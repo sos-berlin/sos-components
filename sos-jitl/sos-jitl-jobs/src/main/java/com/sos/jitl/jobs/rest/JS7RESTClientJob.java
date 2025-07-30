@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
@@ -16,13 +16,9 @@ import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
-import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Versions;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -142,8 +138,9 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 String inputOption = null;
                 boolean rawOutput = false;
                 String returnVarJson = myArgs.getReturnVariable().getValue();
+                String responseBody = response.getResponseBody();
 
-                if (response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()) {
+                if (responseBody != null && !responseBody.trim().isEmpty()) {
                     if ("application/json".equalsIgnoreCase(contentType)) {
                         responseJson = objectMapper.readTree(response.getResponseBody());
                         logger.debug("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson));
@@ -178,26 +175,64 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                             name = mappingNode.has("name") ? mappingNode.get("name").asText().trim() : null;
                             path = mappingNode.has("path") ? mappingNode.get("path").asText().trim() : null;
 
-                            //check if the JSON object have both name and path then fetch the input, output operation and jq query from path
+                            //check if the JSON object have both name and path
                             if (name != null && !name.isBlank() && path != null && !path.isBlank()) {
+                                String inputType = "json"; // default
+
                                 if (path.startsWith("<")) {
-                                    // Case: starts with input option
                                     int firstSeparator = path.indexOf("||");
-                                    if (firstSeparator == -1) {
+
+                                    if (firstSeparator == -1 && !path.matches("^<\\s*plain\\s*:??\\s*$")) {
                                         throw new JobArgumentException("Could not create return variable: " + name +
-                                                ". Invalid path format: Missing '||' after input option: " + path);
+                                                ". Invalid path format: Missing '||' after input option or unknown input type: " + path);
                                     }
-                                    inputOption = path.substring(1, firstSeparator).trim(); // Skip '<'
-                                    path = path.substring(firstSeparator + 2).trim();        // Remaining path: jq query + file ops
+
+                                    if (firstSeparator != -1) {
+                                        String inputSegment = path.substring(1, firstSeparator).trim(); // skip '<'
+                                        path = path.substring(firstSeparator + 2).trim(); // rest: jq or file ops or both
+
+                                        if (inputSegment.startsWith("plain:")) {
+                                            inputType = "plain";
+                                            inputOption = inputSegment.substring("plain:".length()).trim();
+                                        } else if (inputSegment.startsWith("json:")) {
+                                            inputType = "json";
+                                            inputOption = inputSegment.substring("json:".length()).trim();
+                                        } else if (inputSegment.matches("^plain\\s*:??\\s*")) {
+                                            inputType = "plain";
+                                            inputOption = "--response-body";
+                                        } else {
+                                            inputOption = inputSegment;
+                                        }
+                                        if (inputOption == null || inputOption.isEmpty()) {
+                                            inputOption = "--response-body";
+                                        }
+
+                                    } else {
+                                        // No || after input type, assume just "< plain"
+                                        inputType = "plain";
+                                        inputOption = "--response-body";
+                                        path = ""; // no jq, no PI
+                                    }
+                                } else {
+                                    // No < at all: default input type and option
+                                    inputType = "json";
+                                    inputOption = "--response-body";
+                                }
+                                 // Now handle split into jq query and file ops
+                                String[] parts = path.split("\\|\\|", 2);
+                                if(parts.length > 0 && (( inputType.equals("plain") && !parts[0].trim().startsWith(">") &&  !parts[0].trim().startsWith("-r"))||inputType.equals("json") )){
+                                    jqQuery = parts[0].trim();
                                 }
 
-                                // Split path into jq query and optional processing instructions
-                                String[] parts = path.split("\\|\\|", 2);
-                                jqQuery = parts[0].trim();
+                                if (parts.length > 1 || (parts.length == 1 && (
+                                        parts[0].trim().startsWith(">")
+                                                || parts[0].trim().startsWith(">>")
+                                                || parts[0].trim().startsWith("-r")
+                                                || parts[0].trim().startsWith("--raw-output")))) {
 
-                                if (parts.length > 1) {
-                                    // Handle processing flags like -r, > file, etc.
-                                    String[] processorParts = parts[1].trim().split("\\s+");
+                                    String processorString = (parts.length > 1) ? parts[1].trim() : parts[0].trim();
+                                    String[] processorParts = processorString.split("\\s+");
+
                                     for (int i = 0; i < processorParts.length; i++) {
                                         String token = processorParts[i].trim();
 
@@ -217,196 +252,174 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                         }
                                     }
                                 }
-                            } else {
-                                throw new JobArgumentException("Could not create return variable: name or path value is/are invalid or empty");
-                            }
-
-                            //assigning the input for jq
-                            // Support multiple input options separated by space
-                            String[] inputOptions = new String[0];
-                            if (inputOption != null && !inputOption.trim().isEmpty()) {
-                                inputOptions = inputOption.trim().split("\\s+");
-                            }
-                            ObjectNode mergedInput = objectMapper.createObjectNode();
-                            JsonNode jqInput = null;
 
 
-                            if (inputOptions.length > 0) {
-                                if (response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()) {
-                                    if ("application/json".equalsIgnoreCase(contentType)) {
-                                        jqInput = objectMapper.readTree(response.getResponseBody());
-                                        if (jqInput.isObject()) {
-                                            mergedInput.setAll((ObjectNode) jqInput);
-                                        }
-                                    }
-                                }
-                            for (String opt : inputOptions) {
-                                if (opt.startsWith("--response-header=") || opt.startsWith("-s=")) {
-                                    String headerName = opt.startsWith("--response-header=")
-                                            ? opt.substring("--response-header=".length()).trim()
-                                            : opt.substring("-s=".length()).trim();
-
-                                    String headerValue = resHeaders.entrySet().stream()
-                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
-                                            .map(Map.Entry::getValue)
-                                            .findFirst().orElse(null);
-
-                                    if (headerValue != null) {
-                                        ObjectNode headerNode = objectMapper.createObjectNode();
-                                        headerNode.put(headerName, headerValue);
-                                        ObjectNode wrapper = objectMapper.createObjectNode();
-                                        wrapper.set("js7ResponseHeader", headerNode);
-                                        jqInput = wrapper;
-                                    } else {
-                                        throw new JobArgumentException("Could not create return variable: " + name + " because response header not found: " + headerName);
-                                    }
-
-                                } else if (opt.equals("--response-header") || opt.equals("-s")) {
-                                    ObjectNode headerObject = objectMapper.createObjectNode();
-                                    for (Map.Entry<String, String> entry : resHeaders.entrySet()) {
-                                        headerObject.put(entry.getKey(), entry.getValue());
-                                    }
-                                    mergedInput.set("js7ResponseHeader", headerObject);
-
-                                } else if (opt.startsWith("--request-header=") || opt.startsWith("-q=")) {
-                                    String headerName = opt.startsWith("--request-header=")
-                                            ? opt.substring("--request-header=".length()).trim()
-                                            : opt.substring("-q=".length()).trim();
-
-                                    String headerValue = headers.entrySet().stream()
-                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
-                                            .map(Map.Entry::getValue)
-                                            .findFirst().orElse(null);
-
-                                    if (headerValue != null) {
-                                        ObjectNode headerNode = objectMapper.createObjectNode();
-                                        headerNode.put(headerName, headerValue);
-                                        ObjectNode wrapper = objectMapper.createObjectNode();
-                                        wrapper.set("js7RequestHeader", headerNode);
-                                        jqInput = wrapper;
-                                    } else {
-                                        throw new JobArgumentException("Could not create return variable: " + name + " because request header not found: " + headerName);
-                                    }
-
-                                } else if (opt.equals("--request-header") || opt.equals("-q")) {
-                                    ObjectNode headerObject = objectMapper.createObjectNode();
-                                    for (Map.Entry<String, String> entry : headers.entrySet()) {
-                                        headerObject.put(entry.getKey(), entry.getValue());
-                                    }
-                                    mergedInput.set("js7RequestHeader", headerObject);
-
-                                } else if (opt.equals("--request-body") || opt.equals("-d")) {
-                                    if (bodyStr != null && !bodyStr.trim().isEmpty()) {
-                                        JsonNode requestBodyJson = objectMapper.readTree(bodyStr);
-                                        if (!requestBodyJson.isObject()) {
-                                            throw new JobArgumentException("Request body must be a JSON object. Found: " + requestBodyJson.getNodeType());
-                                        }
-                                        mergedInput.set("js7RequestBody", requestBodyJson);
-                                    } else {
-                                        throw new JobArgumentException("Empty request body, could not create return variable: " + name);
-                                    }
-
-                                } else if (opt.startsWith("--from-json=") || opt.startsWith("-j=")) {
-                                    String jsonStr = opt.substring(opt.indexOf('=') + 1).trim();
-                                    try {
-                                        JsonNode fromJsonNode = objectMapper.readTree(jsonStr);
-
-                                        if (!fromJsonNode.isObject()) {
-                                            throw new JobArgumentException(" Expected JSON object for --from-json, but found: " + fromJsonNode.getNodeType());
-                                        }
-
-                                        // Check for duplicate keys before merging
-                                        Iterator<String> fieldNames = fromJsonNode.fieldNames();
-                                        while (fieldNames.hasNext()) {
-                                            String fieldName = fieldNames.next();
-                                            if (mergedInput.has(fieldName)) {
-                                                throw new JobArgumentException("Key conflict during input merge: " + fieldName);
-                                            }
-                                        }
-
-                                        ((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
-
-                                    } catch (Exception e) {
-                                        logger.error("Invalid JSON for input option: " + jsonStr, e);
-                                        throw e;
-                                    }
-                                }
-                                else {
-                                    throw new JobArgumentException("Could not create return variable: " + name + ". Unsupported input option: " + opt);
-                                }
-
-                                if (jqInput != null) {
-                                    if (!jqInput.isObject()) {
-                                        throw new JobArgumentException("Input from option [" + opt + "] must be a JSON object. Found: " + jqInput.getNodeType());
-                                    }
-                                    mergedInput.setAll((ObjectNode) jqInput);
-                                }
-                            }
-                            }else{
-                                if (response.getResponseBody() != null && !response.getResponseBody().trim().isEmpty()) {
-                                    if ("application/json".equalsIgnoreCase(contentType)) {
-                                        jqInput = objectMapper.readTree(response.getResponseBody());
-                                        if (!jqInput.isObject()) {
-                                            throw new JobArgumentException("Response body must be a JSON object.");
-                                        }
-                                        mergedInput.setAll((ObjectNode) jqInput);
-                                    } else {
-                                        throw new JobArgumentException("Could not create return variable: " + name + " because response body is not in JSON format");
-                                    }
-                                } else {
-                                    throw new JobArgumentException("Empty response body, could not create return variable: " + name);
-                                }
-                            }
-
-                            // mergedInput is now ready to be used for jq query execution
-                            if (mergedInput != null && !mergedInput.isEmpty()) {
-                                JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
-                                List<JsonNode> out = new ArrayList<>();
-                                query.apply(rootScope, mergedInput, out::add);
-
-                                if (!out.isEmpty() && out.stream().anyMatch(node -> !node.isNull())) {
-
-                                    if (filePath != null) {
-                                        File file = new File(filePath);
-                                        File parent = file.getParentFile();
-                                        if (parent != null && !parent.exists()) {
-                                            parent.mkdirs();
-                                        }
-
-                                        boolean append = ">>".equals(pI);
-
-                                        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
-                                            for (JsonNode outputNode : out) {
-                                                if (rawOutput && outputNode.isTextual()) {
-                                                    writer.write(outputNode.asText());
-                                                } else {
-                                                    writer.write(objectMapper.writeValueAsString(outputNode));
+                                // check if jq is not null
+                                if(jqQuery!=null && !jqQuery.trim().isEmpty()){
+                                    JsonNode jqInput = null;
+                                    ObjectNode mergedInput = objectMapper.createObjectNode();
+                                    List<JsonNode> result=null;
+                                    if (Objects.equals(inputType, "plain")) {
+                                        if (responseBody != null && !responseBody.trim().isEmpty()) {
+                                            if (contentType != null && contentType.toLowerCase().startsWith("text/")) {
+                                                try {
+                                                    // Escape inner quotes and wrap in double quotes to create valid JSON string.
+                                                    //String escaped = responseBody.replace("\"", "\\\"");
+                                                    jqInput = objectMapper.readTree("\"" + responseBody + "\"");
+                                                } catch (Exception e) {
+                                                    throw new JobArgumentException("Could not convert plain response body to JSON string: " + e.getMessage(), e);
                                                 }
-                                                writer.newLine();
+                                            } else {
+                                                throw new JobArgumentException("Response body is not of content type text/*: " + contentType);
+                                            }
+                                        } else {
+                                            throw new JobException("Empty Response Body!");
+                                        }
+                                        result=ReturnVariableUtils.runJqQuery(jqInput,jqQuery, rootScope, name);
+                                    }
+                                    else {
+                                        String[] inputOptions = new String[0];
+                                        if (inputOption != null && !inputOption.trim().isEmpty()) {
+                                            inputOptions = inputOption.trim().split("\\s+");
+                                        }
+                                        if (inputOptions.length > 0) {
+                                            if (responseBody != null && !responseBody.trim().isEmpty()) {
+                                                if ("application/json".equalsIgnoreCase(contentType)) {
+                                                    jqInput = objectMapper.readTree(responseBody);
+                                                    if (jqInput.isObject()) {
+                                                        mergedInput.setAll((ObjectNode) jqInput);
+                                                    }
+                                                }
+                                            }
+                                            for (String opt : inputOptions) {
+                                                if (opt.startsWith("--response-body") || opt.startsWith("-b"))continue;
+                                                else if (opt.startsWith("--response-header=") || opt.startsWith("-s=")) {
+                                                    String headerName = opt.startsWith("--response-header=")
+                                                            ? opt.substring("--response-header=".length()).trim().toLowerCase()
+                                                            : opt.substring("-s=".length()).trim().toLowerCase();
+
+                                                    String headerValue = resHeaders.entrySet().stream()
+                                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
+                                                            .map(Map.Entry::getValue)
+                                                            .findFirst().orElse(null);
+
+                                                    if (headerValue != null) {
+                                                        ObjectNode headerNode = objectMapper.createObjectNode();
+                                                        headerNode.put(headerName, headerValue);
+                                                        ObjectNode wrapper = objectMapper.createObjectNode();
+                                                        wrapper.set("js7ResponseHeader", headerNode);
+                                                        jqInput = wrapper;
+                                                    } else {
+                                                        throw new JobArgumentException("Could not create return variable: " + name + " because response header not found: " + headerName);
+                                                    }
+
+                                                }
+                                                else if (opt.equals("--response-header") || opt.equals("-s")) {
+                                                    ObjectNode headerObject = objectMapper.createObjectNode();
+                                                    for (Map.Entry<String, String> entry : resHeaders.entrySet()) {
+                                                        headerObject.put(entry.getKey(), entry.getValue().toLowerCase());
+                                                    }
+                                                    mergedInput.set("js7ResponseHeader", headerObject);
+
+                                                }
+                                                else if (opt.startsWith("--request-header=") || opt.startsWith("-q=")) {
+                                                    String headerName = opt.startsWith("--request-header=")
+                                                            ? opt.substring("--request-header=".length()).trim().toLowerCase()
+                                                            : opt.substring("-q=".length()).trim().toLowerCase();
+
+                                                    String headerValue = headers.entrySet().stream()
+                                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
+                                                            .map(Map.Entry::getValue)
+                                                            .findFirst().orElse(null);
+
+                                                    if (headerValue != null) {
+                                                        ObjectNode headerNode = objectMapper.createObjectNode();
+                                                        headerNode.put(headerName, headerValue);
+                                                        ObjectNode wrapper = objectMapper.createObjectNode();
+                                                        wrapper.set("js7RequestHeader", headerNode);
+                                                        jqInput = wrapper;
+                                                    } else {
+                                                        throw new JobArgumentException("Could not create return variable: " + name + " because request header not found: " + headerName);
+                                                    }
+
+                                                }
+                                                else if (opt.equals("--request-header") || opt.equals("-q")) {
+                                                    ObjectNode headerObject = objectMapper.createObjectNode();
+                                                    for (Map.Entry<String, String> entry : headers.entrySet()) {
+                                                        headerObject.put(entry.getKey(), entry.getValue().toLowerCase());
+                                                    }
+                                                    mergedInput.set("js7RequestHeader", headerObject);
+
+                                                }
+                                                else if (opt.equals("--request-body") || opt.equals("-d")) {
+                                                    if (bodyStr != null && !bodyStr.trim().isEmpty()) {
+                                                        JsonNode requestBodyJson = objectMapper.readTree(bodyStr);
+                                                        if (!requestBodyJson.isObject()) {
+                                                            throw new JobArgumentException("Request body must be a JSON object. Found: " + requestBodyJson.getNodeType());
+                                                        }
+                                                        mergedInput.set("js7RequestBody", requestBodyJson);
+                                                    } else {
+                                                        throw new JobArgumentException("Empty request body, could not create return variable: " + name);
+                                                    }
+
+                                                }
+                                                else if (opt.startsWith("--from-json=") || opt.startsWith("-j=")) {
+                                                    String jsonStr = opt.substring(opt.indexOf('=') + 1).trim();
+                                                    try {
+                                                        JsonNode fromJsonNode = objectMapper.readTree(jsonStr);
+
+                                                        if (!fromJsonNode.isObject()) {
+                                                            throw new JobArgumentException(" Expected JSON object for --from-json, but found: " + fromJsonNode.getNodeType());
+                                                        }
+
+                                                        // Check for duplicate keys before merging
+                                                        Iterator<String> fieldNames = fromJsonNode.fieldNames();
+                                                        while (fieldNames.hasNext()) {
+                                                            String fieldName = fieldNames.next();
+                                                            if (mergedInput.has(fieldName)) {
+                                                                throw new JobArgumentException("Key conflict during input merge: " + fieldName);
+                                                            }
+                                                        }
+
+                                                        ((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
+
+                                                    } catch (Exception e) {
+                                                        logger.error("Invalid JSON for input option: " + jsonStr, e);
+                                                        throw e;
+                                                    }
+                                                }
+                                                else {
+                                                    throw new JobArgumentException("Could not create return variable: " + name + ". Unsupported input option: " + opt);
+                                                }
+                                                if (jqInput != null) {
+                                                    if (!jqInput.isObject()) {
+                                                        throw new JobArgumentException("Input from option [" + opt + "] must be a JSON object. Found: " + jqInput.getNodeType());
+                                                    }
+                                                    mergedInput.setAll((ObjectNode) jqInput);
+                                                }
+                                            }
+
+                                        } else {
+                                            if (responseBody != null && !response.getResponseBody().trim().isEmpty()) {
+                                                if ("application/json".equalsIgnoreCase(contentType)) {
+                                                    jqInput = objectMapper.readTree(response.getResponseBody());
+                                                    if (!jqInput.isObject()) {
+                                                        throw new JobArgumentException("Response body must be a JSON object.");
+                                                    }
+                                                    mergedInput.setAll((ObjectNode) jqInput);
+                                                } else {
+                                                    throw new JobArgumentException("Could not create return variable: " + name + " because response body is not in JSON format");
+                                                }
+                                            } else {
+                                                throw new JobArgumentException("Empty response body, could not create return variable: " + name);
                                             }
                                         }
-
-                                        logger.info("Result written to file successfully.");
-                                        step.getOutcome().getVariables().put(name, filePath);
-                                        logger.info("Assigned return variable: " + name + " = " + filePath);
-                                    } else {
-                                        // If NOT writing to file, store result directly
-                                        if (rawOutput && out.size() == 1 && out.get(0).isTextual()) {
-                                            String raw = out.get(0).asText();
-                                            step.getOutcome().getVariables().put(name, raw);
-                                            logger.info("Assigned return variable: " + name + " = " + raw);
-                                        } else {
-                                            JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
-                                            String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode);
-                                            step.getOutcome().getVariables().put(name, resultPretty);
-                                            logger.info("Assigned return variable: " + name + " = " + resultPretty);
-                                        }
+                                        result=ReturnVariableUtils.runJqQuery(mergedInput,jqQuery, rootScope, name);
                                     }
-                                } else {
-                                    throw new JobArgumentException("Error in extracting return variable " + name + " from jq Query " + jqQuery);
+                                    ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, result, rawOutput, objectMapper);
+                                } else if(inputType.equals("plain") && responseBody != null && !response.getResponseBody().trim().isEmpty() && contentType != null && contentType.toLowerCase().startsWith("text/")) {
+                                    ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, responseBody, rawOutput, objectMapper);
                                 }
-                            }else{
-                                throw new JobArgumentException("Error in extracting return variable " + name + " from jq Query " + jqQuery);
                             }
                         }
                     }
@@ -423,8 +436,8 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 }
                 throw e;
             } catch (IOException e) {
-                logger.error("I/O error during REST call: " + e.getMessage(), e);
-                throw new JobException("REST call failed due to I/O error: " + e.getMessage(), e);
+                logger.error("I/O error during Job execution: " + e.getMessage(), e);
+                throw new JobException("I/O Exception occurred: " + e.getMessage(), e);
             }
             finally {
                 try {
