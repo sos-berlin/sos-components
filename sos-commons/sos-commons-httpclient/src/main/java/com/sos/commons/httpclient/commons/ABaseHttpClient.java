@@ -182,6 +182,11 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return execute(createGETRequest(uri), handler);
     }
 
+    /** Executes a GET request with request headers and handles the response via provided handler */
+    public <T> HttpExecutionResult<T> executeGET(URI uri, Map<String,String> headers,  HttpResponse.BodyHandler<T> handler) throws Exception {
+        return execute(createGETRequest(uri, headers), handler);
+    }
+
     /** Executes a GET request and returns response as String */
     public HttpExecutionResult<String> executeGET(URI uri) throws Exception {
         return executeWithResponseBody(createGETRequest(uri));
@@ -635,6 +640,10 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private HttpRequest createGETRequest(URI uri) {
         return createRequestBuilder(uri).GET().build();
+    }
+
+    private HttpRequest createGETRequest(URI uri, Map<String, String> headers) {
+        return createRequestBuilder(uri, headers).GET().build();
     }
 
     private HttpRequest createPOSTRequest(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher bodyPublisher) {

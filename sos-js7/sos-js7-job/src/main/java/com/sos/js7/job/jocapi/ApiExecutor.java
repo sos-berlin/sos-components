@@ -228,10 +228,19 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
         Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        if (step.getLogger().isDebugEnabled()) {
+            step.getLogger().debug("REQUEST: %s", apiUrl);
+            step.getLogger().debug("PARAMS:\n%s", body);
+        }
         return post(token, apiUrl, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body), requestHeaders);
     }
 
     public ApiResponse post(String token, String apiUrl, HttpFormData formData) throws SOSConnectionRefusedException, SOSBadRequestException {
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        if (step.getLogger().isDebugEnabled()) {
+            step.getLogger().debug("REQUEST: %s", apiUrl);
+            step.getLogger().debug("PARAMS: %s", "params are multipart/form-data");
+        }
         Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
         return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData),
                 requestHeaders);
@@ -245,18 +254,15 @@ public class ApiExecutor implements AutoCloseable {
             if (jocUri != null) {
                 boolean isDebugEnabled = step.getLogger().isDebugEnabled();
                 try {
-                    if (isDebugEnabled) {
-                        step.getLogger().debug("REQUEST: %s", apiUrl);
-                        step.getLogger().debug("PARAMS:\n%s", publisher.toString());
-                    }
                     if (!apiUrl.toLowerCase().startsWith(WS_API_PREFIX)) {
                         apiUrl = WS_API_PREFIX + apiUrl;
                     }
                     if (isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
-                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), client.mergeWithDefaultHeaders(
-                            requestHeaders), publisher, HttpResponse.BodyHandlers.ofInputStream());
+                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), 
+                            requestHeaders,
+                            publisher, HttpResponse.BodyHandlers.ofInputStream());
                     String responseBody = readPostResponseBody(result);
                     // result.formatWithResponseBody(true);
                     if (step.getLogger().isDebugEnabled()) {
@@ -340,7 +346,6 @@ public class ApiExecutor implements AutoCloseable {
         Builder builder = BaseHttpClient.withBuilder();
         builder = builder.withLogger(step.getLogger());
         builder = builder.withConnectTimeout(connectTimeout);
-        builder = builder.withDefaultHeaders(additionalHeaders);
         builder = builder.withAuth(getAuthConfig());
         builder = builder.withProxyConfig(getProxyConfig());
 

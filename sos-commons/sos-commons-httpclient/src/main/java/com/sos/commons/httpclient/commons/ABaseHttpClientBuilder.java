@@ -30,6 +30,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
     private ISOSLogger logger = new SLF4JLogger();
     private ProxyConfig proxyConfig;
     private SslArguments ssl;
+    private SSLContext sslContext;
     private IHttpClientAuthStrategy auth = null;
     // Header order does not matter in HTTP, but LinkedHashMap preserves insertion order
     // for consistent debug output instead of random order
@@ -65,6 +66,11 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
 
     public B withSSL(SslArguments ssl) {
         this.ssl = ssl;
+        return self();
+    }
+
+    public B withSSLContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
         return self();
     }
 
@@ -136,6 +142,8 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
             // sslParameters.setEndpointIdentificationAlgorithm(""); // disable hostname verification
             httpClientBuilder.sslContext(sslContext);
             // builder.sslParameters(sslParameters);
+        } else if (sslContext != null) {
+            httpClientBuilder.sslContext(sslContext);
         }
 
         T client = createInstance(logger, httpClientBuilder.build());
