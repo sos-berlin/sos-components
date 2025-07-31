@@ -16,16 +16,45 @@ public class SLF4JLogger implements ISOSLogger {
     private final boolean isDebugEnabled;
     private final boolean isTraceEnabled;
 
+    /** Default constructor.
+     * <p>
+     * Initializes the logger using {@code SLF4JLogger.class} as both the SLF4J delegate and the fully qualified class name (FQCN).<br/>
+     * This setup enables standard logging with the actual calling class and method being correctly reflected in the logs. */
     public SLF4JLogger() {
         this(LoggerFactory.getLogger(SLF4JLogger.class), SLF4JLogger.class);
     }
 
+    /** Constructor for use by classes implementing {@link ISOSLogger}.
+     * <p>
+     * Initializes the logger with {@code SLF4JLogger.class} as the SLF4J backend, and uses the provided class as the fully qualified class name (FQCN).
+     * <p>
+     * This ensures that log messages reflect the intended logger class (e.g. {@code OrderProcessStepLogger}) when using SLF4J's location-aware logging.
+     *
+     * @param fqcnClazz the class implementing {@link ISOSLogger}; used to control caller location in logs */
     public SLF4JLogger(Class<?> fqcnClazz) {
         this(LoggerFactory.getLogger(SLF4JLogger.class), fqcnClazz);
     }
 
+    /** Constructor with a provided SLF4J {@link Logger} instance.
+     * <p>
+     * Uses the given logger and sets the fully qualified class name (FQCN) to {@code SLF4JLogger.class}.<br/>
+     * This ensures that log entries reflect the actual calling class and method that invoked the logger.
+     *
+     * @param logger the SLF4J logger instance to delegate to */
+    public SLF4JLogger(Logger logger) {
+        this(logger, SLF4JLogger.class);
+    }
+
+    /** Full constructor with custom SLF4J logger and fully qualified class name.
+     * <p>
+     * This constructor allows full control over both the SLF4J logger instance and the class used for log origin tracking.<br/>
+     * The provided {@code fqcnClazz} is used internally for location-aware logging to determine the correct caller class and method in the log output.
+     *
+     * @param logger the SLF4J logger instance to delegate to
+     * @param fqcnClazz the class implementing {@link ISOSLogger}, used to resolve the caller location;<br/>
+     *            if {@code null}, defaults to {@code SLF4JLogger.class} */
     public SLF4JLogger(Logger logger, Class<?> fqcnClazz) {
-        this.fqcn = fqcnClazz.getName();
+        this.fqcn = fqcnClazz == null ? SLF4JLogger.class.getName() : fqcnClazz.getName();
         this.logger = logger;
         this.isDebugEnabled = logger.isDebugEnabled();
         this.isTraceEnabled = logger.isTraceEnabled();
