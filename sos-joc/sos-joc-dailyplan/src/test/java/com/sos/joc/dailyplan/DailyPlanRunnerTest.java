@@ -36,7 +36,6 @@ public class DailyPlanRunnerTest {
 
         try {
             DailyPlanSettings dps = new DailyPlanSettings();
-            dps.setCalculateAbsoluteMainPeriodsOnly(true);
             dps.setCaller(DailyPlanRunnerTest.class.getSimpleName());
             dps.setStartMode(StartupMode.webservice);// projection=automatic, schedule preview=webservice?
             dps.setTimeZone("Europe/Berlin");
@@ -50,7 +49,7 @@ public class DailyPlanRunnerTest {
             submission.setId(-1L);
             submission.setSubmissionForDate(dps.getDailyPlanDate());
 
-            OrderListSynchronizer ols = r.calculateStartTimes(dps.getStartMode(), "controllerId", dailyPlanSchedules, dailyPlanDate, submission);
+            OrderListSynchronizer ols = r.calculateAbsoluteMainPeriods(dps.getStartMode(), "controllerId", dailyPlanSchedules, dailyPlanDate, submission);
             LOGGER.info("[OrderListSynchronizer]size=" + ols.getAbsoluteMainPeriods().size());
             for (AbsoluteMainPeriod p : ols.getAbsoluteMainPeriods()) {
                 LOGGER.info("   " + p);

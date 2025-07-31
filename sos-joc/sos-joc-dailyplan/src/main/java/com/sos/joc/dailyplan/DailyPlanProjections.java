@@ -454,7 +454,6 @@ public class DailyPlanProjections {
             msi = new MonthsItem();
         }
 
-        settings.setCalculateAbsoluteMainPeriodsOnly(true);
         settings.setStartMode(StartupMode.automatic);
         final DailyPlanRunner runner = new DailyPlanRunner(settings);
         final AtomicReference<MonthsItem> msiRef = new AtomicReference<>(msi);
@@ -467,7 +466,7 @@ public class DailyPlanProjections {
                 dummySubmission.setId(-1L);
                 dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-                OrderListSynchronizer synchronizer = runner.calculateStartTimes(settings.getStartMode(), "controllerId", dailyPlanSchedules,
+                OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriods(settings.getStartMode(), "controllerId", dailyPlanSchedules,
                         asDailyPlanSingleDate, dummySubmission);
 
                 List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();

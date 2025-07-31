@@ -58,7 +58,6 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
 
             if (!SOSCollection.isEmpty(in.getCalendars()) && in.getDateFrom() != null && in.getDateTo() != null) {
                 DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(API_CALL);
-                settings.setCalculateAbsoluteMainPeriodsOnly(true);
                 settings.setPermittedFolders(folderPermissions.getListOfFolders());
                 settings.setStartMode(StartupMode.webservice);
 
@@ -74,7 +73,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         dummySubmission.setId(-1L);
                         dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-                        OrderListSynchronizer synchronizer = runner.calculateStartTimes(settings.getStartMode(), "controllerId", dailyPlanSchedules,
+                        OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriods(settings.getStartMode(), "controllerId", dailyPlanSchedules,
                                 asDailyPlanSingleDate, dummySubmission);
 
                         List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();
