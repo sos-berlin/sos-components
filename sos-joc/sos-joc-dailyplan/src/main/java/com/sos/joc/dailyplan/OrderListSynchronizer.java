@@ -82,7 +82,13 @@ public class OrderListSynchronizer {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         this.settings = settings;
         this.callerForLog = DailyPlanHelper.getCallerForLog(this.settings);
-        if (this.settings.isCalculateAbsoluteMainPeriodsOnly()) {
+    }
+    
+    public OrderListSynchronizer(DailyPlanSettings settings, boolean calculateAbsoluteMainPeriodsOnly) {
+        this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
+        this.settings = settings;
+        this.callerForLog = DailyPlanHelper.getCallerForLog(this.settings);
+        if (calculateAbsoluteMainPeriodsOnly) {
             this.absoluteMainPeriods = new ArrayList<>();
             this.absoluteMainCyclicPeriodsHelper = new TreeMap<>();
         }
