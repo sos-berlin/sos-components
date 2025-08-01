@@ -21,6 +21,7 @@ import java.security.PrivateKey;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -227,7 +228,10 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
-        Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        Map<String, String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.putAll(additionalHeaders);
+        requestHeaders.putAll(Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON));
+        
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("REQUEST: %s", apiUrl);
             step.getLogger().debug("PARAMS:\n%s", body);
@@ -241,7 +245,9 @@ public class ApiExecutor implements AutoCloseable {
             step.getLogger().debug("REQUEST: %s", apiUrl);
             step.getLogger().debug("PARAMS: %s", "params are multipart/form-data");
         }
-        Map<String, String> requestHeaders = Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
+        Map<String, String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.putAll(additionalHeaders);
+        requestHeaders.putAll(Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType()));
         return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData),
                 requestHeaders);
     }
