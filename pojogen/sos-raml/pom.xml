@@ -149,6 +149,8 @@
 								<exclude>joc/properties-schema.json</exclude>
 								<exclude>board/boardsDeps-schema.json</exclude>
 								<exclude>workflow/workflowsBoardsV-schema.json</exclude>
+								<exclude>order/modify/*.json</exclude>
+								<exclude>orderManagement/**</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -425,6 +427,11 @@
 							<includes>
 								<include>**/*.json</include>
 							</includes>
+							<excludes>
+                                <exclude>**/dailyPlanOrdersSummaryFilter-schema.json</exclude>
+                                <exclude>**/dailyPlanOrdersFilter-schema.json</exclude>
+                                <exclude>**/modify/*.json</exclude>
+                            </excludes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>

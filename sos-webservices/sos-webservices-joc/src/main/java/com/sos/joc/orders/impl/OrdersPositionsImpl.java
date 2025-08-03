@@ -10,6 +10,7 @@ import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.OrderIdsFilter;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.orders.resource.IOrdersPositions;
 import com.sos.schema.JsonValidator;
@@ -26,8 +27,8 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     public JOCDefaultResponse resumeOrderPositions(String accessToken, byte[] filterBytes) {
         try {
             filterBytes = initLogging(API_CALL_RESUME, filterBytes, accessToken, CategoryType.CONTROLLER);
-            JsonValidator.validate(filterBytes, ModifyOrders.class);
-            ModifyOrders ordersFilter = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
+            JsonValidator.validate(filterBytes, OrderIdsFilter.class);
+            OrderIdsFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrderIdsFilter.class);
             String controllerId = ordersFilter.getControllerId();
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
@@ -37,7 +38,6 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             }
             
             Set<String> orders = ordersFilter.getOrderIds();
-            checkRequiredParameter("orderIds", orders);
 
             CheckedResumeOrdersPositions entity = new CheckedResumeOrdersPositions().get(orders, Proxy.of(controllerId).currentState(), folderPermissions
                     .getListOfFolders());

@@ -138,6 +138,7 @@ public class JsonValidator {
             put("OrderFilter", "order/orderFilter-schema.json");
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
+            put("OrderIdsFilter", "order/orderIdsFilter-schema.json");
             put("OrderVariablesFilter", "order/orderVariablesFilter-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");
@@ -289,7 +290,7 @@ public class JsonValidator {
             // schedules
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
 
-            put("com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef", "orderManagement/dailyplan/dailyPlanOrdersFilterDefRequired-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanChangePriority", "orderManagement/dailyplan/dailyPlanChangePriority-schema.json");
             put("com.sos.joc.model.dailyplan.generate.GenerateRequest", "dailyplan/generate/generate-request-schema.json");

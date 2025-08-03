@@ -73,7 +73,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 if (in.getDailyPlanDateTo() == null) {
                     LOGGER.debug("Reading the daily plan from the day " + in.getDailyPlanDateFrom());
                 } else if (in.getDailyPlanDateFrom().equals(in.getDailyPlanDateTo())) {
-                    LOGGER.debug("Reading the daily plan the day " + in.getDailyPlanDateFrom());
+                    LOGGER.debug("Reading the daily plan of the day " + in.getDailyPlanDateFrom());
                 } else {
                     LOGGER.debug("Reading the daily plan for the days " + in.getDailyPlanDateFrom() + " - " + in.getDailyPlanDateTo());
                 }
