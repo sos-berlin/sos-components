@@ -160,7 +160,7 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     public ApiResponse login() throws Exception {
-        return login(Duration.ofSeconds(120));
+        return login(Duration.ofSeconds(30));
     }
 
     public ApiResponse login(Duration connectTimeout) throws Exception {
