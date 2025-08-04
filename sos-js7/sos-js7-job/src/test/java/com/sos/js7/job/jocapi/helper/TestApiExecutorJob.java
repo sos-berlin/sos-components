@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.jocapi.ApiExecutor;
@@ -16,12 +17,13 @@ public class TestApiExecutorJob extends Job<TestApiExecutorJobArguments> {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put("X-Export-Directory", Paths.get(System.getProperty("user.dir")).resolve("target/exported").toString()
                 .replace('\\', '/'));
-        try (ApiExecutor executor = new ApiExecutor(step, headers)) {
+        headers.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        try (ApiExecutor executor = new ApiExecutor(step)) {
             ApiResponse apiResponse = null;
             try {
                 apiResponse = executor.login();
                 apiResponse = executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), step
-                        .getDeclaredArguments().getBody().getValue());
+                        .getDeclaredArguments().getBody().getValue(), headers);
 
                 step.getLogger().info("[TestApiExecutorJob][post][responseBody]%s", apiResponse.getResponseBody());
 

@@ -72,7 +72,6 @@ public class ApiExecutor implements AutoCloseable {
 
     private static final String X_ID_TOKEN = "X-ID-TOKEN";
 
-    // private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
     private static final String WS_API_PREFIX = "/joc/api";
@@ -141,11 +140,6 @@ public class ApiExecutor implements AutoCloseable {
         this.step = step;
     }
 
-    public ApiExecutor(OrderProcessStep<?> step, Map<String, String> additionalHeaders) {
-        this(step);
-        this.additionalHeaders = additionalHeaders;
-    }
-
     public Map<String, String> getAdditionalHeaders() {
         return additionalHeaders;
     }
@@ -154,12 +148,19 @@ public class ApiExecutor implements AutoCloseable {
         this.additionalHeaders = additionalHeaders;
     }
 
+    public void addAdditionalHeaders(String key, String value) {
+        if(this.additionalHeaders == null) {
+            this.additionalHeaders = new HashMap<String, String>();
+        }
+        this.additionalHeaders.put(key, value);
+    }
+
     public void setJobResources(Map<String, DetailValue> jobResources) {
         this.jobResources = jobResources;
     }
 
     public ApiResponse login() throws Exception {
-        return login(Duration.ofSeconds(30));
+        return login(Duration.ofSeconds(120));
     }
 
     public ApiResponse login(Duration connectTimeout) throws Exception {
@@ -168,6 +169,9 @@ public class ApiExecutor implements AutoCloseable {
          * configuration from private.conf
          */
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        Map<String, String> loginRequestHeaders = new HashMap<String, String>();
+        loginRequestHeaders.put("Accept", "application/json, text/plain");
+        loginRequestHeaders.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
         step.getLogger().debug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
@@ -179,7 +183,7 @@ public class ApiExecutor implements AutoCloseable {
                 createClient(uri, connectTimeout);
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
-                HttpExecutionResult<String> result = client.executePOST(loginUri);
+                HttpExecutionResult<String> result = client.executePOST(loginUri, client.mergeWithDefaultHeaders(loginRequestHeaders));
                 // result.formatWithResponseBody(true);
                 if (isDebugEnabled) {
                     step.getLogger().debug("[login]" + BaseHttpClient.formatExecutionResult(result));
@@ -229,25 +233,34 @@ public class ApiExecutor implements AutoCloseable {
 
     public ApiResponse post(String token, String apiUrl, String body) throws SOSConnectionRefusedException, SOSBadRequestException {
         Map<String, String> requestHeaders = new HashMap<String, String>();
-        requestHeaders.putAll(additionalHeaders);
         requestHeaders.putAll(Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON));
-        
+        return post(token, apiUrl, body, requestHeaders);
+    }
+
+    public ApiResponse post(String token, String apiUrl, String body, Map<String, String> requestHeaders) throws SOSConnectionRefusedException,
+            SOSBadRequestException {
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("REQUEST: %s", apiUrl);
             step.getLogger().debug("PARAMS:\n%s", body);
         }
-        return post(token, apiUrl, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body), requestHeaders);
+        requestHeaders.put(ACCESS_TOKEN_HEADER, token);
+        return post(token, apiUrl, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body),
+                requestHeaders);
     }
 
     public ApiResponse post(String token, String apiUrl, HttpFormData formData) throws SOSConnectionRefusedException, SOSBadRequestException {
-        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        Map<String, String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.putAll(Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType()));
+        return post(token, apiUrl, formData,requestHeaders);
+    }
+
+    public ApiResponse post(String token, String apiUrl, HttpFormData formData, Map<String, String> requestHeaders)
+            throws SOSConnectionRefusedException, SOSBadRequestException {
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("REQUEST: %s", apiUrl);
             step.getLogger().debug("PARAMS: %s", "params are multipart/form-data");
         }
-        Map<String, String> requestHeaders = new HashMap<String, String>();
-        requestHeaders.putAll(additionalHeaders);
-        requestHeaders.putAll(Map.of(ACCESS_TOKEN_HEADER, token, HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType()));
+        requestHeaders.put(ACCESS_TOKEN_HEADER, token);
         return post(token, apiUrl, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData),
                 requestHeaders);
     }
@@ -257,6 +270,9 @@ public class ApiExecutor implements AutoCloseable {
         if (token == null) {
             throw new SOSBadRequestException("no access token provided. permission denied.");
         } else {
+            if(additionalHeaders != null) {
+                additionalHeaders.entrySet().forEach(entry -> requestHeaders.putIfAbsent(entry.getKey(), entry.getValue()));
+            }
             if (jocUri != null) {
                 boolean isDebugEnabled = step.getLogger().isDebugEnabled();
                 try {
@@ -266,9 +282,8 @@ public class ApiExecutor implements AutoCloseable {
                     if (isDebugEnabled) {
                         step.getLogger().debug("resolvedUri: %s", jocUri.resolve(apiUrl).toString());
                     }
-                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), 
-                            requestHeaders,
-                            publisher, HttpResponse.BodyHandlers.ofInputStream());
+                    HttpExecutionResult<InputStream> result = client.executePOST(jocUri.resolve(apiUrl), requestHeaders, publisher,
+                            HttpResponse.BodyHandlers.ofInputStream());
                     String responseBody = readPostResponseBody(result);
                     // result.formatWithResponseBody(true);
                     if (step.getLogger().isDebugEnabled()) {
@@ -292,10 +307,12 @@ public class ApiExecutor implements AutoCloseable {
     }
 
     public ApiResponse logout(String token) throws SOSBadRequestException {
+        Map<String, String> logoutRequestHeaders = new HashMap<String, String>();
+        logoutRequestHeaders.put(ACCESS_TOKEN_HEADER, token);
+        logoutRequestHeaders.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
         if (token != null && jocUri != null) {
             try {
-                HttpExecutionResult<String> result = client.executePOST(jocUri.resolve(WS_API_LOGOUT), client.mergeWithDefaultHeaders(Map.of(
-                        ACCESS_TOKEN_HEADER, token)));
+                HttpExecutionResult<String> result = client.executePOST(jocUri.resolve(WS_API_LOGOUT), logoutRequestHeaders);
                 // result.formatWithResponseBody(true);
                 if (step.getLogger().isDebugEnabled()) {
                     step.getLogger().debug("[logout]" + BaseHttpClient.formatExecutionResult(result));
