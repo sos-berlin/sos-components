@@ -36,8 +36,7 @@ public class DeployImpl extends ADeploy implements IDeploy {
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.MEDIUM, API_CALL);
+            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, JocSecurityLevel.MEDIUM, API_CALL);
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

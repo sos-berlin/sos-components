@@ -6,7 +6,6 @@ import java.util.Date;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -36,10 +35,8 @@ public class DeployImpl extends ADeploy implements IDeploy {
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
             
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.LOW, API_CALL);
+            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, JocSecurityLevel.LOW, API_CALL);
 
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
