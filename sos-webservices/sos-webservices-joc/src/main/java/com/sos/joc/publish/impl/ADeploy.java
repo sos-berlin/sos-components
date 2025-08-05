@@ -23,10 +23,12 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -67,16 +69,26 @@ public abstract class ADeploy extends JOCResourceImpl {
     public static final String API_CALL = "./inventory/deployment/deploy";
 
 
-    public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession,
-            DBItemJocAuditLog dbAuditlog, String account, JocSecurityLevel secLvl, String apiCall) throws Exception {
+    public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession, DBItemJocAuditLog dbAuditlog, 
+            JocSecurityLevel secLvl, String apiCall) throws Exception {
+        String account;
+        if(Globals.getJocSecurityLevel().equals(JocSecurityLevel.LOW)) {
+            account =  ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+        } else {
+            account = this.getAccount();
+        }
+        if(account == null) {
+            JocError error = new JocError("cannot determine account for signing.");
+            throw new JocException(error);
+        }
         if (PublishSemaphore.availablePermits(xAccessToken) == 1) {
             TimeUnit.MILLISECONDS.sleep(100);
         }
         PublishSemaphore.tryAcquire(xAccessToken);
         
         Set<String> allowedControllerIds = Collections.emptySet();
-        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
-                availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
+                getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
 
         DBLayerDeploy dbLayer  = new DBLayerDeploy(hibernateSession);
         // process filter

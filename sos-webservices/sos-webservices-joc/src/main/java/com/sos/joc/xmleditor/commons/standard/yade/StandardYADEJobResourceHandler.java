@@ -141,7 +141,7 @@ public class StandardYADEJobResourceHandler {
             session = Globals.createSosHibernateStatelessConnection("deploy");
             session.beginTransaction();
             DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
-            impl.deploy(accessToken, filter, session, dbAuditlog, impl.getAccount(), Globals.getJocSecurityLevel(), ADeploy.API_CALL);
+            impl.deploy(accessToken, filter, session, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
             session.commit();
         } catch (Exception e) {
             Globals.rollback(session);
