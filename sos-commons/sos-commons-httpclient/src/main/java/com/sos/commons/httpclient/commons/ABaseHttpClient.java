@@ -343,6 +343,10 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return execute(createDELETERequest(uri), handler);
     }
 
+    public <T> HttpExecutionResult<T> executeDELETE(URI uri, Map<String,String> headers, HttpResponse.BodyHandler<T> handler) throws Exception {
+        return execute(createDELETERequest(uri, headers), handler);
+    }
+
     /** Executes a DELETE request and returns the response as String */
     public HttpExecutionResult<String> executeDELETE(URI uri) throws Exception {
         return executeWithResponseBody(createDELETERequest(uri));
@@ -652,6 +656,10 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private HttpRequest createDELETERequest(URI uri) {
         return createRequestBuilder(uri).DELETE().build();
+    }
+
+    private HttpRequest createDELETERequest(URI uri, Map<String, String> headers) {
+        return createRequestBuilder(uri, headers).DELETE().build();
     }
 
     private HttpRequest createPUTRequest(URI uri, String content, boolean isWebDAV) {
