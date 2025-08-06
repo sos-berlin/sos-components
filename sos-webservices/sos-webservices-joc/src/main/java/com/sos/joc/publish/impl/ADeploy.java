@@ -40,6 +40,7 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -72,7 +73,9 @@ public abstract class ADeploy extends JOCResourceImpl {
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession, DBItemJocAuditLog dbAuditlog, 
             JocSecurityLevel secLvl, String apiCall) throws Exception {
         String account;
-        if(Globals.getJocSecurityLevel().equals(JocSecurityLevel.LOW)) {
+        if (JocSecurityLevel.HIGH.equals(Globals.getJocSecurityLevel())) {
+            throw new JocNotImplementedException("This operation is not available for Security Level HIGH, use <import_deploy> instead.");
+        } else if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
             account =  ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
         } else {
             account = this.getAccount();
