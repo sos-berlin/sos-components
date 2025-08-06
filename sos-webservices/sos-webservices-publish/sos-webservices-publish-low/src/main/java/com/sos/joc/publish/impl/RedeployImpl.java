@@ -79,7 +79,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             String controllerId = redeployFilter.getControllerId();
             // get all latest active history objects from the database for the provided controllerId and folder from the filter
             List<DBItemDeploymentHistory> latest = dbLayer.getLatestDepHistoryItemsFromFolder(redeployFilter.getFolder(), controllerId, redeployFilter
-                    .getRecursive());
+                    .getRecursive()).toList();
 
             // all items will be resigned with a new commitId
             final String commitId = UUID.randomUUID().toString();
@@ -87,7 +87,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.LOW);
 
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
-            if (latest != null) {
+            if (!latest.isEmpty()) {
                 Stream<DBItemDeploymentHistory> latestStream = latest.stream().filter(item -> OperationType.DELETE.value() != item.getOperation());
                 if (API_CALL_SYNC.equals(action)) {
                     // filter latest with only "not in sync" objects

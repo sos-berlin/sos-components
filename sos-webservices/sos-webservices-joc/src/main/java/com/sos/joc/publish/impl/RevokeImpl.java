@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -48,6 +50,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
 
     @Override
     public JOCDefaultResponse postRevoke(String xAccessToken, byte[] filter) throws Exception {
+
         SOSHibernateSession hibernateSession = null;
         try {
             Date started = Date.from(Instant.now());
@@ -75,22 +78,23 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             if (deployConfigsToRevoke != null && !deployConfigsToRevoke.isEmpty()) {
                 depHistoryDBItemsToRevoke = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToRevoke);
                 if (depHistoryDBItemsToRevoke != null && !depHistoryDBItemsToRevoke.isEmpty()) {
-                    Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToRevoke.stream()
-                            .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
-                    depHistoryDBItemsToRevoke = grouped.keySet().stream().map(item -> grouped.get(item)).flatMap(List::stream).collect(Collectors.toList());
+                    Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToRevoke.stream().collect(Collectors.groupingBy(
+                            DBItemDeploymentHistory::getPath));
+                    depHistoryDBItemsToRevoke = grouped.keySet().stream().map(item -> grouped.get(item)).flatMap(List::stream).collect(Collectors
+                            .toList());
                 }
             }
             // collect Items for set of folders
-            List<DBItemDeploymentHistory> itemsFromFolderToRevoke = new ArrayList<DBItemDeploymentHistory>();
+            Stream<DBItemDeploymentHistory> itemsFromFolderToRevoke = Stream.empty();
             for (String controllerId : controllerIds) {
                 if (!foldersToRevoke.isEmpty()) {
-                    foldersToRevoke.stream()
-                    .map(folder -> dbLayer.getLatestDepHistoryItemsFromFolder(folder.getPath(), controllerId, folder.getRecursive()))
-                    .forEach(itemsList -> itemsFromFolderToRevoke.addAll(itemsList));
+                    itemsFromFolderToRevoke = foldersToRevoke.stream().flatMap(folder -> dbLayer.getLatestDepHistoryItemsFromFolder(folder.getPath(),
+                            controllerId, folder.getRecursive()));
+
                 }
             }
             Map<String, List<DBItemDeploymentHistory>> itemsPerControllerToRevokeFromFolder = 
-                    itemsFromFolderToRevoke.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
+                    itemsFromFolderToRevoke.collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
             Date collectingItemsFinished = Date.from(Instant.now());
             LOGGER.trace("*** collecting items finished ***" + collectingItemsFinished);
             // Delete from all allowed controllers from filter
@@ -115,10 +119,12 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                                 .collect(Collectors.toList()));
                     }
                 }
-                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream()
-                        .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources, dbAuditlog.getId(), account);
-                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, dbAuditlog.getId(), account);
+                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
+                        fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources,
+                        controllerId, dbAuditlog.getId(), account);
+                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
+                        .getId(), account);
                 itemsToRevokePerController.put(controllerId, filteredDepHistoryItemsToRevoke);
             }
             // loop 2: send commands to controllers
@@ -148,6 +154,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
             return responseStatusJSOk(Date.from(Instant.now()));
+
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {

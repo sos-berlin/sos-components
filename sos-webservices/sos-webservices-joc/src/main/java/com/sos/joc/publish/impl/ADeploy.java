@@ -202,11 +202,10 @@ public abstract class ADeploy extends JOCResourceImpl {
             Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
             // determine all (latest) entries from the given folders
 
-            if(foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                foldersToDelete.stream()
-                    .map(Config::getConfiguration)
-                    .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive()))
-                    .forEach(item -> itemsFromFolderToDelete.addAll(item));
+            if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
+                itemsFromFolderToDelete.addAll(foldersToDelete.stream().map(Config::getConfiguration).flatMap(item -> dbLayer
+                        .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).collect(Collectors.toSet()));
+
             }
             if (unsignedDrafts != null) {
                 List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
@@ -357,7 +356,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         .collect(Collectors.toList()));
             }
             Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
-                    .collect(Collectors.groupingBy(fos -> ConfigurationType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                    .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
             // store history entries for delete operation optimistically
             invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account ,dbAuditlog.getId())));

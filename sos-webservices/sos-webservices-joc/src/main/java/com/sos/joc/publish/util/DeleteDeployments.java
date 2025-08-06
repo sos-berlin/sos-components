@@ -144,9 +144,9 @@ public class DeleteDeployments {
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
         final String commitIdForDeleteFileOrderSource = UUID.randomUUID().toString();
         
-        List<DBItemDeploymentHistory> dbItems = controllerIds.stream().map(controllerId -> dbLayer.getLatestDepHistoryItemsFromFolder(conf.getPath(),
-                controllerId, conf.getRecursive())).flatMap(List::stream).filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(
-                        Collectors.toList());
+        List<DBItemDeploymentHistory> dbItems = controllerIds.stream().flatMap(controllerId -> dbLayer.getLatestDepHistoryItemsFromFolder(conf
+                .getPath(), controllerId, conf.getRecursive())).filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors
+                        .toList());
 
         // delete configurations optimistically
         Set<DBItemInventoryConfiguration> invItemsforTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
@@ -303,7 +303,7 @@ public class DeleteDeployments {
     }
 
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntriesForRevoke(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> deletedItems,
-            String commitId, Long auditLogId, String account) {
+            String commitId, String controllerId, Long auditLogId, String account) {
         Set<DBItemDeploymentHistory> deletedObjects = Collections.emptySet();
         Set<String> folders = new HashSet<>();
         List<Long> workflowInvIds = new ArrayList<>();
@@ -324,8 +324,8 @@ public class DeleteDeployments {
                     newEntry.setAccount(account);
                     newEntry.setAuditlogId(auditLogId);
                     newEntry.setContent(item.getContent());
-                    newEntry.setControllerId(item.getControllerId());
-                    newEntry.setControllerInstanceId(item.getControllerInstanceId());
+                    newEntry.setControllerId(controllerId);
+                    newEntry.setControllerInstanceId(0L); // TODO ???
                     newEntry.setFolder(item.getFolder());
                     newEntry.setInvContent(item.getInvContent());
                     newEntry.setInventoryConfigurationId(item.getInventoryConfigurationId());

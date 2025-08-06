@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -634,7 +635,11 @@ public class DBLayerDeploy {
             } else if (releasablesOnly) {
                 query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             }
-            return session.getResultList(query);
+            List<DBItemInventoryConfiguration> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
@@ -672,14 +677,17 @@ public class DBLayerDeploy {
                 query.setParameter("folder", folder);
             }
             if (onlyDeployables) {
-                query.setParameterList("types", JocInventory.DEPLOYABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
+                query.setParameterList("types", JocInventory.getDeployableTypes());
             } else if (onlyReleasables) {
-                query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
+                query.setParameterList("types", JocInventory.getReleasableTypes());
             }
             List<DBItemInventoryConfiguration> result = session.getResultList(query);
             Date getDraftInventoryConfigurationsByFolderFinished = Date.from(Instant.now());
             LOGGER.trace("*** call getDraftInventoryConfigurationsByFolder finished ***" + getDraftInventoryConfigurationsByFolderFinished);
             LOGGER.trace("call getDraftInventoryConfigurationsByFolder took: " + (getDraftInventoryConfigurationsByFolderFinished.getTime() - getDraftInventoryConfigurationsByFolderStarted.getTime()) + " ms");
+            if (result == null) {
+                return Collections.emptyList();
+            }
             return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -851,8 +859,7 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -865,12 +872,10 @@ public class DBLayerDeploy {
         // TODO: check rollout and local configurations as configured, as JOBRESOURCES may not be the only item
         List<Configuration> configurations = new ArrayList<Configuration>();
         if (filter.getRollout() != null) {
-            configurations.addAll(filter.getRollout().getDraftConfigurations().stream()
-                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+            configurations.addAll(filter.getRollout().getDraftConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList()));
         }
         if (filter.getLocal() != null) {
-            configurations.addAll(filter.getLocal().getDraftConfigurations().stream()
-                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+            configurations.addAll(filter.getLocal().getDraftConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList()));
         }
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
@@ -881,8 +886,7 @@ public class DBLayerDeploy {
     
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesValidFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -895,9 +899,8 @@ public class DBLayerDeploy {
         List<Configuration> configurations = Collections.emptyList();
         // TODO: check local configurations as configured, as JOBRESOURCES may not be the only item
         if (filter.getLocal() != null) {
-            configurations = filter.getLocal().getDraftConfigurations().stream()
-                    .filter(item -> !ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                    .map(item -> item.getConfiguration()).collect(Collectors.toList());
+            configurations = filter.getLocal().getDraftConfigurations().stream().filter(item -> !ConfigurationType.JOBRESOURCE.equals(item
+                    .getConfiguration().getObjectType())).map(Config::getConfiguration).collect(Collectors.toList());
         }
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
@@ -908,8 +911,7 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = filter.getDraftConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredInventoryConfiguration(configurations);
         } else {
@@ -935,8 +937,7 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        List<Configuration> configurations = filter.getReleasedConfigurations().stream()
-                .map(item -> item.getConfiguration()).collect(Collectors.toList());
+        List<Configuration> configurations = filter.getReleasedConfigurations().stream().map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredReleasedConfiguration(configurations);
         } else {
@@ -947,7 +948,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
-                ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
+                ConfigurationType.FOLDER)).map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
@@ -961,12 +962,12 @@ public class DBLayerDeploy {
         if (filter.getRollout() != null) {
             configurations = filter.getRollout().getDeployConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    .map(Config::getConfiguration).collect(Collectors.toList());
         }
         if (filter.getLocal() != null) {
             configurations.addAll(filter.getLocal().getDeployConfigurations().stream()
                     .filter(item -> ConfigurationType.JOBRESOURCE.equals(item.getConfiguration().getObjectType()))
-                    .map(item -> item.getConfiguration()).collect(Collectors.toList()));
+                    .map(Config::getConfiguration).collect(Collectors.toList()));
         }
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
@@ -978,7 +979,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesValidFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
-                ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
+                ConfigurationType.FOLDER)).map(Config::getConfiguration).collect(Collectors.toList());
         if (!configurations.isEmpty()) {
             return getFilteredDeploymentHistory(configurations);
         } else {
@@ -987,7 +988,7 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(SetVersionFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredDeploymentHistory(filter.getDeployConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
+        return getFilteredDeploymentHistory(filter.getDeployConfigurations().stream().map(Config::getConfiguration).collect(Collectors
                 .toList()));
     }
 
@@ -1305,11 +1306,11 @@ public class DBLayerDeploy {
 //        }
 //    }
 //
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId) {
+    public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId) {
         return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
     }
 
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
+    public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
@@ -1334,10 +1335,9 @@ public class DBLayerDeploy {
             query.setParameter("controllerId", controllerId);
             List<DBItemDeploymentHistory> result = session.getResultList(query);
             if (result == null) {
-                return Collections.emptyList();
+                return Stream.empty();
             }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
+            return result.stream().filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
@@ -1391,7 +1391,7 @@ public class DBLayerDeploy {
     }
     
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
-        Date getDepHistoryItemsFromFolderStarted = Date.from(Instant.now());
+        //Date getDepHistoryItemsFromFolderStarted = Date.from(Instant.now());
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -1430,7 +1430,7 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolderByType(String folder, Set<Integer> types , boolean recursive) {
-        Date getDepHistoryItemsFromFolderStartedByType = Date.from(Instant.now());
+        //Date getDepHistoryItemsFromFolderStartedByType = Date.from(Instant.now());
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);

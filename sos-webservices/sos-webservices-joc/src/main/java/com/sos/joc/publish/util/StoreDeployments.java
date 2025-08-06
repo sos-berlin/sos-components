@@ -114,6 +114,7 @@ public class StoreDeployments {
                         item.setOperation(OperationType.UPDATE.value());
                         item.setState(DeploymentState.DEPLOYED.value());
                         item.setAuditlogId(signedItemsSpec.getAuditlogId());
+                        item.setControllerId(controllerId);
                         dbLayer.getSession().save(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());

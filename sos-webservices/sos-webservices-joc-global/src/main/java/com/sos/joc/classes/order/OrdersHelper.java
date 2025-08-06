@@ -952,22 +952,22 @@ public class OrdersHelper {
                     }
                     break;
                 case Number:
-                    if (curArg instanceof Boolean) {
-                        invalid = true;
-                    } else if (curArg instanceof List) {
-                        invalid = true;
-                    } else if (curArg instanceof String) {
-                        String strArg = (String) curArg;
-                        if (allowDollarInValue && strArg.contains("$")) {
-                            // only relevant for addOrder instruction
-                            Validator.validateExpression("Variable '" + param.getKey() + "': ", strArg);
-                        } else {
-                            try {
-                                BigDecimal number = new BigDecimal(strArg);
-                                vars.setAdditionalProperty(param.getKey(), number);
-                            } catch (NumberFormatException e) {
-                                invalid = true;
+                    if ((curArg instanceof Number) == false) {
+                        if (curArg instanceof String) {
+                            String strArg = (String) curArg;
+                            if (allowDollarInValue && strArg.contains("$")) {
+                                // only relevant for addOrder instruction
+                                Validator.validateExpression("Variable '" + param.getKey() + "': ", strArg);
+                            } else {
+                                try {
+                                    BigDecimal number = new BigDecimal(strArg);
+                                    vars.setAdditionalProperty(param.getKey(), number);
+                                } catch (NumberFormatException e) {
+                                    invalid = true;
+                                }
                             }
+                        } else {
+                            invalid = true;
                         }
                     }
                     break;

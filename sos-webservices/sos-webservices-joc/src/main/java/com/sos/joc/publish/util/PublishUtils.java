@@ -1294,9 +1294,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        return dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId).filter(item -> item.getOperation()
+                .equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, DBLayerDeploy dbLayer) {
@@ -1308,50 +1307,39 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, String controllerId,
             DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
-                .getLatestDepHistoryItemsFromFolder(item, controllerId)));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        return foldersToDelete.stream().map(Config::getConfiguration).map(Configuration::getPath).flatMap(item -> dbLayer
+                .getLatestDepHistoryItemsFromFolder(item, controllerId)).filter(item -> item.getOperation().equals(OperationType.UPDATE.value()))
+                .collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolderWithoutDeployed(item.getPath(), item
-                .getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getDeployableInventoryConfigurationsByFolderWithoutDeployed(item.getPath(), item
+                .getRecursive()).stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item
-                .getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item
+                .getRecursive()).stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item
-                .getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item
+                .getRecursive()).stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsWithoutReleasedfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
-                .getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
+                .getRecursive()).stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
-                .getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getValidReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
+                .getRecursive()).stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(List<Configuration> folders,
@@ -1427,17 +1415,15 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
+        return dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId).filter(item -> item.getOperation()
+                .equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<Config> foldersToDelete, String controllerId,
             DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
-                .getLatestDepHistoryItemsFromFolder(item, controllerId)));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
+        return foldersToDelete.stream().map(Config::getConfiguration).map(Configuration::getPath).flatMap(item -> dbLayer
+                .getLatestDepHistoryItemsFromFolder(item, controllerId)).filter(item -> item.getOperation().equals(OperationType.DELETE.value()))
+                .collect(Collectors.toSet());
     }
 
     public static Set<ControllerObject> getDeployableControllerObjectsFromDB(DeployablesValidFilter filter, String account, DBLayerDeploy dbLayer)
