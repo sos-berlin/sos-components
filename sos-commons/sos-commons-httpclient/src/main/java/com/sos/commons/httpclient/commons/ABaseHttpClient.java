@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -362,6 +363,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return execute(createPUTRequest(uri, content, false), handler);
     }
 
+    /** Executes a PUT request with a BodyPublisher and handles the response via provided handler */
+    public <T> HttpExecutionResult<T> executePUT(URI uri, Map<String, String> headers, HttpRequest.BodyPublisher requestBody,
+            HttpResponse.BodyHandler<T> handler) throws Exception {
+        return execute(createPUTRequest(uri, headers, requestBody), handler);
+    }
+
     /** Executes a PUT request with text content and returns the response as String */
     public HttpExecutionResult<String> executePUT(URI uri, String content) throws Exception {
         return executeWithResponseBody(createPUTRequest(uri, content, false));
@@ -660,6 +667,10 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private HttpRequest createDELETERequest(URI uri, Map<String, String> headers) {
         return createRequestBuilder(uri, headers).DELETE().build();
+    }
+
+    private HttpRequest createPUTRequest(URI uri, Map<String,String> requestHeaders, BodyPublisher body) {
+        return createRequestBuilder(uri, requestHeaders).PUT(body == null ? HttpRequest.BodyPublishers.noBody() : body).build();
     }
 
     private HttpRequest createPUTRequest(URI uri, String content, boolean isWebDAV) {
