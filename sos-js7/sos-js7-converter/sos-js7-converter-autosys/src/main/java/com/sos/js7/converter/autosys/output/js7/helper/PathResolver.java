@@ -15,15 +15,19 @@ public class PathResolver {
         if (j == null) {
             return "";
         }
-        String p = JS7ConverterHelper.normalizePath(j.getJobFullPathFromJILDefinitionParent().toString());
+        String p = JS7ConverterHelper.normalizePath(j.getJobParentFullPathFromJILDefinition().toString());
         return SOSString.isEmpty(p) ? "" : p;
     }
 
-    public static String getJILJobtPathNormalized(ACommonJob j) {
+    public static String getJILJobPathNormalized(ACommonJob j) {
         if (j == null) {
             return "";
         }
-        String p = JS7ConverterHelper.normalizePath(j.getJobFullPathFromJILDefinition().toString());
+        Path path = j.getJobFullPathFromJILDefinition();
+        if (path == null) {
+            return "";
+        }
+        String p = JS7ConverterHelper.normalizePath(path.toString());
         return SOSString.isEmpty(p) ? "" : p;
     }
 
@@ -36,7 +40,7 @@ public class PathResolver {
         if (j == null) {
             return outputDirectory;
         }
-        Path p = outputDirectory.resolve(j.getJobFullPathFromJILDefinitionParent());
+        Path p = outputDirectory.resolve(j.getJobParentFullPathFromJILDefinition());
         String pr = SOSString.isEmpty(prefix) ? "" : prefix;
 
         // j.getJobBaseName returns name after lastIndex of .
@@ -61,7 +65,7 @@ public class PathResolver {
         // p = p.resolve(subFolders);
         // }
         // } else {
-        p = j.getJobFullPathFromJILDefinitionParent();
+        p = j.getJobParentFullPathFromJILDefinition();
         // }
         return p;
     }

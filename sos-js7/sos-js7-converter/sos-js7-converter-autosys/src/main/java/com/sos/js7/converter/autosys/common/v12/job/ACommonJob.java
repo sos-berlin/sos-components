@@ -753,14 +753,18 @@ public abstract class ACommonJob {
         return i > -1 ? jobName.substring(0, i) : null;
     }
 
-    public Path getJobFullPathFromJILDefinitionParent() {
+    /** @return the parent path or Paths.get("") if {@link ACommonJob#getJobFullPathFromJILDefinition()} is null */
+    public Path getJobParentFullPathFromJILDefinition() {
         Path p = getJobFullPathFromJILDefinition();
         return p == null || p.getParent() == null ? Paths.get("") : p.getParent();
     }
 
-    // see com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobFolder
-    // TODO not works for PNG -> arcp.test_conn.ksh ...
-    // - optimize ....
+    /** see {@link CommonJobFolder}<br/>
+     * TODO not works for PNG -> arcp.test_conn.ksh ...<br/>
+     * - optimize ....<br/>
+     * 
+     * @apiNote to get parent path - use {@link ACommonJob#getJobParentFullPathFromJILDefinition()} instead of getJobFullPathFromJILDefinition().getParent()
+     *          because of possible NPE */
     public Path getJobFullPathFromJILDefinition() {
         if (jobFullPathFromJILDefinition != null) {
             return jobFullPathFromJILDefinition;

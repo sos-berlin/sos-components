@@ -19,6 +19,10 @@ public class Conditions {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Conditions.class);
 
+    /** - Note: TODO (---) is apparently only used by Look-Back conditions and can be replaced by '& s(app.JobB,24.00)' */
+    public static final String LOOKBACK_PREFIX = "---";
+    public static final String LOOKBACK_PREFIX_REPLACEMENT = "&";
+
     public enum Operator {
         AND, OR
     }
@@ -26,6 +30,7 @@ public class Conditions {
     /** <br/>
      * v(app.varA) = "X" & s(app.JobA) & s(app.JobB) <br/>
      * (v(app.varA) = "X" & s(app.JobA)) | s(app.JobB) <br/>
+     * v(app.varA) = "X" & s(app.JobA) ---s(app.JobB,24.00) <br/>
      * 
      * @param val
      * @return List of Condition and Operator or nested List
@@ -39,6 +44,18 @@ public class Conditions {
         if (SOSString.isEmpty(val)) {
             return new ArrayList<>();
         }
+
+        if (val.contains(LOOKBACK_PREFIX)) {
+            String nval;
+            if (val.startsWith(LOOKBACK_PREFIX)) {
+                nval = val.substring(3);
+            } else {
+                nval = val.replace(LOOKBACK_PREFIX, LOOKBACK_PREFIX_REPLACEMENT + " ");
+            }
+            LOGGER.info(String.format("[%s][%s][replaced]%s", method, val, nval));
+            val = nval;
+        }
+
         boolean groupBegin = false;
         boolean groupEnd = false;
         boolean partBegin = false;

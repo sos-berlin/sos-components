@@ -60,6 +60,9 @@ public class Condition implements Serializable {
             String v = val.trim();
             this.originalValue = v;
             int i = val.indexOf("(");
+            if (i == -1) {
+                throw new Exception("[condition can't be set]starting bracket '(' not found");
+            }
 
             // app.varA
             String innerVal = v.substring(i + 1, v.indexOf(")"));

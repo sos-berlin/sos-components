@@ -114,7 +114,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
     private boolean createDiagram(List<ACommonJob> jobs) throws Exception {
         Map<Path, List<ACommonJob>> jobsPerParent = new HashMap<Path, List<ACommonJob>>();
         for (ACommonJob j : jobs) {
-            Path p = j.getJobFullPathFromJILDefinition().getParent();
+            Path p = j.getJobParentFullPathFromJILDefinition();
             List<ACommonJob> l = null;
             if (jobsPerParent.containsKey(p)) {
                 l = jobsPerParent.get(p);
@@ -264,7 +264,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
             this.folder = PathResolver.getJILJobParentPathNormalized(standaloneJob);
             if (onlyFolderInfo) {
-                fullName = standaloneJob.getJobFullPathFromJILDefinition().getParent().toString();
+                fullName = standaloneJob.getJobParentFullPathFromJILDefinition().toString();
             } else {
                 fullName = standaloneJob.getJobFullPathFromJILDefinition().toString();
             }
@@ -600,10 +600,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         if (SOSString.isEmpty(p)) {
             p = "&nbsp;";
         } else {
-            if (p.equals(this.folder)) {
-                p = "<b>" + p + "/</b>";
-            } else {
+            boolean sameFolder = p.equals(this.folder);
+            if (!p.endsWith("/")) {
                 p = p + "/";
+            }
+            if (sameFolder) {
+                p = "<b>" + p + "</b>";
             }
         }
         return p;
@@ -653,7 +655,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                     l.append("  <tr>");
                     l.append("<td align=\"left\" valign=\"top\">").append(getConditionJobParentPath(j)).append("</td>");
                     l.append("<td align=\"left\" valign=\"top\">").append(j).append("</td>");
-                    l.append("<td align=\"left\" valign=\"top\">").append("&nbsp;").append(getJobInfo(j)).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">&nbsp;&nbsp;&nbsp;").append(getJobInfo(j)).append("</td>");
                     l.append("  </tr>");
                     i++;
                 }
@@ -671,8 +673,8 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 for (String j : h.jobs) {
                     l.append("  <tr>");
                     l.append("<td align=\"left\" valign=\"top\">").append(getConditionJobParentPath(j)).append("</td>");
-                    l.append("<td align=\"left\" valign=\"top\">").append("&nbsp;").append(j).append("</td>");
-                    l.append("<td align=\"left\" valign=\"top\">").append(getJobInfo(j)).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">").append(j).append("</td>");
+                    l.append("<td align=\"left\" valign=\"top\">&nbsp;&nbsp;&nbsp;").append(getJobInfo(j)).append("</td>");
                     l.append("  </tr>");
                 }
             }

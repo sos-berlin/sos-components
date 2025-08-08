@@ -14,6 +14,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
+import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
 import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
@@ -86,7 +87,9 @@ public class AutosysAnalyzer {
             try {
                 e.getValue().getCondition().reread();
             } catch (Exception e1) {
-                LOGGER.error("[" + e.getValue().getName() + "]" + e);
+                CommonJobCondition c = e.getValue().getCondition();
+                String add = c == null ? "condition is null" : c.getOriginalCondition();
+                LOGGER.error("[adjustConditions][reread=" + add + "][job=" + e.getValue().getName() + "][exception]" + e1);
             }
         });
 

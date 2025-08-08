@@ -2,6 +2,9 @@ package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
@@ -11,6 +14,7 @@ import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobCondition extends AJobAttributes {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonJobCondition.class);
     public static final String ATTR_CONDITION = "condition";
 
     /** condition - Define Starting Conditions for a Job Contents<br/>
@@ -30,11 +34,24 @@ public class CommonJobCondition extends AJobAttributes {
 
     public void reread() throws Exception {
         condition.setValue(null);
-        setCondition(originalCondition);
+        setConditionValue(originalCondition);
     }
 
     @ArgumentSetter(name = ATTR_CONDITION)
-    public void setCondition(String val) throws Exception {
+    public void setCondition(String val) {
+        try {
+            setConditionValue(val);
+        } catch (Exception e) {
+            condition.setValue(null);
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    public String getOriginalCondition() {
+        return originalCondition;
+    }
+
+    private void setConditionValue(String val) throws Exception {
         String v = JS7ConverterHelper.stringValue(val);
         originalCondition = val;
         if (SOSString.isEmpty(v)) {
@@ -55,9 +72,4 @@ public class CommonJobCondition extends AJobAttributes {
             }
         }
     }
-
-    public String getOriginalCondition() {
-        return originalCondition;
-    }
-
 }
