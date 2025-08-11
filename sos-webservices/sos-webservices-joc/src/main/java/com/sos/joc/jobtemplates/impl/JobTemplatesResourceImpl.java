@@ -89,6 +89,7 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
                 jt.setVersion(null);
                 jt.setFailOnErrWritten(null);
                 jt.setSkipIfNoAdmissionForOrderDay(null);
+                jt.setKillAtEndOfAdmissionPeriod(null);
                 jt.setGraceTimeout(null);
                 jt.setParallelism(null);
             }

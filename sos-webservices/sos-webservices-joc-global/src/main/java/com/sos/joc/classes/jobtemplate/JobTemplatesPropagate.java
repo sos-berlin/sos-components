@@ -231,6 +231,11 @@ public class JobTemplatesPropagate {
 //                actions.getChanges().add("skipIfNoAdmissionForOrderDay");
 //            }
 //            //never updated j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
+//            
+//            if (isNotEqual(j.getKillAtEndOfAdmissionPeriod(), jt.getKillAtEndOfAdmissionPeriod())) {
+//                actions.getChanges().add("killAtEndOfAdmissionPeriod");
+//            }
+//            //never updated j.setKillAtEndOfAdmissionPeriod(jt.getKillAtEndOfAdmissionPeriod());
         }
         if (withNotification) {
             if (isNotEqual(j.getNotification(), jt.getNotification())) {
