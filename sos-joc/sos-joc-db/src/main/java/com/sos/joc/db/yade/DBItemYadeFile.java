@@ -81,7 +81,7 @@ public class DBItemYadeFile extends DBItem {
     }
 
     public void setSourcePath(String val) {
-        sourcePath = val;
+        sourcePath = normalizePath(val);
     }
 
     public String getTargetPath() {
@@ -89,7 +89,7 @@ public class DBItemYadeFile extends DBItem {
     }
 
     public void setTargetPath(String val) {
-        targetPath = val;
+        targetPath = normalizePath(val);
     }
 
     public Long getSize() {
@@ -135,6 +135,18 @@ public class DBItemYadeFile extends DBItem {
     @Transient
     public static String normalizeErrorText(String val) {
         return normalizeValue(val, YadeConstants.MAX_LEN_ERROR_MESSAGE);
+    }
+
+    @Transient
+    /** Truncates the path from the left side if YadeConstants.MAX_LEN_PATH is exceeded */
+    public static String normalizePath(String val) {
+        if (val == null) {
+            return null;
+        }
+        if (val.length() <= YadeConstants.MAX_LEN_PATH) {
+            return val;
+        }
+        return "..." + val.substring(val.length() - (YadeConstants.MAX_LEN_PATH - 3));
     }
 
     public Date getCreated() {
