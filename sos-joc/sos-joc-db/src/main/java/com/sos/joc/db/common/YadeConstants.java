@@ -4,4 +4,5 @@ public class YadeConstants {
 
     public static final int MAX_LEN_ERROR_MESSAGE = 2_000;
 
+    public static final int MAX_LEN_PATH = 255;
 }
