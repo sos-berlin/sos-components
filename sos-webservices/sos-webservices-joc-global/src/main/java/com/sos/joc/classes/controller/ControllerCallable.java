@@ -55,12 +55,10 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
         if (!onlyDb) {
             try {
                 JOCJsonCommand jocJsonCommand = new JOCJsonCommand(dbItemInventoryInstance, accessToken);
-                jocJsonCommand.setAutoCloseHttpClient(false);
                 jocJsonCommand.setUriBuilderForOverview();
                 overview = jocJsonCommand.getJsonObjectFromGet(Overview.class);
                 jocJsonCommand.setUriBuilderForCluster();
                 clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
-                jocJsonCommand.closeHttpClient();
             } catch (ControllerInvalidResponseDataException e) {
                 throw e;
             } catch (ControllerConnectionRefusedException | ControllerConnectionResetException e) {
@@ -76,10 +74,12 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
                 }
             } catch (JocException e) {
                 LOGGER.info(e.toString());
+            } catch (Exception e) {
+                LOGGER.info(e.toString());
             }
         }
         ControllerAnswer js = new ControllerAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, onlyDb);
-		js.setFields();
-		return js;
-	}
+        js.setFields();
+        return js;
+    }
 }

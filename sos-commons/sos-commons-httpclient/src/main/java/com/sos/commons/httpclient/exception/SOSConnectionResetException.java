@@ -1,6 +1,6 @@
 package com.sos.commons.httpclient.exception;
 
-import org.apache.http.HttpRequest;
+import java.net.http.HttpRequest;
 
 import com.sos.commons.exception.SOSException;
 

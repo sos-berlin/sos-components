@@ -24,7 +24,7 @@ public class SAPS4HANARetrieveJobs extends Job<CommonJobArguments> {
             throw e;
         } finally {
             if (httpClient != null) {
-                httpClient.closeHttpClient();
+                httpClient.close();
             }
         }
     }

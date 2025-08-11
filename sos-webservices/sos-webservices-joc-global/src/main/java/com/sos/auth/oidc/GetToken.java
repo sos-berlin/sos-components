@@ -1,20 +1,32 @@
 package com.sos.auth.oidc;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
+//import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.http.HttpUtils;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.ForcedClosingHttpClientException;
+import com.sos.joc.classes.SSLContext;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
@@ -27,12 +39,14 @@ import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
 import jakarta.ws.rs.core.UriBuilder;
 
-public class GetToken extends SOSRestApiClient {
+public class GetToken {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GetToken.class);
     private UriBuilder uriBuilder;
     private Map<String, String> body = new HashMap<>();
     private KeyStore truststore;
+    private BaseHttpClient client;
+    private BaseHttpClient.Builder baseHttpClientBuilder;
     
     public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws Exception {
@@ -49,25 +63,17 @@ public class GetToken extends SOSRestApiClient {
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
         if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
-
             List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
-           
-                String s = props.getIamOidcClientId() + ":" + props.getIamOidcClientSecret();
-                byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
-                addHeader("Authorization", "Basic " + new String(authEncBytes));
-//                LOGGER.info("Authorization: Basic " + new String(authEncBytes));
-                
+           baseHttpClientBuilder.withAuth(props.getIamOidcClientId(), props.getIamOidcClientSecret());
                 createBody(requestBody);
-                
             } else { //if (supportedMethods.contains("client_secret_post")) {
                 createBody(props, requestBody);
             }
         } else {
             createBody(props, requestBody);
         }
-        addHeader("Origin", origin);
-        setUriBuilder(openIdConfigurationResponse.getToken_endpoint());
+        setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
     }
     
     private void createBody(GetTokenRequest requestBody) {
@@ -85,12 +91,12 @@ public class GetToken extends SOSRestApiClient {
         }
     }
 
-    private void setUriBuilder(String url) throws SOSSSLException {
+    private void setUriBuilder(String url, String origin) throws SOSSSLException {
         if (url == null) {
             throw new JocConfigurationException("The token endpoint of the OIDC provider is undefined.");
         }
         this.uriBuilder = UriBuilder.fromPath(url);
-        setProperties(url);
+        init(origin, url);
     }
 
     public GetTokenResponse getJsonObjectFromPost() throws JocException {
@@ -108,56 +114,40 @@ public class GetToken extends SOSRestApiClient {
     }
 
     private String getJsonStringFromPost(URI uri) throws JocException {
-        addHeader("Accept", "application/json");
-        addHeader("Content-Type", "application/x-www-form-urlencoded");
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Accept", "application/json");
+        headers.put("Content-Type", "application/x-www-form-urlencoded");
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
-//            LOGGER.info("REQUEST-URL:" + uri.toString());
-//            LOGGER.info("REQUEST-HEADER:" + printHttpRequestHeaders());
-//            LOGGER.info("REQUEST-BODY:" + body.toString());
-            String response = postRestService(uri, body);
-            return getJsonStringFromResponse(response, uri, jocError);
+            createClient();
+            HttpExecutionResult<String> result = client.executePOST(uri, headers, asBodyString(body));
+            return getJsonStringFromResponse(result, uri, jocError);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new JocBadRequestException(jocError, e);
+            throw new JocBadRequestException(jocError, e);
+        }
+    }
+    
+    private GetTokenResponse getJsonObject(String jsonStr) throws JocInvalidResponseDataException {
+        try {
+            if (jsonStr == null) {
+                return null;
             }
+            return Globals.objectMapper.readValue(jsonStr, GetTokenResponse.class);
+        } catch (Exception e) {
+            throw new JocInvalidResponseDataException(e);
         }
     }
-    
-    private void setProperties(String url) throws SOSSSLException {
-        setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
-        setConnectionTimeout(Globals.httpConnectionTimeout);
-        setSocketTimeout(Globals.httpSocketTimeout);
-        setSSLContext(null, null, truststore);
-        if (url.startsWith("https:") && truststore == null) {
-            throw new JocConfigurationException("Couldn't find required truststore");
-        }
-    }
-    
-	private GetTokenResponse getJsonObject(String jsonStr) throws JocInvalidResponseDataException {
-		try {
-			if (jsonStr == null) {
-				return null;
-			}
-			return Globals.objectMapper.readValue(jsonStr, GetTokenResponse.class);
-		} catch (Exception e) {
-			throw new JocInvalidResponseDataException(e);
-		}
-	}
 
-    private String getJsonStringFromResponse(String response, URI uri, JocError jocError) throws JocException {
-        int httpReplyCode = statusCode();
-        String contentType = getResponseHeader("Content-Type");
+    private String getJsonStringFromResponse(HttpExecutionResult<String> result, URI uri, JocError jocError) throws JocException {
+        int httpReplyCode = result.response().statusCode();
+        String contentType = result.response().headers().firstValue("Content-Type").orElse("");
+        String response = result.response().body();
         if (response == null) {
             response = "";
         }
-//        LOGGER.info("RESPONSE-HEADERS:" + printHttpResponseHeaders());
-//        LOGGER.info("RESPONSE:" + response);
         try {
             switch (httpReplyCode) {
             case 200:
@@ -165,14 +155,13 @@ public class GetToken extends SOSRestApiClient {
                     if (response.isEmpty()) {
                         throw new JocInvalidResponseDataException("Unexpected empty response");
                     }
-                    //LOGGER.debug(response);
                     return response;
                 } else {
                     throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
                             response));
                 }
             default:
-                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+                throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(jocError);
@@ -183,4 +172,37 @@ public class GetToken extends SOSRestApiClient {
     private void setTrustStore(OidcProperties provider) throws Exception {
         truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
+
+    private BaseHttpClient createClient() throws Exception {
+        if(client == null) {
+            client = baseHttpClientBuilder.build();
+        }
+        return client;
+    }
+    
+    private void init(String origin, String url) throws ControllerConnectionRefusedException {
+        if (url.startsWith("https:") && truststore == null) {
+            throw new JocConfigurationException("Couldn't find required truststore");
+        }
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
+                .withLogger(new SLF4JLogger(LOGGER)).withHeader("Origin", origin);
+        if(truststore != null) {
+            try {
+                baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
+            } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+                throw new JocConfigurationException(e);
+            }
+        }
+    }
+    
+    private String asBodyString(Map<String, String> params) {
+        return params.entrySet().stream().map(entry -> {
+            try {
+                return URLEncoder.encode(entry.getKey(), "UTF-8") + "=" + URLEncoder.encode(entry.getValue(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new JocException(e);
+            }
+        }).collect(Collectors.joining("&"));
+    }
+    
 }

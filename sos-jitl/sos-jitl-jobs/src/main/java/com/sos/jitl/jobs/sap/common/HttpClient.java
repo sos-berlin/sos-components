@@ -6,30 +6,43 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonStructure;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
-import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSSSLException;
+import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.jitl.jobs.sap.common.bean.Job;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJob;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJobs;
@@ -40,72 +53,61 @@ import com.sos.js7.job.exception.JobArgumentException;
 
 import jakarta.ws.rs.core.UriBuilder;
 
-public class HttpClient extends SOSRestApiClient {
+public class HttpClient {
 
     private final static String csrfTokenHeaderKey = "X-CSRF-Token";
     private final static String sapClientQueryKey = "sap-client";
-
+    private static enum HTTP_METHOD {GET, POST, PUT, DELETE}; 
     private final ISOSLogger logger;
     private final URI uri;
     private final String sapClient;
+    private BaseHttpClient client;
+    private BaseHttpClient.Builder baseHttpClientBuilder;
 
     private String csrfToken = null;
+    private List<String> cookies;
+    
 
     public HttpClient(CommonJobArguments jobArgs, ISOSLogger logger) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException,
-            CertificateException, SOSSSLException, IOException {
+            CertificateException, SOSSSLException, IOException, KeyManagementException {
         this.uri = jobArgs.getUri().getValue();
         this.sapClient = jobArgs.getMandant().getValue();
         this.logger = logger;
-
-        setProperties(jobArgs);
+        initHttpClientBuilder(jobArgs);
     }
 
     /** @see https://help.sap.com/viewer/c5bc243e9e824373a5e8de7c37b1dee1/Cloud/en-US/0e432781e0c646a09602a4aab786734d.html
      * @return
-     * @throws SocketException
-     * @throws SOSException */
-    public String fetchCSRFToken() throws SocketException, SOSException {
-        clearHeaders();
-        addHeader(csrfTokenHeaderKey, "fetch");
-        addCookieHeader();
+     * @throws Exception */
+    public String fetchCSRFToken() throws Exception {
+        Map<String,String> requestHeaders = new HashMap<String, String>();
+        requestHeaders.put(csrfTokenHeaderKey, "fetch");
+        if(cookies != null) {
+            addCookieHeader(requestHeaders);
+        }
         URI uri = setUriPath();
-        logger.info("Fetch token: %s '%s'", HttpMethod.GET.name(), uri);
-        logger.debug(printHttpRequestHeaders());
-        byte[] response = getRestService(uri, byte[].class);
-        logger.debug(printStatusLine());
-        logger.debug(printHttpResponseHeaders());
-        String token = getResponseHeader(csrfTokenHeaderKey);
-        int httpReplyCode = statusCode();
+        logger.info("Fetch token: GET '%s'", uri);
+        createClient();
+        HttpExecutionResult<byte[]> result = client.executeGET(uri, requestHeaders, BodyHandlers.ofByteArray());
+        String token = result.response().headers().firstValue(csrfTokenHeaderKey).orElse(null);
+        int httpReplyCode = result.response().statusCode();
         // token is sent even http code != 200
         if (httpReplyCode != 200) {
-            String errorMessage = getErrorMessage(response);
-            logger.warn("%d %s%s", httpReplyCode, getHttpResponse().getStatusLine().getReasonPhrase(), errorMessage.isEmpty() ? "" : ": "
-                    + errorMessage);
+            String errorMessage = getErrorMessage(result.response());
+            logger.warn("%d %s%s", httpReplyCode, HttpUtils.getReasonPhrase(httpReplyCode), errorMessage.isEmpty() ? "" : ": " + errorMessage);
         }
         if (token != null) {
             csrfToken = token;
             return token;
         } else {
-            throw new SOSBadRequestException(statusCode(), "Response-Header " + csrfTokenHeaderKey + " is missing");
+            throw new SOSBadRequestException(httpReplyCode, "Response-Header " + csrfTokenHeaderKey + " is missing");
         }
-        // if (httpReplyCode == 200) {
-        // csrfToken = getResponseHeader(csrfTokenHeaderKey);
-        // return csrfToken;
-        // } else {
-        // String errorMessage = getErrorMessage(response);
-        // throw new SOSBadRequestException(httpReplyCode, String.format("%d %s%s", httpReplyCode, getHttpResponse().getStatusLine()
-        // .getReasonPhrase(), errorMessage.isEmpty() ? errorMessage : ": " + errorMessage));
-        // }
     }
 
     /** @see https://help.sap.com/viewer/07b57c2f4b944bcd8470d024723a1631/Cloud/en-US/b4d3719173f641b583c97ff0e8f0a7fa.html
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseJobs retrieveJobs() throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
+     * @throws Exception */
+    public ResponseJobs retrieveJobs() throws Exception {
         return retrieveJobs(null, null);
     }
 
@@ -113,13 +115,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param pageSize
      * @param offset
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseJobs retrieveJobs(Integer pageSize, Integer offset) throws JsonParseException, JsonMappingException, SocketException, IOException,
-            SOSException {
+     * @throws Exception */
+    public ResponseJobs retrieveJobs(Integer pageSize, Integer offset) throws Exception {
         if (pageSize == null) {
             pageSize = 10;
         }
@@ -130,20 +127,16 @@ public class HttpClient extends SOSRestApiClient {
         queryParameter.put("pageSize", pageSize);
         queryParameter.put("offset", offset);
         URI url = setUriPath("scheduler/jobs", null, queryParameter);
-        logger.info("Retrieve Jobs: %s '%s'", HttpMethod.GET.name(), url.toString());
-        return getJsonObject(HttpMethod.GET, url, null, ResponseJobs.class);
+        logger.info("Retrieve Jobs: GET '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.GET, url, null, ResponseJobs.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_bdj_psq_xt
      * @see https://help.sap.com/viewer/07b57c2f4b944bcd8470d024723a1631/Cloud/en-US/2c1ecb6dae0c42b4a850f7c07d1b7124.html
      * @param body
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseJob createJob(Job body) throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
+     * @throws Exception */
+    public ResponseJob createJob(Job body) throws Exception {
         return createJob(Globals.objectMapper.writeValueAsBytes(body));
     }
 
@@ -151,21 +144,14 @@ public class HttpClient extends SOSRestApiClient {
      * @see https://help.sap.com/viewer/07b57c2f4b944bcd8470d024723a1631/Cloud/en-US/2c1ecb6dae0c42b4a850f7c07d1b7124.html
      * @param body
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public <B> ResponseJob createJob(B body) throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
+     * @throws Exception */
+    public <B> ResponseJob createJob(B body) throws Exception {
         if (body == null) {
             throw new JobArgumentException("Request body is missing");
         }
-        // if (csrfToken == null) {
-        // fetchCSRFToken();
-        // }
         URI url = setUriPath("scheduler/jobs");
-        logger.info("Create Job: %s '%s'", HttpMethod.POST.name(), url.toString());
-        return getJsonObject(HttpMethod.POST, url, body, ResponseJob.class);
+        logger.info("Create Job: POST '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.POST, url, body, ResponseJob.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_kdn_dxq_xt
@@ -173,13 +159,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param jobId
      * @param jobName
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseJob retrieveJob(Long jobId, String jobName) throws JsonParseException, JsonMappingException, SocketException, IOException,
-            SOSException {
+     * @throws Exception */
+    public ResponseJob retrieveJob(Long jobId, String jobName) throws Exception {
         URI url = null;
         if (jobId != null) {
             Map<String, Object> uriParameter = new HashMap<>(1);
@@ -195,8 +176,8 @@ public class HttpClient extends SOSRestApiClient {
         } else {
             throw new JobArgumentException("jobId and jobName are missing");
         }
-        logger.info("Retrieve Job: %s '%s'", HttpMethod.GET.name(), url.toString());
-        return getJsonObject(HttpMethod.GET, url, null, ResponseJob.class);
+        logger.info("Retrieve Job: GET '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.GET, url, null, ResponseJob.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_o12_x1r_xt
@@ -209,15 +190,12 @@ public class HttpClient extends SOSRestApiClient {
         if (jobId == null) {
             throw new JobArgumentException("jobId is missing");
         }
-        // if (csrfToken == null) {
-        // fetchCSRFToken();
-        // }
         Map<String, Object> uriParameter = new HashMap<>(1);
         uriParameter.put("jobId", jobId);
         URI url = setUriPath("scheduler/jobs/{jobId}", uriParameter);
-        logger.info("Delete Job: %s '%s'", HttpMethod.DELETE.name(), url.toString());
+        logger.info("Delete Job: DELETE '%s'", url.toString());
         try {
-            getJson(HttpMethod.DELETE, url, null);
+            getJson(HTTP_METHOD.DELETE, url, null);
         } catch (SOSBadRequestException e) {
             if (Arrays.asList(400, 404).contains(e.getHttpCode())) {
                 logger.info("Job '%d' already deleted", jobId);
@@ -225,6 +203,8 @@ public class HttpClient extends SOSRestApiClient {
             } else {
                 throw e;
             }
+        } catch (Exception e) {
+            throw new SOSBadRequestException(e);
         }
         return true;
     }
@@ -234,13 +214,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param jobId
      * @param body
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseSchedule createSchedule(Long jobId, Schedule body) throws JsonParseException, JsonMappingException, SocketException, IOException,
-            SOSException {
+     * @throws Exception */
+    public ResponseSchedule createSchedule(Long jobId, Schedule body) throws Exception {
         return createSchedule(jobId, Globals.objectMapper.writeValueAsBytes(body));
     }
 
@@ -249,27 +224,19 @@ public class HttpClient extends SOSRestApiClient {
      * @param jobId
      * @param body
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public <B> ResponseSchedule createSchedule(Long jobId, B body) throws JsonParseException, JsonMappingException, SocketException, IOException,
-            SOSException {
+     * @throws Exception */
+    public <B> ResponseSchedule createSchedule(Long jobId, B body) throws Exception {
         if (jobId == null) {
             throw new JobArgumentException("jobId is missing");
         }
         if (body == null) {
             throw new JobArgumentException("Request body is missing");
         }
-        // if (csrfToken == null) {
-        // fetchCSRFToken();
-        // }
         Map<String, Object> uriParameter = new HashMap<>(1);
         uriParameter.put("jobId", jobId);
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules", uriParameter);
-        logger.info("Create Schedule: %s '%s'", HttpMethod.POST.name(), url.toString());
-        return getJsonObject(HttpMethod.POST, url, body, ResponseSchedule.class);
+        logger.info("Create Schedule: POST '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.POST, url, body, ResponseSchedule.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_n24_cyq_xt
@@ -277,13 +244,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param jobId
      * @param scheduleId
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseSchedule retrieveSchedule(Long jobId, String scheduleId) throws JsonParseException, JsonMappingException, SocketException,
-            IOException, SOSException {
+     * @throws Exception */
+    public ResponseSchedule retrieveSchedule(Long jobId, String scheduleId) throws Exception {
         if (jobId == null) {
             throw new JobArgumentException("jobId is missing");
         }
@@ -296,8 +258,8 @@ public class HttpClient extends SOSRestApiClient {
         Map<String, Object> queryParameter = new HashMap<>(1);
         queryParameter.put("displayLogs", true);
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}", uriParameter, queryParameter);
-        logger.info("Retrieve Schedule: %s '%s'", HttpMethod.GET.name(), url.toString());
-        return getJsonObject(HttpMethod.GET, url, null, ResponseSchedule.class);
+        logger.info("Retrieve Schedule: GET '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.GET, url, null, ResponseSchedule.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_hvh_gwq_xt
@@ -305,13 +267,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param jobId
      * @param scheduleId
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ResponseSchedule activateSchedule(Long jobId, String scheduleId) throws JsonParseException, JsonMappingException, SocketException,
-            IOException, SOSException {
+     * @throws Exception */
+    public ResponseSchedule activateSchedule(Long jobId, String scheduleId) throws Exception {
         if (jobId == null) {
             throw new JobArgumentException("jobId is missing");
         }
@@ -322,8 +279,8 @@ public class HttpClient extends SOSRestApiClient {
         uriParameter.put("jobId", jobId);
         uriParameter.put("scheduleId", scheduleId);
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}", uriParameter);
-        logger.info("Activate Schedule: %s '%s'", HttpMethod.PUT.name(), url.toString());
-        return getJsonObject(HttpMethod.PUT, url, Globals.objectMapper.writeValueAsBytes(new Schedule().withActive(true)), ResponseSchedule.class);
+        logger.info("Activate Schedule: PUT '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.PUT, url, Globals.objectMapper.writeValueAsBytes(new Schedule().withActive(true)), ResponseSchedule.class);
     }
 
     /** @see https://help.sap.com/viewer/07b57c2f4b944bcd8470d024723a1631/Cloud/en-US/e49a4b2a8b2d43d3a9e4629ba29521f4.html
@@ -331,13 +288,8 @@ public class HttpClient extends SOSRestApiClient {
      * @param scheduleId
      * @param runId
      * @return
-     * @throws JsonParseException
-     * @throws JsonMappingException
-     * @throws SocketException
-     * @throws IOException
-     * @throws SOSException */
-    public ScheduleLog retrieveScheduleLog(Long jobId, String scheduleId, String runId) throws JsonParseException, JsonMappingException,
-            SocketException, IOException, SOSException {
+     * @throws Exception */
+    public ScheduleLog retrieveScheduleLog(Long jobId, String scheduleId, String runId) throws Exception {
         if (jobId == null) {
             throw new JobArgumentException("jobId is missing");
         }
@@ -352,8 +304,8 @@ public class HttpClient extends SOSRestApiClient {
         uriParameter.put("scheduleId", scheduleId);
         uriParameter.put("runId", runId);
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}/runs/{runId}", uriParameter);
-        logger.info("Retrieve Schedule Run Log: %s '%s'", HttpMethod.GET.name(), url.toString());
-        return getJsonObject(HttpMethod.GET, url, null, ScheduleLog.class);
+        logger.info("Retrieve Schedule Run Log: GET '%s'", url.toString());
+        return getJsonObject(HTTP_METHOD.GET, url, null, ScheduleLog.class);
     }
 
     /** @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_usq_jbr_xt
@@ -370,16 +322,13 @@ public class HttpClient extends SOSRestApiClient {
         if (scheduleId == null) {
             throw new JobArgumentException("scheduleId is missing");
         }
-        // if (csrfToken == null) {
-        // fetchCSRFToken();
-        // }
         Map<String, Object> uriParameter = new HashMap<>(2);
         uriParameter.put("jobId", jobId);
         uriParameter.put("scheduleId", scheduleId);
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}", uriParameter);
-        logger.info("Delete Schedule: %s '%s'", HttpMethod.DELETE.name(), url.toString());
+        logger.info("Delete Schedule: DELETE '%s'", url.toString());
         try {
-            getJson(HttpMethod.DELETE, url, null);
+            getJson(HTTP_METHOD.DELETE, url, null);
         } catch (SOSBadRequestException e) {
             if (Arrays.asList(400, 404).contains(e.getHttpCode())) {
                 logger.info("Schedule '%d/%s' already deleted", jobId, scheduleId);
@@ -387,18 +336,10 @@ public class HttpClient extends SOSRestApiClient {
             } else {
                 throw e;
             }
+        } catch (Exception e) {
+            throw new SOSBadRequestException(e);
         }
         return true;
-    }
-
-    private void setProperties(CommonJobArguments jobArgs) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException,
-            CertificateException, IOException, SOSSSLException {
-        setAutoCloseHttpClient(false);
-        setAllowAllHostnameVerifier(jobArgs.getHostnameVerification().getValue());
-        setConnectionTimeout(jobArgs.getConnectionTimeout().getValue().intValue() * 1000);
-        setSocketTimeout(jobArgs.getSocketTimeout().getValue().intValue() * 1000);
-        setSSLContext(null, null, readTruststore(jobArgs));
-        setBasicAuthorization(getBasicAuthorization(jobArgs));
     }
 
     private static KeyStore readTruststore(CommonJobArguments jobArgs) throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
@@ -418,10 +359,6 @@ public class HttpClient extends SOSRestApiClient {
         } else {
             throw new JobArgumentException(String.format("truststore (%1$s) not found.", truststorePath.toString()));
         }
-    }
-
-    private static String getBasicAuthorization(CommonJobArguments jobArgs) {
-        return new String(Base64.getEncoder().encode((jobArgs.getUser().getValue() + ":" + jobArgs.getPwd().getValue()).getBytes()));
     }
 
     private URI setUriPath() {
@@ -454,36 +391,74 @@ public class HttpClient extends SOSRestApiClient {
         }
     }
 
-    // private <T extends JsonStructure, B> T getJsonObject(HttpMethod method, URI uri, B postBody) throws SocketException, SOSException {
-    // return getJsonStructure(getJson(method, uri, postBody));
-    // }
-
-    private <T, B> T getJsonObject(HttpMethod method, URI uri, B postBody, Class<T> clazz) throws JsonParseException, JsonMappingException,
-            SocketException, IOException, SOSException {
+    private <T, B> T getJsonObject(HTTP_METHOD method, URI uri, B postBody, Class<T> clazz) throws Exception {
         return getJsonObject(getJson(method, uri, postBody), clazz);
     }
 
-    private <B> byte[] getJson(HttpMethod method, URI uri, B postBody) throws SocketException, SOSException {
-        clearHeaders();
-        if (HttpMethod.POST.equals(method) || HttpMethod.PUT.equals(method)) {
-            addHeader("Content-Type", "application/json");
+    public <T, B> HttpExecutionResult<T> executeRestService(HTTP_METHOD method, URI uri, Map<String,String> requestHeaders, B body, 
+            HttpResponse.BodyHandler<T> handler) throws Exception {
+        HttpExecutionResult<T> result = null;
+        switch (method) {
+        case GET:
+            result = client.executeGET(uri, requestHeaders, handler);
+            break;
+        case POST:
+            result = client.executePOST(uri, requestHeaders, getBodyPublisher(body), handler);
+            break;
+        case PUT:
+            result = client.executePUT(uri, requestHeaders, getBodyPublisher(body), handler);
+            break;
+        case DELETE:
+            result = client.executeDELETE(uri, requestHeaders, handler);
+            break;
         }
-        // is default: addHeader("Accept", "application/json");
-        if (csrfToken != null) {
-            addHeader(csrfTokenHeaderKey, csrfToken);
+        if (result != null) {
+            addCookies(result);
         }
-        addCookieHeader();
-        if (logger.isDebugEnabled()) {
-            logger.debug(printHttpRequestHeaders());
-            if (postBody != null) {
-                if (postBody instanceof String) {
-                    logger.debug("Request Body: %s", (String) postBody);
-                } else if (postBody instanceof byte[]) {
-                    logger.debug("Request Body: %s", new String((byte[]) postBody, StandardCharsets.UTF_8));
-                }
+        return result;
+    }
+    
+    private <T> void addCookies(HttpExecutionResult<T> result) {
+        List<String> set_cookie_HeaderValues = result.response().headers().allValues("set-cookie");
+        if(set_cookie_HeaderValues != null) {
+            if(cookies == null) {
+                cookies = new ArrayList<String>();
             }
+            cookies.addAll(set_cookie_HeaderValues);
         }
-        return getJsonFromResponse(executeRestService(method, uri, postBody, byte[].class));
+    }
+
+    private <B> BodyPublisher getBodyPublisher(B body) {
+        BodyPublisher bodyPublisher;
+        if(body != null) {
+            if(body instanceof String) {
+                bodyPublisher = BodyPublishers.ofString((String)body);
+            } else if (body instanceof byte[]) {
+                bodyPublisher = BodyPublishers.ofByteArray((byte[])body);
+            } else {
+                // default
+                bodyPublisher = BodyPublishers.noBody();
+            }
+        } else {
+            bodyPublisher = BodyPublishers.noBody();
+        }
+        return bodyPublisher;
+    }
+    
+    private <B> byte[] getJson(HTTP_METHOD method, URI uri, B postBody) throws SOSException, Exception {
+        Map<String,String> requestHeaders = new HashMap<String, String>();
+        if (HTTP_METHOD.POST.equals(method) || HTTP_METHOD.PUT.equals(method)) {
+            requestHeaders.put("Content-Type", "application/json");
+        }
+        requestHeaders.put("Accept", "application/json");
+        if (csrfToken != null) {
+            requestHeaders.put(csrfTokenHeaderKey, csrfToken);
+        }
+        if(cookies != null) {
+            addCookieHeader(requestHeaders);
+        }
+        createClient();
+        return getJsonFromResponse(executeRestService(method, uri, requestHeaders, postBody, HttpResponse.BodyHandlers.ofByteArray()));
     }
 
     @SuppressWarnings("unchecked")
@@ -512,30 +487,26 @@ public class HttpClient extends SOSRestApiClient {
         return Globals.objectMapper.readValue(jsonStr, clazz);
     }
 
-    private byte[] getJsonFromResponse(byte[] response) throws SOSBadRequestException {
-        if (logger.isDebugEnabled()) {
-            logger.debug(printStatusLine());
-            logger.debug(printHttpResponseHeaders());
-        }
-        int httpReplyCode = statusCode();
+    private byte[] getJsonFromResponse(HttpExecutionResult<byte[]> result) throws SOSBadRequestException {
+        int httpReplyCode = result.response().statusCode();
         switch (httpReplyCode) {
         case 200:
         case 201:
-            if (logger.isDebugEnabled() && response != null) {
-                logger.debug("Response Body: %s", new String(response, StandardCharsets.UTF_8));
+            if (logger.isDebugEnabled() && result.response().body() != null) {
+                logger.debug("Response Body: %s", new String(result.response().body(), StandardCharsets.UTF_8));
             }
-            return response;
+            return result.response().body();
         default:
-            String errorMessage = getErrorMessage(response);
-            throw new SOSBadRequestException(httpReplyCode, String.format("%d %s%s", httpReplyCode, getHttpResponse().getStatusLine()
-                    .getReasonPhrase(), errorMessage.isEmpty() ? "" : ": " + errorMessage));
+            String errorMessage = getErrorMessage(result.response());
+            throw new SOSBadRequestException(httpReplyCode, String.format("%d %s%s", httpReplyCode, HttpUtils.getReasonPhrase(httpReplyCode),
+                    errorMessage.isEmpty() ? "" : ": " + errorMessage));
         }
     }
-
-    private <T> String getErrorMessage(byte[] response) {
-        String contentType = getResponseHeader("Content-Type");
+    
+    private String getErrorMessage(HttpResponse<byte[]> response) {
+        String contentType = response.headers().firstValue("Content-Type").orElse(null);
         if (contentType != null && contentType.contains("application/json")) {
-            JsonObject err = getJsonStructure(response);
+            JsonObject err = getJsonStructure(response.body());
             if (err != null) {
                 try {
                     return err.getJsonObject("error").getJsonObject("message").getString("value", "");
@@ -547,4 +518,49 @@ public class HttpClient extends SOSRestApiClient {
         return "";
     }
 
+    private void initHttpClientBuilder(CommonJobArguments jobArgs) throws JobArgumentException, KeyStoreException, NoSuchAlgorithmException,
+            CertificateException, IOException, KeyManagementException {
+        baseHttpClientBuilder = BaseHttpClient.withBuilder();
+        baseHttpClientBuilder.withConnectTimeout(Duration.ofSeconds(jobArgs.getConnectionTimeout().getValue()));
+        baseHttpClientBuilder.withLogger(logger);
+        KeyStore trustStore = readTruststore(jobArgs);
+        if (trustStore != null) {
+            baseHttpClientBuilder.withSSLContext(createSslContext(trustStore));
+        }
+        if (jobArgs.getUri().toString().startsWith("https:") && trustStore == null) {
+            if (jobArgs.getTruststorePath().getValue() != null) {
+                throw new JobArgumentException(String.format("truststore (%1$s) not found.", jobArgs.getTruststorePath().getValue().toString()));
+            } else {
+                throw new JobArgumentException("Couldn't find required truststore");
+            }
+        }
+        baseHttpClientBuilder.withAuth(jobArgs.getUser().getValue(), jobArgs.getPwd().getValue());
+    }
+    
+    public static SSLContext createSslContext(KeyStore sslTrustore) throws NoSuchAlgorithmException, KeyStoreException,
+            KeyManagementException {
+        TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        factory.init(sslTrustore);
+        SSLContext sslContext = SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
+        sslContext.init(null, factory.getTrustManagers(), null);
+        return sslContext;
+    }
+
+    private BaseHttpClient createClient() throws Exception {
+        if(client == null) {
+            client = baseHttpClientBuilder.build();
+        }
+        return client;
+    }
+    
+    private void addCookieHeader(Map<String,String> headers) {
+        headers.put("Cookie", String.join("; ", cookies));
+    }
+    
+    public void close() {
+        if(client != null) {
+            SOSClassUtil.closeQuietly(client);
+            client = null;
+        }
+    }
 }

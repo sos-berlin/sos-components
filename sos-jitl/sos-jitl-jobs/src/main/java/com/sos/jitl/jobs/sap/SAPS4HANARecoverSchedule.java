@@ -72,7 +72,9 @@ public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
                 }
             }
 
-            httpClient.closeHttpClient();
+            if (httpClient != null) {
+                httpClient.close();
+            }
         }
         step.getOutcome().setReturnCode(0);
     }
@@ -133,6 +135,8 @@ public class SAPS4HANARecoverSchedule extends Job<CommonJobArguments> {
                 logger.warn("Schedule (jobId=%d, scheduleId=%s) is already deleted", runIds.getJobId(), runIds.getScheduleId());
                 return true;
             }
+        } catch (Exception e) {
+            throw new SOSException(e);
         }
         return false;
     }

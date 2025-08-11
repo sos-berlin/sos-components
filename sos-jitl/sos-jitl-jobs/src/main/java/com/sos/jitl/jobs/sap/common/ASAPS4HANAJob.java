@@ -1,7 +1,5 @@
 package com.sos.jitl.jobs.sap.common;
 
-import java.io.IOException;
-import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -9,10 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.jitl.jobs.sap.common.bean.ResponseSchedule;
@@ -81,7 +76,7 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
 
         } finally {
             if (httpClient != null) {
-                httpClient.closeHttpClient();
+                httpClient.close();
             }
         }
 
@@ -100,14 +95,12 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         }
     }
 
-    private void activateSchedule(RunIds ids, HttpClient httpClient, ISOSLogger logger) throws JsonParseException, JsonMappingException,
-            SocketException, IOException, SOSException {
+    private void activateSchedule(RunIds ids, HttpClient httpClient, ISOSLogger logger) throws Exception {
         httpClient.activateSchedule(ids.getJobId(), ids.getScheduleId());
         logger.info("Schedule jobId=%d scheduleId=%s is activated", ids.getJobId(), ids.getScheduleId());
     }
 
-    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, ISOSLogger logger) throws JsonParseException,
-            JsonMappingException, SocketException, IOException, SOSException {
+    private boolean pollSchedule(CommonJobArguments args, HttpClient httpClient, ISOSLogger logger) throws Exception {
 
         Long interval = args.getCheckInterval().getValue();
         if (interval <= 0) {
@@ -129,8 +122,7 @@ public abstract class ASAPS4HANAJob extends Job<CommonJobArguments> {
         return result;
     }
 
-    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, ISOSLogger logger) throws JsonParseException,
-            JsonMappingException, SocketException, IOException, SOSException {
+    private boolean checkSchedule(CommonJobArguments args, HttpClient httpClient, boolean firstStep, ISOSLogger logger) throws Exception {
         RunIds runIds = args.getIds();
         ScheduleLog scheduleLog = new ScheduleLog().withRunStatus("UNKNOWN");
         try {

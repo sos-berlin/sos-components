@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -337,6 +338,14 @@ public class HttpUtils {
             }
         }
         return reason;
+    }
+    
+    public static String createUrlEncodedBodyfromMap(Map<String,String> keyValuePairs) {
+        return keyValuePairs.entrySet().stream().map(entry -> 
+                URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8)
+                .concat("=")
+                .concat(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)))
+            .collect(Collectors.joining("&"));
     }
 
     private static String getReasonPhraseFromOfficialCodes(int code) {

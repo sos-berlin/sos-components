@@ -35,13 +35,11 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             filterBytes = initLogging(LOG_API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
-
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(urlParamSchema.getControllerId(), accessToken)
                     .map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
             if (controllerInstances.size() > 1) { // is cluster
                 checkRequiredParameter("url", urlParamSchema.getUrl());
@@ -51,14 +49,10 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             } else {
                 urlParamSchema.setUrl(controllerInstances.get(0).getUri());
             }
-
             // increase timeout for large log files
             int socketTimeout = Math.max(Globals.httpSocketTimeout, 30000);
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParamSchema.getUrl(), getAccessToken());
-            jocJsonCommand.setAutoCloseHttpClient(false);
-            jocJsonCommand.setSocketTimeout(socketTimeout);
             jocJsonCommand.setUriBuilderForMainLog(true);
-
             return responseOctetStreamDownloadStatus200(jocJsonCommand.getStreamingOutputFromGet(
                     "text/plain,application/octet-stream", true), "controller.log.gz");
         } catch (Exception e) {
@@ -68,7 +62,6 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
 
     @Override
     public JOCDefaultResponse getDebugLog(String accessToken, String queryAccessToken, String controllerId, String url) {
-
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }

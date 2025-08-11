@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -15,11 +16,12 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
+//import org.apache.http.ssl.SSLContextBuilder;
+//import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import js7.base.generic.SecretString;
@@ -98,26 +100,34 @@ public class SSLContext {
         loadHttpsConfig();
         if (keystore != null || truststore != null) {
             try {
-                SSLContextBuilder sslContextBuilder = SSLContexts.custom();
-                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory
-                        .getDefaultAlgorithm()));
-                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
-                        TrustManagerFactory.getDefaultAlgorithm()));
+//                SSLContextBuilder sslContextBuilder = SSLContexts.custom();
+                KeyManagerFactory keyManager = KeyManagerFactory.getInstance(
+                        sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory.getDefaultAlgorithm()));
+                TrustManagerFactory trustManager = TrustManagerFactory.getInstance(
+                        sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", TrustManagerFactory.getDefaultAlgorithm()));
+//                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory
+//                        .getDefaultAlgorithm()));
+//                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
+//                        TrustManagerFactory.getDefaultAlgorithm()));
                 if (keystore != null) {
-                    if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
-                        if (keystore.containsAlias(keystoreAlias)) {
-                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars, (aliases, socket) -> keystoreAlias);
-                        } else {
-                            throw new JocConfigurationException("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
-                        }
-                    } else {
-                        sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
-                    }
+//                    if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
+//                        if (keystore.containsAlias(keystoreAlias)) {
+//                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars, (aliases, socket) -> keystoreAlias);
+//                        } else {
+//                            throw new JocConfigurationException("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
+//                        }
+//                    } else {
+//                        sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
+//                    }
+                    keyManager.init(keystore, keyPassChars);
                 }
                 if (truststore != null) {
-                    sslContextBuilder.loadTrustMaterial(truststore, null);
+//                    sslContextBuilder.loadTrustMaterial(truststore, null);
+                    trustManager.init(truststore);
                 }
-                netSSlContext = sslContextBuilder.build();
+//                netSSlContext = sslContextBuilder.build();
+                netSSlContext = javax.net.ssl.SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
+                netSSlContext.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
             } catch (GeneralSecurityException e) {
                 if (e.getCause() != null) {
                     LOGGER.error("", e.getCause());
@@ -354,5 +364,14 @@ public class SSLContext {
             pass = "";
         }
         return SecretString.apply(pass);
+    }
+
+    public static javax.net.ssl.SSLContext createSslContext(KeyStore sslTrustore) throws NoSuchAlgorithmException, KeyStoreException, 
+            KeyManagementException {
+        TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        factory.init(sslTrustore);
+        javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
+        sslContext.init(null, factory.getTrustManagers(), null);
+        return sslContext;
     }
 }

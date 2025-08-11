@@ -51,7 +51,6 @@
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.text.version>1.11.0</apache.commons.text.version>
     <apache.commons.net.version>3.11.1</apache.commons.net.version>
-    <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
     <json.version>1.1.4</json.version>
     <servlet.version>6.0.0</servlet.version>
     <hibernate.version>6.6.14.Final</hibernate.version>
@@ -587,14 +586,9 @@
         <version>${apache.commons.csv.version}</version>
       </dependency>
       <dependency>
-		<groupId>org.apache.commons</groupId>
-		<artifactId>commons-text</artifactId>
-		<version>${apache.commons.text.version}</version>
-		</dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>${apache.httpcomponents.httpclient.version}</version>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${apache.commons.text.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>

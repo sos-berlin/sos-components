@@ -1,6 +1,5 @@
 package com.sos.auth.keycloak;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.security.KeyStore;
 import java.time.Instant;
@@ -15,10 +14,8 @@ import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.keycloak.classes.SOSKeycloakAccountAccessToken;
 import com.sos.auth.keycloak.classes.SOSKeycloakWebserviceCredentials;
 import com.sos.auth.openid.classes.SOSOpenIdAccountAccessToken;
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.JocException;
 
 public class SOSKeycloakSession implements ISOSSession {
 
@@ -29,7 +26,6 @@ public class SOSKeycloakSession implements ISOSSession {
     private Long lastTouch;
     private Long initSessionTimeout;
     private SOSKeycloakHandler sosKeycloakHandler;
-
     private Map<String, Object> attributes;
 
     public SOSKeycloakSession(SOSIdentityService identityService) {
@@ -49,14 +45,11 @@ public class SOSKeycloakSession implements ISOSSession {
             SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             try {
                 webserviceCredentials.setValuesFromProfile(identityService);
-
                 KeyStore truststore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTruststorePath(), webserviceCredentials
                         .getTrustStoreType(), webserviceCredentials.getTruststorePassword());
-
                 webserviceCredentials.setAccount("");
                 sosKeycloakHandler = new SOSKeycloakHandler(webserviceCredentials, truststore);
                 startSession = Instant.now().toEpochMilli();
-
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
@@ -70,7 +63,6 @@ public class SOSKeycloakSession implements ISOSSession {
 
     @Override
     public Object getAttribute(Object key) {
-
         return getAttributes().get(key);
     }
 
@@ -105,7 +97,6 @@ public class SOSKeycloakSession implements ISOSSession {
 
     @Override
     public void touch() {
-
         lastTouch = Instant.now().toEpochMilli();
         if (initSessionTimeout == null) {
             if (Globals.iamSessionTimeout != null) {
@@ -114,7 +105,6 @@ public class SOSKeycloakSession implements ISOSSession {
                 initSessionTimeout = 30 * 60 * 1000L;
             }
         }
-
     }
 
     @Override
@@ -137,7 +127,7 @@ public class SOSKeycloakSession implements ISOSSession {
                 this.stop();
                 return false;
             }
-        } catch (JocException | SOSException | IOException e) {
+        } catch (Exception e) {
             LOGGER.error("", e);
             return false;
         }

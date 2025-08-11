@@ -1,13 +1,19 @@
 package com.sos.joc.classes;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.GZIPOutputStream;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,10 +23,13 @@ import javax.json.JsonStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+import com.sos.commons.httpclient.BaseHttpClient;
+import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
+import com.sos.commons.util.http.HttpUtils;
+import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -32,7 +41,6 @@ import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.ControllerServiceUnavailableException;
-import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -41,7 +49,7 @@ import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
 import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.core.UriBuilder;
 
-public class JOCJsonCommand extends SOSRestApiClient {
+public class JOCJsonCommand {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCJsonCommand.class);
     private static final String CONTROLLER_API_PATH = "/controller/api";
@@ -49,22 +57,24 @@ public class JOCJsonCommand extends SOSRestApiClient {
     private JOCResourceImpl jocResourceImpl;
     private String url = null;
     private String csrfToken = null;
+    private BaseHttpClient client;
+    private BaseHttpClient.Builder baseHttpClientBuilder;
     public static Map<String, String> urlMapper = Collections.emptyMap();
     
     public JOCJsonCommand() {
-        setProperties();
+        init();
     }
 
     public JOCJsonCommand(DBItemInventoryJSInstance dbItemInventoryInstance, String csrfToken) {
         this.url = urlMapper.getOrDefault(dbItemInventoryInstance.getUri(), dbItemInventoryInstance.getUri());
         this.csrfToken = csrfToken;
-        setProperties();
+        init();
     }
     
     public JOCJsonCommand(String uri, String csrfToken) {
         this.url = urlMapper.getOrDefault(uri, uri);
         this.csrfToken = csrfToken;
-        setProperties();
+        init();
     }
 
     public JOCResourceImpl getJOCResourceImpl() {
@@ -206,11 +216,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
     	return getJsonStructure(getJsonStringFromPost(postBody));
     }
     
-	public <T> T getJsonObjectFromPost(String postBody, Class<T> clazz) throws JocException {
-		return getJsonObject(getJsonStringFromPost(postBody), clazz);
-	}
-    
-    public String getJsonStringFromPost(String postBody) throws JocException {
+    private String getJsonStringFromPost(String postBody) throws JocException {
         try {
             return getJsonStringFromPost(getURI(), postBody);
         } catch (JocException e) {
@@ -220,10 +226,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public String getJsonStringFromPost(URI uri, String postBody) throws JocException {
-        addHeader("Content-Type", "application/json");
-        addHeader("Accept", "application/json");
-        addHeader("X-CSRF-Token", getCsrfToken());
+    private String getJsonStringFromPost(URI uri, String postBody) throws JocException {
         if (postBody == null) {
             postBody = "";
         }
@@ -231,26 +234,17 @@ public class JOCJsonCommand extends SOSRestApiClient {
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
         LOGGER.debug("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
         try {
-            String response = postRestService(uri, postBody);
-            return getJsonStringFromResponse(response, uri, jocError);
+            createClient();
+            HttpExecutionResult<String> result = client.executePOST(uri, 
+                    Map.of("Content-Type", "application/json", "Accept", "application/json", "X-CSRF-Token", getCsrfToken()), 
+                    postBody);
+            return getJsonStringFromResponse(result, uri, jocError);
         } catch (SOSConnectionResetException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionResetException(e.toString(), e);
-            }
+            throw new ControllerConnectionResetException(e.toString(), e);
         } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionRefusedException(e.toString(), e);
-            }
+            throw new ControllerConnectionRefusedException(e.toString(), e);
         } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerNoResponseException(e.toString(), e);
-            }
+            throw new ControllerNoResponseException(e.toString(), e);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
@@ -258,91 +252,67 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-    public Path getFilePathFromGet(URI uri, String prefix, String acceptHeader, boolean withGzipEncoding) throws JocException {
-        if (acceptHeader != null && !acceptHeader.isEmpty()) {
-            addHeader("Accept", acceptHeader);
-        }
-        addHeader("Accept-Encoding", "gzip");
-        addHeader("X-CSRF-Token", getCsrfToken());
-        JocError jocError = new JocError();
-        jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
+    public StreamingOutput getStreamingOutputFromGet(String acceptHeader, boolean withGzipEncoding) {
         try {
-            return getFilePathFromResponse(getFilePathByRestService(uri, prefix, withGzipEncoding), uri, jocError);
-        } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionRefusedException(e.toString(), e);
-            }
-        } catch (SOSConnectionResetException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionResetException(e.toString(), e);
-            }
+            return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding, getCsrfToken());
         } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerNoResponseException(e.toString(), e);
-            }
-        } catch (JocException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JocBadRequestException(jocError, e);
+            throw new ControllerNoResponseException(e.toString(), e);
         }
     }
     
-    public StreamingOutput getStreamingOutputFromGet(String acceptHeader, boolean withGzipEncoding) throws JocException {
-        return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding);
-    }
-    
-    public StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding) throws JocException {
+    private StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding, String csrfToken)
+            throws SOSNoResponseException {
+        Map<String,String> headers = new HashMap<String, String>();
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
-            addHeader("Accept", acceptHeader);
+            headers.put("Accept", acceptHeader);
         }
         if (withGzipEncoding) {
-            addHeader("Accept-Encoding", "gzip");
+            headers.put("Accept-Encoding", "gzip");
         }
-        addHeader("X-CSRF-Token", getCsrfToken());
+        headers.put("X-CSRF-Token", csrfToken);
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
+        StreamingOutput fileStream = null;
         try {
-            return getStreamingOutputFromResponse(getStreamingOutputByRestService(uri, withGzipEncoding), uri, jocError);
-        } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionRefusedException(e.toString(), e);
+            createClient();
+            HttpExecutionResult<InputStream> result = client.executeGET(uri, headers, HttpResponse.BodyHandlers.ofInputStream());
+            if (result != null && result.response() != null) {
+                final InputStream instream = result.response().body();
+                fileStream = new StreamingOutput() {
+                    @Override
+                    public void write(OutputStream output) throws IOException {
+                        if (withGzipEncoding) {
+                            output = new GZIPOutputStream(output);
+                        }
+                        try {
+                            byte[] buffer = new byte[4096];
+                            int length;
+                            while ((length = instream.read(buffer)) > 0) {
+                                output.write(buffer, 0, length);
+                            }
+                            output.flush();
+                        } finally {
+                            try {
+                                output.close();
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                };
             }
-        } catch (SOSConnectionResetException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionResetException(e.toString(), e);
-            }
-        } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerNoResponseException(e.toString(), e);
-            }
-        } catch (JocException e) {
-            throw e;
+            return fileStream;
         } catch (Exception e) {
-            throw new JocBadRequestException(jocError, e);
+            throw new SOSNoResponseException(e);
+        } catch (Throwable e) {
+            throw e;
         }
     }
 
-    public <T extends JsonStructure> T getJsonObjectFromGet() throws JocException {
-    	return getJsonStructure(getJsonStringFromGet());
-    }
-    
-    public <T> T getJsonObjectFromGet(Class<T> clazz) throws JocException {
+    public <T> T getJsonObjectFromGet(Class<T> clazz) {
 		return getJsonObject(getJsonStringFromGet(), clazz);
 	}
     
-    public String getJsonStringFromGet() throws JocException {
+    private String getJsonStringFromGet() throws JocException {
         try {
             return getJsonStringFromGet(getURI());
         } catch (JocException e) {
@@ -352,34 +322,20 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
 
-    public String getJsonStringFromGet(URI uri) throws JocException {
-        addHeader("Accept", "application/json");
-        addHeader("X-CSRF-Token", getCsrfToken());
+    public String getJsonStringFromGet(URI uri) {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
-            //LOGGER.info(uri.toString());
-            String response = getRestService(uri);
-            //LOGGER.info(response);
-            return getJsonStringFromResponse(response, uri, jocError);
+            createClient();
+            HttpExecutionResult<String> result = client.executeGET(uri, Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken()),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            return getJsonStringFromResponse(result, uri, jocError);
         } catch (SOSConnectionRefusedException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionRefusedException(e.toString(), e);
-            }
+            throw new ControllerConnectionRefusedException(e.toString(), e);
         } catch (SOSConnectionResetException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerConnectionResetException(e.toString(), e);
-            }
+            throw new ControllerConnectionResetException(e.toString(), e);
         } catch (SOSNoResponseException e) {
-            if (isForcedClosingHttpClient()) {
-                throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
-            } else {
-                throw new ControllerNoResponseException(e.toString(), e);
-            }
+            throw new ControllerNoResponseException(e.toString(), e);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
@@ -394,23 +350,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
         return csrfToken;
     }
     
-    private void setProperties() throws ControllerConnectionRefusedException {
-        setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
-        setConnectionTimeout(Globals.httpConnectionTimeout);
-        setSocketTimeout(Globals.httpSocketTimeout);
-        setSSLContext(SSLContext.getInstance().getSSLContext());
+    private void init() throws ControllerConnectionRefusedException {
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
+                .withLogger(new SLF4JLogger(LOGGER)).withSSLContext(SSLContext.getInstance().getSSLContext());
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new ControllerConnectionRefusedException("Couldn't find required truststore");
         }
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {
             //LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));
-            setBasicAuthorization(ProxyUser.getBasicAuthorization(evt.getUser(), evt.getPwd()));
+            baseHttpClientBuilder.withAuth(evt.getUser(), evt.getPwd());
         } else {
-            setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
+            baseHttpClientBuilder.withAuth(ProxyUser.JOC.getUser(), ProxyUser.JOC.getPwd());
         }
-//        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC
-//                .getBasicAuthorization()));
     }
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
@@ -427,41 +379,41 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-	private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws ControllerInvalidResponseDataException {
-		try {
-			if (jsonStr == null) {
-				return null;
-			}
-			return Globals.objectMapper.readValue(jsonStr, clazz);
-		} catch (Exception e) {
-			throw new ControllerInvalidResponseDataException(e);
-		}
-	}
+    private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws ControllerInvalidResponseDataException {
+        try {
+            if (jsonStr == null) {
+                return null;
+            }
+            return Globals.objectMapper.readValue(jsonStr, clazz);
+        } catch (Exception e) {
+            throw new ControllerInvalidResponseDataException(e);
+        }
+    }
 
-    private String getJsonStringFromResponse(String response, URI uri, JocError jocError) throws JocException {
-        int httpReplyCode = statusCode();
-        String contentType = getResponseHeader("Content-Type");
+    private String getJsonStringFromResponse(HttpExecutionResult<String> result, URI uri, JocError jocError) {
+        int httpReplyCode = result.response().statusCode();
+        List<String> contentTypes = result.response().headers().allValues("Content-Type");
+        String response = result.response().body();
         if (response == null) {
             response = "";
         }
-        
+        String actualContentType = result.response().headers().firstValue("Content-Type").orElse("");
         // TODO Async call while JobScheduler is terminating 
 //        if (response.contains("com.sos.scheduler.engine.common.async.CallQueue$ClosedException")) {
 //            throw new JobSchedulerConnectionResetException(response);
 //        }
-
         try {
             switch (httpReplyCode) {
             case 200:
-                if (contentType.contains("application/json")) {
+                if (contentTypes.contains("application/json")) {
                     if (response.isEmpty()) {
                         throw new ControllerNoResponseException("Unexpected empty response");
                     }
                     LOGGER.debug(response.toString());
                     return response;
                 } else {
-                    throw new ControllerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
-                            response));
+                    throw new ControllerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", 
+                            actualContentType, response));
                 }
             case 201:
                 return response;
@@ -472,57 +424,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
 //              if (type.equals("Problem")) {  //TODO all are problems. Use code later, but yet not always inside the answer
 //                  throw new JobSchedulerObjectNotExistException(msg);
 //              }
-                throw new JocBadRequestException(getJsonErrorMessage(contentType, response, uri));
+                throw new JocBadRequestException(getJsonErrorMessage(actualContentType, response, uri));
             case 409:
-                throw new ControllerConflictException(getJsonErrorMessage(contentType, response, uri));
+                throw new ControllerConflictException(getJsonErrorMessage(actualContentType, response, uri));
             case 503:
                 //TODO consider code=ControllerIsNotYetReady for passive cluster node
-                throw new ControllerServiceUnavailableException(getJsonErrorMessage(contentType, response, uri));
+                throw new ControllerServiceUnavailableException(getJsonErrorMessage(actualContentType, response, uri));
             default:
-                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
-            }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(jocError);
-            throw e;
-        }
-    }
-    
-    private Path getFilePathFromResponse(Path response, URI uri, JocError jocError) throws JocException {
-        int httpReplyCode = statusCode();
-        try {
-            switch (httpReplyCode) {
-            case 200:
-                try {
-                    if (response == null || Files.size(response) <= 0) {
-                        throw new ControllerNoResponseException("Unexpected empty response");
-                    }
-                } catch (IOException e) {
-                    throw new ControllerNoResponseException("Unexpected empty response");
-                }
-                return response;
-            default:
-                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
-            }
-        } catch (JocException e) {
-            e.addErrorMetaInfo(jocError);
-            try {
-                Files.deleteIfExists(response);
-            } catch (IOException e1) {}
-            throw e;
-        }
-    }
-    
-    private StreamingOutput getStreamingOutputFromResponse(StreamingOutput streamingOutPut, URI uri, JocError jocError) throws JocException {
-        int httpReplyCode = statusCode();
-        try {
-            switch (httpReplyCode) {
-            case 200:
-                if (streamingOutPut == null ) {
-                    throw new ControllerNoResponseException("Unexpected empty response");
-                }
-                return streamingOutPut;
-            default:
-                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+                throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(jocError);
@@ -536,7 +445,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
                 JsonReader rdr = Json.createReader(new StringReader(response));
                 JsonObject json = rdr.readObject();
                 rdr.close();
-//                String type = json.getString("TYPE", "");
                 String msg = json.getString("message", null);
                 String code = json.getString("code", null);
                 if (msg == null) {
@@ -554,4 +462,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
             return uri.toString();
         }
     }
+    
+    private BaseHttpClient createClient() throws Exception {
+        if(client == null) {
+            client = baseHttpClientBuilder.build();
+        }
+        return client;
+    }
+    
 }
