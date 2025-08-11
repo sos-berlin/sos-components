@@ -77,6 +77,7 @@
     <keepass.java2.version>2.2.1</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>32.1.1-jre</guava.version>
+    <sshj.version>0.40.0</sshj.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
     <jna.version>5.17.0</jna.version>
