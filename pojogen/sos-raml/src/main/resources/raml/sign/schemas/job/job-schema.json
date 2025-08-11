@@ -45,6 +45,10 @@
 		"type": "boolean",
 		"default": false
 	},
+    "killAtEndOfAdmissionPeriod": {
+        "type": "boolean",
+        "default": false
+    },
     "returnCodeMeaning": {
       "$ref": "jobReturnCode-schema.json"
     },

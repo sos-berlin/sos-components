@@ -218,6 +218,7 @@ public class JsonSerializer {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     //job.setProcessLimit(defaultToNull(job.getProcessLimit(), 1));
                     job.setDefaultArguments(emptyEnvToNull(job.getDefaultArguments()));
+                    job.setKillAtEndOfAdmissionPeriod(defaultToNull(job.getKillAtEndOfAdmissionPeriod(), Boolean.FALSE));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
@@ -243,6 +244,7 @@ public class JsonSerializer {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     job.setWarnOnErrWritten(defaultToNull(job.getWarnOnErrWritten(), Boolean.FALSE));
                     job.setWithSubagentClusterIdExpr(defaultToNull(job.getWithSubagentClusterIdExpr(), Boolean.FALSE));
+                    job.setKillAtEndOfAdmissionPeriod(defaultToNull(job.getKillAtEndOfAdmissionPeriod(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
                     job.setDefaultArguments(emptyEnvToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());

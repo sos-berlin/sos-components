@@ -28,6 +28,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "executable",
     "admissionTimeScheme",
     "skipIfNoAdmissionStartForOrderDay",
+    "killAtEndOfAdmissionPeriod",
     "returnCodeMeaning",
     "processLimit",
     "timeout",
@@ -82,6 +83,8 @@ public class Job {
         "skipIfNoAdmissionForOrderDay"
     })
     private Boolean skipIfNoAdmissionStartForOrderDay = false;
+    @JsonProperty("killAtEndOfAdmissionPeriod")
+    private Boolean killAtEndOfAdmissionPeriod = false;
     /**
      * job return code meaning
      * <p>
@@ -159,10 +162,11 @@ public class Job {
      * @param processLimit
      * @param defaultArguments
      * @param jobResourcePaths
+     * @param killAtEndOfAdmissionPeriod
      * @param skipIfNoAdmissionStartForOrderDay
      * @param isNotRestartable
      */
-    public Job(String agentPath, String subagentBundleId, String subagentBundleIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
+    public Job(String agentPath, String subagentBundleId, String subagentBundleIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, Boolean killAtEndOfAdmissionPeriod, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
         super();
         this.agentPath = agentPath;
         this.subagentBundleId = subagentBundleId;
@@ -170,6 +174,7 @@ public class Job {
         this.executable = executable;
         this.admissionTimeScheme = admissionTimeScheme;
         this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
+        this.killAtEndOfAdmissionPeriod = killAtEndOfAdmissionPeriod;
         this.returnCodeMeaning = returnCodeMeaning;
         this.processLimit = processLimit;
         this.timeout = timeout;
@@ -270,6 +275,16 @@ public class Job {
     @JsonProperty("skipIfNoAdmissionStartForOrderDay")
     public void setSkipIfNoAdmissionStartForOrderDay(Boolean skipIfNoAdmissionStartForOrderDay) {
         this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
+    }
+
+    @JsonProperty("killAtEndOfAdmissionPeriod")
+    public Boolean getKillAtEndOfAdmissionPeriod() {
+        return killAtEndOfAdmissionPeriod;
+    }
+
+    @JsonProperty("killAtEndOfAdmissionPeriod")
+    public void setKillAtEndOfAdmissionPeriod(Boolean killAtEndOfAdmissionPeriod) {
+        this.killAtEndOfAdmissionPeriod = killAtEndOfAdmissionPeriod;
     }
 
     /**
@@ -406,12 +421,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentBundleId", subagentBundleId).append("subagentBundleIdExpr", subagentBundleIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentBundleId", subagentBundleId).append("subagentBundleIdExpr", subagentBundleIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("killAtEndOfAdmissionPeriod", killAtEndOfAdmissionPeriod).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sigkillDelay).append(failOnErrWritten).append(subagentBundleId).append(subagentBundleIdExpr).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
+        return new HashCodeBuilder().append(sigkillDelay).append(failOnErrWritten).append(subagentBundleId).append(subagentBundleIdExpr).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
     }
 
     @Override
@@ -423,7 +438,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(subagentBundleId, rhs.subagentBundleId).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
+        return new EqualsBuilder().append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(subagentBundleId, rhs.subagentBundleId).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
     }
 
 }
