@@ -41,9 +41,9 @@ public class AzureBlobStorageResource {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("fullPath=").append(fullPath);
+        sb.append("isDirectory=").append(isDirectory);
+        sb.append(", fullPath=").append(fullPath);
         sb.append(", blobPath=").append(blobPath);
-        sb.append(", isDirectory=").append(isDirectory);
         sb.append(", size=").append(size);
         sb.append(", lastModifiedInMillis=").append(lastModifiedInMillis);
         return sb.toString();

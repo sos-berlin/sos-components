@@ -22,6 +22,8 @@ import com.sos.commons.xml.transform.SOSXmlTransformer;
 
 public class AzureBlobStorageProviderUtils {
 
+    private static final String ROOT_FOLDER = "/";
+
     // possible recursion
     public static List<ProviderFile> selectFiles(AzureBlobStorageProvider provider, ProviderFileSelection selection, String containerName,
             String directoryPath, List<ProviderFile> result) throws Exception {
@@ -87,15 +89,24 @@ public class AzureBlobStorageProviderUtils {
         }
 
         Set<String> subDirectories = new HashSet<>();
+        int i = 0;
         for (AzureBlobStorageResource resource : parseAzureBlobResources(provider, containerName, directoryPath, executeResult, selection.getConfig()
                 .isRecursive())) {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
+
+            i++;
+            if (provider.getLogger().isDebugEnabled()) {
+                provider.getLogger().debug("%s[list][%s]%s", provider.getLogPrefix(), i, resource);
+            }
             if (resource.isDirectory()) {
                 if (selection.getConfig().isRecursive()) {
-                    if (selection.checkDirectory(resource.getBlobPath())) {
-                        subDirectories.add(resource.getBlobPath());
+                    // root folder already processed
+                    if (!isRootFolder(resource.getBlobPath())) {
+                        if (selection.checkDirectory(resource.getBlobPath())) {
+                            subDirectories.add(resource.getBlobPath());
+                        }
                     }
                 }
             } else {
@@ -103,7 +114,8 @@ public class AzureBlobStorageProviderUtils {
                     ProviderFile file = provider.createProviderFile(resource);
                     if (file == null) {
                         if (provider.getLogger().isDebugEnabled()) {
-                            provider.getLogger().debug(provider.getPathOperationPrefix(resource.getFullPath()) + "[skip]" + resource);
+                            provider.getLogger().debug("%s[list][%s][skip][fullPath=%s]ProviderFile is null", provider.getLogPrefix(), i, resource
+                                    .getFullPath());
                         }
                     } else {
                         if (selection.checkProviderFileMinMaxSize(file)) {
@@ -113,7 +125,7 @@ public class AzureBlobStorageProviderUtils {
                             result.add(file);
 
                             if (provider.getLogger().isDebugEnabled()) {
-                                provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
+                                provider.getLogger().debug("%s[list][%s][added][fullPath]%s", provider.getLogPrefix(), i, resource.getFullPath());
                             }
                         }
                     }
@@ -149,7 +161,9 @@ public class AzureBlobStorageProviderUtils {
             }
             String resourcePath = SOSXML.getChildNodeValue(blob, "Name");
             if (SOSString.isEmpty(resourcePath)) {
-                provider.getLogger().debug("[parseAzureBlobResources][%s][skip]missing Name", i);
+                if (isDebugEnabled) {
+                    provider.getLogger().debug("[parseAzureBlobResources][%s][file][skip]missing Name", i);
+                }
                 continue;
             }
             resources.add(new AzureBlobStorageResource(containerName, resourcePath, false, extractSize(blob), extractLastModified(blob)));
@@ -164,6 +178,16 @@ public class AzureBlobStorageProviderUtils {
                             .nodeToString(blob));
                 }
                 String resourcePath = SOSXML.getChildNodeValue(blob, "Name");
+                if (SOSString.isEmpty(resourcePath)) {
+                    if (isDebugEnabled) {
+                        provider.getLogger().debug("[parseAzureBlobResources][%s][directory][skip]missing Name", i);
+                    }
+                    continue;
+                }
+                // root folder already processed
+                if (isRootFolder(resourcePath)) {
+                    continue;
+                }
                 resources.add(new AzureBlobStorageResource(containerName, resourcePath, true, -1L, HttpUtils.DEFAULT_LAST_MODIFIED));
             }
         }
@@ -188,6 +212,13 @@ public class AzureBlobStorageProviderUtils {
         }
 
         return HttpUtils.httpDateToMillis(lastModified);
+    }
+
+    private static boolean isRootFolder(String directoryPath) {
+        if (directoryPath == null) {
+            return true;
+        }
+        return ROOT_FOLDER.equals(directoryPath);
     }
 
 }
