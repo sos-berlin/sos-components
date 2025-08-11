@@ -46,7 +46,7 @@
     <javassist.version>3.29.2-GA</javassist.version>
     <log4j2.version>2.24.3</log4j2.version>
     <commons.io.version>2.15.1</commons.io.version>
-    <apache.commons.lang.version>3.14.0</apache.commons.lang.version>
+    <apache.commons.lang.version>3.18.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.text.version>1.11.0</apache.commons.text.version>
@@ -70,7 +70,7 @@
     <io.vavr.version>0.10.6</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-    <bouncycastle.version>1.80</bouncycastle.version>
+    <bouncycastle.version>1.81</bouncycastle.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
