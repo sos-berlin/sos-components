@@ -1141,7 +1141,7 @@ public class DailyPlanRunner extends TimerTask {
                                     }
                                 } else {
                                     if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("%s[NonWorkingDays][skip]day=%s", logPrefix, actDateAsString));
+                                        LOGGER.debug(String.format("%s[NonWorkingDays][skip][allowedPeriods=0]day=%s", logPrefix, actDateAsString));
                                     }
                                 }
                             }
