@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -118,6 +119,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
                 dbItem.setShared(ConfigurationGlobals.SHARED);
                 dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
+                
+                Optional<JsonObject> oldJsonObj = StoreSettingsImpl.getJsonObject(oldConfiguration);
+                Optional<JsonObject> newJsonObj = StoreSettingsImpl.getJsonObject(configuration.getConfigurationItem());
 
                 if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     if (get4EyesJocPermissions().getAdministration().getSettings().getManage()) {
@@ -127,10 +131,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         }
                     }
                     // store only user settings without permissions
-                    configuration.setConfigurationItem(StoreSettingsImpl.updateOnlyUserSection(configuration.getConfigurationItem(), oldConfiguration,
-                            getJocError()));
+                    configuration.setConfigurationItem(StoreSettingsImpl.updateOnlyUserSection(configuration.getConfigurationItem(), newJsonObj,
+                            oldJsonObj, getJocError()));
                 } else {
-                    updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(configuration.getConfigurationItem(), oldConfiguration);
+                    StoreSettingsImpl.approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, connection);
+                    updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(newJsonObj, oldJsonObj);
                 }
                 break;
             case IAM:

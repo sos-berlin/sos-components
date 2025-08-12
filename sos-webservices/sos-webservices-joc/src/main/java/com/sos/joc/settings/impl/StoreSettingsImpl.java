@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.time.Instant;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -11,19 +12,24 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+import javax.json.JsonValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.security.IamRoleDBLayer;
+import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
@@ -67,12 +73,18 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             DBItemJocConfiguration oldCfg = jocConfigurationDBLayer.getGlobalSettingsConfiguration();
             String oldConfigurationItem = oldCfg == null ? ConfigurationGlobals.DEFAULT_CONFIGURATION_ITEM : oldCfg.getConfigurationItem();
             
+            Optional<JsonObject> oldJsonObj = getJsonObject(oldConfigurationItem);
+            Optional<JsonObject> newJsonObj = getJsonObject(cfg.getConfigurationItem());
+            
             if (!settingsPermission) {
                 // store only user settings without permissions
-                cfg.setConfigurationItem(updateOnlyUserSection(cfg.getConfigurationItem(), oldConfigurationItem, getJocError()));
-            } else if (dailyPlanHasChanged(cfg.getConfigurationItem(), oldConfigurationItem)) {
-                // TODO: call for every known controller
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
+                cfg.setConfigurationItem(updateOnlyUserSection(cfg.getConfigurationItem(), newJsonObj, oldJsonObj, getJocError()));
+            } else {
+                approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, hibernateSession);
+                if (dailyPlanHasChanged(newJsonObj, oldJsonObj)) {
+                    // TODO: call for every known controller
+                    DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
+                }
             }
             jocConfigurationDBLayer.saveOrUpdateGlobalSettingsConfiguration(cfg, oldCfg);
             return responseStatusJSOk(Date.from(Instant.now()));
@@ -83,25 +95,28 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         }
     }
     
-    public static String updateOnlyUserSection(String configurationItem, String oldConfigurationItem, JocError jocError) {
+    public static String updateOnlyUserSection(String configurationItem, Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
+            JocError jocError) {
         // store only user settings without permissions
         try {
             boolean onlyUserSection = false;
-            JsonReader rdr = Json.createReader(new StringReader(configurationItem));
-            JsonObject obj = rdr.readObject();
-            Optional<JsonObject> oldObj = getOldJsonObject(oldConfigurationItem);
             JsonObjectBuilder builder = Json.createObjectBuilder();
             for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
                 if (!ds.equals(DefaultSections.user)) {
-                    if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                        builder.add(ds.name(), oldObj.get().get(ds.name()));
+                    Optional<JsonValue> section = oldJsonObj.map(o -> o.get(ds.name()));
+                    if (section.isPresent()) {
+                        builder.add(ds.name(), section.get());
                         onlyUserSection = true;
                     }
                 } else {
-                    if (obj.get(ds.name()) != null) {
-                        builder.add(ds.name(), obj.get(ds.name()));
-                    } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                        builder.add(ds.name(), oldObj.get().get(ds.name()));
+                    Optional<JsonValue> newSection = newJsonObj.map(o -> o.get(ds.name()));
+                    if (newSection.isPresent()) {
+                        builder.add(ds.name(), newSection.get());
+                    } else {
+                        Optional<JsonValue> oldSection = oldJsonObj.map(o -> o.get(ds.name()));
+                        if (oldSection.isPresent()) {
+                            builder.add(ds.name(), oldSection.get());
+                        }
                     }
                 }
             }
@@ -119,35 +134,27 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         return configurationItem;
     }
     
-    public static boolean dailyPlanHasChanged(String configurationItem, String oldConfigurationItem) {
-        boolean updateControllerCalendar = false;
+    public static boolean dailyPlanHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj) {
+        
+        Optional<JsonObject> oldDailyPlan = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.dailyplan.name()));
         // Calendar for controller
-        Optional<JsonObject> oldObj = getOldJsonObject(oldConfigurationItem);
-        updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
+        boolean updateControllerCalendar = oldDailyPlan.isEmpty();
         if (!updateControllerCalendar) {
-            JsonReader rdr = Json.createReader(new StringReader(configurationItem));
-            JsonObject obj = rdr.readObject();
 
-            JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
-            JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
-            if (curDailyPlan != null) {
-                String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan.getJsonObject(
-                        "time_zone").getString("value", "");
-                String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? "" : oldDailyPlan.getJsonObject(
-                        "period_begin").getString("value", "");
-                String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject("time_zone")
-                        .getString("value", oldTimeZone);
-                String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan.getJsonObject(
-                        "period_begin").getString("value", oldPeriodBegin);
-                if (curPeriodBegin != null && !curPeriodBegin.isEmpty()) {
+            Optional<JsonObject> curDailyPlan = newJsonObj.map(o -> o.getJsonObject(DefaultSections.dailyplan.name()));
+            if (curDailyPlan.isPresent()) {
+                String oldTimeZone = oldDailyPlan.map(o -> o.getJsonObject("time_zone")).map(o -> o.getString("value", "")).orElse("");
+                String oldPeriodBegin = oldDailyPlan.map(o -> o.getJsonObject("period_begin")).map(o -> o.getString("value", "")).orElse("");
+                String curTimeZone = curDailyPlan.map(o -> o.getJsonObject("time_zone")).map(o -> o.getString("value", "")).orElse("");
+                String curPeriodBegin = curDailyPlan.map(o -> o.getJsonObject("period_begin")).map(o -> o.getString("value", "")).orElse("");
+                String curStartTime = curDailyPlan.map(o -> o.getJsonObject("start_time")).map(o -> o.getString("value", "")).orElse("");
+                if (!curPeriodBegin.isEmpty()) {
                     long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
                     if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
                     }
                 }
-                String curStartTime = curDailyPlan.getJsonObject("start_time") == null ? null : curDailyPlan.getJsonObject("start_time").getString(
-                        "value");
-                if (curStartTime != null && !curStartTime.isEmpty()) {
+                if (!curStartTime.isEmpty()) {
                     long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
                     if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
@@ -162,14 +169,56 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         return updateControllerCalendar;
     }
     
-    private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
+    public static void approvalRequestorRoleHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
+            SOSHibernateSession hibernateSession) throws SOSHibernateException {
+        
+        String oldApprovalRequestorRole = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                "approval_requestor_role")).map(o -> o.getString("value", "")).orElse("");
+        String newApprovalRequestorRole = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                "approval_requestor_role")).map(o -> o.getString("value", "")).orElse("");
+        if (oldApprovalRequestorRole.equals(newApprovalRequestorRole)) {
+            return;
+        }
+        if (newApprovalRequestorRole.isEmpty()) {
+            return;
+        }
+
+        IamRoleDBLayer roleDbLayer = new IamRoleDBLayer(hibernateSession);
+        IamRoleFilter roleFilter = new IamRoleFilter();
+        roleFilter.setRoleName(newApprovalRequestorRole);
+        List<DBItemIamRole> dbRoles = roleDbLayer.getIamRoleList(roleFilter, 0);
+
+        if (dbRoles.isEmpty()) {
+            throw new JocBadRequestException("Unknown role in 'joc.approval_requestor_role'");
+        }
+
+        long numOfAccountsWithOnlyApprovalRequestorRole = roleDbLayer.getAccountIDsByRoleWithOnlyOneRole(dbRoles.stream().map(DBItemIamRole::getId)
+                .distinct().toList()).count();
+
+        if (numOfAccountsWithOnlyApprovalRequestorRole > 0) {
+            throw new JocBadRequestException(String.format(
+                    "There are %d accounts that have the approval requestor role '%s' as their only role. The approval requestor role has to be used as an additional role, not as the only role.",
+                    numOfAccountsWithOnlyApprovalRequestorRole, newApprovalRequestorRole));
+        }
+    }
+    
+    public static Optional<JsonObject> getJsonObject(String oldConfiguration) {
         Optional<JsonObject> oldObj = Optional.empty();
         if (oldConfiguration != null) {
+            JsonReader oldRdr = null;
             try {
-                JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
+                oldRdr = Json.createReader(new StringReader(oldConfiguration));
                 oldObj = Optional.of(oldRdr.readObject());
             } catch (Exception e) {
                 //
+            } finally {
+                if (oldRdr != null) {
+                    try {
+                        oldRdr.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         return oldObj;

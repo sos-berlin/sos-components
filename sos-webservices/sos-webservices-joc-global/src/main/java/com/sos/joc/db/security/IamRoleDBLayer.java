@@ -1,7 +1,11 @@
 package com.sos.joc.db.security;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -102,6 +106,27 @@ public class IamRoleDBLayer {
 
         row = query.executeUpdate();
         return row;
+    }
+    
+    public Stream<Long> getAccountIDsByRoleWithOnlyOneRole(Collection<Long> roleIds) throws SOSHibernateException {
+        return getAccountIDsByRole(roleIds).stream().filter(i -> (Long)i[1] == 1L).map(i -> (Long)i[0]);
+    }
+    
+    public Map<Long, Long> getAllAccountIDsByRole(Collection<Long> roleIds) throws SOSHibernateException {
+        return getAccountIDsByRole(roleIds).stream().collect(Collectors.toMap(i -> (Long)i[0], i -> (Long)i[1]));
+    }
+    
+    private List<Object[]> getAccountIDsByRole(Collection<Long> roleIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select a.accountId, count(a.id) as numOf from ").append(DBItemIamAccount2Roles).append(" a left join ")
+                .append(DBItemIamAccount2Roles).append(" b on a.accountId = b.accountId where b.roleId in (:roleIds) group by a.accountId");
+        Query<Object[]> query = sosHibernateSession.createQuery(hql.toString());
+        query.setParameterList("roleIds", roleIds);
+
+        List<Object[]> result = sosHibernateSession.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
 
     public List<DBItemIamRole> getIamRoleList(IamRoleFilter filter, final int limit) throws SOSHibernateException {
