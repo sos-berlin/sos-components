@@ -50,16 +50,16 @@ public enum ProxyUser {
         if (credential == null) {
            return Optional.empty(); 
         }
-        return OptionConverters.toJava(credential.toScala()).map(c -> new String(Base64.getEncoder().encode((c.userId().string() + ":" + c.password()
-                .string()).getBytes())));
+        return OptionConverters.toJava(credential.toScala()).map(c -> Base64.getEncoder().encodeToString((c.userId().string() + ":" + c.password()
+                .string()).getBytes()));
     }
     
     public static String getBasicAuthorization(String user, String pwd) {
-        return new String(Base64.getEncoder().encode((user + ":" + pwd).getBytes()));
+        return Base64.getEncoder().encodeToString((user + ":" + pwd).getBytes());
     }
     
     public String getBasicAuthorization() {
-        return new String(Base64.getEncoder().encode((getUser() + ":" + getPwd()).getBytes()));
+        return Base64.getEncoder().encodeToString((getUser() + ":" + getPwd()).getBytes());
     }
     
     public String getPwd() {

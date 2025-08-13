@@ -235,9 +235,8 @@ public class JOCJsonCommand {
         LOGGER.debug("JS-URL: " + (uri == null ? "null" : uri.toString()), "JS-PostBody: " + postBody);
         try {
             createClient();
-            HttpExecutionResult<String> result = client.executePOST(uri, 
-                    Map.of("Content-Type", "application/json", "Accept", "application/json", "X-CSRF-Token", getCsrfToken()), 
-                    postBody);
+            HttpExecutionResult<String> result = client.executePOST(uri, client.mergeWithDefaultHeaders(Map.of("Content-Type", "application/json",
+                    "Accept", "application/json", "X-CSRF-Token", getCsrfToken())), postBody);
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (SOSConnectionResetException e) {
             throw new ControllerConnectionResetException(e.toString(), e);
@@ -262,7 +261,7 @@ public class JOCJsonCommand {
     
     private StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding, String csrfToken)
             throws SOSNoResponseException {
-        Map<String,String> headers = new HashMap<String, String>();
+        Map<String,String> headers = new HashMap<String, String>(3);
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
             headers.put("Accept", acceptHeader);
         }
@@ -275,7 +274,8 @@ public class JOCJsonCommand {
         StreamingOutput fileStream = null;
         try {
             createClient();
-            HttpExecutionResult<InputStream> result = client.executeGET(uri, headers, HttpResponse.BodyHandlers.ofInputStream());
+            HttpExecutionResult<InputStream> result = client.executeGET(uri, client.mergeWithDefaultHeaders(headers), HttpResponse.BodyHandlers
+                    .ofInputStream());
             if (result != null && result.response() != null) {
                 final InputStream instream = result.response().body();
                 fileStream = new StreamingOutput() {
