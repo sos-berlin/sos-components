@@ -62,6 +62,7 @@ public class GetToken {
 
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
+        setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
         if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
             List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
@@ -73,7 +74,6 @@ public class GetToken {
         } else {
             createBody(props, requestBody);
         }
-        setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
     }
     
     private void createBody(GetTokenRequest requestBody) {
@@ -114,14 +114,15 @@ public class GetToken {
     }
 
     private String getJsonStringFromPost(URI uri) throws JocException {
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<String, String>(2);
         headers.put("Accept", "application/json");
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
             createClient();
-            HttpExecutionResult<String> result = client.executePOST(uri, headers, asBodyString(body));
+            HttpExecutionResult<String> result = client.executePOST(uri, 
+                    client.mergeWithDefaultHeaders(headers), asBodyString(body));
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (JocException e) {
             throw e;
