@@ -327,7 +327,8 @@ public class JOCJsonCommand {
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
             createClient();
-            HttpExecutionResult<String> result = client.executeGET(uri, Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken()),
+            HttpExecutionResult<String> result = client.executeGET(uri,
+                    client.mergeWithDefaultHeaders(Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken())),
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (SOSConnectionRefusedException e) {
