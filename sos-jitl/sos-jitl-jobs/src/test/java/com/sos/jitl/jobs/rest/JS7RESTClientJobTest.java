@@ -32,7 +32,7 @@ public class JS7RESTClientJobTest {
 
         args.put("request", SOSPath.readFile(Path.of("src/test/resources/jobs/rest/inventory-read-folder.json")));
 
-        UnitTestJobHelper<JS7RESTClientJobArguments> h = new UnitTestJobHelper<>(new JS7RESTClientJob());
+        UnitTestJobHelper<RestJobArguments> h = new UnitTestJobHelper<>(new JS7RESTClientJob());
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT] %s", result));
