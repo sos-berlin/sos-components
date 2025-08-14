@@ -5,9 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;
+import com.sos.commons.httpclient.commons.mulitpart.HttpFormDataCloseable;
+import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataFile;
+import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataString;
 import com.sos.commons.httpclient.exception.SOSBadRequestException;
 import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
@@ -21,16 +25,17 @@ import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Versions;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
+public class JS7RESTClientJob extends Job<RestJobArguments> {
 
     public static final ObjectMapper objectMapper;
     private static final Scope rootScope;
 
-    public void processOrder(OrderProcessStep<JS7RESTClientJobArguments> step) throws Exception {
-        JS7RESTClientJobArguments myArgs = step.getDeclaredArguments();
+    public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
+        RestJobArguments myArgs = step.getDeclaredArguments();
         OrderProcessStepLogger logger = step.getLogger();
 
         //Check the request JSON
@@ -52,6 +57,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
             logger.info("Endpoint: " + endpoint);
 
             String bodyStr = null;
+            HttpFormDataCloseable formData = new HttpFormDataCloseable();
             if (requestNode.has("body")) {
                 try {
                     JsonNode bodyNode = requestNode.get("body");
@@ -61,6 +67,47 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                     }
                 } catch (Exception e) {
                     throw new JobException("Failed to extract 'body' from request JSON: " + e.getMessage(), e);
+                }
+            }
+            else if (requestNode.has("formData")) {
+                try {
+                    JsonNode formDataNode = requestNode.get("formData");
+                    if (formDataNode == null || !formDataNode.isObject()) {
+                        throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
+                    }
+                    Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
+                    while (fields.hasNext()) {
+                        Map.Entry<String, JsonNode> field = fields.next();
+                        String key = field.getKey();
+                        JsonNode valueNode = field.getValue();
+
+                        // Special handling for "file"
+                        if ("file".equalsIgnoreCase(key)) {
+                            // Read file path from JSON value
+                            Path filePath = Paths.get(valueNode.asText());
+
+                            // Determine content type based on "format" if present
+                            String format = formDataNode.has("format") ? formDataNode.get("format").asText() : "";
+                            String contentType;
+                            if ("TAR_GZ".equalsIgnoreCase(format)) {
+                                contentType = HttpFormData.CONTENT_TYPE_GZIP;
+                            } else {
+                                // Fallback — treat as ZIP if unknown default
+                                contentType = HttpFormData.CONTENT_TYPE_ZIP;
+                            }
+
+                            // Add the file part
+                            formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+                        }
+                        // For all other keys → treat as normal form string
+                        else {
+                            String value = valueNode.asText();
+                            formData.addPart(new FormDataString(key, value));
+                        }
+
+                    }
+                } catch (Exception e) {
+                    throw new JobException("Failed to extract 'formData' from request JSON: " + e.getMessage(), e);
                 }
             }
 
@@ -76,14 +123,12 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 }
             }
 
-
-            ApiExecutor apiExecutor = new ApiExecutor(step);
             String accessToken = null;
             ApiResponse response = null;
             boolean loginSuccessful = false;
             boolean logoutSuccessful = false;
 
-            try {
+            try(ApiExecutor apiExecutor = new ApiExecutor(step)) {
                 //REST Call -Creating a new session by login method
                 response = apiExecutor.login();
                 if (response == null || response.getStatusCode() != 200) {
@@ -96,7 +141,13 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 accessToken = response.getAccessToken();
 
                 //Sending the REST request to the specified endpoint with body and access_token( generated by login in new session)
-                response = apiExecutor.post(accessToken, endpoint, bodyStr, headers);
+                 if ( requestNode.has("formData")) {
+                     headers.put( HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
+                     response = apiExecutor.post(accessToken, endpoint, formData, headers);
+                }
+                 else{
+                     response = apiExecutor.post(accessToken, endpoint, bodyStr, headers);
+                 }
                 int statusCode = response.getStatusCode();
 
                 if (statusCode < 200 || statusCode >= 300) {
@@ -218,7 +269,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                     inputType = "json";
                                     inputOption = "--response-body";
                                 }
-                                 // Now handle split into jq query and file ops
+                                // Now handle split into jq query and file ops
                                 String[] parts = path.split("\\|\\|", 2);
                                 if(parts.length > 0 && (( inputType.equals("plain") && !parts[0].trim().startsWith(">") &&  !parts[0].trim().startsWith("-r"))||inputType.equals("json") )){
                                     jqQuery = parts[0].trim();
@@ -263,8 +314,6 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                         if (responseBody != null && !responseBody.trim().isEmpty()) {
                                             if (contentType != null && contentType.toLowerCase().startsWith("text/")) {
                                                 try {
-                                                    // Escape inner quotes and wrap in double quotes to create valid JSON string.
-                                                    //String escaped = responseBody.replace("\"", "\\\"");
                                                     jqInput = objectMapper.readTree("\"" + responseBody + "\"");
                                                 } catch (Exception e) {
                                                     throw new JobArgumentException("Could not convert plain response body to JSON string: " + e.getMessage(), e);
@@ -278,11 +327,11 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                         result=ReturnVariableUtils.runJqQuery(jqInput,jqQuery, rootScope, name);
                                     }
                                     else {
-                                        String[] inputOptions = new String[0];
+                                        List<String> inputOptions = null;
                                         if (inputOption != null && !inputOption.trim().isEmpty()) {
-                                            inputOptions = inputOption.trim().split("\\s+");
+                                            inputOptions = ReturnVariableUtils.parseInputOptions(inputOption);
                                         }
-                                        if (inputOptions.length > 0) {
+                                        if (!inputOptions.isEmpty()) {
                                             if (responseBody != null && !responseBody.trim().isEmpty()) {
                                                 if ("application/json".equalsIgnoreCase(contentType)) {
                                                     jqInput = objectMapper.readTree(responseBody);
@@ -293,63 +342,19 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                             }
                                             for (String opt : inputOptions) {
                                                 if (opt.startsWith("--response-body") || opt.startsWith("-b"))continue;
-                                                else if (opt.startsWith("--response-header=") || opt.startsWith("-s=")) {
-                                                    String headerName = opt.startsWith("--response-header=")
-                                                            ? opt.substring("--response-header=".length()).trim().toLowerCase()
-                                                            : opt.substring("-s=".length()).trim().toLowerCase();
-
-                                                    String headerValue = resHeaders.entrySet().stream()
-                                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
-                                                            .map(Map.Entry::getValue)
-                                                            .findFirst().orElse(null);
-
-                                                    if (headerValue != null) {
-                                                        ObjectNode headerNode = objectMapper.createObjectNode();
-                                                        headerNode.put(headerName, headerValue);
-                                                        ObjectNode wrapper = objectMapper.createObjectNode();
-                                                        wrapper.set("js7ResponseHeader", headerNode);
-                                                        jqInput = wrapper;
-                                                    } else {
-                                                        throw new JobArgumentException("Could not create return variable: " + name + " because response header not found: " + headerName);
-                                                    }
-
-                                                }
-                                                else if (opt.equals("--response-header") || opt.equals("-s")) {
+                                                else if (opt.startsWith("--response-header") || opt.startsWith("-s")) {
                                                     ObjectNode headerObject = objectMapper.createObjectNode();
                                                     for (Map.Entry<String, String> entry : resHeaders.entrySet()) {
-                                                        headerObject.put(entry.getKey(), entry.getValue().toLowerCase());
+                                                        headerObject.put(entry.getKey().toLowerCase(), entry.getValue());
                                                     }
                                                     mergedInput.set("js7ResponseHeader", headerObject);
-
                                                 }
-                                                else if (opt.startsWith("--request-header=") || opt.startsWith("-q=")) {
-                                                    String headerName = opt.startsWith("--request-header=")
-                                                            ? opt.substring("--request-header=".length()).trim().toLowerCase()
-                                                            : opt.substring("-q=".length()).trim().toLowerCase();
-
-                                                    String headerValue = headers.entrySet().stream()
-                                                            .filter(e -> e.getKey().equalsIgnoreCase(headerName))
-                                                            .map(Map.Entry::getValue)
-                                                            .findFirst().orElse(null);
-
-                                                    if (headerValue != null) {
-                                                        ObjectNode headerNode = objectMapper.createObjectNode();
-                                                        headerNode.put(headerName, headerValue);
-                                                        ObjectNode wrapper = objectMapper.createObjectNode();
-                                                        wrapper.set("js7RequestHeader", headerNode);
-                                                        jqInput = wrapper;
-                                                    } else {
-                                                        throw new JobArgumentException("Could not create return variable: " + name + " because request header not found: " + headerName);
-                                                    }
-
-                                                }
-                                                else if (opt.equals("--request-header") || opt.equals("-q")) {
+                                                else if (opt.startsWith("--request-header") || opt.startsWith("-q")) {
                                                     ObjectNode headerObject = objectMapper.createObjectNode();
                                                     for (Map.Entry<String, String> entry : headers.entrySet()) {
-                                                        headerObject.put(entry.getKey(), entry.getValue().toLowerCase());
+                                                        headerObject.put(entry.getKey().toLowerCase(), entry.getValue());
                                                     }
                                                     mergedInput.set("js7RequestHeader", headerObject);
-
                                                 }
                                                 else if (opt.equals("--request-body") || opt.equals("-d")) {
                                                     if (bodyStr != null && !bodyStr.trim().isEmpty()) {
@@ -359,17 +364,23 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                                         }
                                                         mergedInput.set("js7RequestBody", requestBodyJson);
                                                     } else {
-                                                        throw new JobArgumentException("Empty request body, could not create return variable: " + name);
+                                                        throw new JobArgumentException("Empty/null Request body." );
                                                     }
-
                                                 }
                                                 else if (opt.startsWith("--from-json=") || opt.startsWith("-j=")) {
                                                     String jsonStr = opt.substring(opt.indexOf('=') + 1).trim();
+
+                                                    // Handle optional quotes
+                                                    if ((jsonStr.startsWith("'") && jsonStr.endsWith("'")) ||
+                                                            (jsonStr.startsWith("\"") && jsonStr.endsWith("\""))) {
+                                                        jsonStr = jsonStr.substring(1, jsonStr.length() - 1);
+                                                    }
+
                                                     try {
                                                         JsonNode fromJsonNode = objectMapper.readTree(jsonStr);
 
                                                         if (!fromJsonNode.isObject()) {
-                                                            throw new JobArgumentException(" Expected JSON object for --from-json, but found: " + fromJsonNode.getNodeType());
+                                                            throw new JobArgumentException("Expected JSON object for --from-json, but found: " + fromJsonNode.getNodeType());
                                                         }
 
                                                         // Check for duplicate keys before merging
@@ -384,7 +395,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                                         ((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
 
                                                     } catch (Exception e) {
-                                                        logger.error("Invalid JSON for input option: " + jsonStr, e);
+                                                        logger.error("Invalid JSON for input option: " + jsonStr);
                                                         throw e;
                                                     }
                                                 }
@@ -417,8 +428,12 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                                         result=ReturnVariableUtils.runJqQuery(mergedInput,jqQuery, rootScope, name);
                                     }
                                     ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, result, rawOutput, objectMapper);
-                                } else if(inputType.equals("plain") && responseBody != null && !response.getResponseBody().trim().isEmpty() && contentType != null && contentType.toLowerCase().startsWith("text/")) {
-                                    ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, responseBody, rawOutput, objectMapper);
+                                }
+                                else if(inputType.equals("plain") ) {
+                                    if( contentType != null && contentType.toLowerCase().startsWith("text/") )
+                                        ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, responseBody, rawOutput, objectMapper);
+                                    else
+                                        throw new JobArgumentException("Error in extracting return variable " + name+ ", response body is not in text format.");
                                 }
                             }
                         }
@@ -428,6 +443,15 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                         step.getOutcome().setReturnCode(1);
                     }
                 }
+                try {
+                    if (accessToken != null) {
+                        apiExecutor.logout(accessToken);
+                        logoutSuccessful = true;
+                    }
+                } catch (Exception e) {
+                    logger.error("Logout failed!" );
+                    throw e;
+                }
             }
             catch (SOSConnectionRefusedException | SOSBadRequestException e) {
                 if (response != null) {
@@ -436,30 +460,7 @@ public class JS7RESTClientJob extends Job<JS7RESTClientJobArguments> {
                 }
                 throw e;
             } catch (IOException e) {
-                logger.error("I/O error during Job execution: " + e.getMessage(), e);
                 throw new JobException("I/O Exception occurred: " + e.getMessage(), e);
-            }
-            finally {
-                try {
-                    if (accessToken != null) {
-                        apiExecutor.logout(accessToken);
-                        logoutSuccessful = true;
-                    }
-                } catch (Exception e) {
-                    logger.error("Logout failed: " + e.getMessage(), e);
-                    throw e;
-                }
-
-                try {
-                    apiExecutor.close();
-                } catch (Exception e) {
-                    logger.error("Failed to close ApiExecutor: " + e.getMessage(), e);
-                    throw e;
-                }
-
-                if (loginSuccessful && logoutSuccessful) {
-                    logger.info("Logout complete.");
-                }
             }
         } else {
             throw new JobRequiredArgumentMissingException("Missing request JSON in job arguments.");

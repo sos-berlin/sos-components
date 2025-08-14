@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobArgumentException;
@@ -35,6 +36,7 @@ public class ReturnVariableUtils {
     }
 
     public static List<JsonNode> runJqQuery(JsonNode mergedInput, String jqQuery, Scope rootScope, String name) throws JsonQueryException, JobArgumentException {
+
         JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
         List<JsonNode> out = new ArrayList<>();
         query.apply(rootScope, mergedInput, out::add);
@@ -47,7 +49,7 @@ public class ReturnVariableUtils {
         }
     }
 
-    public static void writeToFile(OrderProcessStep<JS7RESTClientJobArguments> step, OrderProcessStepLogger logger, String name, String filePath, String pI, List<JsonNode> out, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
+    public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, List<JsonNode> out, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
 
         if (name.equals("returnCode")) {
             JsonNode node = out.get(0);
@@ -102,7 +104,7 @@ public class ReturnVariableUtils {
         }
     }
 
-    public static void writeToFile(OrderProcessStep<JS7RESTClientJobArguments> step, OrderProcessStepLogger logger, String name, String filePath, String pI,String result, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
+    public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, String result, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
 
         if (name.equals("returnCode")) {
             try {
@@ -114,36 +116,81 @@ public class ReturnVariableUtils {
         }
 
         if (filePath != null) {
-                File file = new File(filePath);
-                File parent = file.getParentFile();
-                if (parent != null && !parent.exists()) {
-                    parent.mkdirs();
-                }
+            File file = new File(filePath);
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
 
-                boolean append = ">>".equals(pI);
+            boolean append = ">>".equals(pI);
 
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
-                    if (rawOutput && !result.isEmpty()) {
-                        writer.write(result);
-                    } else {
-                        writer.write(objectMapper.writeValueAsString(result));
-                    }
-                    writer.newLine();
-
-                }
-
-                logger.info("Result written to file successfully.");
-                step.getOutcome().getVariables().put(name, filePath);
-                logger.info("Assigned return variable: " + name + " = " + filePath);
-        } else {
-                // If NOT writing to file, store result directly
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
                 if (rawOutput && !result.isEmpty()) {
-                    step.getOutcome().getVariables().put(name, result);
-                    logger.info("Assigned return variable: " + name + " = " + result);
+                    writer.write(result);
                 } else {
-                    step.getOutcome().getVariables().put(name, result);
-                    logger.info("Assigned return variable: " + name + " = " + result);
+                    writer.write(objectMapper.writeValueAsString(result));
                 }
+                writer.newLine();
+
+            }
+
+            logger.info("Result written to file successfully.");
+            step.getOutcome().getVariables().put(name, filePath);
+            logger.info("Assigned return variable: " + name + " = " + filePath);
+        } else {
+            // If NOT writing to file, store result directly
+            if (rawOutput && !result.isEmpty()) {
+                step.getOutcome().getVariables().put(name, result);
+                logger.info("Assigned return variable: " + name + " = " + result);
+            } else {
+                step.getOutcome().getVariables().put(name, result);
+                logger.info("Assigned return variable: " + name + " = " + result);
+            }
         }
     }
+    public static List<String> parseInputOptions(String inputOption) {
+        List<String> options = new ArrayList<>();
+        if (inputOption == null || inputOption.trim().isEmpty()) {
+            return options;
+        }
+
+        int i = 0;
+        String[] tokens = inputOption.trim().split("\\s+");
+        while (i < tokens.length) {
+            String token = tokens[i];
+
+            if (token.startsWith("--from-json=")) {
+                // Case 1: Quoted JSON: --from-json='{"key": "val with spaces"}';
+                if (token.contains("'")) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(token);
+                    i++;
+
+                    // keep appending until we find the closing quote
+                    while (i < tokens.length && !tokens[i].endsWith("'")) {
+                        sb.append(" ").append(tokens[i]);
+                        i++;
+                    }
+
+                    if (i < tokens.length) {
+                        sb.append(" ").append(tokens[i]); // append the closing token
+                        i++;
+                    }
+
+                    options.add(sb.toString());
+                } else {
+                    // Case 2: JSON without quotes (no spaces): just add it
+                    options.add(token);
+                    i++;
+                }
+            } else {
+                // Regular option: add and move on
+                options.add(token);
+                i++;
+            }
+        }
+
+        return options;
+    }
+
 }
