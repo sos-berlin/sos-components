@@ -6,6 +6,10 @@ import com.sos.js7.job.OrderProcessStep;
 
 public class EmptyJob extends Job<JobArguments> {
 
+    public EmptyJob(JobContext jobContext) {
+        super(jobContext);
+    }
+
     @Override
     public void processOrder(OrderProcessStep<JobArguments> step) throws Exception {
 

@@ -15,6 +15,10 @@ public class YADEJob extends Job<YADEJobArguments> {
 
     private boolean printMemoryUsage = false;
 
+    public YADEJob(JobContext jobContext) {
+        super(jobContext);
+    }
+
     @Override
     public void processOrder(OrderProcessStep<YADEJobArguments> step) throws Exception {
         // TODO to remove

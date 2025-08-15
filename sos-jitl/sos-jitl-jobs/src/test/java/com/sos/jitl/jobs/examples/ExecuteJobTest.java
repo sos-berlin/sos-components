@@ -30,7 +30,7 @@ public class ExecuteJobTest {
         args.put("exit_codes_to_ignore", "0;x2");
 
         // for unit tests only
-        UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new ExecuteJob());
+        UnitTestJobHelper<JobArguments> h = new UnitTestJobHelper<>(new ExecuteJob(null));
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");

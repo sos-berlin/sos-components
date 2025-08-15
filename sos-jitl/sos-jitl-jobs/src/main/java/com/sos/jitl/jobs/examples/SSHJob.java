@@ -14,6 +14,10 @@ public class SSHJob extends Job<SSHJobArguments> {
 
     private static final String CANCELABLE_RESOURCE_NAME_SSH_PROVIDER = "ssh_provider";
 
+    public SSHJob(JobContext jobContext) {
+        super(jobContext);
+    }
+
     @Override
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
         SSHProviderArguments providerArgs = step.getIncludedArguments(SSHProviderArguments.class);

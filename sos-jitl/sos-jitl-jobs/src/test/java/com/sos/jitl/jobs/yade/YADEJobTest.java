@@ -35,7 +35,7 @@ public class YADEJobTest {
             args.put("target_dir", "xyz");
         }
         // for unit tests only
-        UnitTestJobHelper<YADEJobArguments> h = new UnitTestJobHelper<>(new YADEJob());
+        UnitTestJobHelper<YADEJobArguments> h = new UnitTestJobHelper<>(new YADEJob(null));
         h.getStepConfig().setControllerId("js7");
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);

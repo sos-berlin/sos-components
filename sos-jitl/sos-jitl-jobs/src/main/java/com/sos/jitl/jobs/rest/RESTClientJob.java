@@ -30,6 +30,10 @@ public class RESTClientJob extends Job<RestJobArguments> {
     private  BaseHttpClient client;
     private static final Scope rootScope = Scope.newEmptyScope();
 
+    public RESTClientJob(JobContext jobContext) {
+        super(jobContext);
+    }
+    
     public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
         RestJobArguments myArgs = (RestJobArguments)step.getDeclaredArguments();
         OrderProcessStepLogger logger = step.getLogger();

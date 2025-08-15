@@ -57,6 +57,12 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("     \"%s\"='some password'", args.getPassword().getName());
         step.getLogger().info("     \"%s\"='...' any shell command, e.g. dir, ls ...", args.getShellCommand().getName());
 
+        step.getLogger().info("----------Encoding-----------------");
+        step.getLogger().info("[agent/getJobEnvironment][systemEncoding/Charset]" + getJobEnvironment().getSystemEncoding());
+        step.getLogger().info("[SOSShell][systemEncoding/Charset]" + SOSShell.getSystemEncoding());
+        if (SOSShell.IS_WINDOWS) {
+            step.getLogger().info("[Windows][console encoding]" + SOSShell.executeCommand("chcp"));
+        }
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
             step.getLogger().debug("job DEBUG message");

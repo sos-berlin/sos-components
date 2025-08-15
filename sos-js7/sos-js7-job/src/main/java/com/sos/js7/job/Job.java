@@ -35,6 +35,18 @@ import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.launcher.forjava.internal.BlockingInternalJob;
 
+/** @apiNote An empty (no-argument) constructor will be removed in a future release.<br/>
+ *          Subclasses must provide a constructor like the following:
+ * 
+ *          <pre>
+ *          public class MyNewJob extends Job&lt;JobArguments&gt; {
+ * 
+ *              public MyNewJob(JobContext jobContext) {
+ *                  super(jobContext);
+ *              }
+ *          }
+ *          </pre>
+ */
 public abstract class Job<A extends JobArguments> implements BlockingInternalJob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
@@ -47,11 +59,31 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         JobArgumentValueResolverCache.initialize();
     }
 
+    /** @deprecated This constructor will be removed in a future release.
+     *             <p>
+     *             Use a constructor like the following in your subclass instead:
+     * 
+     *             <pre>
+     *             public class MyNewJob extends Job&lt;JobArguments&gt; {
+     * 
+     *                 public MyNewJob(JobContext jobContext) {
+     *                     super(jobContext);
+     *                 }
+     *             }
+     *             </pre>
+     * 
+     *             This no-argument constructor only exists for backward compatibility and will create a legacy-compatible default context, which may lead to
+     *             limited or incorrect behavior.
+     *
+     * @since 2.8.1 */
+    @Deprecated
     public Job() {
+        // No logging here to avoid noise in customer environments.
+        // Fallback to a legacy-compatible context to keep backward compatibility.
         this((JobContext) null);
     }
 
-    /** e.g. for jobContext.jobArguments() or getAgentSystemEncoding */
+    /** Uses original JobContext (systemEncoding, etc) provided by the Agent */
     public Job(JobContext jobContext) {
         jobEnvironment = new JobEnvironment<A>(jobContext);
     }

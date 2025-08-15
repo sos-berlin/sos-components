@@ -34,6 +34,10 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
     public static final ObjectMapper objectMapper;
     private static final Scope rootScope;
 
+    public JS7RESTClientJob(JobContext jobContext) {
+        super(jobContext);
+    }
+    
     public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
         RestJobArguments myArgs = step.getDeclaredArguments();
         OrderProcessStepLogger logger = step.getLogger();

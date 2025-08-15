@@ -30,7 +30,7 @@ public class SSHJobTest {
         args.put("exit_codes_to_ignore", "0;x2");
 
         // for unit tests only
-        UnitTestJobHelper<SSHJobArguments> h = new UnitTestJobHelper<>(new SSHJob());
+        UnitTestJobHelper<SSHJobArguments> h = new UnitTestJobHelper<>(new SSHJob(null));
         // creates a new thread for each new onOrderProcess call
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
