@@ -6,11 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
@@ -114,11 +111,12 @@ public class JocServletContainer extends ServletContainer {
             
             JocClusterService.getInstance().start(StartupMode.automatic, true);
             DependencyUpdate.getInstance().updateThreaded();
-            try {
-                cleanupOldDeployedFolders(false);
-            } catch (Exception e) {
-                LOGGER.warn("cleanup deployed files: ", e.toString());
-            }
+//            try {
+//                cleanupOldDeployedFolders();
+//            } catch (Exception e) {
+//                LOGGER.warn("cleanup deployed files: ", e.toString());
+//            }
+            cleanupAllTempDirSubFolders();
         }, "servlet-init").start();
         
         
@@ -155,61 +153,48 @@ public class JocServletContainer extends ServletContainer {
             Globals.sosHibernateFactory.close();
         }
 
-        try {
-            cleanupOldDeployedFolders(true);
-        } catch (Exception e) {
-            LOGGER.warn("cleanup deployed files: " + e.toString());
-        }
+//        try {
+//            cleanupOldDeployedFolders();
+//        } catch (Exception e) {
+//            LOGGER.warn("cleanup deployed files: " + e.toString());
+//        }
+        cleanupAllTempDirSubFolders();
     }
 
-    private Set<Path> getDeployedFolders() throws IOException {
-        final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
-        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc([._]war)?-.+-any-\\d+$").asPredicate();
-        return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
-    }
+//    private Set<Path> getDeployedFolders() throws IOException {
+//        final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir"));
+//        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc([._]war)?-.+-any-\\d+$").asPredicate();
+//        return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
+//    }
 
-    private Optional<Path> getCurrentDeployedFolder(Set<Path> deployedFolders) throws IOException {
-        if (deployedFolders != null && deployedFolders.size() > 1) {
-            return deployedFolders.stream().max((i, j) -> {
-                try {
-                    return Files.getLastModifiedTime(i).compareTo(Files.getLastModifiedTime(j));
-                } catch (IOException e) {
-                    return 0;
-                }
-            });
-        } else if (deployedFolders.size() == 1) {
-            return Optional.of(deployedFolders.iterator().next());
-        }
-        throw new IOException("cleanup deployed files: couldn't determine current deploy folder");
-    }
+//    private Optional<Path> getCurrentDeployedFolder(Set<Path> deployedFolders) throws IOException {
+//        if (deployedFolders != null && deployedFolders.size() > 1) {
+//            return deployedFolders.stream().max((i, j) -> {
+//                try {
+//                    return Files.getLastModifiedTime(i).compareTo(Files.getLastModifiedTime(j));
+//                } catch (IOException e) {
+//                    return 0;
+//                }
+//            });
+//        } else if (deployedFolders.size() == 1) {
+//            return Optional.of(deployedFolders.iterator().next());
+//        }
+//        throw new IOException("cleanup deployed files: couldn't determine current deploy folder");
+//    }
 
-    private void cleanupOldDeployedFolders(final Set<Path> oldDeployedFolders) {
-        oldDeployedFolders.stream().forEach(folder -> {
-            try {
-                Files.walk(folder).sorted(Comparator.reverseOrder()).forEach(f -> {
-                    try {
-                        Files.deleteIfExists(f);
-                    } catch (DirectoryNotEmptyException e) {
-                        //
-                    } catch (IOException e) {
-                        LOGGER.warn("cleanup deployed files: " + e.toString());
-                    }
-                });
-            } catch (IOException e) {
-                LOGGER.warn("cleanup deployed files: " + e.toString());
-            }
-        });
-    }
+//    private void cleanupOldDeployedFolders(final Set<Path> oldDeployedFolders) {
+//        oldDeployedFolders.stream().forEach(this::cleanupFolder);
+//    }
 
-    private void cleanupOldDeployedFolders(boolean withCurrentFolder) throws IOException {
-        if (System.getProperty("os.name").toString().startsWith("Windows")) {
-            Set<Path> deployedFolders = getDeployedFolders();
-            final Optional<Path> currentDeployedFolder = getCurrentDeployedFolder(deployedFolders);
-            if (currentDeployedFolder.isPresent() && deployedFolders.remove(currentDeployedFolder.get())) {
-                cleanupOldDeployedFolders(deployedFolders);
-            }
-        }
-    }
+//    private void cleanupOldDeployedFolders() throws IOException {
+//        if (System.getProperty("os.name").startsWith("Windows")) {
+//            Set<Path> deployedFolders = getDeployedFolders();
+//            final Optional<Path> currentDeployedFolder = getCurrentDeployedFolder(deployedFolders);
+//            if (currentDeployedFolder.isPresent() && deployedFolders.remove(currentDeployedFolder.get())) {
+//                cleanupOldDeployedFolders(deployedFolders);
+//            }
+//        }
+//    }
 
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
@@ -228,12 +213,39 @@ public class JocServletContainer extends ServletContainer {
                         }
                     });
                 } else {
-                    LOGGER.warn("Couldn't find the cleanup log files: " + logDir.toString());
+                    LOGGER.warn("Couldn't find the log files: " + logDir.toString());
                 }
             }
         } catch (Exception e) {
             LOGGER.warn("cleanup log files: " + e.toString());
         }
+    }
+    
+    private void cleanupFolder(final Path folder) {
+        try {
+            Files.walk(folder).sorted(Comparator.reverseOrder()).forEach(f -> {
+                try {
+                    Files.deleteIfExists(f);
+                } catch (DirectoryNotEmptyException e) {
+                    //
+                } catch (IOException e) {
+                    LOGGER.warn("cleanup files: " + e.toString());
+                }
+            });
+        } catch (IOException e) {
+            LOGGER.warn("cleanup files: " + e.toString());
+        }
+    }
+    
+    private void cleanupAllTempDirSubFolders() {
+        //if (System.getProperty("os.name").startsWith("Windows")) {
+            try {
+                Files.list(Paths.get(System.getProperty("java.io.tmpdir"))).filter(Files::isDirectory).forEach(this::cleanupFolder);
+                LOGGER.info("cleanup temp. subfolders: " + System.getProperty("java.io.tmpdir"));
+            } catch (IOException e) {
+                LOGGER.warn("cleanup temp. subfolders: " + e.toString());
+            }
+        //}
     }
 
 }
