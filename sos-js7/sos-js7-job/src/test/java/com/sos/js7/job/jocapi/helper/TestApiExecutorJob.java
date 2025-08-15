@@ -12,11 +12,14 @@ import com.sos.js7.job.jocapi.ApiResponse;
 
 public class TestApiExecutorJob extends Job<TestApiExecutorJobArguments> {
 
+    public TestApiExecutorJob(JobContext jobContext) {
+        super(jobContext);
+    }
+
     @Override
     public void processOrder(OrderProcessStep<TestApiExecutorJobArguments> step) throws Exception {
         Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("X-Export-Directory", Paths.get(System.getProperty("user.dir")).resolve("target/exported").toString()
-                .replace('\\', '/'));
+        headers.put("X-Export-Directory", Paths.get(System.getProperty("user.dir")).resolve("target/exported").toString().replace('\\', '/'));
         headers.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
         try (ApiExecutor executor = new ApiExecutor(step)) {
             ApiResponse apiResponse = null;

@@ -34,7 +34,7 @@ public class ApiExecutorTest {
         args.put("api_url", "/inventory/export/folder");
         args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/inventory_export_folder.json")));
 
-        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob(null));
         // optional settings
         h.getStepConfig().setControllerId("js7");
         h.getStepConfig().setOrderId("test_order");
@@ -54,7 +54,7 @@ public class ApiExecutorTest {
         args.put("api_url", "/order/log");
         args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/order_log.json")));
 
-        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob(null));
         // optional settings
         h.getStepConfig().setControllerId("js7");
         h.getStepConfig().setOrderId("test_order");
@@ -74,7 +74,7 @@ public class ApiExecutorTest {
         args.put("api_url", "/task/log");
         args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/task_log.json")));
 
-        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob(null));
         // optional settings
         h.getStepConfig().setControllerId("js7");
         h.getStepConfig().setOrderId("test_order");
@@ -94,7 +94,7 @@ public class ApiExecutorTest {
         args.put("api_url", "/inventory/search");
         args.put("body", SOSPath.readFile(Path.of("src/test/resources/jocapi/inventory_search.json")));
 
-        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob());
+        UnitTestJobHelper<TestApiExecutorJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorJob(null));
         // optional settings
         h.getStepConfig().setControllerId("js7");
         h.getStepConfig().setOrderId("test_order");
@@ -110,17 +110,17 @@ public class ApiExecutorTest {
     public void testUploadMulitpartFormdata() throws Exception {
         setAgentProperties();
         Path path = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources/jocapi/test.zip");
-//        Path path = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources/jocapi/test.tar.gz");
-        
+        // Path path = Paths.get(System.getProperty("user.dir")).resolve("src/test/resources/jocapi/test.tar.gz");
+
         Map<String, Object> args = new HashMap<>();
         args.put("api_url", "/inventory/import");
         args.put("format", "ZIP");
-//        args.put("format", "TAR_GZ");
+        // args.put("format", "TAR_GZ");
         args.put("overwrite", true);
         args.put("file", path);
-        
+
         UnitTestJobHelper<TestApiExecutorUploadJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorUploadJob());
-        
+
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
