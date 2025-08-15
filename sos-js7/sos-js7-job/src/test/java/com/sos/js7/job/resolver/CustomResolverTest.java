@@ -57,7 +57,7 @@ public class CustomResolverTest {
         args.put("log_level", "DEBUG");
         args.put("base1", "base64:xxx");
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
@@ -74,7 +74,7 @@ public class CustomResolverTest {
         args.put("log_all_arguments", Boolean.valueOf(true));
         args.put("log_level", "DEBUG");
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));

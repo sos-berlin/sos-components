@@ -35,7 +35,7 @@ public class StandardEncryptionResolverTest {
         args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
@@ -55,7 +55,7 @@ public class StandardEncryptionResolverTest {
         args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));
@@ -73,7 +73,7 @@ public class StandardEncryptionResolverTest {
         args.put("my_arg", StandardEncryptionResolver.getPrefix()
                 + "BBFzQJSWD8lVzwf02qkX81PmXGiSxDc9Uf2fs594jjRJLycsBnrYJaUBjjl9a5Fo4IZ6I17mFww6xdGxTj2eZHuKmwKy2+Txae+kvJxImd+ZUdL8Gn2UrUtHdjsS4cOD1n6CysJBckh1EVGecriZPeque/kd KFPflA0MAilZ1KYfPDSiGw== 2sO5Qtw07FD1X4JsQycDhQ==");
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));

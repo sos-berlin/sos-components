@@ -28,7 +28,7 @@ public class StandardBase64ResolverTest {
         args.put("path", StandardBase64Resolver.getPrefix() + BASE64_PATH_VAL);
         args.put("log_all_arguments", Boolean.valueOf(true));
 
-        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob());
+        UnitTestJobHelper<TestJobArguments> h = new UnitTestJobHelper<>(new TestJob(null));
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
         LOGGER.info(String.format("[RESULT]%s", result));

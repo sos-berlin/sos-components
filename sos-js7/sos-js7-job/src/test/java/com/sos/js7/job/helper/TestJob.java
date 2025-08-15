@@ -12,6 +12,10 @@ public class TestJob extends TestJobSuperClass {
     public static final String ARG_NAME_LIST_SINGLETONMAP_DECLARED = "list_singleton_map";
     public static final String ARG_NAME_LIST_SINGLETONMAP_UNDECLARED = "list_singleton_map_undeclared";
 
+    public TestJob(JobContext jobContext) {
+        super(jobContext);
+    }
+
     @Override
     public void processOrder(OrderProcessStep<TestJobArguments> step) throws Exception {
         step.getLogger().info("Info from job onOrderProcess");

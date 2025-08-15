@@ -14,10 +14,11 @@ import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
 
 public class TestApiExecutorUploadJob extends Job<TestApiExecutorUploadJobArguments> {
-    
-    private Map<String,String> headers;
-    
-    public TestApiExecutorUploadJob() {
+
+    private Map<String, String> headers;
+
+    public TestApiExecutorUploadJob(JobContext jobContext) {
+        super(jobContext);
         this.headers = new HashMap<String, String>();
     }
 
@@ -31,18 +32,18 @@ public class TestApiExecutorUploadJob extends Job<TestApiExecutorUploadJobArgume
                 headers.put("accept", "application/json, text/plain, */*");
                 headers.put("accept-encoding", "gzip, deflate, br, zstd");
                 executor.setAdditionalHeaders(headers);
-                
+
                 Path path = step.getDeclaredArguments().getFile().getValue();
-                if("ZIP".equalsIgnoreCase(step.getDeclaredArguments().getFormat().getValue())) {
+                if ("ZIP".equalsIgnoreCase(step.getDeclaredArguments().getFormat().getValue())) {
                     formData.addPart(new FormDataFile("file", path.getFileName().toString(), path, HttpFormData.CONTENT_TYPE_ZIP));
-                }else if ("TAR_GZ".equalsIgnoreCase(step.getDeclaredArguments().getFormat().getValue())) {
+                } else if ("TAR_GZ".equalsIgnoreCase(step.getDeclaredArguments().getFormat().getValue())) {
                     formData.addPart(new FormDataFile("file", path.getFileName().toString(), path, HttpFormData.CONTENT_TYPE_GZIP));
                 }
                 formData.addPart(new FormDataString("overwrite", step.getDeclaredArguments().getOverwrite().getValue().toString()));
                 formData.addPart(new FormDataString("format", step.getDeclaredArguments().getFormat().getValue()));
-                
+
                 apiResponse = executor.post(apiResponse.getAccessToken(), step.getDeclaredArguments().getApiURL().getValue(), formData);
-                
+
                 step.getLogger().info("[TestApiExecutorJob][post][responseBody]%s", apiResponse.getResponseBody());
             } finally {
                 if (apiResponse != null) {

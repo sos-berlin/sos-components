@@ -77,7 +77,7 @@ public class GenericMethodsTest {
     @Ignore
     @Test
     public void testABlockingJobWithoutArgumentClazzConstructor() throws Exception {
-        TestJobSuperClass job = new TestJobSuperClass();
+        TestJobSuperClass job = new TestJobSuperClass(null);
 
         LOGGER.info("job class=" + job.getClass());
         LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());
@@ -92,7 +92,7 @@ public class GenericMethodsTest {
     @Ignore
     @Test
     public void testExtendedABlockingJobWithoutArgumentClazzConstructor() throws Exception {
-        TestJob job = new TestJob();
+        TestJob job = new TestJob(null);
 
         LOGGER.info("job class=" + job.getClass());
         LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());
@@ -107,7 +107,7 @@ public class GenericMethodsTest {
     @Ignore
     @Test
     public void testEJobWithoutJobArgumentsClass() throws Exception {
-        TestJobWithoutJobArgumentsClass job = new TestJobWithoutJobArgumentsClass();
+        TestJobWithoutJobArgumentsClass job = new TestJobWithoutJobArgumentsClass(null);
 
         LOGGER.info("job class=" + job.getClass());
         LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());

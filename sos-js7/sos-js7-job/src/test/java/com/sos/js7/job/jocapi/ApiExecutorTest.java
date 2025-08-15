@@ -119,7 +119,7 @@ public class ApiExecutorTest {
         args.put("overwrite", true);
         args.put("file", path);
 
-        UnitTestJobHelper<TestApiExecutorUploadJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorUploadJob());
+        UnitTestJobHelper<TestApiExecutorUploadJobArguments> h = new UnitTestJobHelper<>(new TestApiExecutorUploadJob(null));
 
         JOutcome.Completed result = h.processOrder(args);
         LOGGER.info("###############################################");
