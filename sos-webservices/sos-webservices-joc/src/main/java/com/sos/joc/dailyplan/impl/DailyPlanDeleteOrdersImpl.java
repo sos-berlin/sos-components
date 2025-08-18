@@ -6,9 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,7 +20,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.dailyplan.common.DailyPlanUtils;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -30,14 +27,6 @@ import com.sos.joc.dailyplan.resource.IDailyPlanDeleteOrderResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocAccessDeniedException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
@@ -127,10 +116,20 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             try {
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                session.setAutoCommit(false);
-                //Globals.beginTransaction(session);
-                dbLayer.deleteCascading(filter);
-                //Globals.commit(session);
+                
+                // without transactions
+                List<DBItemDailyPlanOrder> dpOrders = dbLayer.getDailyPlanList(filter, 0);
+                
+                for (DBItemDailyPlanOrder dpOrder : dpOrders) {
+                    session.delete(dpOrder);
+                }
+                
+                dbLayer.executeDeleteVariables(dpOrders.stream().map(DBItemDailyPlanOrder::getOrderId), controllerId);
+                
+                // with transactions
+//                session.setAutoCommit(false);
+//                dbLayer.deleteCascading(filter);
+                
                 if (withEvent) {
                     if (in.getDailyPlanDateFrom() != null) {
                         EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
@@ -157,9 +156,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                         EventBus.getInstance().post(new DailyPlanEvent(controllerId, null));
                     }
                 }
-            } catch (Exception e) {
-                //Globals.rollback(session);
-                throw e;
             } finally {
                 Globals.disconnect(session);
             }
@@ -168,24 +164,24 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         return true;
     }
 
-    public Map<String, List<DBItemDailyPlanOrder>> getPlannedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in, String accessToken,
-            boolean withAudit, boolean withEvent) throws SOSHibernateException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
-        setSettings(IMPL_PATH);
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), false,
-                IMPL_PATH);
-        if (!ordersPerControllerIds.isEmpty()) {
-            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> 
-                    getBasicControllerPermissions(availableController.getKey(), accessToken).getOrders().getCancel())
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-            if (ordersPerControllerIds.keySet().isEmpty()) {
-                throw new JocAccessDeniedException("No permissions to delete dailyplan orders");
-            }
-        } else {
-            initGetPermissions(accessToken);
-        }
-        return ordersPerControllerIds;
-    }
+//    public Map<String, List<DBItemDailyPlanOrder>> getPlannedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in, String accessToken,
+//            boolean withAudit, boolean withEvent) throws SOSHibernateException, ControllerConnectionResetException,
+//            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+//            DBConnectionRefusedException, ExecutionException {
+//        setSettings(IMPL_PATH);
+//        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), false,
+//                IMPL_PATH);
+//        if (!ordersPerControllerIds.isEmpty()) {
+//            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> 
+//                    getBasicControllerPermissions(availableController.getKey(), accessToken).getOrders().getCancel())
+//                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+//            if (ordersPerControllerIds.keySet().isEmpty()) {
+//                throw new JocAccessDeniedException("No permissions to delete dailyplan orders");
+//            }
+//        } else {
+//            initGetPermissions(accessToken);
+//        }
+//        return ordersPerControllerIds;
+//    }
     
 }

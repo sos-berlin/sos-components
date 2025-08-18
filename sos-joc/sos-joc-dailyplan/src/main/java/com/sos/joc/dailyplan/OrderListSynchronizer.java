@@ -311,8 +311,6 @@ public class OrderListSynchronizer {
         try {
             session = Globals.createSosHibernateStatelessConnection("executeStore-" + date);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-            session.setAutoCommit(false);
-            Globals.beginTransaction(session);
             ZoneId zoneId = ZoneId.of(settings.getTimeZone());
             Map<DBItemDailyPlanOrder, Set<String>> orderTags = new HashMap<>();
 
@@ -384,12 +382,11 @@ public class OrderListSynchronizer {
 
             if (!counter.hasStored() && submission != null && submission.getId() != null) {
                 Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submission.getId());
-                if (count == null || count.equals(0L)) {
-                    dbLayer.deleteSubmission(submission.getId());
+                if (count == null || count == 0L) {
+                    dbLayer.deleteSubmission(controllerId, submission.getId());
                 }
             }
 
-            Globals.commit(session);
         } finally {
             Globals.disconnect(session);
         }
@@ -437,7 +434,6 @@ public class OrderListSynchronizer {
                     SOSHibernateSession session4delete = null;
                     try {
                         session4delete = Globals.createSosHibernateStatelessConnection(method + "-" + date);
-                        session4delete.setAutoCommit(false);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
 
                         Set<Long> oldSubmissionIds = new HashSet<>();
@@ -447,48 +443,44 @@ public class OrderListSynchronizer {
                                 oldSubmissionIds.add(item.getSubmissionHistoryId());
                             }
                             if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
-                                Globals.beginTransaction(session4delete);
+                                dbLayer.deleteSingleCascading(item);
                                 try {
-                                    dbLayer.deleteSingleCascading(item);
                                     OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
-                                    Globals.commit(session4delete);
-                                } catch (SOSHibernateException | DBConnectionRefusedException | DBInvalidDataException e1) {
-                                    Globals.rollback(session4delete);
-                                    throw e1;
+                                } catch (Exception e) {
+                                    LOGGER.error("", e);
                                 }
                             } else {
                                 String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
                                 if (!cyclicMainParts.contains(mainPart)) {
                                     cyclicMainParts.add(mainPart);
                                 }
-                                Globals.beginTransaction(session4delete);
+                                session4delete.delete(item);
                                 try {
-                                    dbLayer.delete(item.getId());
                                     OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
-                                    Globals.commit(session4delete);
-                                } catch (SOSHibernateException | DBConnectionRefusedException | DBInvalidDataException e1) {
-                                    Globals.rollback(session4delete);
-                                    throw e1;
+                                } catch (Exception e) {
+                                    LOGGER.error("", e);
                                 }
                             }
                         }
                         
-                        Globals.beginTransaction(session4delete);
                         // delete cyclic variables when all cyclic orders deleted
                         for (String cyclicMainPart : cyclicMainParts) {
-                            Long count = dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart);
-                            if (count == null || count.equals(0L)) {
+                            //if (dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart) == 0L) {
                                 dbLayer.deleteVariablesByCyclicMainPart(controllerId, cyclicMainPart);
-                            }
+                            //}
                         }
+                        
                         // delete submissions with 0 orders
                         for (Long submissionId : oldSubmissionIds) {
                             Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
                             if (count == null || count.equals(0L)) {
-                                dbLayer.deleteSubmission(submissionId);
+                                try {
+                                    dbLayer.deleteSubmission(controllerId, submissionId);
+                                } catch (Exception e) {
+                                    LOGGER.error("", e);
+                                }
                             }
                         }
-                        Globals.commit(session4delete);
 
                         executeStore(startupMode, operation, controllerId, date, durations);
                         if (withSubmit == null || withSubmit) {
@@ -498,13 +490,8 @@ public class OrderListSynchronizer {
                                 LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
                             }
                         }
-                    } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
-                            | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
-                            | DBOpenSessionException | DBInvalidDataException e) {
-                        Globals.rollback(session4delete);
+                    } catch (Exception e) {
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
                     } finally {
                         Globals.disconnect(session4delete);
                     }

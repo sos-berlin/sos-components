@@ -66,7 +66,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.history.DBItemHistoryOrderTag;
@@ -244,16 +243,12 @@ public class OrderTags {
                     if (connection == null) {
                         connection = Globals.createSosHibernateStatelessConnection("storeFileOrderTags");
                     }
-                    connection.setAutoCommit(false);
-                    Globals.beginTransaction(connection);
                     deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
                     addTagsOfOrder(controllerId, orderId, fos2.getTags(), connection, Date.from(Instant.now()));
-                    Globals.commit(connection);
                 }
             }
 
         } catch (Exception e) {
-            Globals.rollback(connection);
             LOGGER.error("[storeFileOrderTags][" + orderId + "]: " + e.toString(), e);
         } finally {
             Globals.disconnect(connection);
@@ -267,7 +262,6 @@ public class OrderTags {
             String addOrderIndex = orderId.substring(OrdersHelper.mainOrderIdLength - 3, OrdersHelper.mainOrderIdLength - 1);
 
             connection = Globals.createSosHibernateStatelessConnection("addTagsByAddOrderInstruction");
-            connection.setAutoCommit(false);
 
             DBItemInventoryAddOrderTag dbItem = connection.get(DBItemInventoryAddOrderTag.class, Long.valueOf(orderIdPattern));
             // JOC-1933 sometimes addOrder event of parent order comes around 10ms after the addAddOrder of the generated order event
@@ -288,15 +282,8 @@ public class OrderTags {
                 Map<String, Set<String>> allTags = Globals.objectMapper.readValue(dbItem.getOrderTags(), typeRefAddOrderTags);
                 Set<String> orderTags = allTags.getOrDefault(addOrderIndex, Collections.emptySet());
                 if (!orderTags.isEmpty()) {
-                    try {
-                        Globals.beginTransaction(connection);
-                        deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
-                        addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
-                        Globals.commit(connection);
-                    } catch (Exception e1) {
-                        Globals.rollback(connection);
-                        throw e1;
-                    }
+                    deleteTagsOfOrder(controllerId, orderId, connection); // if eventbus.post comes twice
+                    addTagsOfOrder(controllerId, orderId, orderTags, connection, Date.from(Instant.now()));
                 }
             }
         } catch (Exception e) {
@@ -393,12 +380,48 @@ public class OrderTags {
 
                 StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
                 hql.append(" where orderId in (:orderIds)");
-                hql.append(" and controllerId=:controllerId");
+                if (!SOSString.isEmpty(controllerId)) {
+                    hql.append(" and controllerId=:controllerId ");
+                }
 
-                Query<DBItemDailyPlanVariable> query = connection.createQuery(hql);
+                Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
                 query.setParameterList("orderIds", orderIds);
-                query.setParameter("controllerId", controllerId);
+                if (!SOSString.isEmpty(controllerId)) {
+                    query.setParameter("controllerId", controllerId);
+                }
                 executeUpdate("deleteTags", query, connection);
+            }
+        }
+    }
+    
+    public static void deleteTags2(String controllerId, List<String> orderIds, SOSHibernateSession connection) throws SOSHibernateException {
+        if (controllerId != null && orderIds != null && !orderIds.isEmpty()) {
+
+            int size = orderIds.size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    deleteTags2(controllerId, SOSHibernate.getInClausePartition(i, orderIds), connection);
+                }
+            } else {
+
+                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+                hql.append(" where orderId in (:orderIds)");
+                if (!SOSString.isEmpty(controllerId)) {
+                    hql.append(" and controllerId=:controllerId ");
+                }
+
+                Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
+                query.setParameterList("orderIds", orderIds);
+                if (!SOSString.isEmpty(controllerId)) {
+                    query.setParameter("controllerId", controllerId);
+                }
+                
+                List<DBItemHistoryOrderTag> result = query.getResultList();
+                if (result != null) {
+                    for (DBItemHistoryOrderTag dbItem : result) {
+                        connection.delete(dbItem); 
+                    }
+                }
             }
         }
     }
@@ -406,14 +429,12 @@ public class OrderTags {
     public static void deleteTagsOfOrder(String controllerId, String orderId, SOSHibernateSession connection) {
         if (controllerId != null && orderId != null) {
             try {
-                StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-                hql.append(" where controllerId=:controllerId");
-                hql.append(" and orderId=:orderId");
-
-                Query<DBItemDailyPlanVariable> query = connection.createQuery(hql);
-                query.setParameter("controllerId", controllerId);
-                query.setParameter("orderId", orderId);
-                executeUpdate("deleteTagsOfOrder", query, connection);
+                List<DBItemHistoryOrderTag> result = getHistoryOrderTag(controllerId, orderId, connection);
+                if (result != null) {
+                    for (DBItemHistoryOrderTag item : result) {
+                        connection.delete(item);
+                    }
+                }
             } catch (SOSHibernateInvalidSessionException ex) {
                 throw new DBConnectionRefusedException(ex);
             } catch (Exception ex) {
@@ -531,14 +552,7 @@ public class OrderTags {
 
     public static void copyTagsOfOrder(String controllerId, String oldOrderId, String newOrderId, Date scheduledFor, SOSHibernateSession connection)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
-        hql.append(" where controllerId=:controllerId");
-        hql.append(" and orderId=:oldOrderId");
-
-        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-        query.setParameter("oldOrderId", oldOrderId);
-        query.setParameter("controllerId", controllerId);
-        List<DBItemHistoryOrderTag> result = query.getResultList();
+        List<DBItemHistoryOrderTag> result = getHistoryOrderTag(controllerId, oldOrderId, connection);
         if (result != null) {
             for (DBItemHistoryOrderTag oldItem : result) {
                 DBItemHistoryOrderTag newItem = new DBItemHistoryOrderTag(oldItem.getControllerId(), newOrderId, oldItem.getTagName(), oldItem
@@ -546,6 +560,18 @@ public class OrderTags {
                 connection.save(newItem);
             }
         }
+    }
+    
+    private static List<DBItemHistoryOrderTag> getHistoryOrderTag(String controllerId, String orderId, SOSHibernateSession connection)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
+        hql.append(" where controllerId=:controllerId");
+        hql.append(" and orderId=:orderId");
+
+        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
+        query.setParameter("orderId", orderId);
+        query.setParameter("controllerId", controllerId);
+        return query.getResultList();
     }
 
     public static Stream<JOrder> filter(List<JOrder> jOrders, Map<String, Set<String>> orderTags, Set<String> requestedOrdertags)

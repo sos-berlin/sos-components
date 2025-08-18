@@ -491,7 +491,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             session.commit();
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (Long submissionId : submissionIds) {
-                deleteNotUsedSubmission(session, dbLayer, in.getControllerId(), submissionId);
+                deleteNotUsedSubmission(dbLayer, in.getControllerId(), submissionId);
             }
             session.close();
             session = null;
@@ -610,15 +610,12 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
         return newOrderId;
     }
 
-    private synchronized void deleteNotUsedSubmission(SOSHibernateSession session, DBLayerDailyPlannedOrders dbLayer, String controllerId,
-            Long submissionId) {
+    private synchronized void deleteNotUsedSubmission(DBLayerDailyPlannedOrders dbLayer, String controllerId, Long submissionId) {
         if (submissionId != null) {
             try {
                 Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
-                if (count.equals(0L)) {
-                    session.beginTransaction();
-                    dbLayer.deleteSubmission(submissionId);
-                    session.commit();
+                if (count == 0L) {
+                    dbLayer.deleteSubmission(controllerId, submissionId);
                 }
             } catch (Exception e1) {
                 LOGGER.warn(e1.toString());
