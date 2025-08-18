@@ -141,7 +141,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
                 AJ aj = job.onCreateJobArguments(exceptions, step);
                 aj = job.getJobArgumensClass().getDeclaredConstructor().newInstance();
-                aj = job.setDeclaredJobArguments(exceptions, step, args, null, null, aj);
+                aj = job.setDeclaredJobArguments(exceptions, aj, args, step);
                 return aj;
             }
         };
@@ -153,7 +153,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         Set<String> declared = getDeclaredJobArgumentNames(instance);
 
         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-        instance = job.setDeclaredJobArguments(exceptions, step, args, null, null, instance);
+        instance = job.setDeclaredJobArguments(exceptions, instance, args, step);
 
         ArgumentsResult r = new ArgumentsResult();
         r.instance = instance;

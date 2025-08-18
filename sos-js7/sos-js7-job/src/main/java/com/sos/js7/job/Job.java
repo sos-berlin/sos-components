@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.js7.job.JobArguments.MockLevel;
@@ -119,7 +120,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     public Either<Problem, Void> start() {
         try {
             List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-            jobEnvironment.setDeclaredArguments(createDeclaredJobArguments(exceptions));
+            jobEnvironment.setDeclaredArguments(createDeclaredJobArgumentsOnStart(exceptions));
             // TODO
             // checkExceptions(exceptions);
             if (LOGGER.isDebugEnabled()) {
@@ -245,25 +246,19 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     }
 
     private Map<String, Object> mergeJobAndStepArguments(final OrderProcessStep<A> step) {
-        Map<String, Object> map = null;
-        if (step == null) {
-            map = jobEnvironment.getAllArgumentsAsNameValueMap();
-        } else {
-            Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
-            Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
+        Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
+        Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
 
-            Stream<Map.Entry<String, Value>> stream = null;
-            if (jobEnvironment.getEngineArguments() == null) {
-                stream = Stream.concat(stepArgs.stream(), orderArgs.stream());
-            } else {
-                stream = Stream.concat(Stream.concat(jobEnvironment.getEngineArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
-            }
-            map = JobHelper.asJavaValues(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
+        Stream<Map.Entry<String, Value>> stream = null;
+        if (SOSCollection.isEmpty(jobEnvironment.getEngineArguments())) {
+            stream = Stream.concat(stepArgs.stream(), orderArgs.stream());
+        } else {
+            stream = Stream.concat(Stream.concat(jobEnvironment.getEngineArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
         }
-        return map;
+        return JobHelper.asJavaValues(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
     }
 
-    private A createDeclaredJobArguments(List<JobArgumentException> exceptions) throws Exception {
+    private A createDeclaredJobArgumentsOnStart(List<JobArgumentException> exceptions) throws Exception {
         return createDeclaredJobArguments(exceptions, null, null);
     }
 
@@ -272,27 +267,30 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         if (jobEnvironment.getEngineArguments() == null && step == null) {
             return instance;
         }
-        Map<String, Object> map = mergeJobAndStepArguments(step);
-        Map<String, DetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
-        Map<String, DetailValue> jobResources = step == null ? null : step.getJobResourcesArgumentsAsNameDetailValueMap();
 
-        return setDeclaredJobArguments(exceptions, step, map, lastSucceededOutcomes, jobResources, instance);
+        if (step == null) {// Job.onStart
+            Map<String, Object> map = jobEnvironment.getAllArgumentsAsNameValueMap();
+            return setDeclaredJobArguments(exceptions, instance, map, null);
+        } else {
+            Map<String, Object> map = mergeJobAndStepArguments(step);
+            return setDeclaredJobArguments(exceptions, instance, map, step);
+        }
     }
 
-    protected A setDeclaredJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step, Map<String, Object> args,
-            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, A instance) throws Exception {
+    protected A setDeclaredJobArguments(List<JobArgumentException> exceptions, A instance, Map<String, Object> args, final OrderProcessStep<A> step)
+            throws Exception {
         if (instance.getIncludedArguments() != null && instance.getIncludedArguments().size() > 0) {
             for (Map.Entry<String, List<JobArgument<?>>> e : instance.getIncludedArguments().entrySet()) {
                 for (JobArgument<?> arg : e.getValue()) {
                     arg.setPayload(e.getKey());
-                    setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
+                    setDeclaredJobArgument(args, arg, null, step);
                 }
             }
         }
         if (instance.hasDynamicArgumentFields()) {
             for (JobArgument<?> arg : instance.getDynamicArgumentFields()) {
                 arg.reset();
-                setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, null);
+                setDeclaredJobArgument(args, arg, null, step);
             }
         }
 
@@ -302,7 +300,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 field.setAccessible(true);
                 JobArgument<?> arg = (JobArgument<?>) field.get(instance);
                 if (arg != null) {
-                    setDeclaredJobArgument(step, args, lastSucceededOutcomes, jobResources, arg, field);
+                    setDeclaredJobArgument(args, arg, field, step);
                     field.set(instance, arg);
                 }
             } catch (JobRequiredArgumentMissingException e) {
@@ -316,80 +314,96 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     }
 
     @SuppressWarnings("unchecked")
-    protected <V> void setDeclaredJobArgument(final OrderProcessStep<A> step, Map<String, Object> args,
-            Map<String, DetailValue> lastSucceededOutcomes, Map<String, DetailValue> jobResources, JobArgument<V> arg, Field field) throws Exception {
+    protected <V> void setDeclaredJobArgument(Map<String, Object> args, JobArgument<V> arg, Field field, final OrderProcessStep<A> step)
+            throws Exception {
         if (arg.getName() == null) {// internal usage
             return;
         }
         if (!arg.isScopeAll()) {
             return;
         }
-
-        // step calls another java job
-        if (step != null && step.hasExecuteJobArguments() && step.getExecuteJobBean().getArguments().containsKey(arg.getName())) {
-            JobArgument<?> a = step.getExecuteJobBean().getArguments().get(arg.getName());
-            try {
-                arg.setValue(getDeclaredArgumentValue(step, arg, field, a.getValue()));
-
-                if (step.getExecuteJobBean().updateDeclaredArgumentsDefinition()) {
-                    arg.setRequired(a.isRequired());
-                    arg.setDefaultValue((V) a.getDefaultValue());
-                    arg.setDisplayMode(a.getDisplayMode());
-                    arg.setValueSource(a.getValueSource());
+        if (step == null) { // Job.onStart
+            if (arg.getName() != null) { // internal usage
+                List<String> allNames = new ArrayList<>(Arrays.asList(arg.getName()));
+                if (arg.getNameAliases() != null) {
+                    allNames.addAll(arg.getNameAliases());
                 }
+
+                Object val = fromMap(jobEnvironment.getAllArgumentsAsNameValueMap(), allNames);
+                if (val == null) {
+                    arg.setValue(arg.getDefaultValue());
+                    setDeclaredArgumentValueType(arg, field, arg.getValue());
+                } else {
+                    arg.setValue(getDeclaredArgumentValue(step, arg, field, val));
+                    setValueSource(arg, new ValueSource(ValueSourceType.JOB_ARGUMENT));
+                }
+            }
+        } else {
+            // step calls another java job
+            if (step.hasExecuteJobArguments() && step.getExecuteJobBean().getArguments().containsKey(arg.getName())) {
+                JobArgument<?> a = step.getExecuteJobBean().getArguments().get(arg.getName());
+                try {
+                    arg.setValue(getDeclaredArgumentValue(step, arg, field, a.getValue()));
+
+                    if (step.getExecuteJobBean().updateDeclaredArgumentsDefinition()) {
+                        arg.setRequired(a.isRequired());
+                        arg.setDefaultValue((V) a.getDefaultValue());
+                        arg.setDisplayMode(a.getDisplayMode());
+                        arg.setValueSource(a.getValueSource());
+                    }
+                    if (arg.isRequired() && arg.getValue() == null) {
+                        throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
+                    }
+                } catch (Throwable e) {
+                    arg.setNotAcceptedValue(a.getValue(), e);
+                }
+                return;
+            }
+
+            List<String> allNames = new ArrayList<>(Arrays.asList(arg.getName()));
+            if (arg.getNameAliases() != null) {
+                allNames.addAll(arg.getNameAliases());
+            }
+
+            // Preference 1 (HIGHEST) - Succeeded Outcomes
+            DetailValue jdv = fromMap(step.getLastSucceededOutcomes(), allNames);
+            if (jdv != null) {
+                arg.setValue(getDeclaredArgumentValue(step, arg, field, jdv.getValue()));
+                ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
+                vs.setSource(jdv.getSource());
+                setValueSource(arg, vs);
+            } else {
+                // Preference 2 - Order Variable or Node Argument
+                Object val = step.getNamedValue(arg);
+                boolean isNamedValue = false;
+                if (val == null) {
+                    val = fromMap(args, allNames);
+                } else {
+                    isNamedValue = true;
+                }
+
+                // TODO setValue - currently overrides not empty value of a appArgument SOSArgument
+                // - solution 1 - set SOSArgument.setDefaultValue instead of SOSArgument.setValue
+                // - solution 2 - handle here ...
+
+                // Preference 3 - JobArgument or Argument or Java Default
+                if (val == null || SOSString.isEmpty(val.toString())) {
+                    arg.setValue(arg.getDefaultValue());
+                    setDeclaredArgumentValueType(arg, field, arg.getValue());
+                    // getDeclaredArgumentValue(step, arg, field, val);
+                } else {
+                    arg.setValue(getDeclaredArgumentValue(step, arg, field, val));
+                }
+
+                // Preference 4 (LOWEST) - JobResources
+                setDeclaredArgumentValueSource(step, field, arg, allNames, isNamedValue, step.getJobResourcesArgumentsAsNameDetailValueMap());
+
                 if (arg.isRequired() && arg.getValue() == null) {
                     throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
                 }
-            } catch (Throwable e) {
-                arg.setNotAcceptedValue(a.getValue(), e);
-            }
-            return;
-        }
-
-        List<String> allNames = new ArrayList<>(Arrays.asList(arg.getName()));
-        if (arg.getNameAliases() != null) {
-            allNames.addAll(arg.getNameAliases());
-        }
-
-        // Preference 1 (HIGHEST) - Succeeded Outcomes
-        DetailValue jdv = fromMap(lastSucceededOutcomes, allNames);
-        if (jdv != null) {
-            arg.setValue(getDeclaredArgumentValue(step, arg, field, jdv.getValue()));
-            ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
-            vs.setSource(jdv.getSource());
-            setValueSource(arg, vs);
-        } else {
-            // Preference 2 - Order Variable or Node Argument
-            Object val = step == null ? null : step.getNamedValue(arg);
-            boolean isNamedValue = false;
-            if (val == null) {
-                val = fromMap(args, allNames);
-            } else {
-                isNamedValue = true;
-            }
-
-            // TODO setValue - currently overrides not empty value of a appArgument SOSArgument
-            // - solution 1 - set SOSArgument.setDefaultValue instead of SOSArgument.setValue
-            // - solution 2 - handle here ...
-
-            // Preference 3 - JobArgument or Argument or Java Default
-            if (val == null || SOSString.isEmpty(val.toString())) {
-                arg.setValue(arg.getDefaultValue());
-                setDeclaredArgumentValueType(arg, field, arg.getValue());
-                // getDeclaredArgumentValue(step, arg, field, val);
-            } else {
-                arg.setValue(getDeclaredArgumentValue(step, arg, field, val));
-            }
-            if (step == null) {
-                setDeclaredArgumentValueSource(arg, allNames);
-            } else {
-                // Preference 4 (LOWEST) - JobResources
-                setDeclaredArgumentValueSource(step, field, arg, allNames, isNamedValue, jobResources);
-            }
-            if (arg.isRequired() && arg.getValue() == null) {
-                throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
             }
         }
+
     }
 
     private <T> T fromMap(Map<String, T> map, List<String> list) {
@@ -574,15 +588,6 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             }
         }
         arg.setArgumentType();
-    }
-
-    private <V> void setDeclaredArgumentValueSource(JobArgument<V> arg, List<String> allNames) {
-        if (arg.getName() == null) {// source Java - internal usage
-            return;
-        }
-        if (jobEnvironment.getAllArgumentsAsNameValueMap().containsKey(arg.getName())) {
-            setValueSource(arg, new ValueSource(ValueSourceType.JOB_ARGUMENT));
-        }
     }
 
     private <V> void setDeclaredArgumentValueSource(final OrderProcessStep<A> step, Field field, JobArgument<V> arg, List<String> allNames,

@@ -21,7 +21,7 @@ public class JobEnvironment<A extends JobArguments> {
     protected JobEnvironment(JobContext jc) {
         if (jc == null) {
             engineArguments = null;
-            systemEncoding = SOSShell.getSystemEncoding();
+            systemEncoding = SOSShell.getConsoleEncoding();
             jobKey = UUID.randomUUID().toString();
         } else {
             engineArguments = jc.jobArguments();

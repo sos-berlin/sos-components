@@ -40,8 +40,8 @@ public class SOSShell {
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
 
-    private static Charset SYSTEM_ENCODING;
-    private static String HOSTNAME;
+    private static Charset consoleEncoding;
+    private static String hostname;
 
     public static SOSCommandResult executeCommand(String script) {
         return executeCommand(script, null, null, null, null);
@@ -72,7 +72,7 @@ public class SOSShell {
     }
 
     public static SOSCommandResult executeCommand(String script, Charset encoding, SOSTimeout timeout, SOSEnv env, Path workingDirectory) {
-        SOSCommandResult result = new SOSCommandResult(script, getEncoding(encoding), timeout);
+        SOSCommandResult result = new SOSCommandResult(script, getConsoleEncoding(encoding), timeout);
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
             if (workingDirectory != null) {
@@ -120,29 +120,33 @@ public class SOSShell {
         });
     }
 
-    public static Charset getSystemEncoding() {
-        return getEncoding(null);
+    public static Charset getConsoleEncoding() {
+        return getConsoleEncoding(null);
     }
 
-    private static Charset getEncoding(Charset defaultEncoding) {
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static Charset getConsoleEncoding(Charset defaultEncoding) {
+        boolean isTraceEnabled = LOGGER.isTraceEnabled();
         if (defaultEncoding != null) {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[getEncoding][default]%s", defaultEncoding.name()));
+            if (isTraceEnabled) {
+                LOGGER.trace(String.format("[getConsoleEncoding][default]%s", defaultEncoding.name()));
             }
             return defaultEncoding;
         }
-        if (SYSTEM_ENCODING == null) {
-            SYSTEM_ENCODING = IS_WINDOWS ? getWindowsEncoding() : Charset.forName("UTF-8");
+        if (consoleEncoding == null) {
+            synchronized (SOSShell.class) {
+                if (consoleEncoding == null) { // double-checked locking
+                    consoleEncoding = IS_WINDOWS ? getWindowsConsoleEncoding() : Charset.forName("UTF-8");
+                }
+            }
         }
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[getEncoding]%s", SYSTEM_ENCODING.name()));
+        if (isTraceEnabled) {
+            LOGGER.trace(String.format("[getConsoleEncoding]%s", consoleEncoding));
         }
-        return SYSTEM_ENCODING;
+        return consoleEncoding;
     }
 
-    private static Charset getWindowsEncoding() {
-        String method = "getWindowsEncoding";
+    private static Charset getWindowsConsoleEncoding() {
+        String method = "getWindowsConsoleEncoding";
         int cp = Kernel32.INSTANCE.GetConsoleCP();
         if (cp == 0) {
             Charset defaultCharset = Charset.defaultCharset();
@@ -178,11 +182,15 @@ public class SOSShell {
     }
 
     public static String getLocalHostName() throws UnknownHostException {
-        if (HOSTNAME == null) {
-            String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
-            HOSTNAME = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
+        if (hostname == null) {
+            synchronized (SOSShell.class) {
+                if (hostname == null) { // double-checked locking
+                    String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
+                    hostname = SOSString.isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
+                }
+            }
         }
-        return HOSTNAME;
+        return hostname;
     }
 
     public static Optional<String> getLocalHostNameOptional() {
@@ -302,22 +310,36 @@ public class SOSShell {
         return System.getProperties().getProperty("java.home");
     }
 
+    /** Returns the CMD command for Windows or the default shell command for Unix.
+     *
+     * <p>
+     * <b>Note on Windows CMD:</b>
+     * <ul>
+     * <li>The <code>/u</code> switch forces UTF-16LE output.</li>
+     * <li>Many standard commands like <code>chcp</code>, <code>dir</code>,<br />
+     * or other ANSI-based commands do not work correctly with <code>/u</code>, because they rely on the current code page.</li>
+     * <li>Therefore, <code>/u</code> should only be used for commands that explicitly require Unicode output, and not for all CMD invocations.</li>
+     * <li>In general: <br>
+     * - ANSI commands: current code page<br/>
+     * - Unicode commands -> /u + UTF-16LE.</li>
+     * </ul>
+     */
+
     private static String[] getCommand(String script) {
-        String[] command = new String[2 + 1];
         if (IS_WINDOWS) {
-            command[0] = System.getenv("comspec");
-            command[1] = "/C";
-            command[2] = script;
+            String comspec = System.getenv("comspec");
+            if (SOSString.isEmpty(comspec)) {
+                comspec = "cmd.exe";
+            }
+            // return new String[] { comspec, "/u", "/C", script };
+            return new String[] { comspec, "/C", script };
         } else {
             String shell = System.getenv("SHELL");
             if (shell == null) {
                 shell = "/bin/sh";
             }
-            command[0] = shell;
-            command[1] = "-c";
-            command[2] = script;
+            return new String[] { shell, "-c", script };
         }
-        return command;
     }
 
     public static String formatBytes(long bytes) {

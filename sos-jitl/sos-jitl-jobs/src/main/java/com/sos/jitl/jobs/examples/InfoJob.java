@@ -59,7 +59,7 @@ public class InfoJob extends Job<InfoJobArguments> {
 
         step.getLogger().info("----------Encoding-----------------");
         step.getLogger().info("[agent/getJobEnvironment][systemEncoding/Charset]" + getJobEnvironment().getSystemEncoding());
-        step.getLogger().info("[SOSShell][systemEncoding/Charset]" + SOSShell.getSystemEncoding());
+        step.getLogger().info("[SOSShell][consoleEncoding/Charset]" + SOSShell.getConsoleEncoding());
         if (SOSShell.IS_WINDOWS) {
             step.getLogger().info("[Windows][console encoding]" + SOSShell.executeCommand("chcp"));
         }
