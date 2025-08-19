@@ -136,6 +136,7 @@ public class SystemMonitoringModel {
             JocCluster.shutdownThreadPool("[" + service.getIdentifier() + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
+        Configuration.INSTANCE.clear();
     }
 
     private void schedule(ThreadGroup threadGroup) {

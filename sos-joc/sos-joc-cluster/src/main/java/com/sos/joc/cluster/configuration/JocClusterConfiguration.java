@@ -87,6 +87,8 @@ public class JocClusterConfiguration {
         addActiveMemberService(ACTIVE_MEMBER_SERVICE_LOGNOTIFICATION);
     }
 
+    // When adding/changing the embedded services, the "Restart Monitor" method should be adjusted, because "Restart Monitor Service" restarts all embedded
+    // services - see JocCluseterService.restartService(monitor)
     private void registerEmbeddedServices() {
         embeddedServices = new ArrayList<>();
         addEmbeddedService(EMBEDDED_SERVICE_MONITOR);

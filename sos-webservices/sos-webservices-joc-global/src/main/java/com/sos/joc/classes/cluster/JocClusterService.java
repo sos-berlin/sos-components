@@ -442,6 +442,9 @@ public class JocClusterService {
                     .getConfigurationSection(DefaultSections.cleanup));
             break;
         case monitor:
+            // embeddedServices - currently only 1 service
+            // TODO restart embeddedService using embeddedServicesHandler and service identifier
+            answer = cluster.restartEmbeddedServices(mode);
             answer = cluster.getActiveMemberHandler().restartService(mode, ClusterServices.monitor.name(), null);
             break;
         case lognotification:

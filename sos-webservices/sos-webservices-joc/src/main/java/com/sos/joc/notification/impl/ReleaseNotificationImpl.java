@@ -63,7 +63,7 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(ValidateResourceImpl.getError(e)));
             }
 
-            // step 2 - update db
+            // step 2 - update db and post NotificationConfigurationReleased event
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(StandardNotificationReleaseResourceImpl
                     .handleStandardConfiguration(in, getAccount(), dbAuditlog.getId())));
 

@@ -11,6 +11,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.release.ReleaseConfiguration;
+import com.sos.joc.notification.impl.ReleaseNotificationImpl;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.commons.standard.StandardSchemaHandler;
 import com.sos.joc.xmleditor.resource.IStandardNotificationReleaseResource;
@@ -18,6 +19,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
+/** Not used by JOC - see {@link ReleaseNotificationImpl#postReleaseNotification(String, byte[])} */
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl implements IStandardNotificationReleaseResource {
 
@@ -42,24 +44,25 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(ValidateResourceImpl.getError(e)));
             }
 
-            // step 2 - update db and reread
-            ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in, getAccount(), 0L);
-
-            // step 3 - post events
-            EventBus.getInstance().post(new NotificationConfigurationReleased());
-
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            // step 2 - update db/reread and post event
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccount(), 0L)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
 
+    /** update db/reread, post NotificationConfigurationReleased event */
     public static ReadStandardConfigurationAnswer handleStandardConfiguration(ReleaseConfiguration in, String account, Long auditLogId)
             throws Exception {
+        // update db/reread
         DBItemXmlEditorConfiguration item = StandardSchemaHandler.createOrUpdateConfigurationIfReleaseOrDeploy(IMPL_PATH, in.getObjectType(), null, in
                 .getConfiguration(), in.getConfigurationJson(), account, auditLogId);
         StandardSchemaHandler handler = new StandardSchemaHandler(in.getObjectType());
         handler.readCurrent(item, true);
+
+        // post event
+        EventBus.getInstance().post(new NotificationConfigurationReleased());
+
         return handler.getAnswer();
     }
 

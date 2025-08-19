@@ -21,6 +21,14 @@ public class JocClusterAnswer {
         return state;
     }
 
+    public boolean isStarted() {
+        return JocClusterState.STARTED.equals(state);
+    }
+
+    public boolean isStopped() {
+        return JocClusterState.STOPPED.equals(state);
+    }
+
     public void setState(JocClusterState val) {
         state = val;
     }

@@ -882,8 +882,8 @@ public class JocCluster {
         synchronized (lockMember) {
             lockMember.notifyAll();
         }
-        closeEmbeddedServices(mode);
-        closeActiveMemberServices(mode, configurations);
+        stopEmbeddedServices(mode);
+        stopActiveMemberServices(mode, configurations);
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
         }
@@ -893,22 +893,34 @@ public class JocCluster {
         LOGGER.info("[" + mode + "][cluster][close]end----------------------------------------------");
     }
 
-    private JocClusterAnswer closeActiveMemberServices(StartupMode mode, ConfigurationGlobals configurations) {
-        LOGGER.info("[" + mode + "][cluster][closeActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]start...");
+    private JocClusterAnswer stopActiveMemberServices(StartupMode mode, ConfigurationGlobals configurations) {
+        LOGGER.info("[" + mode + "][cluster][stopActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]start...");
         JocClusterAnswer answer = null;
         if (activeMemberHandler.isActive()) {
             answer = activeMemberHandler.perform(mode, PerformType.STOP, configurations);
         } else {
             answer = getOKAnswer(JocClusterState.ALREADY_STOPPED);
         }
-        LOGGER.info("[" + mode + "][cluster][closeActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]end");
+        LOGGER.info("[" + mode + "][cluster][stopActiveMemberServices][isActive=" + activeMemberHandler.isActive() + "]end");
         return answer;
     }
 
-    private JocClusterAnswer closeEmbeddedServices(StartupMode mode) {
-        LOGGER.info("[" + mode + "][cluster][closeEmbeddedServices]start...");
+    public JocClusterAnswer restartEmbeddedServices(StartupMode mode) {
+        JocClusterAnswer answer = stopEmbeddedServices(mode);
+        if (answer.isStopped()) {
+            answer = startEmbeddedServices(mode);
+            if (answer.isStarted()) {
+                return answer;
+            }
+        }
+        LOGGER.warn("[" + mode + "][cluster][restartEmbeddedServices]" + SOSString.toString(answer));
+        return answer;
+    }
+
+    private JocClusterAnswer stopEmbeddedServices(StartupMode mode) {
+        LOGGER.info("[" + mode + "][cluster][stopEmbeddedServices]start...");
         JocClusterAnswer answer = embeddedServicesHandler.perform(mode, JocClusterEmbeddedServicesHandler.PerformType.STOP);
-        LOGGER.info("[" + mode + "][cluster][closeEmbeddedServices]end");
+        LOGGER.info("[" + mode + "][cluster][stopEmbeddedServices]end");
         return answer;
     }
 

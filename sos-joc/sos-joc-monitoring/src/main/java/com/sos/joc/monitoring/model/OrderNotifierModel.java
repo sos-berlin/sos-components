@@ -418,7 +418,7 @@ public class OrderNotifierModel {
     private void closeFactory() {
         if (factory != null) {
             factory.close();
-            LOGGER.info(String.format("[%s]database factory closed", LOG_IDENTIFIER));
+            LOGGER.info(String.format("%sdatabase factory closed", LOG_IDENTIFIER));
         }
     }
 
