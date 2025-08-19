@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
@@ -40,6 +41,7 @@ import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.model.dailyplan.projections.items.meta.ControllerInfoItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
 import com.sos.joc.model.dailyplan.projections.items.meta.ScheduleInfoItem;
@@ -57,6 +59,9 @@ public class DailyPlanProjections {
 
     private static final String IDENTIFIER = "projection";
 
+    private final static ReentrantLock LOCK = new ReentrantLock();
+    private static final DailyPlanProjections INSTANCE = new DailyPlanProjections();
+
     // in months - TODO read from the settings?
     private static final int PLANNED_ENTRIES_AGE = 2;
 
@@ -66,12 +71,25 @@ public class DailyPlanProjections {
 
     private String logPrefix;
 
-    public void process(DailyPlanSettings settings) throws Exception {
+    private DailyPlanProjections() {
+    }
+
+    public static DailyPlanProjections getInstance() {
+        return INSTANCE;
+    }
+
+    public JocClusterState process(DailyPlanSettings settings) throws Exception {
         String add = DailyPlanHelper.getCallerForLog(settings);
         logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
+
+        if (!LOCK.tryLock()) {
+            LOGGER.info(logPrefix + "[skip]process is already in progress - new request ignored");
+            return JocClusterState.ALREADY_RUNNING;
+        }
+
         if (settings.getProjectionsMonthAhead() == 0) {
             LOGGER.info(logPrefix + "[skip]projections_month_ahead=0");
-            return;
+            return JocClusterState.MISSING_CONFIGURATION;
         }
         Instant start = Instant.now();
         LOGGER.info(String.format("%s[dailyplan time_zone=%s, period_begin=%s, projections_month_ahead=%s]start...", logPrefix, settings
@@ -100,7 +118,10 @@ public class DailyPlanProjections {
         } finally {
             DBLayer.close(dbLayer);
             LOGGER.info(logPrefix + "[end]" + SOSDate.getDuration(start, Instant.now()));
+
+            LOCK.unlock();
         }
+        return JocClusterState.COMPLETED;
     }
 
     // 1-cleanup
@@ -131,19 +152,25 @@ public class DailyPlanProjections {
 
         java.util.Calendar now = DailyPlanHelper.getUTCCalendarNow();
         java.util.Calendar from = DailyPlanHelper.add2Clone(now, java.util.Calendar.MONTH, -1 * PLANNED_ENTRIES_AGE);
+        java.util.Calendar to = DailyPlanHelper.add2Clone(now, java.util.Calendar.DATE, settings.getDaysAheadPlan());
 
         int currentYear = DailyPlanHelper.getYear(now);
         if (DailyPlanHelper.getYear(from) < currentYear) {
             // set to <currentYear>-01-01
             from = DailyPlanHelper.getFirstDayOfYearCalendar(from, currentYear);
         }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[calculatePlanned]from=%s, to=%s", SOSDate.tryGetDateTimeAsString(from.getTime()), SOSDate
+                    .tryGetDateTimeAsString(to.getTime())));
+        }
 
         DailyPlanResult result = new DailyPlanResult();
         result.plannedFrom = from.getTime();
+        result.plannedTo = null;
         MetaItem mi = null;
         YearsItem yi = null;
         try {
-            List<DBItemDailyPlanSubmission> l = dbLayer.getSubmissions(result.plannedFrom);
+            List<DBItemDailyPlanSubmission> l = dbLayer.getSubmissions(result.plannedFrom, result.plannedTo);
             if (l.size() > 0) {
                 mi = new MetaItem();
                 yi = new YearsItem();
@@ -629,6 +656,7 @@ public class DailyPlanProjections {
 
         private int currentYear;
         private Date plannedFrom;
+        private Date plannedTo;
         private Date plannedFirstDate;
         private Date plannedLastDate;
     }

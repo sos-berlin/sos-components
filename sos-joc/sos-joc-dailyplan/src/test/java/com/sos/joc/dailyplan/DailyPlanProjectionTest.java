@@ -1,6 +1,8 @@
 package com.sos.joc.dailyplan;
 
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -37,11 +39,19 @@ public class DailyPlanProjectionTest {
             // 2) in years: <n> years, <n> year, <n> y
 
             // years will be converted to months...
-            s.setProjectionsMonthAhead(1);
+            s.setProjectionsMonthAhead(6);
 
-            DailyPlanProjections p = new DailyPlanProjections();
-            p.process(s);
+            for (int i = 0; i < 5; i++) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        DailyPlanProjections.getInstance().process(s);
+                    } catch (Exception e) {
+                        LOGGER.error(e.toString(), e);
+                    }
+                });
+            }
 
+            TimeUnit.SECONDS.sleep(10);// due to runAsync
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {

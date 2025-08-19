@@ -93,6 +93,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
@@ -161,7 +162,12 @@ public class DailyPlanRunner extends TimerTask {
                 clear();
 
                 try {
-                    recreateProjections(settings);
+                    JocClusterState state = recreateProjections(settings);
+                    if (!JocClusterState.COMPLETED.equals(state)) {
+                        if (JocClusterState.ALREADY_RUNNING.equals(state)) {// e.g. started by a web service
+                            // TODO wait + rerun
+                        }
+                    }
                 } catch (Throwable ex) {
                     LOGGER.error(ex.toString(), ex);
                 } finally {
@@ -187,12 +193,12 @@ public class DailyPlanRunner extends TimerTask {
         return (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0;
     }
 
-    public static void recreateProjections(DailyPlanSettings settings) throws Exception {
+    public static JocClusterState recreateProjections(DailyPlanSettings settings) throws Exception {
         String add = DailyPlanHelper.getCallerForLog(settings);
         LOGGER.info(String.format("[%s]%s[recreateProjections]creating for %s months ahead", settings.getStartMode(), add, settings
                 .getProjectionsMonthAhead()));
 
-        new DailyPlanProjections().process(settings);
+        return DailyPlanProjections.getInstance().process(settings);
     }
 
     /* service */

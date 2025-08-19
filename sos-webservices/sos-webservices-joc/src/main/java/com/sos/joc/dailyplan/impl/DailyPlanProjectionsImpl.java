@@ -67,7 +67,6 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
         try {
             initLogging(IMPL_PATH_RECREATE, filterBytes, accessToken, CategoryType.DAILYPLAN);
 
-            // TODO run async
             CompletableFuture.runAsync(() -> {
                 try {
                     DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH_RECREATE));

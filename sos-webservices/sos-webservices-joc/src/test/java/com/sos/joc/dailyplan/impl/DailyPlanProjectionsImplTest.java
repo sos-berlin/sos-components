@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.UnitTestSimpleWSImplHelper;
+import com.sos.joc.model.audit.AuditLog;
 
 public class DailyPlanProjectionsImplTest {
 
@@ -22,7 +23,7 @@ public class DailyPlanProjectionsImplTest {
         try {
             h.init();
 
-            h.post("recreate", Paths.get("src/test/resources/ws/dailyplan/impl/request-DailyPlanProjectionsImpl-recreate.json"));
+            h.post("recreate", new AuditLog());
 
             TimeUnit.SECONDS.sleep(20);// sleep due to asynchronous call
         } catch (Throwable e) {
