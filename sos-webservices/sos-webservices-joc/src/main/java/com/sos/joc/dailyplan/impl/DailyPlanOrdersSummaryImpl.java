@@ -104,6 +104,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 filter.setSubmissionIds(null);
                 filter.setSubmissionForDateFrom(dateFrom);
                 filter.setSubmissionForDateTo(dateTo);
+                filter.setStates(null);
+                filter.setLate(null);
 
                 List<PlannedOrderItem> result = new ArrayList<>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, false);

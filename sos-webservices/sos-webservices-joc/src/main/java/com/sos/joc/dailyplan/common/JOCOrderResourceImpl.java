@@ -173,10 +173,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         if (filter != null) {
             // filter.setOrderCriteria("plannedStart");
             filter.setOrderCriteria(null);
-            filter.setSingleStart();
+            filter.setStartMode(null);
             result = dbLayer.getDailyPlanWithHistoryList(filter, 0);
-            filter.setCyclicStart();
-            result.addAll(dbLayer.getDailyPlanWithHistoryList(filter, 0));
             if (sort) {
                 // sort on client
                 // result.sort((o1, o2) -> o1.getPlannedStart().compareTo(o2.getPlannedStart()));
