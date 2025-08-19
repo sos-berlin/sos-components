@@ -270,6 +270,8 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.repository.DeleteFromFilter", "publish/repository/deleteFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.ReadFromFilter", "publish/repository/readFromRepositoryFilter-schema.json");
             put("com.sos.joc.model.publish.repository.UpdateFromFilter", "publish/repository/updateFromRepositoryFilter-schema.json");
+            put("com.sos.joc.model.publish.git.LinkFolderFilter", "publish/git/link-folder-schema.json");
+            put("com.sos.joc.model.publish.git.UnlinkFolderFilter", "publish/git/unlink-folder-schema.json");
             // dependencies
             put("com.sos.joc.model.inventory.dependencies.GetDependenciesRequest", "inventory/dependencies/dependency-request-schema.json");
             // changes
