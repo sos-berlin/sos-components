@@ -55,6 +55,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.git.UnlinkFolderFilter;
 import com.sos.joc.model.publish.repository.Category;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
@@ -70,8 +71,6 @@ import com.sos.joc.publish.util.PublishUtils;
 public abstract class RepositoryUtil {
 
      private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
-//    private static final CopyOption[] COPYOPTIONS = new StandardCopyOption[] { StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING };
-//    private static final OpenOption[] OPENOPTIONS = new StandardOpenOption[] { StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE};
 
     public static String getExtension(ConfigurationType type) {
         switch (type) {
@@ -479,6 +478,18 @@ public abstract class RepositoryUtil {
         return entries;
     }
     
+    public static Set<Path> getPathsToDeleteFromFS(UnlinkFolderFilter filter, Path repositoryBase) {
+        Set<Path> entries = new TreeSet<Path>();
+        if (filter != null && !filter.getFolder().isEmpty()) {
+            try {
+                return RepositoryUtil.readRepositoryAsTreeSet(repositoryBase.resolve(Paths.get("/").relativize(Paths.get(filter.getFolder()))));
+            } catch (IOException e) {
+                LOGGER.error("Could not read from repository: " + repositoryBase.resolve(Paths.get("/").relativize(Paths.get(filter.getFolder())))
+                        .toString());
+            }
+        }
+        return null;
+    }
     public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase,
             StoreItemsCategory category) throws IOException {
         String content = null;
@@ -1426,4 +1437,39 @@ public abstract class RepositoryUtil {
         return item;
     }
 
+    public static void updateRepoControlledFlagForConfigurations(Set<Configuration> deletedFolders, Path repositoriesBase, 
+            InventoryDBLayer dbLayer) throws SOSHibernateException {
+        updateRepoControlledFlag(deletedFolders.stream().map(Configuration::getPath).collect(Collectors.toSet()), repositoriesBase, dbLayer);
+    }
+
+    public static void updateRepoControlledFlag(Set<String> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer)
+            throws SOSHibernateException {
+        updateRepoControlledFlag(deletedFolders, repositoriesBase, dbLayer, false);
+    }
+
+    public static void updateRepoControlledFlag(Set<String> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer, 
+            boolean controlled) throws SOSHibernateException {
+        for (String path : deletedFolders) {
+            if(!"/".equals(path)) {
+                Path folderPath = Paths.get(path); 
+                if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
+                    // top level folder
+                    Path relFolder = Paths.get("/").relativize(folderPath);
+                    Path pathToCheck = repositoriesBase.resolve(relFolder);
+                    if(!Files.exists(pathToCheck)) {
+                        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(path, ConfigurationType.FOLDER.intValue());
+                        if(dbFolder != null) {
+                            if((!controlled && dbFolder.getRepoControlled()) || 
+                                    (controlled && !dbFolder.getRepoControlled())) {
+                                dbFolder.setRepoControlled(controlled);
+                                dbFolder.setModified(Date.from(Instant.now()));
+                                dbLayer.getSession().update(dbFolder);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
 }

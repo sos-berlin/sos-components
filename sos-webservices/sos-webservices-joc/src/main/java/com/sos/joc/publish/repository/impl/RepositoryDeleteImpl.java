@@ -31,6 +31,7 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
 import com.sos.joc.publish.repository.resource.IRepositoryDelete;
+import com.sos.joc.publish.repository.util.RepositoryDeleteUtil;
 import com.sos.joc.publish.repository.util.RepositoryUtil;
 import com.sos.schema.JsonValidator;
 
@@ -88,9 +89,9 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
                     LOGGER.debug(String.format("file - %1$s - could not be deleted!", Globals.normalizePath(path.toString())), e);
                 }
             });
-            Set<Configuration> deletedFolders = deleteFolders(filter, repositoriesBase);
+            Set<Configuration> deletedFolders = RepositoryDeleteUtil.deleteFolders(filter, repositoriesBase);
             // check top level folders if containing any data and set back repoControlled flag in dbItem
-            updateRepoControlledFlag(deletedFolders, repositoriesBase, dbLayer);
+            RepositoryUtil.updateRepoControlledFlagForConfigurations(deletedFolders, repositoriesBase, dbLayer);
             
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** delete from repository finished ***" + apiCallFinished);
@@ -119,59 +120,4 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
         return null;
     }
     
-    private static Set<Configuration> deleteFolders(DeleteFromFilter filter, Path repositoriesBase) {
-        Set<Configuration> folders = filter.getConfigurations().stream()
-                .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                .map(config -> config.getConfiguration()).collect(Collectors.toSet());
-        folders.forEach(folder -> {
-            try {
-                Path relFolder = Paths.get("/").relativize(Paths.get(folder.getPath()));
-                Path pathToDelete = repositoriesBase.resolve(relFolder);
-                LOGGER.info("resolved path: " + pathToDelete.toString());
-                if(Files.exists(pathToDelete)) {
-                    deleteFolders(pathToDelete);
-                }
-                LOGGER.debug(String.format("Folder %1$s has been deleted.", folder.getPath()));
-            } catch (IOException e) {
-                LOGGER.debug(String.format("Folder - %1$s - could not be deleted!", folder.getPath()), e);
-            }
-        });
-        return folders;
-    }
-    
-    private static void deleteFolders(Path path) throws IOException {
-        Files.walk(path).sorted(Comparator.reverseOrder()).map(Path::toFile)
-        .forEach(file -> {
-            try {
-                file.setWritable(true);
-                file.delete();
-            } catch (Exception e) {
-                LOGGER.debug("could not delete item with path: " + file.toString(), e);
-            }
-        });
-    }
-    
-    private static void updateRepoControlledFlag(Set<Configuration> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer)
-            throws SOSHibernateException {
-        for (Configuration cfg : deletedFolders) {
-            if(!"/".equals(cfg.getPath())) {
-                Path folderPath = Paths.get(cfg.getPath()); 
-                if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
-                    // top level folder
-                    Path relFolder = Paths.get("/").relativize(folderPath);
-                    Path pathToCheck = repositoriesBase.resolve(relFolder);
-                    if(!Files.exists(pathToCheck)) {
-                        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(cfg.getPath(), ConfigurationType.FOLDER.intValue());
-                        if(dbFolder != null) {
-                            dbFolder.setRepoControlled(false);
-                            dbFolder.setModified(Date.from(Instant.now()));
-                            dbLayer.getSession().update(dbFolder);
-                        }
-                    }
-                }
-            }
-        }
-        
-    }
-
 }
