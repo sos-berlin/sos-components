@@ -47,6 +47,7 @@ public class SOSClassUtil {
 
     public static void printStackTrace(boolean onlySOS, final Logger logger) {
         try {
+            Logger log = logger == null ? LOGGER : logger;
             StackTraceElement trace[] = new Throwable().getStackTrace();
             for (int i = 1; i < trace.length; i++) {
                 StackTraceElement el = trace[i];
@@ -55,7 +56,6 @@ public class SOSClassUtil {
                         continue;
                     }
                 }
-                Logger log = logger == null ? LOGGER : logger;
                 log.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
             }
         } catch (Throwable ee) {
@@ -152,7 +152,7 @@ public class SOSClassUtil {
             return inputStream.transferTo(nullOutputStream);
         }
     }
-    
+
     public static byte[] toByteArray(InputStream input) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[4096]; // 4KB Puffer
