@@ -551,14 +551,14 @@ public class MappingTest {
         try {
             JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUri\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
             validated = true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             validated = false;
         }
-        assertTrue(validated);
+        assertTrue(!validated);
         try {
             JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
             validated = true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             validated = false;
         }
         assertTrue(validated);
