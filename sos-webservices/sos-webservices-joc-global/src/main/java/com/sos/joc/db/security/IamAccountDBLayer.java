@@ -237,7 +237,16 @@ public class IamAccountDBLayer {
         }
 
         List<DBItemIamAccount> iamAccountList = sosHibernateSession.getResultList(query);
-        return iamAccountList == null ? Collections.emptyList() : iamAccountList;
+        if (iamAccountList == null) {
+            return Collections.emptyList();
+        } else {
+            if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
+                // fix padspace collation in MySQL and provide case-sensitivity
+                return iamAccountList.stream().filter(i -> filter.getAccountName().equals(i.getAccountName())).collect(Collectors.toList());
+            } else {
+                return iamAccountList;
+            }
+        }
     }
 
     public List<DBItemIamAccount2Roles> getListOfRoles(Long accountId) throws SOSHibernateException {
@@ -363,8 +372,9 @@ public class IamAccountDBLayer {
         bindParameters(filter, query);
 
         List<DBItemIamAccount> iamAccountList = sosHibernateSession.getResultList(query);
-        if (iamAccountList.size() > 0) {
-            return iamAccountList.get(0);
+        if (iamAccountList != null && !iamAccountList.isEmpty()) {
+            // fix padspace collation in MySQL and provide case-sensitivity
+            return iamAccountList.stream().filter(i -> filter.getAccountName().equals(i.getAccountName())).findFirst().orElse(null);
         }
         return null;
     }
@@ -464,10 +474,11 @@ public class IamAccountDBLayer {
         bindParameters(filter, query);
 
         accountList = sosHibernateSession.getResultList(query);
-        if (accountList.size() == 0) {
+        if (accountList == null || accountList.size() == 0) {
             return null;
         } else {
-            return accountList.get(0);
+            // fix padspace collation in MySQL and provide case-sensitivity
+            return accountList.stream().filter(i -> filter.getAccountName().equals(i.getAccountName())).findFirst().orElse(null);
         }
     }
 
@@ -511,10 +522,11 @@ public class IamAccountDBLayer {
         bindParameters(filter, query);
 
         accountList = sosHibernateSession.getResultList(query);
-        if (accountList.size() == 0) {
+        if (accountList == null || accountList.size() == 0) {
             return null;
         } else {
-            return accountList.get(0);
+            // fix padspace collation in MySQL and provide case-sensitivity
+            return accountList.stream().filter(i -> filter.getAccountName().equals(i.getAccountName())).findFirst().orElse(null);
         }
     }
 
@@ -539,7 +551,16 @@ public class IamAccountDBLayer {
         }
 
         List<DBItemIamBlockedAccount> iamBlockedAccountsList = sosHibernateSession.getResultList(query);
-        return iamBlockedAccountsList == null ? Collections.emptyList() : iamBlockedAccountsList;
+        if (iamBlockedAccountsList == null) {
+            return Collections.emptyList();
+        } else {
+            if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
+                // fix padspace collation in MySQL and provide case-sensitivity
+                return iamBlockedAccountsList.stream().filter(i -> filter.getAccountName().equals(i.getAccountName())).collect(Collectors.toList());
+            } else {
+                return iamBlockedAccountsList;
+            }
+        }
     }
 
     public Long getIamCountAccountList(IamAccountFilter filter) throws SOSHibernateException {

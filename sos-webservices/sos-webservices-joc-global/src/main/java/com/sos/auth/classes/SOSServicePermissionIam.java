@@ -192,7 +192,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
     
-    public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
+    private JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             String origin, byte[] body) {
         
         MDC.put("context", ThreadCtx);
@@ -1103,10 +1103,8 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 }
 
                 if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
-                    String s = sosLoginParameters.getAccount() + ":" + pwd;
-                    byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
-                    String authStringEnc = new String(authEncBytes);
-                    sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
+                    sosLoginParameters.setBasicAuthorization("Basic " + Base64.getEncoder().encodeToString((sosLoginParameters.getAccount() + ":"
+                            + pwd).getBytes()));
                 }
             }
 
@@ -1160,6 +1158,8 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
                 audit.setComment("===> Failed login");
                 jocAuditLog.logAuditMessage(audit);
+                sosAuthCurrentUserAnswer.setMessage("Access denied");
+                sosAuthCurrentUserAnswer.setIdentityService(null);
                 return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer, jocAuditLog);
             } else {
                 jocAuditLog.logAuditMessage(audit);
