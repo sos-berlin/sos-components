@@ -1,5 +1,6 @@
 package com.sos.joc.deploy.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -554,7 +555,7 @@ public class MappingTest {
         } catch (Exception e) {
             validated = false;
         }
-        assertTrue(!validated);
+        assertFalse(validated);
         try {
             JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
             validated = true;
