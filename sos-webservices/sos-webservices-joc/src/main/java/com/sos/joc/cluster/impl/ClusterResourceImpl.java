@@ -2,24 +2,34 @@ package com.sos.joc.cluster.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.resource.IClusterResource;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.cluster.ClusterResponse;
@@ -95,6 +105,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
             if (response == null) {
+                checkSwitchingControllerIds();
                 storeAuditLog(in.getAuditLog());
                 response = processAnswer(ClusterServices.cluster, JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in
                         .getMemberId()));
@@ -104,6 +115,42 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
+    }
+    
+    private void checkSwitchingControllerIds() {
+        List<String> switchingControllerIds = getSwitchingControllerIds();
+        if (!switchingControllerIds.isEmpty()) {
+            throw new ControllerConflictException(String.format(
+                    "Controller cluster %s %s just switching over. Switch-over of the JOC Cockpit instances is not possible during a switch-over of a Controller cluster",
+                    switchingControllerIds.toString(), switchingControllerIds.size() == 1 ? "is" : "are"));
+        }
+    }
+
+    private List<String> getSwitchingControllerIds() {
+        return Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getValue).filter(
+                this::isSwitchingControllerId).map(instances -> instances.get(0).getControllerId()).toList();
+    }
+    
+    private boolean isSwitchingControllerId(List<DBItemInventoryJSInstance> instances) {
+        boolean isSwitching = false;
+        for (DBItemInventoryJSInstance instance : instances) {
+            if (isSwitching) {
+                break;
+            }
+            try {
+                isSwitching = isSwitchingControllerId(instance);
+            } catch (JocException e) {
+                //
+            }
+        }
+        return isSwitching;
+    }
+    
+    private boolean isSwitchingControllerId(DBItemInventoryJSInstance instance) {
+        JOCJsonCommand jocJsonCommand = new JOCJsonCommand(instance, getAccessToken());
+        jocJsonCommand.setUriBuilderForCluster();
+        return Optional.ofNullable(jocJsonCommand.getJsonObjectFromGet(ClusterState.class)).map(ClusterState::getTYPE).filter(
+                ClusterType.SWITCHED_OVER::equals).isPresent();
     }
 
     @Override

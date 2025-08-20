@@ -17,7 +17,10 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocServiceException;
 import com.sos.joc.joc.impl.StateImpl;
@@ -48,20 +51,28 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(urlParameter.getAuditLog(), controllerId);
-
+            
             // ask for cluster
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
             if (controllerInstances != null && controllerInstances.size() < 2) { // is not cluster
                 throw new JocBadRequestException("There is no cluster with the Id: " + controllerId);
             }
+            
+            if (isSwitchingJocInstances()) {
+                throw new ControllerConflictException(String.format(
+                        "JOC Cockpit cluster is just switching over. Switch-over of the Controller cluster '%s' is not possible during a switch-over of the JOC Cockpit cluster",
+                        controllerId));
+            }
+            
+            storeAuditLog(urlParameter.getAuditLog(), controllerId);
+
 
             ClusterState clusterState = Globals.objectMapper.readValue(Proxy.of(controllerId).currentState().clusterState().toJson(),
                     ClusterState.class);
 
             // ask for coupled
             if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {
-                throw new JocBadRequestException("Switchover is not available because the cluster is not coupled");
+                throw new JocBadRequestException("Switch-over is not available because the cluster is not coupled");
             }
             ControllerApi.of(controllerId).executeCommand(JControllerCommand.clusterSwitchover(Optional.empty())).thenAccept(e -> ProblemHelper
                     .postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
@@ -69,6 +80,17 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
+        }
+    }
+    
+    private boolean isSwitchingJocInstances() {
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_SWITCHOVER);
+            JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
+            return Optional.ofNullable(dbLayer.getCluster()).map(DBItemJocCluster::getSwitchHeartBeat).isPresent();
+        } finally {
+            Globals.disconnect(connection);
         }
     }
     
@@ -102,7 +124,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
     
     @Override
     public JOCDefaultResponse postConfirmClusterNodeLoss(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
         try {
             filterBytes = initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken, CategoryType.CONTROLLER);
             
@@ -125,8 +146,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
-        } finally {
-            Globals.disconnect(connection);
         }
     }
 
