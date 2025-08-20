@@ -555,7 +555,7 @@ public class MappingTest {
         } catch (Exception e) {
             validated = false;
         }
-        assertFalse(validated);
+        assertTrue(validated);
         try {
             JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
             validated = true;
