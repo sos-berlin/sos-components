@@ -253,6 +253,7 @@ public class ClusterWatch {
                 return clusterId;
             } else {
                 try {
+                    Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(cws -> cws.stop());
                     LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'");
                     if (controllerApi == null) {
                         controllerApi = ControllerApi.of(controllerId);
