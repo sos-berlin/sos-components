@@ -19,6 +19,7 @@ public class GlobalSettingsReader {
         settings.setDailyPlanStartTime(conf.getStartTime().getValue());
         settings.setDaysAheadPlan(conf.getDaysAheadPlan().getValue());
         settings.setDaysAheadSubmit(conf.getDaysAheadSubmit().getValue());
+        settings.setProjectionsMonthBefore(conf.getProjectionsMonthBefore().getValue());
         settings.setProjectionsMonthAhead(conf.getProjectionsMonthAhead().getValue());
         settings.setAgeOfPlansToBeClosedAutomatically(conf.getAgeOfPlansToBeClosedAutomatically().getValue());
 

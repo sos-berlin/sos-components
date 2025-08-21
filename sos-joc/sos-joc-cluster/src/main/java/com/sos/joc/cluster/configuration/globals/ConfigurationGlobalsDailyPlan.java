@@ -14,12 +14,14 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
     private ConfigurationEntry daysAheadPlan = new ConfigurationEntry("days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry daysAheadSubmit = new ConfigurationEntry("days_ahead_submit", "3", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
+    private ConfigurationEntry projectionsMonthBefore = new ConfigurationEntry("projections_month_before", "2",
+            GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     private ConfigurationEntry projectionsMonthAhead = new ConfigurationEntry("projections_month_ahead", "6",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    
+
     private ConfigurationEntry submitOrdersIndividually = new ConfigurationEntry("submit_orders_individually", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
-    
+
     private ConfigurationEntry ageOfPlansToBeClosedAutomatically = new ConfigurationEntry("age_of_plans_to_be_closed_automatically", "1",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
@@ -33,9 +35,10 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         daysAheadSubmit.setOrdering(++index);
 
         submitOrdersIndividually.setOrdering(++index);
-        
+
         ageOfPlansToBeClosedAutomatically.setOrdering(++index);
-        
+
+        projectionsMonthBefore.setOrdering(++index);
         projectionsMonthAhead.setOrdering(++index);
     }
 
@@ -59,16 +62,20 @@ public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
         return daysAheadSubmit;
     }
 
+    public ConfigurationEntry getProjectionsMonthBefore() {
+        return projectionsMonthBefore;
+    }
+
     public ConfigurationEntry getProjectionsMonthAhead() {
         return projectionsMonthAhead;
     }
-    
+
     public ConfigurationEntry getAgeOfPlansToBeClosedAutomatically() {
         return ageOfPlansToBeClosedAutomatically;
     }
-    
+
     public boolean getSubmitOrdersIndividually() {
-        if(submitOrdersIndividually.getValue() == null) {
+        if (submitOrdersIndividually.getValue() == null) {
             return submitOrdersIndividually.getDefault().equalsIgnoreCase("true");
         }
         return submitOrdersIndividually.getValue().equalsIgnoreCase("true");

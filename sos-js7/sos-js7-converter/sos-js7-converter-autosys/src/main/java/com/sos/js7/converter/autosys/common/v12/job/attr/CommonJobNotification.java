@@ -1,7 +1,11 @@
 package com.sos.js7.converter.autosys.common.v12.job.attr;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -10,8 +14,10 @@ import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 
 public class CommonJobNotification extends AJobAttributes {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonJobNotification.class);
+
     public enum AlarmType {
-        MINRUNALARM, JOBFAILURE, MAX_RETRYS, STARTJOBFAIL, EVENT_HDLR_ERROR, EVENT_QUE_ERROR, JOBNOT_ONICEHOLD, MAXRUNALARM, RESOURCE, MISSING_HEARTBEAT, CHASE, DATABASE_COMM, VERSION_MISMATCH, DUPLICATE_EVENT, INSTANCE_UNAVAILABLE, AUTO_PING, EXTERN_DEPS_ERROR, SERVICEDESK_FAILURE, UNINOTIFY_FAILURE, CPI_JOBNAME_INVALID, CPI_UNAVAILABLE, MUST_START_ALARM, MUST_COMPLETE_ALARM, WAIT_REPLY_ALARM, KILLJOBFAIL, SENDSIGFAIL, REPLY_RESPONSE_FAIL, RETURN_RESOURCE_FAIL, RESTARTJOBFAIL, JOBNOT_ONNOEXEC, QUEUEDJOB_STARTFAIL, SUSPENDJOBFAIL, RESUMEJOBFAIL
+        MINRUNALARM, JOBFAILURE, JOBTERMINATED, MAX_RETRYS, STARTJOBFAIL, EVENT_HDLR_ERROR, EVENT_QUE_ERROR, JOBNOT_ONICEHOLD, MAXRUNALARM, RESOURCE, MISSING_HEARTBEAT, CHASE, DATABASE_COMM, VERSION_MISMATCH, DUPLICATE_EVENT, INSTANCE_UNAVAILABLE, AUTO_PING, EXTERN_DEPS_ERROR, SERVICEDESK_FAILURE, UNINOTIFY_FAILURE, CPI_JOBNAME_INVALID, CPI_UNAVAILABLE, MUST_START_ALARM, MUST_COMPLETE_ALARM, WAIT_REPLY_ALARM, KILLJOBFAIL, SENDSIGFAIL, REPLY_RESPONSE_FAIL, RETURN_RESOURCE_FAIL, RESTARTJOBFAIL, JOBNOT_ONNOEXEC, QUEUEDJOB_STARTFAIL, SUSPENDJOBFAIL, RESUMEJOBFAIL
     }
 
     private static final String ATTR_ALARM_IF_FAIL = "alarm_if_fail";
@@ -129,8 +135,15 @@ public class CommonJobNotification extends AJobAttributes {
         if (SOSString.isEmpty(val)) {
             notificationAlarmTypes.setValue(null);
         } else {
-            notificationAlarmTypes.setValue(JS7ConverterHelper.stringListValue(val, ",").stream().map(v -> AlarmType.valueOf(v.toUpperCase()))
-                    .collect(Collectors.toList()));
+            String delimiter = val.contains(";") ? ";" : ",";
+            notificationAlarmTypes.setValue(JS7ConverterHelper.stringListValue(val, delimiter).stream().map(v -> {
+                try {
+                    return AlarmType.valueOf(v.toUpperCase());
+                } catch (Exception e) {
+                    LOGGER.error("[setNotificationAlarmTypes][unknown value][" + val + "]" + e, e);
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toList()));
         }
     }
 

@@ -159,6 +159,9 @@ public class SOSDate {
 
     public static String tryGetDateTimeAsString(Date date) {
         try {
+            if (date == null) {
+                return null;
+            }
             return getDateTimeAsString(date, null);
         } catch (SOSInvalidDataException e) {
             return e.toString();
@@ -167,6 +170,9 @@ public class SOSDate {
 
     public static String tryGetDateTimeAsString(Instant date) {
         try {
+            if (date == null) {
+                return null;
+            }
             return getDateTimeAsString(Date.from(date), null);
         } catch (SOSInvalidDataException e) {
             return e.toString();

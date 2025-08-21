@@ -479,7 +479,6 @@ public abstract class RepositoryUtil {
     }
     
     public static Set<Path> getPathsToDeleteFromFS(UnlinkFolderFilter filter, Path repositoryBase) {
-        Set<Path> entries = new TreeSet<Path>();
         if (filter != null && !filter.getFolder().isEmpty()) {
             try {
                 return RepositoryUtil.readRepositoryAsTreeSet(repositoryBase.resolve(Paths.get("/").relativize(Paths.get(filter.getFolder()))));
@@ -490,6 +489,7 @@ public abstract class RepositoryUtil {
         }
         return null;
     }
+    
     public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase,
             StoreItemsCategory category) throws IOException {
         String content = null;
@@ -1454,9 +1454,9 @@ public abstract class RepositoryUtil {
                 Path folderPath = Paths.get(path); 
                 if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
                     // top level folder
-                    Path relFolder = Paths.get("/").relativize(folderPath);
-                    Path pathToCheck = repositoriesBase.resolve(relFolder);
-                    if(!Files.exists(pathToCheck)) {
+//                    Path relFolder = Paths.get("/").relativize(folderPath);
+//                    Path pathToCheck = repositoriesBase.resolve(relFolder);
+//                    if(!Files.exists(pathToCheck)) {
                         DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(path, ConfigurationType.FOLDER.intValue());
                         if(dbFolder != null) {
                             if((!controlled && dbFolder.getRepoControlled()) || 
@@ -1466,7 +1466,7 @@ public abstract class RepositoryUtil {
                                 dbLayer.getSession().update(dbFolder);
                             }
                         }
-                    }
+//                    }
                 }
             }
         }

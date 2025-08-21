@@ -39,6 +39,7 @@ public class DailyPlanProjectionTest {
             // 2) in years: <n> years, <n> year, <n> y
 
             // years will be converted to months...
+            s.setProjectionsMonthBefore(2);
             s.setProjectionsMonthAhead(6);
 
             for (int i = 0; i < 5; i++) {
@@ -51,7 +52,7 @@ public class DailyPlanProjectionTest {
                 });
             }
 
-            TimeUnit.SECONDS.sleep(10);// due to runAsync
+            TimeUnit.SECONDS.sleep(10);// sleep due to asynchronous call
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {

@@ -41,6 +41,7 @@ import com.sos.joc.dailyplan.resource.IDailyPlanProjectionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.projections.ProjectionsCalendarResponse;
@@ -69,7 +70,12 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    DailyPlanRunner.recreateProjections(JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH_RECREATE));
+                    if (DailyPlanRunner.isRecreateProjectionsAlreadyRunning(DailyPlanRunner.recreateProjections(JOCOrderResourceImpl
+                            .getDailyPlanSettings(IMPL_PATH_RECREATE)))) {
+                        JocError err = getJocError();
+                        err.setLogAsInfo(true);
+                        ProblemHelper.postMessageAsHintIfExist("A calculation of the projections are in progress right now.", accessToken, err, null);
+                    }
                 } catch (Exception e) {
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
                 }
@@ -314,9 +320,11 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
                         int total = isPlanned ? numOfPermittedSchedules : numOfPermittedSchedulesForProjectionDays;
                         dateItem.setNumOfNonPeriods(total - numOfschedulesOfTheDay);
+                        dateItem.setNonPeriods(null);
                     }
                     dateItem.setPeriods(null);
                 } else {
+                    dateItem.setNonPeriods(null);
                     if (!export) {
                         setDateItemNumOfOrders(dateItem, scheduleOrderCounter);
                         dateItem.setPeriods(null);
@@ -331,11 +339,8 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                     monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfNonPeriods() == 0);
                 }
             } else {
-                if (export) {
-                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getPeriods().isEmpty());
-                } else {
-                    monthItem.getAdditionalProperties().values().removeIf(dateItem -> dateItem.getNumOfOrders() == 0);
-                }
+                // Do not remove entries with check: "dateItem.getPeriods().isEmpty()" or "dateItem.getNumOfOrders() == 0"
+                // valid case if the planned date does not contain any orders(e.g. if these were manually removed)
             }
 
             if (!monthItem.getAdditionalProperties().isEmpty()) {

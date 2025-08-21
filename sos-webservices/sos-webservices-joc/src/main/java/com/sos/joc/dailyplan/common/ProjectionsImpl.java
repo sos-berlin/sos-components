@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.dailyplan.db.DBLayerDailyPlanProjections;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.projections.ProjectionsDayResponse;
@@ -24,16 +23,6 @@ import com.sos.joc.model.dailyplan.projections.items.year.DateItem;
 import com.sos.joc.model.dailyplan.projections.items.year.DatePeriodItem;
 
 public class ProjectionsImpl extends JOCOrderResourceImpl {
-
-    public static DBMissingDataException getDBMissingDataException() throws DBMissingDataException {
-        String errorMsg = "Couldn't find projections data. Please start a calculation of the projections.";
-        if (DBLayerDailyPlanProjections.projectionsStart.isPresent()) {
-            errorMsg = "Couldn't find projections data. A calculation of the projections are in progress right now.";
-        }
-        DBMissingDataException e = new DBMissingDataException(errorMsg);
-        e.getError().setLogAsInfo(true);
-        return e;
-    }
 
     public static Optional<Set<String>> getNamesOptional(List<String> paths) {
         Optional<Set<String>> names = Optional.empty();
@@ -88,7 +77,7 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
             List<Folder> workflowFolders, Set<String> permittedSchedules, SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
 
         boolean schedulesRemoved = false;
-        MetaItem metaItem = metaContentOpt.orElseThrow(ProjectionsImpl::getDBMissingDataException);
+        MetaItem metaItem = metaContentOpt.orElse(null);
         if (metaItem != null && metaItem.getAdditionalProperties() != null) {
             if (filterControllerIds(metaItem, allowedControllers)) {
                 schedulesRemoved = true;
