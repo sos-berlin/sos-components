@@ -160,6 +160,7 @@ public class DailyPlanService extends AJocActiveMemberService {
         settings.setDailyPlanStartTime(dailyPlanGlobalSettings.getDailyPlanStartTime());
         settings.setDaysAheadPlan(dailyPlanGlobalSettings.getDaysAheadPlan());
         settings.setDaysAheadSubmit(dailyPlanGlobalSettings.getDaysAheadSubmit());
+        settings.setProjectionsMonthBefore(dailyPlanGlobalSettings.getProjectionsMonthBefore());
         settings.setProjectionsMonthAhead(dailyPlanGlobalSettings.getProjectionsMonthAhead());
         settings.setAgeOfPlansToBeClosedAutomatically(dailyPlanGlobalSettings.getAgeOfPlansToBeClosedAutomatically());
 

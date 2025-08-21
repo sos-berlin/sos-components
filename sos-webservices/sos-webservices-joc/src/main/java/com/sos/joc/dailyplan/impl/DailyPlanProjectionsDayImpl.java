@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSCollection;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -91,11 +92,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
             Optional<DBItemDailyPlanProjection> metaOpt = Optional.empty();
             Optional<MetaItem> metaContentOpt = Optional.empty();
 
-            if (items != null) {
-                if (items.isEmpty()) {
-                    throw getDBMissingDataException();
-                }
-
+            if (!SOSCollection.isEmpty(items)) {
                 metaOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();
                 metaContentOpt = metaOpt.map(m -> {
                     try {
@@ -125,50 +122,51 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                     }
                 }
 
-                if (!scheduleNames.isEmpty()) {
-                    Optional<Set<String>> scheduleNamesOpt = getNamesOptional(in.getSchedulePaths());
-                    Optional<Set<String>> workflowNamesOpt = getNamesOptional(in.getWorkflowPaths());
-                    Optional<Set<String>> nonPeriodScheduleNamesOpt = Optional.empty();
+                // scheduleNames can be empty if the planned date has 0 orders/periods
+                // if (!scheduleNames.isEmpty()) {
+                Optional<Set<String>> scheduleNamesOpt = getNamesOptional(in.getSchedulePaths());
+                Optional<Set<String>> workflowNamesOpt = getNamesOptional(in.getWorkflowPaths());
+                Optional<Set<String>> nonPeriodScheduleNamesOpt = Optional.empty();
 
-                    if (invertedProjection) {
-                        nonPeriodScheduleNamesOpt = Optional.of(scheduleNames);
+                if (invertedProjection) {
+                    nonPeriodScheduleNamesOpt = Optional.of(scheduleNames);
+                } else {
+                    if (scheduleNamesOpt.isPresent()) {
+                        Set<String> scheduleNames1 = scheduleNamesOpt.get();
+                        scheduleNames1.retainAll(scheduleNames);
+                        scheduleNamesOpt = Optional.of(scheduleNames1);
                     } else {
-                        if (scheduleNamesOpt.isPresent()) {
-                            Set<String> scheduleNames1 = scheduleNamesOpt.get();
-                            scheduleNames1.retainAll(scheduleNames);
-                            scheduleNamesOpt = Optional.of(scheduleNames1);
-                        } else {
-                            scheduleNamesOpt = Optional.of(scheduleNames);
-                        }
-                    }
-
-                    final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNamesOpt, in
-                            .getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(), permittedSchedules,
-                            folderPermissions);
-
-                    if (invertedProjection) {
-                        entity.setNonPeriods(permittedSchedules.stream().map(s -> {
-                            DatePeriodItem dpi = new DatePeriodItem();
-                            dpi.setSchedule(s);
-                            return dpi;
-                        }).filter(Objects::nonNull).collect(Collectors.toList()));
-                        entity.setNumOfNonPeriods(entity.getNonPeriods().size());
-
-                        // remove Periods
-                        entity.setPeriods(null);
-                        entity.setNumOfOrders(null);
-
-                    } else {
-                        if (unPermittedSchedulesExist) {
-                            entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
-                        }
-                        setDateItemNumOfOrders(entity, scheduleOrderCounter);
-
-                        // remove NonPeriods
-                        entity.setNonPeriods(null);
-                        entity.setNumOfNonPeriods(null);
+                        scheduleNamesOpt = Optional.of(scheduleNames);
                     }
                 }
+
+                final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNamesOpt, in
+                        .getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(), permittedSchedules,
+                        folderPermissions);
+
+                if (invertedProjection) {
+                    entity.setNonPeriods(permittedSchedules.stream().map(s -> {
+                        DatePeriodItem dpi = new DatePeriodItem();
+                        dpi.setSchedule(s);
+                        return dpi;
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
+                    entity.setNumOfNonPeriods(entity.getNonPeriods().size());
+
+                    // remove Periods
+                    entity.setPeriods(null);
+                    entity.setNumOfOrders(null);
+
+                } else {
+                    if (unPermittedSchedulesExist) {
+                        entity.getPeriods().removeIf(p -> !permittedSchedules.contains(p.getSchedule()));
+                    }
+                    setDateItemNumOfOrders(entity, scheduleOrderCounter);
+
+                    // remove NonPeriods
+                    entity.setNonPeriods(null);
+                    entity.setNumOfNonPeriods(null);
+                }
+                // }
 
             }
 

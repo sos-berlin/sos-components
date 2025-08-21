@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.ScrollableResults;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -33,32 +33,37 @@ public class DBLayerDailyPlanProjections extends DBLayer {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanProjections.class);
 
     private static final long serialVersionUID = 1L;
-    public static Optional<Instant> projectionsStart = Optional.empty();
 
     public DBLayerDailyPlanProjections(SOSHibernateSession session) {
         super(session);
     }
 
     public int cleanup() throws SOSHibernateException {
-        projectionsStart = Optional.of(Instant.now());
         return getSession().executeUpdate("delete from " + DBITEM_DPL_PROJECTIONS);
     }
 
-    public void insert(int year, YearsItem o) throws Exception {
-        if (o == null) {
+    /** store monthly not yearly */
+    public void insert(YearsItem yearsItem) throws Exception {
+        if (yearsItem == null) {
             return;
         }
-        // store monthly not yearly
-        Date d = new Date();
-        for (Map.Entry<String, MonthItem> monthEntry : o.getAdditionalProperties().getOrDefault(year + "", new MonthsItem()).getAdditionalProperties()
-                .entrySet()) {
-            String yearMonth = monthEntry.getKey().replace("-", "");
-            insert(Long.valueOf(yearMonth), monthEntry.getValue(), d);
+
+        Date created = new Date();
+        for (Map.Entry<String, MonthsItem> yearEntry : yearsItem.getAdditionalProperties().entrySet()) {
+            // String year = yearEntry.getKey();
+            for (Map.Entry<String, MonthItem> monthEntry : yearEntry.getValue().getAdditionalProperties().entrySet()) {
+                String yearMonth = monthEntry.getKey().replace("-", "");
+                insert(Long.valueOf(yearMonth), monthEntry.getValue(), created);
+            }
         }
     }
 
     private void insert(long yearMonth, MonthItem o, Date created) throws Exception {
         if (o == null) {
+            return;
+        }
+
+        if (SOSCollection.isEmpty(o.getAdditionalProperties())) {
             return;
         }
 
@@ -96,7 +101,6 @@ public class DBLayerDailyPlanProjections extends DBLayer {
 
         getSession().save(item);
 
-        projectionsStart = Optional.empty();
         EventBus.getInstance().post(new DailyPlanProjectionEvent());
     }
 

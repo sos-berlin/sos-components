@@ -40,6 +40,7 @@ public class DailyPlanSettings {
 
     private int daysAheadPlan = 0;
     private int daysAheadSubmit = 0;
+    private int projectionsMonthBefore = 0;
     private int projectionsMonthAhead = 0;
     private int ageOfPlansToBeClosedAutomatically = 1;
 
@@ -186,8 +187,25 @@ public class DailyPlanSettings {
         }
     }
 
+    public void setProjectionsMonthBefore(int val) {
+        projectionsMonthBefore = val;
+    }
+
+    public void setProjectionsMonthBefore(String val) {
+        try {
+            this.projectionsMonthBefore = Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            this.projectionsMonthAhead = 6;
+            LOGGER.warn("Could not set setting for projectionsMonthBefore: " + val);
+        }
+    }
+
     public int getProjectionsMonthAhead() {
         return projectionsMonthAhead;
+    }
+
+    public int getProjectionsMonthBefore() {
+        return projectionsMonthBefore;
     }
 
     public void setAgeOfPlansToBeClosedAutomatically(int val) {
@@ -255,6 +273,7 @@ public class DailyPlanSettings {
         }
         sb.append(",days_ahead_plan=").append(daysAheadPlan);
         sb.append(",days_ahead_submit=").append(daysAheadSubmit);
+        sb.append(",projections_month_before=").append(projectionsMonthBefore);
         sb.append(",projections_month_ahead=").append(projectionsMonthAhead);
         return sb.toString();
     }
