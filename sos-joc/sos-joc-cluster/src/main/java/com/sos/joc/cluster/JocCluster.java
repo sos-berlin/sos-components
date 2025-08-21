@@ -630,16 +630,23 @@ public class JocCluster {
                     } else {
                         LOGGER.info(String.format("[%s][switch][start][newMemberId=%s][db][UTC]heartBeat=%s ...", mode, newMemberId, SOSDate
                                 .getDateTimeAsString(ni.getHeartBeat())));
+                        
                         if (activeMemberHandler.isActive()) {
+                            // update before perform is used in ControllerResourceModifyClusterImpl.isSwitchingJocInstances
+                            item.setSwitchHeartBeat(now);
+
+                            dbLayer.beginTransaction();
+                            dbLayer.getSession().update(item);
+                            dbLayer.commit();
+                            
                             LOGGER.info(String.format("[%s][switch][start][stop][current]%s", mode, currentMemberId));
                             activeMemberHandler.perform(mode, PerformType.STOP, configurations);
 
                             now = dbLayer.getNowUTC();
                         }
+                        
                         item.setMemberId(newMemberId);
                         item.setHeartBeat(now);
-                        // item.setSwitchMemberId(null);
-                        // item.setSwitchHeartBeat(null);
 
                         item.setSwitchMemberId(newMemberId);
                         item.setSwitchHeartBeat(item.getHeartBeat());

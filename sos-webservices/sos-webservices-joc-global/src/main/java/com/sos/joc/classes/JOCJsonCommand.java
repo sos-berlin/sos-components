@@ -312,7 +312,7 @@ public class JOCJsonCommand {
 		return getJsonObject(getJsonStringFromGet(), clazz);
 	}
     
-    private String getJsonStringFromGet() throws JocException {
+    private String getJsonStringFromGet() {
         try {
             return getJsonStringFromGet(getURI());
         } catch (JocException e) {
@@ -380,7 +380,7 @@ public class JOCJsonCommand {
         }
     }
     
-    private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws ControllerInvalidResponseDataException {
+    private <T> T getJsonObject(String jsonStr, Class<T> clazz) {
         try {
             if (jsonStr == null) {
                 return null;
