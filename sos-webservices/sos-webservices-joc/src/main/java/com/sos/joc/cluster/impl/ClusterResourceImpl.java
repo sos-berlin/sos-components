@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.cluster.JocCluster;
@@ -128,29 +129,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
 
     private List<String> getSwitchingControllerIds() {
         return Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getValue).filter(
-                this::isSwitchingControllerId).map(instances -> instances.get(0).getControllerId()).toList();
-    }
-    
-    private boolean isSwitchingControllerId(List<DBItemInventoryJSInstance> instances) {
-        boolean isSwitching = false;
-        for (DBItemInventoryJSInstance instance : instances) {
-            if (isSwitching) {
-                break;
-            }
-            try {
-                isSwitching = isSwitchingControllerId(instance);
-            } catch (JocException e) {
-                //
-            }
-        }
-        return isSwitching;
-    }
-    
-    private boolean isSwitchingControllerId(DBItemInventoryJSInstance instance) {
-        JOCJsonCommand jocJsonCommand = new JOCJsonCommand(instance, getAccessToken());
-        jocJsonCommand.setUriBuilderForCluster();
-        return Optional.ofNullable(jocJsonCommand.getJsonObjectFromGet(ClusterState.class)).map(ClusterState::getTYPE).filter(
-                ClusterType.SWITCHED_OVER::equals).isPresent();
+                l -> States.isSwitchingControllerId(l, getAccessToken())).map(instances -> instances.get(0).getControllerId()).toList();
     }
 
     @Override

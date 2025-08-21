@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.cluster.ClusterState;
@@ -29,7 +30,11 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import js7.data.agent.AgentPath;
+import js7.data_for_java.agent.JAgentRefState;
+import js7.data_for_java.cluster.JClusterState;
 import js7.data_for_java.controller.JControllerCommand;
+import js7.data_for_java.controller.JControllerState;
 
 @Path("controller")
 public class ControllerResourceModifyClusterImpl extends JOCResourceImpl implements IControllerResourceModifyCluster {
@@ -64,11 +69,31 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                         controllerId));
             }
             
+            JControllerState currentState = Proxy.of(controllerId).currentState();
+            
+            Predicate<JAgentRefState> agentClusterIsSwitching = a -> {
+                return Optional.ofNullable(a.clusterState()).map(JClusterState::toJson).map(json -> {
+                    try {
+                        ClusterState cs = Globals.objectMapper.readValue(json, ClusterState.class);
+                        return Optional.ofNullable(cs).map(ClusterState::getTYPE).filter(ClusterType.SWITCHED_OVER::equals).isPresent();
+                    } catch (Exception e1) {
+                        return false;
+                    }
+                }).orElse(false);
+            };
+            
+            List<String> switchingAgentClusters = currentState.pathToAgentRefState().values().stream().filter(
+                    agentClusterIsSwitching).map(JAgentRefState::agentPath).map(AgentPath::string).distinct().toList();
+            if (!switchingAgentClusters.isEmpty()) {
+                throw new ControllerConflictException(String.format(
+                        "Agent cluster %s %s just switching over. Switch-over of the Controller cluster '%s' is not possible during a switch-over of an Agent cluster",
+                        switchingAgentClusters.toString(), switchingAgentClusters.size() == 1 ? "is" : "are"));
+            }
+            
             storeAuditLog(urlParameter.getAuditLog(), controllerId);
 
 
-            ClusterState clusterState = Globals.objectMapper.readValue(Proxy.of(controllerId).currentState().clusterState().toJson(),
-                    ClusterState.class);
+            ClusterState clusterState = Globals.objectMapper.readValue(currentState.clusterState().toJson(), ClusterState.class);
 
             // ask for coupled
             if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {

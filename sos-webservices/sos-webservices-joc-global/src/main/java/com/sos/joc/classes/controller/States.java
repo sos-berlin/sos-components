@@ -9,7 +9,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.controller.ClusterNodeState;
 import com.sos.joc.model.controller.ClusterNodeStateText;
 import com.sos.joc.model.controller.ClusterState;
@@ -158,5 +160,33 @@ public class States {
             }
         }
         return controllerInstance;
+    }
+    
+    /**
+     * 
+     * @param instances - DBItemInventoryJSInstance of both Controllers of the Controller cluster
+     * @param accessToken
+     * @return
+     */
+    public static boolean isSwitchingControllerId(List<DBItemInventoryJSInstance> instances, String accessToken) {
+        boolean isSwitching = false;
+        for (DBItemInventoryJSInstance instance : instances) {
+            if (isSwitching) {
+                break;
+            }
+            try {
+                isSwitching = isSwitchingControllerId(instance, accessToken);
+            } catch (JocException e) {
+                //
+            }
+        }
+        return isSwitching;
+    }
+    
+    private static boolean isSwitchingControllerId(DBItemInventoryJSInstance instance, String accessToken) {
+        JOCJsonCommand jocJsonCommand = new JOCJsonCommand(instance, accessToken);
+        jocJsonCommand.setUriBuilderForCluster();
+        return Optional.ofNullable(jocJsonCommand.getJsonObjectFromGet(com.sos.controller.model.cluster.ClusterState.class)).map(
+                com.sos.controller.model.cluster.ClusterState::getTYPE).filter(ClusterType.SWITCHED_OVER::equals).isPresent();
     }
 }

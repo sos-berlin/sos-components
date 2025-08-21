@@ -19,11 +19,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentClusterWatch;
+import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
+import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.agent.AgentCommand;
@@ -151,6 +154,13 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 return jocDefaultResponse;
             }
             
+            if (Optional.ofNullable(Proxies.getControllerDbInstances().get(controllerId)).filter(l -> l.size() > 1).map(l -> States
+                    .isSwitchingControllerId(l, accessToken)).orElse(false)) {
+                throw new ControllerConflictException(String.format(
+                        "Controller cluster [%s] is just switching over. Switch-over of an Agent cluster of this Controller is not possible during a switch-over of the Controller cluster",
+                        controllerId));
+            }
+
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId());
             
             String agentId = agentCommand.getAgentId();
