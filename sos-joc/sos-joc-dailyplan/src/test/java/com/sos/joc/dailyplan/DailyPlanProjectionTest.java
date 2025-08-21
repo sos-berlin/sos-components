@@ -33,12 +33,7 @@ public class DailyPlanProjectionTest {
             DailyPlanSettings s = new DailyPlanSettings();
             s.setTimeZone("Europe/Berlin");
             s.setPeriodBegin("00:00:00");
-            // currently supported (case insensitive):
-            // 1) in months: <n> <- months, <n> months, <n> month, <n> m
-            // or
-            // 2) in years: <n> years, <n> year, <n> y
 
-            // years will be converted to months...
             s.setProjectionsMonthBefore(2);
             s.setProjectionsMonthAhead(6);
 
