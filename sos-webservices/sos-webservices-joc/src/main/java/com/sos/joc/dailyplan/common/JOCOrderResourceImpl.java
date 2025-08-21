@@ -49,6 +49,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             settings.setPeriodBegin("00:00");
             settings.setDaysAheadPlan(7);
             settings.setDaysAheadSubmit(3);
+            settings.setProjectionsMonthBefore(2);
             settings.setProjectionsMonthAhead(6);
             LOGGER.warn("Could not read settings. Using defaults");
         } else {

@@ -23,6 +23,7 @@ import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -93,6 +94,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -128,7 +130,7 @@ public class DailyPlanRunner extends TimerTask {
     // service
     // TODO currently runs every 60? seconds -the extends TimerTask should be replaced with a schedule executer (see cleanup service)
     public void run() {
-        JocClusterServiceLogger.setLogger("dailyplan");
+        setLogger();
 
         boolean createPlan = false;
         boolean isAutomaticStart = isAutomaticStart();
@@ -161,18 +163,9 @@ public class DailyPlanRunner extends TimerTask {
             if (createPlan) {
                 clear();
 
-                try {
-                    JocClusterState state = recreateProjections(settings);
-                    if (!JocClusterState.COMPLETED.equals(state)) {
-                        if (JocClusterState.ALREADY_RUNNING.equals(state)) {// e.g. started by a web service
-                            // TODO wait + rerun
-                        }
-                    }
-                } catch (Throwable ex) {
-                    LOGGER.error(ex.toString(), ex);
-                } finally {
-                    lastActivityEnd.set(new Date().getTime());
-                }
+                recreateProjectionsByService();
+
+                lastActivityEnd.set(new Date().getTime());
                 settings.setStartMode(StartupMode.automatic);
                 startCalendar = DailyPlanHelper.getStartTimeCalendar(settings);
                 LOGGER.info(DailyPlanHelper.getNextStartMsg(settings, startCalendar));
@@ -193,12 +186,55 @@ public class DailyPlanRunner extends TimerTask {
         return (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0;
     }
 
-    public static JocClusterState recreateProjections(DailyPlanSettings settings) throws Exception {
-        String add = DailyPlanHelper.getCallerForLog(settings);
-        LOGGER.info(String.format("[%s]%s[recreateProjections]creating for %s months ahead", settings.getStartMode(), add, settings
-                .getProjectionsMonthAhead()));
+    private void recreateProjectionsByService() {
+        try {
+            int maxTries = 3;
 
-        return DailyPlanProjections.getInstance().process(settings);
+            for (int i = 0; i < maxTries; i++) {
+                if (isRecreateProjectionsAlreadyRunning(recreateProjections(settings))) {// e.g. started by a web service
+                    try {
+                        TimeUnit.SECONDS.sleep(1L);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.error(ex.toString(), ex);
+        }
+    }
+
+    public static JocClusterState recreateProjections(DailyPlanSettings settings) throws Exception {
+        try {
+            setLogger();
+
+            String add = DailyPlanHelper.getCallerForLog(settings);
+            LOGGER.info(String.format("[%s]%s[recreateProjections]creating for %s months before and %s months ahead", settings.getStartMode(), add,
+                    settings.getProjectionsMonthBefore(), settings.getProjectionsMonthAhead()));
+
+            return DailyPlanProjections.getInstance().process(settings);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            removeLogger();
+        }
+    }
+
+    public static boolean isRecreateProjectionsAlreadyRunning(JocClusterState state) {
+        if (state == null) {
+            return false;// ?
+        }
+        return JocClusterState.ALREADY_RUNNING.equals(state);
+    }
+
+    private static void setLogger() {
+        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
+    }
+
+    private static void removeLogger() {
+        JocClusterServiceLogger.removeLogger(ClusterServices.dailyplan.name());
     }
 
     /* service */

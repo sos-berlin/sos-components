@@ -12,6 +12,7 @@
         </Root>
         <Logger name="org.hibernate" level="fatal" />
         <Logger name="com.mchange.v2" level="fatal" />
+        
         <Logger name="com.sos" level="debug" />
         <Logger name="com.sos.joc.classes.calendar.FrequencyResolver" level="warn" />
         <Logger name="com.sos.joc.dailyplan.DailyPlanRunner" level="warn" />
