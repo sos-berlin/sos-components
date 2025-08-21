@@ -40,6 +40,10 @@ public class LinkFolderImpl extends JOCResourceImpl implements ILinkFolder {
             linkFolderFilter = initLogging(API_CALL, linkFolderFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(linkFolderFilter, LinkFolderFilter.class);
             LinkFolderFilter filter = Globals.objectMapper.readValue(linkFolderFilter, LinkFolderFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
             
             permitted = GitSemaphore.tryAcquire();
             if (!permitted) {
@@ -47,9 +51,7 @@ public class LinkFolderImpl extends JOCResourceImpl implements ILinkFolder {
             }
             
             storeAuditLog(filter.getAuditLog());
-            final Set<String> permittedFolders = folderPermissions.getListOfFolders().stream().map(Folder::getFolder)
-                    .collect(Collectors.toSet());
-            if (permittedFolders.contains(filter.getFolder())) {
+            if (folderIsPermitted(filter.getFolder(), folderPermissions.getListOfFolders())) {
                 Path repositoriesBaseLocal = Globals.sosCockpitProperties.resolvePath("repositories").resolve("local");
                 Path repositoriesBaseRollout = Globals.sosCockpitProperties.resolvePath("repositories").resolve("rollout");
                 
@@ -95,7 +97,7 @@ public class LinkFolderImpl extends JOCResourceImpl implements ILinkFolder {
         if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
             // top level folder
             Path pathToCheck = getAbsoluteRepositoryPath(folderPath, repositoriesBase);
-            if(!Files.exists(pathToCheck)) {
+            if(Files.exists(pathToCheck)) {
                 return true;
             }
         }
