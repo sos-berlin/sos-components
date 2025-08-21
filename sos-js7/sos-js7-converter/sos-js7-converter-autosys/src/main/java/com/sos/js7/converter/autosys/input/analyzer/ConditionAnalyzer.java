@@ -511,7 +511,7 @@ public class ConditionAnalyzer {
 
                     boolean used = false;
                     try {
-                        used = isAlreadyUsed(boxJob, j, ljc, c);
+                        used = isAlreadyUsed(boxJob, j, ljc, c, new HashSet<>());
                     } catch (StackOverflowError e) {
                         used = false;
                         if (!boxJob.isReference()) {
@@ -668,27 +668,64 @@ public class ConditionAnalyzer {
      * @param allJobConditions
      * @param conditionToCheck
      * @return */
-    private boolean isAlreadyUsed(JobBOX boxJob, ACommonJob childrenJob, List<Condition> allJobConditions, Condition conditionToCheck) {
+    private boolean isAlreadyUsed(JobBOX boxJob, ACommonJob childrenJob, List<Condition> allJobConditions, Condition conditionToCheck,
+            Set<String> visited) {
         List<Condition> otherJobConditions = allJobConditions.stream().filter(c -> c.getJobName() != null && !c.equals(conditionToCheck)).collect(
                 Collectors.toList());
 
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[isAlreadyUsed][box=" + boxJob.getName() + "][childrenJob=" + childrenJob.getName() + ", " + childrenJob.isBox()
+                    + "]conditionToCheck=" + conditionToCheck);
+        }
+
+        // TODO
+        // if(childrenJob.isBox()) {
+        // if (LOGGER.isDebugEnabled()) {
+        // LOGGER.debug(" [used=true]childrenJob is BOX");
+        // }
+        // return true;
+        // }
+
+        String key = childrenJob.getName() + "|" + conditionToCheck.toString();
+        if (!visited.add(key)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("  Cycle detected in condition check: " + key);
+            }
+            return false;
+            // throw new StackOverflowError();
+        }
+
         for (Condition oc : otherJobConditions) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("    [findJob]condition=" + oc);
+            }
             ACommonJob job = boxJob.getJobs().stream().filter(j -> !j.isNameEquals(childrenJob) && j.isNameEquals(oc)).findFirst().orElse(null);
             if (job != null) {
                 List<Condition> cl = job.conditionsAsList();
                 for (Condition c : cl) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("     [jobFound][job=" + job + "]condition=" + c);
+                    }
                     // variables and job conditions
                     if (c.equals(conditionToCheck)) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("    [jobFound][used=true][c=" + c + "][eguals]conditionToCheck=" + conditionToCheck);
+                        }
                         return true;
                     }
-                    boolean used = isAlreadyUsed(boxJob, childrenJob, cl, conditionToCheck);
+                    boolean used = isAlreadyUsed(boxJob, childrenJob, cl, conditionToCheck, visited);
                     if (used) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("    [jobFound][used=true]isAlreadyUsed=true");
+                        }
                         return true;
                     }
                 }
             }
         }
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(" used=false");
+        }
         return false;
     }
 
