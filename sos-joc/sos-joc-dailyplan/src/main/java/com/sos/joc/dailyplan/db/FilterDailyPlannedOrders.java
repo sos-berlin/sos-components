@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -17,14 +18,12 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 
-import js7.data.order.OrderId;
-
 public class FilterDailyPlannedOrders extends DBFilter {
 
     private Collection<String> orderIds;
     private Collection<Folder> workflowFolders;
     private Collection<Folder> scheduleFolders;
-    private List<DailyPlanOrderStateText> states;
+    private Set<DailyPlanOrderStateText> states;
     private List<Long> submissionIds;
     private Set<String> cyclicOrdersMainParts;
     private List<String> workflowNames;
@@ -103,18 +102,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
         return filter;
     }
 
-    public boolean isCyclicStart() {
-        return startMode != null && startMode.equals(1);
-    }
-
-    public void setCyclicStart() {
-        startMode = 1;
-    }
-
-    public void setSingleStart() {
-        startMode = 0;
-    }
-
     public Integer getStartMode() {
         return startMode;
     }
@@ -132,15 +119,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void setOrderIds(Collection<String> val) {
         orderIds = val;
-    }
-
-    public void setOrderIds(Set<OrderId> val) {
-        if (orderIds == null) {
-            orderIds = new ArrayList<String>();
-        }
-        for (OrderId orderId : val) {
-            orderIds.add(orderId.string());
-        }
     }
 
     public Set<String> getCyclicOrdersMainParts() {
@@ -207,7 +185,10 @@ public class FilterDailyPlannedOrders extends DBFilter {
         }
     }
 
-    public List<DailyPlanOrderStateText> getStates() {
+    public Set<DailyPlanOrderStateText> getStates() {
+        if (states != null && states.size() == EnumSet.allOf(DailyPlanOrderStateText.class).size()) {
+            return null;
+        }
         return states;
     }
 
@@ -233,7 +214,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void addState(DailyPlanOrderStateText state) {
         if (states == null) {
-            states = new ArrayList<DailyPlanOrderStateText>();
+            states = new HashSet<DailyPlanOrderStateText>();
         }
         states.add(state);
     }
@@ -302,7 +283,15 @@ public class FilterDailyPlannedOrders extends DBFilter {
         submissionForDateTo = val;
     }
 
-    public void setStates(List<DailyPlanOrderStateText> val) {
+    public void setStates(Collection<DailyPlanOrderStateText> val) {
+        if (val != null) {
+            states = val.stream().collect(Collectors.toSet());
+        } else {
+            states = null;
+        }
+    }
+    
+    public void setStates(Set<DailyPlanOrderStateText> val) {
         states = val;
     }
 

@@ -5,9 +5,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -197,7 +201,7 @@ public class DBLayerDailyPlannedOrders {
 
     private void executeDeleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         StringBuilder subSelect = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-        subSelect.append(getWhere(filter, "p.schedulePath", true));
+        subSelect.append(getWhere(filter, "p.schedulePath"));
         
         Query<String> subQuery = session.createQuery(subSelect);
         subQuery = bindParameters(filter, subQuery);
@@ -245,7 +249,7 @@ public class DBLayerDailyPlannedOrders {
 
     private int executeDelete(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-        hql.append(getWhere(filter, "p.schedulePath", true));
+        hql.append(getWhere(filter, "p.schedulePath"));
 
         Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
         bindParameters(filter, query);
@@ -257,7 +261,11 @@ public class DBLayerDailyPlannedOrders {
     }
 
     private String getWhere(FilterDailyPlannedOrders filter) {
-        return getWhere(filter, "", true);
+        return getWhere(filter, "", false);
+    }
+    
+    private String getWhere(FilterDailyPlannedOrders filter, String pathField) {
+        return getWhere(filter, pathField, false);
     }
 
     private String getWhere(FilterDailyPlannedOrders filter, String pathField, boolean useHistoryOrderState) {
@@ -349,72 +357,32 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        boolean isLate = filter.getIsLate() != null && filter.isLate();
-        if (filter.getStates() != null && filter.getStates().size() > 0) {
-            where.append(and).append(" ");
+        if (filter.getStates() != null && !filter.getStates().isEmpty()) {
 
-            DailyPlanOrderStateText state = filter.getStates().get(0);
-            switch (state) {
-            case PLANNED:
-                where.append("p.submitted=0 ");
-                if (useHistoryOrderState) {
-                    if (isLate) {
-                        whereHasCurrentTime = true;
+            boolean withPlannedState = filter.getStates().contains(DailyPlanOrderStateText.PLANNED);
+            boolean withSubmittedState = filter.getStates().contains(DailyPlanOrderStateText.SUBMITTED);
+            boolean withFinishedState = filter.getStates().contains(DailyPlanOrderStateText.FINISHED);
 
-                        where.append("and (");
-                        // TODO o.state ???=
-                        where.append("(");
-                        where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
-                        where.append("and ").append(getLateToleranceStatement());
-                        where.append(") ");
-                        where.append("or ");
-                        where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
-                        where.append(") ");
-                    }
-                }
-                break;
-            case FINISHED:
-                where.append("p.submitted=1 ");
-                if (useHistoryOrderState) {
-                    where.append("and o.state=").append(state.intValue()).append(" ");
-                    if (isLate) {
-                        where.append("and (").append(getLateToleranceStatement()).append(") ");
-                    }
-                }
-                break;
-            case SUBMITTED:
-                where.append("p.submitted=1 ");
-                if (useHistoryOrderState) {
-                    if (isLate) {
-                        whereHasCurrentTime = true;
-
-                        where.append("and (");
-                        where.append("(");
-                        where.append("o.state <> ").append(DailyPlanOrderStateText.FINISHED.intValue()).append(" ");
-                        where.append("and ").append(getLateToleranceStatement());
-                        where.append(") ");
-                        where.append("or ");
-                        where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
-                        where.append(") ");
-                    } else {
-                        where.append("and (o.state <> ").append(DailyPlanOrderStateText.FINISHED.intValue()).append(" or o.state is null) ");
-                    }
-                }
-                break;
+            if (withPlannedState && (withSubmittedState || withFinishedState)) {
+                // nothing to do with p.submitted
+            } else if (withPlannedState) {
+                where.append(and).append("p.submitted=false");
+                and = " and ";
+            } else if (withSubmittedState || withFinishedState) {
+                where.append(and).append("p.submitted=true");
+                and = " and ";
             }
-            and = " and ";
-        } else if (isLate) {
+        }
+
+        if (filter.isLate()) {
             if (useHistoryOrderState) {
                 whereHasCurrentTime = true;
 
                 where.append(and).append("(");
-                where.append("(");
-                where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
-                where.append("and ").append(getLateToleranceStatement());
-                where.append(") ");
-                where.append("or ");
-                where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
-                where.append(") ");
+                where.append("(o.state is not null and ").append(getLateToleranceStatement()).append(")");
+                where.append(" or ");
+                where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(")");
+                where.append(")");
                 and = " and ";
             }
         }
@@ -618,66 +586,50 @@ public class DBLayerDailyPlannedOrders {
     private List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryListExecute(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
-        if (filter.isCyclicStart()) {
-            StringBuilder q = new StringBuilder("select max(p.id) ");
-            boolean useHistoryOrderState = true;
-            if (filter.getStates() != null && filter.getStates().size() > 0) {
-                DailyPlanOrderStateText state = filter.getStates().get(0);
-                switch (state) {
-                case PLANNED:
-                    boolean isLate = filter.getIsLate() != null && filter.isLate();
-                    if (!isLate) {
-                        useHistoryOrderState = false;
-                    }
-                    break;
-                case FINISHED:
-                    useHistoryOrderState = false;
-                default:
-                    break;
-                }
-            }
 
-            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-            if (useHistoryOrderState) {
-                q.append("left outer join ");
-                q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            }
-            q.append(getWhere(filter, "p.schedulePath", useHistoryOrderState)).append(" ");
-            //q.append("group by p.submissionHistoryId,p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName,p.scheduleName,p.workflowName ");
-            q.append("group by p.controllerId, substring(p.orderId, 1, " + OrdersHelper.mainOrderIdLength + ") ");
-            
-            hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
-            hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
-            hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");
-            hql.append(",p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin");
-            hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
-            hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
-            hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
-            hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            hql.append(getWhere(filter, "p.schedulePath", true)).append(" ");
-            hql.append("and p.id in (").append(q).append(") ");
-            hql.append(filter.getOrderCriteria());
-        } else {
-            hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
-            hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
-            hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");
-            hql.append(",p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin");
-            hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
-            hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
-            hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
-            hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            hql.append(getWhere(filter, "p.schedulePath", true)).append(" ");
-            hql.append(filter.getOrderCriteria());
-        }
+        hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
+        hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
+        hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");
+        hql.append(",p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin");
+        hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
+        hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
+        hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
+        hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
+        hql.append(getWhere(filter, "p.schedulePath", true)).append(" ");
+        hql.append(filter.getOrderCriteria());
 
         Query<DBItemDailyPlanWithHistory> query = session.createQuery(hql.toString(), DBItemDailyPlanWithHistory.class);
         query = bindParameters(filter, query);
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        return session.getResultList(query);
+
+        List<DBItemDailyPlanWithHistory> result = session.getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+
+        Stream<DBItemDailyPlanWithHistory> resStream = Stream.empty();
+        if ((filter.getControllerId() != null && !filter.getControllerId().isEmpty()) || (filter.getControllerIds() != null && filter
+                .getControllerIds().size() == 1)) {
+
+            resStream = result.stream().collect(Collectors.groupingBy(i -> OrdersHelper.getOrderIdMainPart(i.getOrderId()), Collectors.maxBy(
+                    Comparator.comparingLong(DBItemDailyPlanWithHistory::getPlannedOrderId)))).values().stream().filter(Optional::isPresent).map(
+                            Optional::get);
+        } else {
+
+            resStream = result.stream().collect(Collectors.groupingBy(DBItemDailyPlanWithHistory::getControllerId, Collectors.groupingBy(
+                    i -> OrdersHelper.getOrderIdMainPart(i.getOrderId()), Collectors.maxBy(Comparator.comparingLong(
+                            DBItemDailyPlanWithHistory::getPlannedOrderId))))).values().stream().map(Map::values).flatMap(Collection::stream).filter(
+                                    Optional::isPresent).map(Optional::get);
+        }
+
+        if (filter.getStates() != null && !filter.getStates().isEmpty()) {
+            resStream = resStream.filter(i -> filter.getStates().contains(i.getStateText()));
+        }
+
+        return resStream.collect(Collectors.toList());
     }
 
     public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String mainOrderId, Date plannedStartFrom, Date plannedStartTo)
@@ -865,7 +817,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     private List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true) + filter.getOrderCriteria() + filter
+        String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath") + filter.getOrderCriteria() + filter
                 .getSortMode();
         Query<DBItemDailyPlanOrder> query = session.createQuery(q);
         query = bindParameters(filter, query);

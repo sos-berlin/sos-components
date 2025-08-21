@@ -58,6 +58,9 @@ public class DBItemDailyPlanWithHistory {
             case FINISHED:
                 return DailyPlanOrderStateText.FINISHED;
             default:
+                if (endTime != null) {
+                    return DailyPlanOrderStateText.FINISHED; 
+                }
                 return DailyPlanOrderStateText.SUBMITTED;
             }
         } else {
