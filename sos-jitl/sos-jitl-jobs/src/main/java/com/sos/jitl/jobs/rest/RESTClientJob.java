@@ -1,6 +1,23 @@
 
 package com.sos.jitl.jobs.rest;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,24 +25,24 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
+import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;
+import com.sos.commons.httpclient.commons.mulitpart.HttpFormDataCloseable;
+import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataFile;
+import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataString;
+import com.sos.commons.util.http.HttpUtils;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
 import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.Versions;
 
 public class RESTClientJob extends Job<RestJobArguments> {
+
     public static final ObjectMapper objectMapper;
     private  BaseHttpClient client;
     private static final Scope rootScope = Scope.newEmptyScope();
@@ -33,12 +50,48 @@ public class RESTClientJob extends Job<RestJobArguments> {
     public RESTClientJob(JobContext jobContext) {
         super(jobContext);
     }
-    
+
     public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
         RestJobArguments myArgs = (RestJobArguments)step.getDeclaredArguments();
         OrderProcessStepLogger logger = step.getLogger();
+
+        //get logging details for info level
+        boolean logReqHeaders = false;
+        boolean logReqBody = false;
+        boolean logResHeaders = false;
+        boolean logResBody = false;
+
+        String infoLogging = (String) myArgs.getLogItems().getValue();
+
+        if (infoLogging != null && !infoLogging.equalsIgnoreCase("none")) {
+            String[] parts = infoLogging.split(";");
+            for (String part : parts) {
+                String[] split = part.split(":");
+                String target = split[0].trim().toLowerCase(); // request or response
+
+                // Default = log both headers and body
+                Set<String> items = new HashSet<>();
+                if (split.length > 1) {
+                    for (String item : split[1].split(",")) {
+                        items.add(item.trim().toLowerCase());
+                    }
+                } else {
+                    items.add("headers");
+                    items.add("body");
+                }
+
+                // Apply flags
+                if ("request".equals(target)) {
+                    if (items.contains("headers")) logReqHeaders = true;
+                    if (items.contains("body")) logReqBody = true;
+                } else if ("response".equals(target)) {
+                    if (items.contains("headers")) logResHeaders = true;
+                    if (items.contains("body")) logResBody = true;
+                }
+            }
+        }
+
         String requestJson = (String)myArgs.getMyRequest().getValue();
-        logger.info("Request Body : " + requestJson);
         if (requestJson != null && !requestJson.isBlank()) {
             JsonNode requestNode;
             try {
@@ -53,20 +106,66 @@ public class RESTClientJob extends Job<RestJobArguments> {
             if (uri == null) {
                 throw new JobRequiredArgumentMissingException("Missing or empty 'URL' in request JSON.");
             } else {
-                logger.info("Endpoint: " + uri);
+
                 String bodyStr = null;
+                HttpFormDataCloseable formData = new HttpFormDataCloseable();
                 if (requestNode.has("body")) {
                     try {
                         JsonNode bodyNode = requestNode.get("body");
                         if (bodyNode != null) {
                             bodyStr = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyNode);
-                            logger.info("Body:" + bodyStr);
+                            if (logReqBody)
+                                logger.info("Request Body :" + bodyStr);
+                            logger.debug("Request Body :" + bodyStr);
                         }
                     } catch (Exception e) {
-                        throw new JobException("Failed to extract 'body' from request JSON: " + e.getMessage(), e);
+                        throw new JobException("Failed to extract 'body' from request JSON: " + e);
                     }
                 }
+                else if (requestNode.has("formData")) {
+                    JsonNode formDataNode = requestNode.get("formData");
+                    if (formDataNode != null) {
+                        if (logReqBody)
+                            logger.info("Request Body as formData :" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                        logger.debug("Request Body as formData:" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                    }
+                    if (formDataNode == null || !formDataNode.isObject()) {
+                        throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
+                    }
+                    Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
+                    while (fields.hasNext()) {
+                        Map.Entry<String, JsonNode> field = fields.next();
+                        String key = field.getKey();
+                        JsonNode valueNode = field.getValue();
 
+                        // Special handling for "file"
+                        if ("file".equalsIgnoreCase(key)) {
+                            // Read file path from JSON value
+                            Path filePath = Paths.get(valueNode.asText());
+
+                            if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+                                throw new JobException("File not found or invalid at path: " + filePath.toAbsolutePath());
+                            }
+                            // Determine content type based on "format" if present
+                            String format = formDataNode.has("format") ? formDataNode.get("format").asText() : "";
+                            String contentType;
+                            if ("TAR_GZ".equalsIgnoreCase(format)) {
+                                contentType = HttpFormData.CONTENT_TYPE_GZIP;
+                            } else {
+                                // Fallback — treat as ZIP if unknown default
+                                contentType = HttpFormData.CONTENT_TYPE_ZIP;
+                            }
+
+                            // Add the file part
+                            formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+                        }
+                        // For all other keys → treat as normal form string
+                        else {
+                            String value = valueNode.asText();
+                            formData.addPart(new FormDataString(key, value));
+                        }
+                    }
+                }
                 Map<String, String> headerMap = new HashMap<>();
 
                 if (requestNode.has("headers") && requestNode.get("headers").isArray()) {
@@ -78,79 +177,78 @@ public class RESTClientJob extends Job<RestJobArguments> {
                         }
                     }
                 }
-
-                step.getLogger().debug("initiate REST api client");
-                BaseHttpClient.Builder builder = BaseHttpClient.withBuilder();
-                builder = (BaseHttpClient.Builder) builder.withLogger(step.getLogger());
-                builder = (BaseHttpClient.Builder) builder.withConnectTimeout(Duration.ofSeconds(30L));
-                this.client = (BaseHttpClient) builder.build();
-
-                String reqContentType = null;
-                for (Map.Entry<String, String> entry : headerMap.entrySet()) {
-                    if ("content-type".equalsIgnoreCase(entry.getKey())) {
-                        reqContentType = entry.getValue();
-                        break;
-                    }
+                if (!headerMap.isEmpty()) {
+                    StringBuilder headerLog = new StringBuilder("Request Headers:\n");
+                    headerMap.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
+                    if (logReqHeaders)
+                        logger.info(headerLog.toString().trim());
+//                logger.debug(headerLog.toString().trim());
                 }
 
+                step.getLogger().debug("initiate REST api client");
+                BaseHttpClient.Builder builder = BaseHttpClient.withBuilder().withLogger(step.getLogger()).withConnectTimeout(Duration.ofSeconds(30L));
+                this.client =  builder.build();
+
                 try {
-                    HttpExecutionResult<String> result = null;
+
+                    HttpExecutionResult<byte[]> result = null;
+                    // this part will be updated when I've the idea what will happen when header=null is passed
                     if(method!=null && !method.trim().isEmpty()) {
                         if (method.equalsIgnoreCase("post")) {
-                            if ("application/json".equalsIgnoreCase(reqContentType) ) {
-                                //when url, headers and body=json is present
-                                result = client.executePOST(uri, headerMap, bodyStr,HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                            if (requestNode.has("formData") ){
+                                headerMap.put( HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
+                                result = client.executePOST(uri, headerMap, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData), HttpResponse.BodyHandlers.ofByteArray());
+                            }else if(!requestNode.has("formData") ){
+                                  result = client.executePOST(uri, headerMap, bodyStr == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(bodyStr),HttpResponse.BodyHandlers.ofByteArray());
                             }
-                        } else if (method.equalsIgnoreCase("get")) {
+                        }
+                        else if (method.equalsIgnoreCase("put")) {
+                             if (requestNode.has("formData")){
+                                 headerMap.put( HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
+                                result = client.executePUT(uri,headerMap, formData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofByteArrays(formData), HttpResponse.BodyHandlers.ofByteArray() );
+                            }else if(!requestNode.has("formData")  ){
+                                //when url, header body=string is present-
+                                result = client.executePUT(uri,headerMap, bodyStr == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(bodyStr), HttpResponse.BodyHandlers.ofByteArray());
+                            }
+                        }
+                        else if (method.equalsIgnoreCase("get")) {
                             if (!headerMap.isEmpty()) {
                                 //when url and headers are present
-                                result = client.executeGET(uri, headerMap, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                                result = client.executeGET(uri, headerMap, HttpResponse.BodyHandlers.ofByteArray());
                             }else {
                                 // only url is present - this will be removed if the header=null will also send the rest call without issue from the internal code side and request sent to the server
-                                result = client.executeGET(uri,HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-                            }
-                        } else if (method.equalsIgnoreCase("put")) {
-                            if ( "application/json".equalsIgnoreCase(reqContentType)) {
-                                //when url, body=string is present-
-                                result = client.executePUT(uri,  HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8), bodyStr);
+                                result = client.executeGET(uri,HttpResponse.BodyHandlers.ofByteArray());
                             }
                         }
                         else if (method.equalsIgnoreCase("delete")) {
                             if (!headerMap.isEmpty()){
                                 //when url and headers are present
-                                result = client.executeDELETE(uri, headerMap, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                                result = client.executeDELETE(uri, headerMap, HttpResponse.BodyHandlers.ofByteArray());
                             }
                             else{
                                 // only url is present - this will be removed if the header=null will also send the rest call without issue from the internal code side and request sent to the server
-                                result = client.executeDELETE(uri, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                                result = client.executeDELETE(uri, HttpResponse.BodyHandlers.ofByteArray());
                             }
                         } else {
-                            throw new JobArgumentException("Unknown method: " + method);
+                            throw new JobArgumentException("Unknown http method: " + method);
                         }
                     }else {
-                        throw new JobArgumentException("Missing Method in the request variable json");
+                        throw new JobArgumentException("Http Method (POST, PUT, GET, DELETE) missing. Request cannot be executed.");
                     }
 
                     int statusCode=-1;
-                    if (result != null) {
+                    if (result != null && result.response()!=null) {
                         statusCode = result.response().statusCode();
                     }
                     if (statusCode >= 200 && statusCode < 300) {
                         logger.info("REST call successful. Status Code: " + statusCode);
-                    } else if (statusCode==-1) {
-                        throw new JobException("Error in fetching return code.");
                     } else {
-                        throw new JobException("Unexpected status code: " + statusCode);
+                        throw new JobException("REST call unsuccessful. Status code: " + statusCode);
                     }
 
-                    HttpResponse<String> response =  result.response();
-                    String responseBody = (String)response.body();
+                    HttpResponse<byte[]> response =  result.response();
+
                     Map<String, String> resHeaders =response.headers().map().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, (entryx) -> String.join(", ",entryx.getValue())));
-                    if (!resHeaders.isEmpty()) {
-                        StringBuilder headerLog = new StringBuilder("Response Headers:\n");
-                        resHeaders.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
-                        logger.debug(headerLog.toString().trim());
-                    }
                     String contentType = null;
                     for(Map.Entry<String, String> entry : resHeaders.entrySet()) {
                             if ("content-type".equalsIgnoreCase((String)entry.getKey())) {
@@ -159,24 +257,39 @@ public class RESTClientJob extends Job<RestJobArguments> {
                             }
                     }
 
-                        if (contentType != null && contentType.equalsIgnoreCase("application/json")&& responseBody != null && !responseBody.trim().isEmpty()){
+                    if (!resHeaders.isEmpty()) {
+                        StringBuilder headerLog = new StringBuilder("Response Headers:\n");
+                        resHeaders.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
+                        if (logResHeaders)
+                            logger.info(headerLog.toString().trim());
+//                    logger.debug(headerLog.toString().trim());
+                    }
+                    String responseBody=null;
+                    if (contentType != null && (contentType.contains("application/json") || contentType.toLowerCase().startsWith("text/"))){
+                        responseBody = new String(response.body(), java.nio.charset.StandardCharsets.UTF_8);
+                        if (contentType.contains("application/json") && !responseBody.trim().isEmpty()) {
                             Object json = objectMapper.readValue(responseBody, Object.class);
+                            if (logResBody)
+                                logger.info("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
                             logger.debug("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json));
-                        } else{
-                            logger.debug("Raw Response Body:\n" + responseBody);
+                        } else if (contentType.toLowerCase().startsWith("text/") && !responseBody.trim().isEmpty()){
+                            if (logResBody)
+                                logger.info("Response Body : \n" +responseBody);
+                            logger.debug("Response Body : \n" + responseBody);
                         }
+                    }
 
-                        //Return Variable
-                        String jqQuery = null;
-                        String pI = null;
-                        String filePath = null;
-                        String returnVarJson = (String)myArgs.getReturnVariable().getValue();
-                        String varName = null;
-                        String path = null;
-                        String name = null;
-                        JsonNode responseJson = null;
-                        String inputOption = null;
-                        boolean rawOutput = false;
+                    //Return Variable
+                    String jqQuery = null;
+                    String pI = null;
+                    String filePath = null;
+                    String returnVarJson = (String)myArgs.getReturnVariable().getValue();
+                    String varName = null;
+                    String path = null;
+                    String name = null;
+                    JsonNode responseJson = null;
+                    String inputOption = null;
+                    boolean rawOutput = false;
 
                     //Return variable -check if return variable is available or not
                     if (returnVarJson != null && !returnVarJson.trim().isEmpty()) {
@@ -231,7 +344,7 @@ public class RESTClientJob extends Job<RestJobArguments> {
                                             } else {
                                                 inputOption = inputSegment;
                                             }
-                                            if (inputOption == null || inputOption.isEmpty()) {
+                                            if (inputOption.isEmpty()) {
                                                 inputOption = "--response-body";
                                             }
 
@@ -304,12 +417,12 @@ public class RESTClientJob extends Job<RestJobArguments> {
                                         }
                                         else {
                                             List<String> inputOptions = null;
-                                            if (inputOption != null && !inputOption.trim().isEmpty()) {
+                                            if (!inputOption.trim().isEmpty()) {
                                                 inputOptions = ReturnVariableUtils.parseInputOptions(inputOption);
                                             }
                                             if (!inputOptions.isEmpty()) {
                                                 if (responseBody != null && !responseBody.trim().isEmpty()) {
-                                                    if ("application/json".equalsIgnoreCase(contentType)) {
+                                                    if (contentType.contains("application/json")) {
                                                         jqInput = objectMapper.readTree(responseBody);
                                                         if (jqInput.isObject()) {
                                                             mergedInput.setAll((ObjectNode) jqInput);
@@ -385,11 +498,10 @@ public class RESTClientJob extends Job<RestJobArguments> {
                                                         mergedInput.setAll((ObjectNode) jqInput);
                                                     }
                                                 }
-
                                             }
                                             else {
                                                 if (responseBody != null && !responseBody.trim().isEmpty()) {
-                                                    if ("application/json".equalsIgnoreCase(contentType)) {
+                                                    if (contentType.contains("application/json")) {
                                                         jqInput = objectMapper.readTree(responseBody);
                                                         if (!jqInput.isObject()) {
                                                             throw new JobArgumentException("Response body must be a JSON object.");

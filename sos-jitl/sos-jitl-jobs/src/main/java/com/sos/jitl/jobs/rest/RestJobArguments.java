@@ -7,6 +7,7 @@ import com.sos.js7.job.JobArguments;
 public class RestJobArguments extends JobArguments {
     private final JobArgument<String> myReturnVariable = new JobArgument<>("return_variable", false);
     private final JobArgument<String> myRequest = new JobArgument<>("request", false);
+    private final JobArgument<String> LogItems = new JobArgument<>("log_items", false,"request:body");
     private final JobArgument<String> keystoreFile = new JobArgument<>("js7.web.https.keystore.file", false);
     private final JobArgument<String> keystoreKeyPassword = new JobArgument<>("js7.web.https.keystore.key-password", false, SOSArgument.DisplayMode.MASKED);
     private final JobArgument<String> keystoreStorePassword = new JobArgument<>("js7.web.https.keystore.store-password", false, SOSArgument.DisplayMode.MASKED);
@@ -31,7 +32,9 @@ public class RestJobArguments extends JobArguments {
         return myRequest;
     }
 
-
+    public JobArgument<String> getLogItems() {
+        return LogItems;
+    }
 
     public JobArgument<String> getApiUrl() {
         return editorUrl;

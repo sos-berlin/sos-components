@@ -1,5 +1,18 @@
 package com.sos.jitl.jobs.rest;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,14 +33,10 @@ import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
-import net.thisptr.jackson.jq.Scope;
+
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
+import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.Versions;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
 
 public class JS7RESTClientJob extends Job<RestJobArguments> {
 
@@ -37,28 +46,62 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
     public JS7RESTClientJob(JobContext jobContext) {
         super(jobContext);
     }
-    
+
     public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
         RestJobArguments myArgs = step.getDeclaredArguments();
         OrderProcessStepLogger logger = step.getLogger();
 
+        //get logging details for info level
+        boolean logReqHeaders = false;
+        boolean logReqBody = false;
+        boolean logResHeaders = false;
+        boolean logResBody = false;
+
+        String infoLogging = (String) myArgs.getLogItems().getValue();
+
+        if (infoLogging != null && !infoLogging.equalsIgnoreCase("none")) {
+            String[] parts = infoLogging.split(";");
+            for (String part : parts) {
+                String[] split = part.split(":");
+                String target = split[0].trim().toLowerCase(); // request or response
+
+                // Default = log both headers and body
+                Set<String> items = new HashSet<>();
+                if (split.length > 1) {
+                    for (String item : split[1].split(",")) {
+                        items.add(item.trim().toLowerCase());
+                    }
+                } else {
+                    items.add("headers");
+                    items.add("body");
+                }
+
+                // Apply flags
+                if ("request".equals(target)) {
+                    if (items.contains("headers")) logReqHeaders = true;
+                    if (items.contains("body")) logReqBody = true;
+                } else if ("response".equals(target)) {
+                    if (items.contains("headers")) logResHeaders = true;
+                    if (items.contains("body")) logResBody = true;
+                }
+            }
+        }
+
+
         //Check the request JSON
         String requestJson = (String) myArgs.getMyRequest().getValue();
-        logger.info("Request Body : " +requestJson);
         if (requestJson != null && !requestJson.isBlank()) {
             JsonNode requestNode;
             try {
                 requestNode = objectMapper.readTree(requestJson);
             } catch (Exception e) {
-                throw new JobException("Invalid JSON in 'myRequest': " + e.getMessage(), e);
+                throw new JobException("Invalid JSON in 'myRequest': " + e);
             }
 
             String endpoint = requestNode.has("endpoint") ? requestNode.get("endpoint").asText(null) : null;
             if (endpoint == null || endpoint.isBlank()) {
                 throw new JobRequiredArgumentMissingException("Missing or empty 'endpoint' in request JSON.");
             }
-
-            logger.info("Endpoint: " + endpoint);
 
             String bodyStr = null;
             HttpFormDataCloseable formData = new HttpFormDataCloseable();
@@ -67,51 +110,56 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     JsonNode bodyNode = requestNode.get("body");
                     if (bodyNode != null) {
                         bodyStr = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bodyNode);
-                        logger.info("Body:" + bodyStr);
+                        if (logReqBody)
+                            logger.info("Request Body :" + bodyStr);
+                        logger.debug("Request Body :" + bodyStr);
                     }
                 } catch (Exception e) {
-                    throw new JobException("Failed to extract 'body' from request JSON: " + e.getMessage(), e);
+                    throw new JobException("Failed to extract 'body' from request JSON: " + e);
                 }
             }
             else if (requestNode.has("formData")) {
-                try {
-                    JsonNode formDataNode = requestNode.get("formData");
-                    if (formDataNode == null || !formDataNode.isObject()) {
-                        throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
-                    }
-                    Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
-                    while (fields.hasNext()) {
-                        Map.Entry<String, JsonNode> field = fields.next();
-                        String key = field.getKey();
-                        JsonNode valueNode = field.getValue();
+                JsonNode formDataNode = requestNode.get("formData");
+                if (formDataNode != null) {
+                    if (logReqBody)
+                        logger.info("Request Body as formData :" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                    logger.debug("Request Body as formData:" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                }
+                if (formDataNode == null || !formDataNode.isObject()) {
+                    throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
+                }
+                Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
+                while (fields.hasNext()) {
+                    Map.Entry<String, JsonNode> field = fields.next();
+                    String key = field.getKey();
+                    JsonNode valueNode = field.getValue();
 
-                        // Special handling for "file"
-                        if ("file".equalsIgnoreCase(key)) {
-                            // Read file path from JSON value
-                            Path filePath = Paths.get(valueNode.asText());
+                    // Special handling for "file"
+                    if ("file".equalsIgnoreCase(key)) {
+                        // Read file path from JSON value
+                        Path filePath = Paths.get(valueNode.asText());
 
-                            // Determine content type based on "format" if present
-                            String format = formDataNode.has("format") ? formDataNode.get("format").asText() : "";
-                            String contentType;
-                            if ("TAR_GZ".equalsIgnoreCase(format)) {
-                                contentType = HttpFormData.CONTENT_TYPE_GZIP;
-                            } else {
-                                // Fallback — treat as ZIP if unknown default
-                                contentType = HttpFormData.CONTENT_TYPE_ZIP;
-                            }
-
-                            // Add the file part
-                            formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+                        if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
+                            throw new JobException("File not found or invalid at path: " + filePath.toAbsolutePath());
                         }
-                        // For all other keys → treat as normal form string
-                        else {
-                            String value = valueNode.asText();
-                            formData.addPart(new FormDataString(key, value));
+                        // Determine content type based on "format" if present
+                        String format = formDataNode.has("format") ? formDataNode.get("format").asText() : "";
+                        String contentType;
+                        if ("TAR_GZ".equalsIgnoreCase(format)) {
+                            contentType = HttpFormData.CONTENT_TYPE_GZIP;
+                        } else {
+                            // Fallback — treat as ZIP if unknown default
+                            contentType = HttpFormData.CONTENT_TYPE_ZIP;
                         }
 
+                        // Add the file part
+                        formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
                     }
-                } catch (Exception e) {
-                    throw new JobException("Failed to extract 'formData' from request JSON: " + e.getMessage(), e);
+                    // For all other keys → treat as normal form string
+                    else {
+                        String value = valueNode.asText();
+                        formData.addPart(new FormDataString(key, value));
+                    }
                 }
             }
 
@@ -126,6 +174,14 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     }
                 }
             }
+            if (!headers.isEmpty()) {
+                StringBuilder headerLog = new StringBuilder("Request Headers:\n");
+                headers.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
+                if (logReqHeaders)
+                    logger.info(headerLog.toString().trim());
+//                logger.debug(headerLog.toString().trim());
+            }
+
 
             String accessToken = null;
             ApiResponse response = null;
@@ -155,11 +211,10 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                 int statusCode = response.getStatusCode();
 
                 if (statusCode < 200 || statusCode >= 300) {
-                    logger.error("Request failed with status code: " + statusCode + ". Response: " + response.getResponseBody());
                     if (statusCode == 420) {
                         throw new JobException("JS7 API Throttling (420): " + response.getResponseBody());
                     }
-                    throw new JobException("Unexpected status code: " + statusCode);
+                    throw new JobException("REST call unsuccessful. Status code:"+ statusCode + ". Response: " + response.getResponseBody());
                 }
 
                 logger.info("REST call successful. Status Code: " + statusCode);
@@ -181,7 +236,9 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                 if (!resHeaders.isEmpty()) {
                     StringBuilder headerLog = new StringBuilder("Response Headers:\n");
                     resHeaders.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
-                    logger.info(headerLog.toString().trim());
+                    if (logResHeaders)
+                        logger.info(headerLog.toString().trim());
+//                    logger.debug(headerLog.toString().trim());
                 }
 
                 String jqQuery = null;
@@ -196,11 +253,15 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                 String responseBody = response.getResponseBody();
 
                 if (responseBody != null && !responseBody.trim().isEmpty()) {
-                    if ("application/json".equalsIgnoreCase(contentType)) {
-                        responseJson = objectMapper.readTree(response.getResponseBody());
+                    if (contentType.contains("application/json")) {
+                        responseJson = objectMapper.readTree(responseBody);
+                        if (logResBody)
+                            logger.info("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson));
                         logger.debug("Response Body: " + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson));
                     } else {
-                        logger.debug("Response Body : \n" + response.getResponseBody());
+                        if (logResBody)
+                            logger.info("Response Body : \n" + responseBody);
+                        logger.debug("Response Body : \n" + responseBody);
                     }
                 }
 
@@ -211,7 +272,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     try {
                         returnVars = objectMapper.readTree(returnVarJson);
                     } catch (Exception e) {
-                        throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
+                        throw new JobException("Invalid JSON in 'return_variable': " +  e);
                     }
 
                     //check if it is a valid json array or not
@@ -320,7 +381,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                 try {
                                                     jqInput = objectMapper.readTree("\"" + responseBody + "\"");
                                                 } catch (Exception e) {
-                                                    throw new JobArgumentException("Could not convert plain response body to JSON string: " + e.getMessage(), e);
+                                                    throw new JobArgumentException("Could not convert plain response body to JSON string: " +  e);
                                                 }
                                             } else {
                                                 throw new JobArgumentException("Response body is not of content type text/*: " + contentType);
@@ -337,7 +398,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                         }
                                         if (!inputOptions.isEmpty()) {
                                             if (responseBody != null && !responseBody.trim().isEmpty()) {
-                                                if ("application/json".equalsIgnoreCase(contentType)) {
+                                                if (contentType.contains("application/json")) {
                                                     jqInput = objectMapper.readTree(responseBody);
                                                     if (jqInput.isObject()) {
                                                         mergedInput.setAll((ObjectNode) jqInput);
@@ -398,7 +459,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
 
                                                         ((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
 
-                                                    } catch (Exception e) {
+                                                    } catch (JsonProcessingException e) {
                                                         logger.error("Invalid JSON for input option: " + jsonStr);
                                                         throw e;
                                                     }
@@ -416,7 +477,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
 
                                         } else {
                                             if (responseBody != null && !response.getResponseBody().trim().isEmpty()) {
-                                                if ("application/json".equalsIgnoreCase(contentType)) {
+                                                if (contentType.contains("application/json")) {
                                                     jqInput = objectMapper.readTree(response.getResponseBody());
                                                     if (!jqInput.isObject()) {
                                                         throw new JobArgumentException("Response body must be a JSON object.");
@@ -458,13 +519,14 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                 }
             }
             catch (SOSConnectionRefusedException | SOSBadRequestException e) {
+                logger.info("from SOSConnectionRefusedException | SOSBadRequestException e");
                 if (response != null) {
                     step.getOutcome().setReturnCode(response.getStatusCode());
                     logger.error("Request failed: " + response.getStatusCode() + " Body: " + response.getResponseBody());
                 }
                 throw e;
             } catch (IOException e) {
-                throw new JobException("I/O Exception occurred: " + e.getMessage(), e);
+                throw new JobException("I/O Exception occurred: " + e);
             }
         } else {
             throw new JobRequiredArgumentMissingException("Missing request JSON in job arguments.");
