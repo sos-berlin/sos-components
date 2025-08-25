@@ -185,7 +185,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     }
 
     /** Executes a GET request with request headers and handles the response via provided handler */
-    public <T> HttpExecutionResult<T> executeGET(URI uri, Map<String,String> headers,  HttpResponse.BodyHandler<T> handler) throws Exception {
+    public <T> HttpExecutionResult<T> executeGET(URI uri, Map<String, String> headers, HttpResponse.BodyHandler<T> handler) throws Exception {
         return execute(createGETRequest(uri, headers), handler);
     }
 
@@ -361,7 +361,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return execute(createDELETERequest(uri), handler);
     }
 
-    public <T> HttpExecutionResult<T> executeDELETE(URI uri, Map<String,String> headers, HttpResponse.BodyHandler<T> handler) throws Exception {
+    public <T> HttpExecutionResult<T> executeDELETE(URI uri, Map<String, String> headers, HttpResponse.BodyHandler<T> handler) throws Exception {
         return execute(createDELETERequest(uri, headers), handler);
     }
 
@@ -605,11 +605,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         }
         Map<String, List<String>> headers = httpHeaders.map();
         if (!SOSCollection.isEmpty(headers)) {
-            logger.debug(title + ":");
-            headers.entrySet().forEach(e -> {
-                String val = e.getValue() == null ? "" : isSensitiveHeader(e.getKey()) ? MASKED_VALUE : String.join(", ", e.getValue());
-                logger.debug(String.format("    name=%-20s value=%s", e.getKey(), val));
-            });
+            String headerStr = headers.entrySet().stream().map(e -> {
+                String val = (e.getValue() == null) ? "" : isSensitiveHeader(e.getKey()) ? MASKED_VALUE : String.join(", ", e.getValue());
+                return e.getKey() + "=" + val;
+            }).collect(Collectors.joining("; "));
+
+            logger.debug("[" + title + "]" + headerStr);
         }
     }
 
@@ -618,11 +619,12 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
         if (logger.isTraceEnabled()) {
             if (this.defaultHeaders.size() > 0) {
-                logger.trace("Default HttpRequest headers(all requests):");
-                this.defaultHeaders.entrySet().forEach(e -> {
+                String headerStr = this.defaultHeaders.entrySet().stream().map(e -> {
                     String val = isSensitiveHeader(e.getKey()) ? MASKED_VALUE : e.getValue();
-                    logger.trace(String.format("    name=%-20s value=%s", e.getKey(), val));
-                });
+                    return e.getKey() + "=" + val;
+                }).collect(Collectors.joining("; "));
+
+                logger.trace("[Default HttpRequest headers(all requests)]" + headerStr);
             }
         }
     }
@@ -686,7 +688,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return createRequestBuilder(uri, headers).DELETE().build();
     }
 
-    private HttpRequest createPUTRequest(URI uri, Map<String,String> requestHeaders, HttpRequest.BodyPublisher body) {
+    private HttpRequest createPUTRequest(URI uri, Map<String, String> requestHeaders, BodyPublisher body) {
         return createRequestBuilder(uri, requestHeaders).PUT(body == null ? HttpRequest.BodyPublishers.noBody() : body).build();
     }
 
