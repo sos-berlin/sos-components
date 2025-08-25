@@ -20,8 +20,6 @@ public class InfoJobArguments extends JobArguments {
         TEST1, TEST2
     }
 
-    private JobArgument<Boolean> showEnv = new JobArgument<>("show_env", false, false);
-    private JobArgument<Boolean> redefineShowEnv = new JobArgument<>("redefine_show_env", false, false);
     private JobArgument<String> stringArgument = new JobArgument<>("string_argument", false);
     private JobArgument<Path> pathArgument = new JobArgument<>("path_argument", false);
     private JobArgument<String> returnVariables = new JobArgument<>("return_variables", false);
@@ -118,14 +116,6 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<Map<String, ?>> getMapWildcardValues() {
         return mapWildcardValues;
-    }
-
-    public JobArgument<Boolean> getShowEnv() {
-        return showEnv;
-    }
-
-    public JobArgument<Boolean> getRedefineShowEnv() {
-        return redefineShowEnv;
     }
 
     public JobArgument<String> getStringArgument() {
