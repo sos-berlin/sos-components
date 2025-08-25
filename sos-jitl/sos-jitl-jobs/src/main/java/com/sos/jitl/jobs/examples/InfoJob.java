@@ -46,9 +46,6 @@ public class InfoJob extends Job<InfoJobArguments> {
 
         step.getLogger().info("----------USAGE-----------------");
         step.getLogger().info("declare and set order/step variables:");
-        step.getLogger().info("     \"%s\"=true (Boolean) to show environment variables", args.getShowEnv().getName());
-        step.getLogger().info("     \"%s\"=true (Boolean) to redefine \"%s\" value and see effect in the next step", args.getRedefineShowEnv()
-                .getName(), args.getShowEnv().getName());
         step.getLogger().info("     \"%s\"=INFO|DEBUG|TRACE (case insensitive)", args.getLogLevel().getName());
         step.getLogger().info("     \"%s\"=... to show in the ORDER HISTORIC OUTCOME", args.getReturnVariables().getName());
         step.getLogger().info("                e.g.: \"%s\"= 'myvar1_xyz__myvar2_123'", args.getReturnVariables().getName());
@@ -62,11 +59,11 @@ public class InfoJob extends Job<InfoJobArguments> {
         step.getLogger().info("[SOSShell][consoleEncoding/Charset]" + SOSShell.getConsoleEncoding());
         if (SOSShell.IS_WINDOWS) {
             step.getLogger().info("[Windows][console encoding]" + SOSShell.executeCommand("chcp"));
+            step.getLogger().info("[Windows][console encoding]" + SOSShell.executeCommand(
+                    "reg.exe QUERY HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage /v OEMCP"));
         }
-        step.getLogger().info("----------Environment variables (" + SOSShell.OS_NAME + ")-----------------");
-        System.getenv().entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
-            step.getLogger().info("    " + e.getKey() + "=" + e.getValue());
-        });
+
+        printEnvs(step.getLogger());
 
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
@@ -113,10 +110,6 @@ public class InfoJob extends Job<InfoJobArguments> {
             step.getLogger().info("[java][%s][%s=%s]%s", e.getValue().getType(), e.getKey(), e.getValue().getDisplayValue(), SOSString.toString(e
                     .getValue(), true));
         });
-
-        if (args.getShowEnv().getValue()) {
-            printEnvs(step.getLogger());
-        }
 
         step.getLogger().info("----------step.getJobResourcesEnv-----------------");
         try {
@@ -165,19 +158,7 @@ public class InfoJob extends Job<InfoJobArguments> {
         }
 
         step.getLogger().info("----------RETURN-----------------");
-        if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {
-            if (args.getRedefineShowEnv().getValue()) {
-                step.getOutcome().putVariable(args.getShowEnv().getName(), !args.getShowEnv().getValue());
-            }
-            if (args.getReturnVariables().getValue() != null) {
-                String[] arr = args.getReturnVariables().getValue().split("__");
-                for (String val : arr) {
-                    String[] valArr = val.trim().split("_");
-                    if (valArr.length > 1) {
-                        step.getOutcome().putVariable(valArr[0].trim(), valArr[1].trim());
-                    }
-                }
-            }
+        if (!args.getReturnVariables().isEmpty()) {
             step.getLogger().info("[SUCCESS]set step outcome: %s", step.getOutcome().getVariables());
         } else {
             OrderProcessStepOutcome outcome = step.getOutcome();
@@ -229,13 +210,13 @@ public class InfoJob extends Job<InfoJobArguments> {
     }
 
     private void printEnvs(ISOSLogger logger) {
-        logger.info("----------ENV-----------------");
+        logger.info("----------Environment variables (" + SOSShell.OS_NAME + ")-----------------");
         logger.info("    JS7");
-        System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).forEach(e -> {
+        System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).sorted(Map.Entry.comparingByKey()).forEach(e -> {
             logger.info("        " + e.getKey() + "=" + e.getValue());
         });
         logger.info("    System");
-        System.getenv().entrySet().stream().filter(e -> !e.getKey().startsWith("JS7")).forEach(e -> {
+        System.getenv().entrySet().stream().filter(e -> !e.getKey().startsWith("JS7")).sorted(Map.Entry.comparingByKey()).forEach(e -> {
             logger.info("        " + e.getKey() + "=" + e.getValue());
         });
     }
