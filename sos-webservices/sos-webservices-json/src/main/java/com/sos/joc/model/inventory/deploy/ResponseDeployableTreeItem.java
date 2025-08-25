@@ -31,7 +31,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "deleted",
     "syncState",
     "deployed",
-    "deployablesVersions"
+    "deployablesVersions",
+    "forceDependencies"
 })
 public class ResponseDeployableTreeItem {
 
@@ -85,6 +86,8 @@ public class ResponseDeployableTreeItem {
     @JsonProperty("deployablesVersions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseDeployableVersion> deployablesVersions = new LinkedHashSet<ResponseDeployableVersion>();
+    @JsonProperty("forceDependencies")
+    private Boolean forceDependencies = false;
 
     /**
      * non negative long
@@ -234,6 +237,16 @@ public class ResponseDeployableTreeItem {
     @JsonProperty("deployablesVersions")
     public void setDeployablesVersions(Set<ResponseDeployableVersion> deployablesVersions) {
         this.deployablesVersions = deployablesVersions;
+    }
+
+    @JsonProperty("forceDependencies")
+    public Boolean getForceDependencies() {
+        return forceDependencies;
+    }
+
+    @JsonProperty("forceDependencies")
+    public void setForceDependencies(Boolean forceDependencies) {
+        this.forceDependencies = forceDependencies;
     }
 
     @Override

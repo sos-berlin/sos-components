@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -283,10 +284,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                 versions = null;
                             }
                             treeItem.setDeployablesVersions(versions);
+                            // add forceDependencies flag for renamed treeItems 
+                            if(treeItem.getDeployablesVersions().stream()
+                                    .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
+                                    .map(ResponseDeployableVersion::getDeploymentPath)
+                                    .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
+                                treeItem.setForceDependencies(true);
+                            }
                         }
                         return treeItem;
-                    })
-                    .collect(Collectors.toSet());
+                    }).collect(Collectors.toSet());
         } else {
             return Collections.emptySet();
         }
