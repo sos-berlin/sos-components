@@ -39,7 +39,6 @@ public class RunningTaskLogHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningTaskLogHandler.class);
 
-    private static final Duration RUNNING_LOG_MAX_THREAD_LIFETIME = Duration.ofMinutes(10L);
     private static final String RUNNING_LOG_THREAD_PREFIX = "running-task-log-";
     private static final AtomicInteger runningLogThreadCounter = new AtomicInteger(1);
 
@@ -205,7 +204,7 @@ public class RunningTaskLogHandler {
             try (AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(taskLogFile, StandardOpenOption.READ)) {
                 ByteBuffer buffer = ByteBuffer.allocate(RUNNING_LOG_READ_FILE_BYTEBUFFER_ALLOCATE_SIZE);
                 Instant start = Instant.now();
-                Instant deadline = start.plus(RUNNING_LOG_MAX_THREAD_LIFETIME);
+                Instant deadline = start.plus(RunningTaskLogs.RUNNING_LOG_MAX_THREAD_LIFETIME);
                 long waitCounter = 0;
                 r: while (!content.isComplete()) {
                     buffer.clear();
