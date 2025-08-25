@@ -2,6 +2,7 @@ package com.sos.joc.order.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.logs.LogOrderContent;
 import com.sos.joc.classes.logs.RunningOrderLogs;
 import com.sos.joc.event.EventBus;
@@ -31,13 +33,11 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
-@Path("order")
+@Path(WebservicePaths.ORDER)
 public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderLogResourceImpl.class);
-    private static final String API_CALL = "./order/log";
-    private static final String API_CALL_DOWNLOAD = "./order/log/download";
-    private static final String API_CALL_RUNNING = "./order/log/running";
+
     private Lock lock = new ReentrantLock();
     private Condition condition = null;
     private Long historyId = null;
@@ -47,7 +47,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
+            filterBytes = initLogging(IMPL_PATH_LOG, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -81,7 +81,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse downloadOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken, CategoryType.CONTROLLER);
+            filterBytes = initLogging(IMPL_PATH_LOG_DOWNLOAD, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
@@ -91,8 +91,30 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             }
 
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
-            return responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
-                    logOrderContent.getUnCompressedLength());
+            return responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(), logOrderContent
+                    .getUnCompressedLength());
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse unsubscribeOrderLog(String accessToken, byte[] filterBytes) {
+        try {
+            filterBytes = initLogging(IMPL_PATH_LOG_UNSUBSCRIBE, filterBytes, accessToken, CategoryType.CONTROLLER);
+            JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
+            OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
+                    orderHistoryFilter.getControllerId(), accessToken).getOrders().getView());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            // LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
+            // TODO task logs
+            RunningOrderLogs.getInstance().unsubscribe(orderHistoryFilter.getHistoryId());
+
+            return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
@@ -101,7 +123,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postRollingOrderLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
+            filterBytes = initLogging(IMPL_PATH_LOG_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             RunningOrderLogEvents orderLog = Globals.objectMapper.readValue(filterBytes, RunningOrderLogEvents.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getBasicControllerPermissions(orderLog

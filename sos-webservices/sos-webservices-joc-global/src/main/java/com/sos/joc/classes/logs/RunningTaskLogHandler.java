@@ -377,7 +377,7 @@ public class RunningTaskLogHandler {
                 if (LOGGER.isDebugEnabled()) {
                     Duration elapsed = Duration.between(start, now);
                     LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
-                            + "][break]the calling session no longer exists");
+                            + "][break]the calling joc session no longer exists");
                 }
                 return false;
             }
@@ -385,8 +385,17 @@ public class RunningTaskLogHandler {
             if (LOGGER.isDebugEnabled()) {
                 Duration elapsed = Duration.between(start, now);
                 LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
-                        + "][check calling session][exception]" + e);
+                        + "][check calling joc session][exception]" + e);
             }
+        }
+
+        if (!RunningTaskLogs.getInstance().isRegistered(content.getSessionIdentifier(), content.getHistoryId())) {
+            if (LOGGER.isDebugEnabled()) {
+                Duration elapsed = Duration.between(start, now);
+                LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position
+                        + "][break]no more registered");
+            }
+            return false;
         }
 
         if (now.isAfter(deadline)) {

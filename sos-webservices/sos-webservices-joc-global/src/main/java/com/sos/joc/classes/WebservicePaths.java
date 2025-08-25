@@ -7,6 +7,7 @@ public class WebservicePaths {
     public static final String ORDERS = "orders";
     public static final String ORDER = "order";
     public static final String TASKS = "tasks";
+    public static final String TASK = "task";
     public static final String SCHEDULES = "schedules";
     public static final String UTILITIES = "utilities";
     public static final String MONITORING = "monitoring";
