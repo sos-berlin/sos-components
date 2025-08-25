@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -377,7 +376,6 @@ public class ApiExecutor implements AutoCloseable {
         }
 
         client = builder.build();
-        client.addSensitiveHeaders(Set.of(X_ID_TOKEN, ACCESS_TOKEN_HEADER));
     }
 
     // TODO

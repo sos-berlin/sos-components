@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +22,7 @@ import javax.net.ssl.SSLSession;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
@@ -38,7 +38,8 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 public abstract class ABaseHttpClient implements AutoCloseable {
 
     private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of(HttpUtils.HEADER_AUTHORIZATION, HttpUtils.HEADER_PROXY_AUTHORIZATION,
-            HttpUtils.HEADER_COOKIE, HttpUtils.HEADER_SET_COOKIE, "x-api-key", "x-auth-token", "authentication-token", "session-id");
+            HttpUtils.HEADER_COOKIE, HttpUtils.HEADER_SET_COOKIE, "x-api-key", "x-auth-token", "authentication-token", "session-id", "x-csrf-token",
+            "x-access-token", "x-id-token");
 
     private static final String MASKED_VALUE = SOSArgument.DisplayMode.MASKED.getValue();
     private final ISOSLogger logger;
@@ -232,7 +233,22 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     /** Executes a POST request with request body and handles the response via provided handler */
     public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, String requestBody, HttpResponse.BodyHandler<T> handler)
             throws Exception {
-        return execute(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.ofString(requestBody)), handler);
+        return executePOST(uri, headers, Optional.ofNullable(requestBody), handler);
+//        return execute(createPOSTRequest(uri, headers, 
+//                requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody) : HttpRequest.BodyPublishers.noBody()),
+//                handler);
+    }
+
+    /** Executes a POST request with request body as Optional and handles the response via provided handler */
+    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, Optional<String> requestBody, HttpResponse.BodyHandler<T> handler)
+            throws Exception {
+        if(requestBody == null) {
+            // the Optional object is null, not the string it should hold
+            throw new SOSInvalidDataException("The Optional of the request body is null. Cannot execute request!");
+        } 
+        return execute(createPOSTRequest(uri, headers, 
+                requestBody.map(HttpRequest.BodyPublishers::ofString).orElse(HttpRequest.BodyPublishers.noBody())),
+                handler);
     }
 
     /** Executes a POST request with a BodyPublisher and handles the response via provided handler */
@@ -263,7 +279,8 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     /** Executes a POST request with request body and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri, Map<String, String> headers, String requestBody) throws Exception {
-        return executeWithResponseBody(createPOSTRequest(uri, headers, HttpRequest.BodyPublishers.ofString(requestBody)));
+        return executeWithResponseBody(createPOSTRequest(uri, headers, 
+                requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody) : HttpRequest.BodyPublishers.noBody()));
     }
 
     /** Executes a POST request with request body publisher and returns response as JsonNode */
@@ -669,7 +686,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return createRequestBuilder(uri, headers).DELETE().build();
     }
 
-    private HttpRequest createPUTRequest(URI uri, Map<String,String> requestHeaders, BodyPublisher body) {
+    private HttpRequest createPUTRequest(URI uri, Map<String,String> requestHeaders, HttpRequest.BodyPublisher body) {
         return createRequestBuilder(uri, requestHeaders).PUT(body == null ? HttpRequest.BodyPublishers.noBody() : body).build();
     }
 
