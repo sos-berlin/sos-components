@@ -63,6 +63,11 @@ public class InfoJob extends Job<InfoJobArguments> {
         if (SOSShell.IS_WINDOWS) {
             step.getLogger().info("[Windows][console encoding]" + SOSShell.executeCommand("chcp"));
         }
+        step.getLogger().info("----------Environment variables (" + SOSShell.OS_NAME + ")-----------------");
+        System.getenv().entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
+            step.getLogger().info("    " + e.getKey() + "=" + e.getValue());
+        });
+
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
             step.getLogger().debug("job DEBUG message");
