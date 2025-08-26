@@ -1,17 +1,5 @@
 package com.sos.jitl.jobs.rest;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,10 +21,14 @@ import com.sos.js7.job.exception.JobException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 import com.sos.js7.job.jocapi.ApiExecutor;
 import com.sos.js7.job.jocapi.ApiResponse;
-
-import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Versions;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class JS7RESTClientJob extends Job<RestJobArguments> {
 
@@ -46,6 +38,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
     public JS7RESTClientJob(JobContext jobContext) {
         super(jobContext);
     }
+
 
     public void processOrder(OrderProcessStep<RestJobArguments> step) throws Exception {
         RestJobArguments myArgs = step.getDeclaredArguments();
@@ -121,13 +114,17 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
             else if (requestNode.has("formData")) {
                 JsonNode formDataNode = requestNode.get("formData");
                 if (formDataNode != null) {
-                    if (logReqBody)
-                        logger.info("Request Body as formData :" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
-                    logger.debug("Request Body as formData:" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                    if (logReqBody) {
+                        logger.info("Request Body as formData :" +
+                                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                    }
+                    logger.debug("Request Body as formData:" +
+                            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
                 }
                 if (formDataNode == null || !formDataNode.isObject()) {
                     throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
                 }
+
                 Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
                 while (fields.hasNext()) {
                     Map.Entry<String, JsonNode> field = fields.next();
@@ -136,24 +133,43 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
 
                     // Special handling for "file"
                     if ("file".equalsIgnoreCase(key)) {
-                        // Read file path from JSON value
                         Path filePath = Paths.get(valueNode.asText());
 
                         if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
                             throw new JobException("File not found or invalid at path: " + filePath.toAbsolutePath());
                         }
-                        // Determine content type based on "format" if present
+
+                        // Determine content type
                         String format = formDataNode.has("format") ? formDataNode.get("format").asText() : "";
                         String contentType;
+
                         if ("TAR_GZ".equalsIgnoreCase(format)) {
-                            contentType = HttpFormData.CONTENT_TYPE_GZIP;
+                            contentType = HttpFormData.CONTENT_TYPE_GZIP; // application/gzip
                         } else {
-                            // Fallback — treat as ZIP if unknown default
-                            contentType = HttpFormData.CONTENT_TYPE_ZIP;
+                            // Detect content type from file extension
+                            String fileName = filePath.getFileName().toString().toLowerCase();
+                            if (fileName.endsWith(".xml")) {
+                                contentType = "application/xml";
+                            } else if (fileName.endsWith(".xlsx")) {
+                                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                            } else if (fileName.endsWith(".zip")) {
+                                contentType = HttpFormData.CONTENT_TYPE_ZIP; // application/zip
+                            } else {
+                                // Try Java’s built-in detection first
+                                contentType = Files.probeContentType(filePath);
+                                if (contentType == null) {
+                                    contentType = "application/octet-stream"; // safe fallback
+                                }
+                            }
                         }
 
                         // Add the file part
-                        formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+                        formData.addPart(new FormDataFile(
+                                key,
+                                filePath.getFileName().toString(),
+                                filePath,
+                                contentType
+                        ));
                     }
                     // For all other keys → treat as normal form string
                     else {
@@ -162,6 +178,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     }
                 }
             }
+
 
             Map<String, String> headers = new HashMap<>();
 

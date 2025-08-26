@@ -29,7 +29,6 @@ public class ReturnVariableUtils {
                 if (!varName.isEmpty()) {
                     if (!seenNames.add(varName)) {
                         throw new JobArgumentException("Duplicate return_variable 'name' found: " + varName);
-
                     }
                 }
             }
