@@ -41,7 +41,7 @@ public class ReadAgentsV {
     @JsonProperty("agentIds")
     private List<String> agentIds = new ArrayList<String>();
     @JsonProperty("states")
-    private List<AgentStateText> states = new ArrayList<AgentStateText>();
+    private List<AgentStateTextFilter> states = new ArrayList<AgentStateTextFilter>();
     @JsonProperty("onlyVisibleAgents")
     private Boolean onlyVisibleAgents = false;
     /**
@@ -91,12 +91,12 @@ public class ReadAgentsV {
     }
 
     @JsonProperty("states")
-    public List<AgentStateText> getStates() {
+    public List<AgentStateTextFilter> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<AgentStateText> states) {
+    public void setStates(List<AgentStateTextFilter> states) {
         this.states = states;
     }
 

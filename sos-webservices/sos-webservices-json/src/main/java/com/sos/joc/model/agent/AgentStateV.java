@@ -3,6 +3,9 @@ package com.sos.joc.model.agent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "version",
     "processLimit",
     "state",
+    "connectionState",
     "healthState",
     "clusterState",
     "errorMessage",
@@ -99,6 +103,16 @@ public class AgentStateV {
     @JsonProperty("state")
     private AgentState state;
     /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    private AgentConnectionState connectionState;
+    @JsonIgnore
+    private AgentStateTextFilter stateTextFilter;
+    /**
      * cluster agent state
      * <p>
      * 
@@ -115,11 +129,11 @@ public class AgentStateV {
     @JsonProperty("clusterState")
     private ClusterState clusterState;
     /**
-     * if state == couplngFailed or unknown
+     * deprecated: see connectionState
      * 
      */
     @JsonProperty("errorMessage")
-    @JsonPropertyDescription("if state == couplngFailed or unknown")
+    @JsonPropertyDescription("deprecated: see connectionState")
     private String errorMessage;
     @JsonProperty("orders")
     private List<OrderV> orders = new ArrayList<OrderV>();
@@ -232,9 +246,6 @@ public class AgentStateV {
      */
     @JsonProperty("url")
     public String getUrl() {
-        if (url != null && !"/".equals(url) && url.endsWith("/")) {
-            url = url.replaceFirst("/$", "");
-        }
         return url;
     }
 
@@ -301,6 +312,50 @@ public class AgentStateV {
     @JsonProperty("state")
     public void setState(AgentState state) {
         this.state = state;
+        Optional.ofNullable(state).map(AgentState::get_text).map(AgentStateText::value).map(AgentStateTextFilter::fromValue).ifPresent(
+                this::setStateTextFilterIfNotCouplingFailed);
+    }
+
+    /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    public AgentConnectionState getConnectionState() {
+        return connectionState;
+    }
+
+    /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("connectionState")
+    public void setConnectionState(AgentConnectionState connectionState) {
+        this.connectionState = connectionState;
+        Optional.ofNullable(connectionState).map(AgentConnectionState::getErrorMessage).ifPresent(this::setErrorMessage); //obsolete
+        Optional.ofNullable(connectionState).map(AgentConnectionState::get_text).filter(s -> !AgentConnectionStateText.WITH_TEMPORARY_ERROR.equals(s))
+                .ifPresent(s -> this.setStateTextFilter(AgentStateTextFilter.COUPLINGFAILED));
+    }
+    
+    @JsonIgnore
+    public AgentStateTextFilter getStateTextFilter() {
+        return stateTextFilter;
+    }
+    
+    @JsonIgnore
+    public void setStateTextFilterIfNotCouplingFailed(AgentStateTextFilter stateTextFilter) {
+        if (!AgentStateTextFilter.COUPLINGFAILED.equals(this.stateTextFilter)) {
+            this.stateTextFilter = stateTextFilter;
+        }
+    }
+    
+    @JsonIgnore
+    public void setStateTextFilter(AgentStateTextFilter stateTextFilter) {
+        this.stateTextFilter = stateTextFilter;
     }
 
     /**
@@ -348,7 +403,7 @@ public class AgentStateV {
     }
 
     /**
-     * if state == couplngFailed or unknown
+     * deprecated: see connectionState
      * 
      */
     @JsonProperty("errorMessage")
@@ -357,7 +412,7 @@ public class AgentStateV {
     }
 
     /**
-     * if state == couplngFailed or unknown
+     * deprecated: see connectionState
      * 
      */
     @JsonProperty("errorMessage")
@@ -409,12 +464,12 @@ public class AgentStateV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("processLimit", processLimit).append("state", state).append("healthState", healthState).append("clusterState", clusterState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("subagentId", subagentId).append("url", url).append("version", version).append("processLimit", processLimit).append("state", state).append("connectionState", connectionState).append("healthState", healthState).append("clusterState", clusterState).append("errorMessage", errorMessage).append("orders", orders).append("runningTasks", runningTasks).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(version).append(url).append(processLimit).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(clusterState).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(connectionState).append(errorMessage).append(agentName).append(version).append(url).append(processLimit).append(healthState).append(subagentId).append(orders).append(disabled).append(state).append(clusterState).append(runningTasks).toHashCode();
     }
 
     @Override
@@ -426,7 +481,7 @@ public class AgentStateV {
             return false;
         }
         AgentStateV rhs = ((AgentStateV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(version, rhs.version).append(url, rhs.url).append(processLimit, rhs.processLimit).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(clusterState, rhs.clusterState).append(runningTasks, rhs.runningTasks).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(connectionState, rhs.connectionState).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(version, rhs.version).append(url, rhs.url).append(processLimit, rhs.processLimit).append(healthState, rhs.healthState).append(subagentId, rhs.subagentId).append(orders, rhs.orders).append(disabled, rhs.disabled).append(state, rhs.state).append(clusterState, rhs.clusterState).append(runningTasks, rhs.runningTasks).isEquals();
     }
 
 }
