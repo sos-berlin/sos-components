@@ -130,10 +130,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            session.setAutoCommit(false);
 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            Globals.beginTransaction(session);
             // released schedules with referenced workflows
             Map<String, List<String>> renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer);
             // schedules from the request
@@ -146,17 +144,19 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             keys.stream().forEach(key -> renamedOldSchedulePathsWithWorkflowNames.remove(key));
             // cancel based on the old name of renamed schedules
             if (!renamedOldSchedulePathsWithWorkflowNames.isEmpty()) {
-                cancelOrdersForRenamedSchedules(in.getAddOrdersDateFrom(), renamedOldSchedulePathsWithWorkflowNames, dbLayer, accessToken);
+                cancelOrdersForRenamedSchedules(in.getAddOrdersDateFrom(), renamedOldSchedulePathsWithWorkflowNames, accessToken);
             }
-            Globals.commit(session);
-            Globals.beginTransaction(session);
             List<Err419> errors = new ArrayList<>();
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             // call update for preDeploy 
             if (in.getDelete() != null && !in.getDelete().isEmpty()) {
+                session.setAutoCommit(false);
+                Globals.beginTransaction(session);
                 errors.addAll(delete(in.getDelete(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                         withDeletionOfEmptyFolders));
+                Globals.commit(session);
+                session.setAutoCommit(true);
             }
 
             if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
@@ -165,7 +165,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
             cancelOrders(in, schedulePathsWithWorkflowNames, accessToken);
-            Globals.commit(session);
             try {
                 PublishSemaphore.release(accessToken);
             } catch (Exception e) {
@@ -175,7 +174,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 TimeUnit.MILLISECONDS.sleep(100);
             }
             PublishSemaphore.tryAcquire(accessToken);
-            Globals.beginTransaction(session);
             // call update for postDeploy 
             if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                 errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
@@ -185,11 +183,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 Globals.rollback(session);
                 return errors;
             }
-            Globals.commit(session);
             auditLogObjectsLogging.log();
-            Globals.beginTransaction(session);
             recreateOrders(in, schedulePathsWithWorkflowNames, accessToken, session);
-            Globals.commit(session);
             return Collections.emptyList();
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -373,21 +368,21 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
         // Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException:
         // Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
-        // DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
+        DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
 
         if (releaseItem == null) {
             // delete all other db items with same objectType and name
-            dbLayer.deleteContraintViolatedReleasedConfigurations(null, conf.getName(), conf.getType());
-            // if (contraintReleaseItem != null) {
-            // dbLayer.getSession().delete(contraintReleaseItem);
-            // }
+            // dbLayer.deleteContraintViolatedReleasedConfigurations(null, conf.getName(), conf.getType());
+            if (contraintReleaseItem != null) {
+                dbLayer.getSession().delete(contraintReleaseItem);
+            }
             dbLayer.getSession().save(setReleaseItem(null, conf, dbAuditLog.getCreated()));
         } else {
             // delete all other db items with same objectType and name but different id
-            dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
-            // if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
-            // dbLayer.getSession().delete(contraintReleaseItem);
-            // }
+            // dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
+            if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
+                dbLayer.getSession().delete(contraintReleaseItem);
+            }
             dbLayer.getSession().update(setReleaseItem(releaseItem, conf, dbAuditLog.getCreated()));
         }
         conf.setReleased(true);
@@ -791,7 +786,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 //    }
 //
     private void cancelOrdersForRenamedSchedules(String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames,
-            InventoryDBLayer dbLayer, String xAccessToken) {
+            String xAccessToken) {
         if (addOrdersDateFrom != null && !addOrdersDateFrom.isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
             DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
@@ -912,7 +907,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
 
-    private void recreateOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken, SOSHibernateSession session) {
+    private void recreateOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken,
+            SOSHibernateSession session) {
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
             boolean successful = false;
