@@ -106,6 +106,13 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
 //                    versions = null;
 //                }
                 treeItem.setDeployablesVersions(versions);
+                // add forceDependencies flag for renamed treeItems 
+                if(treeItem.getDeployablesVersions().stream()
+                        .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
+                        .map(ResponseDeployableVersion::getDeploymentPath)
+                        .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
+                    treeItem.setForceDependencies(true);
+                }
             } else {
                 InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());
                 if (depItem == null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
