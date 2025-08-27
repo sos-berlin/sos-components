@@ -6,7 +6,7 @@
 	<Appenders>
 		<Console name="console" target="SYSTEM_OUT">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t][%logger] (%F:%L) - %m%n" />
 		</Console>
 		<RollingFile name="fileLogger"
 			fileName="${basePath}/history_test.log"
@@ -19,13 +19,13 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<Root level="info">
+		<Root level="trace">
 			<AppenderRef ref="console" />
 			<!-- <AppenderRef ref="fileLogger" /> -->
 		</Root>
 		<Logger name="org.hibernate" level="fatal" />
 		<Logger name="com.mchange.v2" level="fatal" />
-		<Logger name="com.sos" level="debug" />
-		<Logger name="js7" level="debug" />
+		<Logger name="com.sos" level="trace" />
+		<Logger name="js7" level="trace" />
 	</Loggers>
 </Configuration>

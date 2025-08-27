@@ -115,7 +115,7 @@ public class HistoryService extends AJocActiveMemberService {
 
                     @Override
                     public void run() {
-                        JocClusterServiceLogger.setLogger(IDENTIFIER);
+                        setLogger();
 
                         LOGGER.info(String.format("[%s][%s][run]start...", IDENTIFIER, controllerHandler.getIdentifier()));
                         controllerHandler.start(mode, tg);
@@ -143,7 +143,7 @@ public class HistoryService extends AJocActiveMemberService {
 
             int size = closeEventHandlers(mode);
 
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
+            setLogger();
             if (size > 0) {
                 handleLogsOnStop(mode);
             }
@@ -663,7 +663,7 @@ public class HistoryService extends AJocActiveMemberService {
     private int closeEventHandlers(StartupMode mode) {
         String method = "closeEventHandlers";
 
-        JocClusterServiceLogger.setLogger(IDENTIFIER);
+        setLogger();
 
         int size = activeHandlers.size();
         // JocClusterServiceLogger.clearAllLoggers();
@@ -677,7 +677,7 @@ public class HistoryService extends AJocActiveMemberService {
 
                     @Override
                     public void run() {
-                        JocClusterServiceLogger.setLogger(IDENTIFIER);
+                        setLogger();
                         LOGGER.info(String.format("[%s][%s][%s]start...", getIdentifier(), method, h.getIdentifier()));
                         h.close(mode);
                         LOGGER.info(String.format("[%s][%s][%s]end", getIdentifier(), method, h.getIdentifier()));
@@ -686,13 +686,13 @@ public class HistoryService extends AJocActiveMemberService {
                 };
                 threadPool.submit(thread);
             }
-            JocClusterServiceLogger.setLogger(IDENTIFIER);
+            setLogger();
             JocCluster.shutdownThreadPool("[" + getIdentifier() + "][" + mode + "]", threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             // JocClusterServiceLogger.clearAllLoggers();
             activeHandlers = new CopyOnWriteArrayList<>();
         } else {
             if (LOGGER.isDebugEnabled()) {
-                JocClusterServiceLogger.setLogger(IDENTIFIER);
+                setLogger();
                 LOGGER.debug(String.format("[%s][%s][%s][skip]already closed", getIdentifier(), mode, method));
                 // JocClusterServiceLogger.clearAllLoggers();
             }

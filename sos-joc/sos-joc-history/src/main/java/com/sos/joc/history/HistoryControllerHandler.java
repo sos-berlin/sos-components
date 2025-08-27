@@ -10,6 +10,7 @@ import java.util.OptionalLong;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,10 +126,10 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
+/** TODO - see process() method. Step 3 comments - // flux = flux.publishOn(Schedulers.single()); */
 public class HistoryControllerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final String TORN_PROBLEM_CODE_REGEXP = "UnknownEventId|SnapshotForUnknownEventId";
     private static final String REACTOR_MSG_COULD_NOT_EMIT_BUFFER = "Could not emit buffer due to lack of requests";
     private static final int MAX_IN_PROCESS_IN_SECONDS = 60; // 1 minute
@@ -269,7 +270,7 @@ public class HistoryControllerHandler {
             }
         }
 
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[end]%s", method, eventId));
         }
     }
@@ -337,6 +338,18 @@ public class HistoryControllerHandler {
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             // Original Flux
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
+            if (LOGGER.isTraceEnabled()) {
+                // Only actual signals are logged, such as onSubscribe, request(n), onNext(element), onComplete, onError, cancel.
+                // - request(1) happens because the history Flux is terminated with .toIterable().forEach
+                // - the iterator requests exactly 1 element at a time (step-by-step consumption)
+                // Unfortunately, empty buffers (no events emitted) are not logged, so you cannot directly see if the Flux is still "alive" and processing in
+                // the background (not blocked).
+
+                // All logs are produced by reactor.util.Loggers.
+                // The custom log category (e.g., "history-flux-...") will only be visible in the log output if the Log4j2/SLF4J pattern layout is configured to
+                // include %c or %logger (the logger name).
+                flux = flux.log("history-flux-" + controllerConfig.getCurrent().getId(), Level.FINEST, true);
+            }
             // Step 1 - Process all events in parallel, but use flatMapSequential to ensure that the original events order is maintained
             flux = flux.flatMapSequential(e -> Mono.fromRunnable(() -> {
                 // process all events in parallel before filtering
@@ -369,6 +382,7 @@ public class HistoryControllerHandler {
             flux = flux.doFinally(this::fluxDoFinally);
 
             // Step 4 - Take events until stopper signals and process them in batches
+            // bufferTimeout -https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Flux.html#bufferTimeout-int-java.time.Duration-
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).filter(e -> e.getEventId() != null).bufferTimeout(config
                     .getBufferTimeoutMaxSize(), Duration.ofSeconds(config.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
                         JocClusterServiceLogger.setLogger(serviceIdentifier);
@@ -428,6 +442,10 @@ public class HistoryControllerHandler {
     }
 
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("[history][map2fat][controllerId=" + model.getControllerConfiguration().getCurrent().getId() + "]" + eventAndState);
+        }
+
         AFatEvent event = null;
         HistoryEventEntry entry = null;
         HistoryOrder order = null;
@@ -792,14 +810,14 @@ public class HistoryControllerHandler {
                 event = new FatEventOrderOrderAdded(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo()
                         .getPosition(), order.getOrderAddedInfo());
                 break;
-                
+
             case OrderSleeping:
                 order = entry.getCheckedOrder();
                 OrderSleeping os = (OrderSleeping) entry.getEvent();
                 event = new FatEventOrderSleeping(entry.getEventId(), entry.getEventDate(), order.getOrderId(), order.getWorkflowInfo().getPosition(),
                         HistoryEventEntry.getDate(os.until()));
                 break;
-                
+
             case OrderPriorityChanged:
                 order = entry.getCheckedOrder();
                 OrderPriorityChanged opc = (OrderPriorityChanged) entry.getEvent();
@@ -898,7 +916,7 @@ public class HistoryControllerHandler {
     private void waitFor(long seconds) {
         if (!closed.get() && seconds > 0) {
             String method = getMethodName("waitFor");
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("%s%ss ...", method, seconds));
             }
             try {
@@ -907,7 +925,7 @@ public class HistoryControllerHandler {
                 }
             } catch (InterruptedException e) {
                 if (closed.get()) {
-                    if (isDebugEnabled) {
+                    if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(String.format("%ssleep interrupted due to handler close", method));
                     }
                 } else {
