@@ -206,6 +206,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.search.RequestQuickSearchFilter", "inventory/search/request-quick-search-filter-schema.json");
             put("com.sos.joc.model.inventory.convert.ConvertCronFilter", "inventory/convert/convertCronFilter-schema.json");
             put("com.sos.joc.model.inventory.validate.RequestFolder", "inventory/revalidate/request-folder-schema.json");
+            put("com.sos.joc.model.inventory.sync.RequestFilter", "inventory/sync/request-filter-schema.json");
             put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
 
             put("com.sos.joc.model.tag.common.RequestFilters", "tag/common/request-filters-schema.json");
