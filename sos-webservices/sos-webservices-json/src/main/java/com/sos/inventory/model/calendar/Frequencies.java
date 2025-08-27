@@ -2,9 +2,11 @@
 package com.sos.inventory.model.calendar;
 
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -24,7 +26,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "ultimos",
     "months",
     "holidays",
-    "repetitions"
+    "repetitions",
+    "nonWorkingDayCalendars"
 })
 public class Frequencies {
 
@@ -42,6 +45,9 @@ public class Frequencies {
     private List<Holidays> holidays = null;
     @JsonProperty("repetitions")
     private List<Repetition> repetitions = null;
+    @JsonProperty("nonWorkingDayCalendars")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> nonWorkingDayCalendars = null;
 
     @JsonProperty("dates")
     public List<String> getDates() {
@@ -113,14 +119,24 @@ public class Frequencies {
         this.repetitions = repetitions;
     }
 
+    @JsonProperty("nonWorkingDayCalendars")
+    public Set<String> getNonWorkingDayCalendars() {
+        return nonWorkingDayCalendars;
+    }
+
+    @JsonProperty("nonWorkingDayCalendars")
+    public void setNonWorkingDayCalendars(Set<String> nonWorkingDayCalendars) {
+        this.nonWorkingDayCalendars = nonWorkingDayCalendars;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dates", dates).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("months", months).append("holidays", holidays).append("repetitions", repetitions).toString();
+        return new ToStringBuilder(this).append("dates", dates).append("weekdays", weekdays).append("monthdays", monthdays).append("ultimos", ultimos).append("months", months).append("holidays", holidays).append("repetitions", repetitions).append("nonWorkingDayCalendars", nonWorkingDayCalendars).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(months).append(holidays).append(weekdays).append(dates).append(monthdays).append(ultimos).append(repetitions).toHashCode();
+        return new HashCodeBuilder().append(months).append(holidays).append(weekdays).append(nonWorkingDayCalendars).append(dates).append(monthdays).append(ultimos).append(repetitions).toHashCode();
     }
 
     @Override
@@ -132,7 +148,7 @@ public class Frequencies {
             return false;
         }
         Frequencies rhs = ((Frequencies) other);
-        return new EqualsBuilder().append(months, rhs.months).append(holidays, rhs.holidays).append(weekdays, rhs.weekdays).append(dates, rhs.dates).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
+        return new EqualsBuilder().append(months, rhs.months).append(holidays, rhs.holidays).append(weekdays, rhs.weekdays).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(dates, rhs.dates).append(monthdays, rhs.monthdays).append(ultimos, rhs.ultimos).append(repetitions, rhs.repetitions).isEquals();
     }
 
 }
