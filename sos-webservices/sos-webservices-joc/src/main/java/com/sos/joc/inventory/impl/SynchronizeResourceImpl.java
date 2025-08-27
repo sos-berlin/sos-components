@@ -24,14 +24,10 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
-import com.sos.joc.inventory.impl.common.AReadFolder;
 import com.sos.joc.inventory.resource.ISynchronizeResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.common.RequestFolder;
-import com.sos.joc.model.inventory.common.ResponseFolder;
-import com.sos.joc.model.inventory.common.ResponseFolderItem;
 import com.sos.joc.model.inventory.sync.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -52,7 +48,7 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
             JsonValidator.validateFailFast(requestBody, RequestFilter.class);
             RequestFilter filter = Globals.objectMapper.readValue(requestBody, RequestFilter.class);
 
-            filter.setPath(normalizeFolder(filter.getPath()));
+            filter.setFolder(normalizeFolder(filter.getFolder()));
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -65,13 +61,13 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
             JControllerState currentstate = null;
             Set<Integer> objectTypes = JocInventory.DEPLOYABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet()); 
             objectTypes.add(ConfigurationType.FOLDER.intValue());
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(filter.getPath(), filter.getRecursive(), objectTypes, true, false);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(filter.getFolder(), filter.getRecursive(), objectTypes, true, false);
             try {
                 DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
                 DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();
                 deployedFilter.setControllerId(filter.getControllerId());
                 Folder fld = new Folder();
-                fld.setFolder(filter.getPath());
+                fld.setFolder(filter.getFolder());
                 fld.setRecursive(filter.getRecursive());
                 deployedFilter.setFolders(Collections.singleton(fld));
                 deployedFilter.setObjectTypes(objectTypes);
