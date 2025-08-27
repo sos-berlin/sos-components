@@ -39,12 +39,13 @@ public enum AgentStateTextFilter {
 
     @JsonCreator
     public static AgentStateTextFilter fromValue(String value) {
-        AgentStateTextFilter constant = CONSTANTS.get(value);
-        if (constant == null) {
-            throw new IllegalArgumentException(value);
-        } else {
-            return constant;
-        }
+        return CONSTANTS.get(value);
+//        AgentStateTextFilter constant = CONSTANTS.get(value);
+//        if (constant == null) {
+//            throw new IllegalArgumentException(value);
+//        } else {
+//            return constant;
+//        }
     }
 
 }
