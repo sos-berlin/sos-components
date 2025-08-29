@@ -19,14 +19,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "folder",
-    "recursive",
     "auditLog"
 })
 public class RedeployFilter {
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -34,17 +32,6 @@ public class RedeployFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("folder")
-    private String folder;
-    @JsonProperty("recursive")
-    private Boolean recursive = false;
     /**
      * auditParams
      * <p>
@@ -55,7 +42,7 @@ public class RedeployFilter {
     private AuditParams auditLog;
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -67,7 +54,7 @@ public class RedeployFilter {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -76,40 +63,6 @@ public class RedeployFilter {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("folder")
-    public String getFolder() {
-        return folder;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("folder")
-    public void setFolder(String folder) {
-        this.folder = folder;
-    }
-
-    @JsonProperty("recursive")
-    public Boolean getRecursive() {
-        return recursive;
-    }
-
-    @JsonProperty("recursive")
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
     }
 
     /**
@@ -136,12 +89,12 @@ public class RedeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("folder", folder).append("recursive", recursive).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(controllerId).append(auditLog).append(recursive).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -153,7 +106,7 @@ public class RedeployFilter {
             return false;
         }
         RedeployFilter rhs = ((RedeployFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(recursive, rhs.recursive).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
