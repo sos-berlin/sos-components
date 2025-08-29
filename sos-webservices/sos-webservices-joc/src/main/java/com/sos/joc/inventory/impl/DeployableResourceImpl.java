@@ -102,16 +102,15 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                     versions.add(draft);
                 }
                 versions.addAll(getVersions(config.getId(), deployments, in.getWithoutDeployed(), in.getLatest()));
-//                if (versions.isEmpty()) {
-//                    versions = null;
-//                }
-                treeItem.setDeployablesVersions(versions);
-                // add forceDependencies flag for renamed treeItems 
-                if(treeItem.getDeployablesVersions().stream()
-                        .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
-                        .map(ResponseDeployableVersion::getDeploymentPath)
-                        .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
-                    treeItem.setForceDependencies(true);
+                if(!versions.isEmpty()) {
+                    treeItem.setDeployablesVersions(versions);
+                    // add forceDependencies flag for renamed treeItems 
+                    if(treeItem.getDeployablesVersions().stream()
+                            .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
+                            .map(ResponseDeployableVersion::getDeploymentPath)
+                            .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
+                        treeItem.setForceDependencies(true);
+                    }
                 }
             } else {
                 InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());

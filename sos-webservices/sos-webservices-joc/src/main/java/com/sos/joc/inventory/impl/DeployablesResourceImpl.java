@@ -277,11 +277,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                     versions.add(draft);
                                 }
                                 versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments, withoutDeployed, onlyLatest));
-//                                if (versions.isEmpty()) {
-//                                    versions = null;
-//                                }
-                            } else {
-                                versions = null;
                             }
                             if(!versions.isEmpty()) {
                                 treeItem.setDeployablesVersions(versions);
