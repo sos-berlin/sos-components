@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 public class SOSString {
 
-    private static final String DEFAULT_JOIN_DELIMITER = ",";
+    private static final String DEFAULT_JOIN_DELIMITER = ", ";
 
     private static final String TO_STRING_JAVA_INTERNAL_REGEX = "^(java|javax|sun|com\\.sun|com\\.oracle|jdk)\\..*";
     private static final String TO_STRING_NULL_VALUE = "<null>";
@@ -375,14 +375,22 @@ public class SOSString {
     }
 
     public static String join(Object[] array) {
+        return join(array, DEFAULT_JOIN_DELIMITER);
+    }
+
+    public static String join(Object[] array, String delimiter) {
         if (array == null) {
             return null;
         }
-        return join(Arrays.asList(array), DEFAULT_JOIN_DELIMITER, Object::toString);
+        return join(Arrays.asList(array), delimiter, Object::toString);
     }
 
     public static String join(Collection<?> collection) {
-        return join(collection, DEFAULT_JOIN_DELIMITER, Object::toString);
+        return join(collection, DEFAULT_JOIN_DELIMITER);
+    }
+
+    public static String join(Collection<?> collection, String delimiter) {
+        return join(collection, delimiter, Object::toString);
     }
 
     /** e.g.: SOSString.join(myCollection, n -> SOSString.zeroPad(n, 2))

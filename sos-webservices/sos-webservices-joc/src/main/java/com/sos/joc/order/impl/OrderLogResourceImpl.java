@@ -112,7 +112,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
 
             // LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
             // TODO task logs
-            RunningOrderLogs.getInstance().unsubscribe(orderHistoryFilter.getHistoryId());
+            RunningOrderLogs.getInstance().unsubscribe(accessToken, orderHistoryFilter.getHistoryId());
 
             return responseStatusJSOk(new Date());
         } catch (Exception e) {

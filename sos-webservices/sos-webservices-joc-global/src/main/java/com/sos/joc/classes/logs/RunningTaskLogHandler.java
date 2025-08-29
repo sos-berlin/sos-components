@@ -138,6 +138,12 @@ public class RunningTaskLogHandler {
         }
         try {
             if (Files.exists(taskLogFile)) {
+                if (!forDownload) {
+                    // before content.setEventId();
+                    // - (see comparison RunningTaskLogs.getInstance().isBeforeSubscriptionStartTime)
+                    RunningTaskLogs.getInstance().registerSubscriptionStartTime(content.getSessionIdentifier(), content.getHistoryId());
+                }
+
                 content.setEventId();
                 content.setUnCompressedLength(Files.size(taskLogFile));
                 if (forDownload) {
@@ -360,7 +366,7 @@ public class RunningTaskLogHandler {
                 LOGGER.debug(logPrefix + "[START]Thread/Subscribe session");
             }
             putRunningLogThread(workerThread);
-            RunningTaskLogs.getInstance().subscribe(content.getSessionIdentifier(), content.getHistoryId());
+            RunningTaskLogs.getInstance().subscribe(content.getSessionIdentifier(), new TaskLogBean(content));
             workerThread.start();
         } else {
             if (isDebugEnabled) {
@@ -389,7 +395,7 @@ public class RunningTaskLogHandler {
             }
         }
 
-        if (!RunningTaskLogs.getInstance().isRegistered(content.getSessionIdentifier(), content.getHistoryId())) {
+        if (!RunningTaskLogs.getInstance().isSubscribed(content.getSessionIdentifier(), content.getHistoryId())) {
             if (LOGGER.isDebugEnabled()) {
                 Duration elapsed = Duration.between(start, now);
                 LOGGER.debug(logPrefix + "[" + thread + "][runningTime=" + SOSDate.getDuration(elapsed) + "][position=" + position

@@ -60,16 +60,16 @@ public class LogTaskContent {
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
-    public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
-        this.historyId = taskId;
+    public LogTaskContent(Long historyId, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
+        this.historyId = historyId;
         this.sessionIdentifier = sessionIdentifier;
         this.folderPermissions = folderPermissions;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
 
     }
 
-    public LogTaskContent(Long taskId, String sessionIdentifier) {
-        this.historyId = taskId;
+    public LogTaskContent(Long historyId, String sessionIdentifier) {
+        this.historyId = historyId;
         this.sessionIdentifier = sessionIdentifier;
         this.folderPermissions = null;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
