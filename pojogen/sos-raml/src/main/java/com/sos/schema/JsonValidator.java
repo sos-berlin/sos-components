@@ -248,6 +248,7 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
             put("com.sos.joc.model.publish.RedeployFilter", "publish/redeployFilter-schema.json");
+            put("com.sos.joc.model.publish.RedeploySyncFilter", "publish/redeploySyncFilter-schema.json");
             put("com.sos.joc.model.publish.DeleteCaFilter", "publish/deleteCaFilter-schema.json");
             put("com.sos.joc.model.publish.GenerateCaFilter", "publish/generateCaFilter-schema.json");
             put("com.sos.joc.model.publish.ImportRootCaFilter", "publish/importRootCaFilter-schema.json");

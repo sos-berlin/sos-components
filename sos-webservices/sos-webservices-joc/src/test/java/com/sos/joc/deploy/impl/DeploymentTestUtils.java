@@ -81,6 +81,7 @@ import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.GenerateCaFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.RedeploySyncFilter;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
@@ -427,8 +428,8 @@ public class DeploymentTestUtils {
         return filter;
     }
     
-    public static RedeployFilter createDefaultRedeployFilter() {
-        RedeployFilter filter = new RedeployFilter();
+    public static RedeploySyncFilter createDefaultRedeployFilter() {
+        RedeploySyncFilter filter = new RedeploySyncFilter();
         filter.setControllerId("js7-cluster");
         filter.setFolder("/myWorkflows/myIfElseWorkflow");
         filter.setRecursive(true);

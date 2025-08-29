@@ -81,14 +81,16 @@ public class StoreDeployments {
                     put(DeployType.WORKFLOW.intValue(), Workflow.class);
                 }
             });
+    public static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
+    public static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
 
     public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec, String account, String commitId, String controllerId,
             String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
-        storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
+        storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer, true);
     }
 
     public static void storeNewDepHistoryEntries(SignedItemsSpec signedItemsSpec, String account, String commitId, String controllerId,
-            String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
+            String accessToken, JocError jocError, DBLayerDeploy dbLayer, boolean redeploy) {
         try {
             final Date deploymentDate = Date.from(Instant.now());
             // no error occurred
@@ -126,7 +128,9 @@ public class StoreDeployments {
                         if (JocInventory.isWorkflow(toUpdate.getType())) {
                             workflowInvIds.add(toUpdate.getId());
                         }
-                        toUpdate.setDeployed(true);
+                        if(!redeploy) {
+                            toUpdate.setDeployed(true);
+                        }
                         toUpdate.setModified(Date.from(Instant.now()));
                         dbLayer.getSession().update(toUpdate);
                     } else {
@@ -276,7 +280,9 @@ public class StoreDeployments {
 
             // store new history entries and update inventory for update operation optimistically
             DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null, account, signedItemsSpec.getAuditlogId());
-            storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
+            if (!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
+                storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer, false);
+            }
 
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             // boolean verified = false;

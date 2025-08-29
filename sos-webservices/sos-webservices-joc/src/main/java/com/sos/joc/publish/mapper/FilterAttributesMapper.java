@@ -12,7 +12,7 @@ import com.sos.joc.model.publish.DepHistoryCompactFilter;
 import com.sos.joc.model.publish.DepHistoryDetailFilter;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.RedeploySyncFilter;
 
 public abstract class FilterAttributesMapper {
 
@@ -166,7 +166,7 @@ public abstract class FilterAttributesMapper {
         return null;
     }
 
-    public static Set<String> getDefaultAttributesFromFilter(RedeployFilter filter) {
+    public static Set<String> getDefaultAttributesFromFilter(RedeploySyncFilter filter) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getControllerId() != null) {
             filterAttributes.add("controllerId");
@@ -178,7 +178,7 @@ public abstract class FilterAttributesMapper {
         return filterAttributes;
     }
     
-    public static Object getValueByFilterAttribute (RedeployFilter filter, String attribute) {
+    public static Object getValueByFilterAttribute (RedeploySyncFilter filter, String attribute) {
         switch(attribute) {
         case "controllerId":
             return filter.getControllerId();

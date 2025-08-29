@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.http.HttpRequest;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -15,7 +16,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,6 +58,7 @@ import com.sos.joc.model.notification.ReadNotificationFilter;
 import com.sos.joc.model.notification.StoreNotificationFilter;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.RedeploySyncFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.folder.ExportFolderFilter;
 import com.sos.joc.model.publish.git.AddCredentialsFilter;
@@ -293,7 +297,7 @@ public class MappingTest {
     
     @Test
     public void test10MapRedeployFilter () throws JsonProcessingException {
-        RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
+        RedeploySyncFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
 //        ExcludeConfiguration exclude = new ExcludeConfiguration();
 //        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
 //        exclude.setDeployType(DeployType.WORKFLOW);
@@ -708,4 +712,5 @@ public class MappingTest {
             return path;
         }).forEach(item -> LOGGER.trace(item));
     }
+    
 }
