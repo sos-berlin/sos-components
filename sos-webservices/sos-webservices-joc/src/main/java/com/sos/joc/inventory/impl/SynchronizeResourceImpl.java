@@ -91,7 +91,7 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
                         if(!ConfigurationType.FOLDER.equals(item.getObjectType()) && SyncStateText.NOT_DEPLOYED.equals(syncState.get_text())) {
                             DBItemInventoryConfiguration invItem = session.get(DBItemInventoryConfiguration.class, item.getId());
                             invItem.setDeployed(false);
-                            session.save(invItem);
+                            session.update(invItem);
                             updated = true;
                             parentFolders.add(invItem.getFolder());
                         } else if (ConfigurationType.FOLDER.equals(item.getObjectType())) {

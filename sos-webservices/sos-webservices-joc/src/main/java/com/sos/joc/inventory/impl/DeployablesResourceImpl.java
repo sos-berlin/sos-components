@@ -266,8 +266,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         DBItemInventoryConfiguration conf = entry.getKey();
                         Set<InventoryDeploymentItem> deployments = entry.getValue();
                         ResponseDeployableTreeItem treeItem = DeployableResourceImpl.getResponseDeployableTreeItem(conf);
+                        Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
                         if (deployments != null && !deployments.isEmpty()) {
-                            Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
                             if (ConfigurationType.FOLDER.intValue() != conf.getType()) {
                                 if (!treeItem.getDeployed() && conf.getValid() && !withoutDrafts) {
                                     ResponseDeployableVersion draft = new ResponseDeployableVersion();
@@ -283,13 +283,15 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                             } else {
                                 versions = null;
                             }
-                            treeItem.setDeployablesVersions(versions);
-                            // add forceDependencies flag for renamed treeItems 
-                            if(treeItem.getDeployablesVersions().stream()
-                                    .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
-                                    .map(ResponseDeployableVersion::getDeploymentPath)
-                                    .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
-                                treeItem.setForceDependencies(true);
+                            if(!versions.isEmpty()) {
+                                treeItem.setDeployablesVersions(versions);
+                                // add forceDependencies flag for renamed treeItems 
+                                if(treeItem.getDeployablesVersions().stream()
+                                        .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
+                                        .map(ResponseDeployableVersion::getDeploymentPath)
+                                        .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
+                                    treeItem.setForceDependencies(true);
+                                }
                             }
                         }
                         return treeItem;
