@@ -113,9 +113,9 @@ public class GetToken extends SOSRestApiClient {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
-//            LOGGER.info("REQUEST-URL:" + uri.toString());
-//            LOGGER.info("REQUEST-HEADER:" + printHttpRequestHeaders());
-//            LOGGER.info("REQUEST-BODY:" + body.toString());
+            LOGGER.debug("REQUEST-URL:" + uri.toString());
+            LOGGER.debug("REQUEST-HEADER:" + printHttpRequestHeaders());
+            LOGGER.debug("REQUEST-BODY:" + body.toString());
             String response = postRestService(uri, body);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -156,8 +156,8 @@ public class GetToken extends SOSRestApiClient {
         if (response == null) {
             response = "";
         }
-//        LOGGER.info("RESPONSE-HEADERS:" + printHttpResponseHeaders());
-//        LOGGER.info("RESPONSE:" + response);
+        LOGGER.debug("RESPONSE-HEADERS:" + printHttpResponseHeaders());
+        LOGGER.debug("RESPONSE:" + response);
         try {
             switch (httpReplyCode) {
             case 200:
@@ -165,7 +165,6 @@ public class GetToken extends SOSRestApiClient {
                     if (response.isEmpty()) {
                         throw new JocInvalidResponseDataException("Unexpected empty response");
                     }
-                    //LOGGER.debug(response);
                     return response;
                 } else {
                     throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,

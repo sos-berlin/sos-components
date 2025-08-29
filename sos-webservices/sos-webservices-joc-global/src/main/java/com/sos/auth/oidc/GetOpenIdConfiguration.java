@@ -65,8 +65,8 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         JocError jocError = new JocError();
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
-//            LOGGER.info("REQUEST-URL:" + uri.toString());
-//            LOGGER.info("REQUEST-HEADER:" + printHttpRequestHeaders());
+            LOGGER.debug("REQUEST-URL:" + uri.toString());
+            LOGGER.debug("REQUEST-HEADER:" + printHttpRequestHeaders());
             String response = getRestService(uri);
             return getJsonStringFromResponse(response, uri, jocError);
         } catch (JocException e) {
@@ -107,8 +107,8 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
         if (response == null) {
             response = "";
         }
-//        LOGGER.info("RESPONSE-HEADERS:" + printHttpResponseHeaders());
-//        LOGGER.info("RESPONSE:" + response);
+        LOGGER.debug("RESPONSE-HEADERS:" + printHttpResponseHeaders());
+        LOGGER.debug("RESPONSE:" + response);
         try {
             switch (httpReplyCode) {
             case 200:
@@ -116,7 +116,6 @@ public class GetOpenIdConfiguration extends SOSRestApiClient {
                     if (response.isEmpty()) {
                         throw new JocInvalidResponseDataException("Unexpected empty response");
                     }
-                    //LOGGER.debug(response);
                     return response;
                 } else {
                     throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
