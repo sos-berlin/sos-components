@@ -1,6 +1,12 @@
 package com.sos.joc;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.GZIPInputStream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -30,6 +37,8 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
+import jakarta.ws.rs.core.StreamingOutput;
 
 /** For testing web services in the IDE<br/>
  * Suitable for "simple" web services that use e.g. a database connection but not the Proxy/Events etc.<br/>
@@ -158,7 +167,7 @@ public class UnitTestSimpleWSImplHelper {
         Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", file.toAbsolutePath().toString());
     }
 
-    private String mockJOCLoginAsRoot() {
+    public String mockJOCLoginAsRoot() {
         Globals.jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
         Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
 
@@ -191,10 +200,10 @@ public class UnitTestSimpleWSImplHelper {
         JocPermissions p = a.getJocPermissions();
 
         p.getCalendars().setView(true);
-        
+
         p.getDailyPlan().setView(true);
         p.getDailyPlan().setManage(true);
-        
+
         p.getFileTransfer().setView(true);
         p.getFileTransfer().setManage(true);
 
@@ -240,35 +249,55 @@ public class UnitTestSimpleWSImplHelper {
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, StringBuilder filter) throws Exception {
-        return post(methodName, filter == null ? null : filter.toString());
+        return post(methodName, filter, null);
+    }
+
+    public CompletableFuture<JOCDefaultResponse> post(String methodName, StringBuilder filter, String accessToken) throws Exception {
+        return post(methodName, filter == null ? null : filter.toString(), accessToken);
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, String filter) throws Exception {
-        return post(methodName, filter == null ? null : filter.getBytes("UTF-8"));
+        return post(methodName, filter, null);
+    }
+
+    public CompletableFuture<JOCDefaultResponse> post(String methodName, String filter, String accessToken) throws Exception {
+        return post(methodName, filter == null ? null : filter.getBytes("UTF-8"), accessToken);
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, Path filter) throws Exception {
-        return post(methodName, filter == null ? null : Files.readAllBytes(filter));
+        return post(methodName, filter, null);
+    }
+
+    public CompletableFuture<JOCDefaultResponse> post(String methodName, Path filter, String accessToken) throws Exception {
+        return post(methodName, filter == null ? null : Files.readAllBytes(filter), accessToken);
     }
 
     public CompletableFuture<JOCDefaultResponse> post(String methodName, Object filter) throws Exception {
-        return post(methodName, filter == null ? null : Globals.objectMapper.writeValueAsBytes(filter));
+        return post(methodName, filter, null);
     }
 
-    private CompletableFuture<JOCDefaultResponse> post(String methodName, byte[] filter) throws Exception {
+    public CompletableFuture<JOCDefaultResponse> post(String methodName, Object filter, String accessToken) throws Exception {
+        return post(methodName, filter == null ? null : Globals.objectMapper.writeValueAsBytes(filter), accessToken);
+    }
+
+    private CompletableFuture<JOCDefaultResponse> post(String methodName, byte[] filter, String accessToken) throws Exception {
         CompletableFuture<JOCDefaultResponse> future = CompletableFuture.supplyAsync(() -> {
             try {
-                String accessToken = mockJOCLoginAsRoot();
                 Method method = clazz.getDeclaredMethod(methodName, String.class, byte[].class);
                 method.setAccessible(true);
-                JOCDefaultResponse r = (JOCDefaultResponse) method.invoke(instance, accessToken, filter);
+                JOCDefaultResponse r = (JOCDefaultResponse) method.invoke(instance, accessToken == null ? mockJOCLoginAsRoot() : accessToken, filter);
                 Object entity = r.getEntity();
                 String answer = "";
                 if (entity != null) {
                     if (entity instanceof byte[]) {
                         entity = Globals.objectMapper.readValue((byte[]) entity, Object.class);
+                    } else if (entity instanceof StreamingOutput) {
+                        answer = asString((StreamingOutput) entity);
+                        entity = null;
                     }
-                    answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity);
+                    if (entity != null) {
+                        answer = Globals.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity);
+                    }
                 }
                 LOGGER.info("[RESPONSE]" + answer);
                 return r;
@@ -284,6 +313,27 @@ public class UnitTestSimpleWSImplHelper {
         if (!futures.isEmpty()) {
             CompletableFuture<Void> f = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
             f.join();
+        }
+    }
+
+    private static String asString(StreamingOutput so) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            so.write(baos);
+            try (InputStream bais = new ByteArrayInputStream(baos.toByteArray()); GZIPInputStream gzipIn = new GZIPInputStream(bais);
+                    InputStreamReader reader = new InputStreamReader(gzipIn, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(
+                            reader)) {
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+                return sb.toString();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+            return null;
         }
     }
 

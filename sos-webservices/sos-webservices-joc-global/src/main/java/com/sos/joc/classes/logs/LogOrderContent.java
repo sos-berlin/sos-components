@@ -216,7 +216,7 @@ public class LogOrderContent {
             SOSHibernateException, DBMissingDataException, ControllerInvalidResponseDataException, JsonParseException, JsonMappingException,
             IOException {
         if (historyId == null) {
-            throw new JocMissingRequiredParameterException("undefined 'taskId'");
+            throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }
         StreamingOutput out = null;
         OrderLog orderLog = null;
@@ -277,7 +277,7 @@ public class LogOrderContent {
     public void toFile(Path targetFile) throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
             DBMissingDataException, SOSHibernateException, IOException {
         if (historyId == null) {
-            throw new JocMissingRequiredParameterException("undefined 'taskId'");
+            throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }
         OrderLog ol = getLogFromDb();
         if (ol == null) {

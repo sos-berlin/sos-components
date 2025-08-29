@@ -62,14 +62,14 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
-            Long started = Instant.now().toEpochMilli();
+            Long now = Instant.now().toEpochMilli();
 
             historyId = taskLog.getTaskId();
             taskLog.setComplete(false);
             taskLog.setLog(null);
 
             RunningTaskLogs r = RunningTaskLogs.getInstance();
-            if (r.isBeforeLastLogAPICall(accessToken, historyId, taskLog.getEventId(), started, "start")) {
+            if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "start")) {
                 disable(taskLog);
             } else {
                 RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), historyId);
@@ -85,7 +85,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     }
                 case COMPLETE:
                     taskLog = r.getRunningTaskLog(accessToken, taskLog);
-                    if (r.isBeforeLastLogAPICall(accessToken, historyId, taskLog.getEventId(), started, "mode=complete")) {
+                    if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "mode=complete")) {
                         disable(taskLog);
                     } else {
                         if (LOGGER.isDebugEnabled()) {
@@ -107,7 +107,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                         }
                         taskLog = r.getRunningTaskLog(accessToken, taskLog);
                         // additional check due to waiting time and possibly changed taskLog.getEventId()
-                        if (r.isBeforeLastLogAPICall(accessToken, historyId, taskLog.getEventId(), started, "mode=false")) {
+                        if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "mode=false")) {
                             disable(taskLog);
                         } else {
                             if (LOGGER.isDebugEnabled()) {
@@ -179,7 +179,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 
             LogTaskContent logTaskContent = new LogTaskContent(filter, folderPermissions, accessToken);
             if (IMPL_PATH_LOG.equals(implPath)) {
-                RunningTaskLogs.getInstance().registerLastLogAPICall(accessToken, filter.getTaskId());
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders(),
                         getJocAuditTrail());
             } else if (IMPL_PATH_LOG_DOWNLOAD.equals(implPath)) {

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -22,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
-import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.Globals;
 import com.sos.joc.event.EventBus;
@@ -38,25 +39,24 @@ public class RunningTaskLogs {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningTaskLogs.class);
 
     public static final Duration RUNNING_LOG_MAX_THREAD_LIFETIME = Duration.ofMinutes(10L);
-
     private final static long CLEANUP_PERIOD = TimeUnit.MINUTES.toMillis(2);
     private final static String DEFAULT_SESSION_IDENTIFIER = "common_session";
     private final static String EVENT_KEY_DELIMITER = ";";
 
-    private static RunningTaskLogs runningTaskLogs;
-
     // 1 running log thread per <histroryId(taskId)>_<sessionIdentifier>
     // WeakReference - the object(Thread) can be garbage collected immediately if no strong reference to it exists
     private final static String RUNNING_LOG_THREAD_IDENTIFIER_DELIMITER = ";;;";
-    private static final ConcurrentHashMap<String, WeakReference<Thread>> runningLogThreadsCache = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String, WeakReference<Thread>> runningLogThreadsCache = new ConcurrentHashMap<>();
 
-    // key=<sessionIdentifier>, value=Set<historyId>
-    private volatile Map<String, Set<Long>> registeredHistoryIds = new ConcurrentHashMap<>();
+    private static RunningTaskLogs runningTaskLogs;
+
+    // key=<sessionIdentifier>, value=Set<TaskLogBean(orderHistoryId,historyId)>
+    private volatile Map<String, Set<TaskLogBean>> subscribedHistoryIds = new ConcurrentHashMap<>();
     // key=<histroryId(taskId)>_<sessionIdentifier>
     private volatile Map<String, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> completeLogs = new ConcurrentHashMap<>();
     // key=<histroryId>_<sessionIdentifier>, value=eventId(current milliseconds)
-    private volatile Map<String, Long> lastLogAPICalls = new ConcurrentHashMap<>();
+    private volatile Map<String, Long> subscriptionStartTimes = new ConcurrentHashMap<>();
 
     public enum Mode {
         COMPLETE, TRUE, FALSE, BROKEN;
@@ -81,32 +81,32 @@ public class RunningTaskLogs {
             public void run() {
                 boolean isDebugEnabled = LOGGER.isDebugEnabled();
                 if (isDebugEnabled) {
-                    LOGGER.debug("[RunningTaskLogs][cleanup][before]registeredHistoryIds=" + registeredHistoryIds.size() + ", events=" + events.size()
-                            + ", completeLogs=" + completeLogs.size() + ", lastLogAPICalls=" + lastLogAPICalls.size() + ", runningLogThreadsCache="
-                            + runningLogThreadsCache.size());
+                    LOGGER.debug("[RunningTaskLogs][cleanup][before]subscribedHistoryIds=" + subscribedHistoryIds.size() + ", events=" + events.size()
+                            + ", completeLogs=" + completeLogs.size() + ", subscriptionStartTimes=" + subscriptionStartTimes.size()
+                            + ", runningLogThreadsCache=" + runningLogThreadsCache.size());
                 }
                 long now = Instant.now().toEpochMilli();
                 Long eventId = now - CLEANUP_PERIOD;
                 Set<String> toDelete = new HashSet<>();
                 events.forEach((historyIdAndSessionIdentifier, logs) -> {
-                    if (!cleanupCheckIfIsRegistered(historyIdAndSessionIdentifier)) {
+                    if (!cleanupCheckIfIsSubscribed(historyIdAndSessionIdentifier)) {
                         toDelete.add(historyIdAndSessionIdentifier);
                     } else {
                         logs.removeIf(e -> e.getEventId() < eventId);
                     }
                 });
                 toDelete.forEach(historyIdAndSessionIdentifier -> {
-                    cleanupRegisteredHistoryIds(historyIdAndSessionIdentifier);
+                    cleanupSubscribedHistoryIds(historyIdAndSessionIdentifier);
                     events.remove(historyIdAndSessionIdentifier);
-                    lastLogAPICalls.remove(historyIdAndSessionIdentifier);
+                    subscriptionStartTimes.remove(historyIdAndSessionIdentifier);
                 });
-                lastLogAPICalls.entrySet().removeIf(entry -> (now - entry.getValue()) > RUNNING_LOG_MAX_THREAD_LIFETIME.toMillis());
+                subscriptionStartTimes.entrySet().removeIf(entry -> (now - entry.getValue()) > RUNNING_LOG_MAX_THREAD_LIFETIME.toMillis());
 
                 // remove while iteration
                 Iterator<Map.Entry<String, Set<Long>>> iter = completeLogs.entrySet().iterator();
                 while (iter.hasNext()) {
                     Map.Entry<String, Set<Long>> entry = iter.next();
-                    entry.getValue().removeIf(historyId -> !isRegistered(entry.getKey(), historyId));
+                    entry.getValue().removeIf(historyId -> !isSubscribed(entry.getKey(), historyId));
                     if (entry.getValue().size() == 0) {
                         iter.remove();
                     }
@@ -115,9 +115,9 @@ public class RunningTaskLogs {
                 cleanupRunningLogThreadsCache(isDebugEnabled);
 
                 if (isDebugEnabled) {
-                    LOGGER.debug("[RunningTaskLogs][cleanup][after]registeredHistoryIds=" + registeredHistoryIds.size() + ", events=" + events.size()
-                            + ", completeLogs=" + completeLogs.size() + ", lastLogAPICalls=" + lastLogAPICalls.size() + ", runningLogThreadsCache="
-                            + runningLogThreadsCache.size());
+                    LOGGER.debug("[RunningTaskLogs][cleanup][after]subscribedHistoryIds=" + subscribedHistoryIds.size() + ", events=" + events.size()
+                            + ", completeLogs=" + completeLogs.size() + ", subscriptionStartTimes=" + subscriptionStartTimes.size()
+                            + ", runningLogThreadsCache=" + runningLogThreadsCache.size());
                 }
             }
 
@@ -126,7 +126,7 @@ public class RunningTaskLogs {
 
     @Subscribe({ HistoryOrderTaskLog.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLog evt) {
-        if (isRegistered(evt.getSessionIdentifier(), evt.getHistoryOrderStepId())) {
+        if (isSubscribed(evt.getSessionIdentifier(), evt.getHistoryOrderStepId())) {
             // LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
             RunningTaskLog r = new RunningTaskLog();
             r.setEventId(evt.getEventId());
@@ -146,19 +146,28 @@ public class RunningTaskLogs {
         }
     }
 
-    public synchronized void subscribe(String sessionIdentifier, Long historyId) {
+    protected synchronized void subscribe(String sessionIdentifier, TaskLogBean bean) {
         String key = getSessionIdentifier(sessionIdentifier);
-        registeredHistoryIds.computeIfAbsent(key, k -> new HashSet<>()).add(historyId);
+        subscribedHistoryIds.computeIfAbsent(key, k -> new HashSet<>()).add(bean);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[subscribe][historyId=" + historyId + "]observed for log events of this session");
+            LOGGER.debug("[subscribe][" + bean + "]subscribed");
         }
     }
 
     public synchronized void unsubscribe(String sessionIdentifier, Long historyId) {
         String key = getSessionIdentifier(sessionIdentifier);
-        cleanupRegisteredHistoryIds(key, historyId);
+        boolean removed = cleanupSubscribedHistoryIds(key, historyId);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[unsubscribe][historyId=" + historyId + "]no longer observed for log events of this session");
+            LOGGER.debug("[unsubscribe][historyId=" + historyId + "]" + (removed ? "unsubscribed" : "skip, not subscribed"));
+        }
+    }
+
+    protected synchronized void unsubscribeFromOrder(String sessionIdentifier, Long orderHistoryId) {
+        String key = getSessionIdentifier(sessionIdentifier);
+        Set<Long> removedHistoryIds = cleanupSubscribedHistoryIdsFromOrder(key, orderHistoryId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[unsubscribeFromOrder][orderHistoryId=" + orderHistoryId + "][unsubscribed]historyIds=" + SOSString.join(
+                    removedHistoryIds));
         }
     }
 
@@ -173,14 +182,14 @@ public class RunningTaskLogs {
                 return Mode.FALSE;
             }
         } else {
-            if (!isRegistered(sessionIdentifier, historyId)) {
+            if (!isSubscribed(sessionIdentifier, historyId)) {
                 return Mode.BROKEN;
             }
             return Mode.FALSE;
         }
     }
 
-    public synchronized void registerLastLogAPICall(String sessionIdentifier, Long historyId) {
+    public synchronized void registerSubscriptionStartTime(String sessionIdentifier, Long historyId) {
         // unsubscribe
         unsubscribe(sessionIdentifier, historyId);
 
@@ -192,42 +201,51 @@ public class RunningTaskLogs {
             oldEvents = e.size();
             events.remove(eventKey);
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[registerLastLogAPICall][historyId=" + historyId + "]oldEvents removed=" + oldEvents);
-        }
+
         // register
-        lastLogAPICalls.put(eventKey, Instant.now().toEpochMilli());
+        long now = Instant.now().toEpochMilli();
+        subscriptionStartTimes.put(eventKey, Instant.now().toEpochMilli());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[registerSubscriptionStartTime][historyId=" + historyId + "][registered time=" + now + "]oldEvents removed=" + oldEvents);
+        }
     }
 
-    public synchronized boolean isBeforeLastLogAPICall(String sessionIdentifier, Long historyId, Long eventId, Long started, String range) {
-        String key = getEventKey(sessionIdentifier, historyId);
-        Long l = lastLogAPICalls.get(key);
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        if (l == null) {
-            if (isDebugEnabled) {
-                try {
-                    LOGGER.debug("[isBeforeLastLogAPICall][historyId=" + historyId + "][lastLogAPICall=null][eventId=" + eventId + "(" + SOSDate
-                            .getDateTimeAsString(eventId) + " UTC)][" + range + "]false");
-                } catch (SOSInvalidDataException e) {
+    @SuppressWarnings("unused")
+    private synchronized void unregisterSubscriptionStartTime(String sessionIdentifier, Long historyId) {
+        String eventKey = getEventKey(sessionIdentifier, historyId);
+        // unregister
+        Long removed = subscriptionStartTimes.remove(eventKey);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("[unregisterSubscriptionStartTime][historyId=" + historyId + "]" + (removed == null ? "skip, not registered"
+                    : "[registered time=" + removed + "]unregistered"));
+        }
+    }
 
-                }
+    public synchronized boolean isBeforeSubscriptionStartTime(String sessionIdentifier, Long historyId, Long eventId, Long now, String range) {
+        String key = getEventKey(sessionIdentifier, historyId);
+        Long startTime = subscriptionStartTimes.get(key);
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (startTime == null) {
+            if (isDebugEnabled) {
+                LOGGER.debug("[isBeforeSubscriptionStartTime][historyId=" + historyId + "][result=false][" + range
+                        + "][subscriptionStartTime=null, eventId=" + eventId + ", now=" + now + "][resolved UTC]subscriptionStartTime=null, eventId="
+                        + SOSDate.tryGetDateTimeAsString(eventId) + ", now=" + SOSDate.tryGetDateTimeAsString(now));
             }
             return false;
         } else {
-            boolean r = l.longValue() > eventId.longValue();
-            if (!r) {
-                r = l.longValue() > started.longValue();
+            boolean before = startTime.longValue() > eventId.longValue();
+            if (!before) {
+                before = startTime.longValue() > now.longValue();
             }
             if (isDebugEnabled) {
-                try {
-                    LOGGER.debug("[isBeforeLastLogAPICall][historyId=" + historyId + "][lastLogAPICall=" + l + "(" + SOSDate.getDateTimeAsString(l)
-                            + " UTC)][eventId=" + eventId + "(" + SOSDate.getDateTimeAsString(eventId) + " UTC)][started=" + started + "(" + SOSDate
-                                    .getDateTimeAsString(started) + " UTC)][" + range + "]" + r);
-                } catch (SOSInvalidDataException e) {
-
+                if (isDebugEnabled) {
+                    LOGGER.debug("[isBeforeSubscriptionStartTime][historyId=" + historyId + "][result=" + before + "][" + range
+                            + "][subscriptionStartTime=" + startTime + ", eventId=" + eventId + ", now=" + now
+                            + "][resolved UTC]subscriptionStartTime=" + SOSDate.tryGetDateTimeAsString(startTime) + ", eventId=" + SOSDate
+                                    .tryGetDateTimeAsString(eventId) + ", now=" + SOSDate.tryGetDateTimeAsString(now));
                 }
             }
-            return r;
+            return before;
         }
     }
 
@@ -257,12 +275,13 @@ public class RunningTaskLogs {
         return r;
     }
 
-    public boolean isRegistered(String sessionIdentifier, Long historyId) {
-        String id = getSessionIdentifier(sessionIdentifier);
-        return Optional.ofNullable(registeredHistoryIds.get(id)).map(l -> l.contains(historyId)).orElse(false);
+    protected boolean isSubscribed(String sessionIdentifier, Long historyId) {
+        String key = getSessionIdentifier(sessionIdentifier);
+        return Optional.ofNullable(subscribedHistoryIds.get(key)).map(set -> set.stream().anyMatch(bean -> Objects.equals(bean.getHistoryId(),
+                historyId))).orElse(false);
     }
 
-    public static boolean jocSessionExists(String sessionIdentifier, Long historyId) {
+    protected static boolean jocSessionExists(String sessionIdentifier, Long historyId) {
         try {
             SOSAuthCurrentAccountsList accounts = Globals.jocWebserviceDataContainer.getCurrentAccountsList();
             if (accounts == null) {
@@ -322,43 +341,63 @@ public class RunningTaskLogs {
         return historyId + EVENT_KEY_DELIMITER + getSessionIdentifier(sessionIdentifier);
     }
 
-    private boolean cleanupCheckIfIsRegistered(String historyIdAndSessionIdentifier) {
+    private boolean cleanupCheckIfIsSubscribed(String historyIdAndSessionIdentifier) {
         String[] arr = historyIdAndSessionIdentifier.split(EVENT_KEY_DELIMITER);
         try {
             String sessionIdentifier = arr[1];
             Long historyId = Long.valueOf(arr[0]);
-            boolean registered = isRegistered(sessionIdentifier, historyId);
-            if (registered) {
-                registered = jocSessionExists(sessionIdentifier, historyId);
+            boolean subscribed = isSubscribed(sessionIdentifier, historyId);
+            if (subscribed) {
+                subscribed = jocSessionExists(sessionIdentifier, historyId);
             }
-            return registered;
+            return subscribed;
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[cleanupCheckIfIsRegistered][" + historyIdAndSessionIdentifier + "][exception]" + e);
+                LOGGER.debug("[cleanupCheckIfIsSubscribed][" + historyIdAndSessionIdentifier + "][exception]" + e);
             }
             return false;
         }
     }
 
-    private void cleanupRegisteredHistoryIds(String historyIdAndSessionIdentifier) {
+    private void cleanupSubscribedHistoryIds(String historyIdAndSessionIdentifier) {
         try {
             String[] arr = historyIdAndSessionIdentifier.split(EVENT_KEY_DELIMITER);
-            cleanupRegisteredHistoryIds(arr[1], Long.valueOf(arr[0]));
+            cleanupSubscribedHistoryIds(arr[1], Long.valueOf(arr[0]));
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[cleanupRegisteredHistoryIds][" + historyIdAndSessionIdentifier + "][exception]" + e);
+                LOGGER.debug("[cleanupSubscribedHistoryIds][" + historyIdAndSessionIdentifier + "][exception]" + e);
             }
         }
     }
 
-    private void cleanupRegisteredHistoryIds(String sessionIdentifier, Long historyId) {
-        registeredHistoryIds.compute(sessionIdentifier, (k, l) -> {
+    private boolean cleanupSubscribedHistoryIds(String sessionIdentifier, Long historyId) {
+        final boolean[] removed = { false };
+        subscribedHistoryIds.compute(sessionIdentifier, (k, l) -> {
             if (l == null) {
                 return null;
             }
-            l.remove(historyId);
+            removed[0] = l.removeIf(bean -> Objects.equals(bean.getHistoryId(), historyId));
             return l.isEmpty() ? null : l;
         });
+        return removed[0];
+    }
+
+    private Set<Long> cleanupSubscribedHistoryIdsFromOrder(String sessionIdentifier, Long orderHistoryId) {
+        final Set<Long> removedHistoryIds = new HashSet<>();
+        subscribedHistoryIds.compute(sessionIdentifier, (k, l) -> {
+            if (l == null) {
+                return null;
+            }
+            l.removeIf(bean -> {
+                if (Objects.equals(bean.getOrderHistoryId(), orderHistoryId)) {
+                    removedHistoryIds.add(bean.getHistoryId());
+                    return true;
+                }
+                return false;
+            });
+            return l.isEmpty() ? null : l;
+        });
+        return removedHistoryIds;
     }
 
     private static void cleanupRunningLogThreadsCache(boolean isDebugEnabled) {
