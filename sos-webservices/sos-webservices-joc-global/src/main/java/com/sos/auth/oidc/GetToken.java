@@ -48,12 +48,18 @@ public class GetToken extends SOSRestApiClient {
 
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
-        if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
+        
+        String clientSecret = props.getIamOidcClientSecret();
+        if (openIdConfigurationResponse.getToken_endpoint().contains("/v2.0")) {
+            clientSecret = "";
+        }
+        
+        if (!SOSString.isEmpty(clientSecret)) {
 
             List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
            
-                String s = props.getIamOidcClientId() + ":" + props.getIamOidcClientSecret();
+                String s = props.getIamOidcClientId() + ":" + clientSecret;
                 byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
                 addHeader("Authorization", "Basic " + new String(authEncBytes));
 //                LOGGER.info("Authorization: Basic " + new String(authEncBytes));
@@ -61,10 +67,10 @@ public class GetToken extends SOSRestApiClient {
                 createBody(requestBody);
                 
             } else { //if (supportedMethods.contains("client_secret_post")) {
-                createBody(props, requestBody);
+                createBody(clientSecret, props, requestBody);
             }
         } else {
-            createBody(props, requestBody);
+            createBody(clientSecret, props, requestBody);
         }
         addHeader("Origin", origin);
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint());
@@ -77,11 +83,11 @@ public class GetToken extends SOSRestApiClient {
         body.put("code_verifier", requestBody.getCode_verifier());
     }
     
-    private void createBody(OidcProperties props, GetTokenRequest requestBody) {
+    private void createBody(String clientSecret, OidcProperties props, GetTokenRequest requestBody) {
         createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
-        if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
-            body.put("client_secret", props.getIamOidcClientSecret());
+        if (!SOSString.isEmpty(clientSecret)) {
+            body.put("client_secret", clientSecret);
         }
     }
 

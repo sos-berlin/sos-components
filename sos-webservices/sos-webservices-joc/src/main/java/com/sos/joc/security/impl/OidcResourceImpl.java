@@ -108,6 +108,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                            oidcIdentityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
                             identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
                         }
                     }
@@ -139,6 +140,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
+                            oidcIdentityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
                         }
                     }
                 }
@@ -252,6 +254,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                         //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
+                        identityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
                     }
                 }
             }
@@ -270,6 +273,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                         //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
+                        identityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
                     }
                 }
             }
