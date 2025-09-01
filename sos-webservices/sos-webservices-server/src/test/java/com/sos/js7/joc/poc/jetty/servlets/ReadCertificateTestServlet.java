@@ -76,9 +76,9 @@ public class ReadCertificateTestServlet extends HttpServlet {
         } else {
             clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
-                subjectDN = clientCertificate.getSubjectDN().getName();
+                subjectDN = clientCertificate.getSubjectX500Principal().getName();
                 try {
-                    LdapName ldapName = new LdapName(clientCertificate.getSubjectDN().getName().toString());
+                    LdapName ldapName = new LdapName(clientCertificate.getSubjectX500Principal().getName());
                     clientCN = ldapName.getRdns().stream().filter(item -> item.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
                 } catch (InvalidNameException e) {
                     // TODO Auto-generated catch block
@@ -86,7 +86,7 @@ public class ReadCertificateTestServlet extends HttpServlet {
                 }
                 strb.append("{\n");
                 strb.append(String.format("  \"CN\" : \"%1$s\",\n", clientCN));
-                strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
+                strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getSubjectX500Principal().getName()));
                 strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
                 boolean[] keyUsages = clientCertificate.getKeyUsage();
         /*        
