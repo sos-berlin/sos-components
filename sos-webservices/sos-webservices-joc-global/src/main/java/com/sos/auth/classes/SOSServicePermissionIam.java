@@ -184,11 +184,9 @@ public class SOSServicePermissionIam {
         }
     }
     
-    public JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
+    private JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             String origin, byte[] body) {
         
-        MDC.put("context", ThreadCtx);
-
         try {
             GetTokenRequest requestBody = Globals.objectMapper.readValue(body, GetTokenRequest.class);
             identityService = identityService.replaceFirst("^OIDC(-JOC)?:", "");
@@ -209,22 +207,21 @@ public class SOSServicePermissionIam {
             } else {
                 vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
             }
+
             Locker locker = new Locker();
             locker.setContent(vars);
             String lockerKey = SOSLockerHelper.lockerPut(locker).getKey();
             
             String openIdHeaderValue = SOSAuthHelper.getOpenIdConfigurationHeader(conf);
             
-//            LOGGER.info("X-IDENTITY-SERVICE:"+ identityService);
-//            LOGGER.info("X-OPENID-CONFIGURATION:"+ openIdHeaderValue);
-//            LOGGER.info("X-ID-TOKEN:" + tokenResponse.getId_token());
+            LOGGER.debug("X-IDENTITY-SERVICE:"+ identityService);
+            LOGGER.debug("X-OPENID-CONFIGURATION:"+ openIdHeaderValue);
+            LOGGER.debug("X-ID-TOKEN:" + tokenResponse.getId_token());
 
             return loginPost(servletRequest, null, null, identityService, tokenResponse.getId_token(), null, openIdHeaderValue, null, null, null,
                     null, lockerKey, origin, null, null, null);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
-        } finally {
-            MDC.remove("context");
         }
     }
     

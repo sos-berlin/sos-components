@@ -17,9 +17,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SOSLocker {
 
     private static final String KEY = "APLSOSSECRET";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSLocker.class);
     private Map<String, SOSLockerContent> locker;
 
     private String encrypt(String keyStr, Object value) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
@@ -66,6 +70,10 @@ public class SOSLocker {
             locker = new HashMap<String, SOSLockerContent>();
         }
         for (Entry<String, Object> entry : content.entrySet()) {
+            if (entry.getValue() == null) {
+                LOGGER.debug("Value of '" + entry.getKey() + "' is null -> will not to be stored in the locker");
+                continue;
+            }
             content.put(entry.getKey(), encrypt(key, entry.getValue()));
         }
         SOSLockerContent sosLockerContent = new SOSLockerContent();
@@ -152,6 +160,9 @@ public class SOSLocker {
         Long size = 0L;
 
         for (Entry<String, Object> entry : content.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
             size = size + entry.getValue().toString().length();
         }
         if (size > 256 * 1024L) {
