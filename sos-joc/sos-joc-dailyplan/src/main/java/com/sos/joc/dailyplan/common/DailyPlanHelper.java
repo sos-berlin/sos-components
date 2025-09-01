@@ -18,16 +18,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
@@ -432,53 +429,23 @@ public class DailyPlanHelper {
     }
 
     public static Set<String> getNonWorkingDays(String caller, InventoryDBLayer dbLayer, List<AssignedNonWorkingDayCalendars> current,
-            String dateFrom, String dateTo) throws SOSHibernateException, JsonMappingException, JsonProcessingException, SOSMissingDataException,
-            SOSInvalidDataException {
+            String dateFrom, String dateTo) throws Exception {
         return getNonWorkingDays(caller, dbLayer, current, dateFrom, dateTo, new HashMap<>());
     }
 
     // all - not null
     public static Set<String> getNonWorkingDays(String caller, InventoryDBLayer dbLayer, List<AssignedNonWorkingDayCalendars> current,
-            String dateFrom, String dateTo, Map<String, Calendar> all) throws SOSHibernateException, JsonMappingException, JsonProcessingException,
-            SOSMissingDataException, SOSInvalidDataException {
+            String dateFrom, String dateTo, Map<String, Calendar> allNonWorkingDayCalendars) throws Exception {
         Set<String> result = new TreeSet<>();
-        if (current != null && !current.isEmpty()) {
-            List<String> notInAllNames = current.stream().map(AssignedNonWorkingDayCalendars::getCalendarName).distinct().filter(e -> !all
-                    .containsKey(e)).collect(Collectors.toList());
+        if (!SOSCollection.isEmpty(current)) {
+            List<String> currentNonWorkingDayCalendarsNames = current.stream().map(AssignedNonWorkingDayCalendars::getCalendarName).distinct()
+                    .collect(Collectors.toList());
 
-            if (notInAllNames != null && notInAllNames.size() > 0) {
-                List<DBItemInventoryReleasedConfiguration> dbItems = null;
-                boolean newSession = false;
-                try {
-                    newSession = dbLayer.getSession() == null;
-                    if (newSession) {
-                        dbLayer.setSession(Globals.createSosHibernateStatelessConnection(caller + "-getNonWorkingDays"));
-                    }
-                    dbItems = dbLayer.getReleasedConfigurations(notInAllNames, ConfigurationType.NONWORKINGDAYSCALENDAR);
-                } finally {
-                    if (newSession) {
-                        dbLayer.close();
-                    }
-                }
-                if (dbItems != null && !dbItems.isEmpty()) {
-                    for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
-                        Calendar c = Globals.objectMapper.readValue(dbItem.getContent(), Calendar.class);
-                        c.setId(dbItem.getId());
-                        c.setName(dbItem.getName());
-                        c.setPath(dbItem.getPath());
-
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[NonWorkingDaysCalendar=%s]%s", c.getName(), SOSString.toString(c, true)));
-                        }
-
-                        all.put(c.getName(), c);
-                    }
-                }
-            }
+            mapMissingNonWorkingDayCalendars(caller, dbLayer, currentNonWorkingDayCalendarsNames, allNonWorkingDayCalendars);
 
             FrequencyResolver fr = new FrequencyResolver();
             for (AssignedNonWorkingDayCalendars ac : current) {
-                Calendar c = all.get(ac.getCalendarName());
+                Calendar c = allNonWorkingDayCalendars.get(ac.getCalendarName());
                 if (c == null) {
                     continue;
                 }
@@ -486,6 +453,54 @@ public class DailyPlanHelper {
             }
         }
         return result;
+    }
+
+    public static void mapMissingNonWorkingDayCalendars(String caller, InventoryDBLayer dbLayer, List<String> currentNonWorkingDayCalendarsNames,
+            Map<String, Calendar> allNonWorkingDayCalendars) throws Exception {
+        List<String> missingNames = currentNonWorkingDayCalendarsNames.stream().distinct().filter(name -> !allNonWorkingDayCalendars.containsKey(
+                name)).collect(Collectors.toList());
+
+        if (SOSCollection.isEmpty(missingNames)) {
+            return;
+        }
+
+        List<DBItemInventoryReleasedConfiguration> dbItems = null;
+        boolean newSession = false;
+        try {
+            newSession = dbLayer.getSession() == null;
+            if (newSession) {
+                dbLayer.setSession(Globals.createSosHibernateStatelessConnection(caller + "-mapMissingNonWorkingDayCalendars"));
+            }
+            dbItems = dbLayer.getReleasedConfigurations(missingNames, ConfigurationType.NONWORKINGDAYSCALENDAR);
+        } finally {
+            if (newSession) {
+                dbLayer.close();
+            }
+        }
+        int dbItemsCount = dbItems == null ? 0 : dbItems.size();
+        if (missingNames.size() != dbItemsCount) {
+            // throw new DBMissingDataException(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller,
+            // SOSString.join(missingNames, SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList())))));
+            LOGGER.info(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller, SOSString.join(
+                    missingNames, SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList())))));
+        }
+
+        if (dbItemsCount > 0) {
+            for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
+                Calendar c = Globals.objectMapper.readValue(dbItem.getContent(), Calendar.class);
+                c.setType(CalendarType.NONWORKINGDAYSCALENDAR);
+                c.setId(dbItem.getId());
+                c.setName(dbItem.getName());
+                c.setPath(dbItem.getPath());
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[" + caller + "][mapMissingNonWorkingDayCalendars][NonWorkingDaysCalendar=%s]%s", c.getName(),
+                            SOSString.toString(c, true)));
+                }
+
+                allNonWorkingDayCalendars.put(c.getName(), c);
+            }
+        }
     }
 
     public static String toZonedUTCDateTime(Long dateTime) {

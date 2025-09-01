@@ -63,15 +63,18 @@ public class FrequencyResolver {
 
     private Frequencies baseCalendarIncludes = null;
     private Frequencies baseCalendarExcludes = null;
+    // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
+    private Map<String, com.sos.inventory.model.calendar.Calendar> excludesNonWorkingDayCalendars;
     private Frequencies includes = null;
     private Frequencies excludes = null;
 
     public FrequencyResolver() {
     }
 
-    public Dates resolveCalendar(CalendarDatesFilter calendarFilter) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveCalendar(CalendarDatesFilter calendarFilter, Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars)
+            throws SOSMissingDataException, SOSInvalidDataException {
         if (calendarFilter != null) {
-            return resolveCalendar(calendarFilter.getCalendar(), calendarFilter.getDateFrom(), calendarFilter.getDateTo());
+            return resolveCalendar(calendarFilter.getCalendar(), nonWorkingDayCalendars, calendarFilter.getDateFrom(), calendarFilter.getDateTo());
         } else {
             Dates d = new Dates();
             d.setDates(new ArrayList<String>());
@@ -83,12 +86,18 @@ public class FrequencyResolver {
 
     public Dates resolveCalendar(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
+        return resolveCalendar(calendar, null, from, to);
+    }
+
+    protected Dates resolveCalendar(com.sos.inventory.model.calendar.Calendar calendar,
+            Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to) throws SOSMissingDataException,
+            SOSInvalidDataException {
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[resolve][start]from=%s,to=%s", from, to));
         }
 
-        init(calendar, from, to);
+        init(calendar, nonWorkingDayCalendars, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
         datesWithoutRestrictions.clear();
@@ -110,19 +119,22 @@ public class FrequencyResolver {
             // excludes
             if (excludes != null) {
                 if (dates.size() > 0) {
-                    removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
+                    removeNonWorkingDayCalendars(excludes.getNonWorkingDayCalendars(), dateFrom, dateTo);
                     if (dates.size() > 0) {
-                        removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
+                        removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
                         if (dates.size() > 0) {
-                            removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
+                            removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
                             if (dates.size() > 0) {
-                                removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
+                                removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
                                 if (dates.size() > 0) {
-                                    removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
+                                    removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
                                     if (dates.size() > 0) {
-                                        removeRepetitions(excludes.getRepetitions(), this.dateFrom, this.dateTo);
+                                        removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
                                         if (dates.size() > 0) {
-                                            removeMonths(excludes.getMonths(), this.dateFrom, this.dateTo);
+                                            removeRepetitions(excludes.getRepetitions(), this.dateFrom, this.dateTo);
+                                            if (dates.size() > 0) {
+                                                removeMonths(excludes.getMonths(), this.dateFrom, this.dateTo);
+                                            }
                                         }
                                     }
                                 }
@@ -144,8 +156,17 @@ public class FrequencyResolver {
         return d;
     }
 
+    /** @param baseCalendar
+     * @param restrictionsCalendar
+     * @param nonWorkingDayCalendars - all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
+     * @param from
+     * @param to
+     * @return
+     * @throws SOSMissingDataException
+     * @throws SOSInvalidDataException */
     public Dates resolveRestrictions(com.sos.inventory.model.calendar.Calendar baseCalendar,
-            com.sos.inventory.model.calendar.Calendar restrictionsCalendar, String from, String to) throws SOSMissingDataException,
+            com.sos.inventory.model.calendar.Calendar restrictionsCalendar,
+            Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -155,7 +176,7 @@ public class FrequencyResolver {
             LOGGER.debug(String.format("[%s][start]from=%s,to=%s", method, from, to));
         }
 
-        init(baseCalendar, from, to);
+        init(baseCalendar, nonWorkingDayCalendars, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
         datesWithoutRestrictions.clear();
@@ -208,41 +229,48 @@ public class FrequencyResolver {
 
             if (excludes != null) {
                 if (dates.size() > 0) {
-                    removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
+                    removeNonWorkingDayCalendars(excludes.getNonWorkingDayCalendars(), dateFrom, dateTo);
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("    [after][removeDates][dates][size=%s]%s", dates.size(), dates.keySet()));
+                        LOGGER.debug(String.format("    [after][removeNonWorkingDayCalendars][dates][size=%s]%s", dates.size(), dates.keySet()));
                     }
                     if (dates.size() > 0) {
-                        removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
+                        removeDates(excludes.getDates(), this.dateFrom, this.dateTo);
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("    [after][removeWeekDays][dates][size=%s]%s", dates.size(), dates.keySet()));
+                            LOGGER.debug(String.format("    [after][removeDates][dates][size=%s]%s", dates.size(), dates.keySet()));
                         }
                         if (dates.size() > 0) {
-                            removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
+                            removeWeekDays(excludes.getWeekdays(), this.dateFrom, this.dateTo);
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("    [after][removeMonthDays][dates][size=%s]%s", dates.size(), dates.keySet()));
+                                LOGGER.debug(String.format("    [after][removeWeekDays][dates][size=%s]%s", dates.size(), dates.keySet()));
                             }
                             if (dates.size() > 0) {
-                                removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
+                                removeMonthDays(excludes.getMonthdays(), this.dateFrom, this.dateTo);
                                 if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("    [after][removeUltimos][dates][size=%s]%s", dates.size(), dates.keySet()));
+                                    LOGGER.debug(String.format("    [after][removeMonthDays][dates][size=%s]%s", dates.size(), dates.keySet()));
                                 }
                                 if (dates.size() > 0) {
-                                    removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
+                                    removeUltimos(excludes.getUltimos(), this.dateFrom, this.dateTo);
                                     if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("    [after][removeHolidays][dates][size=%s]%s", dates.size(), dates.keySet()));
+                                        LOGGER.debug(String.format("    [after][removeUltimos][dates][size=%s]%s", dates.size(), dates.keySet()));
                                     }
                                     if (dates.size() > 0) {
-                                        removeRepetitions(excludes.getRepetitions(), this.dateFrom, this.dateTo);
+                                        removeHolidays(excludes.getHolidays(), this.dateFrom, this.dateTo);
                                         if (isDebugEnabled) {
-                                            LOGGER.debug(String.format("    [after][removeRepetitions][dates][size=%s]%s", dates.size(), dates
+                                            LOGGER.debug(String.format("    [after][removeHolidays][dates][size=%s]%s", dates.size(), dates
                                                     .keySet()));
                                         }
                                         if (dates.size() > 0) {
-                                            removeMonths(excludes.getMonths(), this.dateFrom, this.dateTo);
+                                            removeRepetitions(excludes.getRepetitions(), this.dateFrom, this.dateTo);
                                             if (isDebugEnabled) {
-                                                LOGGER.debug(String.format("    [after][removeMonths][dates][size=%s]%s", dates.size(), dates
+                                                LOGGER.debug(String.format("    [after][removeRepetitions][dates][size=%s]%s", dates.size(), dates
                                                         .keySet()));
+                                            }
+                                            if (dates.size() > 0) {
+                                                removeMonths(excludes.getMonths(), this.dateFrom, this.dateTo);
+                                                if (isDebugEnabled) {
+                                                    LOGGER.debug(String.format("    [after][removeMonths][dates][size=%s]%s", dates.size(), dates
+                                                            .keySet()));
+                                                }
                                             }
                                         }
                                     }
@@ -366,18 +394,20 @@ public class FrequencyResolver {
         return d;
     }
 
-    private void init(com.sos.inventory.model.calendar.Calendar baseCalendar, String from, String to) throws SOSMissingDataException,
+    private void init(com.sos.inventory.model.calendar.Calendar baseCalendar,
+            Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
-        if (baseCalendar != null) {
-            setDateFrom(from, baseCalendar.getFrom());
-            setDateTo(to, baseCalendar.getTo());
-            this.baseCalendarIncludes = baseCalendar.getIncludes();
-            this.baseCalendarExcludes = baseCalendar.getExcludes();
-            this.includes = baseCalendar.getIncludes();
-            this.excludes = baseCalendar.getExcludes();
-        } else {
+        if (baseCalendar == null) {
             throw new SOSMissingDataException("calendar object is undefined");
         }
+
+        setDateFrom(from, baseCalendar.getFrom());
+        setDateTo(to, baseCalendar.getTo());
+        this.baseCalendarIncludes = baseCalendar.getIncludes();
+        this.baseCalendarExcludes = baseCalendar.getExcludes();
+        this.excludesNonWorkingDayCalendars = nonWorkingDayCalendars;
+        this.includes = baseCalendar.getIncludes();
+        this.excludes = baseCalendar.getExcludes();
     }
 
     private void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {
@@ -519,6 +549,42 @@ public class FrequencyResolver {
             calendar.setTime(Date.from(Instant.parse(cal + "T12:00:00Z")));
         }
         return calendar;
+    }
+
+    private Map<String, Calendar> resolveNonWorkingDayCalendars(Set<String> nonWorkingDayCalendarsNames, Calendar dateFrom, Calendar dateTo)
+            throws SOSInvalidDataException {
+        if (SOSCollection.isEmpty(nonWorkingDayCalendarsNames) || SOSCollection.isEmpty(this.excludesNonWorkingDayCalendars)) {
+            return Map.of();
+        }
+        try {
+            Map<String, Calendar> map = new HashMap<>();
+            for (String name : nonWorkingDayCalendarsNames) {
+                com.sos.inventory.model.calendar.Calendar nonWorkingDayCalendar = this.excludesNonWorkingDayCalendars.get(name);
+                if (nonWorkingDayCalendar == null) {
+                    throw new SOSInvalidDataException("NonWorkingDayCalendars=" + name + " missing");
+                }
+
+                // Dates dates = new FrequencyResolver().resolveCalendar(c, this.excludesNonWorkingDayCalendars, SOSDate.getDateAsString(dateFrom),
+                // SOSDate.getDateAsString(dateTo));
+                Dates dates = new FrequencyResolver().resolveCalendar(nonWorkingDayCalendar, null, SOSDate.getDateAsString(dateFrom), SOSDate
+                        .getDateAsString(dateTo));
+                if (dates != null && !SOSCollection.isEmpty(dates.getDates())) {
+                    for (String date : dates.getDates()) {
+                        map.put(date, null);
+                    }
+                }
+            }
+            return map;
+        } catch (SOSInvalidDataException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SOSInvalidDataException(e);
+        }
+    }
+
+    private void removeNonWorkingDayCalendars(Set<String> nonWorkingDayCalendarsNames, Calendar dateFrom, Calendar dateTo)
+            throws SOSInvalidDataException {
+        removeAll(resolveNonWorkingDayCalendars(nonWorkingDayCalendarsNames, dateFrom, dateTo));
     }
 
     private void addDates(List<String> list, Calendar dateFrom, Calendar dateTo) throws SOSInvalidDataException {
@@ -1179,7 +1245,11 @@ public class FrequencyResolver {
 
         // excludes/remove
         if (baseCalendarExcludes != null && result.size() > 0) {
-            if (!SOSCollection.isEmpty(baseCalendarExcludes.getDates())) {
+            if (!SOSCollection.isEmpty(baseCalendarExcludes.getNonWorkingDayCalendars())) {
+                result = removeDays(result, resolveNonWorkingDayCalendars(baseCalendarExcludes.getNonWorkingDayCalendars(), from, to));
+            }
+
+            if (result.size() > 0 && !SOSCollection.isEmpty(baseCalendarExcludes.getDates())) {
                 result = removeDays(result, resolveDates(baseCalendarExcludes.getDates(), from, to));
             }
 

@@ -74,8 +74,9 @@ public class TestPeriodResolver {
         cal.setTo(nextDateAsString);
 
         com.sos.inventory.model.calendar.Calendar restrictions = new com.sos.inventory.model.calendar.Calendar();
-
-        List<String> dates = new FrequencyResolver().resolveRestrictions(cal, restrictions, actDateAsString, nextDateAsString).getDates();
+        Map<String, com.sos.inventory.model.calendar.Calendar> restrictionsNonWorkingDayCalendars = Map.of();
+        List<String> dates = new FrequencyResolver().resolveRestrictions(cal, restrictions, restrictionsNonWorkingDayCalendars, actDateAsString,
+                nextDateAsString).getDates();
         LOGGER.info("dates=" + dates);
     }
 

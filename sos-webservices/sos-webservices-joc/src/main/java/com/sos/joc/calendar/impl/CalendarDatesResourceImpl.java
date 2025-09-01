@@ -6,7 +6,7 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.calendar.ACalendarBaseResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -22,7 +22,7 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 @Path("calendar")
-public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalendarDatesResource {
+public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl implements ICalendarDatesResource {
 
     private static final String API_CALL = "./calendar/dates";
 
@@ -75,12 +75,11 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
                 checkFolderPermissions(in.getCalendar().getPath());
             }
-
             if (in.getCalendar() == null) {
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");
             }
 
-            return new FrequencyResolver().resolveCalendar(in);
+            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar()));
         } finally {
             Globals.disconnect(session);
         }

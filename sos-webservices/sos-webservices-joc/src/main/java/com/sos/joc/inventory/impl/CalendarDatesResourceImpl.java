@@ -5,7 +5,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.calendar.ACalendarBaseResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -21,7 +21,7 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
-public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalendarDatesResource {
+public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl implements ICalendarDatesResource {
 
     @Override
     public JOCDefaultResponse read(final String accessToken, byte[] inBytes) {
@@ -82,7 +82,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");
             }
 
-            return new FrequencyResolver().resolveCalendar(in);
+            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar()));
         } finally {
             Globals.disconnect(session);
         }

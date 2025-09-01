@@ -1272,9 +1272,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             return runner.calculateStartTimes(StartupMode.webservice, in.getControllerId(), Arrays.asList(dailyPlanSchedule), dailyPlanDate,
                     newSubmission, calendar.getId(), getJocError(), getAccessToken());
 
-        } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
-                | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | IOException | ParseException | SOSException
-                | ExecutionException e) {
+        } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), in.getControllerId());
         }
         return runner.getEmptySynchronizer();

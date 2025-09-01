@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.junit.Before;
@@ -34,9 +35,10 @@ public class FrequencyResolverTest {
         String to = "2024-12-18";
 
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_every_daily.json"));
+        Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveCalendar(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, nonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -47,9 +49,10 @@ public class FrequencyResolverTest {
         String to = "2025-12-01";
 
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_weekdays.json"));
+        Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveCalendar(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, nonWorkingDayCalendars, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
@@ -60,9 +63,10 @@ public class FrequencyResolverTest {
         String to = "2025-12-01";
 
         Calendar calendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_months_every.json"));
+        Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveCalendar(calendar, from, to);
+        Dates dates = fr.resolveCalendar(calendar, nonWorkingDayCalendars, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
@@ -73,9 +77,10 @@ public class FrequencyResolverTest {
         String to = "2024-12-28";
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions.json"));
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -90,9 +95,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_daily.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
@@ -107,9 +113,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar_holidays.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_daily.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -122,9 +129,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_weekly.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -136,9 +144,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_monthly.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -150,9 +159,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_every_yearly.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES: " + String.join(",", dates.getDates()));
     }
 
@@ -165,9 +175,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_months_weekdays.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 
@@ -180,9 +191,10 @@ public class FrequencyResolverTest {
         Calendar baseCalendar = getCalendar(Paths.get("src/test/resources/calendar/calendar.json"));
         Calendar restrictions = getCalendar(Paths.get("src/test/resources/calendar/restrictions_months_every.json"));
         // restrictions = null;
+        Map<String, Calendar> restrictionsNonWorkingDayCalendars = Map.of();
 
         FrequencyResolver fr = new FrequencyResolver();
-        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, from, to);
+        Dates dates = fr.resolveRestrictions(baseCalendar, restrictions, restrictionsNonWorkingDayCalendars, from, to);
         LOGGER.info("DATES(size=" + dates.getDates().size() + ")=" + String.join(",", dates.getDates()));
     }
 

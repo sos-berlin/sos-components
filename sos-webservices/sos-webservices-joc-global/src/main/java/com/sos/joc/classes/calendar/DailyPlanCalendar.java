@@ -28,24 +28,24 @@ import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 public class DailyPlanCalendar {
-    
+
     public static final String dailyPlanCalendarName = "dailyPlan";
     private static final CalendarPath dailyPlanCalendarPath = CalendarPath.of(dailyPlanCalendarName);
     private static DailyPlanCalendar instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
     private boolean initIsCalled = false;
-    
+
     private DailyPlanCalendar() {
         EventBus.getInstance().register(this);
     }
-    
+
     public static synchronized DailyPlanCalendar getInstance() {
         if (instance == null) {
             instance = new DailyPlanCalendar();
         }
         return instance;
     }
-    
+
     @Subscribe({ DailyPlanCalendarEvent.class })
     public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         if (!initIsCalled) {
@@ -55,7 +55,7 @@ public class DailyPlanCalendar {
             updateDailyPlanCalendar(null, null, jocError);
         }
     }
-    
+
     // this method is called directly in onProxyCoupled so that we don't need longer to listen ProxyCoupled event
     public void updateDailyPlanCalendar(JControllerApi controllerApi, JControllerState currentState, String controller) {
         if (initIsCalled) {
@@ -78,7 +78,7 @@ public class DailyPlanCalendar {
             }
         }
     }
-    
+
     public synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
         try {
             JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
@@ -87,7 +87,7 @@ public class DailyPlanCalendar {
             LOGGER.warn(e.toString());
         }
     }
-    
+
     public synchronized void deleteDailyPlanCalendar(JocError jocError) {
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.deleteSimple(dailyPlanCalendarPath));
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
@@ -111,10 +111,10 @@ public class DailyPlanCalendar {
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             Map<CalendarPath, JCalendar> knownCalendars = null;
             try {
-                //JControllerApi api = ControllerApi.of(controllerId);
+                // JControllerApi api = ControllerApi.of(controllerId);
                 JControllerProxy proxy = Proxy.of(controllerId);
                 try {
-                    //knownCalendars = api.controllerState().get(2, TimeUnit.SECONDS).map(JControllerState::pathToCalendar).getOrNull();
+                    // knownCalendars = api.controllerState().get(2, TimeUnit.SECONDS).map(JControllerState::pathToCalendar).getOrNull();
                     knownCalendars = proxy.currentState().pathToCalendar();
                 } catch (Exception e1) {
                 }
@@ -135,9 +135,10 @@ public class DailyPlanCalendar {
             } catch (Exception e) {
                 ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, curControllerId);
             }
-        };
+        }
+        ;
     }
-    
+
     private static boolean dailyPlanCalendarIsAlreadySubmitted(Map<CalendarPath, JCalendar> knownCalendars, JCalendar newCalendar) {
         if (knownCalendars == null) {
             return false;
@@ -150,33 +151,33 @@ public class DailyPlanCalendar {
         }
         return false;
     }
-    
+
     private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
         return getCalendar(convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
     }
-    
+
     private static JCalendar getCalendar(long dateOffset) {
         return JCalendar.of(dailyPlanCalendarPath, Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
     }
-    
+
     public static long convertPeriodBeginToSeconds(String periodBegin) {
         return convertTimeToSeconds(periodBegin, "period_begin");
     }
-    
+
     public static long convertTimeToSeconds(String timeField, String fieldname) {
-        
+
         timeField = (timeField + ":00:00").substring(0, 8);
         if (!timeField.matches("\\d{2}:\\d{2}:\\d{2}")) {
             throw new IllegalArgumentException(fieldname + " (" + timeField + ") must have the format hh:mm:ss");
         }
-        
+
         try {
             return Instant.parse("1970-01-01T" + timeField + "Z").getEpochSecond();
         } catch (Exception e) {
             throw new IllegalArgumentException(fieldname + " (" + timeField + ") must have the format hh:mm:ss");
         }
     }
-    
+
     private static String getValue(ConfigurationEntry c) {
         String s = c.getValue();
         if (s == null || s.isEmpty()) {

@@ -37,7 +37,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -238,9 +237,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     /* service */
-    private void createPlan(StartupMode startupMode, List<ControllerConfiguration> controllers, java.util.Calendar calendar)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, ParseException, SOSException, URISyntaxException,
-            InterruptedException, ExecutionException, TimeoutException {
+    private void createPlan(StartupMode startupMode, List<ControllerConfiguration> controllers, java.util.Calendar calendar) throws Exception {
 
         String method = "createPlan";
         try {
@@ -319,29 +316,21 @@ public class DailyPlanRunner extends TimerTask {
     /* service (createPlan) & DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
-            throws JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException,
-            SOSInvalidDataException, SOSMissingDataException, SOSHibernateException, ParseException, IOException, ExecutionException {
+            throws Exception {
         return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, false);
     }
 
     /* service (createPlan) & DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken,
-            boolean includeLate) throws JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException,
-            DBInvalidDataException, JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, SOSInvalidDataException, SOSMissingDataException, SOSHibernateException, ParseException,
-            IOException, ExecutionException {
+            boolean includeLate) throws Exception {
         return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, includeLate);
     }
 
     /* DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
-            JocError jocError, String accessToken, boolean includeLate) throws JsonParseException, JsonMappingException, DBMissingDataException,
-            DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException, SOSInvalidDataException,
-            SOSMissingDataException, SOSHibernateException, ParseException, IOException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, ExecutionException {
+            JocError jocError, String accessToken, boolean includeLate) throws Exception {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
         String caller = DailyPlanHelper.getCallerForLog(settings);
@@ -380,10 +369,7 @@ public class DailyPlanRunner extends TimerTask {
 
     /* DailyPlanModifyOrderImpl **/
     public OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
-            String dailyPlanDate, DBItemDailyPlanSubmission submission, Long calendarId, JocError jocError, String accessToken)
-            throws JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, SOSInvalidDataException, SOSMissingDataException, SOSHibernateException,
-            ParseException, IOException, ControllerConnectionResetException, ControllerConnectionRefusedException, ExecutionException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission, Long calendarId, JocError jocError, String accessToken) throws Exception {
 
         if (dailyPlanSchedules == null || dailyPlanSchedules.size() == 0) {
             return new OrderListSynchronizer(settings);
@@ -932,34 +918,25 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     public OrderListSynchronizer calculateAbsoluteMainPeriods(StartupMode startupMode, String controllerId,
-            Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission)
-            throws SOSInvalidDataException, ParseException, JsonParseException, JsonMappingException, DBMissingDataException,
-            DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException, DBOpenSessionException, SOSMissingDataException,
-            SOSHibernateException, IOException {
+            Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission) throws Exception {
         return calculateStartTimesOrAbsoluteMainPeriods(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission, null, false, true);
     }
 
     private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
-            String dailyPlanDate, DBItemDailyPlanSubmission submission, boolean includeLate) throws SOSInvalidDataException, ParseException,
-            JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, SOSMissingDataException, SOSHibernateException, IOException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission, boolean includeLate) throws Exception {
         return calculateStartTimesOrAbsoluteMainPeriods(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission, null, includeLate,
                 false);
     }
 
     private OrderListSynchronizer calculateStartTimes(StartupMode startupMode, String controllerId, Collection<DailyPlanSchedule> dailyPlanSchedules,
-            String dailyPlanDate, DBItemDailyPlanSubmission submission, Long usingEveryDayCalendarWithId) throws SOSInvalidDataException,
-            ParseException, JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, SOSMissingDataException, SOSHibernateException, IOException {
+            String dailyPlanDate, DBItemDailyPlanSubmission submission, Long usingEveryDayCalendarWithId) throws Exception {
         return calculateStartTimesOrAbsoluteMainPeriods(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission,
                 usingEveryDayCalendarWithId, false, false);
     }
 
     private OrderListSynchronizer calculateStartTimesOrAbsoluteMainPeriods(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission,
-            Long usingEveryDayCalendarWithId, boolean includeLate, boolean calculateAbsoluteMainPeriodsOnly) throws SOSInvalidDataException,
-            ParseException, JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException,
-            JocConfigurationException, DBOpenSessionException, SOSMissingDataException, SOSHibernateException, IOException {
+            Long usingEveryDayCalendarWithId, boolean includeLate, boolean calculateAbsoluteMainPeriodsOnly) throws Exception {
 
         String method = calculateAbsoluteMainPeriodsOnly ? "calculateAbsoluteMainPeriods" : "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -1061,13 +1038,16 @@ public class DailyPlanRunner extends TimerTask {
                         LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][includes]%s", logPrefix, assignedCalendar.getCalendarName(), SOSString
                                 .toString(restrictions)));
                     }
+                    // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
+                    Map<String, Calendar> mergedNonWorkingDayCalendars = getMergedNonWorkingDayCalendars(isDebugEnabled, logPrefix, invDbLayer,
+                            calendar, restrictions);
 
                     int plannedOrdersCount = 0;
                     List<String> frequencyResolverDates = null;
                     try {
                         PeriodResolver periodResolver = null;
-                        frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, actDateAsString, actDateAsString)
-                                .getDates();
+                        frequencyResolverDates = new FrequencyResolver().resolveRestrictions(calendar, restrictions, mergedNonWorkingDayCalendars,
+                                actDateAsString, actDateAsString).getDates();
                         if (isDebugEnabled) {
                             LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][FrequencyResolver]dates=%s", logPrefix, assignedCalendar
                                     .getCalendarName(), String.join(",", frequencyResolverDates)));
@@ -1112,7 +1092,7 @@ public class DailyPlanRunner extends TimerTask {
                                                 calendayCopy.setTo(actDateAsString);
 
                                                 List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendayCopy, restrictions,
-                                                        firstNonWorkingDay, actDateAsString).getDates();
+                                                        mergedNonWorkingDayCalendars, firstNonWorkingDay, actDateAsString).getDates();
                                                 if (isDebugEnabled) {
                                                     LOGGER.debug(String.format("%s[NonWorkingDays][NEXTNONWORKINGDAY]workingDates=%s", logPrefix,
                                                             String.join(",", workingDates)));
@@ -1148,7 +1128,7 @@ public class DailyPlanRunner extends TimerTask {
                                                 calendayCopy.setTo(lastNonWorkingDay);
 
                                                 List<String> workingDates = new FrequencyResolver().resolveRestrictions(calendayCopy, restrictions,
-                                                        actDateAsString, lastNonWorkingDay).getDates();
+                                                        mergedNonWorkingDayCalendars, actDateAsString, lastNonWorkingDay).getDates();
                                                 if (isDebugEnabled) {
                                                     LOGGER.debug(String.format("%s[NonWorkingDays][PREVIOUSNONWORKINGDAY]workingDates=%s", logPrefix,
                                                             String.join(",", workingDates)));
@@ -1314,6 +1294,34 @@ public class DailyPlanRunner extends TimerTask {
             }
         }
         return synchronizer;
+    }
+
+    // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
+    private Map<String, Calendar> getMergedNonWorkingDayCalendars(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer,
+            Calendar baseCalendar, Calendar restrictionsCalendar) throws Exception {
+        Set<String> mergedNames = new HashSet<>(); // without duplicates
+        if (baseCalendar != null) {
+            Optional.ofNullable(baseCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+            // Optional.ofNullable(baseCalendar.getIncludes()).map(i -> i.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+        }
+        if (restrictionsCalendar != null) {
+            Optional.ofNullable(restrictionsCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+            // Optional.ofNullable(restrictionsCalendar.getIncludes()).map(i -> i.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+        }
+
+        Map<String, Calendar> m = new HashMap<>();
+        if (mergedNames.size() > 0) {
+            DailyPlanHelper.mapMissingNonWorkingDayCalendars(logPrefix, dbLayer, mergedNames.stream().collect(Collectors.toList()),
+                    calculateStartTimesNonWorkingCalendars);
+            for (String name : mergedNames) {
+                Calendar c = calculateStartTimesNonWorkingCalendars.get(name);
+                if (c == null) {
+                    continue;
+                }
+                m.put(name, c);
+            }
+        }
+        return m;
     }
 
     private String nonWorkingDayCalendarsLog(Schedule schedule) {

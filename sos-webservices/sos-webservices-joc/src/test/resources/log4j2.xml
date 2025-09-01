@@ -11,7 +11,13 @@
 		<Root level="info">
 			<AppenderRef ref="console" />
 		</Root>
+
 		<Logger name="com.sos" level="debug" />
+
+
+		<Logger name="com.sos.commons.hibernate.id" level="warn" />
+		<Logger name="com.sos.commons.hibernate.SOSHibernateFactory"
+			level="warn" />
 		<Logger name="com.sos.joc.publish" level="info" />
 	</Loggers>
 </Configuration>
