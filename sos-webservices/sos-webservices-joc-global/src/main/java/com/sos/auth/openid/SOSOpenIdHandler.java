@@ -26,6 +26,8 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -338,40 +340,47 @@ public class SOSOpenIdHandler {
             jsonReaderPayload = Json.createReader(new StringReader(payload));
             jsonHeader = jsonReaderHeader.readObject();
             jsonPayload = jsonReaderPayload.readObject();
-            if (webserviceCredentials.getClaims() != null) {
+            
+            Map<String, List<String>> groupRolesMap = webserviceCredentials.getGroupRolesMap();
+
+            if (webserviceCredentials.getClaims() != null && groupRolesMap != null) {
                 for (String claim : webserviceCredentials.getClaims()) {
-                    JsonArray array = jsonPayload.getJsonArray(claim);
-                    if (array != null) {
+                    JsonValue jv = jsonPayload.get(claim);
+                    if (jv == null) {
+                        LOGGER.info("Configured claim <" + claim + "> not found in JWT Id-Token");
+                        continue;
+                    }
+                    if (jv.getValueType().equals(ValueType.ARRAY)) {
+                        JsonArray array = jv.asJsonArray();
                         for (int i = 0; i < array.size(); i++) {
                             String group = array.getString(i);
-                            LOGGER.debug("--------- account is member of group:" + group);
-                            Map<String, List<String>> groupRolesMap = webserviceCredentials.getGroupRolesMap();
-                            if (groupRolesMap != null) {
-                                List<String> mappedRoles = groupRolesMap.get(group);
-                                if (mappedRoles != null) {
-                                    for (String mappedRole : mappedRoles) {
-                                        LOGGER.debug("--------- role added:" + mappedRole);
-                                        roles.add(mappedRole);
-                                    }
-                                } else {
-                                    LOGGER.debug("---------  group:" + group + " not found in group/roles mapping");
-                                }
-                            }
+                            addRoles(group, groupRolesMap, roles);
                         }
-                    } else {
-                        LOGGER.info("Configured claim <" + claim + "> not found in JWT Id-Token");
+                    } else if (jv.getValueType().equals(ValueType.STRING)) {
+                        String group = jsonPayload.getString(claim);
+                        addRoles(group, groupRolesMap, roles);
                     }
                 }
             }
             return roles;
-        } catch (Exception e) {
-            LOGGER.warn(String.format("Could not decode jwt id-token:" + idToken + "\r\n" + e.getMessage()));
-            throw e;
         } finally {
             if (jsonReaderHeader != null) {
                 jsonReaderHeader.close();
                 jsonReaderPayload.close();
             }
+        }
+    }
+    
+    private void addRoles(String group, Map<String, List<String>> groupRolesMap, Set<String> roles) {
+        LOGGER.debug("--------- account is member of group:" + group);
+        List<String> mappedRoles = groupRolesMap.get(group);
+        if (mappedRoles != null) {
+            for (String mappedRole : mappedRoles) {
+                LOGGER.debug("--------- role added:" + mappedRole);
+                roles.add(mappedRole);
+            }
+        } else {
+            LOGGER.debug("---------  group:" + group + " not found in group/roles mapping");
         }
     }
 
