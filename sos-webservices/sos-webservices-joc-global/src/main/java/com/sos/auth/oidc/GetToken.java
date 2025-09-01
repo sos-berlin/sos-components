@@ -63,16 +63,22 @@ public class GetToken {
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
             throws SOSSSLException {
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
-        if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
+        
+        String clientSecret = props.getIamOidcClientSecret();
+        if (openIdConfigurationResponse.getToken_endpoint().contains("/v2.0")) {
+            clientSecret = "";
+        }
+        
+        if (!SOSString.isEmpty(clientSecret)) {
             List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
-           baseHttpClientBuilder.withAuth(props.getIamOidcClientId(), props.getIamOidcClientSecret());
+                baseHttpClientBuilder.withAuth(props.getIamOidcClientId(), props.getIamOidcClientSecret());
                 createBody(requestBody);
-            } else { //if (supportedMethods.contains("client_secret_post")) {
-                createBody(props, requestBody);
+            } else { // if (supportedMethods.contains("client_secret_post")) {
+                createBody(clientSecret, props, requestBody);
             }
         } else {
-            createBody(props, requestBody);
+            createBody(clientSecret, props, requestBody);
         }
     }
     
@@ -83,11 +89,11 @@ public class GetToken {
         body.put("code_verifier", requestBody.getCode_verifier());
     }
     
-    private void createBody(OidcProperties props, GetTokenRequest requestBody) {
+    private void createBody(String clientSecret, OidcProperties props, GetTokenRequest requestBody) {
         createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
-        if (!SOSString.isEmpty(props.getIamOidcClientSecret())) {
-            body.put("client_secret", props.getIamOidcClientSecret());
+        if (!SOSString.isEmpty(clientSecret)) {
+            body.put("client_secret", clientSecret);
         }
     }
 
