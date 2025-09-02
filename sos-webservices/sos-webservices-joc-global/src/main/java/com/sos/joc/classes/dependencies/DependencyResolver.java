@@ -645,7 +645,7 @@ public class DependencyResolver {
                     }
                 }
             }
-
+            break;
         case SCHEDULE:
             // Workflow
             // no instructions are available in WindowsSearch check always directly in json
@@ -1310,7 +1310,7 @@ public class DependencyResolver {
                         // TODO: might need to handle special case of current member being array
                     } else if (object instanceof JsonString) {
                         // assuming current array member is a string and next key is the search key, ends the recursion
-                        if(nextKey.equals(searchKey)) {
+                        if(nextKey.contains(searchKey)) {
                             values.add(((JsonString)object).getString());
                         }
                     }
