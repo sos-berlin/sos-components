@@ -46,6 +46,7 @@
     <javassist.version>3.29.2-GA</javassist.version>
     <log4j2.version>2.24.3</log4j2.version>
     <commons.io.version>2.15.1</commons.io.version>
+    <commons-codec.version>1.16.0</commons-codec.version>
     <apache.commons.lang.version>3.18.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
@@ -900,6 +901,15 @@
             <artifactId>logback-classic</artifactId> 
           </exclusion>
         </exclusions>
+      </dependency>
+      <!-- commons-codec is a transtive dependency of KeePass, 
+            it is part of the dependencyManagement to be able to control the version used 
+            and not rely on the version provided by KeePass
+      -->
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>${commons-codec.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.jms</groupId>
