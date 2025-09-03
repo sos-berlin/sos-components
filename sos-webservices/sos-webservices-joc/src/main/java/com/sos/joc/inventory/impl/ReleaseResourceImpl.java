@@ -380,7 +380,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         } else {
             // delete all other db items with same objectType and name but different id
             // dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
-            if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
+            if (contraintReleaseItem != null && !contraintReleaseItem.getId().equals(releaseItem.getId())) {
                 dbLayer.getSession().delete(contraintReleaseItem);
             }
             dbLayer.getSession().update(setReleaseItem(releaseItem, conf, dbAuditLog.getCreated()));
