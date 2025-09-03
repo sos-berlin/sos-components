@@ -412,7 +412,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public ScrollableResults<DBItemHistoryAgent> getAgentsWithPrevAndLast(Collection<String> controllerIds, Date dateFrom, Date dateTo) throws SOSHibernateException {
+    public ScrollableResults<DBItemHistoryAgent> getAgentsWithPrevAndLast(Collection<String> controllerIds, Date dateFrom, Date dateTo)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" h ");
         String add = " where ";
         if (dateFrom == null) {
@@ -488,12 +489,27 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public Map<String, Map<String, Map<String, Date>>> getActiveInventoryAgents() throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select controllerId,agentId,uri,modified from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
-                " ");
+    public Map<String, Map<String, Map<String, Date>>> getActiveInventoryAgents(Collection<String> controllerIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select controllerId,agentId,uri,modified from ");
+        hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ");
         hql.append("where deployed=true and disabled=false and hidden=false");
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            hql.append(" and ");
+            if (controllerIds.size() == 1) {
+                hql.append("controllerId=:controllerId ");
+            } else {
+                hql.append("controllerId in (:controllerIds) ");
+            }
+        }
 
         Query<Object[]> query = getSession().createQuery(hql.toString());
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            if (controllerIds.size() == 1) {
+                query.setParameter("controllerId", controllerIds.iterator().next());
+            } else {
+                query.setParameterList("controllerIds", controllerIds);
+            }
+        }
         List<Object[]> l = getSession().getResultList(query);
         if (l == null || l.size() == 0) {
             return new HashMap<>();
