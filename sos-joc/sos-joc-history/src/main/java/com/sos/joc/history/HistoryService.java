@@ -404,13 +404,14 @@ public class HistoryService extends AJocActiveMemberService {
                         //
                         DBItemJocVariable item = dbLayer.getLogsVariable();
                         if (item == null) {
-                            LOGGER.info(String.format("[%s][%s][skip]because compressed data not found", getIdentifier(), method));
+                            LOGGER.info(String.format("[%s][%s][%s][skip]because compressed data not found", getIdentifier(), method,
+                                    DBLayerHistory.LOGS_VARIABLE_NAME));
                             return;
                         }
                         byte[] compressed = item.getBinaryValue();
                         if (compressed == null) {
-                            LOGGER.info(String.format("[%s][%s][skip][remove empty entry]because compressed data not found", getIdentifier(),
-                                    method));
+                            LOGGER.info(String.format("[%s][%s][%s][skip][remove empty entry]because compressed data not found", getIdentifier(),
+                                    method, DBLayerHistory.LOGS_VARIABLE_NAME));
                             dbLayer.beginTransaction();
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
                             dbLayer.commit();
@@ -723,7 +724,7 @@ public class HistoryService extends AJocActiveMemberService {
     private void closeFactory() {
         if (factory == null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.info(String.format("[%s][skip closeFactory]database factory is null", getIdentifier()));
+                LOGGER.debug(String.format("[%s][skip closeFactory]database factory is null", getIdentifier()));
             }
         } else {
             factory.close();

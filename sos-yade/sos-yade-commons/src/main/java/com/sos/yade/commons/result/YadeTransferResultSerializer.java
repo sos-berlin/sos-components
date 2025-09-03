@@ -34,6 +34,16 @@ public class YadeTransferResultSerializer<T extends Serializable> {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public T deserialize(byte[] data) throws Exception {
+        if (data == null) {
+            return null;
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))) {
+            return (T) ois.readObject();
+        }
+    }
+
     public String serializeBase64(final T t) throws Exception {
         if (t == null) {
             return null;

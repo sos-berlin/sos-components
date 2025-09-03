@@ -199,11 +199,13 @@ public class HistoryModel {
         dbFactory = factory;
         historyConfiguration = historyConf;
         controllerConfiguration = controllerConf;
-        variableName = "history_" + controllerConfiguration.getCurrent().getId();
         maxTransactions = historyConfiguration.getMaxTransactions();
-        yadeHandler = new YADEHandler(controllerConfiguration.getCurrent().getId());
-        cacheHandler = new HistoryCacheHandler(controllerConfiguration.getCurrent().getId(), identifier);
+
+        variableName = "history_" + controllerConfiguration.getCurrent().getId();
+        yadeHandler = new YADEHandler(controllerConfiguration.getCurrent().getId(), variableName + "_yade");
         logExtHandler = new LogExtAsyncHandler(historyConfiguration, variableName + "_logExt");
+
+        cacheHandler = new HistoryCacheHandler(controllerConfiguration.getCurrent().getId(), yadeHandler);
     }
 
     public Long getEventId() throws Exception {
@@ -744,6 +746,8 @@ public class HistoryModel {
     public void close(StartupMode mode) {
         closed = true;
 
+        yadeHandler.close();
+
         if (logExtHandler != null) {
             logExtHandler.close(mode);
         }
@@ -998,7 +1002,7 @@ public class HistoryModel {
             item.setConstraintHash(constraintHash);
             item.setCreated(new Date());
             item.setModified(item.getCreated());
-            
+
             dbLayer.getSession().save(item);
 
             item.setMainParentId(item.getId()); // TODO see above
@@ -1754,14 +1758,7 @@ public class HistoryModel {
                     }
                 }
 
-                OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos);
-                if (r.getYadeTransferResult() != null) {
-                    if (le.isError()) {
-                        le.setErrorText(r.getYadeTransferResult().getErrorMessage());
-                    }
-                    yadeHandler.process(r.getYadeTransferResult(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
-                            .getWorkflowPosition());
-                }
+                OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos, yadeHandler);
 
                 if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
                     le.setErrorText(cos.getFirstChunkStdError());
@@ -2549,6 +2546,10 @@ public class HistoryModel {
 
     public HistoryCacheHandler getCacheHandler() {
         return cacheHandler;
+    }
+
+    public YADEHandler getYADEHandler() {
+        return yadeHandler;
     }
 
     public LogExtAsyncHandler getLogExtHandler() {

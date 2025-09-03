@@ -29,6 +29,7 @@ import com.sos.joc.history.controller.exception.model.HistoryModelOrderNotFoundE
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepNotFoundException;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.fatevent.FatPosition;
+import com.sos.joc.history.controller.yade.YADEHandler;
 import com.sos.joc.history.db.DBLayerHistory;
 
 public class HistoryCacheHandler {
@@ -41,6 +42,8 @@ public class HistoryCacheHandler {
 
     private static final String KEY_DELIMITER = "|||";
 
+    private final YADEHandler yadeHandler;
+
     private final String controllerId;
 
     private Map<String, CachedOrder> orders;
@@ -51,8 +54,9 @@ public class HistoryCacheHandler {
     private String identifier;
     private boolean isDebugEnabled;
 
-    public HistoryCacheHandler(String controllerId, String identifier) {
+    public HistoryCacheHandler(String controllerId, YADEHandler yadeHandler) {
         this.controllerId = controllerId;
+        this.yadeHandler = yadeHandler;
 
         init();
     }
@@ -94,7 +98,12 @@ public class HistoryCacheHandler {
         // }
         // }
         // return sb.toString();
-        return String.format("[cached workflows=%s,orders=%s,steps=%s]", workflows.size(), coSize, cosSize);
+        String add = "";
+        if (LOGGER.isDebugEnabled()) {
+            add = "[cached yade protocols=" + yadeHandler.getProtocolsSize() + "]";
+        }
+
+        return String.format("[cached workflows=%s, orders=%s, steps=%s]%s", workflows.size(), coSize, cosSize, add);
     }
 
     public boolean hasOrder(String orderId) {
@@ -464,7 +473,7 @@ public class HistoryCacheHandler {
 
     public void clear(long currentSeconds, long olderThanSeconds) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][cache][clear]workflows/orders/steps older than %ss", identifier, olderThanSeconds));
+            LOGGER.debug(String.format("[%s][cache][clear]workflows/orders/steps/yade older than %ss", identifier, olderThanSeconds));
         }
         workflows.entrySet().removeIf(e -> ((currentSeconds / 60) - e.getValue().getLastUsage()) >= (olderThanSeconds / 60));
 
@@ -475,7 +484,7 @@ public class HistoryCacheHandler {
                 clear(CacheType.orderWithChildOrders, orderId);
             }
         }
-
+        yadeHandler.clearCache(currentSeconds, olderThanSeconds);
     }
 
     private void clearWorkflowCache(String workflowName) {

@@ -315,14 +315,14 @@ public class SOSDate {
         }
     }
 
-    public static Long getMinutes(Date d) {
+    public static long getMinutes(Date d) {
         if (d == null) {
             return 0L;
         }
         return d.getTime() / 1000 / 60;
     }
 
-    public static Long getSeconds(Date d) {
+    public static long getSeconds(Date d) {
         if (d == null) {
             return 0L;
         }

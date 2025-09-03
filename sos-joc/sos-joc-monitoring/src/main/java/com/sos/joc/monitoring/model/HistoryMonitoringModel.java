@@ -695,7 +695,7 @@ public class HistoryMonitoringModel implements Serializable {
                 return null;
             }
 
-            Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
+            long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
             if (diff < 0) {
                 if (!remove) {// remove=true - already removed at begin
                     // remove because startTime > endTime
@@ -742,7 +742,7 @@ public class HistoryMonitoringModel implements Serializable {
         if (expected == null || expected.getSeconds() == null) {
             return null;
         }
-        Long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
+        long diff = SOSDate.getSeconds(endTime) - SOSDate.getSeconds(startTime);
         if (diff < 0) {
             if (LOGGER.isDebugEnabled()) {
                 try {

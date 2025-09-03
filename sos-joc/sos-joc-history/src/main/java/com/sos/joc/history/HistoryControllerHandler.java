@@ -203,6 +203,7 @@ public class HistoryControllerHandler {
         LOGGER.info(String.format("%seventId=%s", method, eventId));
 
         initIntervals(model.getHistoryConfiguration());
+        model.getYADEHandler().start(tg);
         model.getLogExtHandler().start(tg);
         api = ControllerApi.of(controllerConfig.getCurrent().getId(), ProxyUser.HISTORY);
         long errorCounter = 0;
@@ -418,7 +419,7 @@ public class HistoryControllerHandler {
                                     if (errorStartMs == 0) {
                                         errorStartMs = new Date().getTime();
                                     } else {
-                                        Long current = SOSDate.getSeconds(new Date());
+                                        long current = SOSDate.getSeconds(new Date());
                                         if ((current - errorStartMs / 1_000) >= config.getWaitIntervalStopProcessingOnErrors()) {
                                             int totalErrors = errorCounter;
                                             errorCounter = 0;
@@ -1091,7 +1092,7 @@ public class HistoryControllerHandler {
 
     private void releaseEvents(Long eventId) {
         if (eventId != null && eventId > 0 && lastReleaseEvents > 0 && !eventId.equals(lastReleaseEventId)) {
-            Long current = SOSDate.getSeconds(new Date());
+            long current = SOSDate.getSeconds(new Date());
             if ((current - lastReleaseEvents) >= releaseEventsInterval) {
                 String method = "releaseEvents";
                 try {
@@ -1111,7 +1112,7 @@ public class HistoryControllerHandler {
     private void clearCache() {
         if (model != null) {
             if (lastClearCache > 0) {
-                Long current = SOSDate.getSeconds(new Date());
+                long current = SOSDate.getSeconds(new Date());
                 if ((current - lastClearCache) >= model.getHistoryConfiguration().getCacheAge()) {
                     model.getCacheHandler().clear(current, model.getHistoryConfiguration().getCacheAge());
                 }

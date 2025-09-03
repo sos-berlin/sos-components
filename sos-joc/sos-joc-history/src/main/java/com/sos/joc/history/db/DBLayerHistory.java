@@ -26,7 +26,7 @@ public class DBLayerHistory extends DBLayer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerHistory.class);
 
-    private static final String LOGS_VARIABLE_NAME = "cluster_history_logs";
+    public static final String LOGS_VARIABLE_NAME = "cluster_history_logs";
     /** result rerun interval in seconds */
     private static final long RERUN_INTERVAL = 2;
     private static final int MAX_RERUNS = 3;

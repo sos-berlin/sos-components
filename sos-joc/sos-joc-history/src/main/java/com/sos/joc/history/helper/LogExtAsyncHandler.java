@@ -106,8 +106,8 @@ public class LogExtAsyncHandler {
             conf.checkLogExtDirAvailable();
             r = conf.isLogExtDirAvailable();
             if (r) {
-                LOGGER.info(String.format("[%s][isLogExtDirAvailable][%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(), conf
-                        .isLogExtDirExists(), conf.isLogExtDirWritable()));
+                LOGGER.info(String.format("[%s][isLogExtDirAvailable][log_ext_directory=%s]exists=%s,isWritable=%s", jocVariableName, conf
+                        .getLogExtDir(), conf.isLogExtDirExists(), conf.isLogExtDirWritable()));
             }
         }
         return r;
@@ -148,8 +148,8 @@ public class LogExtAsyncHandler {
             logs.clear();
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][process][skip][%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(), conf
-                        .isLogExtDirExists(), conf.isLogExtDirWritable()));
+                LOGGER.debug(String.format("[%s][process][skip][log_ext_directory=%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(),
+                        conf.isLogExtDirExists(), conf.isLogExtDirWritable()));
             }
         }
     }
@@ -323,8 +323,8 @@ public class LogExtAsyncHandler {
     private void serialize() {
         if (!isLogExtDirAvailable()) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][serialize][skip][%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(), conf
-                        .isLogExtDirExists(), conf.isLogExtDirWritable()));
+                LOGGER.debug(String.format("[%s][serialize][skip][log_ext_directory=%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(),
+                        conf.isLogExtDirExists(), conf.isLogExtDirWritable()));
             }
             return;
         }
@@ -350,8 +350,8 @@ public class LogExtAsyncHandler {
     private void deserialize() {
         if (!isLogExtDirAvailable()) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][deserialize][skip][%s]exists=%s,isWritable=%s", jocVariableName, conf.getLogExtDir(), conf
-                        .isLogExtDirExists(), conf.isLogExtDirWritable()));
+                LOGGER.debug(String.format("[%s][deserialize][skip][log_ext_directory=%s]exists=%s,isWritable=%s", jocVariableName, conf
+                        .getLogExtDir(), conf.isLogExtDirExists(), conf.isLogExtDirWritable()));
             }
             return;
         }
