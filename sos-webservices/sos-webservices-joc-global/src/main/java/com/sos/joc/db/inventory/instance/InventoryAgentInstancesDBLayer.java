@@ -1079,7 +1079,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         if (force) {
             int position = 0;
             for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                if (dbAgent.getOrdering() != position) {
+                if (dbAgent.getOrdering().intValue() != position) {
                     dbAgent.setOrdering(position);
                     getSession().update(dbAgent);
                 }
@@ -1171,7 +1171,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         if (force) {
             int position = 0;
             for (DBItemInventorySubAgentInstance dbSubagent : dbSubagents) {
-                if (dbSubagent.getOrdering() != position) {
+                if (dbSubagent.getOrdering().intValue() != position) {
                     dbSubagent.setOrdering(position);
                     getSession().update(dbSubagent);
                 }

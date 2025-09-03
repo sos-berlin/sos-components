@@ -150,7 +150,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
             Optional<MetaItem> metaContentOpt = Optional.empty();
 
             boolean invertedProjection = in.getWithoutStartTime() != null && in.getWithoutStartTime();
-            boolean export = action == IMPL_PATH_DATES;
+            boolean export = action.equals(IMPL_PATH_DATES);
 
             if (items != null) {
                 metaOpt = items.stream().filter(DBItemDailyPlanProjection::isMeta).findAny();

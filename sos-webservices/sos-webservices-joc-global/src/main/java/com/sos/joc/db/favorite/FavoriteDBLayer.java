@@ -62,7 +62,7 @@ public class FavoriteDBLayer extends DBLayer {
 
     public DBItemInventoryFavorite getSharedFavorite(FavoriteSharedIdentifier sharedFavorite) {
         try {
-            if (sharedFavorite.getAccount() == account) {
+            if (sharedFavorite.getAccount().equals(account)) {
                 return null;
             }
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_FAVORITES);
@@ -327,7 +327,7 @@ public class FavoriteDBLayer extends DBLayer {
         if (force) {
             int position = 0;
             for (DBItemInventoryFavorite dbFavoriteByType : dbFavoritesByType) {
-                if (dbFavoriteByType.getOrdering() != position) {
+                if (dbFavoriteByType.getOrdering().intValue() != position) {
                     dbFavoriteByType.setOrdering(position);
                     getSession().update(dbFavoriteByType);
                 }
