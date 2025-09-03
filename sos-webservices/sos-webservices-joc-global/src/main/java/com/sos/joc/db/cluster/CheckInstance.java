@@ -66,7 +66,7 @@ public class CheckInstance {
                             int maxOrdering = instances.stream().mapToInt(DBItemJocInstance::getOrdering).max().orElse(0);
                             int curOrdering = -129; // tinyInt [-128, 127]
                             for (DBItemJocInstance instance : instances) {
-                                if (curOrdering == instance.getOrdering()) {
+                                if (curOrdering == instance.getOrdering().intValue()) {
                                     instance.setOrdering(++maxOrdering);
                                     changedIds.add(instance.getId());
                                 } else {
@@ -79,15 +79,15 @@ public class CheckInstance {
                             if (dbInstanceOpt.isPresent()) {
                                 for (DBItemJocInstance instance : instances) {
                                     if (instance.equals(dbInstanceOpt.get())) {
-                                        if (ordering != instance.getOrdering()) {
+                                        if (!ordering.equals(instance.getOrdering())) {
                                             instance.setOrdering(ordering);
                                             changedIds.add(instance.getId());
                                         }
                                     } else {
-                                        if (index == ordering) {
+                                        if (index == ordering.intValue()) {
                                             index++;
                                         }
-                                        if (index != instance.getOrdering()) {
+                                        if (index != instance.getOrdering().intValue()) {
                                             instance.setOrdering(index);
                                             changedIds.add(instance.getId());
                                         }
@@ -96,7 +96,7 @@ public class CheckInstance {
                                 }
                             } else {
                                 for (DBItemJocInstance instance : instances) {
-                                    if (index != instance.getOrdering()) {
+                                    if (index != instance.getOrdering().intValue()) {
                                         instance.setOrdering(index);
                                         changedIds.add(instance.getId());
                                     }

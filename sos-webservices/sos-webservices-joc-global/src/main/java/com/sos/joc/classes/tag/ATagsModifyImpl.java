@@ -156,7 +156,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                     if (dbItem == null) {
                         continue;
                     }
-                    if (ordering != dbItem.getOrdering()) {
+                    if (ordering != dbItem.getOrdering().intValue()) {
                         dbItem.setOrdering(ordering);
                         dbLayer.getSession().update(dbItem);
                     }
@@ -164,7 +164,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 }
                 for (T dbItem : mappedByName.values().stream().sorted(Comparator.comparingInt(T::getOrdering)).collect(Collectors.toCollection(
                         LinkedList::new))) {
-                    if (ordering != dbItem.getOrdering()) {
+                    if (ordering != dbItem.getOrdering().intValue()) {
                         dbItem.setOrdering(ordering);
                         dbLayer.getSession().update(dbItem);
                     }

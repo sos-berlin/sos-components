@@ -182,7 +182,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
 //                        Instant surveyDateInstant = newCurrentState.instant();
 //                        Long surveyDateMillis = surveyDateInstant.toEpochMilli();
 //                        Function1<Order<Order.State>, Object> scheduledFreshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId,
-//                                surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+//                                surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS.longValue();
 //                        scheduledFreshOrderFilter = JOrderPredicates.and(o -> o.workflowId().equals(jWorkflow.id().asScala()), JOrderPredicates.and(
 //                                JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended()),
 //                                scheduledFreshOrderFilter));

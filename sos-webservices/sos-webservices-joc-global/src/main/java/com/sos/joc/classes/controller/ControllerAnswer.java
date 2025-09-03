@@ -195,7 +195,7 @@ public class ControllerAnswer extends Controller {
 	
 	@JsonIgnore
 	public void setOsId(Long osId) {
-		if (osId != dbInstance.getOsId() && osId != 0L) {
+		if (!osId.equals(dbInstance.getOsId()) && osId != 0L) {
 			dbInstance.setOsId(osId);
 			updateDbInstance = true;
 		}

@@ -165,20 +165,21 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                     if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
-                                .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis && o
+                                .scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS.longValue();
                     } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
                         freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
-                                .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
+                                .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS.longValue());
                     } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
                         freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis;
                     } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
                         freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis;
                     } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                        freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS
+                                .longValue();
                     } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
-                                .toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                        freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis || o.scheduledFor()
+                                .get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue();
                     }
 
                     if (freshOrderFilter != null) {
@@ -278,7 +279,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                                 .getClass()))) {
                             Instant scheduledFor = OrdersHelper.getScheduledForInstant(o, zoneId);
                             if (scheduledFor != null && scheduledFor.isAfter(until)) {
-                                if ((!withStatesFilter || lookingForPending) && scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
+                                if ((!withStatesFilter || lookingForPending) && scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS
+                                        .longValue()) {
                                     return true;
                                 }
                                 return false;

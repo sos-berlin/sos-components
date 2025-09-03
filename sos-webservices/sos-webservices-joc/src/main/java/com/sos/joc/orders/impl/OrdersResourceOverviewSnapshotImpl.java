@@ -198,7 +198,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
                 numOfPendingOrders = freshOrderSet.stream().filter(o -> {
                     Optional<Instant> scheduledFor = o.scheduledFor();
-                    return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                    return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue();
                 }).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(item -> 1).sum();
 
                 if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {

@@ -172,7 +172,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("orderlog event received with historyId '" + evt.getHistoryOrderId() + "', expected historyId '" + historyId + "'");
         }
-        if (historyId != null && historyId.longValue() == evt.getHistoryOrderId()) {
+        if (historyId != null && historyId.equals(evt.getHistoryOrderId())) {
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();

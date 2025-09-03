@@ -1062,19 +1062,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
             if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
                 freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis && o.scheduledFor().get()
-                        .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+                        .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS.longValue();
             } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
                 freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
-                        .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
+                        .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS.longValue());
             } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
                 freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) >= surveyDateMillis;
             } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
                 freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis;
             } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
-                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS
+                        .longValue();
             } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
                 freshOrderFilter = o -> OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis || o.scheduledFor().get()
-                        .toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                        .toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue();
             }
 
             if (freshOrderFilter != null) {

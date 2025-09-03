@@ -446,7 +446,7 @@ public class InventorySubagentClustersDBLayer extends DBLayer {
         if (force) {
             int position = 0;
             for (DBItemInventorySubAgentCluster dbSubagentCluster : dbSubagentClusters) {
-                if (dbSubagentCluster.getOrdering() != position) {
+                if (dbSubagentCluster.getOrdering().intValue() != position) {
                     dbSubagentCluster.setOrdering(position);
                     getSession().update(dbSubagentCluster);
                 }
