@@ -91,7 +91,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            Map<String, Map<String, Map<String, Date>>> inventoryAgents = dbLayer.getActiveInventoryAgents();
+            Map<String, Map<String, Map<String, Date>>> inventoryAgents = dbLayer.getActiveInventoryAgents(allowedControllers);
             Map<String, Set<String>> historyTimeZones = new HashMap<>();
             Map<String, Map<String, List<DBItemHistoryAgent>>> historyAgents = getHistoryAgents(dbLayer, historyTimeZones, allowedControllers,
                     dateFrom, dateTo);

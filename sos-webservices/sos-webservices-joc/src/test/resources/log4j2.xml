@@ -8,9 +8,10 @@
 
 	</Appenders>
 	<Loggers>
-		<Root level="info">
+		<Root level="debug">
 			<AppenderRef ref="console" />
 		</Root>
+		<Logger name="org.hibernate" level="OFF" />
 		<Logger name="com.sos" level="debug" />
 		<Logger name="com.sos.joc.publish" level="info" />
 	</Loggers>
