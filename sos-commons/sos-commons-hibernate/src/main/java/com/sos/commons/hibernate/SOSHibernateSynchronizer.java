@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
 
+/** TODO: This class is incomplete and should not be used yet. <br/>
+ * It is under development and its API may change at any time. */
 public class SOSHibernateSynchronizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSynchronizer.class);
@@ -223,6 +225,7 @@ public class SOSHibernateSynchronizer {
         }
     }
 
+    @SuppressWarnings("unused")
     private Number getMaxId(Connection connection, String table, String primaryKeyColumn) throws SQLException {
         Number id = null;
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery("SELECT MAX(" + primaryKeyColumn + ") AS max_id FROM "
@@ -297,6 +300,7 @@ public class SOSHibernateSynchronizer {
             return sql.toString();
         }
 
+        @SuppressWarnings("unused")
         private String createInsertIgnoreDuplicateQuery(String tableName) {
             String prefix = "";
             String suffix = "";
