@@ -15,7 +15,7 @@ public class YADECLIArgumentsLoader extends AYADEArgumentsLoader {
             throw new YADEEngineSettingsLoadException("missing cliArgs");
         }
 
-        String[] cliArgs = (String[]) params[0];
+        // String[] cliArgs = (String[]) params[0];
 
         return this;
     }

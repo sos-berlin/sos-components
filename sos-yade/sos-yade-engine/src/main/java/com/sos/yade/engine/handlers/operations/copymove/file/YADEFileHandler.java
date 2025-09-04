@@ -52,6 +52,7 @@ public class YADEFileHandler {
     private final YADESourceProviderDelegator sourceDelegator;
     private final YADETargetProviderDelegator targetDelegator;
     private final YADEProviderFile sourceFile;
+    @SuppressWarnings("unused")
     private final AtomicBoolean cancel;
 
     public YADEFileHandler(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
