@@ -125,14 +125,16 @@ public class StoreDeployments {
                         deployedObjects.add(item);
                         DBItemInventoryConfiguration toUpdate = dbLayer.getSession().get(DBItemInventoryConfiguration.class, item
                                 .getInventoryConfigurationId());
-                        if (JocInventory.isWorkflow(toUpdate.getType())) {
-                            workflowInvIds.add(toUpdate.getId());
+                        if (toUpdate != null) {
+                            if (JocInventory.isWorkflow(toUpdate.getType())) {
+                                workflowInvIds.add(toUpdate.getId());
+                            }
+                            if(!redeploy) {
+                                toUpdate.setDeployed(true);
+                            }
+                            toUpdate.setModified(Date.from(Instant.now()));
+                            dbLayer.getSession().update(toUpdate);
                         }
-                        if(!redeploy) {
-                            toUpdate.setDeployed(true);
-                        }
-                        toUpdate.setModified(Date.from(Instant.now()));
-                        dbLayer.getSession().update(toUpdate);
                     } else {
                         // second id != null
                         DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
