@@ -213,6 +213,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         }
     }
 
+    @Override
     public void close() {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(SOSHibernate.getMethodName(logIdentifier, "close"));
@@ -1168,13 +1169,31 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         }
     }
 
+    /** TODO: Setting autoCommit on the Connection seems unnecessary and can be risky.<br/>
+     * Manual changes must therefore be carefully managed, e.g.:<br/>
+     * 
+     * <pre>{@code
+     * boolean autoCommit = session.isAutoCommit();
+     * session.setAutoCommit(true | false);
+     * try {
+     *     // do work
+     * } finally {
+     *     session.setAutoCommit(autoCommit);
+     * }
+     * }</pre>
+     * 
+     * Note: HikariCP manages connection state internally.<br/>
+     * - When a connection is returned to the pool, Hikari resets certain attributes (like autoCommit, readOnly flag, isolation level) to their default values
+     * as configured.<br/>
+     * - Therefore, any manual changes to autoCommit or other settings only affect the connection while it is checked out and must be restored manually before
+     * returning if needed for consistent behavior. */
     public void setAutoCommit(boolean val) throws SOSHibernateException {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "setAutoCommit"), val));
         }
         autoCommit = val;
         try {
-            getConnection().setAutoCommit(autoCommit);
+            getConnection().setAutoCommit(autoCommit); // affects the underlying Connection
         } catch (SQLException e) {
             throw new SOSHibernateTransactionException(e);
         }

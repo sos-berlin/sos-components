@@ -5,103 +5,24 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCollection;
-import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanProjection;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.dailyplan.DailyPlanProjectionEvent;
-import com.sos.joc.model.dailyplan.projections.items.meta.MetaItem;
-import com.sos.joc.model.dailyplan.projections.items.year.MonthItem;
-import com.sos.joc.model.dailyplan.projections.items.year.MonthsItem;
-import com.sos.joc.model.dailyplan.projections.items.year.YearsItem;
 
 public class DBLayerDailyPlanProjections extends DBLayer {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanProjections.class);
 
     private static final long serialVersionUID = 1L;
 
     public DBLayerDailyPlanProjections(SOSHibernateSession session) {
         super(session);
-    }
-
-    public int cleanup() throws SOSHibernateException {
-        return getSession().executeUpdate("delete from " + DBITEM_DPL_PROJECTIONS);
-    }
-
-    /** store monthly not yearly */
-    public void insert(YearsItem yearsItem) throws Exception {
-        if (yearsItem == null) {
-            return;
-        }
-
-        Date created = new Date();
-        for (Map.Entry<String, MonthsItem> yearEntry : yearsItem.getAdditionalProperties().entrySet()) {
-            // String year = yearEntry.getKey();
-            for (Map.Entry<String, MonthItem> monthEntry : yearEntry.getValue().getAdditionalProperties().entrySet()) {
-                String yearMonth = monthEntry.getKey().replace("-", "");
-                insert(Long.valueOf(yearMonth), monthEntry.getValue(), created);
-            }
-        }
-    }
-
-    private void insert(long yearMonth, MonthItem o, Date created) throws Exception {
-        if (o == null) {
-            return;
-        }
-
-        if (SOSCollection.isEmpty(o.getAdditionalProperties())) {
-            return;
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            try {
-                LOGGER.debug(String.format("[insert][%s]%s", yearMonth, Globals.objectMapper.writeValueAsString(o)));
-            } catch (Throwable e) {
-            }
-        }
-
-        DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
-        item.setId(yearMonth);
-        item.setContent(Globals.objectMapper.writeValueAsBytes(o));
-        item.setCreated(created);
-
-        getSession().save(item);
-    }
-
-    public void insertMeta(MetaItem o) throws Exception {
-        if (o == null) {
-            return;
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            try {
-                LOGGER.debug(String.format("[insertMeta]%s", Globals.objectMapper.writeValueAsString(o)));
-            } catch (Throwable e) {
-            }
-        }
-
-        DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
-        item.setId(DBItemDailyPlanProjection.METADATEN_ID);
-        item.setContent(Globals.objectMapper.writeValueAsBytes(o));
-        item.setCreated(new Date());
-
-        getSession().save(item);
-
-        EventBus.getInstance().post(new DailyPlanProjectionEvent());
     }
 
     public List<DBItemDailyPlanProjection> getProjections(List<Long> yearMonths) throws Exception {
