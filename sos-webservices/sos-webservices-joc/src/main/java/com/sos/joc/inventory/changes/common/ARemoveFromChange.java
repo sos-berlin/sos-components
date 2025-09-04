@@ -16,7 +16,6 @@ import com.sos.joc.db.inventory.DBItemInventoryChangesMapping;
 import com.sos.joc.db.inventory.changes.DBLayerChanges;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.changes.RemoveFromChangeRequest;
-import com.sos.joc.model.inventory.changes.common.ChangeItem;
 
 public abstract class ARemoveFromChange extends JOCResourceImpl {
 

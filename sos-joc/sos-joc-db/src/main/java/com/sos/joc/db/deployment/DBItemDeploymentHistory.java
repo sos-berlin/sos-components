@@ -1,21 +1,17 @@
 package com.sos.joc.db.deployment;
 
-import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Proxy;
 
-import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.common.IDeployObject;
-import com.sos.joc.model.publish.ExportFile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

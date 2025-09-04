@@ -11,7 +11,6 @@ import com.sos.commons.exception.SOSException;
 import com.sos.reports.classes.CSVFileReader;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
-import com.sos.reports.classes.ReportHelper;
 import com.sos.reports.reports.ReportFailedJobs;
 import com.sos.reports.reports.ReportFailedWorkflows;
 import com.sos.reports.reports.ReportFailedWorkflowsWithCancelledOrders;

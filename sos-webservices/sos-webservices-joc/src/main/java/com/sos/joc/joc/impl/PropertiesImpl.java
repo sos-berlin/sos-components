@@ -3,8 +3,6 @@ package com.sos.joc.joc.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -14,11 +12,12 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsKiosk;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.LicenseType;
+
+import jakarta.ws.rs.Path;
 
 @Path("joc")
 public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResource {

@@ -27,7 +27,6 @@ import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;

@@ -184,6 +184,7 @@ public class ExecuteRollOutTest {
                 "--ca-alias=" + truststoreAlias };
     }
 
+    @SuppressWarnings("unused")
     private String[] createAgentArgs() {
         String dn = "CN=agent, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "https://joc-2-0-secondary:4443";
@@ -262,6 +263,7 @@ public class ExecuteRollOutTest {
                 "--ca-alias=" + truststoreAlias };
     }
 
+    @SuppressWarnings("unused")
     private String[] createControllerArgsConfigTest() {
         String dn = "CN=sp, OU=development, O=SOS, C=DE, L=Berlin, ST=Berlin";
         String jocUri = "http://sp.sos:4444";

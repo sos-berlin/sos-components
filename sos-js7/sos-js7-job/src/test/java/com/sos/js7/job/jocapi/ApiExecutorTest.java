@@ -126,6 +126,7 @@ public class ApiExecutorTest {
         LOGGER.info(String.format("[RESULT]%s", result));
     }
 
+    @SuppressWarnings("unused")
     private HttpClientAuthConfig getAuthConfig(String user, String password) {
         if (SOSString.isEmpty(user)) {
             return null;

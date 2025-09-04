@@ -14,7 +14,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.authentication.DBItemIamHistory;
 import com.sos.joc.db.authentication.DBItemIamHistoryDetails;
-import com.sos.joc.db.authentication.DBItemIamIdentityService;
 
 public class IamHistoryDbLayer {
 

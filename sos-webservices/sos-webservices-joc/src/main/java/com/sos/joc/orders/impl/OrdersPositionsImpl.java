@@ -9,7 +9,6 @@ import com.sos.joc.classes.order.CheckedAddOrdersPositions;
 import com.sos.joc.classes.order.CheckedResumeOrdersPositions;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderIdsFilter;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.orders.resource.IOrdersPositions;

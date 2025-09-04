@@ -80,7 +80,6 @@ import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.GenerateCaFilter;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.RedeploySyncFilter;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetRootCaFilter;
