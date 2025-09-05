@@ -443,7 +443,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         }
     }
     
-    private static DBItemDeploymentHistory cloneToNew(DBItemDeploymentHistory oldItem) {
+    public static DBItemDeploymentHistory cloneToNew(DBItemDeploymentHistory oldItem) {
         DBItemDeploymentHistory newItem = new DBItemDeploymentHistory();
         newItem.setAccount(oldItem.getAccount());
         newItem.setAuditlogId(oldItem.getAuditlogId());

@@ -136,9 +136,9 @@ public class StoreDeployments {
                         }
                     } else {
                         // second id != null
-                        item = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
+                        DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
                                 commitId, controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
-                        deployedObjects.add(item);
+                        deployedObjects.add(cloned);
                     }
                 }
                 folders.forEach(folder -> JocInventory.postEvent(folder));

@@ -864,52 +864,38 @@ public abstract class PublishUtils {
     
     protected static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
             String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+        DBItemDeploymentHistory clone = new DBItemDeploymentHistory();
         try {
-            if (depHistoryItem.getId() != null) {
-                if (depSignatureItem != null) {
-                    // signed item
-                    depHistoryItem.setSignedContent(depSignatureItem.getSignature());
-                }
-
-                // Methode tries to change commitId and ControllerId but it can face Constraint Violation
-                boolean constraintViolation = new EqualsBuilder().append(commitId, depHistoryItem.getCommitId()).append(controllerId, depHistoryItem
-                        .getControllerId()).isEquals();
-
-                if (!constraintViolation) {
-                    depHistoryItem.setId(null);
-                }
-                depHistoryItem.setAccount(account);
-                // TODO: get Version to set here
-                depHistoryItem.setVersion(null);
-                depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
-                depHistoryItem.setCommitId(commitId);
-                depHistoryItem.setControllerId(controllerId);
-                DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
-                depHistoryItem.setControllerInstanceId(controllerInstance.getId());
-                depHistoryItem.setDeploymentDate(deploymentDate);
-                depHistoryItem.setOperation(OperationType.UPDATE.value());
-                depHistoryItem.setState(DeploymentState.DEPLOYED.value());
-                depHistoryItem.setAuditlogId(auditlogId);
-                if(depHistoryItem.getSignedContent() == null || depHistoryItem.getSignedContent().isEmpty()) {
-                    depHistoryItem.setSignedContent(".");
-                }
-                if (!constraintViolation) {
-                    dbLayerDeploy.getSession().save(depHistoryItem);
-                } else {
-                    dbLayerDeploy.getSession().update(depHistoryItem);
-                }
-                if (depSignatureItem != null) {
-                    depSignatureItem.setDepHistoryId(depHistoryItem.getId());
-                    dbLayerDeploy.getSession().save(depSignatureItem);
-                }
-                
+            if (depSignatureItem != null) {
+                // signed item
+                clone.setSignedContent(depSignatureItem.getSignature());
+            }
+            clone.setAccount(account);
+            // TODO: get Version to set here
+            clone.setVersion(null);
+            clone.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
+            clone.setCommitId(commitId);
+            clone.setControllerId(controllerId);
+            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
+            clone.setControllerInstanceId(controllerInstance.getId());
+            clone.setDeploymentDate(deploymentDate);
+            clone.setOperation(OperationType.UPDATE.value());
+            clone.setState(DeploymentState.DEPLOYED.value());
+            clone.setAuditlogId(auditlogId);
+            if(clone.getSignedContent() == null || clone.getSignedContent().isEmpty()) {
+                clone.setSignedContent(".");
+            }
+            dbLayerDeploy.getSession().save(clone);
+            if (depSignatureItem != null) {
+                depSignatureItem.setDepHistoryId(clone.getId());
+                dbLayerDeploy.getSession().save(depSignatureItem);
             }
         } catch (IOException e) {
             throw new JocException(e);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
-        return depHistoryItem;
+        return clone;
     }
 
 //    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(

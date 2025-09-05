@@ -191,6 +191,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                             } catch (Exception e) {
                             }
                         });
+                unsignedRedeployables = unsignedRedeployables.stream().map(item -> ADeploy.cloneToNew(item)).collect(Collectors.toList());
                 verifiedRedeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, unsignedRedeployables, updateableAgentNames,
                         keyPair, controllerId, hibernateSession));
             }
