@@ -74,19 +74,57 @@ public class ThreadHelper {
     }
 
     public static void tryStop(final StartupMode mode, final ThreadGroup group) {
+        if (group == null) {
+            return;
+        }
+
         try {
-            if (group != null && group.activeCount() > 0) {
-                group.interrupt();
-                Thread.sleep(500);
-                if (group.activeCount() > 0) {
-                    LOGGER.info(String.format("[%s][stop][group=%s]activeCount=%s", mode, group.getName(), group.activeCount()));
-                    group.stop();
-                    Thread.sleep(500);
+            final int maxAttempts = 5;
+            int count = 0;
+
+            Thread[] threads = null;
+            for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                // reserve - activeCount is only an estimate - 2x to handle newly started threads...
+                int estimated = group.activeCount() * 2;
+                threads = new Thread[estimated];
+                count = group.enumerate(threads, false);
+                // break if array is large enough to hold all threads
+                if (count < threads.length) {
+                    break;
                 }
-                LOGGER.info(String.format("[%s][stopped][group=%s]activeCount=%s", mode, group.getName(), group.activeCount()));
             }
-        } catch (Throwable e) {
-            LOGGER.warn(String.format("[%s][stop][group=%s]%s", mode, group.getName(), e.toString()), e);
+
+            List<Thread> activeThreads = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                Thread t = threads[i];
+                if (t != null && t.isAlive()) {
+                    activeThreads.add(t);
+                }
+            }
+
+            int activeCount = activeThreads.size();
+            LOGGER.info(String.format("[%s][tryStop][group=%s]activeCount=%s", mode, group.getName(), activeCount));
+            if (activeCount == 0) {
+                return;
+            }
+
+            for (Thread t : activeThreads) {
+                if (t != null && t.isAlive()) {// double check
+                    t.interrupt();
+                    LOGGER.info(String.format("[%s][tryStop][group=%s][interrupt]%s", mode, group.getName(), t.getName()));
+                }
+            }
+            Thread.sleep(500);
+
+            for (Thread t : activeThreads) {
+                if (t != null && t.isAlive()) {// double check
+                    t.interrupt();
+                    LOGGER.info(String.format("[%s][tryStop][group=%s][still alive]%s", mode, group.getName(), t.getName()));
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.warn(String.format("[%s][tryStop][group=%s]%s", mode, group.getName(), e.toString()), e);
         }
     }
 
