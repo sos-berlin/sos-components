@@ -551,6 +551,10 @@ public class RESTClientJob extends Job<RestJobArguments> {
 
                 } catch (IOException e) {
                     throw new JobException("REST call failed due to I/O error: " + e.getMessage(), e);
+                } finally {
+                    if(formData != null) {
+                        formData.close();
+                    }
                 }
             }
         } else {

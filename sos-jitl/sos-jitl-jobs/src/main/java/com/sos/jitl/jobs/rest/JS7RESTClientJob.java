@@ -544,6 +544,10 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                 throw e;
             } catch (IOException e) {
                 throw new JobException("I/O Exception occurred: " + e);
+            } finally {
+                if(formData != null) {
+                    formData.close();
+                }
             }
         } else {
             throw new JobRequiredArgumentMissingException("Missing request JSON in job arguments.");
