@@ -463,6 +463,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         newItem.setTitle(oldItem.getTitle());
         newItem.setType(oldItem.getType());
         newItem.setVersion(oldItem.getVersion());
+        newItem.writeUpdateableContent(oldItem.readUpdateableContent());
         return newItem;
     }
 }
