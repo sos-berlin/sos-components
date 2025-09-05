@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -37,6 +38,7 @@ import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
@@ -1361,12 +1363,27 @@ public class JocInventory {
         case NONWORKINGDAYSCALENDAR:
             List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
             if (schedules1 != null && !schedules1.isEmpty()) {
-                Predicate<String> calendarNamePredicate = Pattern.compile("\"calendarName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
+//                Predicate<String> calendarNamePredicate = Pattern.compile("\"calendarName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration schedule : schedules1) {
-                    boolean changed = calendarNamePredicate.test(schedule.getContent());
-                    if (changed) {
-                        schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-                                + "\""));
+                    Schedule s = convertSchedule(schedule.getContent(), Schedule.class);
+                    Optional.ofNullable(s.getCalendars()).ifPresent(cs -> cs.forEach(ac -> {
+                        if (ac.getCalendarName().equals(config.getName())) {
+                            ac.setCalendarName(newName);
+                        }
+                        Optional.ofNullable(ac.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config
+                                .getName())).ifPresent(nwcs -> nwcs.add(newName));
+                    }));
+                    Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cs -> cs.forEach(ac -> {
+                        if (!ac.getCalendarName().equals(config.getName())) {
+                            ac.setCalendarName(newName);
+                        }
+                    }));
+                    
+//                    boolean changed = calendarNamePredicate.test(schedule.getContent());
+//                    if (changed) {
+//                        schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+//                                + "\""));
+                    schedule.setContent(Globals.objectMapper.writeValueAsString(s));
                         schedule.setReleased(false);
                         int i = items.indexOf(schedule);
                         if (i != -1) {
@@ -1376,7 +1393,7 @@ public class JocInventory {
                             JocInventory.updateConfiguration(dbLayer, schedule);
                             events.add(schedule.getFolder());
                         }
-                    }
+//                    }
                 }
             }
             break;

@@ -24,6 +24,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
@@ -284,7 +285,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             Map<String, String> oldNewJobTemplateNames = oldToNewName.getOrDefault(ConfigurationType.JOBTEMPLATE, Collections.emptyMap());
                             if (oldNewBoardNames.size() > 0 || oldNewJobResourceNames.size() > 0 || oldNewJobTemplateNames.size() > 0) {
-                                Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                                Workflow w = WorkflowConverter.convertInventoryWorkflow(json);
 
                                 if (oldNewBoardNames.size() > 0) {
                                     WorkflowsHelper.updateWorkflowBoardname(oldNewBoardNames, w.getInstructions());
@@ -324,28 +325,54 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             break;
                         case SCHEDULE:
                             Map<String, String> oldNewWorkflowNames = oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap());
-                            if (oldNewWorkflowNames.size() > 0) {
-                                Schedule sc = Globals.objectMapper.readValue(json, Schedule.class);
-                                for (Map.Entry<String, String> oldNewName : oldNewWorkflowNames.entrySet()) {
-                                    json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
-                                            + "\"");
+                            Map<String, String> oldNewNonWorkingDaysCalendarNames = oldToNewName.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR,
+                                    Collections.emptyMap());
+                            if (!oldNewWorkflowNames.isEmpty() || !oldNewNonWorkingDaysCalendarNames.isEmpty()) {
+                                Schedule sc = JocInventory.convertSchedule(json, Schedule.class);
+                                if (!oldNewWorkflowNames.isEmpty()) {
+                                    if (sc.getWorkflowName() != null) {
+                                        sc.setWorkflowName(oldNewWorkflowNames.getOrDefault(sc.getWorkflowName(), sc.getWorkflowName())); 
+                                    }
+                                    if (sc.getWorkflowNames() != null) {
+                                        sc.setWorkflowNames(sc.getWorkflowNames().stream().map(s -> oldNewWorkflowNames.getOrDefault(s, s))
+                                                .collect(Collectors.toList()));
+                                    } 
                                 }
-                                if (sc.getWorkflowNames() != null) {
-                                    sc.setWorkflowNames(sc.getWorkflowNames().stream().map(s -> oldNewWorkflowNames.getOrDefault(s, s))
-                                            .collect(Collectors.toList()));
-                                    json = Globals.objectMapper.writeValueAsString(sc);
+                                if (!oldNewNonWorkingDaysCalendarNames.isEmpty()) {
+                                    if (sc.getCalendars() != null) {
+                                        sc.getCalendars().forEach(ac -> {
+                                            if (ac.getCalendarName() != null) {
+                                                ac.setCalendarName(oldNewNonWorkingDaysCalendarNames.getOrDefault(ac.getCalendarName(), ac
+                                                        .getCalendarName()));
+                                            }
+                                            if (ac.getExcludes() != null && ac.getExcludes().getNonWorkingDayCalendars() != null) {
+                                                ac.getExcludes().setNonWorkingDayCalendars(ac.getExcludes().getNonWorkingDayCalendars().stream().map(
+                                                        s -> oldNewNonWorkingDaysCalendarNames.getOrDefault(s, s)).collect(Collectors.toSet()));
+                                            }
+                                        });
+                                    }
                                 }
+                                json = Globals.objectMapper.writeValueAsString(sc);
+//                                for (Map.Entry<String, String> oldNewName : oldNewWorkflowNames.entrySet()) {
+//                                    json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
+//                                            + "\"");
+//                                }
+//                                if (sc.getWorkflowNames() != null) {
+//                                    sc.setWorkflowNames(sc.getWorkflowNames().stream().map(s -> oldNewWorkflowNames.getOrDefault(s, s))
+//                                            .collect(Collectors.toList()));
+//                                    json = Globals.objectMapper.writeValueAsString(sc);
+//                                }
                             }
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections
                                     .emptyMap()).entrySet()) {
                                 json = json.replaceAll("(\"calendarName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
                                         + "\"");
                             }
-                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR,
-                                    Collections.emptyMap()).entrySet()) {
-                                json = json.replaceAll("(\"calendarName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
-                                        + "\"");
-                            }
+//                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR,
+//                                    Collections.emptyMap()).entrySet()) {
+//                                json = json.replaceAll("(\"calendarName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
+//                                        + "\"");
+//                            }
                             break;
                         case JOBTEMPLATE:
                             // include scripts
@@ -357,7 +384,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             // JobResources
                             Map<String, String> oldNewJobResourceNames2 = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames2.size() > 0) {
-                                JobTemplate jt = Globals.objectMapper.readValue(json, JobTemplate.class);
+                                JobTemplate jt = JocInventory.convertJobTemplate(json, JobTemplate.class);
                                 if (jt.getJobResourceNames() != null) {
                                     jt.setJobResourceNames(jt.getJobResourceNames().stream().map(s -> oldNewJobResourceNames2.getOrDefault(s, s))
                                             .collect(Collectors.toList()));

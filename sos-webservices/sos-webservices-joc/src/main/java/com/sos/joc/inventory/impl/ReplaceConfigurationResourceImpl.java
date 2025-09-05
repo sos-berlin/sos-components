@@ -58,7 +58,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     @Override
     public JOCDefaultResponse replaceFolder(final String accessToken,  byte[] inBytes) {
         try {
-            inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
+            inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
@@ -75,7 +75,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replaceFolder(RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_FOLDER);
             session.setAutoCommit(false);
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();

@@ -32,6 +32,7 @@ import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
+import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
@@ -429,11 +430,8 @@ public class Validator {
     }
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        List<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList());
-        if (schedule.getNonWorkingDayCalendars() != null && !schedule.getNonWorkingDayCalendars().isEmpty()) {
-            calendarNames.addAll(schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName).collect(Collectors
-                    .toSet()));
-        }
+        List<String> calendarNames = getCalendarRefsInSchedule(schedule).distinct().collect(Collectors.toList());
+
         List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames);
         if (dbCalendars == null || dbCalendars.isEmpty()) {
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
@@ -442,18 +440,25 @@ public class Validator {
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         }
     }
-    
-    private static void validateCalendarRefs(Schedule schedule, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames) throws JocConfigurationException {
-        List<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList());
-        if (schedule.getNonWorkingDayCalendars() != null && !schedule.getNonWorkingDayCalendars().isEmpty()) {
-            calendarNames.addAll(schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName).collect(Collectors
-                    .toSet()));
-        }
+
+    private static void validateCalendarRefs(Schedule schedule, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames)
+            throws JocConfigurationException {
+        Set<String> calendarNames = getCalendarRefsInSchedule(schedule).collect(Collectors.toSet());
+
         calendarNames.removeAll(allWorkingDaysCalendarNames);
         calendarNames.removeAll(allNonWorkingDaysCalendarNames);
         if (!calendarNames.isEmpty()) {
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         }
+    }
+    
+    private static Stream<String> getCalendarRefsInSchedule(Schedule schedule) {
+        Stream<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName);
+        calendarNames = Stream.concat(calendarNames, Optional.ofNullable(schedule.getNonWorkingDayCalendars()).map(s -> s.stream().map(
+                AssignedNonWorkingDayCalendars::getCalendarName)).orElse(Stream.empty()));
+        calendarNames = Stream.concat(calendarNames, schedule.getCalendars().stream().map(AssignedCalendars::getExcludes).filter(Objects::nonNull)
+                .map(Frequencies::getNonWorkingDayCalendars).filter(Objects::nonNull).flatMap(Set::stream));
+        return calendarNames;
     }
 
 //    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> visibleAgentNames)
