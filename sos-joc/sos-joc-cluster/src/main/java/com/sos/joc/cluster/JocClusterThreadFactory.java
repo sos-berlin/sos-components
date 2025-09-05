@@ -15,8 +15,16 @@ public class JocClusterThreadFactory implements ThreadFactory {
         this.namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-";
     }
 
-    /** Ensures the created thread is non-daemon, so it prevents the JVM from exiting<br/>
-     * before the thread completes, matching Executors.defaultThreadFactory() behavior. */
+    /** Creates a new worker thread in this factory.
+     * <ul>
+     * <li>Ensures the thread is non-daemon by default, so it prevents the JVM from exiting<br />
+     * before the thread completes. This matches the behavior of Executors.defaultThreadFactory().<br />
+     * (Daemon mode can still be set manually by the caller if desired.)</li>
+     * <li>Ensures the thread has normal priority.<br />
+     * </li>
+     * <li>Uses stackSize = 0, meaning the JVM's default thread stack size is applied.</li>
+     * </ul>
+     */
     public Thread newThread(Runnable r) {
         Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
         if (t.isDaemon()) {
