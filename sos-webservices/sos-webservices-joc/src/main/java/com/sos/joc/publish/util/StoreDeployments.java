@@ -5,7 +5,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -137,9 +136,9 @@ public class StoreDeployments {
                         }
                     } else {
                         // second id != null
-                        DBItemDeploymentHistory cloned = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
+                        item = PublishUtils.cloneDepHistoryItemsToNewEntry(item, entry.getValue(), account, dbLayer,
                                 commitId, controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
-                        deployedObjects.add(cloned);
+                        deployedObjects.add(item);
                     }
                 }
                 folders.forEach(folder -> JocInventory.postEvent(folder));
@@ -226,13 +225,8 @@ public class StoreDeployments {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
-                LOGGER.trace("JSON(s) rejected from controller: ");
-
-                optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item
-                        .getContent()));
-                updateOptimisticEntriesIfFailed(optimisticEntries, either.getLeft().message(), dbLayer);
+                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer);
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
@@ -251,8 +245,12 @@ public class StoreDeployments {
         }
     }
 
-    public static void updateOptimisticEntriesIfFailed(Collection<DBItemDeploymentHistory> optimisticEntries, String message, DBLayerDeploy dbLayer)
+    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer)
             throws SOSHibernateException {
+        List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+        LOGGER.trace("JSON(s) rejected from controller: ");
+        optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item
+                .getContent()));
         for (DBItemDeploymentHistory optimistic : optimisticEntries) {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -265,6 +263,7 @@ public class StoreDeployments {
             }
         }
         JocInventory.postDeployHistoryEventWhenDeleted(optimisticEntries);
+        return optimisticEntries;
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
@@ -345,7 +344,7 @@ public class StoreDeployments {
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(signedItemsSpec.getVerifiedDeployables().keySet(), message, dbLayer);
+                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer);
                     throw new JocDeployException(message);
                 }
                 break;
@@ -384,7 +383,7 @@ public class StoreDeployments {
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(signedItemsSpec.getVerifiedDeployables().keySet(), message, dbLayer);
+                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer);
                     throw new JocDeployException(message);
                 }
                 break;
