@@ -11,15 +11,12 @@ public class JocClusterThreadFactory implements ThreadFactory {
     private final String namePrefix;
 
     public JocClusterThreadFactory(ThreadGroup tg, String prefix) {
-        SecurityManager s = System.getSecurityManager();
-        if (tg == null) {
-            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-        } else {
-            group = tg;
-        }
-        namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-";
+        this.group = (tg != null) ? tg : Thread.currentThread().getThreadGroup();
+        this.namePrefix = prefix + "-" + poolNumber.getAndIncrement() + "-";
     }
 
+    /** Ensures the created thread is non-daemon, so it prevents the JVM from exiting<br/>
+     * before the thread completes, matching Executors.defaultThreadFactory() behavior. */
     public Thread newThread(Runnable r) {
         Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
         if (t.isDaemon()) {

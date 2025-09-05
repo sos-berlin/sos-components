@@ -49,8 +49,8 @@ public abstract class AJocActiveMemberService implements IJocActiveMemberService
     }
 
     @Override
-    public ThreadGroup getThreadGroup() {
-        if (threadGroup == null || threadGroup.isDestroyed()) {
+    public synchronized ThreadGroup getThreadGroup() {
+        if (threadGroup == null) {
             threadGroup = new ThreadGroup(parentThreadGroup, identifier);
         }
         return threadGroup;
