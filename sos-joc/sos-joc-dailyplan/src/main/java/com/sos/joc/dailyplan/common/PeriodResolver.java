@@ -170,8 +170,10 @@ public class PeriodResolver {
         if (p == null) {
             periods.put(start, period);
         } else {
-            LOGGER.info(String.format("[add][overlapping period for start][start=%s][added=%s]current=%s", start, SOSString.toString(p), SOSString
-                    .toString(period)));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[add][overlapping period for start][start=%s][added=%s]current=%s", start, SOSString.toString(p),
+                        SOSString.toString(period)));
+            }
         }
     }
 
