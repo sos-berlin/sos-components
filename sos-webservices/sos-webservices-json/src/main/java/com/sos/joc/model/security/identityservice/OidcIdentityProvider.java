@@ -28,6 +28,7 @@ import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
     "iamOidcAuthenticationUrl",
     "iamOidcFlowType",
     "iamOidcGroupClaims",
+    "iamOidcGroupScopes",
     "iamIconUrl"
 })
 public class OidcIdentityProvider {
@@ -82,6 +83,8 @@ public class OidcIdentityProvider {
     private OidcFlowTypes iamOidcFlowType;
     @JsonProperty("iamOidcGroupClaims")
     private List<String> iamOidcGroupClaims;
+    @JsonProperty("iamOidcGroupScopes")
+    private List<String> iamOidcGroupScopes;
     /**
      * string without < and >
      * <p>
@@ -106,10 +109,11 @@ public class OidcIdentityProvider {
      * @param iamOidcClientId
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
+     * @param iamOidcGroupScopes
      * @param iamOidcGroupClaims
      * @param iamOidcFlowType
      */
-    public OidcIdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, OidcFlowTypes iamOidcFlowType, List<String> iamOidcGroupClaims, String iamIconUrl) {
+    public OidcIdentityProvider(String identityServiceName, String iamOidcClientId, String iamOidcClientSecret, String iamOidcName, String iamOidcAuthenticationUrl, OidcFlowTypes iamOidcFlowType, List<String> iamOidcGroupClaims, List<String> iamOidcGroupScopes, String iamIconUrl) {
         super();
         this.identityServiceName = identityServiceName;
         this.iamOidcClientId = iamOidcClientId;
@@ -118,6 +122,7 @@ public class OidcIdentityProvider {
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcFlowType = iamOidcFlowType;
         this.iamOidcGroupClaims = iamOidcGroupClaims;
+        this.iamOidcGroupScopes = iamOidcGroupScopes;
         this.iamIconUrl = iamIconUrl;
     }
 
@@ -263,6 +268,16 @@ public class OidcIdentityProvider {
         this.iamOidcGroupClaims = iamOidcGroupClaims;
     }
 
+    @JsonProperty("iamOidcGroupScopes")
+    public List<String> getIamOidcGroupScopes() {
+        return iamOidcGroupScopes;
+    }
+
+    @JsonProperty("iamOidcGroupScopes")
+    public void setIamOidcGroupScopes(List<String> iamOidcGroupScopes) {
+        this.iamOidcGroupScopes = iamOidcGroupScopes;
+    }
+
     /**
      * string without < and >
      * <p>
@@ -287,12 +302,12 @@ public class OidcIdentityProvider {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcFlowType", iamOidcFlowType).append("iamOidcGroupClaims", iamOidcGroupClaims).append("iamIconUrl", iamIconUrl).toString();
+        return new ToStringBuilder(this).append("identityServiceName", identityServiceName).append("iamOidcClientId", iamOidcClientId).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcName", iamOidcName).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcFlowType", iamOidcFlowType).append("iamOidcGroupClaims", iamOidcGroupClaims).append("iamOidcGroupScopes", iamOidcGroupScopes).append("iamIconUrl", iamIconUrl).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamIconUrl).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcGroupClaims).append(iamOidcFlowType).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientSecret).append(identityServiceName).append(iamIconUrl).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcGroupScopes).append(iamOidcGroupClaims).append(iamOidcFlowType).toHashCode();
     }
 
     @Override
@@ -304,7 +319,7 @@ public class OidcIdentityProvider {
             return false;
         }
         OidcIdentityProvider rhs = ((OidcIdentityProvider) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcGroupClaims, rhs.iamOidcGroupClaims).append(iamOidcFlowType, rhs.iamOidcFlowType).isEquals();
+        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(identityServiceName, rhs.identityServiceName).append(iamIconUrl, rhs.iamIconUrl).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcGroupScopes, rhs.iamOidcGroupScopes).append(iamOidcGroupClaims, rhs.iamOidcGroupClaims).append(iamOidcFlowType, rhs.iamOidcFlowType).isEquals();
     }
 
 }
