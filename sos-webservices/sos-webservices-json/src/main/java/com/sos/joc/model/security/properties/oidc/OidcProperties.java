@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "iamOidcClientId",
     "iamOidcName",
     "iamOidcGroupClaims",
+    "iamOidcGroupScopes",
     "iamOidcClientSecret",
     "iamOidcFlowType",
     "iamOidcUserAttribute",
@@ -59,6 +60,8 @@ public class OidcProperties {
     private String iamOidcName;
     @JsonProperty("iamOidcGroupClaims")
     private List<String> iamOidcGroupClaims = new ArrayList<String>();
+    @JsonProperty("iamOidcGroupScopes")
+    private List<String> iamOidcGroupScopes = new ArrayList<String>();
     /**
      * string without < and >
      * <p>
@@ -130,6 +133,7 @@ public class OidcProperties {
      * @param iamOidcAuthenticationUrl
      * @param iamOidcName
      * @param iamOidcTruststorePath
+     * @param iamOidcGroupScopes
      * @param iamOidcGroupRolesMap
      * @param iamOidcTruststorePassword
      * @param iamOidcGroupClaims
@@ -137,12 +141,13 @@ public class OidcProperties {
      * @param iamOidcUserAttribute
      * @param iamOidcTruststoreType
      */
-    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, List<String> iamOidcGroupClaims, String iamOidcClientSecret, OidcFlowTypes iamOidcFlowType, String iamOidcUserAttribute, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType, OidcGroupRolesMapping iamOidcGroupRolesMap) {
+    public OidcProperties(String iamOidcAuthenticationUrl, String iamOidcClientId, String iamOidcName, List<String> iamOidcGroupClaims, List<String> iamOidcGroupScopes, String iamOidcClientSecret, OidcFlowTypes iamOidcFlowType, String iamOidcUserAttribute, String iamOidcTruststorePath, String iamOidcTruststorePassword, String iamOidcTruststoreType, OidcGroupRolesMapping iamOidcGroupRolesMap) {
         super();
         this.iamOidcAuthenticationUrl = iamOidcAuthenticationUrl;
         this.iamOidcClientId = iamOidcClientId;
         this.iamOidcName = iamOidcName;
         this.iamOidcGroupClaims = iamOidcGroupClaims;
+        this.iamOidcGroupScopes = iamOidcGroupScopes;
         this.iamOidcClientSecret = iamOidcClientSecret;
         this.iamOidcFlowType = iamOidcFlowType;
         this.iamOidcUserAttribute = iamOidcUserAttribute;
@@ -226,6 +231,16 @@ public class OidcProperties {
     @JsonProperty("iamOidcGroupClaims")
     public void setIamOidcGroupClaims(List<String> iamOidcGroupClaims) {
         this.iamOidcGroupClaims = iamOidcGroupClaims;
+    }
+
+    @JsonProperty("iamOidcGroupScopes")
+    public List<String> getIamOidcGroupScopes() {
+        return iamOidcGroupScopes;
+    }
+
+    @JsonProperty("iamOidcGroupScopes")
+    public void setIamOidcGroupScopes(List<String> iamOidcGroupScopes) {
+        this.iamOidcGroupScopes = iamOidcGroupScopes;
     }
 
     /**
@@ -384,12 +399,12 @@ public class OidcProperties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcGroupClaims", iamOidcGroupClaims).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcFlowType", iamOidcFlowType).append("iamOidcUserAttribute", iamOidcUserAttribute).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).append("iamOidcGroupRolesMap", iamOidcGroupRolesMap).toString();
+        return new ToStringBuilder(this).append("iamOidcAuthenticationUrl", iamOidcAuthenticationUrl).append("iamOidcClientId", iamOidcClientId).append("iamOidcName", iamOidcName).append("iamOidcGroupClaims", iamOidcGroupClaims).append("iamOidcGroupScopes", iamOidcGroupScopes).append("iamOidcClientSecret", iamOidcClientSecret).append("iamOidcFlowType", iamOidcFlowType).append("iamOidcUserAttribute", iamOidcUserAttribute).append("iamOidcTruststorePath", iamOidcTruststorePath).append("iamOidcTruststorePassword", iamOidcTruststorePassword).append("iamOidcTruststoreType", iamOidcTruststoreType).append("iamOidcGroupRolesMap", iamOidcGroupRolesMap).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(iamOidcClientSecret).append(iamOidcClientId).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcTruststorePath).append(iamOidcGroupRolesMap).append(iamOidcTruststorePassword).append(iamOidcGroupClaims).append(iamOidcFlowType).append(iamOidcUserAttribute).append(iamOidcTruststoreType).toHashCode();
+        return new HashCodeBuilder().append(iamOidcClientId).append(iamOidcGroupScopes).append(iamOidcTruststorePassword).append(iamOidcGroupClaims).append(iamOidcClientSecret).append(iamOidcAuthenticationUrl).append(iamOidcName).append(iamOidcTruststorePath).append(iamOidcGroupRolesMap).append(iamOidcFlowType).append(iamOidcUserAttribute).append(iamOidcTruststoreType).toHashCode();
     }
 
     @Override
@@ -401,7 +416,7 @@ public class OidcProperties {
             return false;
         }
         OidcProperties rhs = ((OidcProperties) other);
-        return new EqualsBuilder().append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcGroupRolesMap, rhs.iamOidcGroupRolesMap).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcGroupClaims, rhs.iamOidcGroupClaims).append(iamOidcFlowType, rhs.iamOidcFlowType).append(iamOidcUserAttribute, rhs.iamOidcUserAttribute).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).isEquals();
+        return new EqualsBuilder().append(iamOidcClientId, rhs.iamOidcClientId).append(iamOidcGroupScopes, rhs.iamOidcGroupScopes).append(iamOidcTruststorePassword, rhs.iamOidcTruststorePassword).append(iamOidcGroupClaims, rhs.iamOidcGroupClaims).append(iamOidcClientSecret, rhs.iamOidcClientSecret).append(iamOidcAuthenticationUrl, rhs.iamOidcAuthenticationUrl).append(iamOidcName, rhs.iamOidcName).append(iamOidcTruststorePath, rhs.iamOidcTruststorePath).append(iamOidcGroupRolesMap, rhs.iamOidcGroupRolesMap).append(iamOidcFlowType, rhs.iamOidcFlowType).append(iamOidcUserAttribute, rhs.iamOidcUserAttribute).append(iamOidcTruststoreType, rhs.iamOidcTruststoreType).isEquals();
     }
 
 }
