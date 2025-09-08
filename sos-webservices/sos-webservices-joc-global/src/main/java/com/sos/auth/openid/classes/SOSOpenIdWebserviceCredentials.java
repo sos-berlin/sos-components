@@ -2,10 +2,11 @@ package com.sos.auth.openid.classes;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,8 @@ public class SOSOpenIdWebserviceCredentials {
     private String truststorePassword = "";
     private KeystoreType truststoreType = null;
     private Map<String, List<String>> groupRolesMap;
-    private List<String> claims;
-    private List<String> scopes;
+    private Set<String> claims;
+    private Set<String> scopes;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -173,7 +174,7 @@ public class SOSOpenIdWebserviceCredentials {
         }
         if (claims == null) {
             if (properties.getOidc().getIamOidcGroupClaims() != null) {
-                claims = new ArrayList<String>();
+                claims = new HashSet<String>();
                 for (String claim : properties.getOidc().getIamOidcGroupClaims()) {
                     claims.add(claim);
                 }
@@ -181,7 +182,7 @@ public class SOSOpenIdWebserviceCredentials {
         }
         if (scopes == null) {
             if (properties.getOidc().getIamOidcGroupScopes() != null) {
-                scopes = new ArrayList<String>();
+                scopes = new HashSet<String>();
                 for (String claim : properties.getOidc().getIamOidcGroupScopes()) {
                     claims.add(claim);
                 }
@@ -236,11 +237,11 @@ public class SOSOpenIdWebserviceCredentials {
         this.openidConfiguration = openidConfiguration;
     }
 
-    public List<String> getClaims() {
+    public Set<String> getClaims() {
         return claims;
     }
     
-    public List<String> getScopes() {
+    public Set<String> getScopes() {
         return scopes;
     }
 }
