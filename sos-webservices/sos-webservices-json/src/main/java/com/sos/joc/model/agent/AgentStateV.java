@@ -3,9 +3,11 @@ package com.sos.joc.model.agent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.controller.ClusterState;
 import com.sos.joc.model.order.OrderV;
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "version",
     "processLimit",
     "state",
+    "connectionState",
     "healthState",
     "clusterState",
     "errorMessage",
@@ -99,6 +102,16 @@ public class AgentStateV {
     @JsonProperty("state")
     private AgentState state;
     /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonIgnore
+    private AgentConnectionState connectionState;
+    @JsonIgnore
+    private AgentStateTextFilter stateTextFilter;
+    /**
      * cluster agent state
      * <p>
      * 
@@ -115,11 +128,10 @@ public class AgentStateV {
     @JsonProperty("clusterState")
     private ClusterState clusterState;
     /**
-     * if state == couplngFailed or unknown
+     * deprecated: see connectionState
      * 
      */
     @JsonProperty("errorMessage")
-    @JsonPropertyDescription("if state == couplngFailed or unknown")
     private String errorMessage;
     @JsonProperty("orders")
     private List<OrderV> orders = new ArrayList<OrderV>();
@@ -232,9 +244,6 @@ public class AgentStateV {
      */
     @JsonProperty("url")
     public String getUrl() {
-        if (url != null && !"/".equals(url) && url.endsWith("/")) {
-            url = url.replaceFirst("/$", "");
-        }
         return url;
     }
 
@@ -301,6 +310,52 @@ public class AgentStateV {
     @JsonProperty("state")
     public void setState(AgentState state) {
         this.state = state;
+        if (!AgentStateTextFilter.COUPLINGFAILED.equals(this.stateTextFilter)) {
+            Optional.ofNullable(state).map(AgentState::get_text).map(AgentStateText::value).map(AgentStateTextFilter::fromValue).ifPresent(
+                    this::setStateTextFilter);
+        }
+    }
+
+    /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonIgnore
+    public AgentConnectionState getConnectionState() {
+        return connectionState;
+    }
+
+    /**
+     * agent connection state
+     * <p>
+     * 
+     * 
+     */
+    @JsonIgnore
+    public void setConnectionState(AgentConnectionState connectionState) {
+        this.connectionState = connectionState;
+        Optional.ofNullable(connectionState).map(AgentConnectionState::getErrorMessage).ifPresent(this::setErrorMessage); //obsolete
+        Optional.ofNullable(connectionState).map(AgentConnectionState::get_text).filter(s -> !AgentConnectionStateText.WITH_TEMPORARY_ERROR.equals(s))
+                .map(s -> AgentStateTextFilter.COUPLINGFAILED).ifPresent(this::setStateTextFilter);
+    }
+    
+    @JsonIgnore
+    public AgentStateTextFilter getStateTextFilter() {
+        return stateTextFilter;
+    }
+    
+//    @JsonIgnore
+//    public void setStateTextFilterIfNotCouplingFailed(AgentStateTextFilter stateTextFilter) {
+//        if (!AgentStateTextFilter.COUPLINGFAILED.equals(this.stateTextFilter)) {
+//            this.stateTextFilter = stateTextFilter;
+//        }
+//    }
+    
+    @JsonIgnore
+    public void setStateTextFilter(AgentStateTextFilter stateTextFilter) {
+        this.stateTextFilter = stateTextFilter;
     }
 
     /**
@@ -347,19 +402,11 @@ public class AgentStateV {
         this.clusterState = clusterState;
     }
 
-    /**
-     * if state == couplngFailed or unknown
-     * 
-     */
     @JsonProperty("errorMessage")
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    /**
-     * if state == couplngFailed or unknown
-     * 
-     */
     @JsonProperty("errorMessage")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
