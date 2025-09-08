@@ -43,6 +43,7 @@ public class SOSOpenIdWebserviceCredentials {
     private KeystoreType truststoreType = null;
     private Map<String, List<String>> groupRolesMap;
     private List<String> claims;
+    private List<String> scopes;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -178,6 +179,14 @@ public class SOSOpenIdWebserviceCredentials {
                 }
             }
         }
+        if (scopes == null) {
+            if (properties.getOidc().getIamOidcGroupScopes() != null) {
+                scopes = new ArrayList<String>();
+                for (String claim : properties.getOidc().getIamOidcGroupScopes()) {
+                    claims.add(claim);
+                }
+            }
+        }
 
         String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
         String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
@@ -229,5 +238,9 @@ public class SOSOpenIdWebserviceCredentials {
 
     public List<String> getClaims() {
         return claims;
+    }
+    
+    public List<String> getScopes() {
+        return scopes;
     }
 }
