@@ -226,7 +226,7 @@ public class StoreDeployments {
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
-                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer);
+                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer, wsIdentifier);
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
@@ -245,7 +245,7 @@ public class StoreDeployments {
         }
     }
 
-    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer)
+    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer, String wsIdentifier)
             throws SOSHibernateException {
         List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
         LOGGER.trace("JSON(s) rejected from controller: ");
@@ -256,10 +256,12 @@ public class StoreDeployments {
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
             dbLayer.getSession().update(optimistic);
             // update related inventory configuration to deployed=false
-            DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
-            if (cfg != null) {
-                cfg.setDeployed(false);
-                dbLayer.getSession().update(cfg);
+            if(!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
+                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
+                if (cfg != null) {
+                    cfg.setDeployed(false);
+                    dbLayer.getSession().update(cfg);
+                }
             }
         }
         JocInventory.postDeployHistoryEventWhenDeleted(optimisticEntries);
@@ -344,7 +346,7 @@ public class StoreDeployments {
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer);
+                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer, wsIdentifier);
                     throw new JocDeployException(message);
                 }
                 break;
@@ -383,7 +385,7 @@ public class StoreDeployments {
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer);
+                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer, wsIdentifier);
                     throw new JocDeployException(message);
                 }
                 break;
