@@ -755,8 +755,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         sosOpenIdWebserviceCredentials.setValuesFromProperties(properties);
         sosOpenIdWebserviceCredentials.setIdToken(idToken);
         SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(sosOpenIdWebserviceCredentials);
-        String clientId = sosOpenIdHandler.decodeIdToken(idToken);
-        return clientId;
+        return sosOpenIdHandler.decodeIdToken(idToken);
     }
 
     private String getOIDCClientCredentialIdentityService(String idToken) throws Exception {
