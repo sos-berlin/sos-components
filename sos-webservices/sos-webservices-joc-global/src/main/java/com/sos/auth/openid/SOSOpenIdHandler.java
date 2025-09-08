@@ -53,9 +53,9 @@ import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 
 public class SOSOpenIdHandler {
 
-    private static final String PREFERRED_USERNAME = "preferred_username";
+    public static final String PREFERRED_USERNAME = "preferred_username";
     private static final String CLIENT_CREDENTIAL_APP_ID = "appid";
-    private static final String EMAIL = "email";
+    public static final String EMAIL = "email";
     private static final String CLAIMS_SUPPORTED = "claims_supported";
     private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";

@@ -3,14 +3,18 @@ package com.sos.joc.security.impl;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.auth.classes.SOSAuthHelper;
+import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -27,6 +31,7 @@ import com.sos.joc.db.security.IamIdentityServiceDBLayer;
 import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.impl.DocumentationsImportResourceImpl;
+
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
@@ -108,12 +113,13 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                            oidcIdentityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
-                            List<String> scopes = properties.getOidc().getIamOidcGroupScopes();
-                            if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
-                                scopes = properties.getOidc().getIamOidcGroupClaims();
-                            }
-                            oidcIdentityProvider.setIamOidcGroupScopes(scopes);
+                            oidcIdentityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
+                                    .getIamOidcAccountNameClaim()));
+//                            Set<String> scopes = properties.getOidc().getIamOidcGroupScopes();
+//                            if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
+//                                scopes = properties.getOidc().getIamOidcGroupClaims();
+//                            }
+//                            oidcIdentityProvider.setIamOidcGroupScopes(scopes);
                             identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
                         }
                     }
@@ -145,7 +151,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                            oidcIdentityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                            // oidcIdentityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                            oidcIdentityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
+                                    .getIamOidcAccountNameClaim()));
                         }
                     }
                 }
@@ -206,6 +214,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProviders));
+
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -254,9 +263,11 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        // identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
-                        identityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                        // identityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                        identityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
+                                .getIamOidcAccountNameClaim()));
                     }
                 }
             }
@@ -273,24 +284,38 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                     if (properties.getOidc() != null) {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
-                        //identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
+                        // identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
-                        identityProvider.setIamOidcGroupClaims(properties.getOidc().getIamOidcGroupClaims());
-                        List<String> scopes = properties.getOidc().getIamOidcGroupScopes();
-                        if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
-                            scopes = properties.getOidc().getIamOidcGroupClaims();
-                        }
-                        identityProvider.setIamOidcGroupScopes(scopes);
+                        identityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
+                                .getIamOidcAccountNameClaim()));
+                        // List<String> scopes = properties.getOidc().getIamOidcGroupScopes();
+                        // if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
+                        // scopes = properties.getOidc().getIamOidcGroupClaims();
+                        // }
+                        // identityProvider.setIamOidcGroupScopes(scopes);
                     }
                 }
             }
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(identityProvider));
+
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
+    
+    private Set<String> getClaims(Set<String> claims, String accountClaim) {
+        if (SOSString.isEmpty(accountClaim)) {
+            accountClaim = SOSOpenIdHandler.PREFERRED_USERNAME; 
+        }
+        if (claims != null) {
+            claims.add(accountClaim);
+        } else {
+            claims = Collections.singleton(accountClaim);
+        }
+        return claims;
     }
 
     @Override
@@ -347,6 +372,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             }
 
             return responseStatusJSOk(Date.from(Instant.now()));
+
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -372,6 +398,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
             checkRequiredParameter("identityServiceName", identityServiceName);
             return DocumentationResourceImpl.postDocumentation(DocumentationDBLayer.SOS_IMAGES_FOLDER + "/" + identityServiceName,
                     getJocAuditTrail());
+
 
         } catch (Exception e) {
             return responseStatusJSError(e);
