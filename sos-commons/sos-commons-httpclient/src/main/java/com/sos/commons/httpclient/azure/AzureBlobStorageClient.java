@@ -53,6 +53,15 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         return AzureBlobStorageClient.formatExecutionResult(result);
     }
 
+    /** Executes a GET request to the Azure Storage service to retrieve information about the available containers in the storage account.
+     *
+     * <p>
+     * Note: The request may fail with 403 Forbidden if the provided credentials (e.g., SAS token) do not have sufficient permissions.<br/>
+     * For example, a SAS token with 'srt=co' (container + object) can list containers,<br/>
+     * but a token with 'srt=sco' (service + container + object) provides broader access.
+     *
+     * @return HttpExecutionResult&lt;String&gt; containing the XML response with details of all available container(s)
+     * @throws Exception if the HTTP request fails or the response cannot be processed */
     public HttpExecutionResult<String> executeGETStorage() throws Exception {
         LinkedHashMap<String, String> queryParams = new LinkedHashMap<>();
         queryParams.put("comp", "list");
@@ -61,6 +70,38 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
         String canonicalizedResource = canonicalize(null, null, canonicalizedQuery);
 
         String path = "?comp=list";
+        String rawUrl = buildUrl(path);
+        String url = authProvider.appendToUrl(rawUrl);
+
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getDefaultHeaders(), 0);
+        return executeWithResponseBody(createRequestBuilder(URI.create(url), authHeaders).GET().build());
+    }
+
+    /** Executes a GET request to the Azure Storage service to retrieve the service-level properties.<br/>
+     * This includes settings such as logging, metrics, CORS rules, and the delete retention (Soft Delete) policy.
+     * 
+     * <p>
+     * Note on permissions: Accessing service properties requires sufficient rights on the storage account. For example:<br/>
+     * - Using a SAS token: the token must include service-level read permission ('srt=s' and 'sp=r').<br/>
+     * - Using an account key: full access is granted.<br/>
+     * - Using Azure AD: the token must have a role with read access to the storage account (e.g., Storage Account Contributor or similar).
+     * </p>
+     *
+     * <p>
+     * If the caller does not have sufficient permissions, the request may fail with 403 Forbidden.
+     * </p>
+     *
+     * @return HttpExecutionResult&lt;String&gt; containing the XML response with the service properties
+     * @throws Exception if the HTTP request fails or the response cannot be processed */
+    public HttpExecutionResult<String> executeGETStorageServicePropertiers() throws Exception {
+        LinkedHashMap<String, String> queryParams = new LinkedHashMap<>();
+        queryParams.put("restype", "service");
+        queryParams.put("comp", "properties");
+
+        String canonicalizedQuery = toCanonicalizedQuery(queryParams);
+        String canonicalizedResource = canonicalize(null, null, canonicalizedQuery);
+
+        String path = "?restype=service&comp=properties";
         String rawUrl = buildUrl(path);
         String url = authProvider.appendToUrl(rawUrl);
 

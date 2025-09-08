@@ -124,11 +124,12 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             client = builder.build();
 
             getLogger().info(getConnectMsg());
+            // containing the XML response with details of all available container(s)
             HttpExecutionResult<String> result = client.executeGETStorage();
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                if (!HttpUtils.isForbidden(code)) {// e.g. SAS token: 'srt=co' instead of 'srt=sco' to check service
+                if (!HttpUtils.isForbidden(code)) {// see client.executeGETStorage description Note
                     if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
 
                     } else {
@@ -137,13 +138,28 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 }
             }
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[connected]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
+                getLogger().debug("%s[connected][container(s)]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
             }
 
             getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
+
+            debugServiceProperties();
         } catch (Throwable e) {
             disconnect();
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+        }
+    }
+
+    private void debugServiceProperties() {
+        if (!getLogger().isDebugEnabled()) {
+            return;
+        }
+        try {
+            HttpExecutionResult<String> result = client.executeGETStorageServicePropertiers();
+            result.formatWithResponseBody(true);
+            getLogger().debug("%s[connected][service properties]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
+        } catch (Exception e) {
+            getLogger().debug("%s[connected][debugServiceProperties]%s", getLogPrefix(), e.toString(), e);
         }
     }
 
