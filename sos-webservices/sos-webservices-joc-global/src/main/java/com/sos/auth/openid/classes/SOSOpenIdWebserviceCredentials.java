@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
+import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
@@ -23,6 +25,7 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 import com.sos.joc.model.security.properties.oidc.OidcGroupRolesMappingItem;
+import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
 public class SOSOpenIdWebserviceCredentials {
 
@@ -45,6 +48,7 @@ public class SOSOpenIdWebserviceCredentials {
     private Map<String, List<String>> groupRolesMap;
     private Set<String> claims;
     private Set<String> scopes;
+    private String accountNameClaim;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -123,7 +127,6 @@ public class SOSOpenIdWebserviceCredentials {
                 if (Globals.sosCockpitProperties == null) {
                     Globals.sosCockpitProperties = new JocCockpitProperties();
                 }
-
                 com.sos.joc.model.security.properties.Properties properties = Globals.objectMapper.readValue(dbItem.getConfigurationItem(),
                         com.sos.joc.model.security.properties.Properties.class);
                 setValuesFromProperties(properties);
@@ -188,6 +191,9 @@ public class SOSOpenIdWebserviceCredentials {
                 }
             }
         }
+        if (accountNameClaim == null) {
+            accountNameClaim = getProperty(properties.getOidc().getIamOidcAccountNameClaim(), SOSOpenIdHandler.PREFERRED_USERNAME);
+        }
 
         String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
         String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
@@ -243,5 +249,9 @@ public class SOSOpenIdWebserviceCredentials {
     
     public Set<String> getScopes() {
         return scopes;
+    }
+    
+    public String getAccountNameClaim() {
+        return accountNameClaim;
     }
 }
