@@ -371,6 +371,7 @@ public class SOSOpenIdHandler {
                 if (jv != null && jv.getValueType().equals(ValueType.STRING)) {
                     accountIdentifier = accountNameClaim;
                 } else {
+                    accountIdentifier = EMAIL;
                     LOGGER.info("AccountName claim '" + accountNameClaim + "' is not supported. '" + accountIdentifier + "' is used instead.");
                 }
             }
