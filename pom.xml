@@ -38,8 +38,8 @@
     <inventory.schema.version>1.7.6-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 
-    <jackson.version>2.14.2</jackson.version>
-    <jackson.databind.version>2.14.2</jackson.databind.version>
+    <jackson.version>2.19.0</jackson.version>
+    <jackson.databind.version>2.19.0</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
     <slf4j.version>2.0.17</slf4j.version>
@@ -51,7 +51,7 @@
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.text.version>1.11.0</apache.commons.text.version>
-    <apache.commons.net.version>3.10.0</apache.commons.net.version>
+    <apache.commons.net.version>3.11.1</apache.commons.net.version>
     <apache.httpcomponents.httpclient.version>4.5.14</apache.httpcomponents.httpclient.version>
     <json.version>1.1.4</json.version>
     <servlet.version>6.0.0</servlet.version>
@@ -75,14 +75,14 @@
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
-    <typesafe.config.version>1.4.3</typesafe.config.version>
+    <typesafe.config.version>1.4.4</typesafe.config.version>
     <keepass.java2.version>2.2.1</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>32.1.1-jre</guava.version>
     <sshj.version>0.40.0</sshj.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.2.0</jsendnsca.version>
-    <jna.version>5.16.0</jna.version>
+    <jna.version>5.17.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <jaxb.impl.version>2.4.0-b180830.0438</jaxb.impl.version>
