@@ -690,7 +690,7 @@ public class SOSAuthHelper {
         OpenIdConfiguration requestConf = new OpenIdConfiguration();
         requestConf.setClaims_supported(conf.getClaims_supported());
         requestConf.setJwks_uri(conf.getJwks_uri());
-        return new String(Base64.getUrlEncoder().encode(Globals.objectMapper.writeValueAsBytes(requestConf)));
+        return Base64.getUrlEncoder().encodeToString(Globals.objectMapper.writeValueAsBytes(requestConf));
     }
     
     public static KeyStore getOIDCTrustStore(OidcProperties provider) throws Exception {

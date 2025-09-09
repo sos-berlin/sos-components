@@ -118,6 +118,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 //                                scopes = properties.getOidc().getIamOidcGroupClaims();
 //                            }
 //                            oidcIdentityProvider.setIamOidcGroupScopes(scopes);
+                            oidcIdentityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                             identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
                         }
                     }
@@ -149,7 +150,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
 
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
-                            // oidcIdentityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                            oidcIdentityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                             oidcIdentityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
                                     .getIamOidcAccountNameClaim()));
                         }
@@ -265,7 +266,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         identityProvider.setIamOidcClientId(getProperty(properties.getOidc().getIamOidcClientId(), ""));
                         // identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
-                        // identityProvider.setIamOidcGroupScopes(properties.getOidc().getIamOidcGroupScopes());
+                        identityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                         identityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
                                 .getIamOidcAccountNameClaim()));
                     }
@@ -293,6 +294,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         // scopes = properties.getOidc().getIamOidcGroupClaims();
                         // }
                         // identityProvider.setIamOidcGroupScopes(scopes);
+                        identityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                     }
                 }
             }
@@ -309,16 +311,27 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     }
     
     private Set<String> getClaims(Set<String> claims, String accountClaim) {
-        if (SOSString.isEmpty(accountClaim)) {
-            accountClaim = SOSOpenIdHandler.PREFERRED_USERNAME; 
-        }
-        if (claims != null) {
-            claims.add(accountClaim);
-        } else {
-            claims = Collections.singleton(accountClaim);
-        }
+//        if (SOSString.isEmpty(accountClaim)) {
+//            accountClaim = SOSOpenIdHandler.PREFERRED_USERNAME; 
+//        }
+//        if (claims != null) {
+//            claims.add(accountClaim);
+//        } else {
+//            claims = Collections.singleton(accountClaim);
+//        }
         return claims;
     }
+    
+    private Set<String> getScopes(Set<String> scopes) {
+      if (scopes != null) {
+          scopes.add("profile");
+          scopes.remove("openid");
+          scopes.remove("email");
+      } else {
+          scopes = Collections.singleton("profile");
+      }
+      return scopes;
+  }
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String identityServiceName, FormDataBodyPart file, String timeSpent,
