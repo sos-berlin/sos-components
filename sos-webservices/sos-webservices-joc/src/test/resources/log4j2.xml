@@ -14,7 +14,7 @@
 
 		<Logger name="com.sos" level="debug" />
 
-
+		<Logger name="org.hibernate" level="warn" />
 		<Logger name="com.sos.commons.hibernate.id" level="warn" />
 		<Logger name="com.sos.commons.hibernate.SOSHibernateFactory"
 			level="warn" />

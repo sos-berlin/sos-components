@@ -1,23 +1,21 @@
 {
-	"dateFrom": "2026-03-28",
-	"dateTo": "2026-03-30",
+	"dateFrom": "2025-09-09",
+	"dateTo": "2025-09-15",
 	"calendars": [
 		{
 			"calendarName": "AnyDays",
 			"periods": [
 				{
-					"singleStart": "02:00:00",
-					"whenHoliday": "SUPPRESS"
-				},
-				{
-					"begin": "02:00:00",
-					"end": "08:00:00",
-					"repeat": "02:00:00",
+					"singleStart": "12:00:00",
 					"whenHoliday": "SUPPRESS"
 				}
-			]
+			],
+			"excludes": {
+				"nonWorkingDayCalendars": [
+					"NonWorking"
+				]
+			}
 		}
 	],
-	"nonWorkingDayCalendars": [],
 	"timeZone": "Europe/Berlin"
 }

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -97,7 +98,7 @@ public class FrequencyResolver {
             LOGGER.debug(String.format("[resolve][start]from=%s,to=%s", from, to));
         }
 
-        init(calendar, nonWorkingDayCalendars, from, to);
+        init(calendar, nonWorkingDayCalendars, from, to, null);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
         datesWithoutRestrictions.clear();
@@ -176,7 +177,7 @@ public class FrequencyResolver {
             LOGGER.debug(String.format("[%s][start]from=%s,to=%s", method, from, to));
         }
 
-        init(baseCalendar, nonWorkingDayCalendars, from, to);
+        init(baseCalendar, nonWorkingDayCalendars, from, to, restrictionsCalendar);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
         datesWithoutRestrictions.clear();
@@ -395,19 +396,45 @@ public class FrequencyResolver {
     }
 
     private void init(com.sos.inventory.model.calendar.Calendar baseCalendar,
-            Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to) throws SOSMissingDataException,
-            SOSInvalidDataException {
+            Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to,
+            com.sos.inventory.model.calendar.Calendar restrictionsCalendar) throws SOSMissingDataException, SOSInvalidDataException {
         if (baseCalendar == null) {
             throw new SOSMissingDataException("calendar object is undefined");
         }
 
         setDateFrom(from, baseCalendar.getFrom());
         setDateTo(to, baseCalendar.getTo());
+        mergeBaseCalendarExcludesFromRestrictionsCalendar(baseCalendar, restrictionsCalendar);
+
         this.baseCalendarIncludes = baseCalendar.getIncludes();
         this.baseCalendarExcludes = baseCalendar.getExcludes();
         this.excludesNonWorkingDayCalendars = nonWorkingDayCalendars;
         this.includes = baseCalendar.getIncludes();
         this.excludes = baseCalendar.getExcludes();
+    }
+
+    private com.sos.inventory.model.calendar.Calendar mergeBaseCalendarExcludesFromRestrictionsCalendar(
+            com.sos.inventory.model.calendar.Calendar baseCalendar, com.sos.inventory.model.calendar.Calendar restrictionsCalendar) {
+        if (restrictionsCalendar == null || restrictionsCalendar.getExcludes() == null) {
+            return baseCalendar;
+        }
+
+        Set<String> mergedNames = new HashSet<>(); // without duplicates
+        Optional.ofNullable(baseCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+        Optional.ofNullable(restrictionsCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+        if (mergedNames.size() > 0) {
+            Frequencies excludes = baseCalendar.getExcludes();
+            if (excludes == null) {
+                excludes = new Frequencies();
+            }
+            excludes.setNonWorkingDayCalendars(mergedNames);
+            baseCalendar.setExcludes(excludes);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[mergeBaseCalendarExcludesFromRestrictionsCalendar][baseCalendar excludes]nonWorkingDayCalendars=" + mergedNames);
+            }
+        }
+
+        return baseCalendar;
     }
 
     private void setDateFrom(String dateFrom, String calendarFrom) throws SOSMissingDataException, SOSInvalidDataException {

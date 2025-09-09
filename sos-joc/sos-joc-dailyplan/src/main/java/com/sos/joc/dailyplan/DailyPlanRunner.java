@@ -1034,13 +1034,14 @@ public class DailyPlanRunner extends TimerTask {
 
                     Calendar restrictions = new Calendar();
                     restrictions.setIncludes(assignedCalendar.getIncludes());
+                    restrictions.setExcludes(assignedCalendar.getExcludes());
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("%s[WorkingDaysCalendar=%s][includes]%s", logPrefix, assignedCalendar.getCalendarName(), SOSString
                                 .toString(restrictions)));
                     }
                     // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
                     Map<String, Calendar> mergedNonWorkingDayCalendars = getMergedNonWorkingDayCalendars(isDebugEnabled, logPrefix, invDbLayer,
-                            calendar, restrictions);
+                            calendar, assignedCalendar);
 
                     int plannedOrdersCount = 0;
                     List<String> frequencyResolverDates = null;
@@ -1298,15 +1299,13 @@ public class DailyPlanRunner extends TimerTask {
 
     // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
     private Map<String, Calendar> getMergedNonWorkingDayCalendars(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer,
-            Calendar baseCalendar, Calendar restrictionsCalendar) throws Exception {
+            Calendar baseCalendar, AssignedCalendars assignedCalendar) throws Exception {
         Set<String> mergedNames = new HashSet<>(); // without duplicates
         if (baseCalendar != null) {
             Optional.ofNullable(baseCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
-            // Optional.ofNullable(baseCalendar.getIncludes()).map(i -> i.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
         }
-        if (restrictionsCalendar != null) {
-            Optional.ofNullable(restrictionsCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
-            // Optional.ofNullable(restrictionsCalendar.getIncludes()).map(i -> i.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
+        if (assignedCalendar != null) {
+            Optional.ofNullable(assignedCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
         }
 
         Map<String, Calendar> m = new HashMap<>();
