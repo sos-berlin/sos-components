@@ -2,6 +2,7 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.util.Base64;
 import java.util.Collections;
@@ -684,13 +685,14 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
     }
 
     private SOSAuthCurrentAccount getUserFromHeaderOrQuery(String basicAuthorization, String clientCertCN, String account)
-            throws UnsupportedEncodingException, JocException {
+            throws JocException {
         String authorization = EMPTY_STRING;
 
         if (basicAuthorization != null) {
             String[] authorizationParts = basicAuthorization.split(" ");
             if (authorizationParts.length > 1) {
-                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes("UTF-8")), "UTF-8");
+                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes(StandardCharsets.UTF_8)),
+                        StandardCharsets.UTF_8);
             }
         } else {
             JocError error = new JocError();
@@ -713,13 +715,13 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         return new SOSAuthCurrentAccount(account, !authorization.equals(EMPTY_STRING));
     }
 
-    private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws UnsupportedEncodingException, JocException {
+    private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws JocException {
         String authorization = EMPTY_STRING;
 
         if (basicAuthorization != null) {
             String[] authorizationParts = basicAuthorization.split(" ");
             if (authorizationParts.length > 1) {
-                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes("UTF-8")), "UTF-8");
+                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
             }
         } else {
             JocError error = new JocError();
@@ -1048,8 +1050,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                     IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                     DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
                     if (dbItemIamAccount != null) {
-                        byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
-                        String authStringEnc = new String(authEncBytes);
+                        String authStringEnc = Base64.getEncoder().encodeToString(dbItemIamAccount.getAccountName().getBytes());
                         sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
                     } else {
                         SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();

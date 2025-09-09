@@ -2,6 +2,7 @@ package com.sos.auth.openid.classes;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
@@ -42,9 +44,13 @@ public class SOSOpenIdLogin implements ISOSLogin {
                     LOGGER.error("Wrong Headers for OIDC Login");
                 } else {
                     webserviceCredentials.setOpenidConfiguration(currentAccount.getSosLoginParameters().getOpenidConfiguration());
-
+                    
                     SOSOpenIdHandler sosOpenIdHandler = new SOSOpenIdHandler(webserviceCredentials);
-                    String accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
+                    String accountName = currentAccount.getSosLoginParameters().getAccount();
+                    if (!SOSString.isEmpty(accountName)) {
+                        accountName = sosOpenIdHandler.decodeIdToken(webserviceCredentials.getIdToken());
+                    }
+
                     currentAccount.setAccountName(accountName);
                     webserviceCredentials.setAccount(accountName);
 
