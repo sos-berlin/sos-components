@@ -50,22 +50,21 @@ public class EndSession {
     private BaseHttpClient.Builder baseHttpClientBuilder;
     private Map<String, String> additionalHeaders;
     
-    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer)
+    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws Exception {
         setTrustStore(props);
-        setUriBuilder(props, openIdConfigurationResponse, lockerKey, origin, referrer);
+        setUriBuilder(props, openIdConfigurationResponse, locker, origin, referrer);
     }
 
-    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer,
+    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer,
             KeyStore truststore) throws SOSSSLException {
         this.truststore = truststore;
-        setUriBuilder(props, openIdConfigurationResponse, lockerKey, origin, referrer);
+        setUriBuilder(props, openIdConfigurationResponse, locker, origin, referrer);
     }
 
-    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer)
+    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws SOSSSLException {
         try {
-            Locker locker = SOSLockerHelper.lockerGet(lockerKey);
             Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
                     Collections.emptyMap());
             String token = (String) loginProps.get("token");
@@ -91,7 +90,6 @@ public class EndSession {
                         String s = clientId + ":" + clientSecret;
                         String authEncBytes = Base64.getEncoder().encodeToString(s.getBytes());
                         additionalHeaders.put("Authorization", "Basic " + authEncBytes);
-                        additionalHeaders.put(lockerKey, referrer);
                         createBody(token, referrer);
                         
                     } else { //if (supportedMethods.contains("client_secret_post")) {
