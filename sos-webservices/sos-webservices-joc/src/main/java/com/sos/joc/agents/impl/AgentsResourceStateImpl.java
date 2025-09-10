@@ -676,6 +676,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             }
         }
         subagent.setState(agentState);
+        if (AgentStateText.UNKNOWN.equals(agentState.get_text())) {
+            subagent.setStateTextFilter(AgentStateTextFilter.UNKNOWN); 
+        }
         return subagent;
     }
 
