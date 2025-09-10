@@ -309,7 +309,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 claims = Collections.singleton(accountClaim);
             }
         }
-        claims.remove("");
+        if (claims != null) {
+            claims.remove("");
+        }
         return claims;
     }
     
