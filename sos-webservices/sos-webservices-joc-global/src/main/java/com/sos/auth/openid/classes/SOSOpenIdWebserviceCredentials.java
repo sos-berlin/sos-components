@@ -48,7 +48,6 @@ public class SOSOpenIdWebserviceCredentials {
     private Map<String, List<String>> groupRolesMap;
     private Set<String> claims;
     private Set<String> scopes;
-    private String accountNameClaim;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -164,7 +163,7 @@ public class SOSOpenIdWebserviceCredentials {
         }
 
         if (userAttribute == null || userAttribute.isEmpty()) {
-            userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), "");
+            userAttribute = getProperty(properties.getOidc().getIamOidcUserAttribute(), SOSOpenIdHandler.PREFERRED_USERNAME);
         }
 
         if (groupRolesMap == null) {
@@ -190,9 +189,6 @@ public class SOSOpenIdWebserviceCredentials {
                     claims.add(claim);
                 }
             }
-        }
-        if (accountNameClaim == null) {
-            accountNameClaim = getProperty(properties.getOidc().getIamOidcAccountNameClaim(), SOSOpenIdHandler.PREFERRED_USERNAME);
         }
 
         String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
@@ -249,9 +245,5 @@ public class SOSOpenIdWebserviceCredentials {
     
     public Set<String> getScopes() {
         return scopes;
-    }
-    
-    public String getAccountNameClaim() {
-        return accountNameClaim;
     }
 }

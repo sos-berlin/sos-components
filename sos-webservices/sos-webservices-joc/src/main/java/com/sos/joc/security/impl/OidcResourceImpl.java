@@ -12,7 +12,6 @@ import java.util.Set;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -56,6 +55,8 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     private static final String API_CALL_IDENTITY_CLIENTS = "./iam/identityclient";
     private static final String API_CALL_IMPORT_ICON = "./iam/import";
     private static final String API_CALL_GET_ICON = "./iam/icon";
+    private static final Set<String> claimsOfScopeProfileOrEmail = Set.of("email", "name", "family_name", "given_name", "middle_name", "nickname",
+            "preferred_username");
 
     private String getProperty(String value, String defaultValue) {
         if (value == null || value.isEmpty()) {
@@ -114,12 +115,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                             oidcIdentityProvider.setIamOidcAuthenticationUrl(getProperty(properties.getOidc().getIamOidcAuthenticationUrl(), ""));
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
                             oidcIdentityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
-                                    .getIamOidcAccountNameClaim()));
-//                            Set<String> scopes = properties.getOidc().getIamOidcGroupScopes();
-//                            if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
-//                                scopes = properties.getOidc().getIamOidcGroupClaims();
-//                            }
-//                            oidcIdentityProvider.setIamOidcGroupScopes(scopes);
+                                    .getIamOidcUserAttribute()));
                             oidcIdentityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                             identityProviders.getOidcServiceItems().add(oidcIdentityProvider);
                         }
@@ -154,7 +150,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                             oidcIdentityProvider.setIamOidcName(getProperty(properties.getOidc().getIamOidcName(), ""));
                             oidcIdentityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                             oidcIdentityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
-                                    .getIamOidcAccountNameClaim()));
+                                    .getIamOidcUserAttribute()));
                         }
                     }
                 }
@@ -268,7 +264,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                         identityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                         identityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
-                                .getIamOidcAccountNameClaim()));
+                                .getIamOidcUserAttribute()));
                     }
                 }
             }
@@ -288,12 +284,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                         // identityProvider.setIamOidcClientSecret(getProperty(properties.getOidc().getIamOidcClientSecret(), ""));
                         identityProvider.setIamOidcFlowType(properties.getOidc().getIamOidcFlowType());
                         identityProvider.setIamOidcGroupClaims(getClaims(properties.getOidc().getIamOidcGroupClaims(), properties.getOidc()
-                                .getIamOidcAccountNameClaim()));
-                        // List<String> scopes = properties.getOidc().getIamOidcGroupScopes();
-                        // if (scopes == null || scopes.isEmpty()) { // use claims if scopes are undefined
-                        // scopes = properties.getOidc().getIamOidcGroupClaims();
-                        // }
-                        // identityProvider.setIamOidcGroupScopes(scopes);
+                                .getIamOidcUserAttribute()));
                         identityProvider.setIamOidcGroupScopes(getScopes(properties.getOidc().getIamOidcGroupScopes()));
                     }
                 }
@@ -309,14 +300,13 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     }
     
     private Set<String> getClaims(Set<String> claims, String accountClaim) {
-//        if (SOSString.isEmpty(accountClaim)) {
-//            accountClaim = SOSOpenIdHandler.PREFERRED_USERNAME; 
-//        }
-//        if (claims != null) {
-//            claims.add(accountClaim);
-//        } else {
-//            claims = Collections.singleton(accountClaim);
-//        }
+        if (!SOSString.isEmpty(accountClaim) && !claimsOfScopeProfileOrEmail.contains(accountClaim)) {
+            if (claims != null) {
+                claims.add(accountClaim);
+            } else {
+                claims = Collections.singleton(accountClaim);
+            }
+        }
         return claims;
     }
     
