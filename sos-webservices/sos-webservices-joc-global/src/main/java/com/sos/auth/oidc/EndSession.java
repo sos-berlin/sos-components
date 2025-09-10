@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSLockerHelper;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
@@ -39,23 +38,22 @@ public class EndSession extends SOSRestApiClient {
     private KeyStore truststore;
     private String httpMethod = "POST";
     
-    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer)
+    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws Exception {
         setTrustStore(props);
-        setUriBuilder(props, openIdConfigurationResponse, lockerKey, origin, referrer);
+        setUriBuilder(props, openIdConfigurationResponse, locker, origin, referrer);
     }
 
-    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer,
+    public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer,
             KeyStore truststore) throws SOSSSLException {
         this.truststore = truststore;
-        setUriBuilder(props, openIdConfigurationResponse, lockerKey, origin, referrer);
+        setUriBuilder(props, openIdConfigurationResponse, locker, origin, referrer);
     }
 
-    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, String lockerKey, String origin, String referrer)
+    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws SOSSSLException {
 
         try {
-            Locker locker = SOSLockerHelper.lockerGet(lockerKey);
             Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
                     Collections.emptyMap());
             String token = (String) loginProps.get("token");

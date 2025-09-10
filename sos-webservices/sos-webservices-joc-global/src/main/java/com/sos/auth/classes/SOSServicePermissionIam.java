@@ -350,7 +350,7 @@ public class SOSServicePermissionIam {
             audit.setComment(comment);
             jocAuditLog.logAuditMessage(audit);
             try {
-                if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
+                if (currentAccount.getCurrentSubject() != null) {
                     sosSessionHandler.getTimeout();
                     sosSessionHandler.stop();
                 }
@@ -363,24 +363,24 @@ public class SOSServicePermissionIam {
                     Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
                             .orElse(Collections.emptyMap());
                     String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
-                    if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
-                        // do nothing, is made by GUI
-                    } else {
-                        // call end session at OIDC provider
-                        loginParams.getIdentityService();
-                        OidcProperties provider =  SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
-                        KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
-                        OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
-                        endSessionEndPoint = conf.getEnd_session_endpoint();
+                    if (endSessionEndPoint != null) {
                         if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
-                         // do nothing, is made by GUI
+                            // do nothing, is made by GUI
                         } else {
-                            new EndSession(provider, conf, loginParams.getLockerKey(), origin, referrer, truststore).getStringResponse();
+                            // call end session at OIDC provider
+                            loginParams.getIdentityService();
+                            OidcProperties provider = SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
+                            KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+                            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+                            new EndSession(provider, conf, locker, origin, referrer, truststore).getStringResponse();
                         }
+                    } else {
+                        LOGGER.error("Couldn't determine end_session endpoint");
                     }
                 }
 
             } catch (Exception e) {
+                LOGGER.error("", e);
             }
         }
         SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(EMPTY_STRING);
