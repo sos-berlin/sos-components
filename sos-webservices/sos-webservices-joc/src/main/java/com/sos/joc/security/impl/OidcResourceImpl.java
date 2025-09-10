@@ -309,6 +309,9 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
                 claims = Collections.singleton(accountClaim);
             }
         }
+        if (claims != null) {
+            claims.remove("");
+        }
         return claims;
     }
     
@@ -317,6 +320,7 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
           scopes.add("profile");
           scopes.remove("openid");
           scopes.remove("email");
+          scopes.remove("");
       } else {
           scopes = Collections.singleton("profile");
       }
