@@ -300,15 +300,15 @@ public class OidcResourceImpl extends JOCResourceImpl implements IOidcResource {
     }
     
     private Set<String> getClaims(Set<String> claims, String accountClaim) {
+        if (claims != null) {
+            claims.remove("");
+        }
         if (!SOSString.isEmpty(accountClaim) && !claimsOfScopeProfileOrEmail.contains(accountClaim)) {
             if (claims != null) {
                 claims.add(accountClaim);
             } else {
                 claims = Collections.singleton(accountClaim);
             }
-        }
-        if (claims != null) {
-            claims.remove("");
         }
         return claims;
     }
