@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -29,7 +30,6 @@ import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.common.AbsoluteMainPeriod;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSchedule;
@@ -69,10 +69,12 @@ public class DailyPlanProjections {
     // currently hard-coded – may be variable later...
     private static final boolean ONLY_PLAN_ORDER_AUTOMATICALLY = true;
 
+    private static final String MSG_ABORTED = "process aborted by priority request";
+
     private Map<String, Long> workflowsAvg = new HashMap<>();
     private Map<String, ScheduleOrderCounter> schedulesOrders = new HashMap<>();
 
-    private String logPrefix;
+    private final AtomicBoolean prioRequested = new AtomicBoolean(false);
 
     private DailyPlanProjections() {
     }
@@ -83,10 +85,21 @@ public class DailyPlanProjections {
 
     public JocClusterState process(DailyPlanSettings settings) throws Exception {
         String add = DailyPlanHelper.getCallerForLog(settings);
-        logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
+        String logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
 
         if (!LOCK.tryLock()) {
-            LOGGER.info(logPrefix + "[skip]process is already in progress - new request ignored");
+            if (settings.isWebservice()) {
+                LOGGER.info(logPrefix + "[skip]process is already in progress - new request ignored");
+            } else {
+                if (prioRequested.get()) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(logPrefix + "[prio]process is already in progress - waiting for cancellation to complete before restart");
+                    }
+                } else {
+                    LOGGER.info(logPrefix + "[prio]process is already in progress - requesting cancellation, will restart after completion");
+                    prioRequested.set(true);
+                }
+            }
             return JocClusterState.ALREADY_RUNNING;
         }
 
@@ -103,15 +116,34 @@ public class DailyPlanProjections {
             cleanup();
 
             // 2 - delete all projection entries in the database
-            dbCleanup();
+            dbCleanup(logPrefix);
+
+            if (prioRequested.get()) {
+                LOGGER.info(getAbortedMsg(logPrefix, "process"));
+                return JocClusterState.UNCOMPLETED;
+            }
 
             // 3 - evaluate already planned daily plan entries
-            DailyPlanResult dprPlanned = calculatePlanned(settings);
+            DailyPlanResult dprPlanned = calculatePlanned(logPrefix, settings);
+
+            if (prioRequested.get()) {
+                LOGGER.info(getAbortedMsg(logPrefix, "process"));
+                return JocClusterState.UNCOMPLETED;
+            }
 
             // 4 - evaluate projections(after the last planned daily plan entry) and insert merged planned and projections
-            if (!calculateProjectionsAndInsertMerged(settings, dprPlanned)) {
+            if (!calculateProjectionsAndInsertMerged(logPrefix, settings, dprPlanned)) {
+                if (prioRequested.get()) {
+                    LOGGER.info(getAbortedMsg(logPrefix, "process"));
+                    return JocClusterState.UNCOMPLETED;
+                }
+
                 // 5 - insert planned only
-                dbInsertPlannedOnly(dprPlanned);
+                dbInsertPlannedOnly(logPrefix, dprPlanned);
+            }
+
+            if (prioRequested.get()) {
+                return JocClusterState.UNCOMPLETED;
             }
 
         } catch (Exception e) {
@@ -128,14 +160,19 @@ public class DailyPlanProjections {
     private void cleanup() {
         workflowsAvg.clear();
         schedulesOrders.clear();
+        prioRequested.set(false);
     }
 
     // step 1-cleanup
-    private void dbCleanup() throws Exception {
+    private void dbCleanup(String logPrefix) throws Exception {
         Instant start = Instant.now();
         String lp = logPrefix + "[dbCleanup]";
 
         LOGGER.info(lp + "start...");
+        if (prioRequested.get()) {
+            LOGGER.info(getAbortedMsg(logPrefix, "dbCleanup"));
+            return;
+        }
         int deleted = 0;
         try (SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-dbCleanup")) {
             boolean autoCommit = session.isAutoCommit();
@@ -163,7 +200,7 @@ public class DailyPlanProjections {
      * to - from now - last day of month settings.getProjectionsMonthAhead(configurable value, e.g=6) months ahead<br>
      * - e.g. now=2025-08-25, to=2026-02-28(last day of 2026-02)<br/>
      */
-    private DailyPlanResult calculatePlanned(DailyPlanSettings settings) {
+    private DailyPlanResult calculatePlanned(String logPrefix, DailyPlanSettings settings) {
         Instant start = Instant.now();
         String lp = logPrefix + "[calculatePlanned]";
 
@@ -188,6 +225,11 @@ public class DailyPlanProjections {
         result.plannedTo = to.getTime();
         result.plannedDates = new HashSet<>();
 
+        if (prioRequested.get()) {
+            LOGGER.info(getAbortedMsg(logPrefix, "calculatePlanned"));
+            return result;
+        }
+
         MetaItem mi = null;
         YearsItem yi = null;
         DBLayerDailyPlanProjections dbLayer = null;
@@ -202,6 +244,11 @@ public class DailyPlanProjections {
                 Map<String, Set<String>> scheduleOrders = new HashMap<>();
 
                 for (DBItemDailyPlanSubmission s : l) {
+                    if (prioRequested.get()) {
+                        LOGGER.info(getAbortedMsg(logPrefix, "calculatePlanned"));
+                        return result;
+                    }
+
                     // database- ordered by submissionFordate, otherwise order with java ...
                     result.plannedLastDate = s.getSubmissionForDate();
                     if (result.plannedFirstDate == null) {
@@ -373,10 +420,9 @@ public class DailyPlanProjections {
     }
 
     // 3 - merge planned and projections
-    private boolean calculateProjectionsAndInsertMerged(DailyPlanSettings settings, DailyPlanResult dprPlanned) throws Exception {
-
+    private boolean calculateProjectionsAndInsertMerged(String logPrefix, DailyPlanSettings settings, DailyPlanResult dprPlanned) throws Exception {
         Instant start = Instant.now();
-        String lp = logPrefix + "[calculateProjections]";
+        String lp = logPrefix + "[calculateProjectionsAndInsertMerged]";
         LOGGER.info(lp + "start...");
 
         List<DBBeanReleasedSchedule2DeployedWorkflow> schedules2workflows = null;
@@ -388,7 +434,7 @@ public class DailyPlanProjections {
         if (SOSCollection.isEmpty(schedules2workflows)) {
             LOGGER.info(String.format("%s[skip]no released schedules found", lp));
         } else {
-            Collection<DailyPlanSchedule> dailyPlanSchedules = convert4projections(schedules2workflows, dprPlanned);
+            Collection<DailyPlanSchedule> dailyPlanSchedules = convert4projections(logPrefix, schedules2workflows, dprPlanned);
 
             if (dailyPlanSchedules.size() > 0) {
                 calculated = true;
@@ -404,6 +450,11 @@ public class DailyPlanProjections {
                 YearsItem yearsItem = dprPlanned.plannedYears;
 
                 for (int i = yearFrom; i <= yearTo; i++) {
+                    if (prioRequested.get()) {
+                        LOGGER.info(getAbortedMsg(logPrefix, "calculateProjectionsAndInsertMerged"));
+                        return false;
+                    }
+
                     String dateFrom = i + "-01-01";
                     String dateTo = i + "-12-31";
                     if (i == yearFrom) {
@@ -415,10 +466,11 @@ public class DailyPlanProjections {
 
                     LOGGER.info(String.format("%s[creating][%s]from %s, to %s", lp, i, dateFrom, dateTo));
                     // yearsItem - planned entries are adjusted/merged with projections entries by getProjectionYear
-                    dbInsertMonthly(getProjectionYear(settings, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo, yearsItem, plannedDates));
+                    dbInsertMonthly(logPrefix, getProjectionYear(logPrefix, settings, dailyPlanSchedules, String.valueOf(i), dateFrom, dateTo,
+                            yearsItem, plannedDates));
                 }
 
-                dbInsertMeta(getMeta(dailyPlanSchedules, dprPlanned));
+                dbInsertMeta(logPrefix, getMeta(logPrefix, dailyPlanSchedules, dprPlanned));
             } else {
                 LOGGER.info(String.format("%s[skip][schedules total=%s]no PlanOrderAutomatically=true schedules found", lp, schedules2workflows
                         .size()));
@@ -429,8 +481,13 @@ public class DailyPlanProjections {
         return calculated;
     }
 
-    private void dbInsertMeta(MetaItem o) throws Exception {
+    private void dbInsertMeta(String logPrefix, MetaItem o) throws Exception {
         if (o == null) {
+            return;
+        }
+
+        if (prioRequested.get()) {
+            LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMeta"));
             return;
         }
 
@@ -453,7 +510,7 @@ public class DailyPlanProjections {
     }
 
     /** store monthly not yearly */
-    private void dbInsertMonthly(YearsItem yearsItem) throws Exception {
+    private void dbInsertMonthly(String logPrefix, YearsItem yearsItem) throws Exception {
         if (yearsItem == null) {
             return;
         }
@@ -465,6 +522,11 @@ public class DailyPlanProjections {
         for (Map.Entry<String, MonthsItem> yearEntry : yearsItem.getAdditionalProperties().entrySet()) {
             // String year = yearEntry.getKey();
             m: for (Map.Entry<String, MonthItem> monthEntry : yearEntry.getValue().getAdditionalProperties().entrySet()) {
+                if (prioRequested.get()) {
+                    LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly"));
+                    return;
+                }
+
                 MonthItem monthItem = monthEntry.getValue();
                 if (monthItem == null || SOSCollection.isEmpty(monthItem.getAdditionalProperties())) {
                     continue m;
@@ -491,6 +553,10 @@ public class DailyPlanProjections {
         if (items.size() > 0) {
             try (SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-dbInsertMonthly")) {
                 for (DBItemDailyPlanProjection item : items) {
+                    if (prioRequested.get()) {
+                        LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly"));
+                        return;
+                    }
                     session.save(item);
                 }
             }
@@ -500,14 +566,14 @@ public class DailyPlanProjections {
         }
     }
 
-    private void dbInsertPlannedOnly(DailyPlanResult dprPlanned) throws Exception {
+    private void dbInsertPlannedOnly(String logPrefix, DailyPlanResult dprPlanned) throws Exception {
         if (dprPlanned == null) {
             return;
         }
         if (dprPlanned.plannedLastDate != null && dprPlanned.meta != null) {
             LOGGER.info(String.format("%s[dbInsertPlannedOnly]from %s to %s", logPrefix, dprPlanned.plannedFirstDate, dprPlanned.plannedLastDate));
-            dbInsertMonthly(dprPlanned.plannedYears);
-            dbInsertMeta(dprPlanned.meta);
+            dbInsertMonthly(logPrefix, dprPlanned.plannedYears);
+            dbInsertMeta(logPrefix, dprPlanned.meta);
         }
     }
 
@@ -526,7 +592,7 @@ public class DailyPlanProjections {
     }
 
     // merge planned and projections
-    private MetaItem getMeta(Collection<DailyPlanSchedule> dailyPlanSchedules, DailyPlanResult dpr) {
+    private MetaItem getMeta(String logPrefix, Collection<DailyPlanSchedule> dailyPlanSchedules, DailyPlanResult dpr) {
         MetaItem mi = dpr != null && dpr.meta != null ? dpr.meta : new MetaItem();
         mi = checkIfPlannedSchedulesExcludedFromProjection(mi, dailyPlanSchedules);
 
@@ -548,7 +614,7 @@ public class DailyPlanProjections {
                 }
                 // overwrite orders (previously (if)set by planned)
                 // schedulerOrders * workflows
-                ScheduleOrderCounter oc = getScheduleOrderCounter(s);
+                ScheduleOrderCounter oc = getScheduleOrderCounter(logPrefix, s);
                 sii.setTotalOrders(oc.getTotalAsLong());
                 sii.setOrderNames(oc.getOrderNamesNormalized());
 
@@ -572,8 +638,8 @@ public class DailyPlanProjections {
         return mi;
     }
 
-    private YearsItem getProjectionYear(DailyPlanSettings settings, Collection<DailyPlanSchedule> dailyPlanSchedules, String year, String dateFrom,
-            String dateTo, YearsItem plannedYears, Set<String> plannedDates) throws Exception {
+    private YearsItem getProjectionYear(String logPrefix, DailyPlanSettings settings, Collection<DailyPlanSchedule> dailyPlanSchedules, String year,
+            String dateFrom, String dateTo, YearsItem plannedYears, Set<String> plannedDates) throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String lp = logPrefix + "[getProjectionYear]";
@@ -591,7 +657,6 @@ public class DailyPlanProjections {
             msi = new MonthsItem();
         }
 
-        settings.setStartMode(StartupMode.automatic);
         final DailyPlanRunner runner = new DailyPlanRunner(settings);
         final AtomicReference<MonthsItem> msiRef = new AtomicReference<>(msi);
         SOSDate.getDatesInRange(dateFrom, dateTo).stream().filter(date -> {
@@ -605,8 +670,8 @@ public class DailyPlanProjections {
                 dummySubmission.setId(-1L);
                 dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-                OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriods(settings.getStartMode(), "controllerId", dailyPlanSchedules,
-                        asDailyPlanSingleDate, dummySubmission);
+                OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriodsOnlyWithoutIncludeLate(settings.getStartMode(),
+                        "controllerId", dailyPlanSchedules, asDailyPlanSingleDate, dummySubmission);
 
                 List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();
                 if (absPeriods.size() > 0) {
@@ -644,8 +709,8 @@ public class DailyPlanProjections {
         return result;
     }
 
-    private Collection<DailyPlanSchedule> convert4projections(List<DBBeanReleasedSchedule2DeployedWorkflow> items, DailyPlanResult dpr)
-            throws Exception {
+    private Collection<DailyPlanSchedule> convert4projections(String logPrefix, List<DBBeanReleasedSchedule2DeployedWorkflow> items,
+            DailyPlanResult dpr) throws Exception {
 
         String lp = logPrefix + "[convert4projections]";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -735,18 +800,18 @@ public class DailyPlanProjections {
     }
 
     // Meta
-    private ScheduleOrderCounter getScheduleOrderCounter(DailyPlanSchedule s) {
+    private ScheduleOrderCounter getScheduleOrderCounter(String logPrefix, DailyPlanSchedule s) {
         if (s == null || s.getSchedule() == null) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("[getScheduleOrderCounter][orders]total,schedule=0"));
             }
             return new ScheduleOrderCounter(null, 0);
         }
-        return getScheduleOrderCounter(s.getSchedule());
+        return getScheduleOrderCounter(logPrefix, s.getSchedule());
     }
 
     // Projections
-    private ScheduleOrderCounter getScheduleOrderCounter(Schedule s) {
+    private ScheduleOrderCounter getScheduleOrderCounter(String logPrefix, Schedule s) {
         if (schedulesOrders.containsKey(s.getPath())) {
             return schedulesOrders.get(s.getPath());
         }
@@ -764,6 +829,10 @@ public class DailyPlanProjections {
         ScheduleOrderCounter c = new ScheduleOrderCounter(orderNames, t);
         schedulesOrders.put(s.getPath(), c);
         return c;
+    }
+
+    private String getAbortedMsg(String logPrefix, String caller) {
+        return String.format("%s[%s]%s", logPrefix, caller, MSG_ABORTED);
     }
 
     private class DailyPlanResult {

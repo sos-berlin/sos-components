@@ -69,6 +69,10 @@ public class DailyPlanSettings {
         return StartupMode.run_now.equals(getStartMode());
     }
 
+    public boolean isWebservice() {
+        return StartupMode.webservice.equals(getStartMode());
+    }
+
     public Date getDailyPlanDate() {
         return dailyPlanDate;
     }

@@ -22,6 +22,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
@@ -56,6 +57,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             AConfigurationSection section = Globals.getConfigurationGlobals().getConfigurationSection(DefaultSections.dailyplan);
             settings = new GlobalSettingsReader().getSettings(section);
         }
+        settings.setStartMode(StartupMode.webservice);
         settings.setCaller(caller);
         return settings;
     }

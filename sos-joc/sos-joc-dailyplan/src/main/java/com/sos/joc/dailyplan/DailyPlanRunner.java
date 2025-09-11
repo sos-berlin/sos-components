@@ -25,6 +25,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -115,6 +116,8 @@ public class DailyPlanRunner extends TimerTask {
 
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
+    private AtomicBoolean cancel = new AtomicBoolean(false);
+
     private DailyPlanSettings settings;
     private java.util.Calendar startCalendar;
     private Map<String, Long> durations = null;
@@ -128,12 +131,14 @@ public class DailyPlanRunner extends TimerTask {
 
     // service
     // TODO currently runs every 60? seconds -the extends TimerTask should be replaced with a schedule executer (see cleanup service)
+    @Override
     public void run() {
         setLogger();
 
         boolean createPlan = false;
         boolean isAutomaticStart = isAutomaticStart();
         try {
+            cancel.set(false);
             // TODO createdPlans static? because several instances ...
             if (isAutomaticStart || settings.isRunNow()) {
                 LOGGER.info(String.format("[%s][start]%s", settings.getStartMode(), settings.toString()));
@@ -172,6 +177,17 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
+    @Override
+    public boolean cancel() {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s]cancel", settings.getStartMode()));
+        }
+        clear();
+        cancel.set(true);
+
+        return super.cancel();
+    }
+
     private void clear() {
         calculateStartTimesCalendars.clear();
         calculateStartTimesNonWorkingCalendars.clear();
@@ -187,12 +203,22 @@ public class DailyPlanRunner extends TimerTask {
 
     private void recreateProjectionsByService() {
         try {
-            int maxTries = 3;
+            int maxTries = 60;
+            long timeout = 1;
+
+            LOGGER.info(getRecreateProjectionMsg(settings));
 
             for (int i = 0; i < maxTries; i++) {
+                if (cancel.get()) {
+                    return;
+                }
                 if (isRecreateProjectionsAlreadyRunning(recreateProjections(settings))) {// e.g. started by a web service
+                    int a = i + 1;
+                    if (a % 10 == 0) {
+                        LOGGER.info(String.format("[%s][recreateProjectionsByService]attempt=%s of max=%s", settings.getStartMode(), a, maxTries));
+                    }
                     try {
-                        TimeUnit.SECONDS.sleep(1L);
+                        TimeUnit.SECONDS.sleep(timeout);
                     } catch (InterruptedException e) {
                         return;
                     }
@@ -209,10 +235,9 @@ public class DailyPlanRunner extends TimerTask {
         try {
             setLogger();
 
-            String add = DailyPlanHelper.getCallerForLog(settings);
-            LOGGER.info(String.format("[%s]%s[recreateProjections]creating for %s months before and %s months ahead", settings.getStartMode(), add,
-                    settings.getProjectionsMonthBefore(), settings.getProjectionsMonthAhead()));
-
+            if (settings.isWebservice()) {
+                LOGGER.info(getRecreateProjectionMsg(settings));
+            }
             return DailyPlanProjections.getInstance().process(settings);
         } catch (Exception e) {
             throw e;
@@ -234,6 +259,12 @@ public class DailyPlanRunner extends TimerTask {
 
     private static void removeLogger() {
         JocClusterServiceLogger.removeLogger(ClusterServices.dailyplan.name());
+    }
+
+    private static String getRecreateProjectionMsg(DailyPlanSettings settings) {
+        String add = DailyPlanHelper.getCallerForLog(settings);
+        return String.format("[%s]%s[recreateProjections]creating for %s months before and %s months ahead", settings.getStartMode(), add, settings
+                .getProjectionsMonthBefore(), settings.getProjectionsMonthAhead());
     }
 
     /* service */
@@ -917,7 +948,7 @@ public class DailyPlanRunner extends TimerTask {
         return mode.equals(StartupMode.automatic) || mode.equals(StartupMode.manual_restart);
     }
 
-    public OrderListSynchronizer calculateAbsoluteMainPeriods(StartupMode startupMode, String controllerId,
+    public OrderListSynchronizer calculateAbsoluteMainPeriodsOnlyWithoutIncludeLate(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission) throws Exception {
         return calculateStartTimesOrAbsoluteMainPeriods(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, submission, null, false, true);
     }
@@ -938,7 +969,7 @@ public class DailyPlanRunner extends TimerTask {
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission,
             Long usingEveryDayCalendarWithId, boolean includeLate, boolean calculateAbsoluteMainPeriodsOnly) throws Exception {
 
-        String method = calculateAbsoluteMainPeriodsOnly ? "calculateAbsoluteMainPeriods" : "calculateStartTimes";
+        String method = calculateAbsoluteMainPeriodsOnly ? "calculateAbsoluteMainPeriodsOnly" : "calculateStartTimes";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
         Date date = SOSDate.getDate(dailyPlanDate);

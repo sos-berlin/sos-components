@@ -3,6 +3,7 @@ package com.sos.joc.dailyplan;
 import java.time.Instant;
 import java.util.List;
 import java.util.Timer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +29,16 @@ public class DailyPlanService extends AJocActiveMemberService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 
     // Thread name limited to 20 characters according to log4j settings
-    private static final String TIMER_THREAD_NAME = "Timer-DailyPlanService";
+    private static final String TIMER_THREAD_NAME_PREFIX = "Timer-DailyPlan-";
     private static final String IDENTIFIER = ClusterServices.dailyplan.name();
+
+    private static final AtomicInteger timerThreadNumber = new AtomicInteger();
 
     private DailyPlanRunner runner;
     private Timer timer;
     private Instant lastActivityStart = null;
     private Instant lastActivityEnd = null;
+    private String timerThreadName;
 
     public DailyPlanService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
@@ -69,7 +73,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s]stop", getIdentifier(), mode));
-        resetTimer(mode);
+        reset(mode);
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
@@ -137,25 +141,29 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     private void schedule(DailyPlanSettings settings) {
-        resetTimer(settings.getStartMode());
+        reset(settings.getStartMode());
         // isDaemon = true so the JVM can shut down without being blocked by this timer thread.
         // Any task that is already running will finish, but no new tasks will be started once shutdown begins.
-        timer = new Timer(TIMER_THREAD_NAME, true);
+        timerThreadName = TIMER_THREAD_NAME_PREFIX + timerThreadNumber.getAndIncrement();
+        timer = new Timer(timerThreadName, true);
         runner = new DailyPlanRunner(settings);
         timer.schedule(runner, 0, 60 * 1000);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][%s]scheduled", getIdentifier(), settings.getStartMode(), TIMER_THREAD_NAME));
+            LOGGER.debug(String.format("[%s][%s][%s]scheduled", getIdentifier(), settings.getStartMode(), timerThreadName));
         }
     }
 
-    private void resetTimer(StartupMode mode) {
+    private void reset(StartupMode mode) {
         if (timer != null) {
             timer.cancel();
             timer.purge();
             timer = null;
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][%s]reset", getIdentifier(), mode, TIMER_THREAD_NAME));
+                LOGGER.debug(String.format("[%s][%s][%s]reset", getIdentifier(), mode, timerThreadName));
             }
+        }
+        if (runner != null) {
+            runner.cancel();
         }
     }
 

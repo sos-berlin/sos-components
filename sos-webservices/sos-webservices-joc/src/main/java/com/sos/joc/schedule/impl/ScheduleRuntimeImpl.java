@@ -15,7 +15,6 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.OrderListSynchronizer;
 import com.sos.joc.dailyplan.common.AbsoluteMainPeriod;
@@ -59,7 +58,6 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             if (!SOSCollection.isEmpty(in.getCalendars()) && in.getDateFrom() != null && in.getDateTo() != null) {
                 DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(API_CALL);
                 settings.setPermittedFolders(folderPermissions.getListOfFolders());
-                settings.setStartMode(StartupMode.webservice);
 
                 final DailyPlanRunner runner = new DailyPlanRunner(settings);
                 List<DailyPlanSchedule> dailyPlanSchedules = List.of(toDailyPlanSchedule(in));
@@ -73,8 +71,8 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
                         dummySubmission.setId(-1L);
                         dummySubmission.setSubmissionForDate(settings.getDailyPlanDate());
 
-                        OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriods(settings.getStartMode(), "controllerId", dailyPlanSchedules,
-                                asDailyPlanSingleDate, dummySubmission);
+                        OrderListSynchronizer synchronizer = runner.calculateAbsoluteMainPeriodsOnlyWithoutIncludeLate(settings.getStartMode(),
+                                "controllerId", dailyPlanSchedules, asDailyPlanSingleDate, dummySubmission);
 
                         List<AbsoluteMainPeriod> absPeriods = synchronizer.getAbsoluteMainPeriods();
                         if (absPeriods.size() > 0) {
