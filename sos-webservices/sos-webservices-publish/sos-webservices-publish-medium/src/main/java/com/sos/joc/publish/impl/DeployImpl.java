@@ -18,6 +18,8 @@ import jakarta.ws.rs.Path;
 @Path("inventory/deployment")
 public class DeployImpl extends ADeploy implements IDeploy {
     
+    public static final JocSecurityLevel SEC_LVL = JocSecurityLevel.MEDIUM; 
+    
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) {
         return postDeploy(xAccessToken, filter, false);
@@ -36,7 +38,7 @@ public class DeployImpl extends ADeploy implements IDeploy {
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, JocSecurityLevel.MEDIUM, API_CALL);
+            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, SEC_LVL, API_CALL);
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

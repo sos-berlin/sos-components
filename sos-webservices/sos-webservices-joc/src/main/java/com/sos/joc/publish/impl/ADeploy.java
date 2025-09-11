@@ -73,9 +73,9 @@ public abstract class ADeploy extends JOCResourceImpl {
     public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession, DBItemJocAuditLog dbAuditlog, 
             JocSecurityLevel secLvl, String apiCall) throws Exception {
         String account;
-        if (JocSecurityLevel.HIGH.equals(Globals.getJocSecurityLevel())) {
+        if (JocSecurityLevel.HIGH.equals(secLvl)) {
             throw new JocNotImplementedException("This operation is not available for Security Level HIGH, use <import_deploy> instead.");
-        } else if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+        } else if(JocSecurityLevel.LOW.equals(secLvl)) {
             account =  ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
         } else {
             account = this.getAccount();
