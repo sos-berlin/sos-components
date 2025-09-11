@@ -34,6 +34,9 @@ public class RunningOrderLogs {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningOrderLogs.class);
 
     protected static final EnumSet<EventType> completeTypes = EnumSet.of(EventType.OrderBroken, EventType.OrderCancelled, EventType.OrderFinished);
+
+    // Thread name limited to 20 characters according to log4j settings
+    private static final String CLEANUP_TIMER_THREAD_NAME = "Timer-CleanRunOrder";
     private static final long CLEANUP_PERIOD = TimeUnit.MINUTES.toMillis(2);
 
     private static RunningOrderLogs runningOrderLogs;
@@ -49,9 +52,9 @@ public class RunningOrderLogs {
     private RunningOrderLogs() {
         EventBus.getInstance().register(this);
 
-        // isDaemon=true to ensure the JVM can exit immediately without waiting for this timer thread
-        // thread name limited to 20 characters according to log4j settings
-        new Timer("Timer-CleanRunOrder", true).scheduleAtFixedRate(new TimerTask() {
+        // isDaemon = true so the JVM can shut down without being blocked by this timer thread.
+        // Any task that is already running will finish, but no new tasks will be started once shutdown begins.
+        new Timer(CLEANUP_TIMER_THREAD_NAME, true).scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
