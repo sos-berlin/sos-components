@@ -40,10 +40,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
@@ -81,6 +83,7 @@ public class DependencyResolver {
     public static final String JOBRESOURCES_SEARCH = "jobResources";
     public static final String LOCKNAME_SEARCH = "lockName";
     public static final String CALENDARNAME_SEARCH = "calendarName";
+    public static final String NW_CALENDARS_SEARCH = "nonWorkingDayCalendars";
     public static final String JOBTEMPLATE_SEARCH = "jobTemplate";
     public static final String INCLUDESCRIPT_SEARCH = "scripts";
     public static final String SCRIPT_SEARCH = "script";
@@ -168,11 +171,11 @@ public class DependencyResolver {
             if(workflowsWithInstruction != null) {
                 cfg.getReferencedBy().addAll(workflowsWithInstruction);
             }
-            List<DBItemInventoryConfiguration> wfWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
-            Set<DBItemInventoryConfiguration> wfWorkflows = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
-                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
-            Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
-                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
+//            List<DBItemInventoryConfiguration> wfWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
+//            Set<DBItemInventoryConfiguration> wfWorkflows = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
+//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
+//            Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
+//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
 //            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
 //            resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
             break;
@@ -227,7 +230,7 @@ public class DependencyResolver {
             break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
-            resolveCalendarReferencedBySchedule(cfg, groupedItems.get(ConfigurationType.SCHEDULE).values());
+            resolveAllCalendarReferencedBySchedule(cfg, groupedItems);
             break;
         case JOBTEMPLATE:
             resolveJobTemplateReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
@@ -413,6 +416,33 @@ public class DependencyResolver {
                 for (String cal : wfCalendarNames) {
                     if(cal.replaceAll("\"","").equals(item.getName())) {
                         item.getReferencedBy().add(schedule);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void resolveAllCalendarReferencedBySchedule(ReferencedDbItem item, 
+            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws JsonMappingException, JsonProcessingException {
+        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.SCHEDULE).values();
+        for(DBItemInventoryConfiguration schedule : cfgs) {
+            Set<String> scheduleCalendars = new HashSet<String>();
+            Schedule s = JocInventory.convertSchedule(schedule.getContent(), Schedule.class);
+            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+                scheduleCalendars.add(cal.getCalendarName());
+                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+            }));
+            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+            if(!scheduleCalendars.isEmpty()) {
+                for(String cal : scheduleCalendars) {
+                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
+                    if(wCalItem != null) {
+                        item.getReferences().add(wCalItem);
+                    }
+                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+                    if(nwCalItem != null) {
+                        item.getReferences().add(nwCalItem);
                     }
                 }
             }
@@ -660,12 +690,18 @@ public class DependencyResolver {
                     }
                 }
             }
-            List<String> scheduleCalendars = new ArrayList<String>();
-            getValuesRecursively("", schedule, CALENDARNAME_SEARCH, scheduleCalendars);
+            // Calendars
+            Set<String> scheduleCalendars = new HashSet<String>();
+            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
+            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+                scheduleCalendars.add(cal.getCalendarName());
+                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+            }));
+            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
             if(!scheduleCalendars.isEmpty()) {
                 for(String cal : scheduleCalendars) {
                     results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
-                    //results.addAll(dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
                     if(!results.isEmpty()) {
                         item.getReferences().addAll(results);
                     }
@@ -871,6 +907,23 @@ public class DependencyResolver {
                     }
                 }
             }
+            // Calendars
+            Set<String> scheduleCalendars = new HashSet<String>();
+            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
+            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+                scheduleCalendars.add(cal.getCalendarName());
+                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+            }));
+            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+            if(!scheduleCalendars.isEmpty()) {
+                for(String cal : scheduleCalendars) {
+                    results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+                    if(!results.isEmpty()) {
+                        results.forEach(result -> item.getReferences().add(new ResponseItem(convert(result))));
+                    }
+                }
+            }
             break;
         case JOBTEMPLATE:
             // jobResource
@@ -989,6 +1042,27 @@ public class DependencyResolver {
                     DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
                     if(workflowItem != null) {
                         item.getReferences().add(workflowItem);
+                    }
+                }
+            }
+            // Calendars
+            Set<String> scheduleCalendars = new HashSet<String>();
+            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
+            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+                scheduleCalendars.add(cal.getCalendarName());
+                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+            }));
+            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+            if(!scheduleCalendars.isEmpty()) {
+                for(String cal : scheduleCalendars) {
+                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
+                    if(wCalItem != null) {
+                        item.getReferences().add(wCalItem);
+                    }
+                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+                    if(nwCalItem != null) {
+                        item.getReferences().add(nwCalItem);
                     }
                 }
             }
