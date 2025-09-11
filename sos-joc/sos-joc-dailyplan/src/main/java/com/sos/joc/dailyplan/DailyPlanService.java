@@ -27,6 +27,8 @@ public class DailyPlanService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 
+    // Thread name limited to 20 characters according to log4j settings
+    private static final String TIMER_THREAD_NAME = "Timer-DailyPlanService";
     private static final String IDENTIFIER = ClusterServices.dailyplan.name();
 
     private DailyPlanRunner runner;
@@ -67,7 +69,7 @@ public class DailyPlanService extends AJocActiveMemberService {
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s]stop", getIdentifier(), mode));
-        resetTimer();
+        resetTimer(mode);
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
@@ -88,6 +90,7 @@ public class DailyPlanService extends AJocActiveMemberService {
             LOGGER.info(String.format("[%s][%s]%s...", getIdentifier(), mode, add));
             DailyPlanSettings settings = getSettings(mode, controllers, serviceSettingsSection);
             settings.setStartMode(StartupMode.run_now);
+            // cancels any DailyPlanRunner running task (planned start or runNow) and schedules/executes immediately
             schedule(settings);
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s][runNow]%s", getIdentifier(), mode, e.toString()), e);
@@ -134,17 +137,25 @@ public class DailyPlanService extends AJocActiveMemberService {
     }
 
     private void schedule(DailyPlanSettings settings) {
-        resetTimer();
-        timer = new Timer();
+        resetTimer(settings.getStartMode());
+        // isDaemon = true so the JVM can shut down without being blocked by this timer thread.
+        // Any task that is already running will finish, but no new tasks will be started once shutdown begins.
+        timer = new Timer(TIMER_THREAD_NAME, true);
         runner = new DailyPlanRunner(settings);
         timer.schedule(runner, 0, 60 * 1000);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s]scheduled", getIdentifier(), settings.getStartMode(), TIMER_THREAD_NAME));
+        }
     }
 
-    private void resetTimer() {
+    private void resetTimer(StartupMode mode) {
         if (timer != null) {
             timer.cancel();
             timer.purge();
             timer = null;
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s][%s]reset", getIdentifier(), mode, TIMER_THREAD_NAME));
+            }
         }
     }
 
