@@ -281,7 +281,7 @@ public class JsonSerializer {
     }
     
     private static AdmissionTimeScheme emptyAdmissionTimeSchemeToNull(AdmissionTimeScheme obj) {
-        if (obj != null && obj.getPeriods() == null) {
+        if (obj != null && obj.getPeriods() == null && obj.getRestrictedSchemes() == null) {
             return null;
         }
         return obj;
