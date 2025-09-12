@@ -2,6 +2,7 @@ package com.sos.auth.classes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.util.Base64;
 import java.util.Collections;
@@ -349,7 +350,7 @@ public class SOSServicePermissionIam {
             audit.setComment(comment);
             jocAuditLog.logAuditMessage(audit);
             try {
-                if (currentAccount != null && currentAccount.getCurrentSubject() != null) {
+                if (currentAccount.getCurrentSubject() != null) {
                     sosSessionHandler.getTimeout();
                     sosSessionHandler.stop();
                 }
@@ -362,24 +363,24 @@ public class SOSServicePermissionIam {
                     Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
                             .orElse(Collections.emptyMap());
                     String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
-                    if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
-                        // do nothing, is made by GUI
-                    } else {
-                        // call end session at OIDC provider
-                        loginParams.getIdentityService();
-                        OidcProperties provider =  SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
-                        KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
-                        OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
-                        endSessionEndPoint = conf.getEnd_session_endpoint();
+                    if (endSessionEndPoint != null) {
                         if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
-                         // do nothing, is made by GUI
+                            // do nothing, is made by GUI
                         } else {
-                            new EndSession(provider, conf, loginParams.getLockerKey(), origin, referrer, truststore).getStringResponse();
+                            // call end session at OIDC provider
+                            loginParams.getIdentityService();
+                            OidcProperties provider = SOSAuthHelper.getOIDCProperties(loginParams.getIdentityService());
+                            KeyStore truststore = SOSAuthHelper.getOIDCTrustStore(provider);
+                            OpenIdConfiguration conf = new GetOpenIdConfiguration(provider, truststore).getJsonObjectFromGet();
+                            new EndSession(provider, conf, locker, origin, referrer, truststore).getStringResponse();
                         }
+                    } else {
+                        LOGGER.error("Couldn't determine end_session endpoint");
                     }
                 }
 
             } catch (Exception e) {
+                LOGGER.error("", e);
             }
         }
         SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(EMPTY_STRING);
@@ -680,13 +681,14 @@ public class SOSServicePermissionIam {
     }
 
     private SOSAuthCurrentAccount getUserFromHeaderOrQuery(String basicAuthorization, String clientCertCN, String account)
-            throws UnsupportedEncodingException, JocException {
+            throws JocException {
         String authorization = EMPTY_STRING;
 
         if (basicAuthorization != null) {
             String[] authorizationParts = basicAuthorization.split(" ");
             if (authorizationParts.length > 1) {
-                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes("UTF-8")), "UTF-8");
+                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes(StandardCharsets.UTF_8)),
+                        StandardCharsets.UTF_8);
             }
         } else {
             JocError error = new JocError();
@@ -709,13 +711,13 @@ public class SOSServicePermissionIam {
         return new SOSAuthCurrentAccount(account, !authorization.equals(EMPTY_STRING));
     }
 
-    private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws UnsupportedEncodingException, JocException {
+    private String getPwdFromHeaderOrQuery(String basicAuthorization, String pwd) throws JocException {
         String authorization = EMPTY_STRING;
 
         if (basicAuthorization != null) {
             String[] authorizationParts = basicAuthorization.split(" ");
             if (authorizationParts.length > 1) {
-                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes("UTF-8")), "UTF-8");
+                authorization = new String(Base64.getDecoder().decode(authorizationParts[1].getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
             }
         } else {
             JocError error = new JocError();
@@ -1025,8 +1027,7 @@ public class SOSServicePermissionIam {
                     IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
                     DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getAccountFromCredentialId(sosLoginParameters.getCredentialId());
                     if (dbItemIamAccount != null) {
-                        byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(dbItemIamAccount.getAccountName().getBytes());
-                        String authStringEnc = new String(authEncBytes);
+                        String authStringEnc = Base64.getEncoder().encodeToString(dbItemIamAccount.getAccountName().getBytes());
                         sosLoginParameters.setBasicAuthorization("Basic " + authStringEnc);
                     } else {
                         SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer();
