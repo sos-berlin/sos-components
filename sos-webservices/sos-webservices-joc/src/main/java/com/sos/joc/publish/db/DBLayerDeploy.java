@@ -1322,7 +1322,8 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" and history.folder = :folder");
             }
-            hql.append(" and history.controllerId = :controllerId").append(" and history.name = dep.name").append(")");
+            hql.append(" and history.controllerId = :controllerId").append(" and history.name = dep.name")
+                .append(" and history.type = dep.type").append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
                 if (!"/".equals(folder)) {
