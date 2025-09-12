@@ -120,7 +120,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                 }
                 
-                DeleteDeployments.checkOlderWorkflowVersions(controllerId, filteredDepHistoryItemsToRevoke.stream().filter(o -> DeployType.WORKFLOW
+                DeleteDeployments.checkIfWorkflowsHaveOrders(controllerId, filteredDepHistoryItemsToRevoke.stream().filter(o -> DeployType.WORKFLOW
                         .equals(o.getTypeAsEnum())).map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
 
                 Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(

@@ -59,6 +59,7 @@ import js7.base.problem.Problem;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.JControllerProxy;
 
@@ -102,7 +103,7 @@ public class DeleteDeployments {
 
         // check older workflow versions
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
-            checkOlderWorkflowVersions(entry.getKey(), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
+            checkIfWorkflowsHaveOrders(entry.getKey(), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
                     DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
         }
 
@@ -530,21 +531,27 @@ public class DeleteDeployments {
         }
     }
     
-    public static void checkOlderWorkflowVersions(String controllerId, Set<String> workflowNames) throws ControllerConnectionResetException,
+    public static void checkIfWorkflowsHaveOrders(String controllerId, Set<String> workflowNames) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
         if (workflowNames != null && !workflowNames.isEmpty()) {
-            checkOlderWorkflowVersions(controllerId, Proxy.of(controllerId).currentState(), workflowNames);
+            checkIfWorkflowsHaveOrders(controllerId, Proxy.of(controllerId).currentState(), workflowNames);
         }
     }
 
-    private static void checkOlderWorkflowVersions(String controllerId, JControllerState currentState, Set<String> workflowNames) {
-        WorkflowsHelper.oldJWorkflowIds(currentState).map(JWorkflowId::path).map(WorkflowPath::string).filter(workflowNames::contains).findAny().map(
-                w -> String.format("Workflow '%s' on Controller '%s' has older version(s) that still have orders to process", w, controllerId)).map(
-                        JocBadRequestException::new).ifPresent(e -> {
-                            throw e;
-                        });
+    private static void checkIfWorkflowsHaveOrders(String controllerId, JControllerState currentState, Set<String> workflowNames) {
+        currentState.idToOrder().values().stream().map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).filter(
+                workflowNames::contains).findAny().map(w -> String.format(
+                        "Workflow '%s' on Controller '%s' still contains orders to process", w, controllerId)).map(JocBadRequestException::new)
+                .ifPresent(e -> {
+                    throw e;
+                });
+//        WorkflowsHelper.oldJWorkflowIds(currentState).map(JWorkflowId::path).map(WorkflowPath::string).filter(workflowNames::contains).findAny().map(
+//                w -> String.format("Workflow '%s' on Controller '%s' has older version(s) that still have orders to process", w, controllerId)).map(
+//                        JocBadRequestException::new).ifPresent(e -> {
+//                            throw e;
+//                        });
     }
 
 }
