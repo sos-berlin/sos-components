@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -134,32 +135,39 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 if (unsignedRedeployables != null) {
                     InventoryDBLayer layer = new InventoryDBLayer(dbLayer.getSession()); 
                     DBLayerDependencies dependencyLayer = new DBLayerDependencies(layer.getSession());
-                    Map<DBItemDeploymentHistory,ReferencedDbItem> dependenciesFromInventory = unsignedRedeployables.stream().distinct()
+                    Map<DBItemDeploymentHistory,ReferencedDbItem> dependenciesFromInventory = unsignedRedeployables.stream().filter(Objects::nonNull).distinct()
                             .collect(Collectors.toMap(Function.identity(), item -> {
                                 try {
                                     DBItemInventoryConfiguration cfg = layer.getConfiguration(item.getInventoryConfigurationId());
-                                    List<DBItemInventoryDependency> dbDependencies = dependencyLayer.getRequestedDependencies(cfg);
-                                    return DependencyResolver.convert(layer.getSession(), cfg, dbDependencies);
+                                    if (cfg != null) {
+                                        List<DBItemInventoryDependency> dbDependencies = dependencyLayer.getRequestedDependencies(cfg);
+                                        return DependencyResolver.convert(layer.getSession(), cfg, dbDependencies);
+                                    } else {
+                                        return new ReferencedDbItem(null);
+                                    }
 //                                    return DependencyResolver.resolve(dbLayer.getSession(), item.getName(), ConfigurationType.fromValue(item.getType()));
                                 } catch (JsonProcessingException | SOSHibernateException e) {
-                                    return null;
+                                    return new ReferencedDbItem(null);
                                 }
                             }));
                     Set<DBItemDeploymentHistory> dependencyHistorieItems = new HashSet<DBItemDeploymentHistory>();
                     dependenciesFromInventory.entrySet().forEach(entry -> {
-                        entry.getValue().getReferences().forEach( inv -> {
-                                    try {
-                                        dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
-                                    } catch (SOSHibernateException e) {}
-                                });
-                        entry.getValue().getReferencedBy().stream().filter(inv -> ConfigurationType.WORKFLOW.equals(inv.getTypeAsEnum()))
-                        .forEach( inv -> {
-                            try {
-                                dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
-                            } catch (SOSHibernateException e) {}
-                        });
+                        if(entry.getValue().getReferencedItem() != null) {
+                            entry.getValue().getReferences().forEach( inv -> {
+                                try {
+                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                } catch (SOSHibernateException e) {}
+                            });
+                            entry.getValue().getReferencedBy().stream().filter(inv -> ConfigurationType.WORKFLOW.equals(inv.getTypeAsEnum()))
+                            .forEach( inv -> {
+                                try {
+                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                } catch (SOSHibernateException e) {}
+                            });
+                        }
                     });
                     Set<DBItemDeploymentHistory> dependencies = dependencyHistorieItems.stream()
+                            .filter(Objects::nonNull)
                             .filter(item -> OperationType.UPDATE.value().equals(item.getOperation()))
                             .peek(item -> {
                                 try {
