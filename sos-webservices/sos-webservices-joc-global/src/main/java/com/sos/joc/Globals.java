@@ -69,6 +69,7 @@ public class Globals {
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
     public static int maxResponseDuration = 55;
+    public static boolean isRunningTaskLogEventBased = false;
     public static boolean withHostnameVerification = false;
     public static boolean clusterInitialized = false;
 
@@ -116,6 +117,7 @@ public class Globals {
             LOGGER.info("Started as API Server");
         }
         setMaxResponseDuration();
+        setRunningTaskLogEventBased();
     }
 
     public static void setProperties() {
@@ -306,6 +308,13 @@ public class Globals {
             maxResponseDuration = sosCockpitProperties.getProperty("max_response_duration", maxResponseDuration);
             // LOGGER.info("Max. response duration for ./events api = " +
             // maxResponseDuration + "s");
+        }
+    }
+
+    private static void setRunningTaskLogEventBased() {
+        if (sosCockpitProperties != null) {
+            isRunningTaskLogEventBased = sosCockpitProperties.getProperty("running_task_log_event_based", false);
+            LOGGER.info("Running Task Log = " + (isRunningTaskLogEventBased ? "event-based" : "file-based"));
         }
     }
 
@@ -519,13 +528,11 @@ public class Globals {
         return configurationGlobals == null ? new ConfigurationGlobalsIdentityService() : (ConfigurationGlobalsIdentityService) configurationGlobals
                 .getConfigurationSection(DefaultSections.identityService);
     }
-    
-    public static ConfigurationGlobalsKiosk getConfigurationGlobalsKiosk() {
-        return configurationGlobals == null ? new ConfigurationGlobalsKiosk() : (ConfigurationGlobalsKiosk) configurationGlobals.getConfigurationSection(
-                DefaultSections.kiosk);
-    }
 
-    
+    public static ConfigurationGlobalsKiosk getConfigurationGlobalsKiosk() {
+        return configurationGlobals == null ? new ConfigurationGlobalsKiosk() : (ConfigurationGlobalsKiosk) configurationGlobals
+                .getConfigurationSection(DefaultSections.kiosk);
+    }
 
     // -1: current version is older, 0: current version is equal, 1: current version
     // is younger

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.event.EventType;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
@@ -179,9 +180,9 @@ public class RunningTaskLogHandler {
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 
-    // TODO - stop monitoring if the log window is closed - JavaScript window unload -> calls new web service
     // TODO - sendEvent - RUNNING_LOG_BYTEBUFFER_ALLOCATE_SIZE best value ?
-    // TODO - sendEvent - open/close running log multiple times for order log (OrderProcessed duplicates)
+    // DONE - stop monitoring if the log window is closed - JavaScript window unload -> calls new web service - unsubscribe
+    // DONE - sendEvent - open/close running log multiple times for order log (OrderProcessed duplicates)
     // DONE - sendEvent - check if the monitoring not trigger for this HistoryOrderTaskLog events
     // DONE - sendEvent - open/close running log multiple sessions
     // DONE - if the same taskId is opened in two/multiple users sessions - the logs from other sessions are added to log because of HistoryOrderTaskLog
@@ -195,8 +196,16 @@ public class RunningTaskLogHandler {
             return;
         }
 
+        if (Globals.isRunningTaskLogEventBased) {
+            if (isDebugEnabled) {
+                LOGGER.debug(logPrefix + "[event-based]startPosition=" + startPosition);
+            }
+            RunningTaskLogs.getInstance().subscribe(content.getSessionIdentifier(), new TaskLogBean(content));
+            return;
+        }
+
         if (isDebugEnabled) {
-            LOGGER.debug(logPrefix + "startPosition=" + startPosition);
+            LOGGER.debug(logPrefix + "[file-based]startPosition=" + startPosition);
         }
 
         Thread workerThread = new Thread(() -> {

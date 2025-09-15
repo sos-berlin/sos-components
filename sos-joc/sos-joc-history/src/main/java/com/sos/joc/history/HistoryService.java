@@ -270,7 +270,7 @@ public class HistoryService extends AJocActiveMemberService {
         try {
             Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
             config = new JocHistoryConfiguration();
-            config.load(conf);
+            config.load(conf, Globals.isRunningTaskLogEventBased);
             updateHistoryConfig(true);
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
