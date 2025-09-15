@@ -211,7 +211,7 @@ public abstract class PublishUtils {
             SignatureException, CertificateException {
         // TODO: determine Signature algorithm from Certificate Object
         Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDrafts = new HashMap<>();
-        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+        if (keyPair == null || keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {

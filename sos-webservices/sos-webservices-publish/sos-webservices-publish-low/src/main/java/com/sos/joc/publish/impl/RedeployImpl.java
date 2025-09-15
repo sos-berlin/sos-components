@@ -102,7 +102,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             // all items will be resigned with a new commitId
             final String commitId = UUID.randomUUID().toString();
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.LOW);
 
             final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
 
