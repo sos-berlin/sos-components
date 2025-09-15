@@ -88,7 +88,8 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
                         }
                         SyncState syncState = SyncStateHelper.getState(currentstate, item.getId(), item.getObjectType(),
                                 deployedNames.get(item.getObjectType().intValue()));
-                        if(!ConfigurationType.FOLDER.equals(item.getObjectType()) && SyncStateText.NOT_DEPLOYED.equals(syncState.get_text())) {
+                        if(!ConfigurationType.FOLDER.equals(item.getObjectType()) && SyncStateText.NOT_DEPLOYED.equals(syncState.get_text())
+                                && SyncStateText.NOT_IN_SYNC.equals(syncState.get_text())) {
                             DBItemInventoryConfiguration invItem = session.get(DBItemInventoryConfiguration.class, item.getId());
                             invItem.setDeployed(false);
                             session.update(invItem);
