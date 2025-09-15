@@ -32,6 +32,7 @@ import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -166,7 +167,8 @@ public class Validator {
             Set<String> visibleAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
-                || ConfigurationType.JOBTEMPLATE.equals(type)) {
+                || ConfigurationType.JOBTEMPLATE.equals(type) || ConfigurationType.WORKINGDAYSCALENDAR.equals(type)
+                || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
             SOSHibernateSession session = null;
             try {
                 if (dbLayer == null) {
@@ -236,6 +238,8 @@ public class Validator {
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
                     // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
                     validateJobResourceRefs(jobTemplate.getJobResourceNames(), dbLayer);
+                } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
+                    validateCalendarRefs((Calendar) config, dbLayer);
                 }
             } finally {
                 Globals.disconnect(session);
@@ -283,7 +287,8 @@ public class Validator {
             throws SOSJsonSchemaException, IOException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
-                || ConfigurationType.JOBTEMPLATE.equals(type)) {
+                || ConfigurationType.JOBTEMPLATE.equals(type) || ConfigurationType.WORKINGDAYSCALENDAR.equals(type)
+                || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
             if (ConfigurationType.WORKFLOW.equals(type)) {
                 String json = new String(configBytes, StandardCharsets.UTF_8);
                 InventoryAgentInstancesDBLayer agentDBLayer = null;
@@ -340,6 +345,9 @@ public class Validator {
                 // TODO something like validateOrderPreparation(workflow.getOrderPreparation());
                 validateJobResourceRefs(jobTemplate.getJobResourceNames(), invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections
                         .emptySet()));
+            } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
+                validateCalendarRefs((Calendar) config, invObjNames.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()), invObjNames
+                        .getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()));
             }
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
@@ -431,14 +439,7 @@ public class Validator {
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
         List<String> calendarNames = getCalendarRefsInSchedule(schedule).distinct().collect(Collectors.toList());
-
-        List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames);
-        if (dbCalendars == null || dbCalendars.isEmpty()) {
-            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
-        } else if (dbCalendars.size() < calendarNames.size()) {
-            calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
-        }
+        validateCalendarRefs(calendarNames, dbLayer);
     }
 
     private static void validateCalendarRefs(Schedule schedule, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames)
@@ -459,6 +460,38 @@ public class Validator {
         calendarNames = Stream.concat(calendarNames, schedule.getCalendars().stream().map(AssignedCalendars::getExcludes).filter(Objects::nonNull)
                 .map(Frequencies::getNonWorkingDayCalendars).filter(Objects::nonNull).flatMap(Set::stream));
         return calendarNames;
+    }
+    
+    private static void validateCalendarRefs(Calendar calendar, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
+        List<String> calendarNames = getCalendarRefsInCalendar(calendar).stream().collect(Collectors.toList());
+        validateCalendarRefs(calendarNames, dbLayer);
+    }
+    
+    private static void validateCalendarRefs(Calendar calendar, Set<String> allWorkingDaysCalendarNames, Set<String> allNonWorkingDaysCalendarNames)
+            throws JocConfigurationException {
+        Set<String> calendarNames = getCalendarRefsInCalendar(calendar);
+
+        calendarNames.removeAll(allWorkingDaysCalendarNames);
+        calendarNames.removeAll(allNonWorkingDaysCalendarNames);
+        if (!calendarNames.isEmpty()) {
+            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
+        }
+    }
+    
+    private static Set<String> getCalendarRefsInCalendar(Calendar calendar) {
+        return Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).orElse(Collections.emptySet());
+    }
+    
+    private static void validateCalendarRefs(List<String> calendarNames, InventoryDBLayer dbLayer) throws SOSHibernateException {
+        if (!calendarNames.isEmpty()) {
+            List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames);
+            if (dbCalendars == null || dbCalendars.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
+            } else if (dbCalendars.size() < calendarNames.size()) {
+                calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
+            }
+        }
     }
 
 //    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> visibleAgentNames)

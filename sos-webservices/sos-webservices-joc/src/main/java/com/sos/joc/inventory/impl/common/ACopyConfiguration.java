@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
@@ -373,6 +374,19 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
 //                                json = json.replaceAll("(\"calendarName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
 //                                        + "\"");
 //                            }
+                            break;
+                        case WORKINGDAYSCALENDAR:
+                        case NONWORKINGDAYSCALENDAR:
+                            Map<String, String> oldNewNonWorkingDaysCalendarNames1 = oldToNewName.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR,
+                                    Collections.emptyMap());
+                            if (!oldNewNonWorkingDaysCalendarNames1.isEmpty()) {
+                                Calendar calendar = (Calendar) JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
+                                if (calendar.getExcludes() != null && calendar.getExcludes().getNonWorkingDayCalendars() != null) {
+                                    calendar.getExcludes().setNonWorkingDayCalendars(calendar.getExcludes().getNonWorkingDayCalendars().stream().map(
+                                            s -> oldNewNonWorkingDaysCalendarNames1.getOrDefault(s, s)).collect(Collectors.toSet()));
+                                }
+                                json = Globals.objectMapper.writeValueAsString(calendar);
+                            }
                             break;
                         case JOBTEMPLATE:
                             // include scripts
