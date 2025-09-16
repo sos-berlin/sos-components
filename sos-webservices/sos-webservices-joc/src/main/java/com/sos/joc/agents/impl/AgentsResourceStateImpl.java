@@ -300,6 +300,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                                     AgentState aState = getAgentState(couplingState, Optional.ofNullable(subagent
                                                             .getConnectionState()));
                                                     subagent.setState(aState);
+                                                    setStateFilter(subagent, aState);
                                                 } else {
                                                     addSubagentState(subagent, dbSubAgent, subagentItemStates, clusterState, subagentIsLost,
                                                             agentStateRefProblem, false);
@@ -336,9 +337,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                     agent.setConnectionState(getAgentConnectionState(optProblem));
                                     agent.setState(getAgentState(couplingState, Optional.ofNullable(agent.getConnectionState())));
+                                    setStateFilter(agent, agent.getState());
                                 }
                             } else {
                                 agent.setState(getState(AgentStateText.UNKNOWN));
+                                setStateFilter(agent, agent.getState());
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(agent.getStateTextFilter())) {
                                 return null;
@@ -526,6 +529,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             agent.setSubagents(null);
             agent.setUrl(dbAgent.getUri());
             agent.setState(getState(AgentStateText.UNKNOWN));
+            agent.setStateTextFilter(AgentStateTextFilter.UNKNOWN);
             agent.setHealthState(null); // will be set later for standalone agents
             agent.setDisabled(dbAgent.getDisabled());
         } else {
@@ -551,6 +555,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setSubagentId(dbSubagent.getSubAgentId());
         agent.setUrl(dbSubagent.getUri());
         agent.setState(getState(AgentStateText.UNKNOWN));
+        agent.setStateTextFilter(AgentStateTextFilter.UNKNOWN);
         agent.setDisabled(dbSubagent.getDisabled());
         agent.setIsDirector(dbSubagent.getDirectorAsEnum());
         return agent;
@@ -671,18 +676,21 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 agentState = getAgentState(couplingState, Optional.ofNullable(subagent.getConnectionState()));
             }
         }
-        subagent.setState(agentState);
-        if (AgentStateText.UNKNOWN.equals(agentState.get_text())) {
-            subagent.setStateTextFilter(AgentStateTextFilter.UNKNOWN);
-            subagent.setErrorMessage(null);
-        } else if (AgentStateText.SHUTDOWN.equals(agentState.get_text())) {
-            subagent.setStateTextFilter(AgentStateTextFilter.SHUTDOWN);
-        } else if (AgentStateText.INITIALISED.equals(agentState.get_text())) {
-            subagent.setStateTextFilter(AgentStateTextFilter.INITIALISED);
-        } else if (AgentStateText.RESETTING.equals(agentState.get_text())) {
-            subagent.setStateTextFilter(AgentStateTextFilter.RESETTING);
-        }
+        setStateFilter(subagent, agentState);
         return subagent;
+    }
+    
+    private static <T extends AgentStateV> void setStateFilter(T agent, AgentState agentState) {
+        if (AgentStateText.UNKNOWN.equals(agentState.get_text())) {
+            agent.setStateTextFilter(AgentStateTextFilter.UNKNOWN);
+            agent.setErrorMessage(null);
+        } else if (AgentStateText.SHUTDOWN.equals(agentState.get_text())) {
+            agent.setStateTextFilter(AgentStateTextFilter.SHUTDOWN);
+        } else if (AgentStateText.INITIALISED.equals(agentState.get_text())) {
+            agent.setStateTextFilter(AgentStateTextFilter.INITIALISED);
+        } else if (AgentStateText.RESETTING.equals(agentState.get_text())) {
+            agent.setStateTextFilter(AgentStateTextFilter.RESETTING);
+        }
     }
 
 }
