@@ -35,11 +35,13 @@ import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -107,7 +109,7 @@ public class DependencyResolver {
 
     
     public static ReferencedDbItem resolve(SOSHibernateSession session, String name, ConfigurationType type)
-            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+            throws SOSHibernateException, IOException {
         DBItemInventoryConfiguration dbItem = null;
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         List<DBItemInventoryConfiguration> allConfigs = dbLayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
@@ -185,6 +187,10 @@ public class DependencyResolver {
             if(schedulesBasedOnCalendar != null) {
                 cfg.getReferencedBy().addAll(schedulesBasedOnCalendar);
             }
+            List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(inventoryDbItem.getName());
+            if (calendars != null) {
+                cfg.getReferencedBy().addAll(calendars);
+            }
             break;
         case JOBTEMPLATE:
             List<DBItemInventoryConfiguration> workflowsByJobTemplate = dbLayer.getUsedWorkflowsByJobTemplateName(inventoryDbItem.getName());
@@ -210,8 +216,7 @@ public class DependencyResolver {
     
     // with minimal db access for dependency resolution of a collection of items
     public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem,
-            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws SOSHibernateException, JsonMappingException,
-                JsonProcessingException {
+            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws SOSHibernateException, IOException {
         // this method is currently not in use
         ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
         cfg.setReferencedItem(inventoryDbItem);
@@ -229,6 +234,7 @@ public class DependencyResolver {
             resolveWorkflowReferencedBy(cfg, groupedItems);
             break;
         case WORKINGDAYSCALENDAR:
+            resolveNonWorkingDaysCalendarsFromCalendars(cfg, groupedItems);
         case NONWORKINGDAYSCALENDAR:
             resolveAllCalendarReferencedBySchedule(cfg, groupedItems);
             break;
@@ -448,7 +454,24 @@ public class DependencyResolver {
             }
         }
     }
-
+    
+    public static void resolveNonWorkingDaysCalendarsFromCalendars(ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+            throws JsonParseException, JsonMappingException, IOException {
+        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).values();
+        Set<String> nonWorkingDaysCalendars = new HashSet<String>();
+        for(DBItemInventoryConfiguration calendar : cfgs) {
+            Calendar workingDayCal = (Calendar)JocInventory.content2IJSObject(calendar.getContent(), ConfigurationType.WORKINGDAYSCALENDAR);
+            Optional.ofNullable(workingDayCal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
+                .ifPresent(cals -> nonWorkingDaysCalendars.addAll(cals));
+        }
+        if(!nonWorkingDaysCalendars.isEmpty()) {
+            groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).entrySet().stream()
+                .filter(entry ->  nonWorkingDaysCalendars.contains(entry.getKey()))
+                .forEach(entry ->item.getReferences().add(entry.getValue()));
+        }
+        
+    }
+    
     public static void resolveJobTemplateReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs)
             throws JsonMappingException, JsonProcessingException {
         for(DBItemInventoryConfiguration cfg : cfgs) {
@@ -467,8 +490,7 @@ public class DependencyResolver {
     }
 
     // with db access for dependency resolution of a single or few items or to use with threading
-    public static void resolveReferences (ReferencedDbItem item, SOSHibernateSession session)
-            throws JsonMappingException, JsonProcessingException {
+    public static void resolveReferences (ReferencedDbItem item, SOSHibernateSession session) throws IOException {
         // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         String json = item.getReferencedItem().getContent();
@@ -755,6 +777,21 @@ public class DependencyResolver {
                 }
             }
             break;
+        case WORKINGDAYSCALENDAR:
+            // Calendars
+            Set<String> nwCalendars = new HashSet<String>();
+            Calendar calendar = (Calendar)JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
+            Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
+                .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
+            if(!nwCalendars.isEmpty()) {
+                for(String cal : nwCalendars) {
+                    results = dbLayer.getConfigurationByName(cal, ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
+                    results.stream().filter(dbItem -> ConfigurationType.NONWORKINGDAYSCALENDAR.equals(dbItem.getTypeAsEnum()))
+                        .findFirst().ifPresent(nwCal ->item.getReferences().add(nwCal));
+                }
+            }
+            break;
+            
         default:
             break;
         }
@@ -976,7 +1013,7 @@ public class DependencyResolver {
     }
     // with no further db access for dependency resolution of a collection of items
     public static ReferencedDbItem resolveReferences (ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-            throws JsonMappingException, JsonProcessingException {
+            throws IOException {
         // this method is currently not in use
         String json = item.getReferencedItem().getContent();
         switch (item.getReferencedItem().getTypeAsEnum()) {
@@ -1095,6 +1132,21 @@ public class DependencyResolver {
                 }
             }
             break;
+        case WORKINGDAYSCALENDAR:
+            // Calendars
+            Set<String> nwCalendars = new HashSet<String>();
+            Calendar calendar = (Calendar)JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
+            Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
+                .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
+            if(!nwCalendars.isEmpty()) {
+                for(String cal : nwCalendars) {
+                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+                    if(nwCalItem != null) {
+                        item.getReferences().add(nwCalItem);
+                    }
+                }
+            }
+            break;
         default:
             break;
         }
@@ -1131,8 +1183,7 @@ public class DependencyResolver {
         }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
     }
     
-    public static void insertOrRenewDependencies(DBItemInventoryConfiguration inventoryDbItem)
-            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+    public static void insertOrRenewDependencies(DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException, IOException {
         // this method is in use (JocInventory update and insert methods)
         SOSHibernateSession session = null;
         try {
@@ -1220,7 +1271,7 @@ public class DependencyResolver {
     // this method is currently not in use (method above with callables is currently used in the api)
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem,
             Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-                    throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+                    throws SOSHibernateException, IOException {
         ReferencedDbItem references = resolveReferencedBy(inventoryDbItem, groupedItems);
         resolveReferences(references, groupedItems);
         // store new dependencies
@@ -1291,7 +1342,7 @@ public class DependencyResolver {
     
     // this method is in use
     public static ReferencedDbItem convert(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
-            throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+            throws SOSHibernateException, IOException {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
         if(dependencies != null && !dependencies.isEmpty()) {
@@ -1308,7 +1359,7 @@ public class DependencyResolver {
     
     public static ReferencedDbItem convert(DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies,
             Map<Long, DBItemInventoryConfiguration> cfgs, SOSHibernateSession session) throws SOSHibernateException,
-            JsonMappingException, JsonProcessingException {
+            IOException {
         ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
         if(dependencies != null && !dependencies.isEmpty()) {
             for(DBItemInventoryDependency dependency : dependencies) {

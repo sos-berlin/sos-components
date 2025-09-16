@@ -149,8 +149,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                                     } else {
                                         return new ReferencedDbItem(null);
                                     }
-//                                    return DependencyResolver.resolve(dbLayer.getSession(), item.getName(), ConfigurationType.fromValue(item.getType()));
-                                } catch (JsonProcessingException | SOSHibernateException e) {
+                                } catch (IOException | SOSHibernateException e) {
                                     return new ReferencedDbItem(null);
                                 }
                             }));
