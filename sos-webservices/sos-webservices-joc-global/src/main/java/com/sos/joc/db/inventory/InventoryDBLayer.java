@@ -2008,6 +2008,19 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("calendarName", getRegexpParameter(calendarName, "\""));
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemInventoryConfiguration> getUsedCalendarsByCalendarName(String calendarName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type in (:types) ");
+        hql.append("and ");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.excludes");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", Set.of(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
+        query.setParameter("calendarName", getRegexpParameter(calendarName, "\""));
+        return getSession().getResultList(query);
+    }
 
     public List<DBItemInventoryConfiguration> getUsedJobsByDocName(String docName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");

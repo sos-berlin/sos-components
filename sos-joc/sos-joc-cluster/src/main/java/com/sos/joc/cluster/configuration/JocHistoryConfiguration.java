@@ -66,7 +66,9 @@ public class JocHistoryConfiguration implements Serializable {
     private int logMaximumByteSize = JocClusterUtil.mb2bytes(logMaximumMBSize);
     private int logMaximumDisplayByteSize = JocClusterUtil.mb2bytes(logMaximumDisplayMBSize);
 
-    public void load(final Properties conf) throws Exception {
+    private boolean runningTaskLogEventBased;
+
+    public void load(final Properties conf, final boolean isRunningTaskLogEventBased) throws Exception {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (conf.getProperty("history_log_dir") != null) {
             logDir = SOSPath.toAbsolutePath(JocClusterUtil.resolveVars(conf.getProperty("history_log_dir").trim()));
@@ -80,7 +82,7 @@ public class JocHistoryConfiguration implements Serializable {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new Exception(String.format("[%s][can't create directory]%s", logDir, e.toString()), e);
             }
         }
@@ -112,11 +114,12 @@ public class JocHistoryConfiguration implements Serializable {
         if (conf.getProperty("history_max_stop_processing_on_errors") != null) {
             maxStopProcessingOnErrors = Integer.parseInt(conf.getProperty("history_max_stop_processing_on_errors").trim());
         }
+        this.runningTaskLogEventBased = isRunningTaskLogEventBased;
 
         LOGGER.info(String.format(
-                "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%ss, cache_age=%ss, wait_interval_stop_processing_on_errors=%ss, max_stop_processing_on_errors=%s",
+                "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%ss, cache_age=%ss, wait_interval_stop_processing_on_errors=%ss, max_stop_processing_on_errors=%s, running_task_log_event_based=%s",
                 maxTransactions, bufferTimeoutMaxSize, bufferTimeoutMaxTime, releaseEventsInterval, cacheAge, waitIntervalStopProcessingOnErrors,
-                maxStopProcessingOnErrors));
+                maxStopProcessingOnErrors, runningTaskLogEventBased));
     }
 
     public Path getLogDir() {
@@ -326,5 +329,9 @@ public class JocHistoryConfiguration implements Serializable {
 
     public int getLogMaximumDisplayByteSize() {
         return logMaximumDisplayByteSize;
+    }
+
+    public boolean isRunningTaskLogEventBased() {
+        return runningTaskLogEventBased;
     }
 }

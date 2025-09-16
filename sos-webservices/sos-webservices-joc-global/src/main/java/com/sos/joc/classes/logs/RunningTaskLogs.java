@@ -55,7 +55,7 @@ public class RunningTaskLogs {
 
     // key=<sessionIdentifier>, value=Set<TaskLogBean(orderHistoryId,historyId)>
     private volatile Map<String, Set<TaskLogBean>> subscribedHistoryIds = new ConcurrentHashMap<>();
-    // key=<histroryId(taskId)>_<sessionIdentifier>
+    // key=<histroryId>_<sessionIdentifier>
     private volatile Map<String, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Map<String, Set<Long>> completeLogs = new ConcurrentHashMap<>();
     // key=<histroryId>_<sessionIdentifier>, value=eventId(current milliseconds)
@@ -129,8 +129,28 @@ public class RunningTaskLogs {
 
     @Subscribe({ HistoryOrderTaskLog.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLog evt) {
-        if (isSubscribed(evt.getSessionIdentifier(), evt.getHistoryOrderStepId())) {
-            // LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
+        // two possible sources:
+        // 1) event-based: HistoryOrderTaskLog events created once by the History service (without sessionIdentifier)
+        // - addEvents for all subscribed sessions here
+        // 2) file-based: HistoryOrderTaskLog events are created multiple times per subscribed sessionIdentifier
+        // - see RunningTaskLogHandler.runningTaskLogMonitor. The sessionIdentifier can be set because it is called by the web service (access token)
+        Set<String> subscribedSessions = new HashSet<>();
+        if (Globals.isRunningTaskLogEventBased) {
+            // 1) see explanation above
+            subscriptionStartTimes.keySet().forEach(e -> {
+                String sessionIdentifier = getSessionIdentifierFromEventKey(e);
+                if (sessionIdentifier != null && isSubscribed(sessionIdentifier, evt.getHistoryOrderStepId())) {
+                    subscribedSessions.add(sessionIdentifier);
+                }
+            });
+        } else {
+            // 2) see explanation above
+            if (isSubscribed(evt.getSessionIdentifier(), evt.getHistoryOrderStepId())) {
+                subscribedSessions.add(evt.getSessionIdentifier());
+            }
+        }
+
+        if (subscribedSessions.size() > 0) {
             RunningTaskLog r = new RunningTaskLog();
             r.setEventId(evt.getEventId());
             r.setLog(evt.getContent());
@@ -138,13 +158,22 @@ public class RunningTaskLogs {
             r.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[createHistoryTaskEvent][historyId=" + r.getTaskId() + "][" + evt.getKey() + "]complete=" + r.getComplete());
+                LOGGER.debug("[createHistoryTaskEvent][subscribed][historyId=" + r.getTaskId() + "][" + evt.getKey() + "]complete=" + r
+                        .getComplete());
             }
 
-            addEvent(evt.getSessionIdentifier(), r);
+            for (String sessionIdentifier : subscribedSessions) {
+                addEvent(sessionIdentifier, r);
+            }
             if (r.getComplete()) {
-                addCompleteness(evt.getSessionIdentifier(), r.getTaskId());
-                unsubscribe(evt.getSessionIdentifier(), r.getTaskId());
+                for (String sessionIdentifier : subscribedSessions) {
+                    addCompleteness(sessionIdentifier, r.getTaskId());
+                    unsubscribe(sessionIdentifier, r.getTaskId());
+                }
+            }
+        } else {
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("[createHistoryTaskEvent][not subscribed]historyId=" + evt.getHistoryOrderStepId());
             }
         }
     }
@@ -344,8 +373,20 @@ public class RunningTaskLogs {
         return historyId + EVENT_KEY_DELIMITER + getSessionIdentifier(sessionIdentifier);
     }
 
+    // historyId<EVENT_KEY_DELIMITER>sessionIdentifier
+    private String getSessionIdentifierFromEventKey(String eventKey) {
+        String[] arr = eventKey.split(EVENT_KEY_DELIMITER);
+        if (arr.length < 2) {
+            return null;
+        }
+        return arr[1];
+    }
+
     private boolean cleanupCheckIfIsSubscribed(String historyIdAndSessionIdentifier) {
         String[] arr = historyIdAndSessionIdentifier.split(EVENT_KEY_DELIMITER);
+        if (arr.length < 2) {
+            return false;
+        }
         try {
             String sessionIdentifier = arr[1];
             Long historyId = Long.valueOf(arr[0]);
@@ -365,7 +406,9 @@ public class RunningTaskLogs {
     private void cleanupSubscribedHistoryIds(String historyIdAndSessionIdentifier) {
         try {
             String[] arr = historyIdAndSessionIdentifier.split(EVENT_KEY_DELIMITER);
-            cleanupSubscribedHistoryIds(arr[1], Long.valueOf(arr[0]));
+            if (arr.length > 1) {
+                cleanupSubscribedHistoryIds(arr[1], Long.valueOf(arr[0]));
+            }
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("[cleanupSubscribedHistoryIds][" + historyIdAndSessionIdentifier + "][exception]" + e);

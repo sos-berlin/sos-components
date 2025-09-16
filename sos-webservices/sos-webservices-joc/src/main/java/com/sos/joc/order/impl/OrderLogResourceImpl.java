@@ -139,7 +139,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             RunningOrderLogs r = RunningOrderLogs.getInstance();
             RunningOrderLogs.Mode mode = r.hasEvents(orderLog.getEventId(), historyId);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("historyId '" + historyId + "' has log events: " + mode.name());
+                LOGGER.debug("[postRollingOrderLog][historyId=" + historyId + "][eventId=" + orderLog.getEventId() + "]mode=" + mode.name());
             }
             switch (mode) {
             case TRUE:
@@ -154,9 +154,9 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 EventBus.getInstance().register(this);
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
+
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("historyId '" + historyId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? "
-                            + complete.get());
+                    LOGGER.debug("  [end of waiting events]eventArrived=" + eventArrived.get() + ", complete=" + complete.get());
                 }
                 if (eventArrived.get()) {
                     if (!complete.get()) {
@@ -184,7 +184,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Subscribe({ HistoryOrderLogArrived.class })
     public void createHistoryOrderEvent(HistoryOrderLogArrived evt) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("orderlog event received with historyId '" + evt.getHistoryOrderId() + "', expected historyId '" + historyId + "'");
+            LOGGER.debug("[createHistoryOrderEvent][evt.historyOrderId=" + evt.getHistoryOrderId() + "]historyId=" + historyId);
         }
         if (historyId != null && historyId.equals(evt.getHistoryOrderId())) {
             eventArrived.set(true);
@@ -198,7 +198,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                        LOGGER.debug("[waitingForEvents]await " + condition.hashCode());
                     }
                     condition.await(maxDelay, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e1) {
@@ -216,11 +216,11 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
 
     private synchronized void signalEvent() {
         try {
-            LOGGER.debug("signalEvent: " + (condition != null));
+            LOGGER.debug("[signalEvent]" + (condition != null));
             if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
                 try {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                        LOGGER.debug("[signalEvent]signalAll" + condition.hashCode());
                     }
                     condition.signalAll();
                 } finally {
@@ -234,7 +234,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 LOGGER.warn("signalEvent failed");
             }
         } catch (InterruptedException e) {
-            LOGGER.warn("signalEvent: " + e.toString());
+            LOGGER.warn("[signalEvent]" + e.toString());
         }
     }
 

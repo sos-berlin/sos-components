@@ -50,6 +50,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.history.HistoryOrderLog;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
@@ -159,18 +160,21 @@ public class HistoryModel {
     private static final boolean CLEANUP_LOG_FILES = true;
 
     private final SOSHibernateFactory dbFactory;
-    private JocHistoryConfiguration historyConfiguration;
-    private ControllerConfiguration controllerConfiguration;
-    private YADEHandler yadeHandler;
-    private HistoryCacheHandler cacheHandler;
+    private final ControllerConfiguration controllerConfiguration;
+    private final YADEHandler yadeHandler;
+    private final HistoryCacheHandler cacheHandler;
     private final LogExtAsyncHandler logExtHandler;
-    private String identifier;
     private final String variableName;
-    private Long storedEventId;
-    private boolean closed = false;
-    private int maxTransactions = 100;
-    private long transactionCounter;
+
+    private JocHistoryConfiguration historyConfiguration;
+
+    private String identifier;
     private String controllerTimezone;
+
+    private Long storedEventId;
+    private long transactionCounter;
+    private int maxTransactions = 100;
+    private boolean closed = false;
 
     private boolean isDebugEnabled;
     private boolean isTraceEnabled;
@@ -546,7 +550,7 @@ public class HistoryModel {
                             FatEventWithProblem ep = (FatEventWithProblem) entry;
                             LOGGER.info(String.format("[%s][%s][%s][%s][%s]%s", controllerConfiguration.getCurrent().getId(), entry.getType(), ep
                                     .getOrderId(), ep.getEventType(), ep.getEventId(), ep.getError()));
-                        } catch (Throwable tep) {
+                        } catch (Exception eep) {
                         }
                         break;
                     case Empty:
@@ -562,15 +566,15 @@ public class HistoryModel {
                     counter.addFailed();
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             hasError = true;
             throw new HistoryModelException(controllerConfiguration.getCurrent().getId(), String.format("[%s][%s][end]%s", identifier, method, e
                     .toString()), e);
         } finally {
-            Throwable ex = null;
+            Exception ex = null;
             try {
                 tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
-            } catch (Throwable e1) {
+            } catch (Exception e1) {
                 ex = e1;
             }
             dbLayer.close();
@@ -578,7 +582,7 @@ public class HistoryModel {
             if (counter.getProcessed() == 0 && firstEventId == 0 && counter.getTotal() > 0) {
                 try {
                     firstEventId = list.get(0).getEventId();
-                } catch (Throwable e2) {
+                } catch (Exception e2) {
                 }
             }
 
@@ -608,17 +612,25 @@ public class HistoryModel {
         // if(logExtHandler)
     }
 
+    private void postEvent(String caller, JOCEvent evt) {
+        try {
+            EventBus.getInstance().post(evt);
+        }
+        // Catch both normal Exceptions and OutOfMemoryError during thread start.
+        // OutOfMemoryError can occur if the JVM or OS cannot create a new native thread - ignore it here.
+        // - avoiding History service failure causes temporary resource shortage (e.g., Java x86)
+        catch (Exception | OutOfMemoryError e) {
+            LOGGER.warn("[" + caller + "]" + e, e);
+        }
+    }
+
     // OrderStarted
     private void postEventOrderStarted(HistoryOrderBean hob) {
         if (hob == null) {
             return;
         }
-        try {
-            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(),
-                    hob.getWorkflowVersionId(), hob));
-        } catch (Throwable e) {
-            LOGGER.warn("[postEventOrderStarted]" + e, e);
-        }
+        postEvent("postEventOrderStarted", new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob
+                .getWorkflowPath(), hob.getWorkflowVersionId(), hob));
     }
 
     // OrderCancelled, OrderFinished, OrderBroken
@@ -628,25 +640,16 @@ public class HistoryModel {
         }
         cacheHandler.clear(CacheType.orderWithChildOrders, hob.getOrderId());
 
-        try {
-            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob
-                    .getWorkflowPath(), hob.getWorkflowVersionId(), hob));
-        } catch (Throwable e) {
-            LOGGER.warn("[postEventOrderTerminated]" + e, e);
-        }
+        postEvent("postEventOrderTerminated", new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob
+                .getWorkflowPath(), hob.getWorkflowVersionId(), hob));
     }
 
     private void postEventOrderUpdated(HistoryOrderBean hob) {
         if (hob == null) {
             return;
         }
-
-        try {
-            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob.getWorkflowPath(),
-                    hob.getWorkflowVersionId(), hob));
-        } catch (Throwable e) {
-            LOGGER.warn("[postEventOrderUpdated]" + e, e);
-        }
+        postEvent("postEventOrderUpdated", new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), hob.getOrderId(), hob
+                .getWorkflowPath(), hob.getWorkflowVersionId(), hob));
     }
 
     private void postEventOrderTaskStarted(DBLayerHistory dbLayer, FatEventOrderStepStarted evt, HistoryOrderStepBean hosb) {
@@ -661,12 +664,8 @@ public class HistoryModel {
             //
         }
         if (co != null) {
-            try {
-                EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
-                        .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
-            } catch (Throwable e) {
-                LOGGER.warn("[postEventOrderTaskStarted]" + e, e);
-            }
+            postEvent("postEventOrderTaskStarted", new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                    .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
         }
     }
 
@@ -683,12 +682,8 @@ public class HistoryModel {
             //
         }
         if (co != null) {
-            try {
-                EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
-                        .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
-            } catch (Throwable e) {
-                LOGGER.warn("[postEventOrderTaskTerminated]" + e, e);
-            }
+            postEvent("postEventOrderTaskTerminated", new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                    .getWorkflowPath(), co.getWorkflowVersionId(), hosb));
         }
     }
 
@@ -698,32 +693,22 @@ public class HistoryModel {
             HistoryOrderStepBean hosb = cos.convert(EventType.OrderStderrWritten, eventId, controllerConfiguration.getCurrent().getId(), co
                     .getWorkflowPath());
             hosb.setCriticality(getJobCriticality(job));
-            try {
-                EventBus.getInstance().post(new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
-            } catch (Throwable e) {
-                LOGGER.warn("[postEventTaskLogFirstStderr]" + e, e);
-            }
+
+            postEvent("postEventTaskLogFirstStderr", new HistoryOrderTaskLogFirstStderr(controllerConfiguration.getCurrent().getId(), hosb));
         }
     }
 
-    @SuppressWarnings("unused")
-    // unused because of JOC-1821
+    // Running Task Log: JOC-2114 (file|event-based)
     private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
-        try {
-            EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
-                    .getHistoryOrderStepId(), content, null));
-        } catch (Throwable e) {
-            LOGGER.warn("[postEventTaskLog]" + e, e);
+        if (!historyConfiguration.isRunningTaskLogEventBased()) {
+            return;
         }
+        postEvent("postEventTaskLog", new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry.getHistoryOrderStepId(),
+                content, null));
     }
 
-    // TODO analogous to JOC-1821 - running order log - read a specific order file instead of using the event interface(all orders)
     private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
-        try {
-            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry, null));
-        } catch (Throwable e) {
-            LOGGER.warn("[postEventOrderLog]" + e, e);
-        }
+        postEvent("postEventOrderLog", new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry, null));
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
@@ -1070,7 +1055,7 @@ public class HistoryModel {
                 } else {
                     try {
                         Files.createDirectories(orderDir);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         removeNotStartedOrderLog = true;
                         LOGGER.warn(String.format("[%s][%s][%s][cannot create directory=%s]%s", method, orderId, notStartedOrderLog, orderDir, e
                                 .toString()), e);
@@ -1084,11 +1069,11 @@ public class HistoryModel {
                     } else {
                         SOSPath.renameTo(notStartedOrderLog, orderLog);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.warn(String.format("[%s][%s][%s]%s", method, orderId, notStartedOrderLog, e.toString()), e);
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(String.format("[%s][%s]%s", method, orderId, e.toString()), e);
         }
     }
@@ -1230,9 +1215,9 @@ public class HistoryModel {
                     cacheHandler.clear(CacheType.order, orderId);
                 }
                 tryStoreCurrentState(dbLayer, eventId);
-            } catch (Throwable te) {
-                String msg = String.format("[%s][%s][%s]%s", identifier, eventType, SOSString.toString(co, true), te);
-                throw new HistoryModelOrderException(controllerConfiguration.getCurrent().getId(), msg, te);
+            } catch (Exception ex) {
+                String msg = String.format("[%s][%s][%s]%s", identifier, eventType, SOSString.toString(co, true), ex);
+                throw new HistoryModelOrderException(controllerConfiguration.getCurrent().getId(), msg, ex);
             }
         } else {
             if (isDebugEnabled) {
@@ -1787,10 +1772,10 @@ public class HistoryModel {
                 endedOrderSteps.put(eos.getOrderId(), cos);
 
                 tryStoreCurrentState(dbLayer, eos.getEventId());
-            } catch (Throwable te) {
+            } catch (Exception ex) {
                 String msg = String.format("[%s][%s][%s][%s]%s", identifier, EventType.OrderProcessed, SOSString.toString(co, true), SOSString
-                        .toString(cos, true), te);
-                throw new HistoryModelOrderStepException(controllerConfiguration.getCurrent().getId(), msg, te);
+                        .toString(cos, true), ex);
+                throw new HistoryModelOrderStepException(controllerConfiguration.getCurrent().getId(), msg, ex);
             }
         } else {
             if (isDebugEnabled) {
@@ -1845,7 +1830,7 @@ public class HistoryModel {
     private void deleteLogOrderDirectory(Path file, String orderId) {
         try {
             SOSPath.deleteIfExists(file.getParent());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(String.format("[%s][%s][error on delete order directory][%s]%s", identifier, orderId, file.getParent(), e.toString()), e);
         }
     }
@@ -1921,7 +1906,7 @@ public class HistoryModel {
                         postEventTaskLogFirstStderr(eventId, co, cos, job);
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.info(String.format("[%s][%s][warnOnOrderStepStderr][workflow=%s][orderId=%s][job=%s %s]%s", identifier, controllerConfiguration
                         .getCurrent().getId(), co.getWorkflowPath(), co.getOrderId(), cos.getJobName(), SOSString.toString(cos), e.toString()));
             } finally {
@@ -1987,7 +1972,7 @@ public class HistoryModel {
                     } else {
                         try {
                             item.setFileContent(SOSGzip.compress(file, false).getCompressed());
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             Path f = moveOriginalLogFile(file, item.getFileSizeUncomressed(), e);
                             if (f == null) {
                                 item = null;
@@ -2020,14 +2005,14 @@ public class HistoryModel {
             } else {
                 LOGGER.error(String.format("[%s][%s][%s]file not found", identifier, method, file.toString()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, file.toString(), e.toString()), e);
             item = null;
         }
         return item;
     }
 
-    private Path moveOriginalLogFile(Path file, Long fileSizeUncomressed, Throwable t) {
+    private Path moveOriginalLogFile(Path file, Long fileSizeUncomressed, Exception e) {
         StringBuilder prefix = new StringBuilder();
         prefix.append("[JOC][History][").append(file).append("]");
 
@@ -2035,7 +2020,7 @@ public class HistoryModel {
         result.append(prefix).append("Log file ");
         result.append("(uncompressed size=").append(SOSShell.formatBytes(fileSizeUncomressed)).append(") ");
         result.append("will be moved because exception:").append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
-        result.append(SOSClassUtil.getStackTrace(t));
+        result.append(SOSClassUtil.getStackTrace(e));
         result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
 
         Path historyLogParentDir = historyConfiguration.getLogDir().getParent();
@@ -2046,25 +2031,25 @@ public class HistoryModel {
                 Path target = historyLogParentDir.resolve("history_" + file.getFileName());
                 SOSPath.renameTo(file, target);
                 result.append(prefix).append("Log file moved to ").append(target).append(".");
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 try {
                     result.append(prefix).append("Log file cannot be moved to ").append(historyLogParentDir).append(":").append(
                             JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(SOSClassUtil.getStackTrace(ex)).append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(prefix).append("Log file will be deleted.");
                     SOSPath.deleteIfExists(file);
-                } catch (Throwable e) {
+                } catch (Exception exx) {
                     result.append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
                     result.append(prefix).append("Log file cannot be deleted:").append(JocClusterUtil.HISTORY_LOG_NEW_LINE);
-                    result.append(SOSClassUtil.getStackTrace(e));
+                    result.append(SOSClassUtil.getStackTrace(exx));
                 }
             }
         }
 
         try {
             file = Files.write(file, result.toString().getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (Throwable e) {
-            LOGGER.info(String.format("[moveOriginalLogFile][%s][truncate existing]%s", file, e.toString()));
+        } catch (Exception ex) {
+            LOGGER.info(String.format("[moveOriginalLogFile][%s][truncate existing]%s", file, ex.toString()));
             return null;
         }
         return file;
@@ -2169,7 +2154,7 @@ public class HistoryModel {
                     pn.setId(fpn.getNoticeId());
                     try {
                         pn.setEndOfLife(getDateAsString(fpn.getEndOfLife(), controllerTimezone));
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         LOGGER.info(String.format("[createOrderLogEntry][OrderNoticePosted][boardName=%s][%s]%s", pn.getBoardName(), fpn
                                 .getEndOfLife(), e.toString()));
                     }
@@ -2184,7 +2169,7 @@ public class HistoryModel {
             try {
                 r.setDelayedUntil(getDateAsString(le.getDelayedUntil(), controllerTimezone));
                 ole.setRetrying(r);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.info(String.format("[createOrderLogEntry][OrderRetrying][delayedUntil=%s]%s", le.getDelayedUntil(), e.toString()));
             }
         } else if (le.getSleepUntil() != null) {
@@ -2192,7 +2177,7 @@ public class HistoryModel {
             try {
                 s.setUntil(getDateAsString(le.getSleepUntil(), controllerTimezone));
                 ole.setSleep(s);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.info(String.format("[createOrderLogEntry][OrderSleeping][until=%s]%s", le.getSleepUntil(), e.toString()));
             }
         } else if (le.getCaught() != null) {
@@ -2209,7 +2194,7 @@ public class HistoryModel {
                 ms.setInstruction(toOrderLogEntryInstruction(le.getOrderMoved().getInstruction()));
                 try {
                     ms.setReason(MovedSkippedReason.valueOf(le.getOrderMoved().getReason()));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     ms.setReason(MovedSkippedReason.Unknown);
                 }
                 m.setSkipped(ms);
@@ -2235,7 +2220,7 @@ public class HistoryModel {
                 cp.setEnd(getDateAsString(le.getOrderCyclingPrepared().getEnd(), controllerTimezone));
                 c.setPrepared(cp);
                 ole.setCycle(c);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 LOGGER.info(String.format("[createOrderLogEntry][OrderCyclingPrepared][next=%s,end=%s]%s", le.getOrderCyclingPrepared().getNext(), le
                         .getOrderCyclingPrepared().getEnd(), t.toString()));
             }
@@ -2267,7 +2252,7 @@ public class HistoryModel {
         w.setEntries(l.stream().map(e -> {
             try {
                 return getDateAsString(e, controllerTimezone);
-            } catch (Throwable t) {
+            } catch (Exception ex) {
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList()));
@@ -2291,7 +2276,7 @@ public class HistoryModel {
         TimeZone tz = null;
         try {
             tz = TimeZone.getTimeZone(timeZone);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             tz = TimeZone.getTimeZone(HistoryUtil.getTimeZone("getDateAsString", timeZone));
         }
         return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", tz);
@@ -2345,7 +2330,7 @@ public class HistoryModel {
             content.append(le.getInfo());
 
             contentAsString = content.toString();
-            // postEventTaskLog(le, contentAsString, newLine);
+            postEventTaskLog(le, contentAsString, newLine);
             break;
         case OrderProcessed:
             // order log
@@ -2371,7 +2356,7 @@ public class HistoryModel {
             content.append(le.getInfo());
 
             contentAsString = content.toString();
-            // postEventTaskLog(le, contentAsString, newLine);
+            postEventTaskLog(le, contentAsString, newLine);
             break;
 
         case OrderStdoutWritten:
@@ -2396,7 +2381,7 @@ public class HistoryModel {
                     } else {
                         cos.addLogSize(stdout.getBytes().length);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.info(String.format("[%s][%s][%s]%s", identifier, le.getEventType(), file, e.toString()));
                 }
             } else {
@@ -2423,7 +2408,7 @@ public class HistoryModel {
                 content.append(stdout);
                 contentAsString = content.toString();
                 if (postEvent) {
-                    // postEventTaskLog(le, contentAsString, newLine);
+                    postEventTaskLog(le, contentAsString, newLine);
                 }
             }
             break;
@@ -2489,10 +2474,10 @@ public class HistoryModel {
                     Files.createDirectories(parent);
                 }
                 write2file(file, content, newLine);
-            } catch (Throwable ee) {
+            } catch (Exception ee) {
                 LOGGER.error(String.format("[%s][%s]%s", identifier, file, ee.toString()), ee);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, file, e.toString()), e);
         }
     }

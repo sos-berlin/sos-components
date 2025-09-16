@@ -89,7 +89,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                         disable(taskLog);
                     } else {
                         if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ",complete=" + taskLog.getComplete());
+                            LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ", complete=" + taskLog.getComplete());
                         }
                     }
                     break;
@@ -216,7 +216,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 LOGGER.info("signalEvent failed");
             }
         } catch (InterruptedException e) {
-            LOGGER.info("signalEvent: " + e.toString());
+            LOGGER.info("[signalEvent]" + e.toString());
         }
     }
 

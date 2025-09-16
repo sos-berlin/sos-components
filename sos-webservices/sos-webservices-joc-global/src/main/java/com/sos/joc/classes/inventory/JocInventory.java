@@ -1359,7 +1359,7 @@ public class JocInventory {
                 }
             }
             break;
-        case WORKINGDAYSCALENDAR: // determine Schedules with Calendar reference
+        case WORKINGDAYSCALENDAR: // determine Schedules and Calendars with Calendar reference
         case NONWORKINGDAYSCALENDAR:
             List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
             if (schedules1 != null && !schedules1.isEmpty()) {
@@ -1396,6 +1396,26 @@ public class JocInventory {
 //                    }
                 }
             }
+            
+            List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(config.getName());
+            if (calendars != null && !calendars.isEmpty()) {
+                for (DBItemInventoryConfiguration calendar : calendars) {
+                    Calendar cal = (Calendar) content2IJSObject(calendar.getContent(), calendar.getType());
+                    Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config
+                            .getName())).ifPresent(nwcs -> nwcs.add(newName));
+                    calendar.setContent(Globals.objectMapper.writeValueAsString(cal));
+                    calendar.setReleased(false);
+                    int i = items.indexOf(calendar);
+                    if (i != -1) {
+                        items.get(i).setContent(calendar.getContent());
+                        items.get(i).setReleased(false);
+                    } else {
+                        JocInventory.updateConfiguration(dbLayer, calendar);
+                        events.add(calendar.getFolder());
+                    }
+                }
+            }
+            
             break;
         case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
             List<DBItemInventoryConfiguration> workflowsOrJobTemplates = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
