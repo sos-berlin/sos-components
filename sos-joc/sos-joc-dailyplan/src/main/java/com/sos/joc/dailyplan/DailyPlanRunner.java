@@ -109,6 +109,12 @@ import js7.data_for_java.plan.JPlanSchemaState;
 import js7.data_for_java.plan.JPlanStatus;
 import js7.proxy.javaapi.JControllerProxy;
 
+/** DailyPlanRunner as a service perform 2 steps:<br/>
+ * 1) handle/generate daily plan<br/>
+ * 2) generate projections<br/>
+ * - if projections generations is already active(e.g. started by the recreate projection web service), it is cancelled because step 1) generates the most
+ * current daily plan<br/>
+ */
 public class DailyPlanRunner extends TimerTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRunner.class);
@@ -201,6 +207,7 @@ public class DailyPlanRunner extends TimerTask {
         return (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0;
     }
 
+    // see DailyPlanRunner class annotation
     private void recreateProjectionsByService() {
         try {
             int maxTries = 60;

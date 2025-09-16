@@ -87,10 +87,14 @@ public class DailyPlanProjections {
         String add = DailyPlanHelper.getCallerForLog(settings);
         String logPrefix = String.format("[%s]%s[projections]", settings.getStartMode(), add);
 
-        if (!LOCK.tryLock()) {
+        if (!LOCK.tryLock()) { // already in progress
             if (settings.isWebservice()) {
+                // the current process was called by the recreate projections web service - ignore it
                 LOGGER.info(logPrefix + "[skip]process is already in progress - new request ignored");
             } else {
+                // the current process was called by the DailyPlanRunner service
+                // - handle/cancel the projection generation as it will be restarted by the DailyPlanRunner due to DailyPlanRunner has the latest daily plan
+                // -- see DailyPlanRunner.recreateProjectionsByService
                 if (prioRequested.get()) {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(logPrefix + "[prio]process is already in progress - waiting for cancellation to complete before restart");

@@ -510,7 +510,8 @@ public class OrderListSynchronizer {
         }
     }
 
-    public void storeAndSubmitPlannedOrder(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
+    @SuppressWarnings("unused")
+    private void storeAndSubmitPlannedOrder(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
             Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             DBMissingDataException, DBOpenSessionException, DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
 
