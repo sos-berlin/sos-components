@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,6 +95,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     private static final Integer RED_SEVERITY = 2;
     private static final Integer ORANGE_SEVERITY = 5;
     private static final Integer OLIVGREEN_SEVERITY = 8;
+    private static final Integer GREY_SEVERITY = 4;
     private static final Map<AgentStateText, Integer> agentStates = Collections.unmodifiableMap(new HashMap<AgentStateText, Integer>() {
 
         private static final long serialVersionUID = 2L;
@@ -104,7 +106,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put(AgentStateText.INITIALISED, 1);
             put(AgentStateText.COUPLINGFAILED, RED_SEVERITY); // obsolete
             put(AgentStateText.SHUTDOWN, RED_SEVERITY);
-            put(AgentStateText.UNKNOWN, 4); // gray
+            put(AgentStateText.UNKNOWN, GREY_SEVERITY); // gray
         }
     });
     private static final Map<AgentConnectionStateText, Integer> agentConnectionStates = Collections.unmodifiableMap(
@@ -475,11 +477,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     private static AgentClusterState getHealthState(List<SubagentV> subagents) {
         AgentClusterStateText healthstate = AgentClusterStateText.UNKNOWN;
         if (subagents != null) {
-            List<AgentStateTextFilter> notCoupled = Arrays.asList(AgentStateTextFilter.COUPLINGFAILED, AgentStateTextFilter.SHUTDOWN,
-                    AgentStateTextFilter.UNKNOWN);
+//            List<AgentStateTextFilter> notCoupled = Arrays.asList(AgentStateTextFilter.COUPLINGFAILED, AgentStateTextFilter.SHUTDOWN,
+//                    AgentStateTextFilter.UNKNOWN);
+            Predicate<Integer> redOrGrey = i -> RED_SEVERITY == i || GREY_SEVERITY == i;
             if (subagents.stream().map(SubagentV::getStateTextFilter).allMatch(AgentStateTextFilter.UNKNOWN::equals)) {
                 healthstate = AgentClusterStateText.UNKNOWN;
-            } else if (subagents.stream().map(SubagentV::getStateTextFilter).allMatch(notCoupled::contains)) { // SHUTDOWN, COUPLING_FAILED OR UNKNOWN
+//            } else if (subagents.stream().map(SubagentV::getStateTextFilter).allMatch(notCoupled::contains)) { // SHUTDOWN, COUPLING_FAILED OR UNKNOWN
+//                healthstate = AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
+            } else if (subagents.stream().map(SubagentV::getState).map(AgentState::getSeverity).allMatch(redOrGrey)) { // SHUTDOWN, COUPLING_FAILED OR UNKNOWN
                 healthstate = AgentClusterStateText.NO_SUBAGENTS_ARE_COUPLED_AND_ENABLED;
             } else if (subagents.stream().map(SubagentV::getStateTextFilter).allMatch(AgentStateTextFilter.COUPLED::equals)) { // severity 0 means COUPLED
                 int numOfDisabledSubagents = subagents.stream().filter(SubagentV::getDisabled).mapToInt(e -> 1).sum();
