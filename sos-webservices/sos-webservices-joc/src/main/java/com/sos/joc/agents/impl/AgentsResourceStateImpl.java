@@ -339,9 +339,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     agent.setState(getAgentState(couplingState, Optional.ofNullable(agent.getConnectionState())));
                                     setStateFilter(agent, agent.getState());
                                 }
-                            } else {
-                                agent.setState(getState(AgentStateText.UNKNOWN));
-                                setStateFilter(agent, agent.getState());
                             }
                             if (withStateFilter && !agentsParam.getStates().contains(agent.getStateTextFilter())) {
                                 return null;
@@ -570,6 +567,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             connectionState.map(AgentConnectionState::getSeverity).ifPresent(agentState::setSeverity);
         } else if (couplingState instanceof DelegateCouplingState.Resetting) {
             agentState = getState(AgentStateText.RESETTING);
+            connectionState.map(AgentConnectionState::getSeverity).ifPresent(agentState::setSeverity);
         } else if (couplingState instanceof DelegateCouplingState.Reset) {
             String reason = ((DelegateCouplingState.Reset) couplingState).reason().string();
             if (reason.equalsIgnoreCase("Shutdown")) {
@@ -577,6 +575,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             } else {
                 agentState = getState(AgentStateText.INITIALISED, reason);
             }
+            connectionState.map(AgentConnectionState::getSeverity).ifPresent(agentState::setSeverity);
         }
         return agentState;
     }
@@ -676,6 +675,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 agentState = getAgentState(couplingState, Optional.ofNullable(subagent.getConnectionState()));
             }
         }
+        subagent.setState(agentState);
         setStateFilter(subagent, agentState);
         return subagent;
     }
