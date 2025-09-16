@@ -631,20 +631,6 @@
         <groupId>com.hierynomus</groupId>
         <artifactId>sshj</artifactId>
         <version>${sshj.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk18on</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>commons-net</groupId>
@@ -829,10 +815,6 @@
             <artifactId>logback-classic</artifactId> 
           </exclusion>
           <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId> 
           </exclusion>
@@ -880,18 +862,6 @@
         <artifactId>database</artifactId>
         <version>${keepass.java2.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
           <exclusion>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId> 
@@ -948,12 +918,6 @@
         <groupId>com.hierynomus</groupId>
         <artifactId>smbj</artifactId>
         <version>${smbj.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
           <groupId>net.thisptr</groupId>
