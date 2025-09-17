@@ -370,7 +370,7 @@ public class OrderApi {
             Instant end = Instant.now();
             
             if (either == null) {
-                msg = "submission failed for " + set.size() + "orders";
+                msg = "submission failed for " + set.size() + " orders";
                 either = Either.left(Problem.pure(msg));
             }
             LOGGER.info(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
