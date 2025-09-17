@@ -22,6 +22,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -112,7 +113,11 @@ public class DBLayerDailyPlannedOrders {
     public void deleteSingleCascading(DBItemDailyPlanOrder item) throws SOSHibernateException {
         
         // order
-        session.delete(item);
+        try {
+            session.delete(item);
+        } catch (SOSHibernateObjectOperationStaleStateException e1) {
+            LOGGER.warn("", e1);
+        }
         // variables
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES);
@@ -189,7 +194,11 @@ public class DBLayerDailyPlannedOrders {
             List<DBItemDailyPlanVariable> result = query.getResultList();
             if (result != null) {
                for (DBItemDailyPlanVariable varItem : result) {
-                   session.delete(varItem);
+                   try {
+                       session.delete(varItem);
+                   } catch (SOSHibernateObjectOperationStaleStateException e1) {
+                       LOGGER.warn("", e1);
+                   }
                }
             }
         } catch (SOSHibernateException e) {

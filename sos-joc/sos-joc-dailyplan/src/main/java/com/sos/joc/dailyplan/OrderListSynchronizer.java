@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Period;
@@ -409,7 +410,7 @@ public class OrderListSynchronizer {
 
         if (settings.isOverwrite()) {
             SOSHibernateSession session = null;
-            List<DBItemDailyPlanOrder> orders = new ArrayList<DBItemDailyPlanOrder>();
+            Set<DBItemDailyPlanOrder> orders = new HashSet<DBItemDailyPlanOrder>();
             try {
                 session = Globals.createSosHibernateStatelessConnection(method + "-" + date);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -454,7 +455,11 @@ public class OrderListSynchronizer {
                                 if (!cyclicMainParts.contains(mainPart)) {
                                     cyclicMainParts.add(mainPart);
                                 }
-                                session4delete.delete(item);
+                                try {
+                                    session4delete.delete(item);
+                                } catch (SOSHibernateObjectOperationStaleStateException e1) {
+                                    LOGGER.warn("", e1);
+                                }
                                 try {
                                     OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
                                 } catch (Exception e) {
