@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -284,7 +285,9 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                         .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
                                         .map(ResponseDeployableVersion::getDeploymentPath)
                                         .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
-                                    treeItem.setForceDependencies(true);
+                                    if (!treeItem.getSyncState().get_text().equals(SyncStateText.NOT_IN_SYNC)) {
+                                        treeItem.setForceDependencies(true);
+                                    }
                                 }
                             }
                         }

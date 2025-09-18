@@ -816,7 +816,12 @@ public class DBLayerDeploy {
                 query.setParameter("path", cfg.getPath());
                 query.setParameter("type", cfg.getObjectType().intValue());
                 query.setMaxResults(1);
-                results.add(query.getSingleResult());
+                try {
+                    DBItemDeploymentHistory result = query.getSingleResult();
+                    results.add(result);
+                } catch (Exception e) {
+                    LOGGER.warn(cfg.getObjectType().name() + ": " + cfg.getPath() + " not found in DEP_HISTORY.");
+                }
             }
             if (results != null && !results.isEmpty()) {
                 return results;
