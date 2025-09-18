@@ -2,6 +2,7 @@ package com.sos.joc.inventory.changes.common;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -11,6 +12,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryChange;
 import com.sos.joc.db.inventory.changes.DBLayerChanges;
 import com.sos.joc.model.inventory.changes.StoreChangeRequest;
+import com.sos.joc.model.inventory.changes.common.ChangeIdentifier;
 import com.sos.joc.model.inventory.changes.common.ChangeState;
 
 public abstract class AStoreChange extends JOCResourceImpl {
@@ -34,15 +36,15 @@ public abstract class AStoreChange extends JOCResourceImpl {
     public void store(StoreChangeRequest request, SOSHibernateSession session) throws SOSHibernateException {
         DBLayerChanges dbLayer = new DBLayerChanges(session);
         DBItemInventoryChange existingChange = dbLayer.getChange(request.getStore().getName());
-        if(existingChange != null) {
-            existingChange.setState(request.getStore().getState().intValue());
-            if(ChangeState.PUBLISHED.equals(request.getStore().getState())) {
+        if (existingChange != null) {
+            Optional.ofNullable(request.getStore()).map(ChangeIdentifier::getState).map(ChangeState::intValue).ifPresent(existingChange::setState);
+            if (ChangeState.PUBLISHED.equals(request.getStore().getState())) {
                 existingChange.setPublishedBy(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
             }
             existingChange.setTitle(request.getStore().getTitle());
             Date now = Date.from(Instant.now());
             existingChange.setModified(now);
-            if(ChangeState.CLOSED.equals(request.getStore().getState())) {
+            if (ChangeState.CLOSED.equals(request.getStore().getState())) {
                 existingChange.setClosed(now);
             }
             session.update(existingChange);
