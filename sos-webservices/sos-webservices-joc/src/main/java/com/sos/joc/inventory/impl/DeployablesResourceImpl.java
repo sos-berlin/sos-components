@@ -285,7 +285,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                         .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
                                         .map(ResponseDeployableVersion::getDeploymentPath)
                                         .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
-                                    if (!treeItem.getSyncState().get_text().equals(SyncStateText.NOT_IN_SYNC)) {
+                                    if (treeItem.getSyncState() != null) {
                                         treeItem.setForceDependencies(true);
                                     }
                                 }
