@@ -32,7 +32,6 @@ import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -148,8 +147,10 @@ public class DeleteDeployments {
     
     public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, String folder, boolean recursive, Collection<String> controllerIds,
             DBLayerDeploy dbLayer, String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents, String cancelOrderDate) throws SOSHibernateException {
-        
+            boolean withEvents, String cancelOrderDate) throws SOSHibernateException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
+
         Configuration conf = new Configuration();
         conf.setObjectType(ConfigurationType.FOLDER);
         conf.setPath(folder);
@@ -160,27 +161,34 @@ public class DeleteDeployments {
     
     public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds,
             DBLayerDeploy dbLayer, String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents, String cancelOrderDate) throws SOSHibernateException {
-        
+            boolean withEvents, String cancelOrderDate) throws SOSHibernateException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
+
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
             return Collections.emptySet();
         }
-   
-        final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-        final String commitIdForDeleteFileOrderSource = UUID.randomUUID().toString();
         
         List<DBItemDeploymentHistory> dbItems = controllerIds.stream().flatMap(controllerId -> dbLayer.getLatestDepHistoryItemsFromFolder(conf
                 .getPath(), controllerId, conf.getRecursive())).filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors
                         .toList());
-
-        // delete configurations optimistically
-        Set<DBItemInventoryConfiguration> invItemsforTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
-                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource, account, auditlogId));
-        deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
         Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> itemsToDeletePerController = dbItems.stream().collect(Collectors.groupingBy(
                 DBItemDeploymentHistory::getControllerId, Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
         
+        // check older workflow versions
+        for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : itemsToDeletePerController.entrySet()) {
+            checkIfWorkflowsHaveOrders(entry.getKey(), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
+                    DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+        }
+        
+        final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
+        final String commitIdForDeleteFileOrderSource = UUID.randomUUID().toString();
+   
+        // delete configurations optimistically
+        Set<DBItemInventoryConfiguration> invItemsforTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems,
+                commitIdForDeleteFromFolder, commitIdForDeleteFileOrderSource, account, auditlogId));
+        deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
         // optimistic DB operations
         for (String controllerId : itemsToDeletePerController.keySet()) {
