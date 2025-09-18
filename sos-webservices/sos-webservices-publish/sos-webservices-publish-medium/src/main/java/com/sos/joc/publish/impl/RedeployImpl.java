@@ -112,7 +112,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (!latest.isEmpty()) {
-                Stream<DBItemDeploymentHistory> latestStream = latest.stream().filter(item -> OperationType.DELETE.value() != item.getOperation());
+                Stream<DBItemDeploymentHistory> latestStream = latest.stream().filter(item -> !OperationType.DELETE.value().equals(item.getOperation()));
                 if (StoreDeployments.API_CALL_SYNC.equals(action)) {
                     // filter latest with only "not in sync" objects
                     final JControllerState currentstate = SyncStateHelper.getControllerState(controllerId, xAccessToken, getJocError());

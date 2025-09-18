@@ -124,13 +124,13 @@ public class SyncStateHelper {
         case WORKFLOW:
             return isNotInSync(currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(name)));
         case JOBRESOURCE:
-            return currentstate.pathToJobResource().get(JobResourcePath.of(name)) != null;
+            return currentstate.pathToJobResource().get(JobResourcePath.of(name)) == null;
         case LOCK:
-            return currentstate.pathToLock().get(LockPath.of(name)) != null;
+            return currentstate.pathToLock().get(LockPath.of(name)) == null;
         case FILEORDERSOURCE:
-            return currentstate.pathToFileWatch().get(OrderWatchPath.of(name)) != null;
+            return currentstate.pathToFileWatch().get(OrderWatchPath.of(name)) == null;
         case NOTICEBOARD:
-            return currentstate.pathToBoardState().get(BoardPath.of(name)) != null;
+            return currentstate.pathToBoardState().get(BoardPath.of(name)) == null;
         default:
             return true;
         }
