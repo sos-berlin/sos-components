@@ -37,15 +37,15 @@
     <inventory.schema.version>1.5.12-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 
-    <jackson.version>2.14.2</jackson.version>
-    <jackson.databind.version>2.14.2</jackson.databind.version>
+    <jackson.version>2.19.0</jackson.version>
+    <jackson.databind.version>2.19.0</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
     <slf4j.version>1.7.36</slf4j.version>
     <javassist.version>3.29.2-GA</javassist.version>
-    <log4j2.version>2.21.1</log4j2.version>
+    <log4j2.version>2.24.3</log4j2.version>
     <commons.io.version>2.15.1</commons.io.version>
-    <apache.commons.lang.version>3.14.0</apache.commons.lang.version>
+    <apache.commons.lang.version>3.18.0</apache.commons.lang.version>
     <apache.commons.compress.version>1.26.0</apache.commons.compress.version>
     <apache.commons.csv.version>1.10.0</apache.commons.csv.version>
     <apache.commons.net.version>3.10.0</apache.commons.net.version>
@@ -57,29 +57,29 @@
     <hibernate.jpa.version>1.0.2.Final</hibernate.jpa.version>
     <c3p0.version>0.9.5.5</c3p0.version>
     <hikari.version>3.2.0</hikari.version>
-    <mchange.commons.version>0.2.20</mchange.commons.version>
-    <maria.db.driver.version>2.2.6</maria.db.driver.version>
-    <postgresql.version>42.4.4</postgresql.version>
+    <mchange.commons.version>0.3.1</mchange.commons.version>
+    <maria.db.driver.version>3.5.0</maria.db.driver.version>
+    <postgresql.version>42.7.7</postgresql.version>
     <classmate.version>1.3.0</classmate.version>
 <!--    <sos.ojdbc8.version>21.8.0.0</sos.ojdbc8.version> -->
-    <sos.ojdbc8.version>19.19.0.0</sos.ojdbc8.version>
+    <sos.ojdbc8.version>19.25.0.0</sos.ojdbc8.version>
     <com.sun.javax.mail.version>1.6.2</com.sun.javax.mail.version>
     <jersey.glassfish.version>3.0.11</jersey.glassfish.version>
     <io.vavr.version>0.10.4</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.0.0</jakarta.ws.rs-api.version>
-    <bouncycastle.version>1.78.1</bouncycastle.version>
+    <bouncycastle.version>1.81</bouncycastle.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
-    <typesafe.config.version>1.4.2</typesafe.config.version>
+    <typesafe.config.version>1.4.5</typesafe.config.version>
     <keepass.java2.version>2.2.1</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>32.1.1-jre</guava.version>
     <sshj.version>0.40.0</sshj.version>
     <javax.jms-api.version>2.0.1</javax.jms-api.version>
     <jsendnsca.version>2.1.1</jsendnsca.version>
-    <jna.version>5.13.0</jna.version>
+    <jna.version>5.17.0</jna.version>
 <!--    <yaml.version>1.33</yaml.version> -->
     <yaml.version>2.0</yaml.version>
     <xml.bind.version>2.3.1</xml.bind.version>
