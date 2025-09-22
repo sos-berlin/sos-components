@@ -45,7 +45,9 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.sign.model.workflow.Workflow;
@@ -241,21 +243,24 @@ public class OrderApi {
                             // at least one failed -> check again after 2 seconds
                             try {
                                 TimeUnit.SECONDS.sleep(2);
-                            } catch (InterruptedException e) {
+                            } catch (InterruptedException ex) {
                                 //
                             }
-                            Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
-                            Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(newKnownOrderIds::contains,
-                                    Collectors.toSet()));
+                            // WORKAROUND: addOrders sends eventId to proxy so that proxy should be up to date
+                            proxy.api().addOrders(Flux.empty()).thenAccept(e -> {
+                                Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
+                                Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(newKnownOrderIds::contains,
+                                        Collectors.toSet()));
 
-                            if (orderIdsToSuccessOrNot.containsKey(Boolean.TRUE)) {
-                                updateHistoryOnSuccess(proxy.api(), orderIdsToSuccessOrNot.get(Boolean.TRUE), items, jocError, accessToken,
-                                        controllerId, method, lp);
-                            }
-                            if (orderIdsToSuccessOrNot.containsKey(Boolean.FALSE)) {
-                                updateHistoryOnError(null, orderIdsToSuccessOrNot.get(Boolean.FALSE), items, jocError, accessToken, controllerId,
-                                        method, lp);
-                            }
+                                if (orderIdsToSuccessOrNot.containsKey(Boolean.TRUE)) {
+                                    updateHistoryOnSuccess(proxy.api(), orderIdsToSuccessOrNot.get(Boolean.TRUE), items, jocError, accessToken,
+                                            controllerId, method, lp);
+                                }
+                                if (orderIdsToSuccessOrNot.containsKey(Boolean.FALSE)) {
+                                    updateHistoryOnError(null, orderIdsToSuccessOrNot.get(Boolean.FALSE), items, jocError, accessToken, controllerId,
+                                            method, lp);
+                                }
+                            });
 
                         } else {
                             updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
@@ -370,13 +375,20 @@ public class OrderApi {
             Instant end = Instant.now();
             
             if (either == null) {
-                msg = "submission failed for " + set.size() + " orders";
-                either = Either.left(Problem.pure(msg));
+                msg = "submission failed for " + set.size() + " orders: " + set.toString();
             }
             LOGGER.info(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
                     end), msg));
             if (jocError != null) {
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                if (either == null) {
+                    if (lp.contains("deploy")) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(new JocDeployException(msg)), accessToken, jocError, controllerId); 
+                    } else {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(new JocBadRequestException(msg)), accessToken, jocError, controllerId);
+                    }
+                } else {
+                    ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                }
             }
         } catch (Throwable e) {
             LOGGER.error(String.format("%s %s", lp, e.toString()), e);

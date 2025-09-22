@@ -1087,7 +1087,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        boolean isSubmitted = filter.getSubmitted();
+        boolean setSubmitted = filter.getSubmitted();
         Date now = JobSchedulerDate.nowInUtc();
 
         FilterDailyPlannedOrders filterCopy = filter.copy();
@@ -1105,25 +1105,27 @@ public class DBLayerDailyPlannedOrders {
                 } else {
                     filterCopy.setOrderIds(copy.subList(i, size));
                 }
-                result += executeSetSubmitted(filterCopy, isSubmitted, now);
+                result += executeSetSubmitted(filterCopy, setSubmitted, now);
             }
             return result;
         } else {
-            return executeSetSubmitted(filterCopy, isSubmitted, now);
+            return executeSetSubmitted(filterCopy, setSubmitted, now);
         }
     }
 
-    private int executeSetSubmitted(FilterDailyPlannedOrders filter, boolean isSubmitted, Date now) throws SOSHibernateException {
+    private int executeSetSubmitted(FilterDailyPlannedOrders filter, boolean setSubmitted, Date now) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-        if (isSubmitted) {
+        if (setSubmitted) {
             hql.append("set submitted=true");
             hql.append(",submitTime=:submitTime  ");
 
+            filter.setSubmitted(false);
             filter.setSubmitTime(now);
         } else {
             hql.append("set submitted=false");
             hql.append(",submitTime=null  ");
 
+            filter.setSubmitted(true);
             filter.setSubmitTime(null);
         }
         hql.append(getWhere(filter));

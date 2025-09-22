@@ -21,7 +21,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 public class DailyPlanUtils {
 
     public static Map<String, List<DBItemDailyPlanOrder>> getOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in,
-            DailyPlanSettings settings, boolean submitted, String API_CALL) throws SOSHibernateException {
+            DailyPlanSettings settings, String API_CALL) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -37,7 +37,6 @@ public class DailyPlanUtils {
             }
             filter.setScheduleFolders(in.getScheduleFolders());
             filter.setWorkflowFolders(in.getWorkflowFolders());
-            filter.setSubmitted(submitted);
             
             // TODO not planned start time is relevant
             //filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
