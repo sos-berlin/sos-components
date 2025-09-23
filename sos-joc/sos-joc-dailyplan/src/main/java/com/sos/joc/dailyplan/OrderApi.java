@@ -248,6 +248,11 @@ public class OrderApi {
                             }
                             // WORKAROUND: addOrders sends eventId to proxy so that proxy should be up to date
                             proxy.api().addOrders(Flux.empty()).thenAccept(e -> {
+                                try {
+                                    TimeUnit.SECONDS.sleep(1);
+                                } catch (InterruptedException ex) {
+                                    //
+                                }
                                 Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
                                 Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(newKnownOrderIds::contains,
                                         Collectors.toSet()));
