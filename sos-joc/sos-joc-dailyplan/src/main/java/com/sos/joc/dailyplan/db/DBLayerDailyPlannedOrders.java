@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +32,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.db.DBLayer;
@@ -47,6 +49,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
+
+import js7.data.order.OrderId;
 
 public class DBLayerDailyPlannedOrders {
 
@@ -682,9 +686,16 @@ public class DBLayerDailyPlannedOrders {
         if ((filter.getControllerId() != null && !filter.getControllerId().isEmpty()) || (filter.getControllerIds() != null && filter
                 .getControllerIds().size() == 1)) {
 
-            resStream = result.stream().collect(Collectors.groupingBy(i -> OrdersHelper.getOrderIdMainPart(i.getOrderId()), Collectors.maxBy(
-                    Comparator.comparingLong(DBItemDailyPlanWithHistory::getPlannedOrderId)))).values().stream().filter(Optional::isPresent).map(
-                            Optional::get);
+            // fix inconsistency: Order is planned in DPL_ORDERS but known at the Controller -> submitted
+            boolean atLeastOneIsPlanned = result.stream().anyMatch(i -> !i.isSubmitted());
+            Set<OrderId> knownOrdersFromController = getKnownOrdersFromController(filter, atLeastOneIsPlanned);
+
+            resStream = result.stream().peek(i -> {
+                if (atLeastOneIsPlanned && !i.isSubmitted() && knownOrdersFromController.contains(OrderId.of(i.getOrderId()))) {
+                    i.setSubmitted(true);
+                }
+            }).collect(Collectors.groupingBy(i -> OrdersHelper.getOrderIdMainPart(i.getOrderId()), Collectors.maxBy(Comparator.comparingLong(
+                    DBItemDailyPlanWithHistory::getPlannedOrderId)))).values().stream().filter(Optional::isPresent).map(Optional::get);
         } else {
 
             resStream = result.stream().collect(Collectors.groupingBy(DBItemDailyPlanWithHistory::getControllerId, Collectors.groupingBy(
@@ -698,6 +709,27 @@ public class DBLayerDailyPlannedOrders {
         }
         
         return resStream.collect(Collectors.toList());
+    }
+    
+    private Set<OrderId> getKnownOrdersFromController(FilterDailyPlannedOrders filter, boolean atLeastOneIsPlanned) {
+        if (atLeastOneIsPlanned) {
+            String controllerId = null;
+            if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
+                controllerId = filter.getControllerId();
+            } else if (filter.getControllerIds() != null && filter.getControllerIds().size() == 1) {
+                controllerId = filter.getControllerIds().get(0);
+            }
+            if (controllerId == null) {
+                return Collections.emptySet(); 
+            }
+            try {
+                return Proxy.of(controllerId).currentState().idToOrder().keySet(); 
+             } catch (Throwable e) {
+                return Collections.emptySet(); 
+             }
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String mainOrderId, Date plannedStartFrom, Date plannedStartTo)

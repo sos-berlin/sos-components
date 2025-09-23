@@ -52,7 +52,7 @@ public class DBItemDailyPlanWithHistory {
     }
 
     public DailyPlanOrderStateText getStateText() {
-        if (submitted) {
+        if (isSubmitted()) {
             switch (getStateAsEnum()) {
             case CANCELLED:
             case FINISHED:
@@ -141,6 +141,9 @@ public class DBItemDailyPlanWithHistory {
     }
 
     public boolean isSubmitted() {
+        if (orderHistoryId != null && orderHistoryId > 0) {
+            return true;
+        }
         return submitted;
     }
 
