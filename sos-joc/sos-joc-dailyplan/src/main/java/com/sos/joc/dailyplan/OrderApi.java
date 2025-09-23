@@ -237,38 +237,44 @@ public class OrderApi {
                          * either.toString() -> Right(BatchResponse(1 succeeded and 1 failed))
                          */
                         
-                        // check if all orders are added
-                        Map<OrderId, JOrder> knownOrders = proxy.currentState().idToOrder();
-                        if (set.stream().anyMatch(oId -> knownOrders.get(oId) == null)) {
-                            // at least one failed -> check again after 2 seconds
-                            try {
-                                TimeUnit.SECONDS.sleep(2);
-                            } catch (InterruptedException ex) {
-                                //
-                            }
-                            // WORKAROUND: addOrders sends eventId to proxy so that proxy should be up to date
-                            proxy.api().addOrders(Flux.empty()).thenAccept(e -> {
+                        if (either.get().toString().contains(set.size() + " succeeded and 0 failed")) {
+                            updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
+                            
+                        } else {
+
+                            // check if all orders are added
+                            Map<OrderId, JOrder> knownOrders = proxy.currentState().idToOrder();
+                            if (set.stream().anyMatch(oId -> knownOrders.get(oId) == null)) {
+                                // at least one failed -> check again after 2 seconds
                                 try {
-                                    TimeUnit.SECONDS.sleep(1);
+                                    TimeUnit.SECONDS.sleep(2);
                                 } catch (InterruptedException ex) {
                                     //
                                 }
-                                Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
-                                Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(newKnownOrderIds::contains,
-                                        Collectors.toSet()));
+                                // WORKAROUND: addOrders sends eventId to proxy so that proxy should be up to date
+                                proxy.api().addOrders(Flux.empty()).thenAccept(e -> {
+                                    try {
+                                        TimeUnit.SECONDS.sleep(1);
+                                    } catch (InterruptedException ex) {
+                                        //
+                                    }
+                                    Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
+                                    Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(
+                                            newKnownOrderIds::contains, Collectors.toSet()));
 
-                                if (orderIdsToSuccessOrNot.containsKey(Boolean.TRUE)) {
-                                    updateHistoryOnSuccess(proxy.api(), orderIdsToSuccessOrNot.get(Boolean.TRUE), items, jocError, accessToken,
-                                            controllerId, method, lp);
-                                }
-                                if (orderIdsToSuccessOrNot.containsKey(Boolean.FALSE)) {
-                                    updateHistoryOnError(null, orderIdsToSuccessOrNot.get(Boolean.FALSE), items, jocError, accessToken, controllerId,
-                                            method, lp);
-                                }
-                            });
+                                    if (orderIdsToSuccessOrNot.containsKey(Boolean.TRUE)) {
+                                        updateHistoryOnSuccess(proxy.api(), orderIdsToSuccessOrNot.get(Boolean.TRUE), items, jocError, accessToken,
+                                                controllerId, method, lp);
+                                    }
+                                    if (orderIdsToSuccessOrNot.containsKey(Boolean.FALSE)) {
+                                        updateHistoryOnError(null, orderIdsToSuccessOrNot.get(Boolean.FALSE), items, jocError, accessToken,
+                                                controllerId, method, lp);
+                                    }
+                                });
 
-                        } else {
-                            updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
+                            } else {
+                                updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
+                            }
                         }
 
                     } else {
