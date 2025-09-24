@@ -62,7 +62,7 @@
     <hikari.version>5.1.0</hikari.version>
     <mchange.commons.version>0.3.1</mchange.commons.version>
     <maria.db.driver.version>3.5.0</maria.db.driver.version>
-    <postgresql.version>42.7.4</postgresql.version>
+    <postgresql.version>42.7.7</postgresql.version>
     <sos.ojdbc8.version>19.25.0.0</sos.ojdbc8.version>
     <classmate.version>1.3.0</classmate.version>
 
@@ -75,7 +75,7 @@
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
-    <typesafe.config.version>1.4.4</typesafe.config.version>
+    <typesafe.config.version>1.4.5</typesafe.config.version>
     <keepass.java2.version>2.2.1</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>32.1.1-jre</guava.version>
