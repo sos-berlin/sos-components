@@ -69,6 +69,10 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                         controllerId));
             }
             
+            if (!ClusterWatch.getInstance().isWatched(controllerId)) {
+                throw new JocBadRequestException("Switch-over is not available. It can only be called up in the active JOC Cockpit.");
+            }
+            
             JControllerState currentState = Proxy.of(controllerId).currentState();
             
             Predicate<JAgentRefState> agentClusterIsSwitching = a -> {
@@ -82,21 +86,27 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 }).orElse(false);
             };
             
-            List<String> switchingAgentClusters = currentState.pathToAgentRefState().values().stream().filter(
-                    agentClusterIsSwitching).map(JAgentRefState::agentPath).map(AgentPath::string).distinct().toList();
+            List<String> switchingAgentClusters = currentState.pathToAgentRefState().values().stream().filter(agentClusterIsSwitching).map(
+                    JAgentRefState::agentPath).map(AgentPath::string).distinct().toList();
             if (!switchingAgentClusters.isEmpty()) {
                 throw new ControllerConflictException(String.format(
                         "Agent cluster %s %s just switching over. Switch-over of the Controller cluster '%s' is not possible during a switch-over of an Agent cluster",
                         switchingAgentClusters.toString(), switchingAgentClusters.size() == 1 ? "is" : "are"));
             }
-            
+
             storeAuditLog(urlParameter.getAuditLog(), controllerId);
 
-
             ClusterState clusterState = Globals.objectMapper.readValue(currentState.clusterState().toJson(), ClusterState.class);
+            if (clusterState == null) {
+                clusterState = new ClusterState(ClusterType.EMPTY, null);
+            }
+            
+            if (ClusterWatch.getInstance().getClusterNodeLoss(controllerId) != null) {
+                clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
+            }
 
             // ask for coupled
-            if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {
+            if (!ClusterType.COUPLED.equals(clusterState.getTYPE())) {
                 throw new JocBadRequestException("Switch-over is not available because the cluster is not coupled");
             }
             ControllerApi.of(controllerId).executeCommand(JControllerCommand.clusterSwitchover(Optional.empty())).thenAccept(e -> ProblemHelper

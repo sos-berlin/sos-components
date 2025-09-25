@@ -81,7 +81,7 @@ public class ClusterWatch {
                 // stop for all controllerIds
                 if (!startedWatches.isEmpty()) {
                     LOGGER.info("[ClusterWatch] try to stop watches");
-                    startedWatches.keySet().forEach(controllerId -> stop(controllerId));
+                    startedWatches.keySet().forEach(this::stop);
                 }
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
                 // start for all controllerIds
@@ -104,8 +104,8 @@ public class ClusterWatch {
                     }
                     controllerDbInstances.forEach((controllerId, dbItems) -> ProxiesEdit.update(dbItems, true));
 
-                    Proxies.getControllerDbInstances().keySet().stream().filter(c -> !controllerDbInstances.containsKey(c)).forEach(c -> Proxies
-                            .getInstance().removeProxies(c));
+                    Proxies.getControllerDbInstances().keySet().stream().filter(c -> !controllerDbInstances.containsKey(c)).forEach(Proxies
+                            .getInstance()::removeProxies);
                 } catch (Exception e) {
                     LOGGER.error("", e);
                 } finally {
@@ -299,7 +299,7 @@ public class ClusterWatch {
         }
     }
     
-    private boolean isWatched(String controllerId) {
+    public boolean isWatched(String controllerId) {
         return startedWatches.containsKey(controllerId);
 //        boolean isAlive = false;
 //        if (startedWatches.containsKey(controllerId)) {
