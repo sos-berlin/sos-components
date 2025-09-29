@@ -442,7 +442,7 @@ public class Proxies {
         LOGGER.info("closing all proxies ...");
         try {
             CompletableFuture.allOf(controllerApis.values().stream()
-                .map(controllerApi -> CompletableFuture.runAsync(() -> controllerApi.stop())).toArray(CompletableFuture[]::new))
+                .map(JControllerApi::stop).toArray(CompletableFuture[]::new))
                 .thenRun(() -> {
                     controllerFutures.clear();
                     controllerApis.clear();
@@ -639,7 +639,7 @@ public class Proxies {
                     return false;
                 }
             }
-            reloadApi(credentials);
+            reloadApi(credentials, force);
             controllerFutures.get(credentials).restart(loadApi(credentials), credentials);
             return true;
         }
@@ -654,12 +654,18 @@ public class Proxies {
     }
     
     private boolean reloadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
+        return reloadApi(credentials, false);
+    }
+    
+    private boolean reloadApi(ProxyCredentials credentials, boolean force) throws ControllerConnectionRefusedException {
         if (controllerApis.containsKey(credentials)) {
-            // "identical" checks equality inclusive the urls
-            // restart not necessary if a proxy with identically credentials already started
-            if (controllerApis.keySet().stream().anyMatch(key -> key.identical(credentials))) {
-                appointNodes(credentials, controllerApis.get(credentials));
-                return false;
+            if (!force) {
+                // "identical" checks equality inclusive the urls
+                // restart not necessary if a proxy with identically credentials already started
+                if (controllerApis.keySet().stream().anyMatch(key -> key.identical(credentials))) {
+                    appointNodes(credentials, controllerApis.get(credentials));
+                    return false;
+                }
             }
             controllerApis.get(credentials).stop();
             controllerApis.put(credentials, newControllerApi(credentials));
