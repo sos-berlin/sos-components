@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.dailyplan.generate;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.dailyplan.generate.items.PathItem;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -22,6 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "dailyPlanDate",
+    "dailyPlanDates",
     "schedulePaths",
     "workflowPaths",
     "overwrite",
@@ -35,7 +39,6 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -44,12 +47,14 @@ public class GenerateRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dailyPlanDate;
+    @JsonProperty("dailyPlanDates")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> dailyPlanDates = new LinkedHashSet<String>();
     /**
      * Daily Plan  Path Item Definition
      * <p>
@@ -106,7 +111,6 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -118,7 +122,6 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -130,7 +133,6 @@ public class GenerateRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -142,12 +144,21 @@ public class GenerateRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
     public void setDailyPlanDate(String dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
+    }
+
+    @JsonProperty("dailyPlanDates")
+    public Set<String> getDailyPlanDates() {
+        return dailyPlanDates;
+    }
+
+    @JsonProperty("dailyPlanDates")
+    public void setDailyPlanDates(Set<String> dailyPlanDates) {
+        this.dailyPlanDates = dailyPlanDates;
     }
 
     /**
@@ -280,12 +291,12 @@ public class GenerateRequest {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("overwrite", overwrite).append("withSubmit", withSubmit).append("includeNonAutoPlannedOrders", includeNonAutoPlannedOrders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("dailyPlanDates", dailyPlanDates).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("overwrite", overwrite).append("withSubmit", withSubmit).append("includeNonAutoPlannedOrders", includeNonAutoPlannedOrders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(includeNonAutoPlannedOrders).append(schedulePaths).append(dailyPlanDate).append(controllerId).append(auditLog).append(withSubmit).append(workflowPaths).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(includeNonAutoPlannedOrders).append(schedulePaths).append(dailyPlanDate).append(controllerId).append(auditLog).append(dailyPlanDates).append(withSubmit).append(workflowPaths).append(overwrite).toHashCode();
     }
 
     @Override
@@ -297,7 +308,7 @@ public class GenerateRequest {
             return false;
         }
         GenerateRequest rhs = ((GenerateRequest) other);
-        return new EqualsBuilder().append(includeNonAutoPlannedOrders, rhs.includeNonAutoPlannedOrders).append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(includeNonAutoPlannedOrders, rhs.includeNonAutoPlannedOrders).append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(dailyPlanDates, rhs.dailyPlanDates).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

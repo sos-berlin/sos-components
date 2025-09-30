@@ -121,7 +121,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return Collections.emptyList();
             }
 
-            return new DailyPlanRunner(null).convert(scheduleItems, permittedFolders, checkedFolders, true, false);
+            return DailyPlanRunner.convert(scheduleItems, permittedFolders, checkedFolders, true, false);
         } finally {
             Globals.disconnect(session);
         }

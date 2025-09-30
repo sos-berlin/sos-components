@@ -6,12 +6,12 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCollection;
@@ -66,7 +67,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) {
         try {
             filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.DAILYPLAN);
-            JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
+            JsonValidator.validate(filterBytes, GenerateRequest.class, true);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), true);
@@ -139,21 +140,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
         }
 
-        setSettings(IMPL_PATH);// ???
+        setSettings(IMPL_PATH);
 
-        DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
-        settings.setOverwrite(in.getOverwrite());
-        settings.setSubmit(in.getWithSubmit());
-        settings.setTimeZone(getSettings().getTimeZone());
-        settings.setPeriodBegin(getSettings().getPeriodBegin());
-        settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
-        settings.setSubmissionTime(new Date());
-        settings.setCaller(parentCaller, IMPL_PATH);
-
-        DailyPlanRunner runner = new DailyPlanRunner(settings);
         boolean onlyPlanOrderAutomatically = in.getIncludeNonAutoPlannedOrders() != Boolean.TRUE;
-        Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders,
+        Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleFolders, scheduleSingles, workflowFolders,
                 workflowSingles, permittedFolders, checkedFolders, onlyPlanOrderAutomatically);
 
         if (SOSCollection.isEmpty(dailyPlanSchedules)) {
@@ -163,24 +153,50 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             return true;
         }
 
+        Map<PlannedOrderKey, PlannedOrder> allGeneratedOrders = new HashMap<>();
+        
+        // JOC-1773: "dailyPlanDate" is deprecated but considered for compatibility
+        if (in.getDailyPlanDates() == null || in.getDailyPlanDates().isEmpty()) {
+            in.setDailyPlanDates(Collections.singleton(in.getDailyPlanDate())); 
+        }
+        
         // log to service log file
         JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
-        Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules, in
-                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate);
-        JocClusterServiceLogger.clearAllLoggers();
+        
+        for (String dailyPlanDate : in.getDailyPlanDates()) {
+            DailyPlanRunner runner = newDailyPlanRunner(dailyPlanDate, in, getSettings(), parentCaller);
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules,
+                    dailyPlanDate, in.getWithSubmit(), getJocError(), accessToken, includeLate);
 
-        if (withAudit) {
-            Set<AuditLogDetail> auditLogDetails = new HashSet<>();
-
-            for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
+            if (withAudit) {
+                allGeneratedOrders.putAll(generatedOrders);
             }
-
-            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditLogId).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(either,
-                    accessToken, getJocError(), null));
+        }
+        
+        JocClusterServiceLogger.clearAllLoggers();
+        
+        if (!allGeneratedOrders.isEmpty()) {
+            OrdersHelper.storeAuditLogDetails(allGeneratedOrders.values().stream().map(po -> new AuditLogDetail(po.getWorkflowPath(), po.getFreshOrder()
+                    .getId(), controllerId)).collect(Collectors.toList()), auditLogId).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
+                            either, accessToken, getJocError(), null));
         }
 
         return true;
+    }
+    
+    private DailyPlanRunner newDailyPlanRunner(String dailyPlanDate, GenerateRequest in, DailyPlanSettings dpSettings, String parentCaller)
+            throws SOSInvalidDataException {
+        DailyPlanSettings settings = new DailyPlanSettings();
+        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setOverwrite(in.getOverwrite());
+        settings.setSubmit(in.getWithSubmit());
+        settings.setTimeZone(dpSettings.getTimeZone());
+        settings.setPeriodBegin(dpSettings.getPeriodBegin());
+        settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(dailyPlanDate).getTime()));
+        settings.setSubmissionTime(Date.from(Instant.now()));
+        settings.setCaller(parentCaller, IMPL_PATH);
+
+        return new DailyPlanRunner(settings);
     }
 
     private List<String> getScheduleSinglePaths(List<String> scheduleSingles) throws SOSHibernateException {
@@ -206,7 +222,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 Collectors.toList());
     }
 
-    private Collection<DailyPlanSchedule> getSchedules(DailyPlanRunner runner, String controllerId, Set<Folder> scheduleFolders,
+    private Collection<DailyPlanSchedule> getSchedules(String controllerId, Set<Folder> scheduleFolders,
             Set<String> scheduleSingles, Set<Folder> workflowFolders, Set<String> workflowSingles, Set<Folder> permittedFolders,
             Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically) throws IOException, SOSHibernateException {
 
@@ -255,7 +271,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 return new ArrayList<DailyPlanSchedule>();
             }
 
-            return runner.convert(scheduleItems, permittedFolders, checkedFolders, onlyPlanOrderAutomatically, true);
+            return DailyPlanRunner.convert(scheduleItems, permittedFolders, checkedFolders, onlyPlanOrderAutomatically, true);
         } finally {
             Globals.disconnect(session);
         }

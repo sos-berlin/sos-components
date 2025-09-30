@@ -608,7 +608,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflow(String controllerId) throws SOSHibernateException,
+    private static List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflow(String controllerId) throws SOSHibernateException,
             IOException {
         SOSHibernateSession session = null;
         try {
@@ -620,21 +620,21 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service - use only with getPlanOrderAutomatically and not check the folder permissions
-    private Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean infoOnMissingDeployedWorkflow) {
+    private static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean infoOnMissingDeployedWorkflow) {
         return convert(items, true, false, null, null, infoOnMissingDeployedWorkflow);
     }
 
-    public Collection<DailyPlanSchedule> getDailyPlanSchedules(String controllerId, boolean infoOnMissingDeployedWorkflow) throws Exception {
+    public static Collection<DailyPlanSchedule> getDailyPlanSchedules(String controllerId, boolean infoOnMissingDeployedWorkflow) throws Exception {
         return convert(getReleasedSchedule2DeployedWorkflow(controllerId), infoOnMissingDeployedWorkflow);
     }
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
-    public Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, Set<Folder> permittedFolders,
+    public static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, Set<Folder> permittedFolders,
             Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically, boolean infoOnMissingDeployedWorkflow) {
         return convert(items, onlyPlanOrderAutomatically, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow);
     }
 
-    private Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean onlyPlanOrderAutomatically,
+    private static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean onlyPlanOrderAutomatically,
             boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow) {
         if (items == null || items.size() == 0) {
             return new ArrayList<DailyPlanSchedule>();
@@ -773,7 +773,7 @@ public class DailyPlanRunner extends TimerTask {
         return result;
     }
 
-    private boolean isWorkflowPermitted(String workflowPath, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private static boolean isWorkflowPermitted(String workflowPath, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
         if (checkedFolders == null) {// from service
             return true;
         }
@@ -793,7 +793,7 @@ public class DailyPlanRunner extends TimerTask {
         return SOSAuthFolderPermissions.isPermittedForFolder(DailyPlanHelper.getFolderFromPath(calendar.getPath()), settings.getPermittedFolders());
     }
 
-    private List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar) throws SOSHibernateException {
+    private static List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
@@ -847,7 +847,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically) {
+    private static void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically) {
 
         if (ageOfPlansToBeClosedAutomatically > 0) {
             try {
@@ -877,7 +877,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private void setUnknownPlansAreOpenFromDate(StartupMode startupMode, String controllerId) {
+    private static void setUnknownPlansAreOpenFromDate(StartupMode startupMode, String controllerId) {
 
         try {
             LocalDate ld = LocalDate.now(ZoneOffset.UTC);
@@ -909,7 +909,7 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private Calendar getWorkingDaysCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException,
+    private static Calendar getWorkingDaysCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException,
             JsonMappingException, IOException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, SOSHibernateException {
 
@@ -935,7 +935,7 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow,
+    private static FreshOrder buildFreshOrder(String dailyPlanDate, Schedule schedule, DailyPlanScheduleWorkflow scheduleWorkflow,
             OrderParameterisation orderParameterisation, Long startTime, Integer startMode) throws SOSInvalidDataException {
         FreshOrder order = new FreshOrder();
         order.setId(DailyPlanHelper.buildOrderId(dailyPlanDate, schedule, orderParameterisation, startTime, startMode));
@@ -1361,7 +1361,7 @@ public class DailyPlanRunner extends TimerTask {
         return m;
     }
 
-    private String nonWorkingDayCalendarsLog(Schedule schedule) {
+    private static String nonWorkingDayCalendarsLog(Schedule schedule) {
         if (schedule.getNonWorkingDayCalendars() == null || schedule.getNonWorkingDayCalendars().size() == 0) {
             return "";
         }

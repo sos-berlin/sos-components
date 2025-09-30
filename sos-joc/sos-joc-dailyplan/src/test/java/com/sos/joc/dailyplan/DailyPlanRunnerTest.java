@@ -43,7 +43,7 @@ public class DailyPlanRunnerTest {
             dps.setPeriodBegin("00:00:00");
 
             DailyPlanRunner r = new DailyPlanRunner(dps);
-            Collection<DailyPlanSchedule> dailyPlanSchedules = r.getDailyPlanSchedules(null, false);
+            Collection<DailyPlanSchedule> dailyPlanSchedules = DailyPlanRunner.getDailyPlanSchedules(null, false);
 
             DBItemDailyPlanSubmission submission = new DBItemDailyPlanSubmission();
             submission.setId(-1L);
