@@ -35,7 +35,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     private static final String API_CALL = "./workflow/";
 
     private enum Action {
-        TRANSITION, TRANFER
+        TRANSITION, TRANSFER
     }
 
     @Override
@@ -57,13 +57,13 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     @Override
     public JOCDefaultResponse transfer(String accessToken, byte[] filterBytes) {
         try {
-            ModifyWorkflow workflow = initRequest(Action.TRANFER, accessToken, filterBytes);
+            ModifyWorkflow workflow = initRequest(Action.TRANSFER, accessToken, filterBytes);
             JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId(),
                     accessToken));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            postWorkflowModify(Action.TRANFER, workflow);
+            postWorkflowModify(Action.TRANSFER, workflow);
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
