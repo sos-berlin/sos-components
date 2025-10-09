@@ -111,21 +111,24 @@ public class SslContextFactory {
         if (c == null) {
             return null;
         }
+        return getKeyManagers(c.getKeyStore(), KeyManagerFactory.getDefaultAlgorithm(), c.getPasswordChars(), c.getAliases());
+    }
 
-        final KeyManagerFactory factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        factory.init(c.getKeyStore(), c.getKeyPasswordChars());
+    public static KeyManager[] getKeyManagers(final KeyStore keystore, String algorithm, char[] passwd, List<String> aliases) throws Exception {
+        if (keystore == null) {
+            return null;
+        }
+        final KeyManagerFactory factory = KeyManagerFactory.getInstance(algorithm);
+        factory.init(keystore, passwd);
         KeyManager[] managers = factory.getKeyManagers();
-
-        if (SOSCollection.isEmpty(c.getAliases())) {
+        if (SOSCollection.isEmpty(aliases)) {
             return managers;
         }
-
         for (int i = 0; i < managers.length; i++) {
             if (managers[i] instanceof X509KeyManager) {
-                managers[i] = new AliasForcingKeyManager((X509KeyManager) managers[i], c.getAliases());
+                managers[i] = new AliasForcingKeyManager((X509KeyManager) managers[i], aliases);
             }
         }
-
         return managers;
     }
 
@@ -137,14 +140,17 @@ public class SslContextFactory {
     }
 
     private static TrustManager[] getTrustManagers(final List<KeyStoreContainer> containers) throws Exception {
-        if (SOSCollection.isEmpty(containers)) {
+        return getTrustManagers(containers.stream().map(KeyStoreContainer::getKeyStore).toList(), TrustManagerFactory.getDefaultAlgorithm());
+    }
+
+    public static TrustManager[] getTrustManagers(final List<KeyStore> truststores, String algorithm) throws Exception {
+        if (SOSCollection.isEmpty(truststores)) {
             return getDefaultJVMTrustManagers();
         }
-
         List<X509TrustManager> trustManagers = new ArrayList<>();
-        for (KeyStoreContainer c : containers) {
-            TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            factory.init(c.getKeyStore());
+        for (KeyStore truststore : truststores) {
+            TrustManagerFactory factory = TrustManagerFactory.getInstance(algorithm);
+            factory.init(truststore);
             for (TrustManager tm : factory.getTrustManagers()) {
                 if (tm instanceof X509TrustManager) {
                     trustManagers.add((X509TrustManager) tm);

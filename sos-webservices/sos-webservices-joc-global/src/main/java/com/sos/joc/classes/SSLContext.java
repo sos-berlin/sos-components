@@ -10,10 +10,13 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509KeyManager;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 //import org.apache.http.ssl.SSLContextBuilder;
@@ -21,8 +24,10 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.keystore.AliasForcingKeyManager;
 import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.typesafe.sslconfig.ssl.SSLConfigFactory;
 
 import js7.base.generic.SecretString;
 import js7.base.io.https.KeyStoreRef;
@@ -100,40 +105,31 @@ public class SSLContext {
         loadHttpsConfig();
         if (keystore != null || truststore != null) {
             try {
-//                SSLContextBuilder sslContextBuilder = SSLContexts.custom();
-                KeyManagerFactory keyManager = KeyManagerFactory.getInstance(
-                        sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory.getDefaultAlgorithm()));
-                TrustManagerFactory trustManager = TrustManagerFactory.getInstance(
-                        sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", TrustManagerFactory.getDefaultAlgorithm()));
-//                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory
-//                        .getDefaultAlgorithm()));
-//                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
-//                        TrustManagerFactory.getDefaultAlgorithm()));
-                if (keystore != null) {
-//                    if (keystoreAlias != null && !keystoreAlias.isEmpty()) {
-//                        if (keystore.containsAlias(keystoreAlias)) {
-//                            sslContextBuilder.loadKeyMaterial(keystore, keyPassChars, (aliases, socket) -> keystoreAlias);
-//                        } else {
-//                            throw new JocConfigurationException("Keystore '" + keystorePath + "' doesn't contain the alias '" + keystoreAlias + "'.");
-//                        }
-//                    } else {
-//                        sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
-//                    }
-                    keyManager.init(keystore, keyPassChars);
-                }
-                if (truststore != null) {
-//                    sslContextBuilder.loadTrustMaterial(truststore, null);
-                    trustManager.init(truststore);
-                }
-//                netSSlContext = sslContextBuilder.build();
                 netSSlContext = javax.net.ssl.SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
-                netSSlContext.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
+                TrustManager [] trustManagers = null;
+                try {
+                    trustManagers = SslContextFactory.getTrustManagers(
+                            List.of(truststore), 
+                            sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", TrustManagerFactory.getDefaultAlgorithm()));
+                } catch (KeyStoreException e) {
+                    LOGGER.warn("", e);
+                }
+                netSSlContext.init(
+                        SslContextFactory.getKeyManagers(
+                                keystore, 
+                                sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory.getDefaultAlgorithm()), 
+                                keyPassChars, 
+                        List.of(keystoreAlias)), 
+                        trustManagers,
+                        null);
             } catch (GeneralSecurityException e) {
                 if (e.getCause() != null) {
                     LOGGER.error("", e.getCause());
                 } else {
                     LOGGER.error("", e);
                 }
+            } catch (Exception e) {
+                LOGGER.error("", e);
             }
         }
     }
