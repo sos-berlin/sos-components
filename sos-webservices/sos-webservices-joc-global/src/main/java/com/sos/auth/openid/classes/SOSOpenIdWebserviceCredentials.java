@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeystoreType;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -176,18 +178,12 @@ public class SOSOpenIdWebserviceCredentials {
         }
         if (claims == null) {
             if (properties.getOidc().getIamOidcGroupClaims() != null) {
-                claims = new HashSet<String>();
-                for (String claim : properties.getOidc().getIamOidcGroupClaims()) {
-                    claims.add(claim);
-                }
+                claims = properties.getOidc().getIamOidcGroupClaims().stream().filter(s -> !SOSString.isEmpty(s)).collect(Collectors.toSet());
             }
         }
         if (scopes == null) {
             if (properties.getOidc().getIamOidcGroupScopes() != null) {
-                scopes = new HashSet<String>();
-                for (String claim : properties.getOidc().getIamOidcGroupScopes()) {
-                    claims.add(claim);
-                }
+                scopes = properties.getOidc().getIamOidcGroupScopes().stream().filter(s -> !SOSString.isEmpty(s)).collect(Collectors.toSet());
             }
         }
 
