@@ -7,6 +7,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -140,7 +141,8 @@ public class SslContextFactory {
     }
 
     private static TrustManager[] getTrustManagers(final List<KeyStoreContainer> containers) throws Exception {
-        return getTrustManagers(containers.stream().map(KeyStoreContainer::getKeyStore).toList(), TrustManagerFactory.getDefaultAlgorithm());
+        List<KeyStore> trustStores = Optional.ofNullable(containers).map(c -> c.stream().map(KeyStoreContainer::getKeyStore).toList()).orElse(null);
+        return getTrustManagers(trustStores, TrustManagerFactory.getDefaultAlgorithm());
     }
 
     public static TrustManager[] getTrustManagers(final List<KeyStore> truststores, String algorithm) throws Exception {

@@ -13,10 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509KeyManager;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 //import org.apache.http.ssl.SSLContextBuilder;
@@ -24,10 +24,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.keystore.AliasForcingKeyManager;
 import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.typesafe.sslconfig.ssl.SSLConfigFactory;
 
 import js7.base.generic.SecretString;
 import js7.base.io.https.KeyStoreRef;
@@ -106,22 +104,7 @@ public class SSLContext {
         if (keystore != null || truststore != null) {
             try {
                 netSSlContext = javax.net.ssl.SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
-                TrustManager [] trustManagers = null;
-                try {
-                    trustManagers = SslContextFactory.getTrustManagers(
-                            List.of(truststore), 
-                            sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", TrustManagerFactory.getDefaultAlgorithm()));
-                } catch (KeyStoreException e) {
-                    LOGGER.warn("", e);
-                }
-                netSSlContext.init(
-                        SslContextFactory.getKeyManagers(
-                                keystore, 
-                                sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory.getDefaultAlgorithm()), 
-                                keyPassChars, 
-                        List.of(keystoreAlias)), 
-                        trustManagers,
-                        null);
+                netSSlContext.init(getKeyManagers(), getTrustManagers(), null);
             } catch (GeneralSecurityException e) {
                 if (e.getCause() != null) {
                     LOGGER.error("", e.getCause());
@@ -132,6 +115,24 @@ public class SSLContext {
                 LOGGER.error("", e);
             }
         }
+    }
+    
+    private TrustManager[] getTrustManagers() throws Exception {
+        if (truststore == null) {
+            return null;
+        }
+        try {
+            return SslContextFactory.getTrustManagers(List.of(truststore), sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
+                    TrustManagerFactory.getDefaultAlgorithm()));
+        } catch (KeyStoreException e) {
+            LOGGER.warn("", e);
+        }
+        return null;
+    }
+    
+    private KeyManager[] getKeyManagers() throws Exception {
+        return SslContextFactory.getKeyManagers(keystore, sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory
+                .getDefaultAlgorithm()), keyPassChars, Optional.ofNullable(keystoreAlias).map(List::of).orElse(null));
     }
 
     public synchronized void setSSLContext(JocCockpitProperties properties) {
