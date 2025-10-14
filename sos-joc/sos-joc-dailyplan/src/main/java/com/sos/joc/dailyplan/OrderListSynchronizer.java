@@ -309,11 +309,11 @@ public class OrderListSynchronizer {
 
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
+        Map<DBItemDailyPlanOrder, Set<String>> orderTags = new HashMap<>();
         try {
             session = Globals.createSosHibernateStatelessConnection("executeStore-" + date);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             ZoneId zoneId = ZoneId.of(settings.getTimeZone());
-            Map<DBItemDailyPlanOrder, Set<String>> orderTags = new HashMap<>();
 
             Map<MainCyclicOrderKey, List<PlannedOrder>> cyclics = new TreeMap<MainCyclicOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
@@ -379,17 +379,20 @@ public class OrderListSynchronizer {
                 }
             }
 
-            OrderTags.addDailyPlanOrderTags(controllerId, orderTags);
-
             if (!counter.hasStored() && submission != null && submission.getId() != null) {
                 Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submission.getId());
                 if (count == null || count == 0L) {
                     dbLayer.deleteSubmission(controllerId, submission.getId());
                 }
             }
-
+            
         } finally {
             Globals.disconnect(session);
+        }
+        
+        Either<Exception, Void> e = OrderTags.addDailyPlanOrderTags(controllerId, orderTags);
+        if (e.isLeft()) {
+            LOGGER.warn("", e);
         }
 
         LOGGER.info(String.format("%s[stored]%s", lp, counter));
