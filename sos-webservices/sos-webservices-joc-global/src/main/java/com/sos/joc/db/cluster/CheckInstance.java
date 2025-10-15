@@ -213,10 +213,10 @@ public class CheckInstance {
 
     private static void executeCommand(String command) {
         SOSCommandResult result = SOSShell.executeCommand(command);
-        if (result.getStdErr() != null && !result.getStdErr().isEmpty()) {
+        if (result.hasStdErr()) {
             System.out.println("StdErr: " + result.getStdErr());
         }
-        if (result.getStdOut() != null && !result.getStdOut().isEmpty()) {
+        if (result.hasStdOut()) {
             System.out.println("StdOut: " + result.getStdOut());
         }
         System.out.println("Exit code of '" + result.getCommand() + "': " + result.getExitCode());

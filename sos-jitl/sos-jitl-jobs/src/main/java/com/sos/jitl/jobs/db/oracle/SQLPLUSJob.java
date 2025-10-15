@@ -65,6 +65,12 @@ public class SQLPLUSJob extends Job<SQLPlusJobArguments> {
             SOSTimeout sosTimeout = new SOSTimeout(args.getTimeout(), TimeUnit.SECONDS);
             sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName), getJobEnvironment().getSystemEncoding(), sosTimeout);
         }
+        // re - JITL-696 adjusting
+        // Compatibility with the previous SOSCommandResult version, which getExitCode() returns 0 if exitCode=null
+        // TODO - this handling should be reviewed
+        if (!sosCommandResult.hasExitCode()) {
+            sosCommandResult.setExitCode(0);
+        }
 
         final String conNL = System.getProperty("line.separator");
         String stdOut = sosCommandResult.getStdOut();

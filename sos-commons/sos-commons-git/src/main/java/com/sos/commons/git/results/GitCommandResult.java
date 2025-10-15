@@ -31,22 +31,27 @@ public abstract class GitCommandResult {
         this.stdOut = result.getStdOut();
     }
 
-    public abstract void parseStdOut(); 
-    
+    public abstract void parseStdOut();
+
     public String getStdOut() {
         return stdOut;
     }
-    
+
     public String getStdErr() {
         return stdErr;
     }
-    
+
     public String getCommand() {
         return command;
     }
 
+    /** can return null */
     public Integer getExitCode() {
         return exitCode;
+    }
+
+    public boolean isNonZeroExitCode() {
+        return exitCode != null && exitCode.intValue() != 0;
     }
 
     public Throwable getException() {
@@ -56,11 +61,11 @@ public abstract class GitCommandResult {
     public String getOriginalCommand() {
         return originalCommand;
     }
-    
+
     public void setError(String msg) {
         setError(msg, null);
     }
-    
+
     public void setError(String msg, Throwable e) {
         error = new GitCommandResultError(msg, e);
     }
