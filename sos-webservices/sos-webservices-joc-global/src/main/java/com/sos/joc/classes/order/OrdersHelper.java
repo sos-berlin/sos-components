@@ -519,7 +519,9 @@ public class OrdersHelper {
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
-        if (finalParameters != null) {
+        if (compact) {
+            o.setArguments(null);
+        } else if (finalParameters != null) {
             o.setArguments(removeFinalParameters(oItem.getArguments(), finalParameters.get(jOrder.workflowId())));
         }
         o.setAttachedState(oItem.getAttachedState());
