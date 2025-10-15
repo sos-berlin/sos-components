@@ -51,6 +51,7 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<Path> hostkeyLocation = new SOSArgument<>("hostkey_location", false);
     private SOSArgument<Boolean> useZlibCompression = new SOSArgument<>("use_zlib_compression", false, false);
     private SOSArgument<Boolean> simulateShell = new SOSArgument<>("simulate_shell", false, false);
+    private SOSArgument<Boolean> disableAutoDetectShell = new SOSArgument<>("disable_auto_detect_shell", false, false);
 
     private SOSArgument<Charset> remoteCharset = new SOSArgument<>("remote_charset", false, Charset.forName("UTF-8"));
 
@@ -155,6 +156,10 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Boolean> getSimulateShell() {
         return simulateShell;
+    }
+
+    public SOSArgument<Boolean> getDisableAutoDetectShell() {
+        return disableAutoDetectShell;
     }
 
     public SOSArgument<Charset> getRemoteCharset() {

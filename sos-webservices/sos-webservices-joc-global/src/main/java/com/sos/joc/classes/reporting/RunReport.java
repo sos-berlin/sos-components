@@ -242,11 +242,11 @@ public class RunReport extends AReporting {
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, reportingDir);
 
             if (cResult.hasError()) {
-                if (cResult.getException() != null) {
+                if (cResult.hasException()) {
                     throw new JocBadRequestException(cResult.getException());
-                } else if (cResult.getStdErr() != null && !cResult.getStdErr().isEmpty()) {
+                } else if (cResult.hasStdErr()) {
                     throw new JocBadRequestException(cResult.getStdErr());
-                } else if (cResult.getExitCode() != 0) {
+                } else if (cResult.isNonZeroExitCode()) {
                     throw new JocBadRequestException("Unknown error when calling: " + cResult.getCommand());
                 }
             }

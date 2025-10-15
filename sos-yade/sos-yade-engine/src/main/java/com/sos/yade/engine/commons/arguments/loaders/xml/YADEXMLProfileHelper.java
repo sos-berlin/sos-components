@@ -6,6 +6,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.util.SOSComparisonOperator;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -345,6 +346,9 @@ public class YADEXMLProfileHelper {
             }
         }
 
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -355,9 +359,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "LocalPostProcessing":
                     parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -394,6 +395,10 @@ public class YADEXMLProfileHelper {
     private static FTPProviderArguments parseFragmentRefFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         FTPProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTP(argsLoader, ref, isSource);
+
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -404,9 +409,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "FTPPostProcessing":
                     parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -420,6 +422,10 @@ public class YADEXMLProfileHelper {
     private static FTPSProviderArguments parseFragmentRefFTPS(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         FTPSProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseFTPS(argsLoader, ref, isSource);
+
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -430,9 +436,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "FTPPostProcessing":
                     parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -486,6 +489,10 @@ public class YADEXMLProfileHelper {
     private static SSHProviderArguments parseFragmentRefSFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         SSHProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSFTP(argsLoader, ref, isSource);
+
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -496,9 +503,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "SFTPPostProcessing":
                     parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -515,6 +519,10 @@ public class YADEXMLProfileHelper {
     private static SMBProviderArguments parseFragmentRefSMB(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
             YADESourceTargetArguments sourceTargetArgs) throws Exception {
         SMBProviderArguments args = YADEXMLFragmentsProtocolFragmentHelper.parseSMB(argsLoader, ref, isSource);
+
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = ref.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -525,9 +533,6 @@ public class YADEXMLProfileHelper {
                     break;
                 case "SMBPostProcessing":
                     parsePostProcessing(argsLoader, sourceTargetArgs.getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(sourceTargetArgs.getCommands().getCommandDelimiter(), n);
                     break;
                 case "Rename":
                     parseFragmentRefRename(argsLoader, n, sourceTargetArgs);
@@ -990,6 +995,14 @@ public class YADEXMLProfileHelper {
                 }
             }
         }
+    }
+
+    public static void parseProcessingCommandDelimiter(YADEXMLArgumentsLoader argsLoader, Node parent, SOSArgument<String> commandDelimiterArg,
+            String commandDelimiterElementName) throws Exception {
+        if (parent == null) {
+            return;
+        }
+        argsLoader.setStringArgumentValue(commandDelimiterArg, SOSXML.getChildNode(parent, commandDelimiterElementName));
     }
 
 }

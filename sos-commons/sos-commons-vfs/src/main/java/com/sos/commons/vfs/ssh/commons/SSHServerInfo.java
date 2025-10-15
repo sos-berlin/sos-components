@@ -28,9 +28,18 @@ public class SSHServerInfo {
 
     public SSHServerInfo(SSHProvider provider, String serverVersion) {
         this.serverVersion = serverVersion;
-        this.commandResult = provider.executeCommand(COMMANDO);
-        if (provider.getLogger().isDebugEnabled()) {
-            provider.getLogger().debug("[SSHServerInfo]%s", SOSString.replaceNewLines(commandResult.toString(), " "));
+        if (provider.getArguments().getDisableAutoDetectShell().isTrue()) {
+            this.commandResult = new SOSCommandResult(serverVersion);
+            // exitCode=null
+            if (provider.getLogger().isDebugEnabled()) {
+                provider.getLogger().debug("[SSHServerInfo][%s=true][skip exec=%s][identifying OS from server version]%s", provider.getArguments()
+                        .getDisableAutoDetectShell().getName(), COMMANDO, serverVersion);
+            }
+        } else {
+            this.commandResult = provider.executeCommand(COMMANDO);
+            if (provider.getLogger().isDebugEnabled()) {
+                provider.getLogger().debug("[SSHServerInfo]%s", SOSString.replaceNewLines(commandResult.toString(), " "));
+            }
         }
         analyze(provider);
     }
@@ -40,7 +49,8 @@ public class SSHServerInfo {
             return;
         }
 
-        if (commandResult.getExitCode() == null) {
+        // getDisableAutoDetectShell is active or uname exitCode=null
+        if (!commandResult.hasExitCode()) {
             if (commandResult.getStdErr().length() > 0) {
                 os = OS.WINDOWS.name();
             } else {
@@ -160,10 +170,10 @@ public class SSHServerInfo {
         if (commandResult.hasError(false)) {
             result.append(" (");
             result.append(commandResult.getCommand());
-            if (commandResult.getExitCode() != null && commandResult.getExitCode() > 0) {
+            if (commandResult.isNonZeroExitCode()) {
                 result.append(" exitCode=").append(commandResult.getExitCode());
             }
-            if (commandResult.getException() != null) {
+            if (commandResult.hasException()) {
                 result.append(" ").append(commandResult.getException().toString());
             }
             result.append(")");

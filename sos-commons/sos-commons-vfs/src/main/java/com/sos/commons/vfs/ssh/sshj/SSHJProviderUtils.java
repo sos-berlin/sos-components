@@ -69,6 +69,10 @@ public class SSHJProviderUtils {
 
     protected static List<String> getConnectedInfos(SSHClient ssh) {
         List<String> msg = new ArrayList<String>();
+        if (ssh == null) {
+            return msg;
+        }
+
         if (ssh.getTimeout() > 0 || ssh.getConnectTimeout() > 0) {
             msg.add("ConnectTimeout=" + AProvider.millis2string(ssh.getConnectTimeout()) + ", SocketTimeout=" + AProvider.millis2string(ssh
                     .getTimeout()));

@@ -73,13 +73,13 @@ public class SSHJob extends Job<SSHJobArguments> {
         SOSCommandResult r = provider.executeCommand(step.getDeclaredArguments().getCommand().getValue());
 
         step.getLogger().info("[exitCode]%s", r.getExitCode());
-        if (!SOSString.isEmpty(r.getStdOut())) {
+        if (r.hasStdOut()) {
             step.getLogger().info("[stdOut]%s", r.getStdOut());
         }
-        if (!SOSString.isEmpty(r.getStdErr())) {
+        if (r.hasStdErr()) {
             step.getLogger().info("[stdErr]%s", r.getStdErr());
         }
-        if (r.getException() != null) {
+        if (r.hasException()) {
             step.getLogger().info("[exception]%s", r.getException());
         }
     }

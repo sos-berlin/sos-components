@@ -1652,7 +1652,7 @@
                 <xs:element ref="SocketTimeout" minOccurs="0"/>
                 <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
-				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>					
+             	<xs:element ref="ConfigurationFiles" minOccurs="0"/>					
                 
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
@@ -1723,7 +1723,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                 <xs:element ref="SocketTimeout" minOccurs="0"/>
                 <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
-				        <xs:element ref="ConfigurationFiles" minOccurs="0"/>				
+                <xs:element ref="ConfigurationFiles" minOccurs="0"/>
+                <xs:element ref="DisableAutoDetectShell" minOccurs="0"/>             				
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -5434,6 +5435,36 @@ A fragment is referenced via this attribute value by a transfer profile.
 					This setting forces the user to manually add new hosts to the "known hosts" files.</li>
                   </ul>
 		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="DisableAutoDetectShell" type="xs:boolean" default="false">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/DisableAutoDetectShell">
+                <Release starting="2.8.2" issue="YADE-632"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-632">YADE-632</a> Availability starting with 2.8.2.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This parameter specifies whether automatic shell detection should be disabled for SFTP connections.<br/>
+            When set to <em>true</em>, the provider will skip executing remote commands (such as <em>uname</em>) that are normally used to identify the shell type or environment.<br/>
+            This option is useful when the SFTP server only supports the SFTP subsystem and does not allow exec channels.<br/>
+            Disabling shell detection in such cases prevents unnecessary reconnect attempts that would otherwise occur when the initial <em>exec</em> command causes the server to close the connection.
+		</p>
             </div>
          </xs:documentation>
       </xs:annotation>

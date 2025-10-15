@@ -53,7 +53,7 @@ public class YADECommandExecutor {
                     throw new YADEEngineJumpHostCommandException(e);
                 }
             } else {
-                logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "][" + command + "]", result);
+                logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
                 checkCommandResult(delegator, argumentName, result);
             }
         }
@@ -207,7 +207,7 @@ public class YADECommandExecutor {
         }
         logger.info("[%s]%s", jumpHostDelegator.getLabel(), command);
         SOSCommandResult result = jumpHostDelegator.getProvider().executeCommand(command);
-        logCommandResult(logger, "[" + jumpHostDelegator.getLabel() + "]", result);
+        logCommandResult(logger, "[" + jumpHostDelegator.getLabel() + "]", result, false);
         try {
             checkCommandResult("[" + jumpHostDelegator.getLabel() + "]", result);
         } catch (YADEEngineCommandException e) {
@@ -247,7 +247,7 @@ public class YADECommandExecutor {
                 }
             } else {
                 SOSCommandResult result = delegator.getProvider().executeCommand(command);
-                logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "][" + command + "]", result);
+                logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
                 checkCommandResult(delegator, argumentName, result);
             }
         }
@@ -263,7 +263,6 @@ public class YADECommandExecutor {
         return env;
     }
 
-    // TODO direc
     private static void executeFileCommands(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, SOSArgument<List<String>> arg, YADEProviderFile sourceFile, SOSEnv env, boolean isSource)
             throws YADEEngineCommandException {
@@ -274,13 +273,15 @@ public class YADECommandExecutor {
         String prefix = String.format("[%s][%s][%s][%s]", sourceFile.getIndex(), delegator.getLabel(), sourceOrTargetFile.getFullPath(), arg
                 .getName());
         for (String command : arg.getValue()) {
-            // String msg = prefix + "[" + resolved + "]";
-            String msg = prefix + "[" + command + "]";
-            logger.info(msg + "...");
+            logger.info(prefix + "[" + command + "]...");
 
             String resolved = YADEFileCommandVariablesResolver.resolve(sourceDelegator, targetDelegator, sourceFile, command);
+            if (logger.isDebugEnabled()) {
+                logger.debug(prefix + "[command][resolved]" + resolved);
+            }
+
             SOSCommandResult result = delegator.getProvider().executeCommand(resolved, env);
-            logCommandResult(logger, msg, result);
+            logCommandResult(logger, prefix, result);
             checkCommandResult(prefix, result);
         }
     }
@@ -303,13 +304,17 @@ public class YADECommandExecutor {
     }
 
     private static void logCommandResult(ISOSLogger logger, String msg, SOSCommandResult result) {
+        logCommandResult(logger, msg, result, true);
+    }
+
+    private static void logCommandResult(ISOSLogger logger, String msg, SOSCommandResult result, boolean logCommand) {
         if (result == null) {
             return; // not implemented by the provider
         }
-        boolean successExitCode = result.getExitCode() != null && result.getExitCode().intValue() == 0;
-        boolean hasStdOut = !SOSString.isEmpty(result.getStdOut());
-        boolean hasStdErr = !SOSString.isEmpty(result.getStdErr());
-        boolean hasException = result.getException() != null;
+        boolean successExitCode = result.isZeroExitCode();
+        boolean hasStdOut = result.hasStdOut();
+        boolean hasStdErr = result.hasStdErr();
+        boolean hasException = result.hasException();
 
         if (successExitCode && !hasStdOut && !hasStdErr && !hasException) {
             return;
@@ -328,10 +333,11 @@ public class YADECommandExecutor {
         if (hasException) {
             l.add("exception=" + result.getException());
         }
+        String add = logCommand ? "[" + result.getCommand() + "]" : "";
         if (l.size() > 1) {
-            logger.info(msg + "[result][" + String.join("][", l) + "]");
+            logger.info(msg + add + "[result][" + String.join("][", l) + "]");
         } else {
-            logger.info(msg + "[result]" + l.get(0));
+            logger.info(msg + add + "[result]" + l.get(0));
         }
     }
 

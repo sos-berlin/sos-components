@@ -70,9 +70,21 @@ public class SSHJProvider extends SSHProvider {
         try {
             getLogger().info(getConnectMsg());
 
-            sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
-            setServerVersion(sshClient.getTransport().getServerVersion());
+            connectInternal();
+            // default: disable_auto_detect_shell=false
+            // - executes the "uname" command once to retrieve advanced server information (e.g., OS, Shell)
             getServerInfo();
+
+            // executing "uname" may disconnect the SSH client
+            // - e.g., if the server only supports the SFTP subsystem and closes the connection instead of reporting an "exec" channel failure
+            if (!isConnected()) {
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[sshClient not connected anymore after getServerInfo=%s]trying to reconnect ...", getLogPrefix(),
+                            getServerInfo());
+                }
+                disconnectInternal();
+                connectInternal();
+            }
 
             getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
 
@@ -95,16 +107,9 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        if (sshClient == null) {
-            commands.clear();
-            return;
+        if (disconnectInternal()) {
+            getLogger().info(getDisconnectedMsg());
         }
-        commands.clear();
-
-        disableReusableResource();
-        SOSClassUtil.closeQuietly(sshClient);
-        sshClient = null;
-        getLogger().info(getDisconnectedMsg());
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
@@ -457,7 +462,7 @@ public class SSHJProvider extends SSHProvider {
                     cmd.join(timeout.getInterval(), timeout.getTimeUnit());
                 }
                 result.setExitCode(cmd.getExitStatus());
-                if (result.getExitCode() == null) {
+                if (!result.hasExitCode()) {
                     if (cmd.getExitSignal() != null) {
                         throw new SOSSSHCommandExitViolentlyException(cmd.getExitSignal(), cmd.getExitErrorMessage());
                     }
@@ -514,7 +519,8 @@ public class SSHJProvider extends SSHProvider {
             super.enableReusableResource(new SSHJProviderReusableResource(this));
             reusableResourceEnabled = true;
         } catch (Exception e) {
-            getLogger().warn(getLogPrefix() + "[enableReusableResource]" + e);
+            reusableResourceEnabled = false;
+            getLogger().warn(getLogPrefix() + "[enableReusableResource=false]" + e);
         }
     }
 
@@ -645,6 +651,25 @@ public class SSHJProvider extends SSHProvider {
             return null;
         }
         return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
+    }
+
+    private void connectInternal() throws Exception {
+        sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
+        setServerVersion(sshClient.getTransport().getServerVersion());
+    }
+
+    // without logging
+    private boolean disconnectInternal() {
+        if (sshClient == null) {
+            commands.clear();
+            return false;
+        }
+        commands.clear();
+
+        disableReusableResource();
+        SOSClassUtil.closeQuietly(sshClient);
+        sshClient = null;
+        return true;
     }
 
     private synchronized String createCommandIdentifier() {

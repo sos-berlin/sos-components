@@ -198,7 +198,7 @@ public class GitCommandUtils {
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
                         filter.getRemoteUrl(), folder, repositoryBase, charset);
-                if(result.getExitCode() != 0) {
+                if(result.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
                             result.getExitCode(), result.getStdErr()), result.getException());
                 }
@@ -371,7 +371,7 @@ public class GitCommandUtils {
                 String folder = filter.getFolder().startsWith("/") ? filter.getFolder().substring(1) : filter.getFolder();
                 GitCloneCommandResult result = (GitCloneCommandResult)GitCommand.executeGitClone(
                         filter.getRemoteUrl(), folder, repositoryBase, charset);
-                if(result.getExitCode() != 0) {
+                if(result.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("clone command exit code <%1$d> with message: %2$s", 
                             result.getExitCode(), result.getStdErr()), result.getException());
                 }
@@ -416,7 +416,7 @@ public class GitCommandUtils {
     public static final GitAddCommandResult addAllChanges (String account, Path localRepo, Path workingDir, Charset charset)
             throws JsonMappingException, JsonProcessingException {
         GitAddCommandResult result = (GitAddCommandResult)GitCommand.executeGitAddAll(localRepo, workingDir, charset);
-        if(result.getExitCode() != 0) {
+        if(result.isNonZeroExitCode()) {
             throw new JocGitException(String.format("add all command exit code <%1$d> with message: %2$s", 
                     result.getExitCode(), result.getStdErr()), result.getException());
         }
@@ -456,7 +456,7 @@ public class GitCommandUtils {
             }
             
             GitAddCommandResult result = (GitAddCommandResult)GitCommand.executeGitAddAll(localRepo, workingDir, charset);
-            if(result.getExitCode() != 0) {
+            if(result.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("add all command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());
             }
@@ -479,7 +479,7 @@ public class GitCommandUtils {
             Charset charset) throws JsonMappingException, JsonProcessingException {
         GitCommitCommandResult result = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted(filter.getMessage() , localRepo,
                 workingDir, charset);
-        if(result.getExitCode() != 0 && result.getExitCode() != 1) {
+        if(result.isNonZeroExitCode() && result.getExitCode() != 1) {
             throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                     result.getExitCode(), result.getStdErr()), result.getException());
         }
@@ -518,7 +518,7 @@ public class GitCommandUtils {
             }
             GitCommitCommandResult result = (GitCommitCommandResult)GitCommand.executeGitCommitFormatted(filter.getMessage() ,localRepo,
                     workingDir, charset);
-            if(result.getExitCode() != 0 && result.getExitCode() != 1) {
+            if(result.isNonZeroExitCode() && result.getExitCode() != 1) {
                 throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());
             }
@@ -540,7 +540,7 @@ public class GitCommandUtils {
     public static final GitPushCommandResult pushCommitedChanges (CommonFilter filter, String account, Path localRepo, Path workingDir,
             Charset charset) throws JsonMappingException, JsonProcessingException {
         GitPushCommandResult result = (GitPushCommandResult)GitCommand.executeGitPush(localRepo, workingDir, charset);
-        if(result.getExitCode() != 0) {
+        if(result.isNonZeroExitCode()) {
             throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                     result.getExitCode(), result.getStdErr()), result.getException());
         }
@@ -589,7 +589,7 @@ public class GitCommandUtils {
                 }
             }
             GitPushCommandResult result = (GitPushCommandResult)GitCommand.executeGitPush(localRepo, workingDir, charset);
-            if(result.getExitCode() != 0) {
+            if(result.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());
             }
@@ -611,7 +611,7 @@ public class GitCommandUtils {
     public static final GitPullCommandResult pullChanges (CommonFilter filter, String account, Path localRepo, Path workingDir, 
             Charset charset) throws JsonMappingException, JsonProcessingException {
         GitPullCommandResult result = (GitPullCommandResult)GitCommand.executeGitPull(localRepo, workingDir, charset);
-        if(result.getExitCode() != 0) {
+        if(result.isNonZeroExitCode()) {
             throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                     result.getExitCode(), result.getStdErr()), result.getException());
         }
@@ -662,7 +662,7 @@ public class GitCommandUtils {
             }
             
             GitPullCommandResult result = (GitPullCommandResult)GitCommand.executeGitPull(localRepo, workingDir, charset);
-            if(result.getExitCode() != 0) {
+            if(result.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());
             }
@@ -690,7 +690,7 @@ public class GitCommandUtils {
             result = (GitCheckoutCommandResult)GitCommand.executeGitCheckout(null, filter.getTag(), localRepo, workingDir, charset);
         }
         
-        if(result.getExitCode() != 0) {
+        if(result.isNonZeroExitCode()) {
             throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                     result.getExitCode(), result.getStdErr()), result.getException());
         }
@@ -716,7 +716,7 @@ public class GitCommandUtils {
                 result = (GitCheckoutCommandResult)GitCommand.executeGitCheckout(null, filter.getTag(), localRepo, workingDir, charset);
             }
             
-            if(result.getExitCode() != 0) {
+            if(result.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("commit command exit code <%1$d> with message: %2$s", 
                         result.getExitCode(), result.getStdErr()), result.getException());
             }
@@ -728,7 +728,7 @@ public class GitCommandUtils {
     
     public static final String getActiveRemoteUri (Path localRepo, Path workingDir, GitCredentialsList credList, Charset charset) {
         GitRemoteCommandResult remoteVResult = (GitRemoteCommandResult)GitCommand.executeGitRemoteRead(localRepo, workingDir, charset);
-        if(remoteVResult.getExitCode() != 0) {
+        if(remoteVResult.isNonZeroExitCode()) {
             throw new JocGitException(String.format("remote -v command exit code <%1$d> with message: %2$s", 
                     remoteVResult.getExitCode(), remoteVResult.getStdErr()), remoteVResult.getException());
         }
@@ -977,7 +977,7 @@ public class GitCommandUtils {
             if(gitKeyFilePath != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.FILE, gitKeyFilePath, charset,
                         gitConfigTmpPath);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
@@ -985,14 +985,14 @@ public class GitCommandUtils {
             if(username != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(GitConfigType.FILE, username, charset,
                         gitConfigTmpPath);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
             }
             if(pwd != null) {
               configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserpwdAdd(GitConfigType.FILE, pwd, charset, gitConfigTmpPath);
-              if(configResult.getExitCode() != 0) {
+              if(configResult.isNonZeroExitCode()) {
                   throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                           configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
               }
@@ -1000,7 +1000,7 @@ public class GitCommandUtils {
             if (userEmail != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(GitConfigType.FILE, userEmail, charset,
                         gitConfigTmpPath);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
@@ -1008,7 +1008,7 @@ public class GitCommandUtils {
             if (localRepoPath != null) {
                 configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSaveDirectoryAdd(GitConfigType.FILE, localRepoPath, charset,
                         gitConfigTmpPath);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
@@ -1033,7 +1033,7 @@ public class GitCommandUtils {
         GitConfigCommandResult configResult;
         try {
             configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(GitConfigType.GLOBAL, gitKeyFilePath, charset);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }
@@ -1048,7 +1048,7 @@ public class GitCommandUtils {
         try {
             GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(
                     GitConfigType.GLOBAL, username, charset);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }
@@ -1063,7 +1063,7 @@ public class GitCommandUtils {
         try {
             GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(
                     GitConfigType.GLOBAL, email, charset);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }
@@ -1079,7 +1079,7 @@ public class GitCommandUtils {
         try {
             configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSaveDirectoryAdd(GitConfigType.GLOBAL, localRrepository,
                     charset);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 throw new JocGitException(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }
@@ -1094,7 +1094,7 @@ public class GitCommandUtils {
         try {
             GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAddCustom(
                     GitConfigType.GLOBAL, oldSshCommandValue, charset);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }
@@ -1108,7 +1108,7 @@ public class GitCommandUtils {
             if(!oldUsernameValue.isEmpty()) {
                 GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUsernameAdd(
                         GitConfigType.GLOBAL, oldUsernameValue, charset);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
@@ -1123,7 +1123,7 @@ public class GitCommandUtils {
             if(!oldEmailValue.isEmpty()) {
                 GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigUserEmailAdd(
                         GitConfigType.GLOBAL, oldEmailValue, charset);
-                if(configResult.getExitCode() != 0) {
+                if(configResult.isNonZeroExitCode()) {
                     LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
                             configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
                 }
@@ -1137,7 +1137,7 @@ public class GitCommandUtils {
         try {
             GitConfigCommandResult configResult = (GitConfigCommandResult)GitCommand.executeGitConfigSshAdd(
                     GitConfigType.GLOBAL, charset, oldLocalRepository);
-            if(configResult.getExitCode() != 0) {
+            if(configResult.isNonZeroExitCode()) {
                 LOGGER.warn(String.format("update config command exit code <%1$d> with message: %2$s", 
                         configResult.getExitCode(), configResult.getStdErr()), configResult.getException());
             }

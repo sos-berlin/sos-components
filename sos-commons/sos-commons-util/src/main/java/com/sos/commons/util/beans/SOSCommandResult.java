@@ -51,15 +51,27 @@ public class SOSCommandResult {
     }
 
     public Integer getExitCode() {
-        if (exitCode == null) {
-            return 0;
-        } else {
-            return exitCode;
-        }
+        return exitCode;
     }
 
     public void setExitCode(Integer val) {
         exitCode = val;
+    }
+
+    public void setExitCode(int val) {
+        exitCode = Integer.valueOf(val);
+    }
+
+    public boolean hasExitCode() {
+        return exitCode != null;
+    }
+
+    public boolean isZeroExitCode() {
+        return hasExitCode() && exitCode.intValue() == 0;
+    }
+
+    public boolean isNonZeroExitCode() {
+        return hasExitCode() && exitCode.intValue() != 0;
     }
 
     public boolean isTimeoutExeeded() {
@@ -102,18 +114,22 @@ public class SOSCommandResult {
         exception = val;
     }
 
+    public boolean hasException() {
+        return exception != null;
+    }
+
     public boolean hasError() {
         return hasError(true);
     }
 
     public boolean hasError(boolean checkStdError) {
-        if (exception != null || timeoutExeeded) {
+        if (hasException() || timeoutExeeded) {
             return true;
         }
-        if (getExitCode() > 0) {
+        if (isNonZeroExitCode()) {
             return true;
         }
-        if (checkStdError && stdErr.length() > 0) {
+        if (checkStdError && hasStdErr()) {
             return true;
         }
         return false;
@@ -129,7 +145,7 @@ public class SOSCommandResult {
         if (timeout != null) {
             sb.append("[timeout=").append(timeout);
             if (timeoutExeeded) {
-                sb.append(",timeoutExeeded=true");
+                sb.append(", timeoutExeeded=true");
             }
             sb.append("]");
         }

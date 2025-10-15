@@ -43,7 +43,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     public SSHJob(JobContext jobContext) {
         super(jobContext);
     }
-    
+
     @Override
     public void processOrder(OrderProcessStep<SSHJobArguments> step) throws Exception {
 
@@ -139,19 +139,24 @@ public class SSHJob extends Job<SSHJobArguments> {
                 }
 
                 result = provider.executeCommand(command, envVars);
-
-                if (!SOSString.isEmpty(result.getStdOut())) {
+                if (result.hasStdOut()) {
                     step.getOutcome().putVariable("std_out", result.getStdOut());
                     logger.info("[stdOut] %s", result.getStdOut());
                 }
-                if (!SOSString.isEmpty(result.getStdErr())) {
+                if (result.hasStdErr()) {
                     step.getOutcome().putVariable("std_err", result.getStdErr());
                     logger.error("[stdErr] %s", result.getStdErr());
                 }
+                // Compatibility with the previous SOSCommandResult version, which getExitCode() returns 0 if exitCode=null
+                // TODO: this handling should be reviewed
+                if (!result.hasExitCode()) {
+                    result.setExitCode(0);
+                }
+
                 logger.info("[returnCode] %s", result.getExitCode());
                 step.getOutcome().putVariable("exit_code", result.getExitCode());
                 step.getOutcome().putVariable("returnCode", result.getExitCode());
-                if (result.getException() != null) {
+                if (result.hasException()) {
                     step.getOutcome().putVariable("exception", result.getException());
                     logger.info("[exception] %s", SOSString.toString(result.getException()));
                 }
@@ -322,8 +327,8 @@ public class SSHJob extends Job<SSHJobArguments> {
                 logger.debug(String.format("[postCommandRead] %s", postCommandRead));
             }
             SOSCommandResult result = provider.executeCommand(postCommandRead);
-            if (result.getExitCode() == 0) {
-                if (!result.getStdOut().toString().isEmpty()) {
+            if (result.isZeroExitCode()) {
+                if (result.hasStdOut()) {
                     BufferedReader reader = new BufferedReader(new StringReader(new String(result.getStdOut())));
                     String line = null;
                     while ((line = reader.readLine()) != null) {

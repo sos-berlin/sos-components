@@ -11,6 +11,11 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
         argsLoader.initializeJumpHostArgsIfNull();
         argsLoader.getJumpHostArgs().getConfiguredOnSource().setValue(isSource);
 
+        // YADE1 - compatibility
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        YADEXMLProfileHelper.parseProcessingCommandDelimiter(argsLoader, fragment, argsLoader.getJumpHostArgs().getCommands().getCommandDelimiter(),
+                "JumpCommandDelimiter");
+
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -40,9 +45,6 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     break;
                 case "JumpCommandAfterOperationFinal":
                     argsLoader.getJumpHostArgs().getCommands().setCommandsAfterOperationFinal(argsLoader.getValue(n));
-                    break;
-                case "JumpCommandDelimiter":
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getCommands().getCommandDelimiter(), n);
                     break;
                 case "ServerAliveInterval":
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getProvider().getServerAliveInterval(), n);
@@ -99,7 +101,11 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
         }
     }
 
-    public static void parseSFTPProcessing(YADEXMLArgumentsLoader argsLoader, Node sftpProcessing) throws Exception {
+    private static void parseSFTPProcessing(YADEXMLArgumentsLoader argsLoader, Node sftpProcessing) throws Exception {
+        // Parse before Pre/Post-Processing because this value is used to split commands
+        YADEXMLProfileHelper.parseProcessingCommandDelimiter(argsLoader, sftpProcessing, argsLoader.getJumpHostArgs().getCommands()
+                .getCommandDelimiter(), "ProcessingCommandDelimiter");
+
         NodeList nl = sftpProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -110,9 +116,6 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     break;
                 case "SFTPPostProcessing":
                     YADEXMLProfileHelper.parsePostProcessing(argsLoader, argsLoader.getJumpHostArgs().getCommands(), n);
-                    break;
-                case "ProcessingCommandDelimiter":
-                    argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getCommands().getCommandDelimiter(), n);
                     break;
                 case "Platform":
                     argsLoader.getJumpHostArgs().setPlatform(argsLoader.getValue(n));
