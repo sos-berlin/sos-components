@@ -66,7 +66,7 @@ public class YADEFileHandler {
     }
 
     public void run(boolean isMoveOperation, boolean useCumulativeTargetFile, boolean useLastModified) throws YADEEngineTransferFileException {
-        this.sourceFile.resetSteady();
+        prepareSource();
 
         // 'index' or 'index][thread name'
         String fileTransferLogPrefix = config.getParallelism() == 1 ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
@@ -220,7 +220,18 @@ public class YADEFileHandler {
 
             targetFile.setState(TransferEntryState.TRANSFERRED);
             // renamed based on ReplaceWhat...
-            String renamed = targetFile.isNameReplaced() ? "[" + YADEClientBannerWriter.formatState(TransferEntryState.RENAMED) + "]" : "";
+            String renamed = "";
+            if (targetFile.isNameReplaced()) {
+                targetFile.setSubState(TransferEntryState.RENAMED);
+                // - the Target file is always renamed during transfer
+                // -- logged by default as [renamed]
+                // - if the Source file should also be renamed:
+                // -- the Source file renaming will take place later
+                // -- therefore - which file has already been renamed should be clearly visible here
+                // --- logged as [target renamed]
+                String add = config.getSource().isReplacementEnabled() ? "target " : "";
+                renamed = "[" + add + YADEClientBannerWriter.formatState(TransferEntryState.RENAMED) + "]";
+            }
             logger.info("[%s][%s]%s[%s=%s][%s=%s][Bytes=%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
                     renamed, sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator.getLabel(), targetFile.getFullPath(), targetFile
                             .getSize(), SOSDate.getDuration(startTime, Instant.now()));
@@ -243,7 +254,6 @@ public class YADEFileHandler {
                         }
                         sourceFile.setState(TransferEntryState.MOVED);
                     }
-
                 }
                 YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
                         config.getTarget().getAtomic() != null, useLastModified);
@@ -255,7 +265,17 @@ public class YADEFileHandler {
         }
     }
 
-    public void initializeTarget() throws ProviderException {
+    private void prepareSource() {
+        sourceFile.resetSteady();
+
+        YADEFileNameInfo fileNameInfo = getSourceFinalFilePathInfo();
+        sourceFile.setNameReplaced(fileNameInfo.isReplaced());
+        if (sourceFile.isNameReplaced()) {
+            sourceFile.setFinalFullPath(sourceDelegator, fileNameInfo.getName());
+        }
+    }
+
+    private void initializeTarget() throws ProviderException {
         YADEFileNameInfo fileNameInfo = getTargetFinalFilePathInfo();
 
         /** finalFileName: the final name of the file after transfer (compressed/replaced name...) */
@@ -299,23 +319,6 @@ public class YADEFileHandler {
         sourceFile.setTarget(target);
     }
 
-    public static Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, YADEProviderFile file) {
-        return YADEFileReplacementHelper.getReplacementResultIfDifferent(delegator, file.getName(), delegator.getArgs().getReplacing().getValue(),
-                delegator.getArgs().getReplacement().getValue());
-    }
-
-    public static String getFinalFullPath(AYADEProviderDelegator delegator, YADEProviderFile file, YADEFileNameInfo newNameInfo) {
-        if (newNameInfo.isAbsolutePath()) {
-            return newNameInfo.getPath();
-        } else {
-            String finalFullPath = file.getParentFullPath();
-            if (newNameInfo.needsParent()) {
-                finalFullPath = delegator.appendPath(finalFullPath, newNameInfo.getParent());
-            }
-            return delegator.appendPath(finalFullPath, newNameInfo.getName());
-        }
-    }
-
     /** Returns the final name of the file after transfer<br/>
      * May contains a path separator and have a different path than the original path if target replacement is enabled
      * 
@@ -342,6 +345,28 @@ public class YADEFileHandler {
             info = new YADEFileNameInfo(targetDelegator, fileName, false);
         }
         return info;
+    }
+
+    private YADEFileNameInfo getSourceFinalFilePathInfo() {
+        // 1) Source name
+        String fileName = sourceFile.getName();
+        // 2) Replaced name
+        YADEFileNameInfo info = null;
+        if (config.getSource().isReplacementEnabled()) {
+            Optional<YADEFileNameInfo> newFileNameInfo = getReplacementResultIfDifferent(sourceDelegator, sourceFile);
+            if (newFileNameInfo.isPresent()) {
+                info = newFileNameInfo.get();
+            }
+        }
+        if (info == null) {
+            info = new YADEFileNameInfo(sourceDelegator, fileName, false);
+        }
+        return info;
+    }
+
+    private static Optional<YADEFileNameInfo> getReplacementResultIfDifferent(AYADEProviderDelegator delegator, YADEProviderFile file) {
+        return YADEFileReplacementHelper.getReplacementResultIfDifferent(delegator, file.getName(), delegator.getArgs().getReplacing().getValue(),
+                delegator.getArgs().getReplacement().getValue());
     }
 
     private void handleException(String fileTransferLogPrefix, YADETargetProviderFile targetFile, Throwable e, int attempts)

@@ -67,7 +67,7 @@ public class YADEFileActionsExecuter {
 
             // 1) Source - Rename
             if (sourceFile.needsRename()) {
-                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, isAtomicallyEnabled, true);
+                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, false, true);
             }
         }
 

@@ -30,7 +30,6 @@ import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLProfileHelper;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
-import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
 public class YADEClientBannerWriter {
 
@@ -76,7 +75,7 @@ public class YADEClientBannerWriter {
             List<String> l = new ArrayList<>();
             if (logger.isDebugEnabled()) {
                 for (ProviderFile f : files) {
-                    logger.debug((YADEProviderFile) f);
+                    logger.debug("Source " + (YADEProviderFile) f);
                 }
             }
 
@@ -471,26 +470,51 @@ public class YADEClientBannerWriter {
         }
 
         private static String getState(YADEProviderFile f, TransferEntryState defaultState) {
-            // skipping the RENAMED subState if the renaming was due to an atomic transfer and not due to a defined replacement
-            if (f.getTarget() != null) {
-                YADETargetProviderFile target = (YADETargetProviderFile) f.getTarget();
-                return resolve(f.getTarget(), defaultState, !target.isNameReplaced());
+            // Source file only (GetList, Remove)
+            if (f.getTarget() == null) {
+                String state = getFileState(f, defaultState);
+                String subState = getFileSubState(f, false);
+                return SOSString.isEmpty(subState) ? state : state + "(" + subState + ")";
             }
-            return resolve(f, defaultState, false);
+
+            // Copy, Move - use Target file state as main state
+            String targetState = getFileState(f.getTarget(), defaultState);
+            String sourceSubState = getFileSubState(f, false);
+            // Target file - skipping the RENAMED sub-state if the renaming was due to an atomic transfer and not due to a defined replacement
+            String targetSubState = getFileSubState(f.getTarget(), !f.getTarget().isNameReplaced());
+
+            boolean sourceSubStateEmpty = SOSString.isEmpty(sourceSubState);
+            boolean targetSubStateEmpty = SOSString.isEmpty(targetSubState);
+
+            // Check 1: both sub-states empty - return main state
+            if (sourceSubStateEmpty && targetSubStateEmpty) {
+                return targetState;
+            }
+            // Check 2: Target sub-state empty(Source sub-state is not empty due to Check 1)
+            if (targetSubStateEmpty) {
+                return targetState + "(source " + sourceSubState + ")";
+            }
+            // Check 3: Source and Target sub-states are equal(not empty due to Check 2)
+            if (targetSubState.equals(sourceSubState)) {
+                return targetState + "(source/target " + targetSubState + ")";
+            }
+            // Check 4: Source sub-state empty(Target sub-state is not empty due to Check 2)
+            if (sourceSubStateEmpty) {
+                return targetState + "(" + targetSubState + ")";
+            }
+            // Source and Target sub-states are not empty and not equal
+            return targetState + "(source " + sourceSubState + ", target " + targetSubState + ")";
         }
 
-        private static String resolve(YADEProviderFile f, TransferEntryState defaultState, boolean skipRenameSubStateForTarget) {
-            String state = f.getState() == null ? formatState(defaultState) : formatState(f.getState());
-            String subState = getSubState(f, skipRenameSubStateForTarget);
-            return state + subState;
+        private static String getFileState(YADEProviderFile f, TransferEntryState defaultState) {
+            return f.getState() == null ? formatState(defaultState) : formatState(f.getState());
         }
 
-        private static String getSubState(YADEProviderFile target, boolean skipRenameSubState) {
-            if (target.getSubState() == null || (skipRenameSubState && TransferEntryState.RENAMED.equals(target.getSubState()))) {
+        private static String getFileSubState(YADEProviderFile f, boolean skipRenameSubState) {
+            if (f.getSubState() == null || (skipRenameSubState && TransferEntryState.RENAMED.equals(f.getSubState()))) {
                 return "";
             }
-            return "(" + formatState(target.getSubState()) + ")";
+            return formatState(f.getSubState());
         }
     }
-
 }

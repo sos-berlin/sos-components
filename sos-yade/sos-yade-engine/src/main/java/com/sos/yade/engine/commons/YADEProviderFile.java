@@ -21,6 +21,8 @@ public class YADEProviderFile extends ProviderFile {
 
     private String integrityHash;
 
+    private boolean nameReplaced;
+
     public YADEProviderFile(AYADEProviderDelegator delegator, String fullPath, long size, long lastModifiedMillis,
             YADEDirectoryMapper directoryMapper, boolean checkSteady) {
         super(delegator.getProvider(), fullPath, size, lastModifiedMillis);
@@ -114,32 +116,39 @@ public class YADEProviderFile extends ProviderFile {
         return integrityHash;
     }
 
+    public boolean isNameReplaced() {
+        return nameReplaced;
+    }
+
+    public void setNameReplaced(boolean val) {
+        nameReplaced = val;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (state != null) {
             sb.append("state=").append(state.name().toLowerCase());
-            sb.append(",");
+            sb.append(", ");
         }
         if (subState != null) {
             sb.append("subState=").append(subState.name().toLowerCase());
-            sb.append(",");
+            sb.append(", ");
         }
         if (integrityHash != null) {
             sb.append("integrityHash=").append(integrityHash);
-            sb.append(",");
+            sb.append(", ");
         }
         sb.append(getFinalFullPath());
         if (target != null) {
             sb.append(", Target state=").append(target.getState().name().toLowerCase());
             if (target.getSubState() != null) {
-                sb.append(",subState=").append(target.getSubState().name().toLowerCase());
+                sb.append(", subState=").append(target.getSubState().name().toLowerCase());
             }
             if (target.getIntegrityHash() != null) {
-                sb.append("integrityHash=").append(target.getIntegrityHash());
-                sb.append(",");
+                sb.append(", integrityHash=").append(target.getIntegrityHash());
             }
-            sb.append(",").append(target.getFinalFullPath());
+            sb.append(", ").append(target.getFinalFullPath());
 
         }
         return sb.toString();
