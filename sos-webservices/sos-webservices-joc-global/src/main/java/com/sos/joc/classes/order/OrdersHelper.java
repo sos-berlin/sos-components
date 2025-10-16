@@ -358,10 +358,10 @@ public class OrdersHelper {
         if (isCancellingOrResuming(order.mark()) || isSuspending(order.mark())) {
             return false;
         }
-        if (isDisrupted(order)) {
-            return false;
-        }
-        return order.isSuspended() || isFailed(order);// || isSuspending(o.mark());
+//        if (isDisrupted(order)) {
+//            return false;
+//        }
+        return order.isSuspended() || isFailed(order) || isDisrupted(order);// || isSuspending(o.mark());
     }
 
     private static boolean isResumable(JOrder order, boolean disrupted) {
