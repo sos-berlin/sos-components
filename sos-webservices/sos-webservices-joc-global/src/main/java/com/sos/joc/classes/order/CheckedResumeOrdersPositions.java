@@ -157,6 +157,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
             
             Variables allConstants = new Variables();
+            Set<String> argsNotUnique = new HashSet<>();
             Variables allVars = new Variables();
             jOrders.stream().map(jOrder -> {
                 OrdersResumePositions orp = new OrdersResumePositions();
@@ -177,16 +178,23 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                 } catch (Exception e1) {
                 }
 
-                orp.setConstants(constants);
+                orp.setConstants(constantsIfChildOrder(constants, jOrder));
                 return orp;
             }).forEach(orp -> {
                 if (orp.getConstants() != null && orp.getConstants().getAdditionalProperties() != null) {
-                    allConstants.setAdditionalProperties(orp.getConstants().getAdditionalProperties());
+                    orp.getConstants().getAdditionalProperties().forEach((k, v) -> {
+                        Object prevValue = allConstants.getAdditionalProperties().put(k, v);
+                        if (prevValue != null && !prevValue.equals(v)) {
+                            argsNotUnique.add(k);
+                        }
+                    });
                 }
                 if (orp.getVariables() != null && orp.getVariables().getAdditionalProperties() != null) {
                     allVars.setAdditionalProperties(orp.getVariables().getAdditionalProperties());
                 }
             });
+            
+            allConstants.getAdditionalProperties().keySet().removeIf(argsNotUnique::contains);
             
             setConstants(allConstants);
             setVariables(allVars);
@@ -196,6 +204,14 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         setSurveyDate(Date.from(currentState.instant()));
         
         return this;
+    }
+    
+    private Variables constantsIfChildOrder(Variables constants, JOrder jOrder) {
+        boolean isChildOrder = jOrder.id().string().contains("|");
+        if (isChildOrder && constants != null && constants.getAdditionalProperties() != null) {
+            constants.getAdditionalProperties().values().removeIf(v -> (v instanceof List) || (v instanceof Map));
+        }
+        return constants;
     }
     
     @JsonIgnore
@@ -284,7 +300,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         }
         setVariables(getVariables(jOrder, position, implicitEnds, constants.getAdditionalProperties().keySet()));
         
-        setConstants(constants);
+        setConstants(constantsIfChildOrder(constants, jOrder));
         
         return this;
     }
