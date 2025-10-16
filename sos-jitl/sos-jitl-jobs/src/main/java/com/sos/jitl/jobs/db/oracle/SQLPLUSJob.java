@@ -67,14 +67,16 @@ public class SQLPLUSJob extends Job<SQLPlusJobArguments> {
         }
         // re - JITL-696 adjusting
         // Compatibility with the previous SOSCommandResult version, which getExitCode() returns 0 if exitCode=null
-        // TODO - this handling should be reviewed
         if (!sosCommandResult.hasExitCode()) {
             sosCommandResult.setExitCode(0);
         }
 
         final String conNL = System.getProperty("line.separator");
         String stdOut = sosCommandResult.getStdOut();
-        step.getLogger().debug(String.format("[command encoding]%s", sosCommandResult.getEncoding()));
+        if (step.getLogger().isDebugEnabled()) {
+            step.getLogger().debug(String.format("[exitCode=%s][command encoding]%s", sosCommandResult.getExitCode(), sosCommandResult
+                    .getEncoding()));
+        }
         step.getLogger().info(String.format("[stdout]%s", stdOut));
         String[] stdOutStringArray = stdOut.split(conNL);
 
