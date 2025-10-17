@@ -28,13 +28,18 @@ public class DBItemInventorySchedule2Calendar extends DBItem {
     @Column(name = "[SCHEDULE_PATH]", nullable = false)
     private String schedulePath;
 
-    @Id
+    // Row identifier: SCHEDULE_NAME, CALENDAR_NAME
+    // @Id is not set due to:
+    // - if a view DBItem defines @Id on a nullable field (or one of the composite keys references a nullable field),
+    // - and this field is actually NULL in a record, Hibernate will return NULL instead of a DBItem for that row.
+    // Setting @Id once for a view on a non-nullable field is enough
+    // - Hibernate does not check this, and @Id is not needed for further processing (the view will not be stored or updated by Hibernate)
     @Column(name = "[CALENDAR_NAME]", nullable = true)
     private String calendarName;
 
-    @Column(name = "[RELEASED]", nullable = false)
+    @Column(name = "[SCHEDULE_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
-    private boolean released;
+    private boolean scheduleReleased;
 
     public String getScheduleName() {
         return scheduleName;
@@ -60,12 +65,12 @@ public class DBItemInventorySchedule2Calendar extends DBItem {
         calendarName = val;
     }
 
-    public boolean getReleased() {
-        return released;
+    public boolean getScheduleReleased() {
+        return scheduleReleased;
     }
 
-    public void setReleased(boolean val) {
-        released = val;
+    public void setScheduleReleased(boolean val) {
+        scheduleReleased = val;
     }
 
 }
