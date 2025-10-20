@@ -1027,7 +1027,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
 
-    protected JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
+    protected synchronized JOCDefaultResponse login(SOSLoginParameters sosLoginParameters, String pwd) throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Login");
