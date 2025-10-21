@@ -13,6 +13,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
+import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.exceptions.JocSosHibernateException;
 
 public class DBLayerDependencies extends DBLayer {
@@ -32,6 +33,17 @@ public class DBLayerDependencies extends DBLayer {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
         List<DBItemInventoryDependency> results = query.getResultList();
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    
+    public List<DBItemInventoryExtendedDependency> getAllExtendedDependencies () throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_EXTENDED_DEPENDENCIES);
+        Query<DBItemInventoryExtendedDependency> query = getSession().createQuery(hql.toString());
+        List<DBItemInventoryExtendedDependency> results = query.getResultList();
         if(results != null) {
             return results;
         } else {

@@ -49,6 +49,7 @@ import com.sos.joc.db.inventory.DBItemInventoryChangesMapping;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
+import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJobTag;
@@ -291,6 +292,9 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_INV_DEPENDENCIES = DBItemInventoryDependency.class.getSimpleName();
     public static final String TABLE_INV_DEPENDENCIES = "INV_DEPENDENCIES";
+
+    public static final String DBITEM_INV_EXTENDED_DEPENDENCIES = DBItemInventoryExtendedDependency.class.getSimpleName();
+    public static final String TABLE_INV_EXTENDED_DEPENDENCIES = "INV_DEPENDENCIES_VIEW";
 
     public static final String DBITEM_INV_CHANGES = DBItemInventoryChange.class.getSimpleName();
     public static final String TABLE_INV_CHANGES = "INV_CHANGES";
@@ -576,6 +580,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDocumentation.class);
         cl.add(DBItemDocumentationImage.class);
         cl.add(DBItemInventoryDependency.class);
+        cl.add(DBItemInventoryExtendedDependency.class);
         cl.add(DBItemInventoryChange.class);
         cl.add(DBItemInventoryChangesMapping.class);
         cl.add(DBItemJocConfiguration.class);
