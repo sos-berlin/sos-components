@@ -76,7 +76,7 @@ public class RunTimeHelper {
         if (j.getRunTime().getDaysOfWeek().getValue() != null) {
             includes = new Frequencies();
             WeekDays weekDays = new WeekDays();
-            weekDays.setDays(JS7ConverterHelper.getDays(j.getRunTime().getDaysOfWeek().getValue().getDays()));
+            weekDays.setDays(JS7ConverterHelper.getScheduleDays0to6(j.getRunTime().getDaysOfWeek().getValue().getDays()));
             includes.setWeekdays(Collections.singletonList(weekDays));
         }
         calendar.setIncludes(includes);
