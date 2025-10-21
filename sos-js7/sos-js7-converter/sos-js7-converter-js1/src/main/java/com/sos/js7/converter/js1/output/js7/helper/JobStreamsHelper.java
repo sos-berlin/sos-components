@@ -33,7 +33,7 @@ public class JobStreamsHelper {
                 JobHelper jh = js7Converter.getJob(result, js1Job, null, null, null);
                 if (jh != null) {
                     Job js7Job = jh.getJS7Job();
-                    js7Job.setAdmissionTimeScheme(JS7RunTimeConverter.convert(js1Job));
+                    js7Job.setAdmissionTimeScheme(JS7RunTimeConverter.toJobAdmissionTimeScheme(js1Job));
 
                     String js7JobName = JS7ConverterHelper.getJS7ObjectName(path, js1Job.getName());
                     jobs.put(js1JobStreamJob.getJob(), new JobStreamJS1JS7Job(js1Job, js1JobStreamJob, js7Job, js7JobName));

@@ -2,6 +2,7 @@ package com.sos.js7.converter.js1;
 
 import java.nio.file.Path;
 
+import com.sos.commons.util.SOSVersionInfo;
 import com.sos.js7.converter.commons.JS7ConverterMain;
 import com.sos.js7.converter.js1.output.js7.JS12JS7Converter;
 
@@ -9,7 +10,7 @@ public class JS12JS7ConverterMain extends JS7ConverterMain {
 
     @Override
     public String getProductAndVersion() {
-        return "JS1 2024-11-11 JS7 2.7.2";
+        return "JS1 " + SOSVersionInfo.VERSION_BUILD_DATE;
     }
 
     @Override

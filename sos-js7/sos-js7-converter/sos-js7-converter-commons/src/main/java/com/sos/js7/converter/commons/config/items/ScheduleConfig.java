@@ -9,7 +9,7 @@ public class ScheduleConfig extends AConfigItem {
     private String forcedWorkingDayCalendarName;
     private String forcedNonWorkingDayCalendarName;
     private String defaultWorkingDayCalendarName = "AnyDays";
-    private String defaultNonWorkingDayCalendarName = "AnyDays";
+    private String defaultNonWorkingDayCalendarName = "NonWorkingDays";
 
     private String defaultTimeZone = SOSDate.TIMEZONE_UTC;
     private Boolean planOrders;

@@ -4,12 +4,12 @@ import java.nio.file.Path;
 
 import com.sos.inventory.model.schedule.Schedule;
 
-public class RunTimeHelper {
+public class SchedulePathHelper {
 
     private final Path path;
     private final Schedule schedule;
 
-    public RunTimeHelper(Path path, Schedule schedule) {
+    public SchedulePathHelper(Path path, Schedule schedule) {
         this.path = path;
         this.schedule = schedule;
     }

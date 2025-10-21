@@ -144,16 +144,21 @@ public class JS7ConverterHelper {
      * 
      * @param days
      * @return */
-    public static List<Integer> getDays(List<String> days) {
+    public static List<Integer> getScheduleDays0to6(List<String> days) {
         if (days == null) {
             return null;
         }
         return days.stream().map(d -> {
-            return getDay(d);
+            return getScheduleDay0to6(d);
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static Integer getDay(String day) {
+    /** Schedule: 0-6<br>
+     * - weekdays -> day - monthdays -> weeklyDays
+     * 
+     * @param day
+     * @return 0-6 (0-Sunday, 1-Monday, ...) */
+    public static Integer getScheduleDay0to6(String day) {
         if (day == null) {
             return null;
         }
@@ -184,6 +189,15 @@ public class JS7ConverterHelper {
         LOGGER.error(msg);
         ConverterReport.INSTANCE.addErrorRecord(msg);
         return null;
+    }
+
+    /** @param day
+     * @return @return 1-7 (1-Monday, ..., 7-Sunday) */
+    public static Integer toDay1to7(Integer day) {
+        if (day == null) {
+            return null;
+        }
+        return day.intValue() == 0 ? Integer.valueOf(7) : day;
     }
 
     public static int toCalendarDayOfWeek(int js7DayOfWeek) {
@@ -689,13 +703,13 @@ public class JS7ConverterHelper {
         result.add(parentPath.resolve(lock.getName() + ".lock.json"), createLock(lock), lock.isReference());
     }
 
-    @SuppressWarnings("unused")
-    private static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
+    /** CTM */
+    public static JS7ConverterResult convertLocks2RootFolder(JS7ConverterResult result, Map<String, Integer> locks) {
         for (Map.Entry<String, Integer> e : locks.entrySet()) {
             Lock l = new Lock();
             l.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(e.getKey()));
             l.setLimit(e.getValue());
-            // result.add(Paths.get(e.getKey() + ".lock.json"), createLock(e.getKey(), e.getValue()));
+            result.add(Paths.get(e.getKey() + ".lock.json"), l, false);
         }
         return result;
     }
