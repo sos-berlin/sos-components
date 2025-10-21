@@ -1728,7 +1728,7 @@ public class WorkflowsHelper {
             dateToFilter = o -> {
                 if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                     Instant scheduledFor = OrdersHelper.getScheduledForInstant(o, zoneId);
-                    if (scheduledFor != null && scheduledFor.isAfter(until)) {
+                    if (scheduledFor != null && !scheduledFor.isBefore(until)) {
                         if (scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
                             return true;
                         }
