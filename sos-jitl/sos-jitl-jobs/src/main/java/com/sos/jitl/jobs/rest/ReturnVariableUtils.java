@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.OrderProcessStep;
 import com.sos.js7.job.OrderProcessStepLogger;
@@ -42,7 +43,7 @@ public class ReturnVariableUtils {
         query.apply(rootScope, mergedInput, out::add);
 
         if (out.isEmpty() || out.stream().allMatch(JsonNode::isNull)) {
-            throw new JobArgumentException("Error in extracting return variable " + name + " from jq Query " + jqQuery);
+            return List.of(TextNode.valueOf(""));
         }
         else{
             return out;

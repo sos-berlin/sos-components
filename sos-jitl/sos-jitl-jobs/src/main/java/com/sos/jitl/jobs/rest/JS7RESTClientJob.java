@@ -36,7 +36,9 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
     private static final Scope rootScope;
 
     public JS7RESTClientJob(JobContext jobContext) {
+
         super(jobContext);
+
     }
 
 
@@ -80,7 +82,6 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
             }
         }
 
-
         //Check the request JSON
         String requestJson = (String) myArgs.getMyRequest().getValue();
         if (requestJson != null && !requestJson.isBlank()) {
@@ -97,7 +98,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
             }
 
             String bodyStr = null;
-            try (HttpFormDataCloseable formData = new HttpFormDataCloseable()){
+            try (HttpFormDataCloseable formData = new HttpFormDataCloseable()) {
                 if (requestNode.has("body")) {
                     try {
                         JsonNode bodyNode = requestNode.get("body");
@@ -114,10 +115,11 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     JsonNode formDataNode = requestNode.get("formData");
                     if (formDataNode != null) {
                         if (logReqBody) {
-                            logger.info("Request Body as formData :" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                                    formDataNode));
+                            logger.info("Request Body as formData :" +
+                                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
                         }
-                        logger.debug("Request Body as formData:" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
+                        logger.debug("Request Body as formData:" +
+                                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(formDataNode));
                     }
                     if (formDataNode == null || !formDataNode.isObject()) {
                         throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
@@ -162,7 +164,12 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                             }
 
                             // Add the file part
-                            formData.addPart(new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+                            formData.addPart(new FormDataFile(
+                                    key,
+                                    filePath.getFileName().toString(),
+                                    filePath,
+                                    contentType
+                            ));
                         }
                         // For all other keys → treat as normal form string
                         else {
@@ -171,7 +178,9 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                         }
                     }
                 }
+
                 Map<String, String> headers = new HashMap<>();
+
                 if (requestNode.has("headers") && requestNode.get("headers").isArray()) {
                     for (JsonNode headerNode : requestNode.get("headers")) {
                         if (headerNode.has("key") && headerNode.has("value")) {
@@ -186,12 +195,13 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     headers.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
                     if (logReqHeaders)
                         logger.info(headerLog.toString().trim());
-                    //                logger.debug(headerLog.toString().trim());
                 }
+
                 String accessToken = null;
                 ApiResponse response = null;
                 boolean loginSuccessful = false;
                 boolean logoutSuccessful = false;
+
                 try (ApiExecutor apiExecutor = new ApiExecutor(step)) {
                     //REST Call -Creating a new session by login method
                     response = apiExecutor.login();
@@ -241,7 +251,6 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                         resHeaders.forEach((key, value) -> headerLog.append("  ").append(key).append(": ").append(value).append("\n"));
                         if (logResHeaders)
                             logger.info(headerLog.toString().trim());
-                        //                    logger.debug(headerLog.toString().trim());
                     }
 
                     String jqQuery = null;
@@ -302,8 +311,8 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                         int firstSeparator = path.indexOf("||");
 
                                         if (firstSeparator == -1 && !path.matches("^<\\s*plain\\s*:??\\s*$")) {
-                                            throw new JobArgumentException("Could not create return variable: " + name
-                                                    + ". Invalid path format: Missing '||' after input option or unknown input type: " + path);
+                                            throw new JobArgumentException("Could not create return variable: " + name +
+                                                    ". Invalid path format: Missing '||' after input option or unknown input type: " + path);
                                         }
 
                                         if (firstSeparator != -1) {
@@ -339,13 +348,15 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                     }
                                     // Now handle split into jq query and file ops
                                     String[] parts = path.split("\\|\\|", 2);
-                                    if (parts.length > 0 && ((inputType.equals("plain") && !parts[0].trim().startsWith(">") && !parts[0].trim()
-                                            .startsWith("-r")) || inputType.equals("json"))) {
+                                    if (parts.length > 0 && ((inputType.equals("plain") && !parts[0].trim().startsWith(">") && !parts[0].trim().startsWith("-r")) || inputType.equals("json"))) {
                                         jqQuery = parts[0].trim();
                                     }
 
-                                    if (parts.length > 1 || (parts.length == 1 && (parts[0].trim().startsWith(">") || parts[0].trim().startsWith(">>")
-                                            || parts[0].trim().startsWith("-r") || parts[0].trim().startsWith("--raw-output")))) {
+                                    if (parts.length > 1 || (parts.length == 1 && (
+                                            parts[0].trim().startsWith(">")
+                                                    || parts[0].trim().startsWith(">>")
+                                                    || parts[0].trim().startsWith("-r")
+                                                    || parts[0].trim().startsWith("--raw-output")))) {
 
                                         String processorString = (parts.length > 1) ? parts[1].trim() : parts[0].trim();
                                         String[] processorParts = processorString.split("\\s+");
@@ -358,8 +369,8 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                             } else if ((token.equals(">") || token.equals(">>")) && i + 1 < processorParts.length) {
                                                 String potentialFilePath = processorParts[i + 1].trim();
                                                 if (potentialFilePath.startsWith("-")) {
-                                                    throw new JobArgumentException("Could not create return variable: " + name
-                                                            + ". Invalid file path: found flag instead of file name after '" + token + "'");
+                                                    throw new JobArgumentException("Could not create return variable: " + name +
+                                                            ". Invalid file path: found flag instead of file name after '" + token + "'");
                                                 }
                                                 pI = token;
                                                 filePath = potentialFilePath;
@@ -423,8 +434,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                         if (bodyStr != null && !bodyStr.trim().isEmpty()) {
                                                             JsonNode requestBodyJson = objectMapper.readTree(bodyStr);
                                                             if (!requestBodyJson.isObject()) {
-                                                                throw new JobArgumentException("Request body must be a JSON object. Found: "
-                                                                        + requestBodyJson.getNodeType());
+                                                                throw new JobArgumentException("Request body must be a JSON object. Found: " + requestBodyJson.getNodeType());
                                                             }
                                                             mergedInput.set("js7RequestBody", requestBodyJson);
                                                         } else {
@@ -434,8 +444,8 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                         String jsonStr = opt.substring(opt.indexOf('=') + 1).trim();
 
                                                         // Handle optional quotes
-                                                        if ((jsonStr.startsWith("'") && jsonStr.endsWith("'")) || (jsonStr.startsWith("\"") && jsonStr
-                                                                .endsWith("\""))) {
+                                                        if ((jsonStr.startsWith("'") && jsonStr.endsWith("'")) ||
+                                                                (jsonStr.startsWith("\"") && jsonStr.endsWith("\""))) {
                                                             jsonStr = jsonStr.substring(1, jsonStr.length() - 1);
                                                         }
 
@@ -443,8 +453,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                             JsonNode fromJsonNode = objectMapper.readTree(jsonStr);
 
                                                             if (!fromJsonNode.isObject()) {
-                                                                throw new JobArgumentException("Expected JSON object for --from-json, but found: "
-                                                                        + fromJsonNode.getNodeType());
+                                                                throw new JobArgumentException("Expected JSON object for --from-json, but found: " + fromJsonNode.getNodeType());
                                                             }
 
                                                             // Check for duplicate keys before merging
@@ -463,13 +472,11 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                             throw e;
                                                         }
                                                     } else {
-                                                        throw new JobArgumentException("Could not create return variable: " + name
-                                                                + ". Unsupported input option: " + opt);
+                                                        throw new JobArgumentException("Could not create return variable: " + name + ". Unsupported input option: " + opt);
                                                     }
                                                     if (jqInput != null) {
                                                         if (!jqInput.isObject()) {
-                                                            throw new JobArgumentException("Input from option [" + opt
-                                                                    + "] must be a JSON object. Found: " + jqInput.getNodeType());
+                                                            throw new JobArgumentException("Input from option [" + opt + "] must be a JSON object. Found: " + jqInput.getNodeType());
                                                         }
                                                         mergedInput.setAll((ObjectNode) jqInput);
                                                     }
@@ -484,8 +491,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                                         }
                                                         mergedInput.setAll((ObjectNode) jqInput);
                                                     } else {
-                                                        throw new JobArgumentException("Could not create return variable: " + name
-                                                                + " because response body is not in JSON format");
+                                                        throw new JobArgumentException("Could not create return variable: " + name + " because response body is not in JSON format");
                                                     }
                                                 } else {
                                                     throw new JobArgumentException("Empty response body, could not create return variable: " + name);
@@ -498,8 +504,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                                         if (contentType != null && contentType.toLowerCase().startsWith("text/"))
                                             ReturnVariableUtils.writeToFile(step, logger, name, filePath, pI, responseBody, rawOutput, objectMapper);
                                         else
-                                            throw new JobArgumentException("Error in extracting return variable " + name
-                                                    + ", response body is not in text format.");
+                                            throw new JobArgumentException("Error in extracting return variable " + name + ", response body is not in text format.");
                                     }
                                 }
                             }
@@ -517,6 +522,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                         logger.error("Logout failed!");
                         throw e;
                     }
+
                 } catch (SOSConnectionRefusedException | SOSBadRequestException e) {
                     logger.info("from SOSConnectionRefusedException | SOSBadRequestException e");
                     if (response != null) {
@@ -526,7 +532,7 @@ public class JS7RESTClientJob extends Job<RestJobArguments> {
                     throw e;
                 } catch (IOException e) {
                     throw new JobException("I/O Exception occurred: " + e);
-                } 
+                }
             }
         } else {
             throw new JobRequiredArgumentMissingException("Missing request JSON in job arguments.");
