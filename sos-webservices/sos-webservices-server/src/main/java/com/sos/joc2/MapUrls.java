@@ -92,7 +92,8 @@ public class MapUrls {
             put("oh", centosdev_secondary_urlMapper);
             //put("oh", centostest_primary_urlMapper);
             //put("oh", centostest_secondary_urlMapper);
-            put("sp", sp_local_urlMapper);
+            put("santiago", sp_local_urlMapper);
+//            put("santiago", centostest_primary_urlMapper);
         }
     });
     
@@ -103,7 +104,7 @@ public class MapUrls {
         {
             put("oh", JocSecurityLevel.LOW);
             //put("oh", JocSecurityLevel.MEDIUM);
-//            put("sp", JocSecurityLevel.MEDIUM);
+//            put("santiago", JocSecurityLevel.LOW);
             put("santiago", JocSecurityLevel.MEDIUM);
         }
     });
