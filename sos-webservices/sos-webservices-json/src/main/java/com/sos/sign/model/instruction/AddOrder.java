@@ -29,7 +29,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "startPosition",
     "stopPositions",
     "innerBlock",
-    "forceJobAdmission"
+    "forceAdmission"
 })
 public class AddOrder
     extends Instruction
@@ -76,8 +76,11 @@ public class AddOrder
         "blockPosition"
     })
     private Object innerBlock;
-    @JsonProperty("forceJobAdmission")
-    private Boolean forceJobAdmission;
+    @JsonProperty("forceAdmission")
+    @JsonAlias({
+        "forceJobAdmission"
+    })
+    private Boolean forceAdmission;
 
     /**
      * No args constructor for use in serialization
@@ -92,13 +95,13 @@ public class AddOrder
      * @param orderId
      * @param workflowPath
      * @param deleteWhenTerminated
-     * @param forceJobAdmission
+     * @param forceAdmission
      * @param arguments
      * @param innerBlock
      * @param tYPE
      * @param startPosition
      */
-    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, Object startPosition, List<Object> stopPositions, Object innerBlock, Boolean forceJobAdmission, InstructionType tYPE) {
+    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, Object startPosition, List<Object> stopPositions, Object innerBlock, Boolean forceAdmission, InstructionType tYPE) {
         super(tYPE);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
@@ -107,7 +110,7 @@ public class AddOrder
         this.startPosition = startPosition;
         this.stopPositions = stopPositions;
         this.innerBlock = innerBlock;
-        this.forceJobAdmission = forceJobAdmission;
+        this.forceAdmission = forceAdmission;
     }
 
     /**
@@ -228,24 +231,24 @@ public class AddOrder
         this.innerBlock = innerBlock;
     }
 
-    @JsonProperty("forceJobAdmission")
-    public Boolean getForceJobAdmission() {
-        return forceJobAdmission;
+    @JsonProperty("forceAdmission")
+    public Boolean getForceAdmission() {
+        return forceAdmission;
     }
 
-    @JsonProperty("forceJobAdmission")
-    public void setForceJobAdmission(Boolean forceJobAdmission) {
-        this.forceJobAdmission = forceJobAdmission;
+    @JsonProperty("forceAdmission")
+    public void setForceAdmission(Boolean forceAdmission) {
+        this.forceAdmission = forceAdmission;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("workflowPath", workflowPath).append("arguments", arguments).append("deleteWhenTerminated", deleteWhenTerminated).append("startPosition", startPosition).append("stopPositions", stopPositions).append("innerBlock", innerBlock).append("forceJobAdmission", forceJobAdmission).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("workflowPath", workflowPath).append("arguments", arguments).append("deleteWhenTerminated", deleteWhenTerminated).append("startPosition", startPosition).append("stopPositions", stopPositions).append("innerBlock", innerBlock).append("forceAdmission", forceAdmission).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stopPositions).append(orderId).append(workflowPath).append(deleteWhenTerminated).append(forceJobAdmission).append(arguments).append(innerBlock).append(startPosition).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stopPositions).append(orderId).append(workflowPath).append(deleteWhenTerminated).append(forceAdmission).append(arguments).append(innerBlock).append(startPosition).toHashCode();
     }
 
     @Override
@@ -257,7 +260,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(stopPositions, rhs.stopPositions).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(deleteWhenTerminated, rhs.deleteWhenTerminated).append(forceJobAdmission, rhs.forceJobAdmission).append(arguments, rhs.arguments).append(innerBlock, rhs.innerBlock).append(startPosition, rhs.startPosition).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(stopPositions, rhs.stopPositions).append(orderId, rhs.orderId).append(workflowPath, rhs.workflowPath).append(deleteWhenTerminated, rhs.deleteWhenTerminated).append(forceAdmission, rhs.forceAdmission).append(arguments, rhs.arguments).append(innerBlock, rhs.innerBlock).append(startPosition, rhs.startPosition).isEquals();
     }
 
 }

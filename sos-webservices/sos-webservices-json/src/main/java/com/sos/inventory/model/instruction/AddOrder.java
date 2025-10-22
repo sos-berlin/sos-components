@@ -64,6 +64,9 @@ public class AddOrder
     @JsonProperty("blockPosition")
     private Object blockPosition;
     @JsonProperty("forceJobAdmission")
+    @JsonAlias({
+        "forceAdmission"
+    })
     private Boolean forceJobAdmission = false;
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)

@@ -56,7 +56,8 @@
     		{"$ref": "../../../inventory/schemas/common/string255Required-schema.json"}
     	]
     },
-    "forceJobAdmission": {
+    "forceAdmission": {
+        "alias": "forceJobAdmission",
     	"type": "boolean"	
     }
   },

@@ -201,7 +201,7 @@ public class WorkflowLabelsModifyImpl extends JOCResourceImpl implements IWorkfl
 //
 //                            // map collected orders to fresh orders
 //                            Function<JOrder, JFreshOrder> mapper = o -> JFreshOrder.of(o.id(), o.workflowId().path(), o.scheduledFor(), o.arguments(),
-//                                    o.asScala().deleteWhenTerminated(), o.asScala().forceJobAdmission(), Optional.empty(), JavaConverters.asJava(o
+//                                    o.asScala().deleteWhenTerminated(), o.asScala().forceAdmission(), Optional.empty(), JavaConverters.asJava(o
 //                                            .asScala().stopPositions()).stream().map(JPositionOrLabel::apply).collect(Collectors.toSet()));
 //
 //                            Map<OrderId, JFreshOrder> freshOrders = jOrders.stream().collect(Collectors.toMap(JOrder::id, mapper));

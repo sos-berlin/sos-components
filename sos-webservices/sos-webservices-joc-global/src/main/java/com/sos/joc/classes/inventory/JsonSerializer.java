@@ -802,7 +802,7 @@ public class JsonSerializer {
                             defaultToNull((String) ao.getStartPosition(), "");
                         }
                     }
-                    ao.setForceJobAdmission(defaultToNull(ao.getForceJobAdmission(), Boolean.FALSE));
+                    ao.setForceAdmission(defaultToNull(ao.getForceAdmission(), Boolean.FALSE));
                     //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 case CYCLE:
