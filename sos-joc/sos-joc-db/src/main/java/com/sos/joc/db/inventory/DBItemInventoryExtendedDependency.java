@@ -211,7 +211,10 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     }
     
     @Transient
-    public ConfigurationType getTypeAsEnum(int type) {
+    public ConfigurationType getTypeAsEnum(Integer type) {
+        if(type == null) {
+            return null;
+        }
         try {
             return ConfigurationType.fromValue(type);
         } catch (Exception e) {
