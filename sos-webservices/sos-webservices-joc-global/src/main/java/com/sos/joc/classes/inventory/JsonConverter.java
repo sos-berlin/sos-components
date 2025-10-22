@@ -391,9 +391,9 @@ public class JsonConverter {
                     CaseWhen caseWhen = invInstruction.cast();
                     com.sos.sign.model.instruction.IfElse sCaseWhen = signInstruction.cast();
                     if (caseWhen.getCases() != null) {
-                        for (i = 0; i < caseWhen.getCases().size(); i++) {
-                            convertInstructions(controllerId, workflowName, caseWhen.getCases().get(i).getThen().getInstructions(), sCaseWhen
-                                    .getIfThens().get(i).getThen().getInstructions(), addOrderIndex, zoneId);
+                        for (int j = 0; j < caseWhen.getCases().size(); j++) {
+                            convertInstructions(controllerId, workflowName, caseWhen.getCases().get(j).getThen().getInstructions(), sCaseWhen
+                                    .getIfThens().get(j).getThen().getInstructions(), addOrderIndex, zoneId);
                         }
                     }
                     if (caseWhen.getElse() != null) {
