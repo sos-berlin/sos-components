@@ -3,8 +3,6 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
@@ -204,12 +202,12 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     
     @Transient
     public Dependency getDependency() {
-        return new Dependency(invId, invName, invType, invFolder, invValid, invDeployed, invReleased);
+        return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased);
     }
     
     @Transient
     public Dependency getReference() {
-        return new Dependency(depId, depName, depType, depFolder, depValid, depDeployed, depReleased);
+        return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased);
     }
     
     @Transient

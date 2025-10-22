@@ -4,6 +4,7 @@ package com.sos.joc.model.inventory.dependencies;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -30,12 +31,14 @@ public class RequestItem {
     @JsonProperty("name")
     private String name;
     /**
+     * configuration types
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    private String type;
+    private ConfigurationType type;
 
     /**
      * 
@@ -58,22 +61,26 @@ public class RequestItem {
     }
 
     /**
+     * configuration types
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    public String getType() {
+    public ConfigurationType getType() {
         return type;
     }
 
     /**
+     * configuration types
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    public void setType(String type) {
+    public void setType(ConfigurationType type) {
         this.type = type;
     }
 
