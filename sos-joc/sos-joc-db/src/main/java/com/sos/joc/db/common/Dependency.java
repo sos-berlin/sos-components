@@ -2,22 +2,20 @@ package com.sos.joc.db.common;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.type.NumericBooleanConverter;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class Dependency {
 
     Long id;
     String name;
-    Integer type;
+    ConfigurationType type;
     String folder;
     private Boolean valid;
     private Boolean deployed;
     private Boolean released;
     
-    public Dependency(Long id, String name, Integer type, String folder, Boolean valid, Boolean deployed, Boolean released) {
+    public Dependency(Long id, String name, ConfigurationType type, String folder, Boolean valid, Boolean deployed, Boolean released) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -31,7 +29,7 @@ public class Dependency {
         return name;
     }
     
-    public Integer getType() {
+    public ConfigurationType getType() {
         return type;
     }
     

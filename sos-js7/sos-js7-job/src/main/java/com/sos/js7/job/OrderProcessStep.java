@@ -245,13 +245,13 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     public void addCancelableResource(String identifier, Object o) {
+        getCancelableResources().put(identifier, o);
+    }
+
+    public synchronized Map<String, Object> getCancelableResources() {
         if (cancelableResources == null) {
             cancelableResources = new HashMap<>();
         }
-        cancelableResources.put(identifier, o);
-    }
-
-    public Map<String, Object> getCancelableResources() {
         return cancelableResources;
     }
 

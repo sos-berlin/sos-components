@@ -49,6 +49,8 @@ public class ConverterBOXJobs {
 
     public static Map<String, List<BOXJobHelper>> USED_JOBS_PER_BOX = new HashMap<>();
 
+    private static final boolean TMP_RESOLVE_NESTED_BOXES = false;
+
     private final Autosys2JS7Converter converter;
     private final JS7ConverterResult result;
 
@@ -64,8 +66,48 @@ public class ConverterBOXJobs {
         this.result = result;
     }
 
+    private static List<ACommonJob> groupByRoot(List<ACommonJob> jobs) {
+        Map<String, JobBOX> jobMap = new HashMap<>();
+        for (ACommonJob job : jobs) {
+            jobMap.put(job.getName(), (JobBOX) job);
+        }
+
+        Map<String, List<JobBOX>> roots = new HashMap<>();
+
+        for (ACommonJob job : jobs) {
+            String rootName = findRoot((JobBOX) job, jobMap);
+            JobBOX rootJob = jobMap.get(rootName);
+            if (!rootJob.getName().equals(job.getName())) { // Root selbst nicht nochmal hinzufügen
+                rootJob.getJobs().add(job);
+            }
+        }
+
+        List<ACommonJob> rootBoxes = new ArrayList<>();
+
+        return rootBoxes;
+    }
+
+    private static String findRoot(JobBOX job, Map<String, JobBOX> jobMap) {
+        JobBOX current = job;
+        while (current.getParentBoxName() != null) {
+            JobBOX parent = jobMap.get(current.getParentBoxName());
+            if (parent == null) {
+                // Falls Parent nicht in der Liste ist → behandeln als Root
+                return current.getBoxName();
+            }
+            current = parent;
+        }
+        return current.getBoxName();
+    }
+
     public void convert(List<ACommonJob> boxJobs) {
         String method = "convert";
+
+        if (TMP_RESOLVE_NESTED_BOXES) {
+            boxJobs = groupByRoot(boxJobs);
+            // boxJobs = boxJobs.stream().filter(j -> ((JobBOX) j).getParentBoxName() == null).collect(Collectors.toList());
+        }
+
         int size = boxJobs.size();
         if (size > 0) {
             LOGGER.info(String.format("[%s][workflow][BOX main jobs=%s][start]...", method, size));
