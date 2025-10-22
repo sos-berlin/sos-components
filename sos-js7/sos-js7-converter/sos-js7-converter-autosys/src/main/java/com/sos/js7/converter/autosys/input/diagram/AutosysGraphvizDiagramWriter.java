@@ -33,6 +33,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         original, optimizeDependencies
     }
 
+    // Box/Standalone/All
+    private static final String BGCOLOR_FOLDER = "#0099FF";
+
     private final AutosysDiagramConfig config;
     private final AutosysAnalyzer analyzer;
     private final Range range;
@@ -255,6 +258,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         String fullName;
         boolean onlyFolderInfo = standaloneJobsSize > -1;
 
+        String parentBoxName = null;
         if (box == null) {
             folderType = "Standalone";
             app = getJILApplication(standaloneJob);
@@ -275,15 +279,31 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             group = getJILGroup(box);
             description = box.getDescription().getValue();
             name = box.getName();
+            parentBoxName = box.getParentBoxName();
+
             this.folder = PathResolver.getJILJobParentPathNormalized(box);
             fullName = box.getJobFullPathFromJILDefinition().toString();
             condition = box.getCondition().getOriginalCondition();
         }
         fullName = JS7ConverterHelper.normalizePath(fullName);
 
+        String emptyRow = "<tr><td align=\"left\" colspan=\"4\">&nbsp;</td></tr>";
+
         StringBuilder sb = new StringBuilder();
         StringBuilder tableBox = new StringBuilder();
         tableBox.append("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">").append(NEW_LINE);
+
+        if (parentBoxName != null) {
+            tableBox.append("  <tr>");
+            tableBox.append("<td align=\"left\" width=\"80px\">").append(getWithFont(folderType + " parent")).append("&nbsp;</td>");
+            tableBox.append("<td align=\"left\" colspan=\"3\">");
+            tableBox.append("<b><i>");
+            tableBox.append(getWithFont(parentBoxName));
+            tableBox.append("</i></b>");
+            tableBox.append("</td>");
+            tableBox.append("</tr>").append(NEW_LINE);
+            tableBox.append(emptyRow);
+        }
 
         tableBox.append("  <tr>");
         tableBox.append("<td align=\"left\" width=\"80px\">").append(getWithFont(folderType)).append("&nbsp;</td>");
@@ -313,7 +333,6 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         }
 
         boolean addEmptyRow = false;
-        String emptyRow = "<tr><td align=\"left\" colspan=\"4\">&nbsp;</td></tr>";
         if (!SOSString.isEmpty(app)) {
             tableBox.append("<tr>");
             tableBox.append("<td align=\"left\">").append(getWithFont("Application")).append("&nbsp;</td>");
@@ -443,7 +462,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         // sb.append(" HEADER [shape=").append(quote("box")).append(NEW_LINE);
         sb.append("    HEADER [shape=").append(quote("folder")).append(NEW_LINE);
         sb.append("            label=<").append(toHtml(tableBox.toString())).append(">").append(NEW_LINE);
-        sb.append("            fillcolor=").append(quote("#0099FF")).append(NEW_LINE);
+        sb.append("            fillcolor=").append(quote(BGCOLOR_FOLDER)).append(NEW_LINE);
         sb.append("            color=white").append(NEW_LINE);
         sb.append("            fontsize=12").append(NEW_LINE);
         sb.append("            margin=0.2").append(NEW_LINE);
@@ -462,7 +481,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
         try {
             String jobKey = getJobKey(nr, job);
-            sb.append(toHtml(quote(jobKey) + " [label = <" + getJobHtml(job, isStandalone) + ">];")).append(NEW_LINE);
+
+            String fillColor = "";
+            if (job.isBox()) {
+                fillColor = ",fillcolor=\"" + BGCOLOR_FOLDER + "\"";
+            }
+            sb.append(toHtml(quote(jobKey) + " [label = <" + getJobHtml(job, isStandalone) + ">" + fillColor + "];")).append(NEW_LINE);
 
             // all are IN conditions
             if (job.hasCondition()) {
@@ -712,25 +736,44 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
     private StringBuilder getJobHtml(ACommonJob job, boolean isStandalone) {
         String jobName = job.getName();
+        boolean isBox = job.isBox();
 
         boolean hasDuplicates = duplicates.containsKey(jobName);
 
         StringBuilder sb = new StringBuilder();
         sb.append(NEW_LINE);
         sb.append("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">").append(NEW_LINE);
-        sb.append("  <tr>");
-        sb.append("<td align=\"left\" width=\"70px\">Job").append("</td>");
-        sb.append("<td align=\"left\" colspan=\"3\"><b>");
-        if (hasDuplicates) {
-            sb.append("<font color=\"red\">");
+        if (isBox) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\" width=\"70px\">BOX").append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\"><b>");
+            if (hasDuplicates) {
+                sb.append("<font color=\"red\">");
+            }
+            if (jobName.equals(job.getBoxName())) {
+                sb.append(jobName);
+            } else {
+                sb.append(job.getBoxName() + ", Job=" + jobName);
+            }
+            if (hasDuplicates) {
+                sb.append("</font>");
+            }
+            sb.append("</b><br align=\"left\" /></td>");
+            sb.append("</tr>").append(NEW_LINE);
+        } else {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\" width=\"70px\">Job").append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\"><b>");
+            if (hasDuplicates) {
+                sb.append("<font color=\"red\">");
+            }
+            sb.append(jobName);
+            if (hasDuplicates) {
+                sb.append("</font>");
+            }
+            sb.append("</b><br align=\"left\" /></td>");
+            sb.append("</tr>").append(NEW_LINE);
         }
-        sb.append(jobName);
-        if (hasDuplicates) {
-            sb.append("</font>");
-        }
-        sb.append("</b><br align=\"left\" /></td>");
-        sb.append("</tr>").append(NEW_LINE);
-
         if (hasDuplicates) {
             sb.append("  <tr>");
             sb.append("<td align=\"left\">&nbsp;</td>");
@@ -770,7 +813,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             sb.append("<td align=\"left\" colspan=\"3\">").append(group).append("</td>");
             sb.append("</tr>").append(NEW_LINE);
         }
-        if (job.getBoxName() != null) {
+        if (job.getBoxName() != null && !isBox) {
             sb.append("  <tr>");
             sb.append("<td align=\"left\">box_name</td>");
             sb.append("<td align=\"left\" colspan=\"3\">").append(job.getBoxName()).append("</td>");
@@ -783,10 +826,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             sb.append("</tr>").append(NEW_LINE);
         }
 
-        sb.append("  <tr>");
-        sb.append("<td align=\"left\">").append(job.getJobType().getName()).append("</td>");
-        sb.append("<td align=\"left\" colspan=\"3\"><b>").append(job.getJobType().getValue()).append("</b></td>");
-        sb.append("</tr>").append(NEW_LINE);
+        if (!isBox) {
+            sb.append("  <tr>");
+            sb.append("<td align=\"left\">").append(job.getJobType().getName()).append("</td>");
+            sb.append("<td align=\"left\" colspan=\"3\"><b>").append(job.getJobType().getValue()).append("</b></td>");
+            sb.append("</tr>").append(NEW_LINE);
+        }
 
         sb.append("  <tr><td align=\"left\" colspan=\"4\">&nbsp;</td></tr>").append(NEW_LINE);
 

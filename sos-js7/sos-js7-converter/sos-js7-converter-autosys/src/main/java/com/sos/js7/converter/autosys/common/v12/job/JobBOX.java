@@ -89,4 +89,8 @@ public class JobBOX extends ACommonJob {
         return boxSuccess.getValue() != null || boxFailure.getValue() != null;
     }
 
+    public String getParentBoxName() {
+        return getBox() == null ? null : getBox().getBoxName().getValue();
+    }
+
 }
