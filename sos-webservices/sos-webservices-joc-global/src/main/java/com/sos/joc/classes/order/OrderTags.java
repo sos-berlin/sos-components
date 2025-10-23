@@ -37,6 +37,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -1221,6 +1222,12 @@ public class OrderTags {
                         getOrderTags(tags, opts.getBlock().getInstructions(), dbOrderTagLayer);
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        getOrderTags(tags, at.getBlock().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     if (ao.getTags() != null) {
@@ -1340,6 +1347,12 @@ public class OrderTags {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         getOrderTags(tags, opts.getBlock().getInstructions(), gt);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        getOrderTags(tags, at.getBlock().getInstructions(), gt);
                     }
                     break;
                 case ADD_ORDER:

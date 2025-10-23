@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -144,6 +145,12 @@ public class WorkflowConverter {
                     Options opts = invInstruction.cast();
                     if (opts.getBlock() != null) {
                         convertInstructions(opts.getBlock().getInstructions());
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = invInstruction.cast();
+                    if (at.getBlock() != null) {
+                        convertInstructions(at.getBlock().getInstructions());
                     }
                     break;
                 default:

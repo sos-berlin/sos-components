@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -187,6 +188,12 @@ public class ReferenceValidator {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         validateAddOrderInstructionArguments(opts.getBlock().getInstructions(), orderPreparation);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        validateAddOrderInstructionArguments(at.getBlock().getInstructions(), orderPreparation);
                     }
                     break;
                 default:

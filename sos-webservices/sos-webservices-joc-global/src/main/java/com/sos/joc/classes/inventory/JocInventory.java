@@ -165,6 +165,7 @@ public class JocInventory {
                     put(InstructionType.OPTIONS, "classpath:/raml/inventory/schemas/instruction/options-schema.json");
                     put(InstructionType.BREAK, "classpath:/raml/inventory/schemas/instruction/break-schema.json");
                     put(InstructionType.SLEEP, "classpath:/raml/inventory/schemas/instruction/sleep-schema.json");
+                    put(InstructionType.ADMISSION_TIME, "classpath:/raml/inventory/schemas/instruction/admissionTime-schema.json");
                 }
             });
     

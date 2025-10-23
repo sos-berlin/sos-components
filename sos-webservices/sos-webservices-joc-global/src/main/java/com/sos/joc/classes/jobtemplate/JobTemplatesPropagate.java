@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -744,6 +745,12 @@ public class JobTemplatesPropagate {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         readNodeArguments(opts.getBlock().getInstructions(), jobName, args);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        readNodeArguments(at.getBlock().getInstructions(), jobName, args);
                     }
                     break;
                 default:

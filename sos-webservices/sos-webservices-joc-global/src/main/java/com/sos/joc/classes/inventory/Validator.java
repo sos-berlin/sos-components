@@ -37,6 +37,7 @@ import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -1085,6 +1086,13 @@ public class Validator {
                                 invalidAgentRefs, boardNames, forkListExist, dbLayer);
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                    }
+                    break;
                 case SLEEP:
                     Sleep sleep = inst.cast();
                     validateExpression("$." + instPosition + "duration: ", sleep.getDuration());
@@ -1380,6 +1388,13 @@ public class Validator {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
+                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
                     }
                     break;

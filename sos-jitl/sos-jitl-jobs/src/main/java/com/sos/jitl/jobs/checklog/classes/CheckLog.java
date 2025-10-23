@@ -156,6 +156,13 @@ public class CheckLog {
                     returnValue = s;
                 }
                 break;
+            case ADMISSION_TIME:
+                com.sos.inventory.model.instruction.AdmissionTime admissions = (com.sos.inventory.model.instruction.AdmissionTime) instruction;
+                s = handleInstruction(admissions.getBlock().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
+                break;
             default:
                 break;
             }

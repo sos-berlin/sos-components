@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -712,6 +713,12 @@ public class JsonSerializer {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         cleanInventoryInstructions(opts.getBlock().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        cleanInventoryInstructions(at.getBlock().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
                 default:

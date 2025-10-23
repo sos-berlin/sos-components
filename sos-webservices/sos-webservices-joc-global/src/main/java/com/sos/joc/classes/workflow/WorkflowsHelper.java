@@ -36,6 +36,7 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -774,6 +775,11 @@ public class WorkflowsHelper {
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "options"), opts.getBlock().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
+                    break;
                 default:
                     break;
                 }
@@ -897,6 +903,12 @@ public class WorkflowsHelper {
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         setWorkflowPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        setWorkflowPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 default:
@@ -1028,6 +1040,14 @@ public class WorkflowsHelper {
                         setWorkflowBlockPositions(blockPos, opts.getBlock().getInstructions(), blockPoss);
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        Object[] blockPos = extendArray(pos, "admissionTime");
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, at.getBlock().getInstructions()));
+                        setWorkflowBlockPositions(blockPos, at.getBlock().getInstructions(), blockPoss);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -1122,6 +1142,12 @@ public class WorkflowsHelper {
                     Options o = inst.cast();
                     if (o.getBlock() != null) {
                         setWorkflowAddOrderPositions(extendArray(pos, "options"), depth, o.getBlock().getInstructions(), positions);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        setWorkflowAddOrderPositions(extendArray(pos, "admissionTime"), depth, at.getBlock().getInstructions(), positions);
                     }
                     break;
                 case LOCK:
@@ -1290,6 +1316,12 @@ public class WorkflowsHelper {
                         updateWorkflowBoardname(oldNewBoardNames, opts.getBlock().getInstructions());
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, at.getBlock().getInstructions());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -1373,6 +1405,13 @@ public class WorkflowsHelper {
                     Options o = inst.cast();
                     if (o.getBlock() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "options"), o.getBlock().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), level, boardPostPositions,
                                 boardExpectPositions, boardConsumePositions);
                     }
                     break;
@@ -1530,6 +1569,12 @@ public class WorkflowsHelper {
                         extractImplicitEnds(opts.getBlock().getInstructions(), posSet, 0, true);
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        extractImplicitEnds(at.getBlock().getInstructions(), posSet, 0, true);
+                    }
+                    break;    
                 default:
                     break;
                 }
@@ -2056,6 +2101,14 @@ public class WorkflowsHelper {
                         }
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        if(hasBoard(boardName, at.getBlock().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;    
                 default:
                     break;
                 }
@@ -2161,6 +2214,12 @@ public class WorkflowsHelper {
                         setCaseWhenPositions(extendArray(pos, "options"), opts.getBlock().getInstructions(), poss);
                     }
                     break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        setCaseWhenPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), poss);
+                    }
+                    break;    
                 default:
                     break;
                 }

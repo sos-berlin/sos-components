@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
 import com.sos.inventory.model.instruction.CaseWhen;
 import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Cycle;
@@ -559,6 +560,15 @@ public class WorkflowSearcher {
                     result.add(new WorkflowInstruction<Options>(position, opts));
 
                     handleInstructions(result, opts.getBlock().getInstructions(), position);
+                }
+                break;
+            case ADMISSION_TIME:
+                AdmissionTime at = in.cast();
+                if (at.getBlock() != null) {
+                    String position = getPosition(parentPosition, index, "options");
+                    result.add(new WorkflowInstruction<AdmissionTime>(position, at));
+
+                    handleInstructions(result, at.getBlock().getInstructions(), position);
                 }
                 break;
                 
