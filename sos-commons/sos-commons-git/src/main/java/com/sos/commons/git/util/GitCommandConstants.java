@@ -83,22 +83,22 @@ public class GitCommandConstants {
     // git config command - usage to unset safe.directory setting from global config
     public static final String CMD_GIT_CONFIG_UNSET_GLOBAL_SAVE_DIRECTORY = "git config --global --unset --global safe.directory";
     // git config command - usage to set different key file for global config
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_WIN = "git config --global --add core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --global --add core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_WIN = "git config --global --add core.sshCommand \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_LINUX = "git config --global --add core.sshCommand '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_WIN = "git config --global --replace-all core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --global --replace-all core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_WIN = "git config --global --replace-all core.sshCommand \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SSH_COMMAND_FORMAT_LINUX = "git config --global --replace-all core.sshCommand '%1$s'";
     // git config command - usage to set different user.name for global config
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_WIN = "git config --global --add user.name \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_LINUX = "git config --global --add user.name '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_WIN = "git config --global --replace-all user.name \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_NAME_FORMAT_LINUX = "git config --global --replace-all user.name '%1$s'";
     // git config command - usage to set different user.password for global config
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_WIN = "git config --global --add user.password \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_LINUX = "git config --global --add user.password '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_WIN = "git config --global --replace-all user.password \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_PWD_FORMAT_LINUX = "git config --global --replace-all user.password '%1$s'";
     // git config command - usage to set different user.email for global config
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_WIN = "git config --global --add user.email \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_LINUX = "git config --global --add user.email '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_WIN = "git config --global --replace-all user.email \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_USER_EMAIL_FORMAT_LINUX = "git config --global --replace-all user.email '%1$s'";
     // git config command - usage to set shared local repo as save directory
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_WIN = "git config --global --add safe.directory '%1$s'";
-    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_LINUX = "git config --global --add safe.directory \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_WIN = "git config --global --replace-all safe.directory '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_GLOBAL_SAVE_DIRECTORY_LINUX = "git config --global --replace-all safe.directory \"%1$s\"";
 
     // LOCAL
     
@@ -123,22 +123,22 @@ public class GitCommandConstants {
     // git config command - usage to unset safe.directory setting from local config
     public static final String CMD_GIT_CONFIG_UNSET_LOCAL_SAVE_DIRECTORY = "git config --local --unset --global safe.directory";
     // git config command - usage to set different key file for global config
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_WIN = "git config --local --add core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --local --add core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_WIN = "git config --local --add core.sshCommand \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_LINUX = "git config --local --add core.sshCommand '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_WIN = "git config --local --replace-all core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_PREFORMAT_LINUX = "git config --local --replace-all core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_WIN = "git config --local --replace-all core.sshCommand \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SSH_COMMAND_FORMAT_LINUX = "git config --local --replace-all core.sshCommand '%1$s'";
     // git config command - usage to set different user.name for global config
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_WIN = "git config --local --add user.name \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_LINUX = "git config --local --add user.name '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_WIN = "git config --local --replace-all user.name \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_NAME_FORMAT_LINUX = "git config --local --replace-all user.name '%1$s'";
     // git config command - usage to set different user.password for global config
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_WIN = "git config --local --add user.password \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_LINUX = "git config --local --add user.password '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_WIN = "git config --local --replace-all user.password \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_PWD_FORMAT_LINUX = "git config --local --replace-all user.password '%1$s'";
     // git config command - usage to set different user.email for global config
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_WIN = "git config --local --add user.email \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_LINUX = "git config --local --add user.email '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_WIN = "git config --local --replace-all user.email \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_USER_EMAIL_FORMAT_LINUX = "git config --local --replace-all user.email '%1$s'";
     // git config command - usage to set shared local repo as save directory
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_WIN = "git config --local --add safe.directory \"%1$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_LINUX = "git config --local --add safe.directory '%1$s'";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_WIN = "git config --local --replace-all safe.directory \"%1$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_LOCAL_SAVE_DIRECTORY_LINUX = "git config --local --replace-all safe.directory '%1$s'";
 
     // FILE
     
@@ -173,22 +173,22 @@ public class GitCommandConstants {
     public static final String CMD_GIT_CONFIG_UNSET_FILE_SAVE_DIRECTORY_WIN = "git config --file \"%1$s\" --unset --global safe.directory";
     public static final String CMD_GIT_CONFIG_UNSET_FILE_SAVE_DIRECTORY_LINUX = "git config --file '%1$s' --unset --global safe.directory";
     // git config command - usage to set different key file for new config file
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_WIN = "git config --file \"%1$s\" --add core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_LINUX = "git config --file '%1$s' --add core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %2$s'";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_WIN = "git config --file \"%1$s\" --add core.sshCommand \"%2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_LINUX = "git config --file '%1$s' --add core.sshCommand '%2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_WIN = "git config --file \"%1$s\" --replace-all core.sshCommand \"ssh -o StrictHostKeyChecking=no -i %2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_PREFORMAT_LINUX = "git config --file '%1$s' --replace-all core.sshCommand 'ssh -o StrictHostKeyChecking=no -i %2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_WIN = "git config --file \"%1$s\" --replace-all core.sshCommand \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SSH_COMMAND_FORMAT_LINUX = "git config --file '%1$s' --replace-all core.sshCommand '%2$s'";
     // git config command - usage to set different user.name for global config
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_WIN = "git config --file \"%1$s\" --add user.name \"%2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_LINUX = "git config --file '%1$s' --add user.name '%2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_WIN = "git config --file \"%1$s\" --replace-all user.name \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_NAME_FORMAT_LINUX = "git config --file '%1$s' --replace-all user.name '%2$s'";
     // git config command - usage to set different user.password for global config
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_WIN = "git config --file \"%1$s\" --add user.password \"%2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_LINUX = "git config --file '%1$s' --add user.password '%2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_WIN = "git config --file \"%1$s\" --replace-all user.password \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_PWD_FORMAT_LINUX = "git config --file '%1$s' --replace-all user.password '%2$s'";
     // git config command - usage to set different user.email for global config
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_WIN = "git config --file \"%1$s\" --add user.email \"%2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX = "git config --file '%1$s' --add user.email '%2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_WIN = "git config --file \"%1$s\" --replace-all user.email \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_USER_EMAIL_FORMAT_LINUX = "git config --file '%1$s' --replace-all user.email '%2$s'";
     // git config command - usage to set shared local repo as save directory
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_WIN = "git config --file \"%1$s\" --add safe.directory \"%2$s\"";
-    public static final String CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_LINUX = "git config --file '%1$s' --add safe.directory '%2$s'";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_WIN = "git config --file \"%1$s\" --replace-all safe.directory \"%2$s\"";
+    public static final String CMD_GIT_CONFIG_ADD_FILE_SAVE_DIRECTORY_LINUX = "git config --file '%1$s' --replace-all safe.directory '%2$s'";
     
     // SHELL COMMANDS
     public static final String CMD_SHELL_CD = "cd ";
