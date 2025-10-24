@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.hierynomus.protocol.transport.TransportException;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
@@ -41,6 +42,7 @@ import com.sos.commons.vfs.ssh.exceptions.SOSSSHCommandExitViolentlyException;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.common.SSHException;
+import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.connection.channel.direct.Signal;
@@ -77,7 +79,7 @@ public class SSHJProvider extends SSHProvider {
 
             // executing "uname" may disconnect the SSH client
             // - e.g., if the server only supports the SFTP subsystem and closes the connection instead of reporting an "exec" channel failure
-            if (!isConnected()) {
+            if (needsReconnectAfterServerInfo()) {
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug("%s[sshClient not connected anymore after getServerInfo=%s]trying to reconnect ...", getLogPrefix(),
                             getServerInfo());
@@ -98,7 +100,10 @@ public class SSHJProvider extends SSHProvider {
         }
     }
 
-    /** Overrides {@link IProvider#isConnected()} */
+    /** Overrides {@link IProvider#isConnected()}
+     * 
+     * @apiNote The sshClient.isConnected() method is not particularly reliable because it checks internal sshj flags instead of the actual connection (e.g.,
+     *          socket). */
     @Override
     public boolean isConnected() {
         return sshClient == null ? false : sshClient.isConnected();
@@ -439,7 +444,8 @@ public class SSHJProvider extends SSHProvider {
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
         SOSCommandResult result = new SOSCommandResult(command);
-        if (sshClient == null) {
+        if (sshClient == null || !isConnected()) {
+            result.setException(new IOException("SSHClient not connected"));
             return result;
         }
 
@@ -461,6 +467,7 @@ public class SSHJProvider extends SSHProvider {
                 } else {
                     cmd.join(timeout.getInterval(), timeout.getTimeUnit());
                 }
+
                 result.setExitCode(cmd.getExitStatus());
                 if (!result.hasExitCode()) {
                     if (cmd.getExitSignal() != null) {
@@ -468,10 +475,36 @@ public class SSHJProvider extends SSHProvider {
                     }
                 }
             }
-        } catch (Throwable e) {
+        } catch (ConnectionException | TransportException e) {
+            result.setException(e);
+
+            // - disconnect sshClient (do not use the SSHJProvider.disconnect() method, as it sets the client to null)
+            // - the disconnect via sshj is necessary because the sshClient.isConnected() method doesn't actually check whether the connection (socket, etc.) is
+            // established.
+            // -- It checks the internal sshj flags. set these flags.
+            SOSClassUtil.closeQuietly(sshClient);
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[executeCommand][sshClient disconnected]%s", getLogPrefix(), result);
+            }
+
+            // TODO: implement an automatic reconnection here?
+            // Observed behavior with CompleteFTP 25.0.6 (Windows):
+            // - When SSH is disabled (SFTP-only mode): PRO
+            // -- reconnect logic works correctly because a ConnectionException is thrown immediately.
+            // - When SSH is enabled: CONTRA
+            // -- reconnect logic does NOT trigger immediately, because no ConnectionException is thrown.
+            // -- The sshClient is actually disconnected, but this happens a few milliseconds later on an asynchronous sshj thread.
+            // -- The server sends an additional message to the channel that has already been closed.
+            // --- sshj does not accept this message and only then marks the connection as disconnected.
+            // Therefore, relying on isConnected() or catching exceptions in the same thread does not reliably detect this disconnect.
+
+        } catch (Exception e) {
             result.setException(e);
         }
         resetCommand(uuid);
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("%s[executeCommand][after][isConnected]%s", getLogPrefix(), isConnected());
+        }
         return result;
     }
 
@@ -670,6 +703,32 @@ public class SSHJProvider extends SSHProvider {
         SOSClassUtil.closeQuietly(sshClient);
         sshClient = null;
         return true;
+    }
+
+    /** @apiNote The second check part (... || hasConnectionException ...) is not really necessary after the "executeCommand" method has been modified to
+     *          disconnect the client connection on a ConnectionException.
+     * @return */
+    private boolean needsReconnectAfterServerInfo() {
+        if (getArguments().getDisableAutoDetectShell().isTrue()) {
+            return false;
+        }
+
+        boolean isConnected = isConnected();
+        boolean hasConnectionException = hasConnectionException(getServerInfo().getCommandResult());
+
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("%s[needsReconnectAfterServerInfo]isConnected=%s, hasConnectionException=%s", getLogPrefix(), isConnected,
+                    hasConnectionException);
+        }
+
+        return !isConnected || hasConnectionException;
+    }
+
+    private boolean hasConnectionException(SOSCommandResult result) {
+        if (result == null) {
+            return false;
+        }
+        return result.hasException() && result.getException() instanceof ConnectionException;
     }
 
     private synchronized String createCommandIdentifier() {

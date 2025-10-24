@@ -76,6 +76,9 @@ public class SSHServerInfo {
                 // unix commands have to be used
                 os = OS.WINDOWS.name();
                 setShell(isSFTPOnly, Shell.CYGWIN);
+            } else if (stdOutLowerCase.equals("win32nt")) {// CompleteFTP_25.0.6
+                os = OS.WINDOWS.name();
+                setShell(isSFTPOnly, Shell.UNIX);
             } else {
                 trySetOSFromServerVersion();
                 setShell(isSFTPOnly, Shell.UNIX);
