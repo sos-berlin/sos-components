@@ -23,6 +23,7 @@ import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -61,6 +62,7 @@ import com.sos.joc.classes.board.PlanSchemas;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -105,6 +107,7 @@ import js7.data_for_java.plan.JPlan;
 import js7.data_for_java.plan.JPlanSchemaState;
 import js7.data_for_java.plan.JPlanStatus;
 import js7.proxy.javaapi.JControllerProxy;
+import reactor.core.publisher.Flux;
 
 public class DailyPlanRunner extends TimerTask {
 
@@ -224,6 +227,14 @@ public class DailyPlanRunner extends TimerTask {
                 if (controllerSchedules.size() > 0) {
                     LOGGER.info(String.format("[%s][%s][%s][Plan Order automatically]found %s schedules", startupMode, method, controllerId,
                             controllerSchedules.size()));
+                    
+                    //JOC-2140: one addOrders test call without orders to avoid 'invalid session token'-problem
+                    try {
+                        ControllerApi.of(controllerId).addOrders(Flux.empty());
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (Exception e2) {
+                        //
+                    }
 
                     for (int day = 0; day < settings.getDaysAheadPlan(); day++) {
                         String dailyPlanDate = SOSDate.getDateWithTimeZoneAsString(dailyPlanCalendar.getTime(), settings.getTimeZone());
