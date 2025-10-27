@@ -125,18 +125,24 @@ public class ClusterWatch {
 //        }
 //    }
     
-    public void appointNodes(String controllerId, JControllerApi api) throws DBMissingDataException, JocConfigurationException,
+    public void appointNodes(String controllerId, JControllerApi api, boolean force) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
-        appointNodes(controllerId, api, null, null, null, null);
+        appointNodes(controllerId, api, null, null, null, null, force);
     }
 
-    public void appointNodes(String controllerId, JControllerProxy proxy) throws DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
-        appointNodes(controllerId, null, proxy, null, null, null);
+//    public void appointNodes(String controllerId, JControllerProxy proxy) throws DBMissingDataException, JocConfigurationException,
+//            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
+//        appointNodes(controllerId, null, proxy, null, null, null);
+//    }
+    
+    public void appointNodes(String controllerId, JControllerApi api, JControllerProxy proxy, JocInstancesDBLayer dbLayer, String accessToken,
+            JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, JocBadRequestException {
+        appointNodes(controllerId, api, proxy, dbLayer, accessToken, jocError, false);
     }
 
     public void appointNodes(String controllerId, JControllerApi api, JControllerProxy proxy, JocInstancesDBLayer dbLayer, String accessToken,
-            JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            JocError jocError, boolean forceRestart) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, JocBadRequestException {
         if (onStart) {
             //LOGGER.warn(toStringWithId() + " cluster service is not started: " + controllerId);
@@ -150,7 +156,7 @@ public class ClusterWatch {
         
         JControllerApi controllerApi = proxy == null ? api : proxy.api();
         
-        String watchId = start(controllerApi, controllerId, true, dbLayer);
+        String watchId = start(controllerApi, controllerId, true, dbLayer, forceRestart);
            
         ClusterState cState = getCurrentClusterState(controllerId, proxy);
 
@@ -240,14 +246,15 @@ public class ClusterWatch {
         return "JOC (" + clusterId + ")";
     }
 
-    private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, JocInstancesDBLayer dbLayer) {
-        //LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
+    private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, JocInstancesDBLayer dbLayer,
+            boolean forceRestart) {
+        // LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
         boolean jocIsActive = true;
         if (checkWatchByJoc) {
             jocIsActive = jocInstanceIsActive(dbLayer);
         }
         if (jocIsActive) {
-            if (isWatched(controllerId)) {
+            if (!forceRestart && isWatched(controllerId)) {
                 LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is still running for '" + controllerId + "'");
                 // throw new JocServiceException("[ClusterWatch] " + controllerId + " is still running.");
                 return clusterId;

@@ -667,11 +667,15 @@ public class Proxies {
                     return false;
                 }
             }
-            controllerApis.get(credentials).stop();
-            controllerApis.put(credentials, newControllerApi(credentials));
+            controllerApis.get(credentials).stop(); // stops clusterWatch too
+            controllerApis.put(credentials, newControllerApi(credentials, true));
             return true;
         }
         return false;
+    }
+    
+    private JControllerApi newControllerApi(ProxyCredentials credentials, boolean force) {
+        return appointNodes(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials), force);
     }
     
     private JControllerApi newControllerApi(ProxyCredentials credentials) {
@@ -679,8 +683,12 @@ public class Proxies {
     }
     
     private JControllerApi appointNodes(ProxyCredentials credentials, JControllerApi api) {
+        return appointNodes(credentials, api, false);
+    }
+    
+    private JControllerApi appointNodes(ProxyCredentials credentials, JControllerApi api, boolean force) {
         if (api != null && credentials.getBackupUrl() != null && ProxyUser.JOC.equals(credentials.getUser())) {
-            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api);
+            ClusterWatch.getInstance().appointNodes(credentials.getControllerId(), api, force);
         }
         return api;
     }
