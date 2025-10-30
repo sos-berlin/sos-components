@@ -81,6 +81,7 @@ public class ProxyTest {
                     put(Order.ExpectingNotices.class, "waiting");
                     put(Order.BetweenCycles.class, "waiting");
                     put(Order.WaitingForLock$.class, "waiting");
+                    put(Order.WaitingForAdmission.class, "waiting");
                     put(Order.Broken.class, "failed");
                     put(Order.Failed$.class, "failed");
                     put(Order.FailedInFork$.class, "failed");

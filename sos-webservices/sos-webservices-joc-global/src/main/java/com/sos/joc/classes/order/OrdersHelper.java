@@ -176,6 +176,7 @@ public class OrdersHelper {
                     put(Order.DelayingRetry.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
+                    put(Order.WaitingForAdmission.class, OrderStateText.WAITING);
                     put(Order.BetweenCycles.class, OrderStateText.WAITING);
                     put(Order.Ready.class, OrderStateText.WAITING);
                     put(Order.Sleeping.class, OrderStateText.WAITING);
@@ -208,6 +209,7 @@ public class OrdersHelper {
             put("ExpectingNotice", OrderStateText.WAITING);
             put("ExpectingNotices", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
+            put("WaitingForAdmission", OrderStateText.WAITING);
             put("BetweenCycles", OrderStateText.WAITING);
             put("Ready", OrderStateText.WAITING);
             put("Sleeping", OrderStateText.WAITING);
