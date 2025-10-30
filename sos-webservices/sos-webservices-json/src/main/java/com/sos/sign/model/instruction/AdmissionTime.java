@@ -1,6 +1,7 @@
 
 package com.sos.sign.model.instruction;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "admissionTimeScheme",
+    "skipIfNoAdmissionStartForOrderDay",
     "block"
 })
 public class AdmissionTime
@@ -35,6 +37,11 @@ public class AdmissionTime
      */
     @JsonProperty("admissionTimeScheme")
     private AdmissionTimeScheme admissionTimeScheme;
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    @JsonAlias({
+        "skipIfNoAdmissionForOrderDay"
+    })
+    private Boolean skipIfNoAdmissionStartForOrderDay = false;
     /**
      * instructions
      * <p>
@@ -54,13 +61,15 @@ public class AdmissionTime
 
     /**
      * 
+     * @param skipIfNoAdmissionStartForOrderDay
      * @param block
-     * @param admissionTimeScheme
      * @param tYPE
+     * @param admissionTimeScheme
      */
-    public AdmissionTime(AdmissionTimeScheme admissionTimeScheme, Instructions block, InstructionType tYPE) {
+    public AdmissionTime(AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, Instructions block, InstructionType tYPE) {
         super(tYPE);
         this.admissionTimeScheme = admissionTimeScheme;
+        this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
         this.block = block;
     }
 
@@ -86,6 +95,16 @@ public class AdmissionTime
     @JsonProperty("admissionTimeScheme")
     public void setAdmissionTimeScheme(AdmissionTimeScheme admissionTimeScheme) {
         this.admissionTimeScheme = admissionTimeScheme;
+    }
+
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    public Boolean getSkipIfNoAdmissionStartForOrderDay() {
+        return skipIfNoAdmissionStartForOrderDay;
+    }
+
+    @JsonProperty("skipIfNoAdmissionStartForOrderDay")
+    public void setSkipIfNoAdmissionStartForOrderDay(Boolean skipIfNoAdmissionStartForOrderDay) {
+        this.skipIfNoAdmissionStartForOrderDay = skipIfNoAdmissionStartForOrderDay;
     }
 
     /**
@@ -114,12 +133,12 @@ public class AdmissionTime
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("admissionTimeScheme", admissionTimeScheme).append("block", block).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("block", block).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(block).append(admissionTimeScheme).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(skipIfNoAdmissionStartForOrderDay).append(block).append(admissionTimeScheme).toHashCode();
     }
 
     @Override
@@ -131,7 +150,7 @@ public class AdmissionTime
             return false;
         }
         AdmissionTime rhs = ((AdmissionTime) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(block, rhs.block).append(admissionTimeScheme, rhs.admissionTimeScheme).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(block, rhs.block).append(admissionTimeScheme, rhs.admissionTimeScheme).isEquals();
     }
 
 }
