@@ -582,6 +582,21 @@ public class JS7ConverterHelper {
         return workflowPath.toString().replace(".workflow.json", "");
     }
 
+    public static String getScheduleName(Path schedulePath) {
+        return schedulePath.getFileName().toString().replace(".schedule.json", "");
+    }
+
+    /** @param currentPath e.g. schedule path (same folder object)
+     * @param workflowName
+     * @return */
+    public static Path getWorkflowPathByJS7Path(Path currentPath, String workflowName) {
+        Path parent = currentPath.getParent();
+        if (parent == null) {
+            parent = Paths.get("");
+        }
+        return JS7ConverterHelper.resolvePath(parent, workflowName + ".workflow.json");
+    }
+
     public static Path getSchedulePathFromJS7Path(Path workflowPath, String workflowName, String additionalName) {
         Path parent = workflowPath.getParent();
         if (parent == null) {
@@ -788,16 +803,22 @@ public class JS7ConverterHelper {
 
     public static com.sos.inventory.model.calendar.Calendar createDefaultWorkingDaysCalendar() {
         com.sos.inventory.model.calendar.Calendar c = new com.sos.inventory.model.calendar.Calendar();
-        // c.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle("xxx"));
         c.setType(CalendarType.WORKINGDAYSCALENDAR);
+        c.setIncludes(createEveryDayFrequencies());
+        return c;
+    }
 
+    public static Frequencies createEveryDayFrequencies() {
         Frequencies fr = new Frequencies();
         WeekDays wd = new WeekDays();
         wd.setDays(Arrays.asList(0, 1, 2, 3, 4, 5, 6));
         fr.setWeekdays(Collections.singletonList(wd));
-        c.setIncludes(fr);
+        return fr;
+    }
 
-        return c;
+    public static Frequencies createEmptyFrequencies() {
+        Frequencies fr = new Frequencies();
+        return fr;
     }
 
     public static String parentheses(String input) {

@@ -2,15 +2,19 @@
 package com.sos.js7.converter.js1.common.json.calendars;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.commons.util.SOSString;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-/** calendar
+/** calendar -!!!! manually adjusted
  * <p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -81,6 +85,10 @@ public class JS1Calendar {
      */
     @JsonProperty("usedBy")
     private UsedBy usedBy;
+
+    @JsonIgnore
+    // starting with 0 - will generate _dup1, _dup2 ....
+    private int duplicateNameCounter = 0;
 
     /** non negative long
      * <p>
@@ -280,6 +288,23 @@ public class JS1Calendar {
     @JsonProperty("usedBy")
     public void setUsedBy(UsedBy usedBy) {
         this.usedBy = usedBy;
+    }
+
+    @JsonIgnore
+    public String getIdentifier() {
+        if (!SOSString.isEmpty(path)) {
+            return path;
+        }
+        if (!SOSString.isEmpty(basedOn)) {
+            return basedOn;
+        }
+        return name;
+    }
+
+    @JsonIgnore
+    public int incrementAndGetDuplicateNameCounter() {
+        duplicateNameCounter++;
+        return duplicateNameCounter;
     }
 
     @Override

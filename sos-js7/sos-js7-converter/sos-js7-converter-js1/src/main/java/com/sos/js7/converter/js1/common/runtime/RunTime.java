@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -16,10 +18,13 @@ import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.report.ParserReport;
 import com.sos.js7.converter.js1.common.EConfigFileExtensions;
+import com.sos.js7.converter.js1.common.json.calendars.JS1Calendar;
 import com.sos.js7.converter.js1.input.DirectoryParser.DirectoryParserResult;
 import com.sos.js7.converter.js1.output.js7.JS12JS7Converter;
 
 public class RunTime {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RunTime.class);
 
     private static final String ATTR_SINGLE_START = "single_start";
     private static final String ATTR_BEGIN = "begin";
@@ -73,6 +78,10 @@ public class RunTime {
         this.currentPath = currentPath;
 
         convertChildElements(currentPath, xpath, node);
+
+        if (arePeriodsEmpty()) {
+            this.periods = createDefaultPeriods();
+        }
     }
 
     // XML 2 RunTime
@@ -93,17 +102,9 @@ public class RunTime {
         this.once = JS7ConverterHelper.stringValue(m.get(ATTR_ONCE));
 
         convertChildElements(currentPath, xpath, node);
-    }
 
-    private String getNodeText(Path currentPath, Node node) {
-        try {
-            long fileSize = currentPath.toAbsolutePath().toFile().length();
-            if (fileSize > 1_000) {
-                return "[without node text]fileSize=" + fileSize + " bytes";
-            }
-            return JS7ConverterHelper.nodeToString(node);
-        } catch (Throwable e) {
-            return "";
+        if (arePeriodsEmpty()) {
+            this.periods = createDefaultPeriods();
         }
     }
 
@@ -120,50 +121,80 @@ public class RunTime {
             this.letRun = rt.getLetRun();
             this.once = rt.getRunOnce();
             convertChildElements(rt);
+
+            if (arePeriodsEmpty()) {
+                this.periods = createDefaultPeriods();
+            }
         }
     }
 
     private void convertChildElements(Path path, SOSXMLXPath xpath, Node node) throws Exception {
         this.calendarsHelper = convertCalendars(path, xpath, node);
-        if (this.calendarsHelper == null) {
-            this.periods = convertPeriod(path, xpath, node);
-            this.ats = convertAt(path, xpath, node);
-            this.dates = convertDate(path, xpath, node);
-            this.weekDays = convertWeekDays(path, xpath, node);
-            this.monthDays = convertMonthDays(path, xpath, node);
-            this.months = convertMonth(path, xpath, node);
-            this.ultimos = convertUltimos(path, xpath, node);
-            this.holidays = convertHolidays(path, xpath, node);
-        }
+        // if (this.calendarsHelper == null) {
+        this.periods = convertPeriod(path, xpath, node);
+        this.ats = convertAt(path, xpath, node);
+        this.dates = convertDate(path, xpath, node);
+        this.weekDays = convertWeekDays(path, xpath, node);
+        this.monthDays = convertMonthDays(path, xpath, node);
+        this.months = convertMonth(path, xpath, node);
+        this.ultimos = convertUltimos(path, xpath, node);
+        this.holidays = convertHolidays(path, xpath, node);
+        // }
     }
 
     private void convertChildElements(com.sos.js7.converter.js1.common.json.schedule.RunTime rt) throws Exception {
         this.calendarsHelper = convertCalendars(rt.getCalendars());
-        if (this.calendarsHelper == null) {
-            this.periods = convertPeriod(rt.getPeriods());
-            this.ats = convertAt(rt.getAts());
-            this.dates = convertDate(rt.getDates());
-            this.weekDays = convertWeekDays(rt.getWeekdays());
-            this.monthDays = convertMonthDays(rt.getMonthdays());
-            this.months = convertMonth(rt.getMonths());
-            this.ultimos = convertUltimos(rt.getUltimos());
-            this.holidays = convertHolidays(rt.getHolidays());
-        }
+        // if (this.calendarsHelper == null) {
+        this.periods = convertPeriod(rt.getPeriods());
+        this.ats = convertAt(rt.getAts());
+        this.dates = convertDate(rt.getDates());
+        this.weekDays = convertWeekDays(rt.getWeekdays());
+        this.monthDays = convertMonthDays(rt.getMonthdays());
+        this.months = convertMonth(rt.getMonths());
+        this.ultimos = convertUltimos(rt.getUltimos());
+        this.holidays = convertHolidays(rt.getHolidays());
+        // }
     }
 
     public boolean isEmpty() {
-        return singleStart == null && begin == null && end == null && repeat == null && schedule == null && periods == null && ats == null
-                && dates == null && weekDays == null && monthDays == null && months == null && ultimos == null && holidays == null
-                && calendarsHelper == null;
+        return arePeriodsEmpty() && holidays == null && calendarsHelper == null;
     }
 
-    public boolean hasCalendars() {
-        return calendarsHelper != null && calendarsHelper.getCalendars().getCalendars() != null && calendarsHelper.getCalendars().getCalendars()
-                .size() > 0;
+    private boolean arePeriodsEmpty() {
+        return singleStart == null && begin == null && end == null && repeat == null && schedule == null && periods == null && ats == null
+                && dates == null && weekDays == null && monthDays == null && months == null && ultimos == null;
+    }
+
+    @SuppressWarnings("unused")
+    private boolean hasCalendars() {
+        return calendarsHelper != null && calendarsHelper.hasCalendars();
+    }
+
+    public boolean hasHolidaysOrNonWorkingDayCalendars() {
+        return hasHolidays() || hasNonWorkingDayCalendars();
+    }
+
+    public boolean hasHolidays() {
+        return holidays != null;
     }
 
     public boolean isConvertableWithoutCalendars() {
-        return !isEmpty() && !hasCalendars();
+        return !isEmpty() && !hasWorkingDayCalendars();
+    }
+
+    public boolean hasWorkingDayCalendars() {
+        return calendarsHelper != null && calendarsHelper.hasWorkingDayCalendars();
+    }
+
+    public List<JS1Calendar> getNonWorkingDayCalendars() {
+        if (calendarsHelper == null) {
+            return null;
+        }
+        return calendarsHelper.getNonWorkingDayCalendars();
+    }
+
+    private boolean hasNonWorkingDayCalendars() {
+        return calendarsHelper != null && calendarsHelper.hasNonWorkingDayCalendars();
     }
 
     public boolean hasChildElements() {
@@ -190,10 +221,12 @@ public class RunTime {
             if (p != null) {
                 return new Schedule(pr, p);
             } else {
+                LOGGER.error("[newSchedule][" + currentPath + "][attribute=" + attrName + "]Schedule not found=" + includePath);
                 ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]Schedule not found=" + includePath, "");
                 return null;
             }
         } catch (Throwable e) {
+            LOGGER.error("[newSchedule][" + currentPath + "][attribute=" + attrName + "][Schedule not found=" + includePath + "]" + e);
             ParserReport.INSTANCE.addErrorRecord(currentPath, "[attribute=" + attrName + "]Schedule not found=" + includePath, e);
             return null;
         }
@@ -231,12 +264,28 @@ public class RunTime {
         return result;
     }
 
+    private static List<Period> createDefaultPeriods() {
+        return null;
+
+        // JS1 empty runtime is the same as: <run_time begin="00:00" end="24:00"/>
+        // when a default period is created for JS7, a schedule with a single start at 00:00 is created
+        // - therefore, no default period is created - which means that no schedule is created either.
+
+        // List<Period> result = new ArrayList<>();
+        // com.sos.js7.converter.js1.common.json.schedule.Period p = new com.sos.js7.converter.js1.common.json.schedule.Period();
+        // p.setBegin("00:00");
+        // p.setEnd("24:00");
+        // result.add(new Period(p));
+        // return result;
+    }
+
     public static CalendarsHelper convertCalendars(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         String c = SOSXML.getValue(xpath.selectNode(node, "./" + ELEMENT_CALENDARS));
         if (c != null) {
             try {
                 return CalendarsHelper.convert(c);
             } catch (Throwable e) {
+                LOGGER.error("[convertCalendars][" + path + "][" + c + "]" + e);
                 ParserReport.INSTANCE.addErrorRecord(path, "[runtime][covertCalendars]" + c, e);
             }
         }
@@ -248,6 +297,7 @@ public class RunTime {
             try {
                 return CalendarsHelper.convert(c);
             } catch (Throwable e) {
+                LOGGER.error("[convertCalendars][" + c + "]" + e);
                 ParserReport.INSTANCE.addErrorRecord(null, "[runtime][covertCalendars]" + c, e);
             }
         }
@@ -328,6 +378,7 @@ public class RunTime {
     protected static List<WeekDays> convertWeekDays(Path path, SOSXMLXPath xpath, Node node) throws SOSXMLXPathException {
         List<WeekDays> result = null;
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_WEEKDAYS);
+
         if (l != null && l.getLength() > 0) {
             result = new ArrayList<>();
             for (int i = 0; i < l.getLength(); i++) {
@@ -519,6 +570,18 @@ public class RunTime {
     private static void addReportSkipRecord(Path path, String method, int totalSize) {
         ParserReport.INSTANCE.addWarningRecord(path, method, "total size=" + totalSize + ". converting after  " + MAX_ELEMENTS_PRO_CHILD
                 + " skipped");
+    }
+
+    private String getNodeText(Path currentPath, Node node) {
+        try {
+            long fileSize = currentPath.toAbsolutePath().toFile().length();
+            if (fileSize > 1_000) {
+                return "[without node text]fileSize=" + fileSize + " bytes";
+            }
+            return JS7ConverterHelper.nodeToString(node);
+        } catch (Throwable e) {
+            return "";
+        }
     }
 
     public String getNodeText() {

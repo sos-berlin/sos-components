@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,15 +27,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.calendar.WhenHolidayType;
 import com.sos.inventory.model.common.Variables;
@@ -124,6 +131,7 @@ import com.sos.js7.converter.js1.output.js7.helper.JobTemplateHelper;
 import com.sos.js7.converter.js1.output.js7.helper.LockHelper;
 import com.sos.js7.converter.js1.output.js7.helper.NamedJobHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ProcessClassFirstUsageHelper;
+import com.sos.js7.converter.js1.output.js7.helper.ReportWriter;
 import com.sos.js7.converter.js1.output.js7.helper.ReturnCodeHelper;
 import com.sos.js7.converter.js1.output.js7.helper.ScheduleHelper;
 import com.sos.js7.converter.js1.output.js7.helper.SchedulePathHelper;
@@ -190,7 +198,11 @@ public class JS12JS7Converter {
     private String inputDirPath;
 
     private Map<String, List<ACommonJob>> js1JobsByLanguage = new HashMap<>();
-    private Map<String, List<RunTime>> js1Calendars = new HashMap<>();
+    // key=js1-path
+    private Map<String, JS1Calendar> js1Calendars = new HashMap<>();
+    // key = js1 name, value; key-js1 path
+    Map<String, Map<String, Calendar>> js1ToJs7Calendars = new HashMap<>();
+    private Map<String, List<RunTime>> js1RunTimeCalendars = new HashMap<>();
     private Map<Path, JS7Agent> js1ProcessClass2js7Agent = new HashMap<>();
     private Map<Path, OrderJob> js1OrderJobs = new HashMap<>();
     private Map<Path, StandaloneJob> js1StandaloneShellJobs = new HashMap<>();
@@ -252,7 +264,7 @@ public class JS12JS7Converter {
             LOGGER.info(LOG_DELIMITER_LINE);
             Instant start = Instant.now();
             LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
-            JS7ConverterResult result = convert(pr);
+            JS7ConverterResult result = convert(pr, reportDir);
             LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
 
             // 3.1 - Parser Reports
@@ -329,7 +341,7 @@ public class JS12JS7Converter {
         }
     }
 
-    private static JS7ConverterResult convert(DirectoryParserResult pr) {
+    private static JS7ConverterResult convert(DirectoryParserResult pr, Path reportDir) {
         JS7ConverterResult result = new JS7ConverterResult();
 
         JS12JS7Converter c = new JS12JS7Converter();
@@ -347,9 +359,9 @@ public class JS12JS7Converter {
             c.convertJobChains(result);
             c.addJobResources(result);
             c.addLocks(result);
-            c.addSchedulesBasedOnJS1Schedule(result);
+            c.addSchedules(result, reportDir);
             c.convertAgents(result);
-            c.convertCalendars(result);
+            c.convertCalendars(result, reportDir);
             c.postProcessing(result);
         } catch (Throwable e) {
             LOGGER.error(String.format("[convert]%s", e.toString()), e);
@@ -362,25 +374,239 @@ public class JS12JS7Converter {
         return result;
     }
 
-    private void convertCalendars(JS7ConverterResult result) {
+    private void convertCalendars(JS7ConverterResult result, Path reportDir) {
+        ReportWriter rw = new ReportWriter(LOGGER, "convertCalendars", reportDir.resolve(ReportWriter.FILE_NAME_CALENDARS));
+        rw.cleanup();
+
+        Set<String> generatedJS1Calendars = new HashSet<>();
+        Set<String> generatedJS7Calendars = new HashSet<>();
+        // 1) JS1 calendars
+        int i = 0;
+        // #############################################
+        Map<CalendarType, Map<String, Map<String, Calendar>>> groupedByType = new HashMap<>();
+        for (Map.Entry<String, Map<String, Calendar>> js1Entry : js1ToJs7Calendars.entrySet()) {
+            String js1Name = js1Entry.getKey();
+
+            for (Map.Entry<String, Calendar> pathEntry : js1Entry.getValue().entrySet()) {
+                String js1Path = pathEntry.getKey();
+                Calendar cal = pathEntry.getValue();
+                CalendarType type = cal.getType();
+
+                groupedByType.computeIfAbsent(type, t -> new HashMap<>()).computeIfAbsent(js1Name, n -> new HashMap<>()).put(js1Path, cal);
+            }
+        }
+
+        if (groupedByType.size() > 0) {
+            rw.writeDelimiterLine();
+            rw.writeLine("#### JS7 Calendars based on the Calendar/Holiday definitions of JS1.");
+            rw.writeDelimiterLine();
+            for (Map.Entry<CalendarType, Map<String, Map<String, Calendar>>> groupedEntry : groupedByType.entrySet()) {
+                int k = 0;
+                for (Map.Entry<String, Map<String, Calendar>> entry : groupedEntry.getValue().entrySet()) {
+                    k += entry.getValue().entrySet().size();
+                }
+                rw.writeLine(groupedEntry.getKey().toString() + "=" + k);
+            }
+            rw.writeDelimiterLine();
+            rw.resetLogger();
+
+            rw.writeLine("Details:");
+        }
+
+        for (Map.Entry<CalendarType, Map<String, Map<String, Calendar>>> groupedEntry : groupedByType.entrySet()) {
+            for (Map.Entry<String, Map<String, Calendar>> entry : new TreeMap<>(groupedEntry.getValue()).entrySet()) {
+                String js1Name = entry.getKey();
+                for (Map.Entry<String, Calendar> e : new TreeMap<>(entry.getValue()).entrySet()) {
+                    i++;
+
+                    String js1NameOrPath = e.getKey();
+                    generatedJS1Calendars.add(js1NameOrPath);
+
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("[convertCalendars]js1Name=" + js1Name + ", js1NameOrPath=" + js1NameOrPath);
+                    }
+
+                    Path parentPath = CONFIG.getCalendarConfig().getForcedFolder();
+                    Calendar cal = e.getValue();
+
+                    if (parentPath == null) {
+                        String path = cal.getPath();
+                        if (SOSString.isEmpty(path)) {
+                            parentPath = Paths.get("");
+                        } else {
+                            parentPath = Paths.get(path);
+                            if (parentPath.getParent() == null) {
+                                parentPath = Paths.get("");
+                            } else {
+                                parentPath = parentPath.getParent();
+                            }
+                        }
+                    }
+                    cal.setPath(null);
+                    Path calendarPath = JS7ConverterHelper.getCalendarPath(parentPath, cal.getName());
+                    // no json definition provided - set default every day
+                    CalendarType calType = cal.getType();
+
+                    if (i > 1) {
+                        rw.writeEmptyLine();
+                    }
+                    rw.writeLine("[JS7][" + calType + "]" + SOSPathUtils.toUnixStyle(calendarPath.toString()));
+                    if (js1Calendars.containsKey(js1NameOrPath)) {
+                        JS1Calendar js1 = js1Calendars.get(js1NameOrPath);
+                        if (SOSString.isEmpty(js1.getCategory())) {
+                            rw.writeLine("    [JS1][Calendar]" + js1NameOrPath);
+                        } else { // e.g. generated from holidays
+                            rw.writeLine("    [JS1]" + js1.getCategory());
+                        }
+                    } else {
+                        rw.writeLine("    [JS1][" + js1NameOrPath + "]The JS1 Calendar JSON file definition is missing.");
+
+                        switch (calType) {
+                        case NONWORKINGDAYSCALENDAR:
+                            rw.writeLine("    [JS7]Empty frequency is used. The calendar must be defined manually.");
+                            cal.setIncludes(JS7ConverterHelper.createEmptyFrequencies());
+                            break;
+                        default:
+                            rw.writeLine("    [JS7]Empty frequency is used. The calendar must be defined manually.");
+                            cal.setIncludes(JS7ConverterHelper.createEmptyFrequencies());
+                            break;
+                        }
+
+                        cal.setExcludes(null);
+                    }
+                    generatedJS7Calendars.add(cal.getName());
+                    result.add(calendarPath, cal, false);
+
+                    Set<String> usedBySchedules = getCalendarUsages(result, cal.getName());
+                    if (usedBySchedules == null) {
+                        rw.writeLine("    [JS7]Used by Schedules : usage not found");
+                    } else {
+                        rw.writeLine("    [JS7]Used by Schedules (" + usedBySchedules.size() + "):");
+
+                        for (String schedule : usedBySchedules) {
+                            rw.writeLine("            " + SOSPathUtils.toUnixStyle(schedule));
+                        }
+                    }
+                }
+            }
+        }
+        // #############################################
+        if (!SOSCollection.isEmpty(js1Calendars)) {
+            Set<String> notUsedWD = new HashSet<>();
+            Set<String> notUsedNWD = new HashSet<>();
+
+            for (Map.Entry<String, JS1Calendar> e : js1Calendars.entrySet()) {
+                String js1NameOrPath = e.getKey();
+                if (!generatedJS1Calendars.contains(js1NameOrPath)) {
+                    // LOGGER.info("[convertCalendars][js1=" + js1NameOrPath + "][skip]" + add + "not used");
+                    switch (e.getValue().getType()) {
+                    case NON_WORKING_DAYS:
+                        notUsedNWD.add(js1NameOrPath);
+                        break;
+                    case WORKING_DAYS:
+                        notUsedWD.add(js1NameOrPath);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+
+            if (notUsedWD.size() > 0 || notUsedNWD.size() > 0) {
+                if (i > 1) {
+                    rw.writeEmptyLine();
+                }
+                rw.writeDelimiterLine();
+
+                if (notUsedWD.size() > 0) {
+                    String add = CONFIG.getScheduleConfig().getForcedWorkingDayCalendarName() == null ? "because not used"
+                            : "due to scheduleConfig.forced.workingDayCalendarName converter setting";
+
+                    rw.writeLine("[JS1][WORKING_DAYS][not converted]" + add);
+                    for (String c : notUsedWD) {
+                        rw.writeLine("    " + c);
+                    }
+                    i++;
+                }
+                if (notUsedNWD.size() > 0) {
+                    if (i > 1) {
+                        rw.writeEmptyLine();
+                    }
+                    String add = CONFIG.getScheduleConfig().getForcedNonWorkingDayCalendarName() == null ? "because not used"
+                            : "due to scheduleConfig.forced.nonWorkingDayCalendarName converter setting";
+
+                    rw.writeLine("[JS1][NON_WORKING_DAYS][not converted]" + add);
+                    for (String c : notUsedNWD) {
+                        rw.writeLine("    " + c);
+                    }
+                    i++;
+                }
+            }
+        }
+
+        // 1) JS1 RunTimes without JS1 calendars
         if (result.getSchedules() != null && result.getSchedules().getItemsToGenerate().size() > 0) {
+            if (i > 1) {
+                rw.writeEmptyLine();
+            }
+            rw.writeDelimiterLine();
+            rw.writeLine("#### JS7 Calendars used when JS1 Run-Time provides no Calendar definitions.");
+            rw.writeDelimiterLine();
+
             Path rootPath = CONFIG.getCalendarConfig().getForcedFolder() == null ? Paths.get("") : CONFIG.getCalendarConfig().getForcedFolder();
-            Set<String> names = new HashSet<>();
             for (JS7ExportObject<Schedule> item : result.getSchedules().getItemsToGenerate()) {
                 Schedule s = item.getObject();
                 if (s.getCalendars() != null && s.getCalendars().size() > 0) {
                     for (AssignedCalendars ac : s.getCalendars()) {
                         if (!SOSString.isEmpty(ac.getCalendarName())) {
-                            if (!names.contains(ac.getCalendarName())) {
-                                result.add(JS7ConverterHelper.getCalendarPath(rootPath, ac.getCalendarName()), JS7ConverterHelper
-                                        .createDefaultWorkingDaysCalendar(), false);
-                                names.add(ac.getCalendarName());
+                            if (!generatedJS7Calendars.contains(ac.getCalendarName())) {
+                                Path calendarPath = JS7ConverterHelper.getCalendarPath(rootPath, ac.getCalendarName());
+                                result.add(calendarPath, JS7ConverterHelper.createDefaultWorkingDaysCalendar(), false);
+                                generatedJS7Calendars.add(ac.getCalendarName());
+
+                                rw.writeLine("[JS7][" + CalendarType.WORKINGDAYSCALENDAR + "]" + SOSPathUtils.toUnixStyle(calendarPath.toString()));
+                                rw.writeLine("    [JS7]\"Every Day\" frequency is used");
+                                i++;
+
+                                Set<String> usedBySchedules = getCalendarUsages(result, ac.getCalendarName());
+                                if (usedBySchedules == null) {
+                                    rw.writeLine("    [JS7]Used by Schedules : usage not found");
+                                } else {
+                                    rw.writeLine("    [JS7]Used by Schedules (" + usedBySchedules.size() + "):");
+
+                                    for (String schedule : usedBySchedules) {
+                                        rw.writeLine("            " + SOSPathUtils.toUnixStyle(schedule));
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    private Set<String> getCalendarUsages(JS7ConverterResult result, String calendarName) {
+        if (result.getSchedules() == null) {
+            return null;
+        }
+        Set<String> set = new TreeSet<>();
+        for (JS7ExportObject<Schedule> item : result.getSchedules().getItemsToGenerate()) {
+            Schedule s = item.getObject();
+            if (s.getCalendars() != null && s.getCalendars().size() > 0) {
+                for (AssignedCalendars ac : s.getCalendars()) {
+                    if (!SOSString.isEmpty(ac.getCalendarName()) && ac.getCalendarName().equals(calendarName)) {
+                        set.add(item.getOriginalPath().getPath().toString());
+                    }
+                    if (ac.getExcludes() != null && ac.getExcludes().getNonWorkingDayCalendars() != null) {
+                        if (ac.getExcludes().getNonWorkingDayCalendars().contains(calendarName)) {
+                            set.add(item.getOriginalPath().getPath().toString());
+                        }
+                    }
+                }
+            }
+        }
+        return set;
     }
 
     public StandaloneJob findStandaloneJobByPath(Path path) {
@@ -486,18 +712,39 @@ public class JS12JS7Converter {
         return result;
     }
 
-    // TODO check - nonWorkingDayCalendars generated??????????
-    private void addSchedulesBasedOnJS1Schedule(JS7ConverterResult result) {
-        js1Schedules.entrySet().stream().sorted(Map.Entry.<String, ScheduleHelper> comparingByKey()).forEach(e -> {
-            String js7ScheduleName = JS7ConverterHelper.getJS7ObjectName(e.getKey());
-            Path schedulePath = JS7ConverterHelper.getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), js7ScheduleName, "");
+    private void addSchedules(JS7ConverterResult result, Path reportDir) {
+        ReportWriter rw = new ReportWriter(reportDir.resolve(ReportWriter.FILE_NAME_CYCLIC_WORKFLOWS));
+        rw.cleanup();
 
-            Schedule schedule = JS7RunTimeConverter.toSchedule(schedulePath, e.getValue().getJS1Schedule(), e.getValue().getTimeZone(), e.getValue()
-                    .getWorkflows().stream().map(w -> {
+        // 1) schedules already added - e.g. from job chain orders
+        // key - workflows, value=schedules
+        Map<Path, Map<Path, Schedule>> allWorkflowsToSchedules = new TreeMap<>(Comparator.comparing(Path::toString));
+        for (JS7ExportObject<Schedule> item : result.getSchedules().getItemsToGenerate()) {
+            Schedule schedule = item.getObject();
+            Path schedulePath = item.getOriginalPath().getPath();
+            if (schedule.getWorkflowNames() != null) {
+                for (String workflowName : schedule.getWorkflowNames()) {
+                    Path workflowPath = JS7ConverterHelper.getWorkflowPathByJS7Path(schedulePath, workflowName);
+                    allWorkflowsToSchedules.computeIfAbsent(workflowPath, k -> new TreeMap<>(Comparator.comparing(Path::toString))).put(schedulePath,
+                            schedule);
+                }
+            }
+        }
+        // 2) schedules to add
+        Set<Path> schedulesToAdd = new HashSet<>();
+        js1Schedules.entrySet().stream().forEach(e -> {
+            String js1ScheduleName = e.getKey();
+            String scheduleName = JS7ConverterHelper.getJS7ObjectName(js1ScheduleName);
+            Path schedulePath = JS7ConverterHelper.getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), scheduleName, "");
+
+            Schedule schedule = JS7RunTimeConverter.toSchedule(this, schedulePath, e.getValue().getJS1Schedule(), e.getValue().getTimeZone(), e
+                    .getValue().getWorkflows().stream().map(w -> {
                         return w.getName();
                     }).collect(Collectors.toList()));
 
             if (schedule != null) {
+                schedulesToAdd.add(schedulePath);
+
                 if (e.getValue().getStartPosition() != null) {
                     setSchedulePosition(schedule, e.getValue().getStartPosition());
                 }
@@ -505,58 +752,118 @@ public class JS12JS7Converter {
                     schedule.setOrderParameterisations(e.getValue().getOrderParams());
                 }
 
-                CycleSchedule cs = JS7RunTimeConverter.toWorkflowCyclicInstructions(schedule, schedulePath);
-                if (cs == null) {
-                    // result.add(getSchedulePathFromJS7Path(e.getValue().getWorkflows().get(0).getPath(), e.getKey(), ""), schedule);
-                    result.add(schedulePath, schedule, false);
-                } else {
-                    try {
-                        for (WorkflowHelper wh : e.getValue().getWorkflows()) {
-                            JS7ExportObject<Workflow> ew = result.getExportObjectWorkflowByPath(wh.getPath());
-                            if (ew == null) {
-                                LOGGER.error(String.format("[addSchedulesBasedOnJS1Schedule][Workflow-CycleSchedule][%s]workflow not found", wh
-                                        .getPath()));
-                                ConverterReport.INSTANCE.addErrorRecord("[addSchedulesBasedOnJS1Schedule][Workflow-CycleSchedule][workflow not found]"
-                                        + wh.getPath());
-                            } else {
-                                Workflow workflow = (Workflow) ew.getObject();
-                                Instructions ci = new Instructions(workflow.getInstructions());
+                for (WorkflowHelper wh : e.getValue().getWorkflows()) {
+                    allWorkflowsToSchedules.computeIfAbsent(wh.getPath(), k -> new TreeMap<>(Comparator.comparing(Path::toString))).put(schedulePath,
+                            schedule);
+                }
+            }
 
-                                List<Instruction> in = new ArrayList<>();
-                                in.add(new Cycle(ci, cs));
-                                workflow.setInstructions(in);
-                                result.addOrReplace(wh.getPath(), workflow, false);
-                            }
-                        }
-                        // dev modus - use true to compare generated schedule/workflow cyclic
-                        boolean resetSchedule = true;
-                        if (resetSchedule) {
-                            // schedule.setCalendars(List.of(schedule.getCalendars().get(0)));
-                            if (schedule.getCalendars() != null) {
-                                schedule.getCalendars().forEach(c -> {
-                                    c.setPeriods(null);
-                                    c.setIncludes(null);
-                                    c.setExcludes(null);
+        });
 
-                                    List<Period> periods = new ArrayList<>();
-                                    Period period = new Period();
-                                    period.setWhenHoliday(WhenHolidayType.SUPPRESS);
-                                    period.setSingleStart("00:00:00");
-                                    periods.add(period);
-                                    c.setPeriods(periods);
-                                });
-                            }
-                        }
+        // 3)
+        // js1: 1) 1-workflow 1 schedule 2) 1-workflow n schedules
+        // case not exists: 1 schedule n workflows
+        Set<Path> processedCyclicWorkflows = new HashSet<>();
+        int cw = 0;
+        m: for (Map.Entry<Path, Map<Path, Schedule>> ae : allWorkflowsToSchedules.entrySet()) {
+            Map<Path, Schedule> workflowSchedules = ae.getValue();
+            if (SOSCollection.isEmpty(workflowSchedules)) {
+                continue m;
+            }
+
+            // 1) cyclic orders
+            if (JS12JS7Converter.CONFIG.getGenerateConfig().getCyclicOrders()) {
+                for (Map.Entry<Path, Schedule> se : workflowSchedules.entrySet()) {
+                    Schedule schedule = se.getValue();
+                    Path schedulePath = se.getKey();
+                    if (schedulesToAdd.contains(schedulePath)) {
                         result.add(schedulePath, schedule, false);
+                    }
+                }
+                continue m;
+            }
+
+            // 2) cyclic workflows
+            // 2.1) can't be converted
+            CycleSchedule cs = JS7RunTimeConverter.toWorkflowCyclicInstructions(workflowSchedules);
+            if (cs == null) {
+                for (Map.Entry<Path, Schedule> se : workflowSchedules.entrySet()) {
+                    Schedule schedule = se.getValue();
+                    Path schedulePath = se.getKey();
+                    if (schedulesToAdd.contains(schedulePath)) {
+                        result.add(schedulePath, schedule, false);
+                    }
+                }
+                continue m;
+            }
+
+            // 2.2) converted
+            for (Map.Entry<Path, Schedule> se : workflowSchedules.entrySet()) {
+                Schedule schedule = se.getValue();
+                Path schedulePath = se.getKey();
+                if (schedule.getCalendars() != null) {
+                    try {
+                        schedule.getCalendars().forEach(c -> {
+                            // reset only periods
+                            // - includes/excludes - should be maintained to avoid a cyclic workflow starting every/on a different day as defined.
+                            // -- because the workflow is started and ended
+                            // –-- not good e.g. for the history to see on which days the workflow was executed
+                            c.setPeriods(null);
+                            // c.setIncludes(null);
+                            // c.setExcludes(null);
+
+                            List<Period> periods = new ArrayList<>();
+                            Period period = new Period();
+                            period.setWhenHoliday(WhenHolidayType.SUPPRESS);
+                            period.setSingleStart("00:00:00");
+                            periods.add(period);
+                            c.setPeriods(periods);
+
+                            result.addOrReplace(schedulePath, schedule, false);
+                        });
                     } catch (Exception ex) {
-                        LOGGER.error(String.format("[addSchedulesBasedOnJS1Schedule][Workflow-CycleSchedule][%s]%s", schedule.getPath(), ex
-                                .toString()), ex);
-                        ConverterReport.INSTANCE.addErrorRecord("[addSchedulesBasedOnJS1Schedule][Workflow-CycleSchedule][" + schedule.getPath() + "]"
-                                + ex);
+                        LOGGER.error(String.format("[addSchedules][Workflow-CycleSchedule][%s]%s", schedulePath, ex.toString()), ex);
+                        ConverterReport.INSTANCE.addErrorRecord("[addSchedules][Workflow-CycleSchedule][" + schedulePath + "]" + ex);
                     }
                 }
             }
-        });
+
+            Path workflowPath = ae.getKey();
+            if (processedCyclicWorkflows.contains(workflowPath)) {
+
+            } else {
+                JS7ExportObject<Workflow> ew = result.getExportObjectWorkflowByPath(workflowPath);
+                if (ew == null) {
+                    LOGGER.error(String.format("[addSchedules][Workflow-CycleSchedule][%s]workflow not found", workflowPath));
+                    ConverterReport.INSTANCE.addErrorRecord("[addSchedules][Workflow-CycleSchedule][workflow not found]" + workflowPath);
+                } else {
+                    try {
+                        Workflow workflow = (Workflow) ew.getObject();
+                        Instructions ci = new Instructions(workflow.getInstructions());
+
+                        List<Instruction> in = new ArrayList<>();
+                        in.add(new Cycle(ci, cs));
+                        workflow.setInstructions(in);
+                        result.addOrReplace(workflowPath, workflow, false);
+
+                        cw++;
+
+                        if (cw > 1) {
+                            rw.writeEmptyLine();
+                        }
+
+                        rw.writeLine(SOSPathUtils.toUnixStyle(workflowPath.toString()));
+                        for (Map.Entry<Path, Schedule> se : workflowSchedules.entrySet()) {
+                            rw.writeLine("    " + SOSPathUtils.toUnixStyle(se.getKey().toString()));
+                        }
+
+                    } catch (Exception ex) {
+                        LOGGER.error(String.format("[addSchedules][Workflow-CycleSchedule][%s]%s", workflowPath, ex.toString()), ex);
+                        ConverterReport.INSTANCE.addErrorRecord("[addSchedules][Workflow-CycleSchedule][" + workflowPath + "]" + ex);
+                    }
+                }
+            }
+        }
     }
 
     private void parserSummaryReport() {
@@ -633,9 +940,9 @@ public class JS12JS7Converter {
         }
 
         try {
-            if (js1Calendars.size() > 0) {
+            if (js1RunTimeCalendars.size() > 0) {
                 ParserReport.INSTANCE.addAnalyzerRecord("CALENDARS", "START");
-                js1Calendars.entrySet().stream().sorted(Map.Entry.<String, List<RunTime>> comparingByKey()).forEach(e -> {
+                js1RunTimeCalendars.entrySet().stream().sorted(Map.Entry.<String, List<RunTime>> comparingByKey()).forEach(e -> {
                     ParserReport.INSTANCE.addAnalyzerRecord(e.getKey().toUpperCase(), "");
                     List<RunTime> sorted = e.getValue().stream().sorted((e1, e2) -> e1.getCurrentPath().compareTo(e2.getCurrentPath())).collect(
                             Collectors.toList());
@@ -868,6 +1175,7 @@ public class JS12JS7Converter {
                 // hasSchedule = true;
             }
         }
+
         // hasSchedule =
         // addJS1ScheduleFromScheduleOrRunTime(js1Job.getRunTime(), getStandaloneOrderParameterisation(jh), null, workflowPath, workflowName, null);
         addJS1ScheduleFromScheduleOrRunTime(js1Job.getRunTime(), null, null, workflowPath, workflowName, null);
@@ -1011,14 +1319,14 @@ public class JS12JS7Converter {
                     for (JS1Calendar js1 : calendars.getCalendars()) {
                         if (js1.getBasedOn() != null) {
                             List<RunTime> al = new ArrayList<>();
-                            if (js1Calendars.containsKey(js1.getBasedOn())) {
-                                al = js1Calendars.get(js1.getBasedOn());
+                            if (js1RunTimeCalendars.containsKey(js1.getBasedOn())) {
+                                al = js1RunTimeCalendars.get(js1.getBasedOn());
                             }
                             al.add(runTime);
-                            js1Calendars.put(js1.getBasedOn(), al);
+                            js1RunTimeCalendars.put(js1.getBasedOn(), al);
                         }
 
-                        Calendar cal = JS7CalendarConverter.convert(CONFIG, js1);
+                        Calendar cal = JS7CalendarConverter.convert(this, js1, null);
                         if (cal == null) {
                             ConverterReport.INSTANCE.addWarningRecord(runTime.getCurrentPath(), "[" + range
                                     + "][skip convert run-time][calendars is null]" + runTime.getNodeText(), "calendars is null");
@@ -1031,6 +1339,7 @@ public class JS12JS7Converter {
                         case NONWORKINGDAYSCALENDAR:
                             AssignedNonWorkingDayCalendars nc = new AssignedNonWorkingDayCalendars();
                             nc.setCalendarName(cal.getName());
+
                             nonWorking.add(nc);
                             break;
                         case WORKINGDAYSCALENDAR:
@@ -1039,18 +1348,42 @@ public class JS12JS7Converter {
                             c.setTimeZone(runTime.getTimeZone());
 
                             c.setPeriods(periods);
-                            c.setIncludes(cal.getIncludes());
-                            c.setExcludes(cal.getExcludes());
+
+                            // a really js7 calendar json is available - includes are set in the calendar definition
+                            if (!js1Calendars.containsKey(js1.getIdentifier())) {
+                                c.setIncludes(cal.getIncludes());
+                                c.setExcludes(cal.getExcludes());
+                            }
                             working.add(c);
                             break;
                         }
+                    }
 
+                    boolean test = false;// not active - not used?
+                    if (SOSCollection.isEmpty(working) && test) {
+                        AssignedCalendars c = new AssignedCalendars();
+                        c.setCalendarName(JS7CalendarConverter.getDefaultWorkingDayCalendarName());
+                        c.setTimeZone(runTime.getTimeZone());
+                        // c.setPeriods(JS7CalendarConverter.convertPeriods(js1.getPeriods()));
+
+                        working.add(c);
                     }
 
                     Schedule s = new Schedule();
                     s.setWorkflowNames(Collections.singletonList(workflowName));
                     s.setCalendars(working.size() == 0 ? null : working);
-                    s.setNonWorkingDayCalendars(nonWorking.size() == 0 ? null : nonWorking);
+
+                    if (!SOSCollection.isEmpty(nonWorking)) {
+                        Set<String> nwn = nonWorking.stream().map(e -> e.getCalendarName()).collect(Collectors.toSet());
+                        for (AssignedCalendars ac : working) {
+                            if (ac.getExcludes() == null) {
+                                ac.setExcludes(new Frequencies());
+                            }
+                            ac.getExcludes().setNonWorkingDayCalendars(nwn);
+                        }
+                    }
+
+                    // s.setNonWorkingDayCalendars(nonWorking.size() == 0 ? null : nonWorking);
                     s.setPlanOrderAutomatically(CONFIG.getScheduleConfig().planOrders());
                     s.setSubmitOrderToControllerWhenPlanned(CONFIG.getScheduleConfig().submitOrders());
 
@@ -2022,7 +2355,7 @@ public class JS12JS7Converter {
     private void setMockLevel(ExecutableJava ej) {
         if (CONFIG.getMockConfig().getForcedJitlJobsMockLevel() != null) {
             String mockLevel = CONFIG.getMockConfig().getForcedJitlJobsMockLevel().toUpperCase();
-            if (mockLevel.equals("INFO") || mockLevel.equals("ERROR")) {// see com.sos.jitl.jobs.common.JobArguments
+            if (mockLevel.equals("INFO") || mockLevel.equals("ERROR")) {// see com.sos.js7.job.JobArguments
                 Environment env = ej.getArguments();
                 if (env == null) {
                     env = new Environment();
@@ -2293,6 +2626,10 @@ public class JS12JS7Converter {
 
     public static String getDuplicateName(String name, int counter) {
         return name + DUPLICATE_PREFIX + counter;
+    }
+
+    public Path findIncludeFile(Path currentPath, Path include) {
+        return findIncludeFile(pr, currentPath, include);
     }
 
     public static Path findIncludeFile(DirectoryParserResult pr, Path currentPath, Path include) {
@@ -2936,11 +3273,9 @@ public class JS12JS7Converter {
                 for (JobChainOrder o : orders) {
                     if (o.getState() != null) {
                         if (!usedStates.containsKey(o.getState())) {
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format(
-                                        "[convertJobChainOrders2Schedules][%s][state=%s][skip]because state not used in the current workflow. handle later..",
-                                        o.getPath(), o.getState()));
-                            }
+                            LOGGER.warn(String.format(
+                                    "[convertJobChainOrders2Schedules][%s][state=%s][skip]because this state is not used in the current workflow.", o
+                                            .getPath(), o.getState()));
 
                             // ConverterReport.INSTANCE.addWarningRecord(o.getPath(), "skip convert to schedule", "state=" + o.getState()
                             // + " becase state not used in the workflow");
@@ -3022,6 +3357,9 @@ public class JS12JS7Converter {
                             setSchedulePosition(s, startPosition);
                         }
                         result.add(sph.getPath(), s, false);
+
+                        addJS1ScheduleFromScheduleOrRunTime(o.getRunTime(), l, startPosition, workflowPath, workflowName, add);
+
                     } else {
                         addJS1ScheduleFromScheduleOrRunTime(o.getRunTime(), l, startPosition, workflowPath, workflowName, add);
                     }
@@ -3584,6 +3922,21 @@ public class JS12JS7Converter {
 
     public Set<Path> getJS1JobStreamJobs() {
         return js1JobStreamJobs;
+    }
+
+    protected void addJS1Calendar(JS1Calendar cal) {
+        if (cal == null) {
+            return;
+        }
+        js1Calendars.put(cal.getIdentifier(), cal);
+    }
+
+    protected Map<String, JS1Calendar> getJS1Calendars() {
+        return js1Calendars;
+    }
+
+    protected Map<String, Map<String, Calendar>> getJS1ToJS7Calendars() {
+        return js1ToJs7Calendars;
     }
 
 }

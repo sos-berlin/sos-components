@@ -62,6 +62,10 @@ public class JS7ConverterResult {
         schedules.addItem(path, val, reference);
     }
 
+    public void addOrReplace(Path path, Schedule val, boolean reference) {
+        schedules.addOrReplaceItem(path, val, reference);
+    }
+
     public void add(Path path, Board val, boolean reference) {
         boards.addItem(path, val, reference);
     }
@@ -86,7 +90,7 @@ public class JS7ConverterResult {
         jobTemplates.addItem(path, val, reference);
     }
 
-    public JS7ExportObject<Workflow> getExportObjectWorkflowByPath(String name) {
+    public JS7ExportObject<Workflow> getExportObjectWorkflowByName(String name) {
         return workflows.getAllItems().stream().filter(o -> o.getOriginalPath().getPath().getFileName().toString().equals(name + ".workflow.json"))
                 .findAny().orElse(null);
     }

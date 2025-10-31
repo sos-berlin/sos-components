@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSCollection;
-import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
@@ -51,16 +50,49 @@ public class JS7RunTimeConverter {
         WEEKDAYS, MONTHDAYS, ULTIMOS;
     }
 
-    public static CycleSchedule toWorkflowCyclicInstructions(Schedule schedule, Path schedulePath) {
+    public static CycleSchedule toWorkflowCyclicInstructions(Map<Path, Schedule> workflowSchedules) {
         if (JS12JS7Converter.CONFIG.getGenerateConfig().getCyclicOrders()) {
             return null;
         }
-        if (schedule == null) {// holidays
+        if (SOSCollection.isEmpty(workflowSchedules)) {
             return null;
         }
+        if (workflowSchedules.size() == 1) {
+            return toWorkflowCyclicInstructions(workflowSchedules.values().iterator().next(), workflowSchedules.keySet().iterator().next());
+        }
 
-        if (!SOSCollection.isEmpty(schedule.getNonWorkingDayCalendars())) {
-            LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][holidays/nonWorkingDayCalendar]" + schedulePath);
+        Schedule lastSchedule = null;
+        Path lastSchedulePath = null;
+        for (Map.Entry<Path, Schedule> se : workflowSchedules.entrySet()) {
+            if (lastSchedule == null) {
+                lastSchedule = se.getValue();
+                lastSchedulePath = se.getKey();
+                continue;
+            }
+
+            if (!areEqualsForCyclic(lastSchedule, se.getValue())) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[toWorkflowCyclicInstructions][skip][areEqualsForCyclic=fasle][s1=" + lastSchedule.getCalendars() + "]s2=" + se
+                            .getValue().getCalendars());
+                }
+                return null;
+            }
+            lastSchedule = se.getValue();
+            lastSchedulePath = se.getKey();
+        }
+
+        return toWorkflowCyclicInstructions(lastSchedule, lastSchedulePath);
+    }
+
+    private static boolean areEqualsForCyclic(Schedule s1, Schedule s2) {
+        if (s1.getCalendars() == null || s2.getCalendars() == null) {
+            return false;
+        }
+        return s1.getCalendars().equals(s2.getCalendars());
+    }
+
+    private static CycleSchedule toWorkflowCyclicInstructions(Schedule schedule, Path schedulePath) {
+        if (schedule.getCalendars() == null) {
             return null;
         }
 
@@ -69,27 +101,30 @@ public class JS7RunTimeConverter {
             if (cal.getPeriods() == null) {
                 return null;
             }
-            if (cal.getIncludes() == null) {
-                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][missing includes]" + schedulePath);
+            if (cal.getIncludes() == null && cal.getExcludes() == null) {
+                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][missing includes, excludes]" + schedulePath);
                 return null;
             }
             if (cal.getExcludes() != null) {
-                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][excludes]" + schedulePath);
-                return null;
+                // LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][excludes]" + schedulePath);
+                // return null;
             }
 
             long countCyclic = cal.getPeriods().stream().filter(p -> p.getRepeat() != null).count();
             if (countCyclic == 0) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[toWorkflowCyclicInstructions][skip][singleStarts only]" + schedulePath);
+                }
                 return null;
             } else if (countCyclic != cal.getPeriods().size()) {
                 long singleStarts = cal.getPeriods().size() - countCyclic;
-                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][singleStarts detected][singleStarts=" + singleStarts
-                        + ", repeat(cyclic)=" + countCyclic + "]" + schedulePath);
+                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][mix cyclic(repeat)/singleStarts detected][singleStarts="
+                        + singleStarts + ", repeat(cyclic)=" + countCyclic + "]" + schedulePath);
                 return null;
             }
 
             if (cal.getIncludes().getHolidays() != null) {
-                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][holidays]" + schedulePath);
+                LOGGER.info("[toWorkflowCyclicInstructions][skip][can't be converted][includes/Holidays]" + schedulePath);
                 return null;
             }
 
@@ -311,16 +346,16 @@ public class JS7RunTimeConverter {
         return Long.valueOf(((day - 1) * DAY_SECONDS) + secondsOfDay);
     }
 
-    public static Schedule toSchedule(Path js7SchedulePath, com.sos.js7.converter.js1.common.runtime.Schedule js1Schedule, String timeZone,
-            List<String> workflowNames) {
+    public static Schedule toSchedule(JS12JS7Converter js7Converter, Path js7SchedulePath,
+            com.sos.js7.converter.js1.common.runtime.Schedule js1Schedule, String timeZone, List<String> workflowNames) {
         if (js1Schedule == null) {
             return null;
         }
-        return toSchedule(js7SchedulePath, js1Schedule.getRunTime(), timeZone, workflowNames);
+        return toSchedule(js7Converter, js7SchedulePath, js1Schedule.getRunTime(), timeZone, workflowNames);
     }
 
-    private static Schedule toSchedule(Path js7SchedulePath, com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, String timeZone,
-            List<String> workflowNames) {
+    private static Schedule toSchedule(JS12JS7Converter js7Converter, Path js7SchedulePath,
+            com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, String timeZone, List<String> workflowNames) {
 
         if (js1RunTime == null || !js1RunTime.isConvertableWithoutCalendars()) {
             if (LOGGER.isDebugEnabled()) {
@@ -387,6 +422,7 @@ public class JS7RunTimeConverter {
                 convertDays(working, timeZone, wd.getDays(), DaysType.WEEKDAYS);
             }
         }
+
         if (hasMonths) {
             convertMonths(js7SchedulePath, working, timeZone, js1RunTime.getMonths());
         }
@@ -400,20 +436,25 @@ public class JS7RunTimeConverter {
             convertUltimos(working, timeZone, js1RunTime.getUltimos());
         }
         if (hasHolidays) {
-            AssignedNonWorkingDayCalendars nwc = new AssignedNonWorkingDayCalendars();
+            // js1RunTime.getHolidays().
 
-            String name = JS12JS7Converter.CONFIG.getScheduleConfig().getDefaultNonWorkingDayCalendarName();
-            if (!SOSCollection.isEmpty(js1RunTime.getHolidays().getIncludes())) {
-                name = SOSPath.getFileNameWithoutExtension(js1RunTime.getHolidays().getIncludes().get(0).getIncludeFile());
-            }
-            nwc.setCalendarName(JS7ConverterHelper.getJS7ObjectName(name));
-            nonWorking.add(nwc);
+            // AssignedNonWorkingDayCalendars nwc = new AssignedNonWorkingDayCalendars();
+
+            // String name = getNonWorkingDayCalendarName(js1RunTime.getHolidays());
+            // nwc.setCalendarName(JS7ConverterHelper.getJS7ObjectName(name));
+            // nonWorking.add(nwc);
         }
 
         // try to reduce n-calendars if all periods are equal
         working = tryReduceWorkingCalendars(working);
         Schedule schedule = null;
         if (working.size() > 0 || nonWorking.size() > 0) {
+            if (hasHolidays) {
+                for (AssignedCalendars c : working) {
+                    trySetNonWorkingDayCalendarAsExcluded(js7Converter, js7SchedulePath, js1RunTime, c);
+                }
+            }
+
             schedule = new Schedule();
             schedule.setCalendars(working.size() == 0 ? null : working);
             schedule.setNonWorkingDayCalendars(nonWorking.size() == 0 ? null : nonWorking);
@@ -560,7 +601,7 @@ public class JS7RunTimeConverter {
         }
 
         List<AssignedCalendars> cl = new ArrayList<>();
-        AssignedCalendars c = createWorkingCalendar(timeZone);
+        AssignedCalendars c = createAssignedCalendar(timeZone);
         c.setPeriods(new ArrayList<>());
 
         Months m = new Months();
@@ -652,7 +693,7 @@ public class JS7RunTimeConverter {
             return;
         }
 
-        AssignedCalendars c = createWorkingCalendar(timeZone);
+        AssignedCalendars c = createAssignedCalendar(timeZone);
         WeekDays wds = new WeekDays();
         wds.setDays(JS7ConverterHelper.allWeekDays());
         c.getIncludes().setWeekdays(Collections.singletonList(wds));
@@ -667,13 +708,33 @@ public class JS7RunTimeConverter {
         working.add(c);
     }
 
+    private static void trySetNonWorkingDayCalendarAsExcluded(JS12JS7Converter js7Converter, Path js7SchedulePath,
+            com.sos.js7.converter.js1.common.runtime.RunTime js1RunTime, AssignedCalendars c) {
+        if (!js1RunTime.hasHolidaysOrNonWorkingDayCalendars()) {
+            return;
+        }
+
+        List<com.sos.inventory.model.calendar.Calendar> nwCalendars = JS7CalendarConverter.convertToNonWorkingDayCalendars(js7Converter, js1RunTime
+                .getCurrentPath(), js7SchedulePath, js1RunTime.getHolidays(), js1RunTime.getNonWorkingDayCalendars(), null);
+        if (!SOSCollection.isEmpty(nwCalendars)) {
+            if (c.getExcludes() == null) {
+                c.setExcludes(new Frequencies());
+            }
+            Set<String> set = new HashSet<>(); // remove duplicates
+            for (com.sos.inventory.model.calendar.Calendar nw : nwCalendars) {
+                set.add(nw.getName());
+            }
+            c.getExcludes().setNonWorkingDayCalendars(set);
+        }
+    }
+
     private static void convertRepeat(List<AssignedCalendars> working, String timeZone, String repeat, String begin, String end,
             WhenHolidayType whenHolidayType) {
         if (repeat == null) {
             return;
         }
 
-        AssignedCalendars c = createWorkingCalendar(timeZone);
+        AssignedCalendars c = createAssignedCalendar(timeZone);
         WeekDays wds = new WeekDays();
         wds.setDays(JS7ConverterHelper.allWeekDays());
         c.getIncludes().setWeekdays(Collections.singletonList(wds));
@@ -695,7 +756,7 @@ public class JS7RunTimeConverter {
             return;
         }
 
-        AssignedCalendars c = createWorkingCalendar(timeZone);
+        AssignedCalendars c = createAssignedCalendar(timeZone);
         WeekDays wds = new WeekDays();
         wds.setDays(JS7ConverterHelper.allWeekDays());
         c.getIncludes().setWeekdays(Collections.singletonList(wds));
@@ -733,7 +794,7 @@ public class JS7RunTimeConverter {
         }
 
         for (Map.Entry<String, List<String>> e : starts.entrySet()) {
-            AssignedCalendars c = createWorkingCalendar(timeZone);
+            AssignedCalendars c = createAssignedCalendar(timeZone);
             c.getIncludes().setDates(e.getValue());
 
             Period p = new Period();
@@ -770,7 +831,7 @@ public class JS7RunTimeConverter {
             }
         }
         if (equals) {
-            AssignedCalendars c = createWorkingCalendar(timeZone);
+            AssignedCalendars c = createAssignedCalendar(timeZone);
             c.getIncludes().setDates(dates);
             c.setPeriods(convertPeriods(lastPeriods));
 
@@ -779,7 +840,7 @@ public class JS7RunTimeConverter {
             for (com.sos.js7.converter.js1.common.runtime.Date d : runTimeDates) {
                 String date = d.getDate();
                 if (!SOSString.isEmpty(date)) {
-                    AssignedCalendars c = createWorkingCalendar(timeZone);
+                    AssignedCalendars c = createAssignedCalendar(timeZone);
                     c.getIncludes().setDates(Collections.singletonList(date));
                     c.setPeriods(convertPeriods(d.getPeriods()));
                     working.add(c);
@@ -788,7 +849,7 @@ public class JS7RunTimeConverter {
         }
     }
 
-    private static AssignedCalendars createWorkingCalendar(String timeZone) {
+    private static AssignedCalendars createAssignedCalendar(String timeZone) {
         AssignedCalendars c = new AssignedCalendars();
         c.setCalendarName(JS12JS7Converter.CONFIG.getScheduleConfig().getDefaultWorkingDayCalendarName());
         c.setTimeZone(timeZone);
@@ -807,7 +868,7 @@ public class JS7RunTimeConverter {
         for (com.sos.js7.converter.js1.common.runtime.Day d : runTimeDays) {
             List<Integer> days = d.getDays();
             if (days != null && days.size() > 0) {
-                AssignedCalendars c = createWorkingCalendar(timeZone);
+                AssignedCalendars c = createAssignedCalendar(timeZone);
                 switch (daysType) {
                 case WEEKDAYS:
                     WeekDays wds = new WeekDays();
@@ -842,7 +903,7 @@ public class JS7RunTimeConverter {
         }
         for (com.sos.js7.converter.js1.common.runtime.WeekDay d : runTimeDays) {
             if (!SOSString.isEmpty(d.getDay()) && d.getWhich() != null) {
-                AssignedCalendars c = createWorkingCalendar(timeZone);
+                AssignedCalendars c = createAssignedCalendar(timeZone);
 
                 WeeklyDay wDay = new WeeklyDay();
                 wDay.setDay(JS7ConverterHelper.getScheduleDay0to6(d.getDay()));

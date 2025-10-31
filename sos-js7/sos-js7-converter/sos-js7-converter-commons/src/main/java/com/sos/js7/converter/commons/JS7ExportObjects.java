@@ -127,6 +127,7 @@ public class JS7ExportObjects<T> {
         return this.getAllItems().stream().filter(o -> o != null && o.getUniquePath().getName().equals(getName(path))).findFirst().orElse(null);
     }
 
+    /** @return e.g. my_workflow.workflow, my_schedule.schedule */
     public static String getName(Path path) {
         if (path == null) {
             return null;

@@ -7,6 +7,7 @@ import java.util.List;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.js7.converter.js1.common.Include;
 
@@ -19,7 +20,7 @@ public class Holidays {
     private List<Holiday> holidays;
     private List<Include> includes;
 
-    protected Holidays(Path path, SOSXMLXPath xpath, Node node) throws Exception {
+    public Holidays(Path path, SOSXMLXPath xpath, Node node) throws Exception {
         this.weekDays = RunTime.convertWeekDays(path, xpath, node);
 
         NodeList l = xpath.selectNodes(node, "./" + ELEMENT_HOLIDAY);
@@ -67,4 +68,15 @@ public class Holidays {
         return includes;
     }
 
+    public boolean hasIncludesOnly() {
+        return !SOSCollection.isEmpty(includes) && SOSCollection.isEmpty(weekDays) && SOSCollection.isEmpty(holidays);
+    }
+    
+    public boolean hasHolidaysOnly() {
+        return !SOSCollection.isEmpty(holidays) && SOSCollection.isEmpty(weekDays) && SOSCollection.isEmpty(includes);
+    }
+    
+    public boolean hasWeekDaysOnly() {
+        return !SOSCollection.isEmpty(weekDays) && SOSCollection.isEmpty(holidays) && SOSCollection.isEmpty(includes);
+    }
 }

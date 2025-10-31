@@ -154,6 +154,33 @@ public class SOSPathUtils {
         return tmp.isEmpty() || SOSString.trimEnd(tmp, PATH_SEPARATOR_UNIX).endsWith(":") ? null : tmp;
     }
 
+    /** Returns the base name of a file (without extension) from a given path.
+     * 
+     * Examples:<br/>
+     * path = null → null<br/>
+     * path = "/" → null<br/>
+     * path = "C:" → null<br/>
+     * path = "C://xyz" → "xyz"<br/>
+     * path = "C://dir/file.txt" → "file"<br/>
+     * path = "C://dir/archive.tar.gz" → "archive.tar"<br/>
+     * path = "C://dir/.hidden" → ".hidden"<br/>
+     * 
+     * @param path full path
+     * @return base name (without extension) or null if no valid name */
+    public static String getBaseName(String path) {
+        String name = getName(path);
+        if (name == null) {
+            return null;
+        }
+
+        int dotIndex = name.lastIndexOf('.');
+        if (dotIndex <= 0) { // not an extension - e.g. leading dot: .bashrc
+            return name;
+        }
+
+        return name.substring(0, dotIndex);
+    }
+
     /** Returns parent path without trailing separator
      * 
      * @param path
@@ -185,7 +212,8 @@ public class SOSPathUtils {
             return null;
         }
         String ps = getPathSeparator(path, pathSeparator);
-        String tmp = SOSString.trimEnd(path.substring(0, path.lastIndexOf(name)), ps);
+        String p = isWindowsStylePathSeparator(pathSeparator) ? toWindowsStyle(path) : toUnixStyle(path);
+        String tmp = SOSString.trimEnd(p.substring(0, p.lastIndexOf(name)), ps);
         if (tmp.isEmpty()) {
             return ps;
         }
@@ -245,6 +273,10 @@ public class SOSPathUtils {
         return getDirectoryWithTrailingSeparator(toUnixStyle(path), PATH_SEPARATOR_UNIX);
     }
 
+    public static String getUnixStylePathWithLeadingSeparator(String path) {
+        return getPathWithLeadingSeparator(toUnixStyle(path), PATH_SEPARATOR_UNIX);
+    }
+
     public static String getWindowsStyleDirectoryWithTrailingSeparator(String path) {
         return getDirectoryWithTrailingSeparator(toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
     }
@@ -254,6 +286,13 @@ public class SOSPathUtils {
             return null;
         }
         return path.endsWith(pathSeparator) ? path : path + pathSeparator;
+    }
+
+    private static String getPathWithLeadingSeparator(String path, String pathSeparator) {
+        if (path == null) {
+            return null;
+        }
+        return path.startsWith(pathSeparator) ? path : pathSeparator + path;
     }
 
     /** Selects top-level paths from a collection of path-like elements.<br />
@@ -353,6 +392,10 @@ public class SOSPathUtils {
 
     public static boolean isUnixStylePathSeparator(String pathSeparator) {
         return PATH_SEPARATOR_UNIX.equals(pathSeparator);
+    }
+
+    public static boolean isWindowsStylePathSeparator(String pathSeparator) {
+        return PATH_SEPARATOR_WINDOWS.equals(pathSeparator);
     }
 
     public static String getPathSeparator(String path) {
