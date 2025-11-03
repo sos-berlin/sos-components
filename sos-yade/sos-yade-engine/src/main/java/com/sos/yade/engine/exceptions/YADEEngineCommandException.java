@@ -9,7 +9,7 @@ public class YADEEngineCommandException extends YADEEngineException {
     private String std;
 
     public YADEEngineCommandException(String prefix, Integer exitCode, String std) {
-        super(prefix + "[exitCode=" + exitCode + "]" + std);
+        super(prefix + (exitCode == null ? "" : "[exitCode=" + exitCode + "]") + std);
         this.prefix = prefix;
         this.exitCode = exitCode;
         this.std = std;

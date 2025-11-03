@@ -321,7 +321,7 @@ public class YADECommandExecutor {
         }
 
         List<String> l = new ArrayList<>();
-        if (!successExitCode) {
+        if (result.hasExitCode() && !successExitCode) {
             l.add("exitCode=" + result.getExitCode());
         }
         if (hasStdOut) {
@@ -331,7 +331,7 @@ public class YADECommandExecutor {
             l.add("std:err=" + result.getStdErr().trim());
         }
         if (hasException) {
-            l.add("exception=" + result.getException());
+            l.add("" + result.getException());
         }
         String add = logCommand ? "[" + result.getCommand() + "]" : "";
         if (l.size() > 1) {
@@ -363,7 +363,7 @@ public class YADECommandExecutor {
                 if (SOSString.isEmpty(std)) {
                     std = exception;
                 } else {
-                    std = "[exception=" + exception + "]" + std;
+                    std = "[" + exception + "]" + std;
                 }
             }
             throw new YADEEngineCommandException(prefix, result.getExitCode(), std);
