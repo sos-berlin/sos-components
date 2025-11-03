@@ -358,6 +358,14 @@ public class YADECommandExecutor {
             } else {
                 std = stdErr;
             }
+            if (result.getException() != null) {
+                String exception = result.getException().toString();
+                if (SOSString.isEmpty(std)) {
+                    std = exception;
+                } else {
+                    std = "[exception=" + exception + "]" + std;
+                }
+            }
             throw new YADEEngineCommandException(prefix, result.getExitCode(), std);
         }
     }

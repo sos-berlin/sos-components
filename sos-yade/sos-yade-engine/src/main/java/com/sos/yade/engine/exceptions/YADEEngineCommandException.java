@@ -5,10 +5,10 @@ public class YADEEngineCommandException extends YADEEngineException {
     private static final long serialVersionUID = 1L;
 
     private String prefix;
-    private int exitCode;
+    private Integer exitCode;
     private String std;
 
-    public YADEEngineCommandException(String prefix, int exitCode, String std) {
+    public YADEEngineCommandException(String prefix, Integer exitCode, String std) {
         super(prefix + "[exitCode=" + exitCode + "]" + std);
         this.prefix = prefix;
         this.exitCode = exitCode;
@@ -36,7 +36,7 @@ public class YADEEngineCommandException extends YADEEngineException {
         return prefix;
     }
 
-    public int getExitCode() {
+    public Integer getExitCode() {
         return exitCode;
     }
 
