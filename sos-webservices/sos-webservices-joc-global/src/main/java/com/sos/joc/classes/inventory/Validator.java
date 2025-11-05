@@ -58,6 +58,12 @@ import com.sos.inventory.model.instruction.Sleep;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
+import com.sos.inventory.model.instruction.schedule.Scheme;
+import com.sos.inventory.model.job.AdmissionRestrictedScheme;
+import com.sos.inventory.model.job.AdmissionRestriction;
+import com.sos.inventory.model.job.AdmissionTimePeriod;
+import com.sos.inventory.model.job.AdmissionTimePeriodType;
+import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
@@ -113,6 +119,23 @@ public class Validator {
     private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
             .asPredicate();
     private static boolean hasLicense = false;
+    
+    public static final Map<AdmissionTimePeriodType, String> ADMISSION_TIME_PERIOD_SCHEMA_LOCATION = Collections.unmodifiableMap(
+            new HashMap<AdmissionTimePeriodType, String>() {
+
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(AdmissionTimePeriodType.DAILY_PERIOD, "classpath:/raml/inventory/schemas/job/dailyPeriod-schema.json");
+                    put(AdmissionTimePeriodType.MONTHLY_DATE_PERIOD, "classpath:/raml/inventory/schemas/job/monthlyDatePeriod-schema.json");
+                    put(AdmissionTimePeriodType.MONTHLY_LAST_DATE_PERIOD, "classpath:/raml/inventory/schemas/job/monthlyLastDatePeriod-schema.json");
+                    put(AdmissionTimePeriodType.MONTHLY_LAST_WEEKDAY_PERIOD,
+                            "classpath:/raml/inventory/schemas/job/monthlyLastWeekdayPeriod-schema.json");
+                    put(AdmissionTimePeriodType.MONTHLY_WEEKDAY_PERIOD, "classpath:/raml/inventory/schemas/job/monthlyWeekdayPeriod-schema.json");
+                    put(AdmissionTimePeriodType.SPECIFIC_DATE_PERIOD, "classpath:/raml/inventory/schemas/job/specificDatePeriod-schema.json");
+                    put(AdmissionTimePeriodType.WEEKDAY_PERIOD, "classpath:/raml/inventory/schemas/job/weekdayPeriod-schema.json");
+                }
+            });
 
     /** @param type
      * @param configBytes
@@ -200,6 +223,7 @@ public class Validator {
                             new HashMap<String, String>(), invalidAgentRefs, boardNames, false, dbLayer);
                     //validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     //validateJobTags(jobs);
+                    validateAdmissionTime(jobs);
                     validateLockRefs(json, dbLayer);
                     //validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
@@ -306,6 +330,7 @@ public class Validator {
                 validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), new HashMap<String, String>(),
                         invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), false, workflowJsonsByName);
                 //validateJobTags(jobs);
+                validateAdmissionTime(jobs);
                 validateLockRefs(json, invObjNames.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()));
                 validateJobResourceRefs(jobResources, invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()));
             } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -1059,6 +1084,7 @@ public class Validator {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
+                    validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
                                 orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
@@ -1088,6 +1114,7 @@ public class Validator {
                     break;
                 case ADMISSION_TIME:
                     AdmissionTime at = inst.cast();
+                    validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
                         validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, dbLayer);
@@ -1364,6 +1391,7 @@ public class Validator {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
+                    validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
                                 orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
@@ -1393,6 +1421,7 @@ public class Validator {
                     break;
                 case ADMISSION_TIME:
                     AdmissionTime at = inst.cast();
+                    validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
                         validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
                                 invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
@@ -1680,6 +1709,75 @@ public class Validator {
 //                    "$.jobs[" + e.getKey() + "].jobTags", e.getValue().getJobTags()));
 //        }
 //    }
+    
+    private static void validateAdmissionTime(Jobs jobs) throws SOSJsonSchemaException {
+        if (jobs != null && jobs.getAdditionalProperties() != null) {
+            for (Map.Entry<String, Job> job : jobs.getAdditionalProperties().entrySet()) {
+                validateAdmissionTime(job.getValue().getAdmissionTimeScheme(), "jobs['" + job.getKey() + "'].");
+            }
+        }
+    }
+
+    private static void validateAdmissionTime(List<Scheme> cycleSchemes, String position) throws SOSJsonSchemaException {
+        if (cycleSchemes != null) {
+            int index = 0;
+            for (Scheme scheme : cycleSchemes) {
+                validateAdmissionTime(scheme.getAdmissionTimeScheme(), position + "schemes[" + index++ + "].");
+            }
+        }
+    }
+
+    private static void validateAdmissionTime(AdmissionTimeScheme ats, String position) throws SOSJsonSchemaException {
+        if (ats != null) {
+            validateAdmissionTimePeriods(ats.getPeriods(), position + "admissionTimeScheme.");
+            validateAdmissionTimeRestrictionSchemes(ats.getRestrictedSchemes(), position + "admissionTimeScheme.");
+        }
+    }
+
+    private static void validateAdmissionTimePeriods(List<AdmissionTimePeriod> periods, String position) throws SOSJsonSchemaException {
+        if (periods != null && !periods.isEmpty()) {
+            int index = 0;
+            for (AdmissionTimePeriod period : periods) {
+                String pos = position + "periods[" + index++ + "].";
+                try {
+                    JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(period), URI.create(ADMISSION_TIME_PERIOD_SCHEMA_LOCATION.get(period
+                            .getTYPE())), true);
+                } catch (SOSJsonSchemaException e) {
+                    throw new SOSJsonSchemaException(e.getMessage().replaceAll("(\\$\\.)", "$1" + pos));
+                } catch (Exception e) {
+                    //
+                }
+            }
+        }
+    }
+
+    private static void validateAdmissionTimeRestrictionSchemes(List<AdmissionRestrictedScheme> restrictions, String position)
+            throws SOSJsonSchemaException {
+        if (restrictions != null && !restrictions.isEmpty()) {
+            int index = 0;
+            for (AdmissionRestrictedScheme restriction : restrictions) {
+                String pos = position + "restrictedSchemes[" + index++ + "].";
+                validateAdmissionTimePeriods(restriction.getPeriods(), pos);
+                validateAdmissionTimeRestrictions(restriction.getRestriction(), pos);
+            }
+        }
+    }
+
+    private static void validateAdmissionTimeRestrictions(AdmissionRestriction restriction, String position) throws SOSJsonSchemaException {
+        if (restriction != null) {
+            switch (restriction.getTYPE()) {
+            case MONTH_RESTRICTION:
+                try {
+                    JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(restriction), URI.create(
+                            "classpath:/raml/inventory/schemas/job/monthRestriction-schema.json"), true);
+                } catch (SOSJsonSchemaException e) {
+                    throw new SOSJsonSchemaException(e.getMessage().replaceAll("(\\$\\.)", "$1" + position + "restriction."));
+                } catch (Exception e) {
+                    //
+                }
+            }
+        }
+    }
 
     private static void validateExpression(String prefix, Map<String, String> map) throws JocConfigurationException {
         if (map != null) {
