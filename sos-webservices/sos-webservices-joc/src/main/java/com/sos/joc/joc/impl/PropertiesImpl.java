@@ -42,6 +42,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setSecurityLevel(Globals.getJocSecurityLevel());
             entity.setApiVersion(Globals.apiVersion);
             entity.setInventoryVersion(Globals.inventoryVersion);
+            entity.setEnableLinkChecker(Globals.sosCockpitProperties.getProperty("enable_link_checker", false));
             
             ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
             entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(jocSettings));
