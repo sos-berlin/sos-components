@@ -366,17 +366,17 @@ public class OrdersHelper {
         return order.isSuspended() || isFailed(order) || isDisrupted(order);// || isSuspending(o.mark());
     }
 
-    private static boolean isResumable(JOrder order, boolean disrupted) {
-        if (disrupted) {
-            return false;
-        }
-        Order<Order.State> o = order.asScala();
-        // LOGGER.info("isResumable? " + o.isResumable());
-        if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
-            return false;
-        }
-        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
-    }
+//    private static boolean isResumable(JOrder order, boolean disrupted) {
+//        if (disrupted) {
+//            return false;
+//        }
+//        Order<Order.State> o = order.asScala();
+//        // LOGGER.info("isResumable? " + o.isResumable());
+//        if (isCancellingOrResuming(o.mark()) || isSuspending(o.mark())) {
+//            return false;
+//        }
+//        return o.isSuspended() || isFailed(o);// || isSuspending(o.mark());
+//    }
 
     public static boolean isContinuable(JOrder order) {
         Order<Order.State> o = order.asScala();
@@ -536,12 +536,12 @@ public class OrdersHelper {
         // if (hhh != null && !hhh.isEmpty()) {
         // boolean isDisrupted = hhh.get(hhh.size() - 1).outcome().show().contains("Disrupted");
         // }
-        boolean isDisrupted = false;
+        //boolean isDisrupted = false;
         boolean isInRetryInstruction = isInRetryInstruction(jOrder, controllerState);
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
             o.setLastOutcome(outcomes.get(outcomes.size() - 1).getOutcome());
-            isDisrupted = o.getLastOutcome().getTYPE().equals("Disrupted");
+            //isDisrupted = o.getLastOutcome().getTYPE().equals("Disrupted");
             if (compact != Boolean.TRUE) {
                 o.setHistoricOutcome(outcomes);
             }
@@ -672,7 +672,7 @@ public class OrdersHelper {
         o.setMarked(getMark(jOrder.asScala().mark()));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? true : null);
         o.setIsSuspendible(isSuspendible(jOrder) ? true : null);
-        o.setIsResumable(isResumable(jOrder, isDisrupted) ? true : null);
+        o.setIsResumable(isResumable(jOrder) ? true : null);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
