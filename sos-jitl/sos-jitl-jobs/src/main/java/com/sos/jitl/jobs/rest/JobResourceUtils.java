@@ -1,101 +1,121 @@
 package com.sos.jitl.jobs.rest;
 
+import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
+import com.sos.commons.util.keystore.KeyStoreContainer;
+import com.sos.commons.util.keystore.KeyStoreType;
+import com.sos.commons.util.ssl.SslArguments;
 import com.sos.js7.job.JobArgument;
+import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.OrderProcessStep;
-import com.sos.js7.job.OrderProcessStepLogger;
-import com.sos.js7.job.ValueSource;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Optional;
+
 
 public class JobResourceUtils {
 
-    private static List<JobArgument<String>> collectArguments(RestJobArguments args) {
-        return Arrays.asList(
-                args.getReturnVariable(),
-                args.getMyRequest(),
-                args.getLogItems(),
-                args.getKeystoreFile(),
-                args.getKeystoreKeyPassword(),
-                args.getKeystoreStorePassword(),
-                args.getKeystoreAlias(),
-                args.getTruststoreFile(),
-                args.getTruststoreStorePassword(),
-                args.getApiServerCSFile(),
-                args.getApiServerCSKey(),
-                args.getApiServerCSPassword(),
-                args.getApiServerUsername(),
-                args.getApiServerToken(),
-                args.getApiServerPassword(),
-                args.getApiServerPrivateKeyPath(),
-                args.getApiUrl()
-        );
-    }
+	
+	//extracting the truststore details
+	private static <T extends JobArguments> List<KeyStoreContainer>  getTrustStoreContainersFromOrder (OrderProcessStep<T> step) throws Exception {
+	
+		String enc_path = Optional
+				.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+		
+		String trustStores = Optional.ofNullable(step.getAllArguments().get("truststore_file"))
+				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
 
+		if (SOSString.isEmpty(trustStores)) {
+			return null;
+		}
+		
+		if (!trustStores.isBlank()&& trustStores.startsWith("enc:")) {
+			trustStores = EnciphermentDecryptor.decryptValue(trustStores, Paths.get(enc_path));
+		}
+		String[] arr = trustStores.split("\\|");
+		String password = Optional.ofNullable(step.getAllArguments().get("truststore_password"))
+				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
+		
+		if (!password.isBlank()&& password.startsWith("enc:")) {
+			password = EnciphermentDecryptor.decryptValue(password, Paths.get(enc_path));
+		}
+		
+		String pass = SOSString.isEmpty(password) ? null : password;
+		return Arrays.asList(arr).stream().peek(String::trim).map(path -> {
+			if (SOSString.isEmpty(path)) {
+				return null;
+			}
+			KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
+			if (!Files.exists(c.getPath())) {
+				step.getLogger().warn("[order][TrustStore][%s]not found", c.getPath());
+				return null;
+			}
+			c.setPassword(pass);
+			return c;
+		}).filter(Objects::nonNull).toList();
+	}
+	
 
-    private  static  void logArgument(JobArgument<String> arg, OrderProcessStepLogger logger) {
-        if (arg.isDirty()) {
-            logger.info(arg.getName() + " = " + arg.getValue());
-        } else if (arg.getDefaultValue() != null && !arg.getDefaultValue().isEmpty()) {
-            logger.info(arg.getName() + " (default) = " + arg.getDefaultValue());
-        } else {
-            logger.info(arg.getName() + " was not set and did not hold a default value");
-        }
-    }
+	//extracting the keystore details
+	private static <T extends JobArguments> KeyStoreContainer getKeyStoreContainerFromOrder(OrderProcessStep<T> step) throws Exception {
+		String enc_path = Optional
+				.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+		String path = Optional.ofNullable(step.getAllArguments().get("keystore_file"))
+				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
 
-    public static void logKnownArguments(OrderProcessStepLogger logger, RestJobArguments myArgs) {
-        List<JobArgument<String>> allArgs = collectArguments(myArgs);
-        for (JobArgument arg : allArgs) {
-            logArgument(arg, logger);
-        }
-    }
+		if (SOSString.isEmpty(path)) {
+			return null;
+		}
 
-   // Log grouped arguments
-   
-    public static void logAllArguments(OrderProcessStepLogger logger, Map<String, JobArgument<?>> allArgs) {
-        for (Map.Entry<String, JobArgument<?>> entry : allArgs.entrySet()) {
-            JobArgument<?> arg = entry.getValue();
-            ValueSource valueSource = arg.getValueSource();
+		if (path.startsWith("enc:")) {
+			path = EnciphermentDecryptor.decryptValue(path, Paths.get(enc_path));
+		}
+		
+		String alias = Optional.ofNullable(step.getAllArguments().get("keystore_alias"))
+				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
 
-            String typeName = "UNKNOWN_TYPE";
-            String sourceName = "UNKNOWN_SOURCE";
+		if (!alias.isBlank()&& alias.startsWith("enc:")) {
+			alias = EnciphermentDecryptor.decryptValue(alias, Paths.get(enc_path));
+		}
+		
+		KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
+		if (!Files.exists(c.getPath())) {
+			step.getLogger().warn("[order][KeyStore][%s]not found", c.getPath());
+			return null;
+		}
+		
+		String key_pass = Optional.ofNullable(step.getAllArguments().get("keystore_password"))
+				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
+		
+		if (!key_pass.isBlank()&& key_pass.startsWith("enc:")) {
+			key_pass = EnciphermentDecryptor.decryptValue(key_pass, Paths.get(enc_path));
+		}
+		
+		c.setPassword(key_pass);
+		c.setKeyPassword(key_pass);
+		c.setAliases(SOSString.isEmpty(alias) ? null : List.of(alias));
+		
+		return c;
+	}
 
-            if (valueSource != null) {
-                try {
-                    // Access protected getType() using reflection
-                    java.lang.reflect.Method getTypeMethod = ValueSource.class.getDeclaredMethod("getType");
-                    getTypeMethod.setAccessible(true);
-                    Object typeObj = getTypeMethod.invoke(valueSource);
+	
+	//fetching the ssl arguments( keystore/ truststore) details
+	public static <T extends JobArguments> SslArguments getSslArguments(OrderProcessStep<T> step) throws Exception {
+		SslArguments args = new SslArguments();
+		List<KeyStoreContainer> trustStoreContainers = getTrustStoreContainersFromOrder(step);
 
-                    if (typeObj != null) {
-                        typeName = typeObj.toString(); // e.g., JOB_RESOURCE, JAVA, etc.
-                    }
-                } catch (Exception e) {
-                    typeName = "INACCESSIBLE_TYPE";
-                }
+		args.getTrustedSsl().setTrustStoreContainers(trustStoreContainers);
 
-                if (valueSource.getSource() != null && !valueSource.getSource().isEmpty()) {
-                    sourceName = valueSource.getSource();
-                }else {
-                	logger.info(
-                            entry.getKey() + " : " + arg.getValue()
-                            + " ( source=" + typeName +  ", modified=" + arg.isDirty() + " )"
-                        );
-                	logger.debug("no jobresource found");
-                	continue;
-                }
-            }
+		// KeyStore: 0->1
+		KeyStoreContainer keyStoreContainer = getKeyStoreContainerFromOrder(step);
 
-            logger.info(
-                entry.getKey() + " : " + arg.getValue()
-                + " ( source=" + typeName + "(" + sourceName + ")"
-                + ", modified=" + arg.isDirty() + " )"
-            );
-        }
-    }
+		args.getTrustedSsl().setKeyStoreContainer(keyStoreContainer);
 
-    
- 
+		return args;
+	}
 }
