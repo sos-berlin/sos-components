@@ -22,6 +22,7 @@ import java.util.Set;
 
 public class ReturnVariableUtils {
 
+	//check for duplicate return variable in list
     public static void checkDuplicateReturnVariable(JsonNode returnVars) throws JobArgumentException {
         Set<String> seenNames = new HashSet<>();
         for (JsonNode node : returnVars) {
@@ -36,6 +37,7 @@ public class ReturnVariableUtils {
         }
     }
 
+    //executs the jq query for return variable
     public static List<JsonNode> runJqQuery(JsonNode mergedInput, String jqQuery, Scope rootScope, String name) throws JsonQueryException, JobArgumentException {
 
         JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
@@ -50,6 +52,7 @@ public class ReturnVariableUtils {
         }
     }
 
+    //writing the output of the jq query to the files using specified file path
     public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, List<JsonNode> out, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
 
         if (name.equals("returnCode")) {
@@ -105,6 +108,7 @@ public class ReturnVariableUtils {
         }
     }
 
+  //writing the output of the request directly to the files using specified file path( response is in plan text)
     public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, String result, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
 
         if (name.equals("returnCode")) {
@@ -149,6 +153,8 @@ public class ReturnVariableUtils {
             }
         }
     }
+    
+    //excrating the input option for the return vairable
     public static List<String> parseInputOptions(String inputOption) {
         List<String> options = new ArrayList<>();
         if (inputOption == null || inputOption.trim().isEmpty()) {

@@ -51,8 +51,10 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
+import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -61,6 +63,7 @@ import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocReleaseException;
+import com.sos.joc.inventory.dependencies.util.DependencyUtils;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -69,6 +72,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
+import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
 import com.sos.schema.JsonValidator;
 
@@ -127,7 +131,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-
+            checkDependencies(session, in);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             // released schedules with referenced workflows
             Map<String, List<String>> renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer);
@@ -971,5 +975,34 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
         }
     }
-
+    
+    private void checkDependencies(SOSHibernateSession session, ReleaseFilter filter) throws SOSHibernateException {
+        Set<RequestItem> requestedItems = filter.getUpdate().stream().map(item -> {
+            RequestItem reqItem = new RequestItem();
+            reqItem.setName(Paths.get(item.getPath()).getFileName().toString());
+            reqItem.setType(item.getObjectType());
+            return reqItem;
+        }).collect(Collectors.toSet());
+        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(session);
+        // remove all keys that are not present in the filter
+        Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
+        itemsWithReferences.keySet().removeIf(dep -> {
+            RequestItem req = new RequestItem();
+            req.setName(dep.getName());
+            req.setType(dep.getType());
+            return !requestedItems.contains(req);
+        });
+        Set<Dependency> invalidDependencies =  itemsWithReferences.values().stream().flatMap(Set::stream)
+                .filter(dependency -> !dependency.getValid()).collect(Collectors.toSet());
+        if(!invalidDependencies.isEmpty()) {
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            List <DBItemInventoryReleasedConfiguration>  released = dbLayer.getReleasedConfigurations(invalidDependencies.stream().map(dep -> dep.getName()).collect(Collectors.toList()), invalidDependencies.stream().map(dep -> dep.getType()).collect(Collectors.toSet()));
+            if(released.isEmpty()) {
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append(invalidDependencies.stream().map(invalid -> invalid.getType().name() +":" + invalid.getName()).collect(Collectors.joining(", ", "No valid current draft nor released configuration found for referenced items [", "]")));
+                throw new JocReleaseException(errorMessage.toString());
+            }
+        }
+    }
+    
 }
