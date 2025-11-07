@@ -10,7 +10,8 @@ public enum OrderMarkText {
 
     CANCELLING("CANCELLING"),
     RESUMING("RESUMING"),
-    SUSPENDING("SUSPENDING");
+    SUSPENDING("SUSPENDING"),
+    OUTDATED("OUTDATED");
     private final String value;
     private final static Map<String, OrderMarkText> CONSTANTS = new HashMap<String, OrderMarkText>();
 

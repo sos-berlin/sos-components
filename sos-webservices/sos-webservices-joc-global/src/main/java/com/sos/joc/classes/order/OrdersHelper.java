@@ -134,12 +134,14 @@ import js7.data.workflow.position.Label;
 import js7.data.workflow.position.Position;
 import js7.data.workflow.position.PositionOrLabel;
 import js7.data.workflow.position.WorkflowPosition;
+import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderObstacle;
 import js7.data_for_java.order.JOrderPredicates;
+import js7.data_for_java.subagent.JSubagentItemState;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JBranchPath;
@@ -307,6 +309,7 @@ public class OrdersHelper {
             put(OrderMarkText.RESUMING, 0);
             put(OrderMarkText.SUSPENDING, 5);
             put(OrderMarkText.CANCELLING, 2);
+            put(OrderMarkText.OUTDATED, 4); // grey
         }
     });
 
@@ -502,10 +505,12 @@ public class OrdersHelper {
     // return null;
     // }
 
-    private static OrderMark getMark(Option<js7.data.order.OrderMark> opt) {
+    private static OrderMark getMark(Option<js7.data.order.OrderMark> opt, Optional<String> agentProblem) {
         OrderMarkText markText = null;
         if (opt.nonEmpty()) {
             markText = groupByMarkClasses.get(opt.get().getClass());
+        } else if (agentProblem.isPresent()) {
+            markText = OrderMarkText.OUTDATED;
         }
         if (markText != null) {
             OrderMark mark = new OrderMark();
@@ -596,10 +601,20 @@ public class OrdersHelper {
             ss.setUntil(oItem.getState().getUntil());
             o.setSleepState(ss);
         }
+        Optional<String> subAgentProblem = Optional.empty();
         if ("Processing".equals(oItem.getState().getTYPE())) {
+            subAgentProblem = Optional.ofNullable(controllerState.pathToAgentRefState().get(AgentPath.of(o.getAgentId()))).flatMap(
+                    JAgentRefState::problem).map(ProblemHelper::getErrorMessage).filter(s -> !s.toLowerCase().contains("missing heartbeat") && !s
+                            .toLowerCase().contains("dedicated"));
+            
             Option<SubagentId> subAgentId = ((Order.Processing) jOrder.asScala().state()).subagentId();
             if (subAgentId.nonEmpty()) {
                 String sId = subAgentId.get().string();
+                if (subAgentProblem.isEmpty()) {
+                    subAgentProblem = Optional.ofNullable(controllerState.idToSubagentItemState().get(subAgentId.get())).flatMap(
+                            JSubagentItemState::problem).map(ProblemHelper::getErrorMessage).filter(s -> !s.toLowerCase().contains(
+                                    "missing heartbeat") && !s.toLowerCase().contains("dedicated"));
+                }
                 if (o.getAgentId() != null && sId.equals(o.getAgentId())) {
                     sId = sId.replaceFirst("-1$", "");
                 }
@@ -669,7 +684,7 @@ public class OrdersHelper {
                 }
             }
         }
-        o.setMarked(getMark(jOrder.asScala().mark()));
+        o.setMarked(getMark(jOrder.asScala().mark(), subAgentProblem));
         // o.setIsCancelable(jOrder.asScala().isCancelable() ? true : null);
         o.setIsSuspendible(isSuspendible(jOrder) ? true : null);
         o.setIsResumable(isResumable(jOrder) ? true : null);
