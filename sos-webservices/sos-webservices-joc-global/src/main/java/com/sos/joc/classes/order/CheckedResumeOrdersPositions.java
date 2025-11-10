@@ -556,9 +556,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         Optional<Long> cEndTime = cycleEndTime != null ? Optional.of(Instant.now().plusSeconds(Math.min(TimeUnit.DAYS.toSeconds(1), Math.max(0,
                 cycleEndTime)))).map(Instant::toEpochMilli) : Optional.empty();
 
-        Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
-                .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
-                        ? l.lastIndexOf("cycle") : -1).orElse(-1);
+//        Integer indexOfImplicitEndCyclePosition = getPositions().stream().filter(p -> workflowJPosition.toString().equals(p.getPositionString()))
+//                .filter(p -> "ImplicitEnd".equals(p.getType())).map(Position::getPosition).findAny().map(l -> (l.lastIndexOf("cycle") == l.size() - 2)
+//                        ? l.lastIndexOf("cycle") : -1).orElse(-1);
 
         for (Object pos : workflowJPosition.toList()) {
             boolean posIsAdded = false;
@@ -571,9 +571,10 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                         if (curOrderPos != null) {
                             if (posStr.equals(curOrderPos.replaceAll("(try|catch|cycle)\\+?.*", "$1"))) {
                                 if (posStr.equals("cycle")) {
-                                    if (indexOfImplicitEndCyclePosition == index) {
-                                        curOrderPos = posStr;
-                                    } else if (cEndTime.isPresent()) {
+//                                    if (indexOfImplicitEndCyclePosition == index) {
+//                                        curOrderPos = posStr;
+//                                    } else 
+                                    if (cEndTime.isPresent()) {
                                         curOrderPos = curOrderPos.replaceAll("end=\\d+", "end=" + cEndTime.get());
                                     }
                                 }
