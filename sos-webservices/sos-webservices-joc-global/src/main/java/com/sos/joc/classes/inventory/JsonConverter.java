@@ -66,7 +66,7 @@ import js7.base.problem.Problem;
 import js7.data_for_java.value.JExpression;
 
 public class JsonConverter {
-    
+
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
             InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.CONSUME_NOTICES.value(), InstructionType.LOCK
                     .value(), InstructionType.FINISH.value(), InstructionType.STICKY_SUBAGENT.value());
@@ -84,16 +84,18 @@ public class JsonConverter {
     private final static String includeScriptErrorMsg2 = "Script include of job '%s[%s]': value replacement failed: %s";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
-    
-    private static final Map<InternalExecutableType, String> type2classname = Collections.unmodifiableMap(new HashMap<InternalExecutableType, String>() {
 
-        private static final long serialVersionUID = 1L;
+    private static final Map<InternalExecutableType, String> type2classname = Collections.unmodifiableMap(
+            new HashMap<InternalExecutableType, String>() {
 
-        {
-            put(InternalExecutableType.JavaScript_Graal, "com.sos.js7.scriptengine.jobs.JavaScriptJob");
-            put(InternalExecutableType.JavaScript_Node, "com.sos.js7.scriptengine.jobs.JavaScriptJob"); //TODO different className
-        }
-    });
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(InternalExecutableType.JavaScript_Graal, "com.sos.js7.scriptengine.jobs.JavaScriptJob");
+                    put(InternalExecutableType.JavaScript_Node, "com.sos.js7.scriptengine.jobs.JavaScriptJob"); // TODO different className
+                    put(InternalExecutableType.Python_Graal, "com.sos.js7.scriptengine.jobs.PythonJob");
+                }
+            });
 
     @SuppressWarnings("unchecked")
     public static <T extends IDeployObject> T readAsConvertedDeployObject(String controllerId, String objectPath, String json, Class<T> clazz,
@@ -107,7 +109,7 @@ public class JsonConverter {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
-    
+
     public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String controllerId, String workflowPath, String json,
             Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
 
@@ -116,15 +118,15 @@ public class JsonConverter {
         Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
 
         signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation(), workflowPath));
-        
+
         if (signWorkflow.getInstructions() != null) {
             // at the moment the converter is only necessary to modify instructions for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
-                convertInstructions(controllerId, workflowPath, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0), OrdersHelper
-                        .getDailyPlanTimeZone());
+                convertInstructions(controllerId, workflowPath, invWorkflow.getInstructions(), signWorkflow.getInstructions(), new AtomicInteger(0),
+                        OrdersHelper.getDailyPlanTimeZone());
             }
             if (hasCycleInstruction.test(json)) {
-                signWorkflow.setCalendarPath(DailyPlanCalendar.dailyPlanCalendarName); 
+                signWorkflow.setCalendarPath(DailyPlanCalendar.dailyPlanCalendarName);
             }
         }
         if (signWorkflow.getJobs() != null) {
@@ -133,29 +135,30 @@ public class JsonConverter {
             }
             considerReturnCodeWarningsAndSubagentClusterId(invWorkflow.getJobs(), signWorkflow.getJobs());
         }
-        
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(Globals.objectMapper.writeValueAsString(signWorkflow));
         }
-        
+
         return signWorkflow;
     }
-    
+
     // not private because of unit test
     protected static void considerReturnCodeWarningsAndSubagentClusterId(Jobs invJobs, com.sos.sign.model.workflow.Jobs signJobs) {
         if (signJobs.getAdditionalProperties() != null && invJobs.getAdditionalProperties() != null) {
             invJobs.getAdditionalProperties().forEach((jobName, invJob) -> {
-                
+
                 com.sos.sign.model.job.Job signJob = signJobs.getAdditionalProperties().get(jobName);
                 considerSubagentClusterId(invJob, signJob);
-                
+
                 switch (invJob.getExecutable().getTYPE()) {
                 case InternalExecutable:
                     com.sos.inventory.model.job.ExecutableJava invEj = invJob.getExecutable().cast();
-                    if (signJob != null && invEj.getInternalType() != null && invEj.getInternalType().equals(InternalExecutableType.JavaScript_Graal)) {
+                    if (signJob != null && invEj.getInternalType() != null && (invEj.getInternalType().equals(InternalExecutableType.JavaScript_Graal)
+                            || invEj.getInternalType().equals(InternalExecutableType.Python_Graal))) {
                         ExecutableJava signEj = signJob.getExecutable().cast();
                         if (signEj != null) {
-                            signEj.setClassName(type2classname.get(InternalExecutableType.JavaScript_Graal));
+                            signEj.setClassName(type2classname.get(invEj.getInternalType()));
                         }
                     }
                     break;
@@ -193,7 +196,7 @@ public class JsonConverter {
             });
         }
     }
-    
+
     private static void considerSubagentClusterId(Job invJob, com.sos.sign.model.job.Job signJob) {
         if (signJob != null) {
             if (signJob.getSubagentBundleIdExpr() == null || signJob.getSubagentBundleIdExpr().isEmpty()) {
@@ -204,7 +207,7 @@ public class JsonConverter {
             signJob.setSubagentBundleId(null);
         }
     }
-    
+
     private static void includeScripts(String workflowName, com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
         Map<String, com.sos.sign.model.job.Job> replacedJobs = new HashMap<>();
         if (signJobs.getAdditionalProperties() != null) {
@@ -231,7 +234,7 @@ public class JsonConverter {
             });
             replacedJobs.forEach((jobName, job) -> signJobs.setAdditionalProperty(jobName, job));
         }
-        
+
     }
 
     private static String replaceIncludes(String workflowName, String script, String jobName, Map<String, String> releasedScripts) {
@@ -243,8 +246,8 @@ public class JsonConverter {
                 if (m.find()) {
                     String scriptName = m.group(2);
                     if (releasedScripts == null || !releasedScripts.containsKey(scriptName)) {
-                        throw new IllegalArgumentException(String.format("Script include '%s' of job '%s[%s]' referenced an unreleased script '%s'", line,
-                                workflowName, jobName, scriptName));
+                        throw new IllegalArgumentException(String.format("Script include '%s' of job '%s[%s]' referenced an unreleased script '%s'",
+                                line, workflowName, jobName, scriptName));
                     }
                     try {
                         line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
@@ -268,10 +271,10 @@ public class JsonConverter {
         }
         return String.join("\n", scriptLines);
     }
-    
+
     public static Map<String, String> parseReplaceInclude(String str) throws IOException, IllegalArgumentException {
         if (str == null || str.trim().isEmpty()) {
-           return Collections.emptyMap(); 
+            return Collections.emptyMap();
         }
         StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str.trim()));
         tokenizer.resetSyntax();
@@ -279,14 +282,14 @@ public class JsonConverter {
         tokenizer.quoteChar('\'');
         tokenizer.slashSlashComments(false);
         tokenizer.slashStarComments(false);
-        //wordChars all except above quote chars and ',', i.e. 34, 39, 44
+        // wordChars all except above quote chars and ',', i.e. 34, 39, 44
         tokenizer.wordChars(0, 33);
         tokenizer.wordChars(35, 38);
         tokenizer.wordChars(40, 43);
         tokenizer.wordChars(45, 255);
-        
+
         Map<String, String> replaceTokens = new HashMap<>();
-        
+
         int currentToken = tokenizer.nextToken();
         boolean searchValExpected = false;
         boolean replacementValExpected = false;
@@ -294,7 +297,7 @@ public class JsonConverter {
         boolean commaExpected = false;
         String searchVal = "";
         String msg = "wrong format";
-        
+
         while (currentToken != StreamTokenizer.TT_EOF) {
             switch (tokenizer.ttype) {
             case StreamTokenizer.TT_WORD:
@@ -455,7 +458,7 @@ public class JsonConverter {
                         Object returnCode = sFail.getNamedValues().getAdditionalProperties().get("returnCode");
                         if (returnCode != null) {
                             if (!(returnCode instanceof Integer)) {
-                                if (returnCode instanceof String) { 
+                                if (returnCode instanceof String) {
                                     try {
                                         sFail.getNamedValues().setAdditionalProperty("returnCode", Integer.valueOf((String) returnCode));
                                     } catch (Exception e) {
@@ -477,9 +480,9 @@ public class JsonConverter {
                             var.setAdditionalProperty("returnCode", 1);
                             sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Failed", finish.getMessage(), var));
                         } else {
-//                            if (finish.getMessage() != null && !finish.getMessage().isEmpty()) {
-//                                var.setAdditionalProperty("returnMessage", finish.getMessage());
-//                            }
+                            // if (finish.getMessage() != null && !finish.getMessage().isEmpty()) {
+                            // var.setAdditionalProperty("returnMessage", finish.getMessage());
+                            // }
                             var.setAdditionalProperty("returnCode", 0);
                             sFinish.setOutcome(new com.sos.sign.model.common.Outcome("Succeeded", null, var));
                         }
@@ -532,9 +535,9 @@ public class JsonConverter {
             sfl.setChildToArguments("(x) => { " + fl.getSubagentIdVariable() + ": $x }");
             sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x");
         }
-        //sfl.setChildToId("(x) => $x." + fl.getChildToId());
+        // sfl.setChildToId("(x) => $x." + fl.getChildToId());
     }
-    
+
     private static void convertStickySubagent(StickySubagent ss, com.sos.sign.model.instruction.StickySubagent sss) {
         if (sss.getSubagentBundleIdExpr() == null) {
             if (ss.getSubagentClusterId() != null) {
@@ -542,7 +545,7 @@ public class JsonConverter {
             }
         }
     }
-    
+
     private static void convertAddOrder(String controllerId, String workflowName, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao,
             AtomicInteger addOrderIndex, ZoneId zoneId) {
         sao.setDeleteWhenTerminated(ao.getRemainWhenTerminated() != Boolean.TRUE);
@@ -550,11 +553,11 @@ public class JsonConverter {
         String sAddOrderIndex = ("" + (100 + (addOrderIndex.getAndIncrement() % 100))).substring(1);
         String datetimePattern = "#[0-9]{4}-[0-9]{2}-[0-9]{2}#[^-]+";
         // first replaceAll(replaceAll...):
-        //      #2022-01-01#T12345678901-test|branchname of parent orderId -> 2022010112345678901
-        // second replaceAll(replaceAll...) 
-        //      #2022-01-01#T12345678901-test|branchname of parent orderId -> test|branchname -> test
+        // #2022-01-01#T12345678901-test|branchname of parent orderId -> 2022010112345678901
+        // second replaceAll(replaceAll...)
+        // #2022-01-01#T12345678901-test|branchname of parent orderId -> test|branchname -> test
         // resp.
-        //      #2022-01-01#T12345678901-2022010112345678901!-test|branchname of parent orderId -> test|branchname -> test
+        // #2022-01-01#T12345678901-2022010112345678901!-test|branchname of parent orderId -> test|branchname -> test
         String idPattern = "uniqueOrderId('#' ++ now(format='yyyy-MM-dd', timezone='%1$s') ++ '#D' ++ %2$s ++ '%3$s'"
                 + " ++ replaceAll(replaceAll($js7OrderId, '^(%4$s)-.*$', '$1'), '\\D', \"\")"
                 + " ++ replaceAll(replaceAll($js7OrderId, '^%4$s-([^!]+!-)?(.*)$', '$2'), '^([^|]+).*', '!-$1'))";
@@ -566,11 +569,11 @@ public class JsonConverter {
         if (sao.getStopPositions() == null) {
             sao.setStopPositions(Collections.emptyList());
         }
-        
+
         boolean withStartLabel = (sao.getStartPosition() != null && sao.getStartPosition() instanceof String);
         boolean withEndLabels = sao.getStopPositions().stream().anyMatch(pos -> pos instanceof String);
         boolean withBlockLabel = (sao.getInnerBlock() != null && sao.getInnerBlock() instanceof String);
-        
+
         if (withStartLabel || withEndLabels || withBlockLabel) {
             Map<String, List<Object>> labelMap = getLabelToPositionsMap(controllerId, sao.getWorkflowPath());
             int numOfEndPositions = sao.getStopPositions().size();
@@ -590,25 +593,25 @@ public class JsonConverter {
             }
         }
     }
-    
+
     private static Map<String, List<Object>> getLabelToPositionsMap(String controllerId, String workflowName) {
         Map<String, List<Object>> labelMap = Collections.emptyMap();
-        // TODO it needs all other workflows of the same deploy call 
-//        if (controllerId != null) {
-//            try {
-//                labelMap = WorkflowsHelper.getLabelToPositionsMapFromDepHistory(controllerId, workflowName);
-//            } catch (DBMissingDataException e) {
-//                labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
-//            }
-//        } else {
-            labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
-            if (labelMap == null) {
-                return Collections.emptyMap();
-            }
-//        }
+        // TODO it needs all other workflows of the same deploy call
+        // if (controllerId != null) {
+        // try {
+        // labelMap = WorkflowsHelper.getLabelToPositionsMapFromDepHistory(controllerId, workflowName);
+        // } catch (DBMissingDataException e) {
+        // labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
+        // }
+        // } else {
+        labelMap = WorkflowsHelper.getLabelToPositionsMapFromInventory(workflowName);
+        if (labelMap == null) {
+            return Collections.emptyMap();
+        }
+        // }
         return labelMap;
     }
-    
+
     private static String quoteVariable(Object val) {
         if (val == null) {
             return null;
@@ -623,7 +626,7 @@ public class JsonConverter {
         }
         return quoteString(val.toString());
     }
-    
+
     public static String quoteString(String str) {
         if (str == null) {
             return null;
@@ -637,24 +640,24 @@ public class JsonConverter {
         }
         return str;
     }
-    
-    //protected for test
+
+    // protected for test
     protected static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation, String workflowPath) {
         if (orderPreparation == null) {
             orderPreparation = new Requirements();
-            //return null;
+            // return null;
         }
         Parameters params = new Parameters();
         if (orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
-            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> params.setAdditionalProperty(k,
-                    invParameterToSignParameter(v)));
+            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> params.setAdditionalProperty(k, invParameterToSignParameter(
+                    v)));
         }
         if (!params.getAdditionalProperties().containsKey("js7Workflow.path") && workflowPath != null) {
             params.setAdditionalProperty("js7Workflow.path", new Parameter(ParameterType.String.value(), null, workflowPath));
         }
         return new OrderPreparation(params, orderPreparation.getAllowUndeclared());
     }
-    
+
     private static Parameter invParameterToSignParameter(com.sos.inventory.model.workflow.Parameter value) {
         Parameter p = new Parameter();
         p.setDefault(value.getDefault());
@@ -668,7 +671,7 @@ public class JsonConverter {
         }
         return p;
     }
-    
+
     private static com.sos.sign.model.workflow.ListParameter invListParameterToSignListParameter(ListParameters ilps) {
         ObjectParameter lps = new ObjectParameter();
         if (ilps != null && ilps.getAdditionalProperties() != null) {
@@ -676,7 +679,7 @@ public class JsonConverter {
         }
         return new com.sos.sign.model.workflow.ListParameter("List", lps);
     }
-    
+
     private static ObjectParameter invObjectParameterToSignObjectParameter(ListParameters ilps) {
         ObjectParameter ops = new ObjectParameter();
         if (ilps != null && ilps.getAdditionalProperties() != null) {
@@ -684,11 +687,11 @@ public class JsonConverter {
         }
         return ops;
     }
-    
+
     public static Requirements signOrderPreparationToInvOrderPreparation(OrderPreparation orderPreparation) {
         return signOrderPreparationToInvOrderPreparation(orderPreparation, true);
     }
-    
+
     @SuppressWarnings("unchecked")
     public static Requirements signOrderPreparationToInvOrderPreparation(OrderPreparation orderPreparation, boolean withFinals) {
         if (orderPreparation == null) {
@@ -729,7 +732,7 @@ public class JsonConverter {
                             }
                         } else if (v.getType() instanceof Map) {
                             p.setType(ParameterType.Map);
-                            
+
                             Map<String, String> slp = (Map<String, String>) ((Map<String, Object>) v.getType()).get("elementType");
                             if (slp != null) {
                                 p.setType(ParameterType.List);
@@ -746,18 +749,17 @@ public class JsonConverter {
                 }
             });
         }
-        return new Requirements(params, orderPreparation.getAllowUndeclared()); 
+        return new Requirements(params, orderPreparation.getAllowUndeclared());
     }
-    
+
     private static ListParameters listParamsfromMap(Map<String, String> p) {
         if (p != null) {
             ListParameters lp = new ListParameters();
             p.forEach((k1, v1) -> {
                 if (!"TYPE".equals(k1)) {
                     try {
-                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType
-                                .fromValue(v1), null));
-                        
+                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType.fromValue(v1), null));
+
                     } catch (Exception e) {
                     }
                 }
