@@ -128,8 +128,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             }
             onStart();
             return right(null);
-        } catch (Throwable e) {
-            return left(Problem.fromThrowable(new JobException("[onStart]" + e.toString(), e)));
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = e.toString();
+            }
+            return left(Problem.fromThrowable(new JobException("[onStart]" + msg, e)));
         }
     }
 
