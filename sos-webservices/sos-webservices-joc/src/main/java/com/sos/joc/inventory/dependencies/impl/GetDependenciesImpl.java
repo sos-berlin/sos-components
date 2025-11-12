@@ -264,7 +264,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 item.setName(requested.getName());
                 return item;
             });
-            response.setRequestedItems(Stream.concat(refs, reqs).collect(Collectors.toSet()));
+            response.getRequestedItems().addAll(Stream.concat(refs, reqs).collect(Collectors.toSet()));
         }
         if (!requestedByItemsWithReferences.isEmpty()) {
             Stream<RequestedResponseItem> refsBy = requestedByItemsWithReferences.entrySet().stream().map(entry -> {
@@ -298,7 +298,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 item.setName(requested.getName());
                 return item;
             });
-            response.setRequestedItems(Stream.concat(refsBy, reqs).collect(Collectors.toSet()));
+            response.getRequestedItems().addAll(Stream.concat(refsBy, reqs).collect(Collectors.toSet()));
         }
         if(response.getAffectedItems().isEmpty()) {
             response.setAffectedItems(null);
