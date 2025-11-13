@@ -54,6 +54,7 @@ import com.sos.joc.db.inventory.DBItemInventoryFavorite;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJobTag;
 import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
+import com.sos.joc.db.inventory.DBItemInventoryNote;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -302,6 +303,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_CHANGES_MAPPINGS = DBItemInventoryChangesMapping.class.getSimpleName();
     public static final String TABLE_INV_CHANGES_MAPPINGS = "INV_CHANGES_MAPPINGS";
     public static final String TABLE_INV_CHANGES_SEQUENCE = "SEQ_INV_CH";
+    
+    public static final String DBITEM_INV_NOTES = DBItemInventoryNote.class.getSimpleName();
+    public static final String TABLE_INV_NOTES = "INV_NOTES";
+    public static final String TABLE_INV_NOTES_SEQUENCE = "SEQ_INV_N";
 
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
@@ -423,7 +428,7 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JOC_APPROVERS = DBItemJocApprover.class.getSimpleName();
     public static final String TABLE_JOC_APPROVERS = "JOC_APPROVERS";
     public static final String TABLE_JOC_APPROVERS_SEQUENCE = "SEQ_JOC_A";
-
+    
     
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
@@ -583,6 +588,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryExtendedDependency.class);
         cl.add(DBItemInventoryChange.class);
         cl.add(DBItemInventoryChangesMapping.class);
+        cl.add(DBItemInventoryNote.class);
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);
         cl.add(DBItemJocCluster.class);

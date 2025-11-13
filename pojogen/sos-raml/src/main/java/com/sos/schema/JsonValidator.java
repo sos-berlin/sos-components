@@ -222,6 +222,9 @@ public class JsonValidator {
             put("com.sos.joc.model.tag.rename.RequestFilter", "tag/rename/request-filter-schema.json");
             put("com.sos.joc.model.tag.tagging.RequestModifyFilter", "tag/tagging/request-modify-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestTag", "inventory/common/request-tag-schema.json");
+            
+            put("com.sos.joc.model.note.common.NoteIdentifier", "note/common/identifier-schema.json");
+            put("com.sos.joc.model.note.AddPost", "note/addPost-schema.json");
 
             put("com.sos.joc.model.descriptor.common.RequestFilter", "descriptor/common/request-filter-schema.json");
             put("com.sos.joc.model.descriptor.common.RequestFolder", "descriptor/common/request-folder-schema.json");
