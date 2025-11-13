@@ -16,7 +16,12 @@ public interface INote {
     public JOCDefaultResponse read(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
     
     @POST
-    @Path("dlete")
+    @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    
+    @POST
+    @Path("preferences")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse setPreferences(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 }

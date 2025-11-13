@@ -4,8 +4,7 @@ package com.sos.joc.model.note;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.note.common.DisplayPreferences;
-import com.sos.joc.model.note.common.RequestModifyFilter;
+import com.sos.joc.model.note.common.ModifyRequest;
 import com.sos.joc.model.note.common.Severity;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -21,11 +20,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "content",
-    "severity",
-    "displayPreferences"
+    "severity"
 })
 public class AddPost
-    extends RequestModifyFilter
+    extends ModifyRequest
 {
 
     /**
@@ -45,14 +43,6 @@ public class AddPost
      */
     @JsonProperty("severity")
     private Severity severity = Severity.fromValue("NORMAL");
-    /**
-     * DisplayPreferences
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("displayPreferences")
-    private DisplayPreferences displayPreferences;
 
     /**
      * disallow <script and <svg/on
@@ -100,36 +90,14 @@ public class AddPost
         this.severity = severity;
     }
 
-    /**
-     * DisplayPreferences
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("displayPreferences")
-    public DisplayPreferences getDisplayPreferences() {
-        return displayPreferences;
-    }
-
-    /**
-     * DisplayPreferences
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("displayPreferences")
-    public void setDisplayPreferences(DisplayPreferences displayPreferences) {
-        this.displayPreferences = displayPreferences;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("content", content).append("severity", severity).append("displayPreferences", displayPreferences).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("content", content).append("severity", severity).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(severity).append(displayPreferences).append(content).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(severity).append(content).toHashCode();
     }
 
     @Override
@@ -141,7 +109,7 @@ public class AddPost
             return false;
         }
         AddPost rhs = ((AddPost) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(severity, rhs.severity).append(displayPreferences, rhs.displayPreferences).append(content, rhs.content).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(severity, rhs.severity).append(content, rhs.content).isEquals();
     }
 
 }

@@ -4,18 +4,22 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryNote;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
+import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.note.AddPost;
 import com.sos.joc.model.note.NoteResponse;
 import com.sos.joc.model.note.common.Author;
 import com.sos.joc.model.note.common.Metadata;
+import com.sos.joc.model.note.common.NoteIdentifier;
 import com.sos.joc.model.note.common.Participant;
 import com.sos.joc.model.note.common.Post;
 import com.sos.joc.note.resource.IAddPost;
@@ -35,34 +39,30 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             body = initLogging(API_CALL, body, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(body, AddPost.class);
             AddPost in = Globals.objectMapper.readValue(body, AddPost.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            
+            NoteImpl.checkObjectType(in.getObjectType());
             storeAuditLog(in.getAuditLog());
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-
+            InventorySearchItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            
             String user = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
             Date now = Date.from(Instant.now());
             Author author = newAuthor(user);
             NoteResponse note = new NoteResponse();
 
-            DBItemInventoryNote dbItem = dbLayer.getNote(in);
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
             if (dbItem == null) { // new note
-
-                Long cId = dbLayer.getConfigurationId(in);
-                if (cId == null) {
-                    throw new DBMissingDataException(String.format("Couldn't find %s: %s", in.getObjectType().name().toLowerCase(), in.getName()));
-                }
-                
                 note = newNote(now, author, in);
 
                 dbItem = new DBItemInventoryNote();
                 dbItem.setCreated(now);
                 dbItem.setModified(now);
-                dbItem.setCid(cId);
+                dbItem.setCid(invItem.getId());
                 dbItem.setSeverity(in.getSeverity().intValue());
                 dbItem.setId(null);
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
@@ -104,7 +104,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             }
             
             note.setDeliveryDate(now);
-
+            note.setNoteId(dbItem.getId());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(note));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -112,14 +112,25 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             Globals.disconnect(session);
         }
     }
+    
+    private static InventorySearchItem getInvItem(InventoryNotesDBLayer dbLayer, NoteIdentifier in, SOSAuthFolderPermissions folderPermissions) {
+        InventorySearchItem invItem = dbLayer.getInvItem(in);
+        if (invItem == null) {
+            throw new DBMissingDataException(String.format("Couldn't find %s: %s", in.getObjectType().name().toLowerCase(), in.getName()));
+        }
+        if (!folderPermissions.isPermittedForFolder(invItem.getFolder())) {
+            throw new JocFolderPermissionsException(invItem.getFolder());
+        }
+        return invItem;
+    }
 
-    private Author newAuthor(String userName) {
+    protected static Author newAuthor(String userName) {
         Author a = new Author();
         a.setUserName(userName);
         return a;
     }
 
-    private Participant newParticipant(Integer postCount, Date modified, Author author) {
+    private static Participant newParticipant(Integer postCount, Date modified, Author author) {
         Participant p = new Participant();
         p.setModified(modified);
         p.setPostCount(postCount);
@@ -127,7 +138,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
         return p;
     }
 
-    private Post newPost(Integer postId, Date modified, Author author, AddPost in) {
+    private static Post newPost(Integer postId, Date modified, Author author, AddPost in) {
         Post p = new Post();
         p.setAuthor(author);
         p.setContent(in.getContent());
@@ -137,7 +148,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
         return p;
     }
 
-    private Metadata newMetadata(Date modified, Author author) {
+    private static Metadata newMetadata(Date modified, Author author) {
         Metadata md = new Metadata();
         md.setCreated(modified);
         md.setCreatedBy(author);
@@ -148,7 +159,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
         return md;
     }
 
-    private NoteResponse newNote(Date modified, Author author, AddPost in) {
+    private static NoteResponse newNote(Date modified, Author author, AddPost in) {
         NoteResponse note = new NoteResponse();
         note.setMetadata(newMetadata(modified, author));
         note.setPosts(Collections.singletonList(newPost(1, modified, author, in)));

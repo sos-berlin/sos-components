@@ -19,6 +19,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "noteId",
     "metadata",
     "posts",
     "participants"
@@ -27,6 +28,14 @@ public class Note
     extends NoteIdentifier
 {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("noteId")
+    private Long noteId;
     /**
      * metadata
      * <p>
@@ -39,6 +48,28 @@ public class Note
     private List<Post> posts = new ArrayList<Post>();
     @JsonProperty("participants")
     private List<Participant> participants = new ArrayList<Participant>();
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("noteId")
+    public Long getNoteId() {
+        return noteId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("noteId")
+    public void setNoteId(Long noteId) {
+        this.noteId = noteId;
+    }
 
     /**
      * metadata
@@ -84,12 +115,12 @@ public class Note
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("metadata", metadata).append("posts", posts).append("participants", participants).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("noteId", noteId).append("metadata", metadata).append("posts", posts).append("participants", participants).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(metadata).append(posts).append(participants).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(noteId).append(metadata).append(posts).append(participants).toHashCode();
     }
 
     @Override
@@ -101,7 +132,7 @@ public class Note
             return false;
         }
         Note rhs = ((Note) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(metadata, rhs.metadata).append(posts, rhs.posts).append(participants, rhs.participants).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(noteId, rhs.noteId).append(metadata, rhs.metadata).append(posts, rhs.posts).append(participants, rhs.participants).isEquals();
     }
 
 }

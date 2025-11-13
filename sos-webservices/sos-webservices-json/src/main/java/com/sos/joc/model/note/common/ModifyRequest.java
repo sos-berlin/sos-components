@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "auditLog"
 })
-public class RequestModifyFilter
+public class ModifyRequest
     extends NoteIdentifier
 {
 
@@ -70,10 +70,10 @@ public class RequestModifyFilter
         if (other == this) {
             return true;
         }
-        if ((other instanceof RequestModifyFilter) == false) {
+        if ((other instanceof ModifyRequest) == false) {
             return false;
         }
-        RequestModifyFilter rhs = ((RequestModifyFilter) other);
+        ModifyRequest rhs = ((ModifyRequest) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(auditLog, rhs.auditLog).isEquals();
     }
 
