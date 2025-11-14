@@ -333,6 +333,17 @@ public class ApiExecutor implements AutoCloseable {
         client = null;
     }
 
+    public void closeQuietly(String accessToken) {
+        if(accessToken != null) {
+            try {
+                logout(accessToken);
+            } catch (Exception e) {
+                step.getLogger().error(e);
+            } 
+        } 
+        close();
+    }
+
     public Map<String, String> getResponseHeaders() {
         return responseHeaders;
     }
