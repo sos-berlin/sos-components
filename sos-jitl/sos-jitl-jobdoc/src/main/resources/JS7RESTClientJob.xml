@@ -7,7 +7,7 @@
    <job xmlns:xi="http://www.w3.org/2001/XInclude"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         name="JS7RESTClientJob"
-        title="Send Requst to a JOC API">
+        title="Send Request to a JOC API">
         <script language="java" java_class="com.sos.jitl.jobs.rest.JS7RESTClientJob" resource="1"/>
     </job>
    <configuration>
