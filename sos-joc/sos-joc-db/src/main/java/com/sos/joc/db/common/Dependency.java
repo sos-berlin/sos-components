@@ -4,6 +4,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.dependencies.RequestItem;
 
 public class Dependency {
 
@@ -15,6 +16,15 @@ public class Dependency {
     private Boolean deployed;
     private Boolean released;
     
+    public Dependency(RequestItem requestItem) {
+        this.id = null;
+        this.name = requestItem.getName();
+        this.type = requestItem.getType();
+        this.folder = null;
+        this.valid = null;
+        this.deployed = null;
+        this.released = null;
+    }
     public Dependency(Long id, String name, ConfigurationType type, String folder, Boolean valid, Boolean deployed, Boolean released) {
         this.id = id;
         this.name = name;
@@ -23,6 +33,10 @@ public class Dependency {
         this.valid = valid;
         this.deployed = deployed;
         this.released = released;
+    }
+    
+    public Long getId() {
+        return id;
     }
     
     public String getName() {
@@ -53,7 +67,14 @@ public class Dependency {
     public int hashCode() {
         return new HashCodeBuilder().append(id).toHashCode();
     }
-
+    
+    public RequestItem getRequestItem () {
+        RequestItem item = new RequestItem();
+        item.setName(name);
+        item.setType(type);
+        return item;
+    }
+    
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -66,4 +87,14 @@ public class Dependency {
         return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
     
+    public boolean equalsWithoutId(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Dependency) == false) {
+            return false;
+        }
+        Dependency rhs = ((Dependency) other);
+        return new EqualsBuilder().append(name, rhs.name).append(type, rhs.type).isEquals();
+    }
 }

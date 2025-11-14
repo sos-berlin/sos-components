@@ -173,13 +173,6 @@ public class DependencyResolver {
             if(workflowsWithInstruction != null) {
                 cfg.getReferencedBy().addAll(workflowsWithInstruction);
             }
-//            List<DBItemInventoryConfiguration> wfWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
-//            Set<DBItemInventoryConfiguration> wfWorkflows = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
-//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
-//            Set<DBItemInventoryConfiguration> wfJobTemplates = wfWorkflowsOrJobTemplatesByIncludeScript.stream()
-//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
-//            resolveIncludeScriptByWorkflow(cfg, wfWorkflows);
-//            resolveIncludeScriptByJobTemplate(cfg, wfJobTemplates);
             break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
@@ -1011,6 +1004,7 @@ public class DependencyResolver {
             break;
         }
     }
+    
     // with no further db access for dependency resolution of a collection of items
     public static ReferencedDbItem resolveReferences (ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
             throws IOException {

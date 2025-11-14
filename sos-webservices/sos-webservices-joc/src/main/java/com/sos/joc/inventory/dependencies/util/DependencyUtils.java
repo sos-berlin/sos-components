@@ -2,6 +2,8 @@ package com.sos.joc.inventory.dependencies.util;
 
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,9 +26,11 @@ public class DependencyUtils {
     
     public static Map<Dependency, Set<Dependency>> resolveReferencedBy(List<DBItemInventoryExtendedDependency> dependencies) {
         if(dependencies != null && !dependencies.isEmpty()) {
-            return dependencies.stream()
-                    .collect(Collectors.groupingBy(DBItemInventoryExtendedDependency::getDependency, 
-                            Collectors.mapping(DBItemInventoryExtendedDependency::getReference, Collectors.toSet())));
+            Map<Dependency, Set<Dependency>> resolved = new HashMap<Dependency, Set<Dependency>>();
+            dependencies.stream().map(DBItemInventoryExtendedDependency::getDependency).forEach(dep -> resolved.putIfAbsent(dep,
+                    new HashSet<Dependency>()));
+            dependencies.stream().forEach(item -> resolved.get(item.getDependency()).add(item.getReferencedBy()));
+            return resolved;
         } else {
             return Collections.emptyMap();
         }
@@ -34,9 +38,11 @@ public class DependencyUtils {
     
     public static Map<Dependency, Set<Dependency>> resolveReferences(List<DBItemInventoryExtendedDependency> dependencies) {
         if(dependencies != null && !dependencies.isEmpty()) {
-            return dependencies.stream()
-                    .collect(Collectors.groupingBy(DBItemInventoryExtendedDependency::getReference, 
-                            Collectors.mapping(DBItemInventoryExtendedDependency::getDependency, Collectors.toSet())));
+            Map<Dependency, Set<Dependency>> resolved = new HashMap<Dependency, Set<Dependency>>();
+            dependencies.stream().map(DBItemInventoryExtendedDependency::getReferencedBy).forEach(dep -> resolved.putIfAbsent(dep,
+                    new HashSet<Dependency>()));
+            dependencies.stream().forEach(item -> resolved.get(item.getReferencedBy()).add(item.getDependency()));
+            return resolved;
         } else {
             return Collections.emptyMap();
         }
@@ -55,6 +61,13 @@ public class DependencyUtils {
         } else {
             return Paths.get(folder).resolve(name).toString().replace('\\', '/');
         }
+    }
+    
+    public static Set<ConfigurationObject> convert(Set<Dependency> dependencies) {
+        if(dependencies == null) {
+            return Collections.emptySet();
+        }
+        return dependencies.stream().map(DependencyUtils::convert).collect(Collectors.toSet());
     }
     
     public static ConfigurationObject convert(Dependency dependency) {

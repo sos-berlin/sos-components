@@ -1,11 +1,16 @@
 package com.sos.joc.inventory.dependencies.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -208,98 +213,34 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
 //    }
     
     private static ResponseItem getResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
-        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(dbLayer.getSession());
-        List<RequestItem> requestItems = filter.getConfigurations();
+        Set<RequestItem> requestItems = new HashSet<RequestItem>(filter.getConfigurations());
+        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(dbLayer.getSession()).stream()
+                .filter(item -> requestItems.contains(item.getInvRequestItem()) || requestItems.contains(item.getDepRequestItem()))
+                .collect(Collectors.toList());
         Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
-        // remove all keys that are not present in the filter
-//        itemsWithReferences.keySet().removeIf(dep -> {
-//            RequestItem req = new RequestItem();
-//            req.setName(dep.getName());
-//            req.setType(dep.getType());
-//            return !requestItems.contains(req);
-//        });
-        Map<Dependency, Set<Dependency>> requestedItemsWithReferences = itemsWithReferences.entrySet().stream().filter(entry -> {
-            RequestItem req = new RequestItem();
-            req.setName(entry.getKey().getName());
-            req.setType(entry.getKey().getType());
-            return requestItems.contains(req);
-        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)); 
         Map<Dependency, Set<Dependency>> itemsReferencedBy = DependencyUtils.resolveReferencedBy(dependencies);
-        Map<Dependency, Set<Dependency>> requestedByItemsWithReferences = itemsReferencedBy.entrySet().stream().filter(entry -> {
-            RequestItem req = new RequestItem();
-            req.setName(entry.getKey().getName());
-            req.setType(entry.getKey().getType());
-            return requestItems.contains(req);
-        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)); 
+        
+        Map<RequestItem, Dependency> reqDeps = Stream.concat(itemsWithReferences.keySet().stream(), itemsReferencedBy.keySet().stream()).distinct()
+                .collect(Collectors.toMap(Dependency::getRequestItem, Function.identity(), (K1,K2) -> K1));
+        
         ResponseItem response = new ResponseItem();
-        if(!requestedItemsWithReferences.isEmpty()) {
-            Stream<RequestedResponseItem> refs = requestedItemsWithReferences.entrySet().stream().map(entry -> {
-                RequestedResponseItem item = new RequestedResponseItem();
-                ConfigurationObject cfg = new ConfigurationObject();
-                Dependency requested = entry.getKey();
-                cfg.setObjectType(requested.getType());
-                cfg.setName(requested.getName());
-                cfg.setPath(DependencyUtils.resolvePath(requested.getFolder(), requested.getName()));
-                cfg.setValid(requested.getValid());
-                cfg.setDeployed(requested.getDeployed());
-                cfg.setReleased(requested.getReleased());
-                item.setType(requested.getType());
-                item.setName(requested.getName());
-                item.setConfiguration(cfg);
-                item.getReferences().addAll(entry.getValue().stream().map(DependencyUtils::convert).collect(Collectors.toSet()));
-                if(itemsReferencedBy.get(entry.getKey()) != null) {
-                    item.getReferencedBy().addAll(itemsReferencedBy.get(entry.getKey()).stream()
-                            .map(DependencyUtils::convert).collect(Collectors.toSet()));
-                    response.getAffectedItems().addAll(itemsReferencedBy.get(entry.getKey()).stream()
-                            .filter(referencedBy -> itemsWithReferences.containsKey(referencedBy))
-                            .map(DependencyUtils::getAffectedResponseItem).collect(Collectors.toSet()));
-                }
-                response.getAffectedItems().addAll(entry.getValue().stream().filter(reference -> itemsWithReferences.containsKey(reference))
-                        .map(DependencyUtils::getAffectedResponseItem).collect(Collectors.toSet()));
-                return item;
-            });
-            Stream<RequestedResponseItem> reqs = requestItems.stream().map(requested -> {
-                RequestedResponseItem item = new RequestedResponseItem();
-                item.setType(requested.getType());
-                item.setName(requested.getName());
-                return item;
-            });
-            response.getRequestedItems().addAll(Stream.concat(refs, reqs).collect(Collectors.toSet()));
-        }
-        if (!requestedByItemsWithReferences.isEmpty()) {
-            Stream<RequestedResponseItem> refsBy = requestedByItemsWithReferences.entrySet().stream().map(entry -> {
-                RequestedResponseItem item = new RequestedResponseItem();
-                ConfigurationObject cfg = new ConfigurationObject();
-                Dependency requested = entry.getKey();
-                cfg.setObjectType(requested.getType());
-                cfg.setName(requested.getName());
-                cfg.setPath(DependencyUtils.resolvePath(requested.getFolder(), requested.getName()));
-                cfg.setValid(requested.getValid());
-                cfg.setDeployed(requested.getDeployed());
-                cfg.setReleased(requested.getReleased());
-                item.setType(requested.getType());
-                item.setName(requested.getName());
-                item.setConfiguration(cfg);
-                item.getReferencedBy().addAll(entry.getValue().stream().map(DependencyUtils::convert).collect(Collectors.toSet()));
-                if(itemsWithReferences.get(entry.getKey()) != null) {
-                    item.getReferences().addAll(itemsWithReferences.get(entry.getKey()).stream()
-                            .map(DependencyUtils::convert).collect(Collectors.toSet()));
-                    response.getAffectedItems().addAll(itemsWithReferences.get(entry.getKey()).stream()
-                            .filter(references -> itemsReferencedBy.containsKey(references))
-                            .map(DependencyUtils::getAffectedResponseItem).collect(Collectors.toSet()));
-                }
-                response.getAffectedItems().addAll(entry.getValue().stream().filter(referencedBy -> itemsReferencedBy.containsKey(referencedBy))
-                        .map(DependencyUtils::getAffectedResponseItem).collect(Collectors.toSet()));
-                return item;
-            });
-            Stream<RequestedResponseItem> reqs = requestItems.stream().map(requested -> {
-                RequestedResponseItem item = new RequestedResponseItem();
-                item.setType(requested.getType());
-                item.setName(requested.getName());
-                return item;
-            });
-            response.getRequestedItems().addAll(Stream.concat(refsBy, reqs).collect(Collectors.toSet()));
-        }
+        response.setRequestedItems(requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull).map(dependency -> {
+                    RequestedResponseItem rri = new RequestedResponseItem();
+                    ConfigurationObject cfg = new ConfigurationObject();
+                    cfg.setObjectType(dependency.getType());
+                    cfg.setName(dependency.getName());
+                    cfg.setPath(DependencyUtils.resolvePath(dependency.getFolder(), dependency.getName()));
+                    cfg.setValid(dependency.getValid());
+                    cfg.setDeployed(dependency.getDeployed());
+                    cfg.setReleased(dependency.getReleased());
+                    rri.setType(dependency.getType());
+                    rri.setName(dependency.getName());
+                    rri.setConfiguration(cfg);
+                    rri.setReferences(DependencyUtils.convert(itemsWithReferences.get(dependency)));
+                    rri.setReferencedBy(DependencyUtils.convert(itemsReferencedBy.get(dependency)));
+                    return rri;
+                }).collect(Collectors.toSet()));
+
         if(response.getAffectedItems().isEmpty()) {
             response.setAffectedItems(null);
         }

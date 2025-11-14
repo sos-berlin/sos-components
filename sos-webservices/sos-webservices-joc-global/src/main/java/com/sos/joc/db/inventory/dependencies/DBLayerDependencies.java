@@ -121,7 +121,9 @@ public class DBLayerDependencies extends DBLayer {
     
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-        hql.append(" where invId = :invId or invDependencyId = :invId");
+//        hql.append(" where invId = :invId or invDependencyId = :invId");
+//        hql.append(" where invId = :invId");
+        hql.append(" where invDependencyId = :invId");
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
         query.setParameter("invId", item.getId());
         List<DBItemInventoryDependency> resultsFound = getSession().getResultList(query);

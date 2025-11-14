@@ -10,6 +10,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.Dependency;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.dependencies.RequestItem;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -52,6 +53,7 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean invReleased;
     
+    @Id
     @Column(name = "[DEP_ID]", nullable = true)
     private Long depId;
     @Column(name = "[DEP_NAME]", nullable = true)
@@ -206,8 +208,24 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     }
     
     @Transient
-    public Dependency getReference() {
+    public Dependency getReferencedBy() {
         return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased);
+    }
+    
+    @Transient
+    public RequestItem getInvRequestItem() {
+        RequestItem req = new RequestItem();
+        req.setName(invName);
+        req.setType(getTypeAsEnum(invType));
+        return req;
+    }
+    
+    @Transient
+    public RequestItem getDepRequestItem() {
+        RequestItem req = new RequestItem();
+        req.setName(depName);
+        req.setType(getTypeAsEnum(depType));
+        return req;
     }
     
     @Transient
