@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+    <job xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xhtml="http://www.w3.org/1999/xhtml"
+         name="RESTClientJob"
+         title="Send Request to a Web Service API">
+        <script language="java" java_class="com.sos.jitl.jobs.rest.RESTClientJob" resource="1"/>
+    </job>
+
+    <configuration>
+        <params id="job_parameter">
+            <param name="request" required="true">
+                <note>
+                    <title>JSON for the API Request</title>
+                    <p>
+                        Specifies the REST API request details in JSON format. The object should contain the following keys:<br/>
+                        <ul style="margin-left:20px;">
+                            <li><b>endpoint</b> – Full URL of the API (e.g., <code>https://example.com/api/users</code>).</li>
+                            <li><b>method</b> – HTTP method, one of <code>GET</code>, <code>POST</code>, <code>PUT</code>, or <code>DELETE</code>.</li>
+                            <li><b>headers</b> – Optional headers, such as <code>Authorization</code>, sent with the request.</li>
+                            <li><b>body</b> – Optional request payload in JSON format, used for <code>POST</code> or <code>PUT</code> requests.</li>
+                        </ul>
+                    </p>
+                    <p>
+                        Example:
+                        <pre><code><![CDATA[
+{
+  "endpoint": "https://example.com/api/users",
+  "method": "POST",
+  "headers": [
+    { "key": "Authorization", "value": "Basic dXNlcjpfzZWNyZXQ=" }
+  ],
+  "body": {
+    "id": "2",
+    "details": { "name": "John", "age": "50", "email": "example@gmail.com" }
+  }
+}
+                        ]]></code></pre>
+                    </p>
+                </note>
+            </param>
+            <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="return_variable"
+                required="false">
+                <note>
+                    <title>JSON Object Array </title>                                                                                      
+                    An array of JSON objects, each containing two keys:
+                    <br/>1) name: The variable name used to access the value extracted by the JQ query defined in the path key.
+                    <br/>2) path: A JQ query to extract a value from a JSON input. Optionally, this key may also contain file output instructions in the format:
+                    <br/>[JQ query] || [Processing Instruction] [File Path]
+                    <br/>If || is present, it indicates that the query result should be written to a file. In this case, the processing instruction and file path must be provided. Supported processing instructions are:
+                    <br/>
+                    <ul style="margin-left:20px;">
+                    <li>&gt; : Overwrites the file with the query result.</li>
+                    <li>&gt;&gt; : Appends the query result to the file.</li>
+                </ul>
+                <p>
+                     Note: There must be at least one space between the processing instruction and the file path.
+                </p>
+                </note>
+            </param>
+			<param name="log_items" required="false">
+    <note>
+        <title>This <b>log_items</b> variable contains details of which items should be logged</title>
+        <p>
+            The user can specify which request or response details should be logged at the <b>info</b> level in the order log.  
+            The default value of this variable is <b>request:body</b>.
+        </p>
+        <p>
+            Example:
+            <pre><code><![CDATA[
+"log_items" = "request:body;response:headers"
+]]></code></pre>
+        </p>
+    </note>
+</param>
+            <param name="url" required="false">
+                <note>
+                    <title>The complete URL of the Web Service</title>
+                    <p>
+                        The URL of the API endpoint (e.g., <code>https://example.com/user/details</code>).  
+                        Can be provided directly in the <b>Workflow variables </b>or referenced from a <b>Job Resource</b>.
+                    </p>
+                </note>
+            </param>
+            <param name="username" required="false">
+                <note>
+                    <title>Username</title>
+                    <p>
+                        Specifies the username for Basic authentication.  
+                        Supported formats:<br/>
+                        <ul style="margin-left:20px;">
+                            <li>Plain text</li>
+                            <li>Encrypted value</li>
+                            <li>Reference to a credential from a Credential Store</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="password" required="false">
+                <note>
+                    <title>Password</title>
+                    <p>
+                        Specifies the password for authentication in one of the following formats:<br/>
+                        <ul style="margin-left:20px;">
+                            <li>Plain text</li>
+                            <li>Encrypted value</li>
+                            <li>Reference to a credential from a KeePass Credential Store</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="encipherment_private_key_path" required="false">
+                <note>
+                    <title>Path of the Encipherment Private Key</title>
+                    <p>
+                        Specifies the path to the private key used for decryption of encrypted username and password values.
+                        The file must be accessible to the Agent executing the job.
+                        For more details, see: 
+                        <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+Encryption+and+Decryption">JS7 – Encryption and Decryption</a>.
+                    </p>
+					<p> Path to the Encipherment Private Key stored in the JS7_PRIVATE_AGENT_DIR placeholder can be provided in the following formats:<br/>
+                     <ul style="margin-left:20px;">
+                       <li>Absolute path: full path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ <extraction-directory/agent/var/config/private/encryption.key   ]]></code></pre></li>
+                       <li>Relative path: relative path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ ./config/private/encryption.key  ]]></code></pre></li>
+                    </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="keystore_file" required="false">
+                <note>
+                    <title>Path to the Keystore File</title>
+                    <p>
+                        Specifies the path to a <code>PKCS12</code> keystore file holding the private key and certificate
+                        used for HTTPS communication or mutual TLS (mTLS) authentication. This parameter can be referenced dynamically using a Job Resource.
+                    </p> <br/>
+                    <p> Path to the Keystore file stored in the JS7_PRIVATE_AGENT_DIR placeholder can be provided in the following formats:<br/>
+                     <ul style="margin-left:20px;">
+                       <li>Absolute path: full path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ <extraction-directory/agent/var/config/private/https-keystore.p12   ]]></code></pre></li>
+                       <li>Relative path: relative path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ ./config/private/https-keystore.p12  ]]></code></pre></li>
+                    </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="keystore_alias" required="false">
+                <note>
+                    <title>Certificate Alias</title>
+                    <p>
+                        Specifies the alias name under which the client certificate is stored in the keystore.
+                        This alias identifies which key entry should be used for HTTPS communication.
+                    </p>
+                </note>
+            </param>
+            <param name="keystore_password" required="false">
+                <note>
+                    <title>Keystore Password</title>
+                    <p>
+                        Specifies the password used to access the keystore file.  
+                        This password protects the keystore integrity.
+                    </p>
+                </note>
+            </param>
+            <param name="keystore_key_password" required="false">
+                <note>
+                    <title>Private Key Password</title>
+                    <p>
+                        Specifies the password for accessing the private key within the keystore.
+                        This is required if the private key is protected separately from the keystore password.
+                    </p>
+                </note>
+            </param>
+            <param name="truststore_file" required="false">
+                <note>
+                    <title>Path to the Truststore File</title>
+                    <p>
+                        Specifies the truststore file in <code>PKCS12</code> format that holds the
+                        CA certificates used to verify the identity of remote HTTPS servers.
+                    </p>
+					<p> Path to the Truststore file stored in the JS7_PRIVATE_AGENT_DIR placeholder can be provided in the following formats:<br/>
+                     <ul style="margin-left:20px;">
+                       <li>Absolute path: full path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ <extraction-directory/agent/var/config/private/https-truststore.p12   ]]></code></pre></li>
+                       <li>Relative path: relative path to the JS7 agent private directory. Example:
+                        <pre><code><![CDATA[ ./config/private/https-truststore.p12  ]]></code></pre></li>
+                    </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="truststore_password" required="false">
+                <note>
+                    <title>Truststore Password</title>
+                    <p>
+                        Specifies the password for accessing the truststore file that contains CA certificates.
+                    </p>
+                </note>
+            </param>
+            <param name="credential_store_file" required="false">
+                <note>
+                    <title>Path of the KeePass Database File</title>
+                    <p>
+                        Specifies the path to a KeePass database file (<code>*.kdbx</code>) used as a Credential Store.
+                        This parameter is required if credentials (username/password) are retrieved from KeePass.
+                    </p>
+                    <p> Path to the KeePass Database file stored in the JS7_CONFIG_AGENT_DIR placeholder can be provided in the following formats:<br/>
+                     <ul style="margin-left:20px;">
+                       <li>Absolute path: full path to the JS7 agent config directory. Example:
+                        <pre><code><![CDATA[ <extraction-directory/agent/var/config/Database.kdbx   ]]></code></pre></li>
+                       <li>Relative path: relative path to the JS7 agent config directory. Example:
+                        <pre><code><![CDATA[ ./config/Database.kdbx  ]]></code></pre></li>
+                    </ul>
+                    </p>
+					
+                </note>
+            </param>
+            <param name="credential_store_key_file" required="false">
+                <note>
+                    <title>Path of the KeePass Key File</title>
+                    <p>
+                        Specifies the key file used to unlock the KeePass database.  
+                        Depending on your setup, you might use a key file, a password, or both.
+                    </p>
+					<p> Path to the KeePass key file stored in the JS7_CONFIG_AGENT_DIR placeholder can be provided in the following formats:<br/>
+                     <ul style="margin-left:20px;">
+                       <li>Absolute path: full path to the JS7 agent config directory. Example:
+                        <pre><code><![CDATA[ <extraction-directory/agent/var/config/Database.key   ]]></code></pre></li>
+                       <li>Relative path: relative path to the JS7 agent config directory. Example:
+                        <pre><code><![CDATA[ ./config/Database.key    ]]></code></pre></li>
+                    </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="credential_store_password" required="false">
+                <note>
+                    <title>Password of the KeePass Database</title>
+                    <p>
+                        Specifies the password required to access the KeePass credential store.
+                        You can use a password, a key file, or both depending on how your KeePass database is configured.
+                    </p>
+                </note>
+            </param>
+
+        </params>
+    </configuration>
+
+         <documentation xmlns:xi="http://www.w3.org/2001/XInclude"
+                  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+       <p>
+           The JITL RESTClientJob template can execute REST API requests for any third-party application that uses 
+           <b>Basic Authentication</b> (username and password encoded in Base64) and supports either 
+           <b>HTTP</b> or <b>HTTPS</b> protocols.
+       </p>
+
+       <p>The username and password used for authentication can be provided in multiple ways:</p>
+       <ul style="margin-left:20px;">
+	   <li>Directly inside the request JSON — for example, as Base64-encoded credentials within the headers,
+               or in the specific format required by the target web service API documentation.</li>
+			    Example:
+                        <pre><code><![CDATA[
+{
+  "endpoint": "https://example.com/api/users",
+  "method": "POST",
+  "headers": [
+    { "key": "Authorization", "value": "Basic dXNlcjpzZWNyZXQ=" }
+  ],
+  "body": {
+    "id": "2",
+    "details": { "name": "John", "age": "50", "email": "example@gmail.com" }
+  }
+}
+                        ]]></code></pre>
+           <li>As workflow variables. See: <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+Order+Variables#JS7OrderVariables-DeclaringVariables">Declaring Variables</a></li>
+		    Example:
+                <pre><code><![CDATA[
+"username" = "John"
+			]]></code></pre>
+           <li>In the job resources section. The user should attach the Job Resource to the job. See: <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+Job+Resources">JS7 - Job Resources</a></li>
+		    Example:
+                <pre><code><![CDATA[
+"username" = "John"
+			]]></code></pre>
+           
+       </ul>
+
+       <p>When credentials are provided in the <b>job resources</b>, they may be stored as plain text, 
+          though this is not secure. For a more secure setup, credentials can be:</p>
+       <ul style="margin-left:20px;">
+           <li>Encrypted and later decrypted at runtime using an encipherment private key. See:
+                        <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+Encryption+and+Decryption">JS7 – Encryption and Decryption</a>.</li>
+           <li>Stored securely in a <b>credential store</b> (such as a KeePass database). See:
+                        <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+Credential+Store">JS7 - Credential Store</a>.</li> 
+       </ul>
+
+       <p>
+           In such cases, users must provide either the encryption key or credential store access details 
+           (such as the store file path, key file, and password) depending on the chosen security method.
+       </p>
+
+       <p>
+           For <b>HTTPS</b> connections requiring identity verification, users can specify 
+           <b>PKCS12-format keystore and truststore credentials</b> in the job resources. 
+           These define the certificates and private keys used to establish secure SSL/TLS communication.
+           The following parameters can be used:
+       </p>
+       <ul style="margin-left:20px;">
+           <li><code>keystore_file</code> – Path to the PKCS12 keystore containing the private key and certificate.</li>
+           <li><code>keystore_password</code> – Password to access the keystore.</li>
+           <li><code>keystore_key_password</code> – Password for the private key.</li>
+           <li><code>keystore_alias</code> – Alias of the certificate within the keystore.</li>
+           <li><code>truststore_file</code> – Path to the PKCS12 truststore containing CA certificates.</li>
+           <li><code>truststore_password</code> – Password to access the truststore.</li>
+       </ul>
+
+       <p>
+           These settings enable the job to authenticate both the client and the server securely 
+           during HTTPS communication. See:
+                        <a href="https://kb.sos-berlin.com/display/JS7/JS7+-+How+to+add+SSL+TLS+Certificates+to+Keystore+and+Truststore">JS7 - How to add SSL TLS Certificates to Keystore and Truststore</a>
+       </p>
+
+       <p>
+           Overall, this JITL RESTClientJob provides a flexible and secure way to execute API calls 
+           across third-party web services, supporting both basic authentication and certificate-based 
+           HTTPS connections.
+       </p>
+	   
+   </documentation>
+</description>
+ 
