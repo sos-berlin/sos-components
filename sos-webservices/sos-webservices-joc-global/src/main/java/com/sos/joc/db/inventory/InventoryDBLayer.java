@@ -193,7 +193,19 @@ public class InventoryDBLayer extends DBLayer {
             hql.append(" where cid in (:configIds)");
             Query<Integer> query = getSession().createQuery(hql.toString());
             query.setParameter("configIds", configIds);
-            return getSession().executeUpdate(query);
+            int affected =  getSession().executeUpdate(query);
+            
+            try {
+                hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES);
+                hql.append(" where cid in (:configIds)");
+                query = getSession().createQuery(hql.toString());
+                query.setParameter("configIds", configIds);
+                getSession().executeUpdate(query);
+            } catch (Exception e) {
+                //
+            }
+            
+            return affected;
         }
     }
 

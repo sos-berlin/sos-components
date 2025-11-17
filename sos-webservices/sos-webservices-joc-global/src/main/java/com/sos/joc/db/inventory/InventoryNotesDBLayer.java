@@ -39,7 +39,7 @@ public class InventoryNotesDBLayer extends DBLayer {
     private InventorySearchItem getInvItem(String name, Integer type) {
         try {
             boolean isCalendar = JocInventory.isCalendar(type);
-            StringBuilder hql = new StringBuilder("select id as id, folder as folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            StringBuilder hql = new StringBuilder("select id as id, path as path, folder as folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where name=:name");
             if (isCalendar) {
                 hql.append(" and type in (:types)");
@@ -59,6 +59,37 @@ public class InventoryNotesDBLayer extends DBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public void deleteNote(Long configurationId) {
+        DBItemInventoryNote note = null;
+        if (getSession().isTransactionOpened()) {
+            deleteNoteTransactional(configurationId);
+        } else {
+            try {
+                note = getNote(configurationId);
+            } catch (Exception e) {
+                //
+            }
+            if (note != null) {
+                try {
+                    getSession().delete(note);
+                } catch (Exception e) {
+                    //
+                }
+            }
+        }
+    }
+    
+    private void deleteNoteTransactional(Long configurationId) {
+        try {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cId)");
+            Query<Integer> query = getSession().createQuery(hql.toString());
+            query.setParameter("cId", configurationId);
+            getSession().executeUpdate(query);
+        } catch (Exception e) {
+            //
         }
     }
 }

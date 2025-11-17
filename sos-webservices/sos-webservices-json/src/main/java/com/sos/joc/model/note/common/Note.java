@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "noteId",
+    "path",
     "metadata",
     "posts",
     "participants"
@@ -36,6 +38,15 @@ public class Note
      */
     @JsonProperty("noteId")
     private Long noteId;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String path;
     /**
      * metadata
      * <p>
@@ -69,6 +80,28 @@ public class Note
     @JsonProperty("noteId")
     public void setNoteId(Long noteId) {
         this.noteId = noteId;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
@@ -115,12 +148,12 @@ public class Note
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("noteId", noteId).append("metadata", metadata).append("posts", posts).append("participants", participants).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("noteId", noteId).append("path", path).append("metadata", metadata).append("posts", posts).append("participants", participants).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(noteId).append(metadata).append(posts).append(participants).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(noteId).append(metadata).append(posts).append(participants).toHashCode();
     }
 
     @Override
@@ -132,7 +165,7 @@ public class Note
             return false;
         }
         Note rhs = ((Note) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(noteId, rhs.noteId).append(metadata, rhs.metadata).append(posts, rhs.posts).append(participants, rhs.participants).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(noteId, rhs.noteId).append(metadata, rhs.metadata).append(posts, rhs.posts).append(participants, rhs.participants).isEquals();
     }
 
 }

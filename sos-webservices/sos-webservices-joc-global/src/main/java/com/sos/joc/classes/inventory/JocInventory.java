@@ -69,6 +69,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -1032,6 +1033,9 @@ public class JocInventory {
             dbLayer.deleteSearchWorkflowByInventoryId(item.getId(), false);
         }
         dbLayer.getSession().delete(item);
+        
+        InventoryNotesDBLayer noteDbLayer = new InventoryNotesDBLayer(dbLayer.getSession());
+        noteDbLayer.deleteNote(item.getId());
     }
 
     public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws JsonParseException,

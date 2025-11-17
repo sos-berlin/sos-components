@@ -47,6 +47,7 @@ import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryGroupsEvent;
 import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
+import com.sos.joc.event.bean.inventory.InventoryNoteEvent;
 import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
@@ -320,6 +321,20 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId() / 1000);
             eventSnapshot.setEventType(evt.getKey()); // InventoryObjectUpdated
+            eventSnapshot.setObjectType(EventType.fromValue(evt.getObjectType()));
+            eventSnapshot.setPath(evt.getPath());
+            addEvent(eventSnapshot);
+        } catch (Exception e) {
+            //
+        }
+    }
+    
+    @Subscribe({ InventoryNoteEvent.class })
+    public void createInventoryNoteEvent(InventoryNoteEvent evt) {
+        try {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
+            eventSnapshot.setEventType(evt.getKey()); // InventoryNoteUpdated, InventoryNoteAdded, InventoryNoteDeleted
             eventSnapshot.setObjectType(EventType.fromValue(evt.getObjectType()));
             eventSnapshot.setPath(evt.getPath());
             addEvent(eventSnapshot);

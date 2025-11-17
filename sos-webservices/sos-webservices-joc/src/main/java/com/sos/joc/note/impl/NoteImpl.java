@@ -14,6 +14,8 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryNote;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryNoteDeleteEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -21,6 +23,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.note.DisplayPreferencesRequest;
 import com.sos.joc.model.note.NoteResponse;
+import com.sos.joc.model.note.common.Author;
 import com.sos.joc.model.note.common.ModifyRequest;
 import com.sos.joc.model.note.common.NoteIdentifier;
 import com.sos.joc.note.resource.INote;
@@ -48,9 +51,12 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             }
             
             checkObjectType(in.getObjectType());
+            in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
-            DBItemInventoryNote dbItem = getDBNoteItem(session, in, folderPermissions);
-            NoteResponse note = getNoteResponse(dbItem, in);
+            InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
+            InventorySearchItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
+            NoteResponse note = getNoteResponse(dbItem, in, invItem.getPath());
             note.setDeliveryDate(Date.from(Instant.now()));
             note.setNoteId(dbItem.getId());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(note));
@@ -61,7 +67,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         }
     }
     
-    private static NoteResponse getNoteResponse(DBItemInventoryNote dbItem, NoteIdentifier in) throws JsonMappingException, JsonProcessingException {
+    private static NoteResponse getNoteResponse(DBItemInventoryNote dbItem, NoteIdentifier in, String path) throws JsonMappingException, JsonProcessingException {
         if (dbItem == null) {
             throw new DBMissingDataException(String.format("Couldn't find note of %s: %s", in.getObjectType().name().toLowerCase(), in.getName()));
 
@@ -69,12 +75,12 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             NoteResponse note = Globals.objectMapper.readValue(dbItem.getContent(), NoteResponse.class);
             note.setName(in.getName());
             note.setObjectType(in.getObjectType());
+            note.setPath(path);
             return note;
         }
     }
     
-    private static DBItemInventoryNote getDBNoteItem(SOSHibernateSession session, NoteIdentifier in, SOSAuthFolderPermissions folderPermissions) {
-        InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
+    protected static InventorySearchItem getInvItem(InventoryNotesDBLayer dbLayer, NoteIdentifier in, SOSAuthFolderPermissions folderPermissions) {
         InventorySearchItem invItem = dbLayer.getInvItem(in);
         if (invItem == null) {
             throw new DBMissingDataException(String.format("Couldn't find %s: %s", in.getObjectType().name().toLowerCase(), in.getName()));
@@ -82,7 +88,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         if (!folderPermissions.isPermittedForFolder(invItem.getFolder())) {
             throw new JocFolderPermissionsException(invItem.getFolder());
         }
-        return dbLayer.getNote(invItem.getId());
+        return invItem;
     }
     
     protected static void checkObjectType(ConfigurationType type) {
@@ -91,6 +97,12 @@ public class NoteImpl extends JOCResourceImpl implements INote {
          }
     }
     
+    protected static Author newAuthor(String userName) {
+        Author a = new Author();
+        a.setUserName(userName);
+        return a;
+    }
+
     @Override
     public JOCDefaultResponse delete(String accessToken, byte[] body) {
         SOSHibernateSession session = null;
@@ -104,11 +116,15 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             }
             
             checkObjectType(in.getObjectType());
+            in.setName(JocInventory.pathToName(in.getName()));
             storeAuditLog(in.getAuditLog());
             session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
-            DBItemInventoryNote dbItem = getDBNoteItem(session, in, folderPermissions);
+            InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
+            InventorySearchItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
             if (dbItem != null) {
                 session.delete(dbItem);
+                EventBus.getInstance().post(new InventoryNoteDeleteEvent(invItem.getPath(), in.getObjectType().value()));
             }
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
@@ -131,16 +147,19 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             }
             
             checkObjectType(in.getObjectType());
+            in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL_PREFS);
-            DBItemInventoryNote dbItem = getDBNoteItem(session, in, folderPermissions);
-            NoteResponse note = getNoteResponse(dbItem, in);
+            InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
+            InventorySearchItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
+            NoteResponse note = getNoteResponse(dbItem, in, invItem.getPath());
             
             if (!in.getDisplayPreferences().equals(note.getMetadata().getDisplayPreferences())) {
                 Date now = Date.from(Instant.now());
                 
                 note.getMetadata().setDisplayPreferences(in.getDisplayPreferences());
                 note.getMetadata().setModified(now);
-                note.getMetadata().setModifiedBy(AddPostImpl.newAuthor(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname()));
+                note.getMetadata().setModifiedBy(newAuthor(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname()));
                 
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
                 dbItem.setModified(now);
