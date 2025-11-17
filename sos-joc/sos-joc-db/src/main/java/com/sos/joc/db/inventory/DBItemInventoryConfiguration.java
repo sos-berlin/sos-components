@@ -79,6 +79,10 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Convert(converter = NumericBooleanConverter.class)
     private boolean repoControlled = false;
 
+    @Column(name = "[DIRTY]", nullable = false)
+    @Convert(converter = NumericBooleanConverter.class)
+    private boolean dirty = false;
+
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
 
@@ -207,6 +211,14 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setRepoControlled(boolean repoControlled) {
         this.repoControlled = repoControlled;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public Long getAuditLogId() {
