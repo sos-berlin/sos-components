@@ -19,7 +19,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
-import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
@@ -41,7 +40,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
 
     public JOCDefaultResponse rename(RequestFilter in, String request) throws Exception {
         SOSHibernateSession session = null;
-        List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>(); 
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
@@ -147,7 +145,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
-                    updated.add(config);
                 } else {
                     JocInventory.updateConfiguration(dbLayer, config);
                 }
@@ -161,7 +158,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     if (deletedIds.remove(item.getId())) {
                         config.setId(null);
                         JocInventory.insertConfiguration(dbLayer, item);
-                        updated.add(item);
                     } else {
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
