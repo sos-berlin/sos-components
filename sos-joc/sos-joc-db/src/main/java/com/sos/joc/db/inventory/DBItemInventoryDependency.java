@@ -43,6 +43,11 @@ public class DBItemInventoryDependency extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
+    @Column(name = "[ENFORCE]", nullable = false)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean enforce;
+
+    
     public Integer getDependencyType() {
         return dependencyType;
     }
@@ -106,6 +111,15 @@ public class DBItemInventoryDependency extends DBItem {
             this.published = false;
         }
         this.published = published;
+    }
+
+    
+    public Boolean getEnforce() {
+        return enforce;
+    }
+    
+    public void setEnforce(Boolean enforce) {
+        this.enforce = enforce;
     }
 
 }
