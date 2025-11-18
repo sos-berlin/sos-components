@@ -1151,7 +1151,13 @@ public class DependencyResolver {
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         new Thread(() -> {
             try {
-                insertOrRenewDependencies(inventoryDbItem);
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
+                    insertOrRenewDependencies(session, inventoryDbItem);
+                } finally {
+                    Globals.disconnect(session);
+                }
             } catch (Exception e) {
                 //TODO use ProblemHelper
                 LOGGER.error("", e);
@@ -1169,7 +1175,13 @@ public class DependencyResolver {
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         new Thread(() -> {
             try {
-                insertOrRenewDependencies(allCfgs, withPool);
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
+                    insertOrRenewDependencies(session, allCfgs, withPool);
+                } finally {
+                    Globals.disconnect(session);
+                }
             } catch (Exception e) {
                 //TODO use ProblemHelper
                 LOGGER.error("", e);
@@ -1177,22 +1189,16 @@ public class DependencyResolver {
         }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
     }
     
-    public static void insertOrRenewDependencies(DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException, IOException {
+    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException, IOException {
         // this method is in use (JocInventory update and insert methods)
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
             ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
             resolveReferences(references, session);
             DBLayerDependencies layer = new DBLayerDependencies(session);
             // store new dependencies
             layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
-        } finally {
-            Globals.disconnect(session);
-        }
     }
 
-    public static void insertOrRenewDependencies(List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
+    public static void insertOrRenewDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         // this method is in use
         Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
@@ -1224,22 +1230,16 @@ public class DependencyResolver {
             } finally {
                 executorService.shutdown();
             }
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection("storeDependencies");
-                DBLayerDependencies layer = new DBLayerDependencies(session);
-                referencedItems.stream()
-                    .filter(item -> !(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty()))
-                    .forEach(ref -> {
-                        try {
-                            layer.insertOrReplaceDependencies(ref.getReferencedItem(), convert(ref, layer.getSession()));
-                        } catch (Exception e) {
-                            LOGGER.error("", e);
-                        }
-                    });
-            } finally {
-                Globals.disconnect(session);
-            }
+            DBLayerDependencies layer = new DBLayerDependencies(session);
+            referencedItems.stream()
+                .filter(item -> !(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty()))
+                .forEach(ref -> {
+                    try {
+                        layer.insertOrReplaceDependencies(ref.getReferencedItem(), convert(ref, layer.getSession()));
+                    } catch (Exception e) {
+                        LOGGER.error("", e);
+                    }
+                });
         }
     }
 
@@ -1462,5 +1462,5 @@ public class DependencyResolver {
         object.setObjectType(item.getTypeAsEnum());
         return object;
     }
-
+    
 }
