@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
@@ -238,12 +240,16 @@ public class JOCJsonCommand {
             HttpExecutionResult<String> result = client.executePOST(uri, client.mergeWithDefaultHeaders(Map.of("Content-Type", "application/json",
                     "Accept", "application/json", "X-CSRF-Token", getCsrfToken())), postBody);
             return getJsonStringFromResponse(result, uri, jocError);
-        } catch (SOSConnectionResetException e) {
-            throw new ControllerConnectionResetException(e.toString(), e);
-        } catch (SOSConnectionRefusedException e) {
-            throw new ControllerConnectionRefusedException(e.toString(), e);
-        } catch (SOSNoResponseException e) {
-            throw new ControllerNoResponseException(e.toString(), e);
+        } catch (HttpConnectTimeoutException e) {
+            throw new ControllerConnectionRefusedException(jocError, e);
+        } catch (HttpTimeoutException e) {
+            throw new ControllerNoResponseException(jocError, e);
+        } catch (IOException e) {
+            if (e.getMessage().contains("no bytes")) {
+                throw new ControllerNoResponseException(jocError, e);
+            } else {
+                throw new JocBadRequestException(jocError, e);
+            }
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
@@ -252,15 +258,10 @@ public class JOCJsonCommand {
     }
     
     public StreamingOutput getStreamingOutputFromGet(String acceptHeader, boolean withGzipEncoding) {
-        try {
-            return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding, getCsrfToken());
-        } catch (SOSNoResponseException e) {
-            throw new ControllerNoResponseException(e.toString(), e);
-        }
+        return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding, getCsrfToken());
     }
     
-    private StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding, String csrfToken)
-            throws SOSNoResponseException {
+    private StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding, String csrfToken) {
         Map<String,String> headers = new HashMap<String, String>(3);
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
             headers.put("Accept", acceptHeader);
@@ -302,7 +303,7 @@ public class JOCJsonCommand {
             }
             return fileStream;
         } catch (Exception e) {
-            throw new SOSNoResponseException(e);
+            throw new ControllerNoResponseException(e);
         } catch (Throwable e) {
             throw e;
         }
@@ -331,13 +332,17 @@ public class JOCJsonCommand {
                     client.mergeWithDefaultHeaders(Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken())),
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             return getJsonStringFromResponse(result, uri, jocError);
-        } catch (SOSConnectionRefusedException e) {
-            throw new ControllerConnectionRefusedException(e.toString(), e);
-        } catch (SOSConnectionResetException e) {
-            throw new ControllerConnectionResetException(e.toString(), e);
-        } catch (SOSNoResponseException e) {
-            throw new ControllerNoResponseException(e.toString(), e);
-        } catch (JocException e) {
+        } catch (HttpConnectTimeoutException e) {
+            throw new ControllerConnectionRefusedException(jocError, e);
+        } catch (HttpTimeoutException e) {
+            throw new ControllerNoResponseException(jocError, e);
+        } catch (IOException e) {
+            if (e.getMessage().contains("no bytes")) {
+                throw new ControllerNoResponseException(jocError, e);
+            } else {
+                throw new JocBadRequestException(jocError, e);
+            }
+        }  catch (JocException e) {
             throw e;
         } catch (Exception e) {
             throw new JocBadRequestException(jocError, e);
@@ -352,8 +357,9 @@ public class JOCJsonCommand {
     }
     
     private void init() throws ControllerConnectionRefusedException {
-        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
-                .withLogger(new SLF4JLogger(LOGGER)).withSSLContext(SSLContext.getInstance().getSSLContext());
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withRequestTimeout(
+                Duration.ofMillis(Globals.httpSocketTimeout)).withLogger(new SLF4JLogger(LOGGER)).withSSLContext(SSLContext.getInstance()
+                        .getSSLContext());
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new ControllerConnectionRefusedException("Couldn't find required truststore");
         }

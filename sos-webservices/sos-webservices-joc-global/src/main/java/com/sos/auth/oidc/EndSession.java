@@ -1,6 +1,8 @@
 package com.sos.auth.oidc;
 
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -17,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSLockerHelper;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.exception.SOSSSLException;
@@ -28,6 +29,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
@@ -165,6 +167,10 @@ public class EndSession {
             createClient();
             HttpExecutionResult<String> result = client.executePOST(uri, headers, HttpUtils.createUrlEncodedBodyfromMap(body));
             return getJsonStringFromResponse(result, uri, jocError);
+        } catch (HttpConnectTimeoutException e) {
+            throw new ControllerConnectionRefusedException("", e);
+        } catch (HttpTimeoutException e) {
+            throw new ControllerNoResponseException("", e);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {

@@ -36,6 +36,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
     // for consistent debug output instead of random order
     private Map<String, String> headers = new LinkedHashMap<String, String>();
     private Duration connectTimeout;
+    private Duration requestTimeout;
 
     /** Set followRedirects(HttpClient.Redirect.ALWAYS) to automatically follow 3xx redirects.<br/>
      * -- Note: java.net.http.HttpClient default=NEVER, Apache HttpClient - ALWAYS<br/>
@@ -109,6 +110,11 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
         this.connectTimeout = connectTimeout;
         return self();
     }
+    
+    public B withRequestTimeout(Duration requestTimeout) {
+        this.requestTimeout = requestTimeout;
+        return self();
+    }
 
     public T build() throws Exception {
         if (connectTimeout != null) {
@@ -148,6 +154,10 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
 
         T client = createInstance(logger, httpClientBuilder.build());
         client.setDefaultRequestHeaders(headers);
+        
+        if (requestTimeout != null) {
+            client.setRequestTimeout(requestTimeout);
+        }
         return client;
     }
 
