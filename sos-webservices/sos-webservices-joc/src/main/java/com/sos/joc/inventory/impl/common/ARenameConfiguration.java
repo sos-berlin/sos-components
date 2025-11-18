@@ -166,7 +166,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
-                DependencyResolver.updateDependencies(updated);
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 
