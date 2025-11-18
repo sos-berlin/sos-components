@@ -1,9 +1,7 @@
 package com.sos.joc.inventory.dependencies.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +41,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     private static final String API_CALL = "./inventory/dependencies";
     private static final List<ConfigurationType> referencesType = Arrays.asList(
             ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE, 
-            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE);
+            ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.INCLUDESCRIPT);
     private static final List<ConfigurationType> referencedByType = Arrays.asList(
             ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE, ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD,
             ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.INCLUDESCRIPT);
@@ -214,9 +212,9 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     
     private static ResponseItem getResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
         Set<RequestItem> requestItems = new HashSet<RequestItem>(filter.getConfigurations());
-        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(dbLayer.getSession()).stream()
-                .filter(item -> requestItems.contains(item.getInvRequestItem()) || requestItems.contains(item.getDepRequestItem()))
-                .collect(Collectors.toList());
+        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(dbLayer.getSession());
+        dependencies = dependencies.stream().filter(Objects::nonNull)
+                .filter(item -> requestItems.contains(item.getInvRequestItem()) || requestItems.contains(item.getDepRequestItem())).collect(Collectors.toList());
         Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
         Map<Dependency, Set<Dependency>> itemsReferencedBy = DependencyUtils.resolveReferencedBy(dependencies);
         

@@ -71,6 +71,9 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[DEP_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean depReleased;
+    @Column(name = "[ENFORCE]", nullable = false)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean enforce;
     
     public Long getInvId() {
         return invId;
@@ -170,6 +173,12 @@ public class DBItemInventoryExtendedDependency extends DBItem {
         this.depReleased = depReleased;
     }
     
+    public Boolean getEnforce() {
+        return enforce;
+    }
+    public void setEnforce(Boolean enforce) {
+        this.enforce = enforce;
+    }
     
     @Transient
     public String getInvPathAsString() {
