@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
@@ -110,6 +112,9 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 JocInventory.updateConfiguration(dbLayer, item);
             }
             
+            DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
+            depDbLayer.updateEnforce(dBFolderContent.stream().map(DBItemInventoryConfiguration::getId).toList());
+            
             session.commit();
             auditLogObjectsLogging.log();
             
@@ -184,6 +189,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
+                DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
+                depDbLayer.updateEnforce(Collections.singleton(config.getId()));
                 auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
                         dbAuditLog));
                 setItem(config, p, dbAuditLog.getId());

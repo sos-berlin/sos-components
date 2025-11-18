@@ -183,8 +183,7 @@ public class DBLayerDependencies extends DBLayer {
         if (invIds == null || invIds.isEmpty()) {
             return 0;
         }
-        StringBuilder hql = new StringBuilder("update from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-        hql.append("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set enforce=true where ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set enforce=true where ");
         if (invIds.size() == 1) {
             hql.append("invId=:invId ");
         } else {
