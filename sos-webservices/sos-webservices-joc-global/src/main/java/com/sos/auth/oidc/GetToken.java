@@ -3,6 +3,8 @@ package com.sos.auth.oidc;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -27,6 +29,7 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
@@ -130,6 +133,10 @@ public class GetToken {
             HttpExecutionResult<String> result = client.executePOST(uri, 
                     client.mergeWithDefaultHeaders(headers), asBodyString(body));
             return getJsonStringFromResponse(result, uri, jocError);
+        } catch (HttpConnectTimeoutException e) {
+            throw new ControllerConnectionRefusedException("", e);
+        } catch (HttpTimeoutException e) {
+            throw new ControllerNoResponseException("", e);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
@@ -167,6 +174,11 @@ public class GetToken {
                     throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
                             response));
                 }
+            case 400:
+                if (!response.isEmpty()) {
+                    throw new JocBadRequestException(httpReplyCode + ": " + response);
+                }
+                throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
             default:
                 throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
             }

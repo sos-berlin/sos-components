@@ -1,7 +1,9 @@
 package com.sos.auth.oidc;
 
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -22,6 +24,7 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
@@ -82,6 +85,10 @@ public class GetOpenIdConfiguration {
             createClient();
             HttpExecutionResult<String> result = client.executeGET(uri, headers, HttpResponse.BodyHandlers.ofString());
             return getJsonStringFromResponse(result, uri, jocError);
+        } catch (HttpConnectTimeoutException e) {
+            throw new ControllerConnectionRefusedException("", e);
+        } catch (HttpTimeoutException e) {
+            throw new ControllerNoResponseException("", e);
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
