@@ -84,7 +84,7 @@ public class InventoryNotesDBLayer extends DBLayer {
     
     private void deleteNoteTransactional(Long configurationId) {
         try {
-            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cId)");
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cId");
             Query<Integer> query = getSession().createQuery(hql.toString());
             query.setParameter("cId", configurationId);
             getSession().executeUpdate(query);
