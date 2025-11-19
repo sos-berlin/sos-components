@@ -213,12 +213,12 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     
     @Transient
     public Dependency getDependency() {
-        return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased);
+        return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased, enforce);
     }
     
     @Transient
     public Dependency getReferencedBy() {
-        return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased);
+        return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased, enforce);
     }
     
     @Transient

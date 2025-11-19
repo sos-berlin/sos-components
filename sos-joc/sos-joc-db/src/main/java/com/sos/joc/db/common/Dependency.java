@@ -15,6 +15,7 @@ public class Dependency {
     private Boolean valid;
     private Boolean deployed;
     private Boolean released;
+    private Boolean enforce = false;
     
     public Dependency(RequestItem requestItem) {
         this.id = null;
@@ -25,7 +26,7 @@ public class Dependency {
         this.deployed = null;
         this.released = null;
     }
-    public Dependency(Long id, String name, ConfigurationType type, String folder, Boolean valid, Boolean deployed, Boolean released) {
+    public Dependency(Long id, String name, ConfigurationType type, String folder, Boolean valid, Boolean deployed, Boolean released, Boolean enforce) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -33,6 +34,7 @@ public class Dependency {
         this.valid = valid;
         this.deployed = deployed;
         this.released = released;
+        this.enforce = enforce;
     }
     
     public Long getId() {
@@ -62,7 +64,11 @@ public class Dependency {
     public Boolean getReleased() {
         return released;
     }
-
+    
+    public Boolean getEnforce() {
+        return enforce;
+    }
+    
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(id).toHashCode();

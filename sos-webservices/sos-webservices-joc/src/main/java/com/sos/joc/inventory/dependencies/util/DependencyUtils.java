@@ -16,6 +16,7 @@ import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.dependencies.get.AffectedResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.EnforcedConfigurationObject;
 
 public class DependencyUtils {
     
@@ -63,15 +64,15 @@ public class DependencyUtils {
         }
     }
     
-    public static Set<ConfigurationObject> convert(Set<Dependency> dependencies) {
+    public static Set<EnforcedConfigurationObject> convert(Set<Dependency> dependencies) {
         if(dependencies == null) {
             return Collections.emptySet();
         }
         return dependencies.stream().map(DependencyUtils::convert).collect(Collectors.toSet());
     }
     
-    public static ConfigurationObject convert(Dependency dependency) {
-        ConfigurationObject config = new ConfigurationObject();
+    public static EnforcedConfigurationObject convert(Dependency dependency) {
+        EnforcedConfigurationObject config = new EnforcedConfigurationObject();
         if(dependency.getType() != null) {
             config.setObjectType(dependency.getType());
             config.setName(dependency.getName());
@@ -79,6 +80,7 @@ public class DependencyUtils {
             config.setValid(dependency.getValid());
             config.setDeployed(dependency.getDeployed());
             config.setReleased(dependency.getReleased());
+            config.setEnforce(dependency.getEnforce());
         }
         return config;
     }

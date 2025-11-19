@@ -1285,7 +1285,7 @@ public class DependencyResolver {
             dependency.setInvId(reference.getReferencedItem().getId());
             dependency.setDependencyType(item.getTypeAsEnum());
             dependency.setInvDependencyId(item.getId());
-            // check dep_configurations view if item is deployed
+            // check if item is already deployed or released
             dependency.setPublished(isPublished(dblayer, item));
             dependency.setEnforce(!dependency.getPublished());
 
