@@ -22,6 +22,7 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -59,6 +60,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setHasDeployments(false);
             item.setHasReleases(false);
             item.setIsReferencedBy(null);
+            item.setHasNote(new InventoryNotesDBLayer(session).hasNote(config.getId()));
             
             if (in.getCommitId() != null && !in.getCommitId().isEmpty() && JocInventory.isDeployable(type)) {
                 String invContentFromDepHistory = dbLayer.getDeployedInventoryContent(config.getId(), in.getCommitId());
@@ -199,6 +201,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setDeployments(null);
             item.setHasDeployments(null);
             item.setHasReleases(null);
+            item.setHasNote(null);
             item.setIsReferencedBy(null);
             item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             

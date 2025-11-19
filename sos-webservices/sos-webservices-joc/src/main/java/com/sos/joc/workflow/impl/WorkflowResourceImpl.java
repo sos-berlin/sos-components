@@ -22,6 +22,7 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.Workflow;
@@ -86,6 +87,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 String path = WorkflowPaths.getPath(content.getName());
                 checkFolderPermissions(path, folderPermissions.getListOfFolders());
                 workflow.setPath(path);
+                workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId()) ? true : null);
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);

@@ -1034,8 +1034,10 @@ public class JocInventory {
         }
         dbLayer.getSession().delete(item);
         
-        InventoryNotesDBLayer noteDbLayer = new InventoryNotesDBLayer(dbLayer.getSession());
-        noteDbLayer.deleteNote(item.getId());
+        if (!JocInventory.isFolder(item.getType())) {
+            InventoryNotesDBLayer noteDbLayer = new InventoryNotesDBLayer(dbLayer.getSession());
+            noteDbLayer.deleteNote(item.getId());
+        }
     }
 
     public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws JsonParseException,

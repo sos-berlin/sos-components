@@ -15,6 +15,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.lock.resource.ILockResource;
@@ -70,6 +71,8 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
                     .getDailyPlanTimeZone(), session);
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId()));
+            
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

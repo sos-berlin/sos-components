@@ -10,6 +10,7 @@ import com.sos.joc.Globals;
 
 public class DeployedContent {
 
+    private Long invId;
     private String json;
     private String path;
     private String name;
@@ -17,8 +18,10 @@ public class DeployedContent {
     private String commitId;
     private Boolean isCurrentVersion;
     private Date created;
+    private boolean hasNote = false;
     
-    public DeployedContent(String path, String instructionJson, String commitId) {
+    public DeployedContent(Long invId, String path, String instructionJson, String commitId) {
+        this.invId = invId;
         this.path = path;
         this.json = instructionJson;
         this.commitId = commitId;
@@ -26,7 +29,8 @@ public class DeployedContent {
         this.isCurrentVersion = null;
     }
     
-    public DeployedContent(String path, String name, String title, String json, String commitId) {
+    public DeployedContent(Long invId, String path, String name, String title, String json, String commitId) {
+        this.invId = invId;
         this.path = path;
         this.title = title;
         this.name = name;
@@ -36,7 +40,8 @@ public class DeployedContent {
         this.isCurrentVersion = null;
     }
     
-    public DeployedContent(String path, String json, String commitId, Date created, Boolean isCurrentVersion) {
+    public DeployedContent(Long invId, String path, String json, String commitId, Date created, Boolean isCurrentVersion) {
+        this.invId = invId;
         this.path = path;
         this.json = json;
         this.commitId = commitId;
@@ -44,7 +49,8 @@ public class DeployedContent {
         this.isCurrentVersion = isCurrentVersion;
     }
     
-    public DeployedContent(String path, String name, String title, String json, String commitId, Date created, Boolean isCurrentVersion) {
+    public DeployedContent(Long invId, String path, String name, String title, String json, String commitId, Date created, Boolean isCurrentVersion) {
+        this.invId = invId;
         this.path = path;
         this.title = title;
         this.name = name;
@@ -71,6 +77,10 @@ public class DeployedContent {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    public Long getInvId() {
+        return invId;
     }
     
     public String getPath() {
@@ -110,6 +120,14 @@ public class DeployedContent {
     
     public WorkflowId getWorkflowId() {
         return new WorkflowId(name, commitId);
+    }
+    
+    public boolean hasNote() {
+        return hasNote;
+    }
+    
+    public void setHasNote(boolean hasNote) {
+        this.hasNote = hasNote;
     }
     
     @Override

@@ -25,6 +25,7 @@ import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.Board;
@@ -129,6 +130,8 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             
             PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE, filter
                     .getLimit(), currentState);
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId()));
+            
             answer.setNoticeBoard(plB.getPlannedBoard(dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

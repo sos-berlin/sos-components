@@ -32,11 +32,13 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.plan.Plan;
 import com.sos.joc.model.plan.Plans;
@@ -284,11 +286,15 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
+                Set<String> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
                 
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
+                        }
+                        if (boardNotes.contains(dc.getName())) {
+                            dc.setHasNote(true);
                         }
                         return plB.getPlannedBoardDeps(dc);
                     } catch (Throwable e) {

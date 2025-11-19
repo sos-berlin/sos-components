@@ -123,6 +123,8 @@ public class ConfigurationObject {
     private Boolean hasDeployments;
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
+    @JsonProperty("hasNote")
+    private Boolean hasNote;
     @JsonProperty("isReferencedBy")
     private IsReferencedBy isReferencedBy;
     /**
@@ -332,6 +334,16 @@ public class ConfigurationObject {
     @JsonProperty("hasReleases")
     public Boolean getHasReleases() {
         return hasReleases;
+    }
+    
+    @JsonProperty("hasNote")
+    public void setHasNote(Boolean hasNote) {
+        this.hasNote = hasNote;
+    }
+    
+    @JsonProperty("hasNote")
+    public Boolean getHasNote() {
+        return hasNote;
     }
     
     @JsonProperty("isReferencedBy")

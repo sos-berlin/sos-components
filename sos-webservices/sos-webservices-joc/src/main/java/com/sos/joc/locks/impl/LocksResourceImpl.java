@@ -23,12 +23,14 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
 import com.sos.schema.JsonValidator;
@@ -100,10 +102,15 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             }
             JocError jocError = getJocError();
             if (contents != null) {
+                Set<String> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue());
+                
                 answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
+                        }
+                        if (lockNotes.contains(dc.getName())) {
+                            dc.setHasNote(true);
                         }
                         return helper.getLockEntry(controllerState, dc);
                     } catch (Throwable e) {
