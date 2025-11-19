@@ -11,6 +11,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
@@ -53,7 +54,7 @@ public class DBLayerDependencies extends DBLayer {
     
     public List<DBItemInventoryDependency> getDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-        hql.append(" where invId = :invId");
+        hql.append(" where invDependencyId = :invId or invId = :invId");
         Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
         query.setParameter("invId", item.getId());
         List<DBItemInventoryDependency> results = query.getResultList();
@@ -120,13 +121,7 @@ public class DBLayerDependencies extends DBLayer {
         }
     
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-//        hql.append(" where invId = :invId or invDependencyId = :invId");
-//        hql.append(" where invId = :invId");
-        hql.append(" where invDependencyId = :invId");
-        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
-        query.setParameter("invId", item.getId());
-        List<DBItemInventoryDependency> resultsFound = getSession().getResultList(query);
+        List<DBItemInventoryDependency> resultsFound = getDependencies(item);
         if(resultsFound != null) {
             resultsFound.stream().forEach(found -> {
                 try {
@@ -138,21 +133,30 @@ public class DBLayerDependencies extends DBLayer {
         }
     } 
     
-    public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Collection<DBItemInventoryDependency> dependencies)
+    public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Set<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException {
-        if(dependencies != null) {
-            deleteDependencies(item);
-            if (dependencies != null && !dependencies.isEmpty()) {
-                dependencies.stream().filter(dep -> dep.getInvId().equals(item.getId()) || dep.getInvDependencyId().equals(item.getId())).forEach(
-                        dependency -> {
-                            try {
-                                getSession().save(dependency);
-                            } catch (SOSHibernateException e) {
-                                throw new JocSosHibernateException(e);
-                            }
-                        });
+//            deleteDependencies(item);
+        List<DBItemInventoryDependency> storedDependencies = getDependencies(item);
+        for(DBItemInventoryDependency storedDependency : storedDependencies) {
+            if (!dependencies.contains(storedDependency)) {
+                getSession().delete(storedDependency);
+            } else {
+                // possibly check if items should be enforced
             }
         }
+        dependencies.removeAll(storedDependencies);
+        dependencies.stream().filter(dep -> dep.getInvDependencyId().equals(item.getId())|| dep.getInvId().equals(item.getId())).forEach(
+                dependency -> {
+                    try {
+                        // check if relation has to be enforced 
+                        // check if the invId item of this invDepId dependency is already deployed/released
+//                        dependency.setEnforce(true);
+                        
+                        getSession().save(dependency);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                });
     }
     
     public List<DBItemInventoryConfiguration> getReferencesByDependencies(Collection<Long> referencesByIds) throws SOSHibernateException {

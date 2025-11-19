@@ -1262,18 +1262,6 @@ public class DependencyResolver {
         return null;
     }
 
-    // this method is currently not in use (method above with callables is currently used in the api)
-    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem,
-            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-                    throws SOSHibernateException, IOException {
-        ReferencedDbItem references = resolveReferencedBy(inventoryDbItem, groupedItems);
-        resolveReferences(references, groupedItems);
-        // store new dependencies
-        DBLayerDependencies layer = new DBLayerDependencies(session);
-        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
-
-    }
-    
     // this method is in use
     public static List<DBItemInventoryDependency> getStoredDependencies(SOSHibernateSession session,
             DBItemInventoryConfiguration inventoryObject) throws SOSHibernateException {
@@ -1291,24 +1279,27 @@ public class DependencyResolver {
     // this method is currently in use
     public static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
         Set<DBItemInventoryDependency> dependencies = new HashSet<DBItemInventoryDependency>();
+        InventoryDBLayer dblayer = new InventoryDBLayer(session);
         dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
             dependency.setDependencyType(item.getTypeAsEnum());
             dependency.setInvDependencyId(item.getId());
-            dependency.setPublished(item.getDeployed() || item.getReleased());
-            if(item.getDeployed()) {
-                InventoryDBLayer dblayer = new InventoryDBLayer(session);
-                try {
-                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
-                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
-                        dependency.setDepDependencyId(latestDeployed.getId());
-                        dependency.setControllerId(latestDeployed.getControllerId());
-                    }
-                } catch (SOSHibernateException e) {
-                    throw new JocSosHibernateException(e);
-                }
-            }
+            // check dep_configurations view if item is deployed
+            dependency.setPublished(isPublished(dblayer, item));
+            dependency.setEnforce(!dependency.getPublished());
+
+//            if(item.getDeployed()) {
+//                try {
+//                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
+//                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
+//                        dependency.setDepDependencyId(latestDeployed.getId());
+//                        dependency.setControllerId(latestDeployed.getControllerId());
+//                    }
+//                } catch (SOSHibernateException e) {
+//                    throw new JocSosHibernateException(e);
+//                }
+//            }
             return dependency;
         }).collect(Collectors.toSet()));
         dependencies.addAll(reference.getReferences().stream().map(item -> {
@@ -1316,19 +1307,20 @@ public class DependencyResolver {
             dependency.setInvId(item.getId());
             dependency.setDependencyType(reference.getReferencedItem().getTypeAsEnum());
             dependency.setInvDependencyId(reference.getReferencedItem().getId());
-            dependency.setPublished(reference.getReferencedItem().getDeployed() || reference.getReferencedItem().getReleased());
-            if(reference.getReferencedItem().getDeployed()) {
-                InventoryDBLayer dblayer = new InventoryDBLayer(session);
-                try {
-                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(item.getId());
-                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
-                        dependency.setDepDependencyId(latestDeployed.getId());
-                        dependency.setControllerId(latestDeployed.getControllerId());
-                    }
-                } catch (SOSHibernateException e) {
-                    throw new JocSosHibernateException(e);
-                }
-            }
+            dependency.setPublished(isPublished(dblayer, reference.getReferencedItem()));
+            dependency.setEnforce(!dependency.getPublished());
+            
+//            if(reference.getReferencedItem().getDeployed()) {
+//                try {
+//                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(item.getId());
+//                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
+//                        dependency.setDepDependencyId(latestDeployed.getId());
+//                        dependency.setControllerId(latestDeployed.getControllerId());
+//                    }
+//                } catch (SOSHibernateException e) {
+//                    throw new JocSosHibernateException(e);
+//                }
+//            }
             return dependency;
         }).collect(Collectors.toSet()));
         return dependencies;
@@ -1463,4 +1455,14 @@ public class DependencyResolver {
         return object;
     }
     
+    private static boolean isPublished(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config) {
+        try {
+            if(JocInventory.isDeployable(config.getTypeAsEnum())) {
+                return dbLayer.isDeployed(config.getId());
+            } else if (JocInventory.isReleasable(config.getTypeAsEnum())) {
+                return dbLayer.isReleased(config.getId());
+            }
+        } catch (SOSHibernateException e) {}
+        return false;
+    }
 }

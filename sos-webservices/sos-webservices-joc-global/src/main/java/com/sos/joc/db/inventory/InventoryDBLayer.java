@@ -37,6 +37,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.items.FolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
@@ -2224,6 +2225,23 @@ public class InventoryDBLayer extends DBLayer {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+    
+    public boolean isDeployed(Long id) throws SOSHibernateException {
+        StringBuilder sql = new StringBuilder("select count(*) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+        sql.append(" where inventoryConfigurationId = :id");
+        Query<Long> query = getSession().createQuery(sql.toString());
+        query.setParameter("id", id);
+        
+        return getSession().getSingleResult(query) > 0;
+    }
+    
+    public boolean isReleased(Long id) throws SOSHibernateException {
+        StringBuilder sql = new StringBuilder("select count(*) from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        sql.append(" where cid = :id");
+        Query<Long> query = getSession().createQuery(sql.toString());
+        query.setParameter("id", id);
+        return getSession().getSingleResult(query) > 0;
     }
 
 }
