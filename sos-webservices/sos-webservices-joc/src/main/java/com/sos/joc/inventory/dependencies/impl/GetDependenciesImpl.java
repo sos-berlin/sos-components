@@ -23,11 +23,11 @@ import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.inventory.dependencies.util.DependencyUtils;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
+import com.sos.joc.model.inventory.dependencies.get.EnforcedConfigurationObject;
 import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.schema.JsonValidator;
@@ -224,7 +224,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         ResponseItem response = new ResponseItem();
         response.setRequestedItems(requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull).map(dependency -> {
                     RequestedResponseItem rri = new RequestedResponseItem();
-                    ConfigurationObject cfg = new ConfigurationObject();
+                    EnforcedConfigurationObject cfg = new EnforcedConfigurationObject();
                     cfg.setObjectType(dependency.getType());
                     cfg.setName(dependency.getName());
                     cfg.setPath(DependencyUtils.resolvePath(dependency.getFolder(), dependency.getName()));
