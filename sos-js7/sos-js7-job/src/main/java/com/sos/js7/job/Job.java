@@ -145,7 +145,27 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         onStop();
     }
 
-    public A onCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step) throws Exception {
+    /** A lifecycle hook invoked before the Job API categorizes incoming arguments into declared and undeclared groups.<br/>
+     * The default implementation is a no-op and returns {@code null}.<br/>
+     * Subclasses may override this method to customize argument initialization or to perform preprocessing steps.
+     *
+     * <p>
+     * This hook can be useful for:
+     * <ul>
+     * <li>dynamically creating or configuring the {@code declaredArguments} instance,</li>
+     * <li>retrieving argument values before they are categorized
+     * <ul>
+     * <li>see {@link OrderProcessStep#getPreAssignedArgumentValue(String)}),</li>
+     * </ul>
+     * </li>
+     * <li>preparing additional state required to build a successful runtime environment.
+     * <ul>
+     * <li>see com.sos.js7.scriptengine.jobs.ScriptJob</li>
+     * </ul>
+     * </li>
+     * </ul>
+     */
+    public A beforeCreateJobArguments(List<JobArgumentException> exceptions, final OrderProcessStep<A> step) throws Exception {
         return null;
     }
 
@@ -165,10 +185,10 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     try {
                         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
 
-                        A args = onCreateJobArguments(exceptions, step);
+                        A args = beforeCreateJobArguments(exceptions, step);
                         args = createDeclaredJobArguments(exceptions, step, args);
 
-                        step.init(args);
+                        step.applyArguments(args);
 
                         mockLevel = step.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {

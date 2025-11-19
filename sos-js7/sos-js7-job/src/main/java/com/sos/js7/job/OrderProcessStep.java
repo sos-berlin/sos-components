@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -157,7 +158,7 @@ public class OrderProcessStep<A extends JobArguments> {
     // to overwrite by UnitTestJobHelper
     protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step, List<JobArgumentException> exceptions)
             throws Exception {
-        AJ args = job.onCreateJobArguments(exceptions, step);
+        AJ args = job.beforeCreateJobArguments(exceptions, step);
         return job.createDeclaredJobArguments(exceptions, step, args);
     }
 
@@ -186,7 +187,7 @@ public class OrderProcessStep<A extends JobArguments> {
             // AJ args = job.onCreateJobArguments(exceptions, step);
             // args = job.createDeclaredJobArguments(exceptions, step, args);
             AJ args = onExecuteJobCreateArguments(job, step, exceptions);
-            step.init(args);
+            step.applyArguments(args);
 
             if (step.getLogger().isDebugEnabled()) {
                 step.logJobKey();
@@ -220,7 +221,7 @@ public class OrderProcessStep<A extends JobArguments> {
         cancelableExecuteJobs = null;
     }
 
-    protected void init(A arguments) throws Exception {
+    protected void applyArguments(A arguments) throws Exception {
         this.declaredArguments = arguments;
         this.logger.init(arguments);
 
@@ -241,7 +242,7 @@ public class OrderProcessStep<A extends JobArguments> {
             this.workflowVersionId = stepConfig.getWorkflowVersionId();
             this.workflowPosition = stepConfig.getWorkflowPosition();
         }
-        init(arguments);
+        applyArguments(arguments);
     }
 
     public void addCancelableResource(String identifier, Object o) {
@@ -332,6 +333,73 @@ public class OrderProcessStep<A extends JobArguments> {
         return SOSArgumentHelper.getDisplayValue(originalValue, ar.getDisplayMode());
     }
 
+    /** Retrieves the value of the specified argument **before it has been categorized or finalized**.
+     * 
+     * <p>
+     * This method is intended to be called only during the {@link Job#beforeCreateJobArguments(List, OrderProcessStep)} phase,<br/>
+     * i.e., before the Job API has classified arguments into declared or undeclared categories.<br />
+     * 
+     * Processing priority: see {@link #setAllArguments()} */
+    public Object getPreAssignedArgumentValue(String argName) {
+        // Preference 1 (HIGHEST) - Succeeded Outcomes
+        Map<String, DetailValue> lastSucceededOutcomes = getLastSucceededOutcomes();
+        if (!SOSCollection.isEmpty(lastSucceededOutcomes)) {
+            DetailValue v = lastSucceededOutcomes.get(argName);
+            if (v != null) {
+                return v.getValue();
+            }
+        }
+        if (internalStep != null) {
+            // Preference 2 - Order Variables (Node Arguments are unknown)
+            Map<String, Object> map = JobHelper.asJavaValues(internalStep.order().arguments());
+            if (!SOSCollection.isEmpty(map)) {
+                if (map.containsKey(argName)) {
+                    return map.get(argName);
+                }
+            }
+
+            // Preference 3 - JobArgument
+            map = JobHelper.asJavaValues(internalStep.arguments());
+            if (!SOSCollection.isEmpty(map)) {
+                if (map.containsKey(argName)) {
+                    return map.get(argName);
+                }
+            }
+        }
+
+        // Preference 4 (LOWEST) - JobResources
+        Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
+        if (!SOSCollection.isEmpty(resources)) {
+            DetailValue v = resources.get(argName);
+            if (v != null) {
+                return v.getValue();
+            }
+        }
+
+        // Preference 5 - JobContext.jobArguments()
+        if (jobEnvironment.getAllArgumentsAsNameValueMap().containsKey(argName)) {
+            return jobEnvironment.getAllArgumentsAsNameValueMap().get(argName);
+        }
+
+        setOrderPreparationParameterNames();
+        // order preparation default values
+        if (orderPreparationParameterNames != null && orderPreparationParameterNames.contains(argName)) {
+            for (String name : orderPreparationParameterNames) {
+                try {
+                    return getNamedValue(name);
+                } catch (Exception e1) {
+                }
+            }
+        }
+
+        if (unitTestUndeclaredArguments != null) {
+            if (unitTestUndeclaredArguments.containsKey(argName)) {
+                return unitTestUndeclaredArguments.get(argName);
+            }
+        }
+        return null;
+    }
+
     private void setAllArguments() throws Exception {
         allArguments = new TreeMap<>();
 
@@ -339,7 +407,7 @@ public class OrderProcessStep<A extends JobArguments> {
 
         // DECLARED Arguments
         setAllDeclaredArguments();
-        if (allDeclaredArguments != null && allDeclaredArguments.size() > 0) {
+        if (!SOSCollection.isEmpty(allDeclaredArguments)) {
             allDeclaredArguments.stream().forEach(a -> {
                 if (!allArguments.containsKey(a.getName())) {
                     allArguments.put(a.getName(), a);
@@ -364,9 +432,9 @@ public class OrderProcessStep<A extends JobArguments> {
 
         // for preference see ABlockingJob.createJobArguments/setJobArgument
         // Preference 1 (HIGHEST) - Succeeded Outcomes
-        Map<String, DetailValue> lso = getLastSucceededOutcomes();
-        if (lso != null && lso.size() > 0) {
-            lso.entrySet().stream().forEach(e -> {
+        Map<String, DetailValue> lastSucceededOutcomes = getLastSucceededOutcomes();
+        if (!SOSCollection.isEmpty(lastSucceededOutcomes)) {
+            lastSucceededOutcomes.entrySet().stream().forEach(e -> {
                 // if (!allArguments.containsKey(e.getKey()) && !JobHelper.NAMED_NAME_RETURN_CODE.equals(e.getKey())) {
                 if (!allArguments.containsKey(e.getKey())) {
                     ValueSource vs = new ValueSource(ValueSourceType.LAST_SUCCEEDED_OUTCOME);
@@ -381,9 +449,9 @@ public class OrderProcessStep<A extends JobArguments> {
         }
         if (internalStep != null) {
             // Preference 2 - Order Variables (Node Arguments are unknown)
-            Map<String, Object> o = JobHelper.asJavaValues(internalStep.order().arguments());
-            if (o != null && o.size() > 0) {
-                o.entrySet().stream().forEach(e -> {
+            Map<String, Object> map = JobHelper.asJavaValues(internalStep.order().arguments());
+            if (!SOSCollection.isEmpty(map)) {
+                map.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
                         try {
                             allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
@@ -396,9 +464,9 @@ public class OrderProcessStep<A extends JobArguments> {
             }
 
             // Preference 3 - JobArgument
-            Map<String, Object> j = JobHelper.asJavaValues(internalStep.arguments());
-            if (j != null && j.size() > 0) {
-                j.entrySet().stream().forEach(e -> {
+            map = JobHelper.asJavaValues(internalStep.arguments());
+            if (!SOSCollection.isEmpty(map)) {
+                map.entrySet().stream().forEach(e -> {
                     if (!allArguments.containsKey(e.getKey())) {
                         try {
                             allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
@@ -412,7 +480,7 @@ public class OrderProcessStep<A extends JobArguments> {
         }
         // Preference 4 (LOWEST) - JobResources
         Map<String, DetailValue> resources = getJobResourcesArgumentsAsNameDetailValueMap();
-        if (resources != null && resources.size() > 0) {
+        if (!SOSCollection.isEmpty(resources)) {
             resources.entrySet().stream().forEach(e -> {
                 String name = e.getKey();
                 DetailValue dv = e.getValue();

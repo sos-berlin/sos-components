@@ -97,7 +97,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
         final OrderProcessStep<A> step = newOrderProcessStep(args);
         return CompletableFuture.supplyAsync(() -> {
             try {
-                ArgumentsResult r = toArgs(step, args, job.onCreateJobArguments(null, step));
+                ArgumentsResult r = toArgs(step, args, job.beforeCreateJobArguments(null, step));
                 step.init4unittest(r.instance, r.undeclared, stepConfig);
 
                 step.checkAndLogParameterization(null, null);
@@ -139,7 +139,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
             protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step,
                     List<JobArgumentException> exceptions) throws Exception {
 
-                AJ aj = job.onCreateJobArguments(exceptions, step);
+                AJ aj = job.beforeCreateJobArguments(exceptions, step);
                 aj = job.getJobArgumensClass().getDeclaredConstructor().newInstance();
                 aj = job.setDeclaredJobArguments(exceptions, aj, args, step);
                 return aj;
