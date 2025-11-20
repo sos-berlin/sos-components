@@ -127,7 +127,12 @@ public class InventoryDBLayer extends DBLayer {
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
-        return getSession().getResultList(query);
+        List<InventoryDeploymentItem> results = getSession().getResultList(query);
+        if(results != null) {
+            return results;
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public String getDeployedInventoryContent(Long configId, String commitId) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -2242,6 +2247,19 @@ public class InventoryDBLayer extends DBLayer {
         Query<Long> query = getSession().createQuery(sql.toString());
         query.setParameter("id", id);
         return getSession().getSingleResult(query) > 0;
+    }
+
+    public List<DBItemDepConfiguration> getDeployedDepConfigurations(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
+        hql.append("where inventoryConfigurationId = :id");
+        Query<DBItemDepConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        List<DBItemDepConfiguration> results = getSession().getResultList(query);
+        if(results == null) {
+            return Collections.emptyList();
+        } else {
+            return results;
+        }
     }
 
 }

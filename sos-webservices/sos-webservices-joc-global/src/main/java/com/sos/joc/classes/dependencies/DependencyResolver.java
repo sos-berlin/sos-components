@@ -53,18 +53,15 @@ import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 //import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
 import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
-import com.sos.joc.model.publish.OperationType;
 
 public class DependencyResolver {
 
@@ -1288,18 +1285,6 @@ public class DependencyResolver {
             // check if item is already deployed or released
             dependency.setPublished(isPublished(dblayer, item));
             dependency.setEnforce(!dependency.getPublished());
-
-//            if(item.getDeployed()) {
-//                try {
-//                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(reference.getReferencedItem().getId());
-//                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
-//                        dependency.setDepDependencyId(latestDeployed.getId());
-//                        dependency.setControllerId(latestDeployed.getControllerId());
-//                    }
-//                } catch (SOSHibernateException e) {
-//                    throw new JocSosHibernateException(e);
-//                }
-//            }
             return dependency;
         }).collect(Collectors.toSet()));
         dependencies.addAll(reference.getReferences().stream().map(item -> {
@@ -1310,17 +1295,6 @@ public class DependencyResolver {
             dependency.setPublished(isPublished(dblayer, reference.getReferencedItem()));
             dependency.setEnforce(!dependency.getPublished());
             
-//            if(reference.getReferencedItem().getDeployed()) {
-//                try {
-//                    DBItemDeploymentHistory latestDeployed =  dblayer.getLatestActiveDepHistoryItem(item.getId());
-//                    if(latestDeployed != null && OperationType.UPDATE.value().equals(latestDeployed.getOperation())) {
-//                        dependency.setDepDependencyId(latestDeployed.getId());
-//                        dependency.setControllerId(latestDeployed.getControllerId());
-//                    }
-//                } catch (SOSHibernateException e) {
-//                    throw new JocSosHibernateException(e);
-//                }
-//            }
             return dependency;
         }).collect(Collectors.toSet()));
         return dependencies;

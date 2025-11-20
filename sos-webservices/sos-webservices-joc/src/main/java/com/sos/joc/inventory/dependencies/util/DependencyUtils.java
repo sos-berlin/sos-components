@@ -14,7 +14,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.dependencies.get.AffectedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.EnforcedConfigurationObject;
 
@@ -74,6 +73,7 @@ public class DependencyUtils {
     public static EnforcedConfigurationObject convert(Dependency dependency) {
         EnforcedConfigurationObject config = new EnforcedConfigurationObject();
         if(dependency.getType() != null) {
+            config.setId(dependency.getId());
             config.setObjectType(dependency.getType());
             config.setName(dependency.getName());
             config.setPath(DependencyUtils.resolvePath(dependency.getFolder(), dependency.getName()));

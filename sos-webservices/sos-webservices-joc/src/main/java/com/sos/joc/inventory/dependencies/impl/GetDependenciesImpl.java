@@ -2,6 +2,7 @@ package com.sos.joc.inventory.dependencies.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -19,17 +20,22 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.inventory.dependencies.util.DependencyUtils;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.dependencies.get.EnforcedConfigurationObject;
 import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
 import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
+import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -225,6 +231,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         response.setRequestedItems(requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull).map(dependency -> {
                     RequestedResponseItem rri = new RequestedResponseItem();
                     EnforcedConfigurationObject cfg = new EnforcedConfigurationObject();
+                    cfg.setId(dependency.getId());
                     cfg.setObjectType(dependency.getType());
                     cfg.setName(dependency.getName());
                     cfg.setPath(DependencyUtils.resolvePath(dependency.getFolder(), dependency.getName()));
@@ -234,8 +241,8 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                     rri.setType(dependency.getType());
                     rri.setName(dependency.getName());
                     rri.setConfiguration(cfg);
-                    rri.setReferences(DependencyUtils.convert(itemsWithReferences.get(dependency)));
-                    rri.setReferencedBy(DependencyUtils.convert(itemsReferencedBy.get(dependency)));
+                    rri.setReferences(setDeployments(dbLayer.getSession(), DependencyUtils.convert(itemsWithReferences.get(dependency))));
+                    rri.setReferencedBy(setDeployments(dbLayer.getSession(), DependencyUtils.convert(itemsReferencedBy.get(dependency))));
                     return rri;
                 }).collect(Collectors.toSet()));
 
@@ -244,5 +251,32 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         }
         return response;
     }
+    
+    private static Set<EnforcedConfigurationObject> setDeployments(SOSHibernateSession session, Set<EnforcedConfigurationObject> configs) {
+        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+        return configs.stream().peek(item -> {
+            List<InventoryDeploymentItem> deployments;
+            try {
+                deployments = dbLayer.getDeploymentHistory(item.getId());
+                setDeployments(item, deployments);
+            } catch (SOSHibernateException e) {
+                item.setDeployments(null);
+            }
+        }).collect(Collectors.toSet());
+    }
+    
+    private static void setDeployments(EnforcedConfigurationObject cfg, List<InventoryDeploymentItem> deployments) {
+        cfg.setDeployments(deployments.stream().map(dep -> {
+            ResponseDeployableVersion answer = new ResponseDeployableVersion();
+            answer.setId(dep.getId());
+            answer.setCommitId(dep.getCommitId());
+            answer.setDeploymentOperation(OperationType.fromValue(dep.getOperation()).name());
+            answer.setVersionDate(dep.getDeploymentDate());
+            ResponseItemDeployment v = new ResponseItemDeployment();
+            v.setControllerId(dep.getControllerId());
+            answer.setVersions(Collections.singleton(v));
+            return answer;
+        }).collect(Collectors.toSet()));
 
+    }
 }
