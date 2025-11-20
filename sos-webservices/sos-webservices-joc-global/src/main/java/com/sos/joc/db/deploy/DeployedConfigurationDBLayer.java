@@ -207,7 +207,8 @@ public class DeployedConfigurationDBLayer {
         try {
             String name = JocInventory.pathToName(path);
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, name, title, content, commitId, created, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append("(inventoryConfigurationId, path, name, title, content, commitId, created, true as isCurrentVersion) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
             hql.append(" and name = :name");
@@ -233,8 +234,8 @@ public class DeployedConfigurationDBLayer {
         try {
             String name = JocInventory.pathToName(path);
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, name, title, invContent, commitId, deploymentDate, false as isCurrentVersion) from ").append(
-                    DBLayer.DBITEM_DEP_HISTORY);
+            hql.append("(inventoryConfigurationId, path, name, title, invContent, commitId, deploymentDate, false as isCurrentVersion) from ");
+            hql.append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
             hql.append(" and name = :name");
@@ -426,8 +427,8 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(c.path, c.name, c.title, c.content, c.commitId, c.created, true as isCurrentVersion) from ").append(
-                    DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
+            hql.append("(c.inventoryConfigurationId, c.path, c.name, c.title, c.content, c.commitId, c.created, true as isCurrentVersion) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
             if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on tg.cid=c.inventoryConfigurationId");
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
@@ -452,8 +453,8 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ").append(
-                    DBLayer.DBITEM_DEP_HISTORY).append(" c ");
+            hql.append("(c.inventoryConfigurationId, c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ");
+            hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" c ");
             if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on (tg.name=c.name and tg.type=c.type)");
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id=tg.tagId ");
@@ -659,7 +660,7 @@ public class DeployedConfigurationDBLayer {
         try {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(dc.path, sw.instructions, dc.commitId) from ");
+            hql.append("(dc.inventoryConfigurationId, dc.path, sw.instructions, dc.commitId) from ");
             hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
             hql.append("where dc.type=:type ");

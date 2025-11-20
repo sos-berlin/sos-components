@@ -30,10 +30,13 @@ import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.note.common.Severity;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.model.workflow.search.InstructionStateText;
@@ -109,6 +112,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
                         .collect(Collectors.toSet()), dbLayer);
         
+        Map<String, Integer> workflowNotes = new InventoryNotesDBLayer(dbLayer.getSession()).hasNote(ConfigurationType.WORKFLOW.intValue());
+        
         // TODO should be permantly stored and updated by events
         //Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
         Set<String> workflowNamesWithAddOrders = WorkflowRefs.getWorkflowNamesWithAddOrders(controllerId);
@@ -130,6 +135,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setVersionId(w.getCommitId());
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
+                workflow.setHasNote(Severity.fromValueOrNull(workflowNotes.get(w.getName())));
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
                 if (withStatesFilter && !workflowsFilter.getStates().contains(workflow.getState().get_text())) {
                     return null;
@@ -148,7 +154,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     }
                 }
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
-                    workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
+                    workflow.setFileOrderSources(fileOrderSources.get(w.getName()));
                 }
                 if (workflowNamesWithAddOrders.contains(w.getName())) {
                     workflow.setHasAddOrderDependencies(true);

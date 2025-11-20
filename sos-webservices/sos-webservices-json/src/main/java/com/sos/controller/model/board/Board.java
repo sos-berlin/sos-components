@@ -3,17 +3,18 @@ package com.sos.controller.model.board;
 
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.inventory.model.board.BoardType;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.model.note.common.Severity;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -32,7 +33,8 @@ import com.sos.inventory.model.board.BoardType;
     "numOfPostedNotices",
     "numOfExpectedNotices",
     "numOfExpectingOrders",
-    "notices"
+    "notices",
+    "hasNote"
 })
 public class Board
     extends com.sos.inventory.model.board.Board
@@ -106,6 +108,8 @@ public class Board
     private Integer numOfExpectingOrders;
     @JsonProperty("notices")
     private List<Notice> notices = null;
+    @JsonProperty("hasNote")
+    private Severity hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -134,7 +138,7 @@ public class Board
      * @param numOfAnnouncements
      */
     public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
-        super(boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
+        super( boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
@@ -332,14 +336,24 @@ public class Board
         this.notices = notices;
     }
 
+    @JsonProperty("hasNote")
+    public Severity getHasNote() {
+        return hasNote;
+    }
+
+    @JsonProperty("hasNote")
+    public void setHasNote(Severity hasNote) {
+        this.hasNote = hasNote;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("notices", notices).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfAnnouncements", numOfAnnouncements).append("numOfPostedNotices", numOfPostedNotices).append("numOfExpectedNotices", numOfExpectedNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("notices", notices).append("hasNote", hasNote).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notices).append(path).append(numOfExpectedNotices).append(numOfExpectingOrders).append(numOfNotices).append(numOfPostedNotices).append(state).append(hasNote).append(versionDate).append(numOfAnnouncements).toHashCode();
     }
 
     @Override
@@ -351,7 +365,7 @@ public class Board
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(notices, rhs.notices).append(path, rhs.path).append(numOfExpectedNotices, rhs.numOfExpectedNotices).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(numOfNotices, rhs.numOfNotices).append(numOfPostedNotices, rhs.numOfPostedNotices).append(state, rhs.state).append(hasNote, rhs.hasNote).append(versionDate, rhs.versionDate).append(numOfAnnouncements, rhs.numOfAnnouncements).isEquals();
     }
 
 }

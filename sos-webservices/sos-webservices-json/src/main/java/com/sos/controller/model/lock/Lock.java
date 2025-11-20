@@ -2,16 +2,16 @@
 package com.sos.controller.model.lock;
 
 import java.util.Date;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
+import com.sos.joc.model.note.common.Severity;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -24,7 +24,8 @@ import com.sos.controller.model.common.SyncState;
 @JsonPropertyOrder({
     "path",
     "versionDate",
-    "state"
+    "state",
+    "hasNote"
 })
 public class Lock
     extends com.sos.inventory.model.lock.Lock
@@ -56,6 +57,8 @@ public class Lock
      */
     @JsonProperty("state")
     private SyncState state;
+    @JsonProperty("hasNote")
+    private Severity hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -66,15 +69,15 @@ public class Lock
 
     /**
      * 
-     * @param documentationPath
      * @param path
      * @param limit
      * @param state
+     * @param documentationName
      * @param title
      * @param versionDate
      */
-    public Lock(String path, Date versionDate, SyncState state, Integer limit, String documentationPath, String title) {
-        super(limit, documentationPath, title);
+    public Lock(String path, Date versionDate, SyncState state, Integer limit, String documentationName, String title) {
+        super(limit, documentationName, title);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
@@ -146,14 +149,24 @@ public class Lock
         this.state = state;
     }
 
+    @JsonProperty("hasNote")
+    public Severity getHasNote() {
+        return hasNote;
+    }
+
+    @JsonProperty("hasNote")
+    public void setHasNote(Severity hasNote) {
+        this.hasNote = hasNote;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("hasNote", hasNote).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(hasNote).append(versionDate).toHashCode();
     }
 
     @Override
@@ -165,7 +178,7 @@ public class Lock
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(hasNote, rhs.hasNote).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

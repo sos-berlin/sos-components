@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -118,8 +119,10 @@ public class Validator {
             InstructionType.EXPECT_NOTICE.value(), InstructionType.EXPECT_NOTICES.value(), InstructionType.CONSUME_NOTICES.value());
     private final static Predicate<String> hasNoticesInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + noticesInstructions + ")\"")
             .asPredicate();
+    private final static EnumSet<InternalExecutableType> executableTypesWithScript = EnumSet.of(InternalExecutableType.JavaScript_Graal,
+            InternalExecutableType.Python_Graal, InternalExecutableType.JavaScript_Node);
     private static boolean hasLicense = false;
-
+    
     public static final Map<AdmissionTimePeriodType, String> ADMISSION_TIME_PERIOD_SCHEMA_LOCATION = Collections.unmodifiableMap(
             new HashMap<AdmissionTimePeriodType, String>() {
 
@@ -696,9 +699,7 @@ public class Validator {
             switch (job.getExecutable().getTYPE()) {
             case InternalExecutable:
                 ExecutableJava ej = job.getExecutable().cast();
-                if (ej.getInternalType() != null && (InternalExecutableType.JavaScript_Graal.equals(ej.getInternalType())
-                        || InternalExecutableType.Python_Graal.equals(ej.getInternalType()) || InternalExecutableType.JavaScript_Node.equals(ej
-                                .getInternalType()))) {
+                if (ej.getInternalType() != null && executableTypesWithScript.contains(ej.getInternalType())) {
                     // script is required
                     if (ej.getScript() == null || ej.getScript().isEmpty()) {
                         throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script is required but missing");

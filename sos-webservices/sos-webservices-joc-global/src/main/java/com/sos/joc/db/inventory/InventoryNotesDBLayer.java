@@ -1,8 +1,14 @@
 package com.sos.joc.db.inventory;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
@@ -36,6 +42,36 @@ public class InventoryNotesDBLayer extends DBLayer {
         }
     }
     
+    public Integer hasNote(Long configurationId) {
+        if (configurationId == null) {
+            return null;
+        }
+        try {
+            StringBuilder hql = new StringBuilder("select severity from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cid");
+            Query<Integer> query = getSession().createQuery(hql.toString());
+            query.setParameter("cid", configurationId);
+            return getSession().getSingleResult(query);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+    
+    public Map<String, Integer> hasNote(Integer type) {
+        try {
+            StringBuilder hql = new StringBuilder("select c.name, n.severity from ").append(DBLayer.DBITEM_INV_NOTES).append(" n left join ")
+                    .append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c on n.cid=c.id where c.type=:type");
+            Query<Object[]> query = getSession().createQuery(hql.toString());
+            query.setParameter("type", type);
+            List<Object[]> result = getSession().getResultList(query);
+            if (result != null) {
+                return result.stream().collect(Collectors.toMap(i -> (String) i[0], i -> (Integer) i[1], (k1, k2) -> k1));
+            }
+            return Collections.emptyMap();
+        } catch (Exception ex) {
+            return Collections.emptyMap();
+        }
+    }
+    
     private InventorySearchItem getInvItem(String name, Integer type) {
         try {
             boolean isCalendar = JocInventory.isCalendar(type);
@@ -62,34 +98,22 @@ public class InventoryNotesDBLayer extends DBLayer {
         }
     }
 
-    public void deleteNote(Long configurationId) {
+    public void deleteNote(Long configurationId) throws SOSHibernateException {
         DBItemInventoryNote note = null;
         if (getSession().isTransactionOpened()) {
             deleteNoteTransactional(configurationId);
         } else {
-            try {
-                note = getNote(configurationId);
-            } catch (Exception e) {
-                //
-            }
+            note = getNote(configurationId);
             if (note != null) {
-                try {
-                    getSession().delete(note);
-                } catch (Exception e) {
-                    //
-                }
+                getSession().delete(note);
             }
         }
     }
     
-    private void deleteNoteTransactional(Long configurationId) {
-        try {
-            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cId");
-            Query<Integer> query = getSession().createQuery(hql.toString());
-            query.setParameter("cId", configurationId);
-            getSession().executeUpdate(query);
-        } catch (Exception e) {
-            //
-        }
+    private void deleteNoteTransactional(Long configurationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cId");
+        Query<Integer> query = getSession().createQuery(hql.toString());
+        query.setParameter("cId", configurationId);
+        getSession().executeUpdate(query);
     }
 }
