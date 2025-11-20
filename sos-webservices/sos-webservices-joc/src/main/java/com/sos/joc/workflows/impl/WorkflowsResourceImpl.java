@@ -36,6 +36,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.note.common.Severity;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.model.workflow.search.InstructionStateText;
@@ -111,7 +112,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
                         .collect(Collectors.toSet()), dbLayer);
         
-        Set<String> workflowNotes = new InventoryNotesDBLayer(dbLayer.getSession()).hasNote(ConfigurationType.WORKFLOW.intValue());
+        Map<String, Integer> workflowNotes = new InventoryNotesDBLayer(dbLayer.getSession()).hasNote(ConfigurationType.WORKFLOW.intValue());
         
         // TODO should be permantly stored and updated by events
         //Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
@@ -134,7 +135,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setVersionId(w.getCommitId());
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
-                workflow.setHasNote(workflowNotes.contains(w.getName()) ? true : null);
+                workflow.setHasNote(Severity.fromValueOrNull(workflowNotes.get(w.getName())));
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
                 if (withStatesFilter && !workflowsFilter.getStates().contains(workflow.getState().get_text())) {
                     return null;

@@ -286,16 +286,14 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
-                Set<String> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
+                Map<String, Integer> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
                 
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        if (boardNotes.contains(dc.getName())) {
-                            dc.setHasNote(true);
-                        }
+                        dc.setHasNote(boardNotes.get(dc.getName()));
                         return plB.getPlannedBoardDeps(dc);
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {

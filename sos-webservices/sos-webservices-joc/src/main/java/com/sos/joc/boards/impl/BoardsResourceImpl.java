@@ -146,16 +146,14 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 }
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, filter.getLimit(), controllerState);
-                Set<String> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
+                Map<String, Integer> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
                 
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        if (boardNotes.contains(dc.getName())) {
-                            dc.setHasNote(true);
-                        }
+                        dc.setHasNote(boardNotes.get(dc.getName()));
                         return plB.getPlannedBoard(dc);
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {

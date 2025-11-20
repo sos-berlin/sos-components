@@ -14,6 +14,8 @@ import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import com.sos.joc.model.note.common.Severity;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -127,7 +129,7 @@ public class Workflow
     @JsonProperty("deployed")
     private Boolean deployed;
     @JsonProperty("hasNote")
-    private Boolean hasNote;
+    private Severity hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -425,12 +427,12 @@ public class Workflow
     }
 
     @JsonProperty("hasNote")
-    public Boolean getHasNote() {
+    public Severity getHasNote() {
         return hasNote;
     }
 
     @JsonProperty("hasNote")
-    public void setHasNote(Boolean hasNote) {
+    public void setHasNote(Severity hasNote) {
         this.hasNote = hasNote;
     }
 

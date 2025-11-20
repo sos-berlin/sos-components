@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.model.note.common.Severity;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -107,7 +109,7 @@ public class Board
     @JsonProperty("notices")
     private List<Notice> notices = null;
     @JsonProperty("hasNote")
-    private Boolean hasNote;
+    private Severity hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -335,12 +337,12 @@ public class Board
     }
 
     @JsonProperty("hasNote")
-    public Boolean getHasNote() {
+    public Severity getHasNote() {
         return hasNote;
     }
 
     @JsonProperty("hasNote")
-    public void setHasNote(Boolean hasNote) {
+    public void setHasNote(Severity hasNote) {
         this.hasNote = hasNote;
     }
 

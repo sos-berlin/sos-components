@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -102,16 +103,14 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             }
             JocError jocError = getJocError();
             if (contents != null) {
-                Set<String> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue());
+                Map<String, Integer> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue());
                 
                 answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        if (lockNotes.contains(dc.getName())) {
-                            dc.setHasNote(true);
-                        }
+                        dc.setHasNote(lockNotes.get(dc.getName()));
                         return helper.getLockEntry(controllerState, dc);
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {

@@ -2,7 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
@@ -42,33 +42,33 @@ public class InventoryNotesDBLayer extends DBLayer {
         }
     }
     
-    public boolean hasNote(Long configurationId) {
+    public Integer hasNote(Long configurationId) {
         if (configurationId == null) {
-            return false;
+            return null;
         }
         try {
-            StringBuilder hql = new StringBuilder("select count(*) from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cid");
-            Query<Long> query = getSession().createQuery(hql.toString());
+            StringBuilder hql = new StringBuilder("select severity from ").append(DBLayer.DBITEM_INV_NOTES).append(" where cid=:cid");
+            Query<Integer> query = getSession().createQuery(hql.toString());
             query.setParameter("cid", configurationId);
-            return getSession().getSingleResult(query) > 0;
+            return getSession().getSingleResult(query);
         } catch (Exception ex) {
-            return false;
+            return null;
         }
     }
     
-    public Set<String> hasNote(Integer type) {
+    public Map<String, Integer> hasNote(Integer type) {
         try {
-            StringBuilder hql = new StringBuilder("select c.name from ").append(DBLayer.DBITEM_INV_NOTES).append(" n left join ")
+            StringBuilder hql = new StringBuilder("select c.name, n.severity from ").append(DBLayer.DBITEM_INV_NOTES).append(" n left join ")
                     .append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c on n.cid=c.id where c.type=:type");
-            Query<String> query = getSession().createQuery(hql.toString());
+            Query<Object[]> query = getSession().createQuery(hql.toString());
             query.setParameter("type", type);
-            List<String> result = getSession().getResultList(query);
+            List<Object[]> result = getSession().getResultList(query);
             if (result != null) {
-                return result.stream().collect(Collectors.toSet());
+                return result.stream().collect(Collectors.toMap(i -> (String) i[0], i -> (Integer) i[1], (k1, k2) -> k1));
             }
-            return Collections.emptySet();
+            return Collections.emptyMap();
         } catch (Exception ex) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
     }
     

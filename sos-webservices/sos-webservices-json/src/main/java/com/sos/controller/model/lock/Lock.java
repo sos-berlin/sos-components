@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
+import com.sos.joc.model.note.common.Severity;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -56,7 +58,7 @@ public class Lock
     @JsonProperty("state")
     private SyncState state;
     @JsonProperty("hasNote")
-    private Boolean hasNote;
+    private Severity hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -148,12 +150,12 @@ public class Lock
     }
 
     @JsonProperty("hasNote")
-    public Boolean getHasNote() {
+    public Severity getHasNote() {
         return hasNote;
     }
 
     @JsonProperty("hasNote")
-    public void setHasNote(Boolean hasNote) {
+    public void setHasNote(Severity hasNote) {
         this.hasNote = hasNote;
     }
 

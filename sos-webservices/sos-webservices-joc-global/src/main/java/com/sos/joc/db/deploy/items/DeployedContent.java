@@ -7,6 +7,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
+import com.sos.joc.model.note.common.Severity;
 
 public class DeployedContent {
 
@@ -18,7 +19,7 @@ public class DeployedContent {
     private String commitId;
     private Boolean isCurrentVersion;
     private Date created;
-    private boolean hasNote = false;
+    private Integer severity = null;
     
     public DeployedContent(Long invId, String path, String instructionJson, String commitId) {
         this.invId = invId;
@@ -122,12 +123,12 @@ public class DeployedContent {
         return new WorkflowId(name, commitId);
     }
     
-    public boolean hasNote() {
-        return hasNote;
+    public Severity hasNote() {
+        return Severity.fromValueOrNull(severity);
     }
     
-    public void setHasNote(boolean hasNote) {
-        this.hasNote = hasNote;
+    public void setHasNote(Integer severity) {
+        this.severity = severity;
     }
     
     @Override

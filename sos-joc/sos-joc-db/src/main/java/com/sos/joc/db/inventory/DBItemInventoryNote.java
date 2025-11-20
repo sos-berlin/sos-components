@@ -82,7 +82,11 @@ public class DBItemInventoryNote extends DBItem {
 
     @Transient
     public Severity getSeverityAsEnum() {
-        return Severity.fromValue(severity);
+        try {
+            return Severity.fromValue(severity);
+        } catch (Exception e) {
+            return Severity.NORMAL;
+        }
     }
 
     public void setSeverity(Integer val) {

@@ -25,6 +25,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.note.common.Severity;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
@@ -87,7 +88,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 String path = WorkflowPaths.getPath(content.getName());
                 checkFolderPermissions(path, folderPermissions.getListOfFolders());
                 workflow.setPath(path);
-                workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId()) ? true : null);
+                workflow.setHasNote(Severity.fromValueOrNull(new InventoryNotesDBLayer(connection).hasNote(content.getInvId())));
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
