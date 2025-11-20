@@ -205,7 +205,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     @Override
-    public void onOrderProcessCancel(OrderProcessStep<SSHJobArguments> step) throws Exception {
+    public void onProcessOrderCanceled(OrderProcessStep<SSHJobArguments> step) throws Exception {
         String jobName = null;
         try {
             jobName = step.getJobName();

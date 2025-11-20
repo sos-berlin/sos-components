@@ -21,32 +21,43 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
     }
 
     @Override
-    public void onOrderProcessCancel(OrderProcessStep<A> step) throws Exception {
-        cancelHibernate(step, step.getJobName());
+    public void onProcessOrderCanceled(OrderProcessStep<A> step) throws Exception {
+        cancelHibernate(step, step.getCancelableResources().get(CANCELABLE_RESOURCE_NAME_HIBERNATE));
     }
 
-    private void cancelHibernate(OrderProcessStep<A> step, String jobName) {
+    /**
+     * <p>
+     * Properly cancels a Hibernate query if {@link SOSHibernateSession#getSQLExecutor()} was used,<br/>
+     * because it uses a JDBC Statement that can be cancelled.
+     * <p>
+     * In contrast, the standard Hibernate API does not provide a way to cancel queries<br/>
+     * executed via methods like {@link SOSHibernateSession#executeUpdate(String)} or {@link SOSHibernateSession#getResultList(String)} .<br/>
+     *
+     * @param step the JS7 step
+     * @param cancelableResource the resource that can be cancelled (session) */
+    public static void cancelHibernate(OrderProcessStep<?> step, Object cancelableResource) {
         try {
-            Object o = step.getCancelableResources().get(CANCELABLE_RESOURCE_NAME_HIBERNATE);
-            if (o == null) {
+            if (cancelableResource == null) {
                 return;
             }
 
-            SOSHibernateSession s = (SOSHibernateSession) o;
-            boolean doRollback = false;
-            if (s.getCurrentStatement() != null) {
+            SOSHibernateSession session = (SOSHibernateSession) cancelableResource;
+            boolean currentStatementCanceled = false;
+            // 1) Cancel JDBC statement (if SOSHibernateSession#getSQLExecutor() was used)
+            if (session.getCurrentStatement() != null) {
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]cancel statement ...");
                 try {
-                    s.getCurrentStatement().cancel();
+                    session.getCurrentStatement().cancel();
                 } catch (Throwable ex) {
                     step.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][cancel statement]" + ex.toString(), ex);
                 }
-                doRollback = true;
+                currentStatementCanceled = true;
             }
-            Connection conn = s.getConnection();
-            // Rollback if the current statement is canceled.
-            // Otherwise, rollback execution waits until the current statement completes.
-            if (doRollback) {
+
+            Connection conn = session.getConnection();
+            // 2) Rollback if the current JDBC statement is canceled.
+            // - Otherwise, rollback execution waits until the current statement completes.
+            if (currentStatementCanceled) {
                 try {
                     step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]connection rollback ...");
                     conn.rollback();
@@ -55,18 +66,27 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
                 }
             } else {
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL
-                        + "][hibernate][connection rollback][skip]because the current statement is no more active");
+                        + "][hibernate][connection rollback][skip]because the current jdbc statement cannot be evaluated");
             }
+
+            // 3) Abort connection
             try {
                 conn.abort(Runnable::run);
             } catch (Throwable ex) {
                 step.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection abort]" + ex.toString(), ex);
             }
-            // close session and factory
+
+            // 4) Close session/factory
             step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]close...");
-            s.getFactory().close(s);
+            session.getFactory().close(session);
             step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]completed");
-        } catch (Throwable e) {
+        } catch (Exception e) {
+            String jobName = "unknown";
+            try {
+                jobName = step.getJobName();
+            } catch (Exception ex) {
+
+            }
             step.getLogger().error(String.format("[%s][job name=%s][cancelHibernate]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }

@@ -34,6 +34,7 @@ import com.sos.commons.hibernate.common.SOSBatchObject;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLExecutorException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernateSQLExecutor implements Serializable {
@@ -50,17 +51,14 @@ public class SOSHibernateSQLExecutor implements Serializable {
         logIdentifier = SOSHibernate.getLogIdentifier(session == null ? null : session.getIdentifier());
     }
 
-    /** see getResultSet */
+    /** see {@link #getResultSet(String)} */
     public void close(ResultSet rs) {
         if (rs != null) {
             try {
-                rs.close();
-            } catch (Throwable e) {
+                SOSClassUtil.closeQuietly(rs.getStatement());
+            } catch (Exception e) {
             }
-            try {
-                rs.getStatement().close();
-            } catch (Throwable e) {
-            }
+            SOSClassUtil.closeQuietly(rs);
         }
     }
 
@@ -86,12 +84,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -128,12 +121,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -173,12 +161,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -204,18 +187,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Throwable e) {
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
         }
         return result;
     }
@@ -234,18 +207,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Throwable e) {
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
     }
@@ -285,9 +248,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                     } catch (Exception e) {
                         throw e;
                     } finally {
-                        if (rs != null) {
-                            rs.close();
-                        }
+                        SOSClassUtil.closeQuietly(rs);
                     }
                 } else {
                     if (isDebugEnabled) {
@@ -299,12 +260,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, command);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
     }
@@ -331,12 +287,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -356,12 +307,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -391,20 +337,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -454,34 +388,10 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
         } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
+            SOSClassUtil.closeQuietly(out);
+            SOSClassUtil.closeQuietly(in);
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
@@ -528,27 +438,9 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
+            SOSClassUtil.closeQuietly(in);
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result.toString();
@@ -606,50 +498,21 @@ public class SOSHibernateSQLExecutor implements Serializable {
             } catch (Exception e) {
                 //
             }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
+            SOSClassUtil.closeQuietly(out);
+            SOSClassUtil.closeQuietly(in);
+            SOSClassUtil.closeQuietly(rs);
+            SOSClassUtil.closeQuietly(stmt);
             session.resetCurrentStatement();
         }
         return result;
     }
 
-    /** ResultSet rs = session.getSQLExecutor().getResultSet("select * from ...");
-     * 
-     * Map<String, String> record = null;
-     * 
-     * while (!(record = session.getSQLExecutor().next(rs)).isEmpty()) {
-     * 
-     * LOGGER.info("record = " + result);
-     * 
-     * }
-     * 
-     * session.getSQLExecutor().close(rs);
+    /** ResultSet rs = session.getSQLExecutor().getResultSet("select * from ...");<br/>
+     * Map<String, String> record = null;<br/>
+     * while (!(record = session.getSQLExecutor().next(rs)).isEmpty()) {<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;LOGGER.info("record = " + result);<br/>
+     * }<br/>
+     * session.getSQLExecutor().close(rs);<br/>
      * 
      * @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public ResultSet getResultSet(String sql) throws SOSHibernateException {
@@ -813,20 +676,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql == null ? null : sql.toString());
         } finally {
-            if (pstmt != null) {
-                try {
-                    pstmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
+            SOSClassUtil.closeQuietly(pstmt);
+            SOSClassUtil.closeQuietly(inputStream);
             session.resetCurrentStatement();
         }
     }
@@ -919,19 +770,8 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e, sql == null ? null : sql.toString());
         } finally {
-            if (pstmt != null) {
-                try {
-                    pstmt.close();
-                } catch (Exception e) {
-                    //
-                }
-            }
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Throwable e) {
-                }
-            }
+            SOSClassUtil.closeQuietly(pstmt);
+            SOSClassUtil.closeQuietly(reader);
             session.resetCurrentStatement();
         }
     }

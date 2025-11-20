@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -53,7 +52,7 @@ public class SSHJob extends Job<SSHJobArguments> {
     }
 
     @Override
-    public void onOrderProcessCancel(OrderProcessStep<SSHJobArguments> step) throws Exception {
+    public void onProcessOrderCanceled(OrderProcessStep<SSHJobArguments> step) throws Exception {
         String jobName = null;
         try {
             jobName = step.getJobName();

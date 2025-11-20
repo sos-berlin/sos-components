@@ -101,12 +101,35 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 step.init4unittest(r.instance, r.undeclared, stepConfig);
 
                 step.checkAndLogParameterization(null, null);
+
+                simulateCancelIfConfigured(job, step);
                 this.job.processOrder(step);
                 return step.processed();
             } catch (Throwable e) {
                 return step.failed(e.toString(), e);
             }
         }).get(timeout.getInterval(), timeout.getTimeUnit());
+    }
+
+    private void simulateCancelIfConfigured(Job<A> job, OrderProcessStep<A> step) {
+        if (stepConfig.cancelAfterSeconds > 0) {
+            Thread thread = new Thread() {
+
+                public void run() {
+
+                    String name = Thread.currentThread().getName();
+                    LOGGER.info(String.format("[%s][start][simulateCancelIfConfigured][%ss]...", name, stepConfig.cancelAfterSeconds));
+                    try {
+                        TimeUnit.SECONDS.sleep(stepConfig.cancelAfterSeconds);
+                        job.onProcessOrderCanceled(step);
+                    } catch (Exception e) {
+
+                    }
+                    LOGGER.info(String.format("[%s][end][simulateCancelIfConfigured][%ss]", name, stepConfig.cancelAfterSeconds));
+                }
+            };
+            thread.start();
+        }
     }
 
     public void setEnvVar(String n, String v) {
@@ -241,6 +264,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
         private String workflowVersionId;
         private String workflowPosition;
 
+        private int cancelAfterSeconds;
+
         public String getControllerId() {
             return controllerId == null ? "test-controller" : controllerId;
         }
@@ -313,5 +338,12 @@ public class UnitTestJobHelper<A extends JobArguments> {
             workflowPosition = val;
         }
 
+        public int getCancelAfterSeconds() {
+            return cancelAfterSeconds;
+        }
+
+        public void setCancelAfterSeconds(int val) {
+            cancelAfterSeconds = val;
+        }
     }
 }

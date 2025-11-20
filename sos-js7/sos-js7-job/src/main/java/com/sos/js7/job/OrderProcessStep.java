@@ -52,6 +52,7 @@ import scala.collection.JavaConverters;
 public class OrderProcessStep<A extends JobArguments> {
 
     private static final String INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH = "js7Workflow.path";
+    private static final String SINGLE_CANCELABLE_RESOURCE_IDENTIFIER = "js7_single_cancelable_resource";
 
     private final JobEnvironment<A> jobEnvironment;
     private final BlockingInternalJob.Step internalStep;
@@ -211,7 +212,7 @@ public class OrderProcessStep<A extends JobArguments> {
         if (cancelableExecuteJobs != null && cancelableExecuteJobs.size() > 0) {
             for (Map.Entry<String, OrderProcessStep> e : cancelableExecuteJobs.entrySet()) {
                 try {
-                    e.getValue().getExecuteJobBean().getJob().cancelOrderProcessStep(e.getValue());
+                    e.getValue().getExecuteJobBean().getJob().cancelProcessOrder(e.getValue());
                 } catch (Throwable t) {
                     logger.warn("[cancelExecuteJobs][" + e.getKey() + "]" + e.toString(), e);
                 }
@@ -245,8 +246,26 @@ public class OrderProcessStep<A extends JobArguments> {
         applyArguments(arguments);
     }
 
-    public void addCancelableResource(String identifier, Object o) {
-        getCancelableResources().put(identifier, o);
+    /** Single Cancelable Resource
+     * 
+     * @param cancelableResource */
+    public void setCancelableResource(Object cancelableResource) {
+        getCancelableResources().put(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER, cancelableResource);
+    }
+
+    /** Single Cancelable Resource
+     * 
+     * @return Cancelable Resource */
+    public Object getCancelableResource() {
+        return getCancelableResources().get(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER);
+    }
+
+    /** Multiple Cancelable Resources
+     * 
+     * @param identifier Cancelable Resource identifier
+     * @param cancelableResource */
+    public void addCancelableResource(String identifier, Object cancelableResource) {
+        getCancelableResources().put(identifier, cancelableResource);
     }
 
     public synchronized Map<String, Object> getCancelableResources() {

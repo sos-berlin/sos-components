@@ -42,11 +42,8 @@ public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArgument
         } catch (Throwable e) {
             throw e;
         } finally {
-            if (session != null) {
-                session.close();
-            }
             if (factory != null) {
-                factory.close();
+                factory.close(session);
             }
         }
     }

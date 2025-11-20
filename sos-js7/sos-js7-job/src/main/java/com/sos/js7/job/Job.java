@@ -104,7 +104,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     }
 
     /** to override */
-    public void onOrderProcessCancel(OrderProcessStep<A> step) throws Exception {
+    public void onProcessOrderCanceled(OrderProcessStep<A> step) throws Exception {
 
     }
 
@@ -174,14 +174,13 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         return new InterruptibleOrderProcess() {
 
             volatile boolean canceled = false;
-            AtomicReference<OrderProcessStep<A>> orderProcessStepRef = null;
+            AtomicReference<OrderProcessStep<A>> processOrderStepRef = null;
 
             @Override
             public JOutcome.Completed runInterruptible() throws Exception {
                 while (!canceled) {
                     MockLevel mockLevel = MockLevel.OFF;
                     OrderProcessStep<A> step = new OrderProcessStep<A>(jobEnvironment, internalStep);
-                    orderProcessStepRef = new AtomicReference<>(step);
                     try {
                         List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
 
@@ -189,6 +188,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                         args = createDeclaredJobArguments(exceptions, step, args);
 
                         step.applyArguments(args);
+                        processOrderStepRef = new AtomicReference<>(step);
 
                         mockLevel = step.getDeclaredArguments().getMockLevel().getValue();
                         switch (mockLevel) {
@@ -225,12 +225,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             @Override
             public void cancel(boolean immediately) {
                 try {
-                    if (orderProcessStepRef != null && !canceled) {
-                        OrderProcessStep<A> orderProcessStep = orderProcessStepRef.get();
+                    if (processOrderStepRef != null && !canceled) {
+                        OrderProcessStep<A> orderProcessStep = processOrderStepRef.get();
                         boolean log = false;
                         if (orderProcessStep != null) {
                             log = true;
-                            cancelOrderProcessStep(orderProcessStep);
+                            cancelProcessOrder(orderProcessStep);
                         }
                         Thread thread = thread();
                         if (thread == null) {
@@ -251,12 +251,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         };
     }
 
-    protected void cancelOrderProcessStep(OrderProcessStep<A> jobStep) {
+    protected void cancelProcessOrder(OrderProcessStep<A> jobStep) {
         String jobName = getJobName(jobStep);
         try {
-            onOrderProcessCancel(jobStep);
+            onProcessOrderCanceled(jobStep);
         } catch (Throwable e) {
-            jobStep.getLogger().error(String.format("[%s][job name=%s][onOrderProcessCancel]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
+            jobStep.getLogger().error(String.format("[%s][job name=%s][onProcessOrderCanceled]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
         jobStep.cancelExecuteJobs();
     }
