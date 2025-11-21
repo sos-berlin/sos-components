@@ -105,11 +105,11 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         Map<RequestItem, Dependency> reqDeps = Stream.concat(itemsWithReferences.keySet().stream(), itemsReferencedBy.keySet().stream()).distinct()
                 .collect(Collectors.toMap(Dependency::getRequestItem, Function.identity(), (K1,K2) -> K1));
         
-        response.setRequestedItems(requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull)
-                .map(dependency -> dependency.getId()).collect(Collectors.toSet()));
+        response.setRequestedItems(requestItems.stream().map(reqDeps::get).filter(Objects::nonNull)
+                .map(Dependency::getId).collect(Collectors.toSet()));
         
         ResponseObjects objects = new ResponseObjects();
-        requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull).map(dependency -> {
+        requestItems.stream().map(reqDeps::get).filter(Objects::nonNull).map(dependency -> {
             ResponseObject cfg = new ResponseObject();
             cfg.setId(dependency.getId());
             cfg.setObjectType(dependency.getType());
@@ -118,18 +118,26 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             cfg.setValid(dependency.getValid());
             cfg.setDeployed(dependency.getDeployed());
             cfg.setReleased(dependency.getReleased());
+            cfg.setDeployments(null);
             if(itemsWithReferences.get(dependency) != null) {
-                Set <ResponseObject> references = DependencyUtils.convertObjects(itemsWithReferences.get(dependency).stream().filter(dep -> !dep.getEnforce()).collect(Collectors.toSet()));
-                Set <ResponseObject> enforcedReferences = DependencyUtils.convertObjects(itemsWithReferences.get(dependency).stream().filter(dep -> dep.getEnforce()).collect(Collectors.toSet()));
-                cfg.setReferences(references.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
-                cfg.setEnforcedReferences(enforcedReferences.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
-                
+                Map<Boolean,Set<Dependency>> refs = itemsWithReferences.get(dependency).stream()
+                        .collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.toSet()));
+                cfg.setReferences(DependencyUtils.convertObjects(refs.get(false)).stream()
+                        .peek(obj -> objects.getAdditionalProperties().putIfAbsent(obj.getId().toString(), obj))
+                        .map(ResponseObject::getId).collect(Collectors.toSet()));
+                cfg.setEnforcedReferences(DependencyUtils.convertObjects(refs.get(true)).stream()
+                        .peek(obj -> objects.getAdditionalProperties().putIfAbsent(obj.getId().toString(), obj))
+                        .map(ResponseObject::getId).collect(Collectors.toSet()));
             }
             if(itemsReferencedBy.get(dependency) != null) {
-                Set <ResponseObject> referencedBy = DependencyUtils.convertObjects(itemsReferencedBy.get(dependency).stream().filter(dep -> !dep.getEnforce()).collect(Collectors.toSet()));
-                Set <ResponseObject> enforcedReferencedBy = DependencyUtils.convertObjects(itemsReferencedBy.get(dependency).stream().filter(dep -> dep.getEnforce()).collect(Collectors.toSet()));
-                cfg.setReferencedBy(referencedBy.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
-                cfg.setEnforcedReferencedBy(enforcedReferencedBy.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
+                Map<Boolean,Set<Dependency>> refs = itemsReferencedBy.get(dependency).stream()
+                        .collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.toSet()));
+                cfg.setReferencedBy(DependencyUtils.convertObjects(refs.get(false)).stream()
+                        .peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj))
+                        .map(ResponseObject::getId).collect(Collectors.toSet()));
+                cfg.setEnforcedReferencedBy(DependencyUtils.convertObjects(refs.get(true)).stream()
+                        .peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj))
+                        .map(ResponseObject::getId).collect(Collectors.toSet()));
             }
             return cfg;
         }).forEach(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj));
@@ -137,14 +145,6 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         response.setDeliveryDate(Date.from(Instant.now()));
         return response;
     }
-    
-    
-    
-    
-    
-    
-    
-    
     
 //    private static void resolveReferencesRecursively(Map <Long, DBItemInventoryConfiguration> allUniqueItems, Set<Long> referencedIds,
 //            OperationType type, InventoryDBLayer dblayer, DBLayerDependencies depDbLayer) {
