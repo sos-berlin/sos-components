@@ -11,7 +11,6 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
@@ -53,18 +52,60 @@ public class DBLayerDependencies extends DBLayer {
     }
     
     public List<DBItemInventoryDependency> getDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-        hql.append(" where invDependencyId = :invId or invId = :invId");
-        Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
-        query.setParameter("invId", item.getId());
-        List<DBItemInventoryDependency> results = query.getResultList();
-        if(results != null) {
-            return results;
-        } else {
-            return Collections.emptyList();
+        return getDependencies(item.getId());
+    }
+    
+    public List<DBItemInventoryDependency> getDependencies (Long id) {
+        try {
+            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+            hql.append(" where invDependencyId = :invId or invId = :invId");
+            Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+            query.setParameter("invId", id);
+            List<DBItemInventoryDependency> results = query.getResultList();
+            if(results != null) {
+                return results;
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
         }
     }
     
+    public List<DBItemInventoryDependency> getReferencesDependencies (Long id) {
+        try {
+            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+            hql.append(" where invDependencyId = :invId");
+            Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+            query.setParameter("invId", id);
+            List<DBItemInventoryDependency> results = query.getResultList();
+            if(results != null) {
+                return results;
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+    
+    public List<DBItemInventoryDependency> getReferencedByDependencies (Long id) {
+        try {
+            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+            hql.append(" where invId = :invId");
+            Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+            query.setParameter("invId", id);
+            List<DBItemInventoryDependency> results = query.getResultList();
+            if(results != null) {
+                return results;
+            } else {
+                return Collections.emptyList();
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
     public List<DBItemInventoryDependency> getRequestedDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
         hql.append(" where invId = :invId or invDependencyId = :invId");

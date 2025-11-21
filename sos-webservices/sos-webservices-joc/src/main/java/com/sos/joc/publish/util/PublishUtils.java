@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -68,9 +69,11 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -1807,5 +1810,18 @@ public abstract class PublishUtils {
             }
         }).orElse(null);
     }
-
+    
+    public static final void resetDependenciesEnforcement(Set<Long> invIds, SOSHibernateSession session) {
+        DBLayerDependencies dbLayer = new DBLayerDependencies(session);
+        invIds.forEach(id -> {
+            List<DBItemInventoryDependency> dependencies = dbLayer.getReferencesDependencies(id);
+            dependencies.forEach(dependency -> {
+                dependency.setEnforce(false);
+                try {session.update(dependency);
+                } catch (SOSHibernateException e) {
+                    LOGGER.error(e.getMessage());
+                }
+            });
+        });
+    }
 }

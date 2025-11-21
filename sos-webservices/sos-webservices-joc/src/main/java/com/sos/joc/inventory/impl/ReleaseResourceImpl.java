@@ -74,6 +74,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -186,6 +187,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             auditLogObjectsLogging.log();
             recreateOrders(in, schedulePathsWithWorkflowNames, accessToken, session);
+
             return Collections.emptyList();
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -389,6 +391,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setReleased(true);
         conf.setModified(dbAuditLog.getCreated());
         dbLayer.getSession().update(conf);
+        // after successful update, set enforce flag to false for related dependencies 
+        PublishUtils.resetDependenciesEnforcement(Collections.singleton(conf.getId()), dbLayer.getSession());
+
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));
 

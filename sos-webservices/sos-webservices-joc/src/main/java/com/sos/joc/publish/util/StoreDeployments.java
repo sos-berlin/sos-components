@@ -181,9 +181,9 @@ public class StoreDeployments {
                 // cleanup stored commitIds
                 dbLayer.cleanupCommitIds(commitId);
                 // create new (daily) planned orders
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 if (dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
-                    List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                     List<String> schedulePathsWithSubmit = new ArrayList<String>();
                     List<String> schedulePathsWithoutSubmit = new ArrayList<String>();
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
@@ -221,6 +221,11 @@ public class StoreDeployments {
                         }
                     }
                 }
+                // after successful deployment, set enforce flag to false for related dependencies 
+                PublishUtils.resetDependenciesEnforcement(
+                        optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
+                            .collect(Collectors.toSet()),
+                        newHibernateSession);
             } else if (either.isLeft()) {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
