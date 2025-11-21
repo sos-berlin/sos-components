@@ -74,11 +74,11 @@ public class JsonConverter {
             .asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
             .asPredicate();
-    public final static String scriptIncludeComments = "(##|::|//)";
+    public final static String scriptIncludeComments = "(\\s*)(##|::|//)";
     public final static String scriptInclude = "!include";
     public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+(\\S+)[ \t]*(.*)$",
             Pattern.DOTALL);
-    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
+    public final static Predicate<String> hasScriptIncludes = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
     private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: "
             + scriptIncludeComments + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
     private final static String includeScriptErrorMsg2 = "Script include of job '%s[%s]': value replacement failed: %s";
@@ -244,19 +244,21 @@ public class JsonConverter {
             if (hasScriptIncludes.test(line)) {
                 Matcher m = scriptIncludePattern.matcher(line);
                 if (m.find()) {
-                    String scriptName = m.group(2);
+                    String scriptName = m.group(3);
+                    String indent = m.group(1);
                     if (releasedScripts == null || !releasedScripts.containsKey(scriptName)) {
                         throw new IllegalArgumentException(String.format("Script include '%s' of job '%s[%s]' referenced an unreleased script '%s'",
                                 line, workflowName, jobName, scriptName));
                     }
                     try {
                         line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
+                        line = line.replaceAll("\\n", "\\n" + indent);
                     } catch (Exception e) {
                         throw new IllegalArgumentException(String.format("Script '%s' of job '%s[%s]' cannot be read: %s", scriptName, workflowName,
                                 jobName, e.toString()));
                     }
                     try {
-                        Map<String, String> replacements = parseReplaceInclude(m.group(3));
+                        Map<String, String> replacements = parseReplaceInclude(m.group(4));
                         for (Map.Entry<String, String> entry : replacements.entrySet()) {
                             line = line.replaceAll(Pattern.quote(entry.getKey()), Matcher.quoteReplacement(entry.getValue()));
                         }
@@ -750,6 +752,21 @@ public class JsonConverter {
             });
         }
         return new Requirements(params, orderPreparation.getAllowUndeclared());
+    }
+    
+    public static String replaceNameOfIncludeScript(String jsonString, String oldName, String newName) {
+        return jsonString.replaceAll(scriptIncludeComments + scriptInclude + "[ \t]+" + oldName + "(\\s*)", "$1$2"
+                + scriptInclude + " " + newName + "$3");
+    }
+    
+    public static String replaceNameOfIncludeScriptInScriptLine(String line, String oldName, String newName) {
+        Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+        if (m.find()) {
+            if (oldName.equals(m.group(3))) {
+                return m.group(1) + m.group(2) + JsonConverter.scriptInclude + " " + newName + " " + m.group(4);
+            }
+        }
+        return line;
     }
 
     private static ListParameters listParamsfromMap(Map<String, String> p) {

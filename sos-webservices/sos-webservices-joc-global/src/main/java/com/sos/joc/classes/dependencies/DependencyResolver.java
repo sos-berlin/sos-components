@@ -259,7 +259,7 @@ public class DependencyResolver {
                                         if (hasScriptInclude.test(line)) {
                                             Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
                                             if (m.find()) {
-                                                if (item.getReferencedItem().getName().equals(m.group(2))) {
+                                                if (item.getReferencedItem().getName().equals(m.group(3))) {
                                                     item.getReferencedBy().add(wf);
                                                 }
                                             }
@@ -292,7 +292,7 @@ public class DependencyResolver {
                                 if (hasScriptInclude.test(line)) {
                                     Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
                                     if (m.find()) {
-                                        if (item.getReferencedItem().getName().equals(m.group(2))) {
+                                        if (item.getReferencedItem().getName().equals(m.group(3))) {
                                             item.getReferencedBy().add(jobTemplate);
                                         }
                                     }

@@ -265,8 +265,8 @@ public class ImportUtils {
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.INCLUDESCRIPT)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
-                                    .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
+                            json = JsonConverter.replaceNameOfIncludeScript(json, updateableItem.getOldName(), updateableItem.getNewName());
+                            
                             ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (Exception e) {
                             throw new JocImportException(e);
@@ -313,8 +313,7 @@ public class ImportUtils {
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.INCLUDESCRIPT)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + updateableItem
-                                    .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
+                            json = JsonConverter.replaceNameOfIncludeScript(json, updateableItem.getOldName(), updateableItem.getNewName());
                             ((JobEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
                         } catch (Exception e) {
                             throw new JocImportException(e);

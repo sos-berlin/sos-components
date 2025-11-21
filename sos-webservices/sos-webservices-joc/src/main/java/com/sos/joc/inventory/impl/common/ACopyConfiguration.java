@@ -278,8 +278,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             // include scripts
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
-                                        .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");
+                                json = JsonConverter.replaceNameOfIncludeScript(json, oldNewName.getKey(), oldNewName.getValue());
                             }
                             // notice, notices Instructions, jobResources, jobTemplate
                             Map<String, String> oldNewBoardNames = oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap());
@@ -392,8 +391,7 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                             // include scripts
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
-                                        .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");
+                                json = JsonConverter.replaceNameOfIncludeScript(json, oldNewName.getKey(), oldNewName.getValue());
                             }
                             // JobResources
                             Map<String, String> oldNewJobResourceNames2 = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());

@@ -738,12 +738,12 @@ public class Validator {
         if (script != null) {
             Matcher m = scriptIncludePattern.matcher(script);
             while (m.find()) {
-                String scriptName = m.group(2);
+                String scriptName = m.group(3);
                 if (!releasedScripts.contains(scriptName)) {
                     throw new JocConfigurationException(position + " referenced an unknown script '" + scriptName + "'");
                 }
                 try {
-                    JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
+                    JsonConverter.parseReplaceInclude(m.group(4)); // m.group(3) = "--replace="","" ...
                 } catch (Exception e) {
                     throw new JocConfigurationException(position + ": Invalid script include '" + m.group(0)
                             + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
