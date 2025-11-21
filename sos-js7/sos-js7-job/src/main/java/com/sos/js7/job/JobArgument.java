@@ -21,7 +21,7 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
 /** JobArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - java.lang.String<br/>
  * - java.lang.Boolean<br/>
- * - java.lang.Integer, java.lang.Long, java.math.BigDecimal<br/>
+ * - java.lang.Integer, java.lang.Long, java.lang.Double, java.math.BigDecimal<br/>
  * - java.lang.Enum<br/>
  * - java.net.URI<br/>
  * - java.nio.charset.Charset<br/>
@@ -43,7 +43,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     }
 
     public enum ArgumentFlatType {
-        STRING, BOOLEAN, INTEGER, LONG, BIGDECIMAL, ENUM, URI, CHARSET, PATH, FILE, OBJECT, LIST_VALUE_SINGLTON_MAP
+        STRING, BOOLEAN, INTEGER, LONG, DOUBLE, BIGDECIMAL, ENUM, URI, CHARSET, PATH, FILE, OBJECT, LIST_VALUE_SINGLTON_MAP
     }
 
     /** TODO: currently only ALL in use (ALL, ORDER_PREPARATION) */
@@ -434,6 +434,8 @@ public class JobArgument<T> extends SOSArgument<T> {
             return Integer.valueOf(value.toString());
         case LONG:
             return Long.valueOf(value.toString());
+        case DOUBLE:
+            return Double.valueOf(value.toString());
         case BIGDECIMAL:
             return new BigDecimal(value.toString());
         case PATH:
@@ -483,6 +485,8 @@ public class JobArgument<T> extends SOSArgument<T> {
             argumentFlatType = ArgumentFlatType.INTEGER;
         } else if (clazzType.equals(Long.class)) {
             argumentFlatType = ArgumentFlatType.LONG;
+        } else if (clazzType.equals(Double.class)) {
+            argumentFlatType = ArgumentFlatType.DOUBLE;
         } else if (clazzType.equals(BigDecimal.class)) {
             argumentFlatType = ArgumentFlatType.BIGDECIMAL;
         } else if (clazzType.equals(Path.class)) {

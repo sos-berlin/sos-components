@@ -99,16 +99,16 @@ public class JobHelper {
             ((ListValue) o).toJava().forEach(item -> {
                 if (item instanceof ObjectValue) {
                     Map<String, Object> m = new LinkedHashMap<>();
-                    ((ObjectValue) item).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+                    ((ObjectValue) item).toJava().forEach((k1, v1) -> m.put(k1, tryConvertEngineValueIfBigDecimal(v1.toJava())));
                     l.add(m);
                 } else {
-                    l.add(item.toJava());
+                    l.add(tryConvertEngineValueIfBigDecimal(item.toJava()));
                 }
             });
             return l;
         } else if (o instanceof ObjectValue) {
             Map<String, Object> m = new LinkedHashMap<>();
-            ((ObjectValue) o).toJava().forEach((k1, v1) -> m.put(k1, v1.toJava()));
+            ((ObjectValue) o).toJava().forEach((k1, v1) -> m.put(k1, tryConvertEngineValueIfBigDecimal(v1.toJava())));
             return m;
         }
         return o;
@@ -227,6 +227,35 @@ public class JobHelper {
         } catch (Throwable e) {
             return StringValue.of(date == null ? "" : date.toString());
         }
+    }
+
+    /** The engine seems to always return BigDecimal for numeric values in a List or Map.<br/>
+     * Attempts to convert the BigDecimal to a Long or Double if possible.
+     *
+     * @param o the object to convert
+     * @return the converted Long or Double if conversion is possible; otherwise, the original object */
+    private static Object tryConvertEngineValueIfBigDecimal(Object o) {
+        if (o == null) {
+            return null;
+        }
+        if (!(o instanceof BigDecimal)) {
+            return o;
+        }
+
+        try {
+            BigDecimal bd = (BigDecimal) o;
+            try {
+                return Long.valueOf(bd.longValueExact());
+            } catch (ArithmeticException e) {
+            }
+
+            double d = bd.doubleValue();
+            if (BigDecimal.valueOf(d).compareTo(bd) == 0) {
+                return Double.valueOf(d);
+            }
+        } catch (Exception e) {
+        }
+        return o;
     }
 
 }
