@@ -91,7 +91,7 @@ public class JobHelper {
         if (o instanceof StringValue) {
             return o.convertToString();
         } else if (o instanceof NumberValue) {
-            return ((NumberValue) o).toJava();
+            return tryConvertEngineValueIfBigDecimal(((NumberValue) o).toJava());
         } else if (o instanceof BooleanValue) {
             return Boolean.parseBoolean(o.convertToString());
         } else if (o instanceof ListValue) {
@@ -229,7 +229,7 @@ public class JobHelper {
         }
     }
 
-    /** The engine seems to always return BigDecimal for numeric values in a List or Map.<br/>
+    /** The engine seems to always return BigDecimal for numeric values.<br/>
      * Attempts to convert the BigDecimal to a Long or Double if possible.
      *
      * @param o the object to convert
