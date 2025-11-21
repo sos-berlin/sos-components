@@ -106,6 +106,10 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 this.job.processOrder(step);
                 return step.processed();
             } catch (Throwable e) {
+                try {
+                    step.checkAndLogParameterization(null, null);
+                } catch (Exception e1) {
+                }
                 return step.failed(e.toString(), e);
             }
         }).get(timeout.getInterval(), timeout.getTimeUnit());

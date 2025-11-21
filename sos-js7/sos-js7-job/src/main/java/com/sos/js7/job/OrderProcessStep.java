@@ -342,6 +342,12 @@ public class OrderProcessStep<A extends JobArguments> {
     }
 
     private String getDisplayValue(String name, Object originalValue) {
+        if (allArguments == null) {
+            if (logger.isDebugEnabled()) {
+                return SOSArgumentHelper.getDisplayValue(originalValue, DisplayMode.UNMASKED);
+            }
+            return DisplayMode.UNKNOWN.getValue();
+        }
         JobArgument<?> ar = allArguments.get(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
