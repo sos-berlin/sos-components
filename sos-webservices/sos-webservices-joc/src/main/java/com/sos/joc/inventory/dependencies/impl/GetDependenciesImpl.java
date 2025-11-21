@@ -33,7 +33,10 @@ import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.dependencies.get.EnforcedConfigurationObject;
 import com.sos.joc.model.inventory.dependencies.get.RequestedResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.Response;
 import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
+import com.sos.joc.model.inventory.dependencies.get.ResponseObject;
+import com.sos.joc.model.inventory.dependencies.get.ResponseObjects;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
@@ -41,10 +44,11 @@ import com.sos.schema.JsonValidator;
 import jakarta.ws.rs.Path;
 
 
-@Path("inventory/dependencies")
+@Path("inventory")
 public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependencies {
     
     private static final String API_CALL = "./inventory/dependencies";
+    private static final String API_CALL2 = "./inventory/dependencies2";
     private static final List<ConfigurationType> referencesType = Arrays.asList(
             ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE, 
             ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE, ConfigurationType.INCLUDESCRIPT);
@@ -71,6 +75,75 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             Globals.disconnect(hibernateSession);
         }
     }
+    
+    @Override
+    public JOCDefaultResponse postGetDependenciesNew(String xAccessToken, byte[] dependencyFilter) {
+        SOSHibernateSession hibernateSession = null;
+        try {
+            dependencyFilter = initLogging(API_CALL2, dependencyFilter, xAccessToken, CategoryType.INVENTORY);
+            JsonValidator.validate(dependencyFilter, GetDependenciesRequest.class);
+            GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
+            hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
+            DBLayerDependencies dblayer = new DBLayerDependencies(hibernateSession);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(createResponse(filter, dblayer)));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        } finally {
+            Globals.disconnect(hibernateSession);
+        }
+    }
+    
+    private static Response createResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
+        Response response = new Response();
+        Set<RequestItem> requestItems = new HashSet<RequestItem>(filter.getConfigurations());
+        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(dbLayer.getSession());
+        dependencies = dependencies.stream().filter(Objects::nonNull)
+                .filter(item -> requestItems.contains(item.getInvRequestItem()) 
+                        || requestItems.contains(item.getDepRequestItem())).collect(Collectors.toList());
+        Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
+        Map<Dependency, Set<Dependency>> itemsReferencedBy = DependencyUtils.resolveReferencedBy(dependencies);
+        Map<RequestItem, Dependency> reqDeps = Stream.concat(itemsWithReferences.keySet().stream(), itemsReferencedBy.keySet().stream()).distinct()
+                .collect(Collectors.toMap(Dependency::getRequestItem, Function.identity(), (K1,K2) -> K1));
+        
+        response.setRequestedItems(requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull)
+                .map(dependency -> dependency.getId()).collect(Collectors.toSet()));
+        
+        ResponseObjects objects = new ResponseObjects();
+        requestItems.stream().map(item -> reqDeps.get(item)).filter(Objects::nonNull).map(dependency -> {
+            ResponseObject cfg = new ResponseObject();
+            cfg.setId(dependency.getId());
+            cfg.setObjectType(dependency.getType());
+            cfg.setName(dependency.getName());
+            cfg.setPath(DependencyUtils.resolvePath(dependency.getFolder(), dependency.getName()));
+            cfg.setValid(dependency.getValid());
+            cfg.setDeployed(dependency.getDeployed());
+            cfg.setReleased(dependency.getReleased());
+            if(itemsWithReferences.get(dependency) != null) {
+                Set <ResponseObject> references = DependencyUtils.convertObjects(itemsWithReferences.get(dependency).stream().filter(dep -> !dep.getEnforce()).collect(Collectors.toSet()));
+                Set <ResponseObject> enforcedReferences = DependencyUtils.convertObjects(itemsWithReferences.get(dependency).stream().filter(dep -> dep.getEnforce()).collect(Collectors.toSet()));
+                cfg.setReferences(references.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
+                cfg.setEnforcedReferences(enforcedReferences.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
+                
+            }
+            if(itemsReferencedBy.get(dependency) != null) {
+                Set <ResponseObject> referencedBy = DependencyUtils.convertObjects(itemsReferencedBy.get(dependency).stream().filter(dep -> !dep.getEnforce()).collect(Collectors.toSet()));
+                Set <ResponseObject> enforcedReferencedBy = DependencyUtils.convertObjects(itemsReferencedBy.get(dependency).stream().filter(dep -> dep.getEnforce()).collect(Collectors.toSet()));
+                cfg.setReferencedBy(referencedBy.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
+                cfg.setEnforcedReferencedBy(enforcedReferencedBy.stream().peek(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj)).map(ref -> ref.getId()).collect(Collectors.toSet()));
+            }
+            return cfg;
+        }).forEach(obj -> objects.getAdditionalProperties().put(obj.getId().toString(), obj));
+        response.setObjects(objects);
+        response.setDeliveryDate(Date.from(Instant.now()));
+        return response;
+    }
+    
+    
+    
+    
+    
+    
+    
     
     
 //    private static void resolveReferencesRecursively(Map <Long, DBItemInventoryConfiguration> allUniqueItems, Set<Long> referencedIds,
@@ -277,6 +350,6 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             answer.setVersions(Collections.singleton(v));
             return answer;
         }).collect(Collectors.toSet()));
-
     }
+    
 }
