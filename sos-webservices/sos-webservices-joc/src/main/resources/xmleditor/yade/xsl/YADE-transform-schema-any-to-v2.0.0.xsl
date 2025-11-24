@@ -295,6 +295,7 @@
             
             <xsl:copy-of select="StrictHostkeyChecking"/>
             <xsl:copy-of select="ConfigurationFiles"/>
+            <xsl:copy-of select="DisableAutoDetectShell"/>
              
         </SFTPFragment>        
     </xsl:template>
