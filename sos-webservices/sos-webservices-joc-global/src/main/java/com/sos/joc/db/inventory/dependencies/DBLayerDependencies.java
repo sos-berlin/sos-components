@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.query.Query;
@@ -15,6 +16,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.dependencies.get.ResponseObject;
 
 public class DBLayerDependencies extends DBLayer {
 
@@ -145,22 +148,6 @@ public class DBLayerDependencies extends DBLayer {
         }
     }
     
-    public List<DBItemInventoryConfiguration> getReferencesInventoryItem (Long dependencyId) throws SOSHibernateException {
-            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" as con ");
-            hql.append(" where con.id in (");
-            hql.append("select dep.invId from ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" as dep");
-            hql.append(" where dep.invDependencyId = :invDepId");
-            hql.append(")");
-            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("invDepId", dependencyId);
-            List<DBItemInventoryConfiguration> results = query.getResultList();
-            if(results != null) {
-                return results;
-            } else {
-                return Collections.emptyList();
-            }
-        }
-    
     public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
         List<DBItemInventoryDependency> resultsFound = getDependencies(item);
         if(resultsFound != null) {
@@ -200,16 +187,22 @@ public class DBLayerDependencies extends DBLayer {
                 });
     }
     
-    public List<DBItemInventoryConfiguration> getReferencesByDependencies(Collection<Long> referencesByIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where id in (:invDepId)");
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameterList("invDepId", referencesByIds);
-        List<DBItemInventoryConfiguration> results = query.getResultList();
-        if(results != null) {
-            return results;
-        } else {
-            return Collections.emptyList();
+    public Optional<ResponseObject> getResponseObject(String name, ConfigurationType type) {
+        try {
+            StringBuilder hql = new StringBuilder("select id as id, path as path, deployed as deployed, released as released, valid as valid from ")
+                    .append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" where name=:name and type=:type");
+            Query<ResponseObject> query = getSession().createQuery(hql.toString(), ResponseObject.class);
+            query.setParameter("name", name);
+            query.setParameter("type", type.intValue());
+            query.setMaxResults(1);
+            ResponseObject result = query.getSingleResult();
+            if (result != null) {
+                result.setObjectType(type);
+                result.setName(name);
+            }
+            return Optional.ofNullable(result);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e); 
         }
     }
 
