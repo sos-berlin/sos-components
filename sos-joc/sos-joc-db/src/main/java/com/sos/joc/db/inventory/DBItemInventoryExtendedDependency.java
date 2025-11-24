@@ -1,8 +1,5 @@
 package com.sos.joc.db.inventory;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
@@ -181,37 +178,6 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     }
     
     @Transient
-    public String getInvPathAsString() {
-        Path path = getInvPath();
-        if(path != null) {
-            return path.toString().replace('\\', '/');
-        } else {
-            return "";
-        }
-    }
-    
-    @Transient
-    public Path getInvPath() {
-        Path path = null;
-        if(invFolder != null) {
-            path = Paths.get(invFolder);
-        }
-        if(invName != null) {
-            if(path != null) {
-                path = path.resolve(invName);
-            } else {
-                path = Paths.get(invName);
-            }
-        }
-        return path;
-    }
-    
-    @Transient
-    public String getDepPath() {
-        return invFolder;
-    }
-    
-    @Transient
     public Dependency getDependency() {
         return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased, enforce);
     }
@@ -258,6 +224,5 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     public void setDepType(ConfigurationType val) {
         setDepType(val == null ? null : val.intValue());
     }
-
     
 }

@@ -18,7 +18,7 @@ import com.sos.joc.model.audit.CategoryType;
 import jakarta.ws.rs.Path;
 
 
-@Path("inventory/dependencies")
+@Path("inventory")
 public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDependencies {
 
     private static final String API_CALL = "./inventory/dependencies/update";

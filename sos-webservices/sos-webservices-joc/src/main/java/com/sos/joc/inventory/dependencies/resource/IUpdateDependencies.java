@@ -12,7 +12,7 @@ public interface IUpdateDependencies {
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    @Path("update")
+    @Path("dependencies/update")
     public JOCDefaultResponse postUpdateDependencies(@HeaderParam("X-Access-Token") String xAccessToken);
     
 }
