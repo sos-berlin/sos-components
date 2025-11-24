@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -231,6 +233,7 @@ public class Validator {
                     // validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
                     // validateAgentRefs(json, agentDBLayer, visibleAgentNames);
+                    validateTimeZone(workflow.getTimeZone());
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
                     validateCalendarRefs(schedule, dbLayer);
@@ -254,6 +257,7 @@ public class Validator {
                         }
                         validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.orderParameterisations");
                     }
+                    validateTimeZone(schedule.getCalendars());
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
                     String position = "$.workflowName";
@@ -261,6 +265,7 @@ public class Validator {
                     Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
                     validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
                     validateFileOrderSourceDirAndPattern(fileOrderSource);
+                    validateTimeZone(fileOrderSource.getTimeZone());
                 } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                     JobTemplate jobTemplate = (JobTemplate) config;
                     validateJobTemplateJob(jobTemplate, dbLayer.getScriptNames());
@@ -337,6 +342,7 @@ public class Validator {
                 validateAdmissionTime(jobs);
                 validateLockRefs(json, invObjNames.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()));
                 validateJobResourceRefs(jobResources, invObjNames.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()));
+                validateTimeZone(workflow.getTimeZone());
             } else if (ConfigurationType.SCHEDULE.equals(type)) {
                 Schedule schedule = (Schedule) config;
                 validateCalendarRefs(schedule, invObjNames.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()), invObjNames
@@ -362,6 +368,7 @@ public class Validator {
                     }
                     validateOrderParameterisations(schedule.getOrderParameterisations(), r, workflowName, w, "$.orderParameterisations");
                 }
+                validateTimeZone(schedule.getCalendars());
             } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                 String position = "$.workflowName";
                 FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -369,6 +376,7 @@ public class Validator {
                 Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
                 validateFileVariable(w.getOrderPreparation(), fileOrderSource.getWorkflowName(), position);
                 validateFileOrderSourceDirAndPattern(fileOrderSource);
+                validateTimeZone(fileOrderSource.getTimeZone());
             } else if (ConfigurationType.JOBTEMPLATE.equals(type)) {
                 JobTemplate jobTemplate = (JobTemplate) config;
                 validateJobTemplateJob(jobTemplate, invObjNames.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()));
@@ -822,6 +830,27 @@ public class Validator {
         } catch (JsonProcessingException e) {
             //
         }
+    }
+    
+    private static void validateTimeZone(List<AssignedCalendars> cals) {
+        if (cals != null) {
+            String position = "$.calendars";
+            AtomicInteger index = new AtomicInteger(0);
+            cals.stream().map(AssignedCalendars::getTimeZone).filter(Objects::nonNull).forEach(t -> validateTimeZone(t, position + "[" + index
+                    .getAndIncrement() + "]"));
+        }
+    }
+    
+    private static void validateTimeZone(String timeZone, String position) {
+        try {
+            ZoneId.of(timeZone);
+        } catch (Exception e) {
+            throw new JocConfigurationException(position + ".timeZone: " + e.getMessage());
+        }
+    }
+    
+    private static void validateTimeZone(String timeZone) {
+        validateTimeZone(timeZone, "$");
     }
 
     private static void validateOnErrWritten(Boolean failOnErrWritten, Boolean warnOnErrWritten) throws JocConfigurationException {
