@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 
 public class HttpUtils {
 
@@ -64,7 +65,37 @@ public class HttpUtils {
             // asctime
             DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy", Locale.ENGLISH).withZone(ZoneOffset.UTC));
 
-    public static String getAccessInfo(URI baseURI, String username) {
+    /** Normalizes the provided parameters into an HTTP/HTTPS format string.<br/>
+     * Example: https://user:pass@example.com:8443/path/to/resource<br/>
+     * <p>
+     * Variants:<br/>
+     * <ul>
+     * <li>Without user info:
+     * <ul>
+     * <li>https://example.com:8443/path/to/resource</li>
+     * </ul>
+     * </li>
+     * <li>With user info:
+     * <ul>
+     * <li>Without password:
+     * <ul>
+     * <li>https://user@example.com:8443/path/to/resource</li>
+     * </ul>
+     * </li>
+     * <li>With password:
+     * <ul>
+     * <li>https://user:********@example.com:8443/path/to/resource</li>
+     * </ul>
+     * </li></li>
+     * </ul>
+     * </li>
+     * </ul>
+     * 
+     * @param baseURI The base URI of the resource.
+     * @param username The username to include in the URI (optional).
+     * @param hasPassword Whether a password should be included (masked) in the URI.
+     * @return The normalized HTTP/HTTPS URI string. */
+    public static String getAccessInfo(URI baseURI, String username, boolean hasPassword) {
         if (baseURI == null) {
             return null;
         }
@@ -73,8 +104,12 @@ public class HttpUtils {
             return uri;
         } else {
             // HTTP Format: https://user:pass@example.com:8443/path/to/resource
-            // SOSHTTPUtils Format: [user]https://example.com:8443/path/to/resource
-            return "[" + username + "]" + uri;
+            String userInfo = username;
+            if (hasPassword) {
+                userInfo = userInfo + ":" + SOSArgument.DisplayMode.MASKED.getValue();
+            }
+            // (?i)^(https?://) -> captures http:// or https:// at the beginning, case-insensitive
+            return uri.replaceFirst("(?i)^(https?://)", "$1" + userInfo + "@");
         }
     }
 
@@ -339,13 +374,10 @@ public class HttpUtils {
         }
         return reason;
     }
-    
-    public static String createUrlEncodedBodyfromMap(Map<String,String> keyValuePairs) {
-        return keyValuePairs.entrySet().stream().map(entry -> 
-                URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8)
-                .concat("=")
-                .concat(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8)))
-            .collect(Collectors.joining("&"));
+
+    public static String createUrlEncodedBodyfromMap(Map<String, String> keyValuePairs) {
+        return keyValuePairs.entrySet().stream().map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8).concat("=").concat(URLEncoder
+                .encode(entry.getValue(), StandardCharsets.UTF_8))).collect(Collectors.joining("&"));
     }
 
     private static String getReasonPhraseFromOfficialCodes(int code) {

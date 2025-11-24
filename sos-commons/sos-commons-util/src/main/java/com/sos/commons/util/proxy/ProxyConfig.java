@@ -105,9 +105,9 @@ public class ProxyConfig {
         return sb.toString();
     }
 
-    /** <proxy_type>://[user@]host:port<br/>
+    /** <proxy_type>://[user:password@]host:port<br/>
      * Examples:<br/>
-     * - http://user123@proxy.example.com:80<br/>
+     * - http://user123:********@proxy.example.com:80<br/>
      * - http://proxy.example.com:80<br/>
      * - socks://user123@proxy.example.com:1080<br/>
      * - socks://proxy.example.com:1080<br/>
@@ -117,7 +117,11 @@ public class ProxyConfig {
         StringBuilder sb = new StringBuilder();
         sb.append(proxy.type().name().toLowerCase()).append("://");
         if (!SOSString.isEmpty(user)) {
-            sb.append(user).append("@");
+            sb.append(user);
+            if (!SOSString.isEmpty(password)) {
+                sb.append(":").append(SOSArgument.DisplayMode.MASKED.getValue());
+            }
+            sb.append("@");
         }
         sb.append(host).append(":").append(port);
         return sb.toString();

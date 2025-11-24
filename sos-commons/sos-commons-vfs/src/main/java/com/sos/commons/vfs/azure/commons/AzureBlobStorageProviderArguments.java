@@ -56,7 +56,7 @@ public class AzureBlobStorageProviderArguments extends AProviderArguments {
                 }
             }
         }
-        return HttpUtils.getAccessInfo(baseURI, getUser().getValue());
+        return HttpUtils.getAccessInfo(baseURI, getUser().getValue(), !getPassword().isEmpty());
     }
 
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */

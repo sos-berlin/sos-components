@@ -49,7 +49,7 @@ public class HTTPProviderArguments extends AProviderArguments {
                 throw new ProviderInitializationException(e);
             }
         }
-        return HttpUtils.getAccessInfo(baseURI.getValue(), getUser().getValue());
+        return HttpUtils.getAccessInfo(baseURI.getValue(), getUser().getValue(), !getPassword().isEmpty());
     }
 
     /** Overrides {@link AProviderArguments#getAdvancedAccessInfo() */
