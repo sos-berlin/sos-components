@@ -57,6 +57,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -570,6 +571,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setAuditLogId(dbAuditLog.getId());
         dbLayer.deleteReleasedItemsByConfigurationIds(Collections.singletonList(conf.getId()));
         JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer, ConfigurationType.FOLDER);
+        DBLayerDependencies dependenciesDbLayer = new DBLayerDependencies(dbLayer.getSession());
+        dependenciesDbLayer.deleteDependencies(conf);
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));
     }
