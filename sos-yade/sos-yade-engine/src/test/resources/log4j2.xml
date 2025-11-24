@@ -14,8 +14,10 @@
 		</Root>
 
 		<Logger name="net.schmizz.sshj" level="warn" />
+		<!-- 
 		<Logger name="com.hierynomus.smbj" level="warn" />
-
 		<Logger name="com.sos" level="info" />
+-->
+		
 	</Loggers>
 </Configuration>

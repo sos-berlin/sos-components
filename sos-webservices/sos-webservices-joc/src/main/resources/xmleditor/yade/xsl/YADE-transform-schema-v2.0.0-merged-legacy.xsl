@@ -215,13 +215,16 @@
             <xsl:copy-of select="@*"/>
 
             <!-- to v1 -->
-            <xsl:if test="SMBConnection/Hostname">
+            <xsl:if test="SMBAuthentication/SMBAuthenticationMethodNTLM and SMBConnection/Hostname">
                 <Hostname><xsl:value-of select="SMBConnection/Hostname"/></Hostname>
             </xsl:if>
             
+            <!-- v2 -->
+            <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="SMBConnection"/>
             
             <SMBAuthentication>
-                <!-- v1 -->
+                <!-- to v1 -->
                 <xsl:choose>
                     <xsl:when test="SMBAuthentication/SMBAuthenticationMethodNTLM">
                         <Account><xsl:value-of select="SMBAuthentication/SMBAuthenticationMethodNTLM/Account"/></Account>
@@ -231,14 +234,16 @@
                         </xsl:if>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:choose>
-                            <xsl:when test="SMBAuthentication/SMBAuthenticationMethodGuest/Account">
-                                <Account><xsl:value-of select="SMBAuthentication/SMBAuthenticationMethodGuest/Account"/></Account>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <Account>Guest</Account>                                
-                            </xsl:otherwise>
-                        </xsl:choose>
+                        <xsl:if test="SMBAuthentication/SMBAuthenticationMethodGuest">
+                            <xsl:choose>
+                                <xsl:when test="SMBAuthentication/SMBAuthenticationMethodGuest/Account">
+                                    <Account><xsl:value-of select="SMBAuthentication/SMBAuthenticationMethodGuest/Account"/></Account>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <Account>Guest</Account>                                
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:if>
                     </xsl:otherwise>
                 </xsl:choose>
             
@@ -251,8 +256,6 @@
             </SMBAuthentication>
             
             <!-- v2 -->
-            <xsl:copy-of select="CredentialStoreFragmentRef"/>
-            <xsl:copy-of select="SMBConnection"/>
             <xsl:copy-of select="ConfigurationFiles"/>
         </xsl:copy>
     </xsl:template>
