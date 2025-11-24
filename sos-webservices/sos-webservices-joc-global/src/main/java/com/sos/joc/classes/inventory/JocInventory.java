@@ -1441,16 +1441,8 @@ public class JocInventory {
                                         if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
                                             String[] scriptLines = es.getScript().split("\n");
                                             for (int i = 0; i < scriptLines.length; i++) {
-                                                String line = scriptLines[i];
-                                                if (hasScriptInclude.test(line)) {
-                                                    Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
-                                                    if (m.find()) {
-                                                        if (config.getName().equals(m.group(2))) {
-                                                            scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + " " + newName + " " + m.group(
-                                                                    3);
-                                                        }
-                                                    }
-                                                }
+                                                scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config
+                                                        .getName(), newName);
                                             }
                                             es.setScript(String.join("\n", scriptLines));
                                             replacedJobs.put(jobName, job);
@@ -1468,16 +1460,8 @@ public class JocInventory {
                                 if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
                                     String[] scriptLines = es.getScript().split("\n");
                                     for (int i = 0; i < scriptLines.length; i++) {
-                                        String line = scriptLines[i];
-                                        if (hasScriptInclude.test(line)) {
-                                            Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
-                                            if (m.find()) {
-                                                if (config.getName().equals(m.group(2))) {
-                                                    scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + " " + newName + " " + m.group(
-                                                            3);
-                                                }
-                                            }
-                                        }
+                                        scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config.getName(),
+                                                newName);
                                     }
                                     es.setScript(String.join("\n", scriptLines));
                                     workflowOrJobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
