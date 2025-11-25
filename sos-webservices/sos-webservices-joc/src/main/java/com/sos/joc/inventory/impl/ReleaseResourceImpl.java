@@ -393,7 +393,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setModified(dbAuditLog.getCreated());
         dbLayer.getSession().update(conf);
         // after successful update, set enforce flag to false for related dependencies 
-        PublishUtils.resetDependenciesEnforcement(Collections.singleton(conf.getId()), dbLayer.getSession());
+        PublishUtils.resetDependenciesEnforcementAfterPublish(Collections.singleton(conf.getId()), dbLayer.getSession());
 
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));

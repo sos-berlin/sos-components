@@ -222,7 +222,7 @@ public class StoreDeployments {
                     }
                 }
                 // after successful deployment, set enforce flag to false for related dependencies 
-                PublishUtils.resetDependenciesEnforcement(
+                PublishUtils.resetDependenciesEnforcementAfterPublish(
                         optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
                             .collect(Collectors.toSet()),
                         newHibernateSession);
