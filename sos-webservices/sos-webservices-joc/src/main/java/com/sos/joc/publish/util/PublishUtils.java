@@ -1813,17 +1813,15 @@ public abstract class PublishUtils {
     
     public static final void resetDependenciesEnforcementAfterPublish(Set<Long> invIds, SOSHibernateSession session) {
         DBLayerDependencies dbLayer = new DBLayerDependencies(session);
-        invIds.forEach(id -> {
-            List<DBItemInventoryDependency> dependencies = dbLayer.getReferencesDependencies(id);
-            dependencies.forEach(dependency -> {
-                dependency.setInvEnforce(false);
-                dependency.setDepEnforce(false);
-                dependency.setPublished(true);
-                try {session.update(dependency);
-                } catch (SOSHibernateException e) {
-                    LOGGER.error(e.getMessage());
-                }
-            });
+        List<DBItemInventoryDependency> dependencies = dbLayer.getReferencesDependencies(new ArrayList<Long>(invIds));
+        dependencies.forEach(dependency -> {
+            dependency.setInvEnforce(false);
+            dependency.setDepEnforce(false);
+            dependency.setPublished(true);
+            try {session.update(dependency);
+            } catch (SOSHibernateException e) {
+                LOGGER.error(e.getMessage());
+            }
         });
     }
 }

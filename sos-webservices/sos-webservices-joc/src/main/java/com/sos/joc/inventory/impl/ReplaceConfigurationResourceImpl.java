@@ -189,12 +189,12 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
-                DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-                depDbLayer.updateEnforce(Collections.singleton(config.getId()));
                 auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
                         dbAuditLog));
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
+                DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
+                depDbLayer.updateEnforce(Collections.singletonList(config.getId()));
                 events.add(config.getFolder());
                 if (JocInventory.isWorkflow(config.getType())) {
                     workflowInvIds.add(config.getId());
