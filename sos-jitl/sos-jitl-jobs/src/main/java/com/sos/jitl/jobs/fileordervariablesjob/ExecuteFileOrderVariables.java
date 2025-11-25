@@ -45,7 +45,7 @@ public class ExecuteFileOrderVariables {
             }
 
             for (Entry<String, Object> entry : jobArguments.entrySet()) {
-                if (entry.getValue() instanceof String) {
+                if (entry.getValue() != null && entry.getValue() instanceof String) {
                     String s = (String) entry.getValue();
 
                     if (variables.get(entry.getKey()) == null && variables.get(entry.getKey()) != "js7_source_file" && !s.isEmpty()) {

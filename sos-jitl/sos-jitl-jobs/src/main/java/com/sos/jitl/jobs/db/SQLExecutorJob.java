@@ -87,7 +87,8 @@ public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArgument
 
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
         vars.entrySet().forEach(e -> {
-            ps.addKey(e.getKey(), e.getValue().toString());
+            Object val = e.getValue();
+            ps.addKey(e.getKey(), val == null ? "" : val.toString());
         });
         return ps.replace(path);
     }

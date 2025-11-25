@@ -162,16 +162,35 @@ public class JobHelper {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
-        return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
-                .getValue()));
+        // .filter(a -> a.getValue().getValue() != null)
+        // stream() .. Collectors.toMap throws NPE if value is NULL
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, JobArgument<?>> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            result.put(key, entry.getValue().getValue());
+        }
+        return result;
     }
 
     public static Map<String, String> asNameValueStringMap(Map<String, JobArgument<?>> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
-        return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
-                .getValue().toString()));
+        // .filter(a -> a.getValue().getValue() != null)
+        // stream() .. Collectors.toMap throws NPE if value is NULL
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, JobArgument<?>> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            Object val = entry.getValue().getValue();
+            result.put(key, val == null ? null : val.toString());
+        }
+        return result;
     }
 
     @SuppressWarnings("unused")

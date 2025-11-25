@@ -28,13 +28,13 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
     }
 
     @Override
-    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient,
-            ISOSLogger logger) throws Exception {
+    public void createInactiveSchedule(OrderProcessStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, ISOSLogger logger)
+            throws Exception {
         Map<String, Object> undeclaredArgs = step.getUndeclaredArgumentsAsNameValueMap();
         logger.info(undeclaredArgs.toString());
         ScheduleData data = new ScheduleData();
-        undeclaredArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg.getValue() instanceof String).forEach(
-                arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));
+        undeclaredArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg.getValue() != null && arg
+                .getValue() instanceof String).forEach(arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));
         Schedule schedule = new Schedule().withActive(false).withData(data).withDescription(setScheduleDescription(step));
         Job job = new Job().withAction(args.getActionEndpoint().getValue().toString()).withHttpMethod(args.getActionEndpointHTTPMethod().getValue())
                 .withActive(true).withDescription(args.getJobDescription().getValue()).withName(getJobName(step)).withSchedules(Collections
