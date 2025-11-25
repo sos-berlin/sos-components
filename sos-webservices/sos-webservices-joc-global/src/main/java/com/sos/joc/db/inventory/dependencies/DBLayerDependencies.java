@@ -1,7 +1,6 @@
 package com.sos.joc.db.inventory.dependencies;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -191,24 +190,31 @@ public class DBLayerDependencies extends DBLayer {
     
     public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Set<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException {
-//            deleteDependencies(item);
         List<DBItemInventoryDependency> storedDependencies = getDependencies(item);
         for(DBItemInventoryDependency storedDependency : storedDependencies) {
             if (!dependencies.contains(storedDependency)) {
                 getSession().delete(storedDependency);
-            } else {
-                // possibly check if items should be enforced
             }
         }
-        dependencies.removeAll(storedDependencies);
-        dependencies.stream().filter(dep -> dep.getInvDependencyId().equals(item.getId())|| dep.getInvId().equals(item.getId())).forEach(
-                dependency -> {
+        InventoryDBLayer dbLayer = new InventoryDBLayer(getSession());
+        dependencies.stream().filter(dep -> dep.getInvDependencyId().equals(item.getId())|| dep.getInvId().equals(item.getId()))
+                .forEach(dependency -> {
                     try {
-                        // check if relation has to be enforced 
-                        // check if the invId item of this invDepId dependency is already deployed/released
-//                        dependency.setEnforce(true);
-                        
-                        getSession().save(dependency);
+                        /*
+                         * store o2:
+                         * object o1 refencedby object o2 -> invEnforce = false iff o1 is released/deployed, depEnforced = false 
+                         * */
+                        dependency.setDepEnforce(false);
+                        if(isPublished(dbLayer, dependency)) {
+                            dependency.setInvEnforce(true);
+                        } else {
+                            dependency.setInvEnforce(false);
+                        }
+                        if(storedDependencies.contains(dependency)) {
+                            getSession().update(dependency);
+                        } else {
+                            getSession().save(dependency);
+                        }
                     } catch (SOSHibernateException e) {
                         throw new JocSosHibernateException(e);
                     }
@@ -256,15 +262,9 @@ public class DBLayerDependencies extends DBLayer {
         List<DBItemInventoryDependency> result = getReferencedByDependencies(invIds);
         result.forEach(dependency -> {
             dependency.setInvEnforce(true);
-            boolean isPublished = false;
             try {
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(getSession());
-                if(JocInventory.isDeployable(dependency.getDependencyTypeAsEnum())) {
-                    isPublished = invDbLayer.isDeployed(dependency.getInvDependencyId());
-                } else if (JocInventory.isReleasable(dependency.getDependencyTypeAsEnum())) {
-                    isPublished = invDbLayer.isReleased(dependency.getInvDependencyId());
-                }
-                if(isPublished) {
+                if(isPublished(invDbLayer, dependency)) {
                     dependency.setDepEnforce(true);
                 } else {
                     dependency.setDepEnforce(false);
@@ -291,4 +291,12 @@ public class DBLayerDependencies extends DBLayer {
 //        return getSession().executeUpdate(query);
     }
     
+    private static boolean isPublished(InventoryDBLayer invDbLayer, DBItemInventoryDependency dependency) throws SOSHibernateException {
+        if(JocInventory.isDeployable(dependency.getDependencyTypeAsEnum())) {
+            return invDbLayer.isDeployed(dependency.getInvDependencyId());
+        } else if (JocInventory.isReleasable(dependency.getDependencyTypeAsEnum())) {
+            return invDbLayer.isReleased(dependency.getInvDependencyId());
+        }
+        return false;
+    }
 }
