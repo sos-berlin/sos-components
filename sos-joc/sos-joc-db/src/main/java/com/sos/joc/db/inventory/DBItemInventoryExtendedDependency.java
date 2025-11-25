@@ -49,7 +49,7 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[INV_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean invReleased;
-    @Column(name = "[ENFORCE]", nullable = false)
+    @Column(name = "[INV_ENFORCE]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean invEnforce;
     
