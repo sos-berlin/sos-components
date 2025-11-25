@@ -217,17 +217,37 @@ public class DBLayerDependencies extends DBLayer {
         }
     }
     
-    public int updateEnforce(Collection<Long> invIds) throws SOSHibernateException {
+    public int updateInvEnforce(Collection<Long> invIds) throws SOSHibernateException {
         if (invIds == null || invIds.isEmpty()) {
             return 0;
         }
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set enforce=true where ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set invEnforce=true where ");
         if (invIds.size() == 1) {
             hql.append("invId=:invId ");
         } else {
             hql.append("invId in (:invIds) ");
         }
-        hql.append("and enforce=false");
+        hql.append("and invEnforce=false");
+        Query<?> query = getSession().createQuery(hql);
+        if (invIds.size() == 1) {
+            query.setParameter("invId", invIds.iterator().next());
+        } else {
+            query.setParameterList("invIds", invIds);
+        }
+        return getSession().executeUpdate(query);
+    }
+    
+    public int updateDepEnforce(Collection<Long> invIds) throws SOSHibernateException {
+        if (invIds == null || invIds.isEmpty()) {
+            return 0;
+        }
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set depEnforce=true where ");
+        if (invIds.size() == 1) {
+            hql.append("invId=:invId ");
+        } else {
+            hql.append("invId in (:invIds) ");
+        }
+        hql.append("and depEnforce=false");
         Query<?> query = getSession().createQuery(hql);
         if (invIds.size() == 1) {
             query.setParameter("invId", invIds.iterator().next());

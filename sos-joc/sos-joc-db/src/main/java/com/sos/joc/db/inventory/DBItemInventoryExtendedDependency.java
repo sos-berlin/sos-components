@@ -49,6 +49,9 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[INV_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean invReleased;
+    @Column(name = "[ENFORCE]", nullable = false)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean invEnforce;
     
     @Id
     @Column(name = "[DEP_ID]", nullable = true)
@@ -68,9 +71,9 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[DEP_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean depReleased;
-    @Column(name = "[ENFORCE]", nullable = false)
+    @Column(name = "[DEP_ENFORCE]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
-    private Boolean enforce;
+    private Boolean depEnforce;
     
     public Long getInvId() {
         return invId;
@@ -119,6 +122,13 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     }
     public void setInvReleased(Boolean invReleased) {
         this.invReleased = invReleased;
+    }
+    
+    public Boolean getInvEnforce() {
+        return invEnforce;
+    }
+    public void setInvEnforce(Boolean invEnforce) {
+        this.invEnforce = invEnforce;
     }
     
     public Long getDepId() {
@@ -170,21 +180,21 @@ public class DBItemInventoryExtendedDependency extends DBItem {
         this.depReleased = depReleased;
     }
     
-    public Boolean getEnforce() {
-        return enforce;
+    public Boolean getDepEnforce() {
+        return depEnforce;
     }
-    public void setEnforce(Boolean enforce) {
-        this.enforce = enforce;
+    public void setDepEnforce(Boolean depEnforce) {
+        this.depEnforce = depEnforce;
     }
     
     @Transient
     public Dependency getDependency() {
-        return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased, enforce);
+        return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased, invEnforce);
     }
     
     @Transient
     public Dependency getReferencedBy() {
-        return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased, enforce);
+        return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased, depEnforce);
     }
     
     @Transient

@@ -1816,7 +1816,8 @@ public abstract class PublishUtils {
         invIds.forEach(id -> {
             List<DBItemInventoryDependency> dependencies = dbLayer.getReferencesDependencies(id);
             dependencies.forEach(dependency -> {
-                dependency.setEnforce(false);
+                dependency.setInvEnforce(false);
+                dependency.setDepEnforce(false);
                 try {session.update(dependency);
                 } catch (SOSHibernateException e) {
                     LOGGER.error(e.getMessage());

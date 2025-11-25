@@ -113,7 +113,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             }
             
             DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-            depDbLayer.updateEnforce(dBFolderContent.stream().map(DBItemInventoryConfiguration::getId).toList());
+            depDbLayer.updateInvEnforce(dBFolderContent.stream().map(DBItemInventoryConfiguration::getId).toList());
+            depDbLayer.updateDepEnforce(dBFolderContent.stream().map(DBItemInventoryConfiguration::getId).toList());
             
             session.commit();
             auditLogObjectsLogging.log();
@@ -190,7 +191,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-                depDbLayer.updateEnforce(Collections.singleton(config.getId()));
+                depDbLayer.updateInvEnforce(Collections.singleton(config.getId()));
+                depDbLayer.updateDepEnforce(Collections.singleton(config.getId()));
                 auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session,
                         dbAuditLog));
                 setItem(config, p, dbAuditLog.getId());

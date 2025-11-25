@@ -1284,7 +1284,8 @@ public class DependencyResolver {
             dependency.setInvDependencyId(item.getId());
             // check if item is already deployed or released
             dependency.setPublished(isPublished(dblayer, item));
-            dependency.setEnforce(!dependency.getPublished());
+            dependency.setInvEnforce(!dependency.getPublished());
+            dependency.setDepEnforce(!dependency.getPublished());
             return dependency;
         }).collect(Collectors.toSet()));
         dependencies.addAll(reference.getReferences().stream().map(item -> {
@@ -1293,7 +1294,8 @@ public class DependencyResolver {
             dependency.setDependencyType(reference.getReferencedItem().getTypeAsEnum());
             dependency.setInvDependencyId(reference.getReferencedItem().getId());
             dependency.setPublished(isPublished(dblayer, reference.getReferencedItem()));
-            dependency.setEnforce(!dependency.getPublished());
+            dependency.setInvEnforce(!dependency.getPublished());
+            dependency.setDepEnforce(!dependency.getPublished());
             
             return dependency;
         }).collect(Collectors.toSet()));
