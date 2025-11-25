@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory.dependencies;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,12 +10,15 @@ import java.util.Set;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.dependencies.get.ResponseObject;
@@ -76,36 +80,60 @@ public class DBLayerDependencies extends DBLayer {
     }
     
     public List<DBItemInventoryDependency> getReferencesDependencies (Long id) {
-        try {
-            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-            hql.append(" where invDependencyId = :invId");
-            Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
-            query.setParameter("invId", id);
-            List<DBItemInventoryDependency> results = query.getResultList();
-            if(results != null) {
-                return results;
-            } else {
-                return Collections.emptyList();
+        return getReferencesDependencies(Collections.singletonList(id));
+    }
+    
+    public List<DBItemInventoryDependency> getReferencesDependencies (List<Long> ids) {
+        if (ids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryDependency> result = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReferencesDependencies(SOSHibernate.getInClausePartition(i, ids)));
             }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
+            return result;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+                hql.append(" where invDependencyId in (:invIds)");
+                Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+                query.setParameter("invIds", ids);
+                List<DBItemInventoryDependency> results = query.getResultList();
+                if(results != null) {
+                    return results;
+                } else {
+                    return Collections.emptyList();
+                }
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
         }
     }
     
     public List<DBItemInventoryDependency> getReferencedByDependencies (Long id) {
-        try {
-            StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
-            hql.append(" where invId = :invId");
-            Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
-            query.setParameter("invId", id);
-            List<DBItemInventoryDependency> results = query.getResultList();
-            if(results != null) {
-                return results;
-            } else {
-                return Collections.emptyList();
+        return getReferencedByDependencies(Collections.singletonList(id));
+    }
+
+    public List<DBItemInventoryDependency> getReferencedByDependencies (List<Long> ids) {
+        if (ids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryDependency> result = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReferencedByDependencies(SOSHibernate.getInClausePartition(i, ids)));
             }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
+            return result;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+                hql.append(" where invId in (:invIds)");
+                Query<DBItemInventoryDependency> query = getSession().createQuery(hql.toString());
+                query.setParameter("invIds", ids);
+                List<DBItemInventoryDependency> results = query.getResultList();
+                if(results != null) {
+                    return results;
+                } else {
+                    return Collections.emptyList();
+                }
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
         }
     }
 
@@ -217,25 +245,50 @@ public class DBLayerDependencies extends DBLayer {
         }
     }
     
-    public int updateEnforce(Collection<Long> invIds) throws SOSHibernateException {
+    public void updateEnforce(List<Long> invIds) throws SOSHibernateException {
         if (invIds == null || invIds.isEmpty()) {
-            return 0;
+            return;
         }
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set invEnforce=true, depEnforce=true where ");
-        if (invIds.size() == 1) {
-            hql.append("invId=:invId ");
-        } else {
-            hql.append("invId in (:invIds) ");
-        }
-        hql.append("and invEnforce=false");
-        hql.append("or depEnforce=false");
-        Query<?> query = getSession().createQuery(hql);
-        if (invIds.size() == 1) {
-            query.setParameter("invId", invIds.iterator().next());
-        } else {
-            query.setParameterList("invIds", invIds);
-        }
-        return getSession().executeUpdate(query);
+        /*
+         * rename o1:
+         *   object o1 refencedby object o2 -> invEnforce = true, depEnforced = true iff o2 is released/deployed
+         * */
+        List<DBItemInventoryDependency> result = getReferencedByDependencies(invIds);
+        result.forEach(dependency -> {
+            dependency.setInvEnforce(true);
+            boolean isPublished = false;
+            try {
+                InventoryDBLayer invDbLayer = new InventoryDBLayer(getSession());
+                if(JocInventory.isDeployable(dependency.getDependencyTypeAsEnum())) {
+                    isPublished = invDbLayer.isDeployed(dependency.getInvDependencyId());
+                } else if (JocInventory.isReleasable(dependency.getDependencyTypeAsEnum())) {
+                    isPublished = invDbLayer.isReleased(dependency.getInvDependencyId());
+                }
+                if(isPublished) {
+                    dependency.setDepEnforce(true);
+                } else {
+                    dependency.setDepEnforce(false);
+                }
+                getSession().update(dependency);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
+        });
+//        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set invEnforce=true, depEnforce=true where ");
+//        if (invIds.size() == 1) {
+//            hql.append("invId=:invId ");
+//        } else {
+//            hql.append("invId in (:invIds) ");
+//        }
+//        hql.append("and invEnforce=false");
+//        hql.append("or depEnforce=false");
+//        Query<?> query = getSession().createQuery(hql);
+//        if (invIds.size() == 1) {
+//            query.setParameter("invId", invIds.iterator().next());
+//        } else {
+//            query.setParameterList("invIds", invIds);
+//        }
+//        return getSession().executeUpdate(query);
     }
     
 }
