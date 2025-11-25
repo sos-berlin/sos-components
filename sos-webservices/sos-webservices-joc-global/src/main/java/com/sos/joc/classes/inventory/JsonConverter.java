@@ -78,7 +78,7 @@ public class JsonConverter {
     public final static String scriptInclude = "!include";
     public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+(\\S+)[ \t]*(.*)$",
             Pattern.DOTALL);
-    public final static Predicate<String> hasScriptIncludes = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
+    private final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
     private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: "
             + scriptIncludeComments + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
     private final static String includeScriptErrorMsg2 = "Script include of job '%s[%s]': value replacement failed: %s";
@@ -760,10 +760,10 @@ public class JsonConverter {
     }
     
     public static String replaceNameOfIncludeScriptInScriptLine(String line, String oldName, String newName) {
-        Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+        Matcher m = scriptIncludePattern.matcher(line);
         if (m.find()) {
             if (oldName.equals(m.group(3))) {
-                return m.group(1) + m.group(2) + JsonConverter.scriptInclude + " " + newName + " " + m.group(4);
+                return m.group(1) + m.group(2) + scriptInclude + " " + newName + " " + m.group(4);
             }
         }
         return line;
