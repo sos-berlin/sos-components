@@ -190,8 +190,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-                depDbLayer.updateInvEnforce(Collections.singleton(config.getId()));
-                depDbLayer.updateDepEnforce(Collections.singleton(config.getId()));
+                depDbLayer.updateEnforce(Collections.singleton(config.getId()));
                 
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
