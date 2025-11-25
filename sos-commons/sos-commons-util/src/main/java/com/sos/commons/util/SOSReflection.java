@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,12 +138,12 @@ public class SOSReflection {
         if (type == null) {
             return null;
         }
-        List<Method> result = new ArrayList<>();
+        Set<Method> result = new HashSet<>(); // without duplicate methods e.g. from this, super etc
         for (Class<?> c = type; c != null; c = c.getSuperclass()) {
             result.addAll(Arrays.asList(c.getMethods()));
         }
         // result.sort(Comparator.comparing(Method::getName));
-        return result;
+        return new ArrayList<>(result);
     }
 
     public static boolean isEmpty(Object obj) {
