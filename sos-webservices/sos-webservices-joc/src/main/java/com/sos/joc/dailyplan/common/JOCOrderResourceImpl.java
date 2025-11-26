@@ -234,6 +234,11 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return p;
 
     }
+    
+    protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
+            DailyPlanOrderFilterDef in, List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result) {
+        return addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false, Collections.emptyMap(), false);
+    }
 
     protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
             DailyPlanOrderFilterDef in, List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails,
