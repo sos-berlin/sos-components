@@ -30,6 +30,7 @@ import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -37,6 +38,8 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderState;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.note.common.Severity;
 
 public class JOCOrderResourceImpl extends JOCResourceImpl {
 
@@ -186,7 +189,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return result;
     }
 
-    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item) {
+    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item, Map<String, Integer> workflowNotes,
+            Map<String, Integer> scheduleNotes) {
 
         PlannedOrderItem p = new PlannedOrderItem();
         p.setLate(item.isLate());
@@ -204,8 +208,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         p.setStartMode(item.getStartMode());
 
         p.setWorkflowPath(item.getWorkflowPath());
+        p.setWorkflowHasNote(Severity.fromValueOrNull(workflowNotes.get(item.getWorkflowName())));
         p.setOrderId(item.getOrderId());
         p.setSchedulePath(item.getSchedulePath());
+        p.setScheduleHasNote(Severity.fromValueOrNull(workflowNotes.get(item.getScheduleName())));
         p.setOrderName(item.getOrderName());
 
         DailyPlanOrderState orderState = new DailyPlanOrderState();
@@ -231,14 +237,21 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
             DailyPlanOrderFilterDef in, List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result, boolean getCyclicDetails,
-            Map<String, Set<String>> orderTags) {
+            Map<String, Set<String>> orderTags, boolean withNotes) {
 
         boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
         Set<String> workflowNames = new HashSet<>();
         if (orders != null) {
+            Map<String, Integer> workflowNotes = Collections.emptyMap();
+            Map<String, Integer> scheduleNotes = Collections.emptyMap();
+            if (withNotes) {
+                InventoryNotesDBLayer dbNoteLayer = new InventoryNotesDBLayer(session);
+                workflowNotes = dbNoteLayer.hasNote(ConfigurationType.WORKFLOW.intValue());
+                scheduleNotes = dbNoteLayer.hasNote(ConfigurationType.SCHEDULE.intValue());
+            }
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (DBItemDailyPlanWithHistory item : orders) {
-                PlannedOrderItem p = createPlanItem(item);
+                PlannedOrderItem p = createPlanItem(item, workflowNotes, scheduleNotes);
                 p.setControllerId(controllerId);
                 p.setTags(orderTags.get(OrdersHelper.getParentOrderId(p.getOrderId())));
 

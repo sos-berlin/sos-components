@@ -109,17 +109,17 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
 
                 List<PlannedOrderItem> result = new ArrayList<>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, false);
-                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false, Collections.emptyMap());
+                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result);
 
                 for (PlannedOrderItem p : result) {
-                    String state = p.getState().get_text().value();
-                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(state)) {
+                    DailyPlanOrderStateText state = p.getState().get_text();
+                    if (DailyPlanOrderStateText.SUBMITTED.equals(state)) {
                         if (p.getLate()) {
                             answer.setSubmittedLate(answer.getSubmittedLate() + 1);
                         } else {
                             answer.setSubmitted(answer.getSubmitted() + 1);
                         }
-                    } else if (DailyPlanOrderStateText.PLANNED.value().equals(state)) {
+                    } else if (DailyPlanOrderStateText.PLANNED.equals(state)) {
                         if (p.getLate()) {
                             answer.setPlannedLate(answer.getPlannedLate() + 1);
                         } else {
@@ -148,7 +148,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                                 answer.setPlanned(answer.getPlanned() + 1);
                             }
                         }
-                    } else if (DailyPlanOrderStateText.FINISHED.value().equals(state)) {
+                    } else if (DailyPlanOrderStateText.FINISHED.equals(state)) {
                         answer.setFinished(answer.getFinished() + 1);
                     }
                 }

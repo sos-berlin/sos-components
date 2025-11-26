@@ -117,7 +117,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, true);
                 Map<String, Set<String>> orderTags = orders == null ? Collections.emptyMap() : OrderTags.getTagsByOrderIds(controllerId, orders
                         .stream().map(DBItemDailyPlanWithHistory::getOrderId), session);
-                workflowNames.addAll(addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags));
+                workflowNames.addAll(addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags, true));
             }
 
             PlannedOrders answer = new PlannedOrders();
