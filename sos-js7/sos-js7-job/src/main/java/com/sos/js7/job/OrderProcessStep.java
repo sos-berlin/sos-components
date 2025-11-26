@@ -301,12 +301,41 @@ public class OrderProcessStep<A extends JobArguments> {
         return jobResourcesValues;
     }
 
+    public Map<String, String> getJobResourcesArgumentsAsNameValueStringMap() {
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, DetailValue> entry : getJobResourcesArgumentsAsNameDetailValueMap().entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            Object val = entry.getValue().getValue();
+            result.put(key, val == null ? null : val.toString());
+        }
+        return result;
+    }
+
     public Map<String, DetailValue> getLastSucceededOutcomes() {
         return getLastOutcomes().get(OrderOutcome.Succeeded.class.getSimpleName());
     }
 
+    public Map<String, Object> getLastSucceededOutcomesAsNameValueMap() {
+        return JobHelper.asNameValueMapFromMapWithDetailValue(getLastSucceededOutcomes());
+    }
+
+    public Map<String, String> getLastSucceededOutcomesAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastSucceededOutcomes());
+    }
+
     public Map<String, DetailValue> getLastFailedOutcomes() {
         return getLastOutcomes().get(OrderOutcome.Failed.class.getSimpleName());
+    }
+
+    public Map<String, Object> getLastFailedOutcomesAsNameValueMap() {
+        return JobHelper.asNameValueMapFromMapWithDetailValue(getLastFailedOutcomes());
+    }
+
+    public Map<String, String> getLastFailedOutcomesAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastFailedOutcomes());
     }
 
     protected BlockingInternalJob.Step getInternalStep() {
@@ -328,6 +357,11 @@ public class OrderProcessStep<A extends JobArguments> {
             return a.getValue();
         }
         return null;
+    }
+
+    public String getDeclaredArgumentValueAsString(String name) {
+        Object obj = getDeclaredArgumentValue(name);
+        return obj == null ? null : obj.toString();
     }
 
     private String getDisplayValue(String name) {
@@ -622,6 +656,10 @@ public class OrderProcessStep<A extends JobArguments> {
             return Collections.emptyMap();
         }
         return JobHelper.asJavaValues(internalStep.order().arguments());
+    }
+
+    public Map<String, String> getOrderArgumentsAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
     }
 
     @SuppressWarnings("unused")

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -159,7 +160,7 @@ public class JobHelper {
     }
 
     public static Map<String, Object> asNameValueMap(Map<String, JobArgument<?>> map) {
-        if (map == null || map.size() == 0) {
+        if (SOSCollection.isEmpty(map)) {
             return Collections.emptyMap();
         }
         // .filter(a -> a.getValue().getValue() != null)
@@ -175,8 +176,23 @@ public class JobHelper {
         return result;
     }
 
+    public static Map<String, Object> asNameValueMapFromMapWithDetailValue(Map<String, DetailValue> map) {
+        if (SOSCollection.isEmpty(map)) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, DetailValue> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            result.put(key, entry.getValue().getValue());
+        }
+        return result;
+    }
+
     public static Map<String, String> asNameValueStringMap(Map<String, JobArgument<?>> map) {
-        if (map == null || map.size() == 0) {
+        if (SOSCollection.isEmpty(map)) {
             return Collections.emptyMap();
         }
         // .filter(a -> a.getValue().getValue() != null)
@@ -188,6 +204,38 @@ public class JobHelper {
                 continue;
             }
             Object val = entry.getValue().getValue();
+            result.put(key, val == null ? null : val.toString());
+        }
+        return result;
+    }
+
+    public static Map<String, String> asNameValueStringMapFromMapWithDetailValue(Map<String, DetailValue> map) {
+        if (SOSCollection.isEmpty(map)) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, DetailValue> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            Object val = entry.getValue().getValue();
+            result.put(key, val == null ? null : val.toString());
+        }
+        return result;
+    }
+
+    public static Map<String, String> asNameValueStringMapFromMapWithObjectValue(Map<String, Object> map) {
+        if (SOSCollection.isEmpty(map)) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            Object val = entry.getValue();
             result.put(key, val == null ? null : val.toString());
         }
         return result;
