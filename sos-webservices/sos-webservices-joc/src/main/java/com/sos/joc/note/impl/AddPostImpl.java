@@ -95,9 +95,10 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 md.setModifiedBy(author);
                 md.setParticipantCount(note.getParticipants().size());
                 md.setPostCount(note.getPosts().size());
-                if (md.getSeverity().intValue() < in.getSeverity().intValue()) {
+                // note should change color according to the most recent post and not based on the most important post
+                //if (md.getSeverity().intValue() < in.getSeverity().intValue()) {
                     md.setSeverity(in.getSeverity());
-                }
+                //}
                 
                 setNoteIdentifier(note, author, in, invItem.getPath());
 
