@@ -99,6 +99,7 @@ public class DependencyResolver {
             add(ConfigurationType.LOCK.intValue());
             add(ConfigurationType.NOTICEBOARD.intValue());
             add(ConfigurationType.SCHEDULE.intValue());
+            add(ConfigurationType.INCLUDESCRIPT.intValue());
             add(ConfigurationType.WORKINGDAYSCALENDAR.intValue());
             add(ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
         }
