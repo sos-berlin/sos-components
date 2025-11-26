@@ -299,27 +299,36 @@ public class DBLayerDependencies extends DBLayer {
         }
         return false;
     }
-    
+
     public Set<Long> checkPublished(List<Long> invIds) throws SOSHibernateException {
-        StringBuilder sql = new StringBuilder("select inventoryConfigurationId from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-        sql.append(" where inventoryConfigurationId in (:ids)");
-        Query<Long> query = getSession().createQuery(sql.toString());
-        query.setParameter("ids", invIds);
-        List<Long> deployedResults = query.getResultList();
-        if(deployedResults == null) {
-            deployedResults = Collections.emptyList();
+        if (invIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            Set<Long> result = new HashSet<>();
+            for (int i = 0; i < invIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(checkPublished(SOSHibernate.getInClausePartition(i, invIds)));
+            }
+            return result;
+        } else {
+            StringBuilder sql = new StringBuilder("select inventoryConfigurationId from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            sql.append(" where inventoryConfigurationId in (:ids)");
+            Query<Long> query = getSession().createQuery(sql.toString());
+            query.setParameter("ids", invIds);
+            List<Long> deployedResults = query.getResultList();
+            if (deployedResults == null) {
+                deployedResults = Collections.emptyList();
+            }
+            sql = new StringBuilder("select cid from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            sql.append(" where cid in (:ids)");
+            query = getSession().createQuery(sql.toString());
+            query.setParameter("ids", invIds);
+            List<Long> releasedResults = query.getResultList();
+            if (releasedResults == null) {
+                releasedResults = Collections.emptyList();
+            }
+            Set<Long> publishedIds = new HashSet<Long>();
+            publishedIds.addAll(deployedResults);
+            publishedIds.addAll(releasedResults);
+            return publishedIds;
         }
-        sql = new StringBuilder("select cid from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        sql.append(" where cid in (:ids)");
-        query = getSession().createQuery(sql.toString());
-        query.setParameter("ids", invIds);
-        List<Long> releasedResults = query.getResultList();
-        if(releasedResults == null) {
-            releasedResults = Collections.emptyList();
-        }
-        Set<Long> publishedIds = new HashSet<Long>();
-        publishedIds.addAll(deployedResults);
-        publishedIds.addAll(releasedResults);
-        return publishedIds;
     }
+
 }
