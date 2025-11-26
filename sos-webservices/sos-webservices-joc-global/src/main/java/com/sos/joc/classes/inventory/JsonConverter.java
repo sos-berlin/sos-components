@@ -252,7 +252,7 @@ public class JsonConverter {
                     }
                     try {
                         line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
-                        line = indent + line.replaceAll("\\n", "\\\\n" + indent);
+                        line = indent + line.replace("\n", "\n" + indent);
                     } catch (Exception e) {
                         throw new IllegalArgumentException(String.format("Script '%s' of job '%s[%s]' cannot be read: %s", scriptName, workflowName,
                                 jobName, e.toString()));
