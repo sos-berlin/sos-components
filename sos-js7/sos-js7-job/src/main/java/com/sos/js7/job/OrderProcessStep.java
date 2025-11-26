@@ -728,8 +728,8 @@ public class OrderProcessStep<A extends JobArguments> {
                     }
                 }
             }
-            if (declaredArguments.hasDynamicArgumentFields()) {
-                for (JobArgument<?> arg : declaredArguments.getDynamicArgumentFields()) {
+            if (declaredArguments.hasDynamicArguments()) {
+                for (JobArgument<?> arg : declaredArguments.getDynamicArguments()) {
                     l.add(arg);
                 }
             }

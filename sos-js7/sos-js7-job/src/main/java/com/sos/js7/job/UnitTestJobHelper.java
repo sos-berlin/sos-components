@@ -202,8 +202,8 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 }
             }
         }
-        if (instance.hasDynamicArgumentFields()) {
-            for (JobArgument<?> arg : instance.getDynamicArgumentFields()) {
+        if (instance.hasDynamicArguments()) {
+            for (JobArgument<?> arg : instance.getDynamicArguments()) {
                 if (arg.getName() == null) {
                     continue;
                 }

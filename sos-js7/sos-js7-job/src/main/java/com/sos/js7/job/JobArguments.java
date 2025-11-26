@@ -23,7 +23,7 @@ public class JobArguments {
     private JobArgument<MockLevel> mockLevel = new JobArgument<>("mock_level", false, MockLevel.OFF);
 
     private Map<String, List<JobArgument<?>>> includedArguments;
-    private List<JobArgument<?>> dynamicArgumentFields;
+    private List<JobArgument<?>> dynamicArguments;
 
     public JobArguments() {
     }
@@ -32,16 +32,16 @@ public class JobArguments {
         setIncludedArguments(args);
     }
 
-    public void setDynamicArgumentFields(List<JobArgument<?>> val) {
-        dynamicArgumentFields = val;
+    public void setDynamicArguments(List<JobArgument<?>> val) {
+        dynamicArguments = val;
     }
 
-    public List<JobArgument<?>> getDynamicArgumentFields() {
-        return dynamicArgumentFields;
+    public List<JobArgument<?>> getDynamicArguments() {
+        return dynamicArguments;
     }
 
-    public boolean hasDynamicArgumentFields() {
-        return dynamicArgumentFields != null && dynamicArgumentFields.size() > 0;
+    public boolean hasDynamicArguments() {
+        return dynamicArguments != null && dynamicArguments.size() > 0;
     }
 
     protected Map<String, List<JobArgument<?>>> getIncludedArguments() {
@@ -62,7 +62,7 @@ public class JobArguments {
                         if (sa.getName() == null) {// internal usage
                             return null;
                         }
-                        return JobArgument.createDeclaredArgumentFromIncluded(sa,f);
+                        return JobArgument.createDeclaredArgumentFromIncluded(sa, f);
                     } catch (Throwable e) {
                         return null;
                     }

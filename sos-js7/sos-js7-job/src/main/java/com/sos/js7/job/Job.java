@@ -311,8 +311,8 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 }
             }
         }
-        if (instance.hasDynamicArgumentFields()) {
-            for (JobArgument<?> arg : instance.getDynamicArgumentFields()) {
+        if (instance.hasDynamicArguments()) {
+            for (JobArgument<?> arg : instance.getDynamicArguments()) {
                 arg.reset();
                 setDeclaredJobArgument(args, arg, null, step);
             }
