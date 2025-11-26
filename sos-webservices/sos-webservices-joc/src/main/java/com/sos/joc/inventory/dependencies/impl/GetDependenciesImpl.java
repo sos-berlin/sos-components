@@ -26,7 +26,6 @@ import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.inventory.dependencies.resource.IGetDependencies;
 import com.sos.joc.inventory.dependencies.util.DependencyUtils;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesRequest;
 import com.sos.joc.model.inventory.dependencies.GetDependenciesResponse;
@@ -113,28 +112,57 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     }
     
     private Response createResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
-        Response response = new Response();
+        switch(filter.getOperationType()) {
+        case DEPLOY:
+        case RELEASE:
+        case EXPORT:
+        case GIT:
+            return createPublishResponse(filter, dbLayer);
+        case RECALL:
+        case REVOKE:
+        case REMOVE:
+            return createRemoveResponse(filter, dbLayer);
+        default: 
+            return createPublishResponse(filter, dbLayer);
+        }
+    }
+    
+    private Response createPublishResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
+        Response response = initResponse(filter, dbLayer);
+        ResponseObjects objects = response.getObjects();
+
+        Stream.concat(allItemsWithReferences.keySet().stream(), allItemsReferencedBy.keySet().stream()).distinct().map(d -> map(d,
+                allItemsWithReferences.get(d), allItemsReferencedBy.get(d))).forEach(ro -> {
+                    objects.setAdditionalProperty(ro.getId().toString(), ro);
+                });
+
+        response.setObjects(objects);
+        response.setDeliveryDate(Date.from(Instant.now()));
+        return response;
+    }
+
+    private Response createRemoveResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
+        Response response = initResponse(filter, dbLayer);
+        ResponseObjects objects = response.getObjects();
+
+        Set<Long> publishedInvIds = dbLayer.checkPublished(allItemsReferencedBy.values().stream().flatMap(Set::stream).distinct().map(
+                Dependency::getId).toList());
+
+        Stream.concat(allItemsWithReferences.keySet().stream(), allItemsReferencedBy.keySet().stream()).distinct().map(d -> map(d,
+                allItemsWithReferences.get(d), allItemsReferencedBy.get(d), publishedInvIds)).forEach(ro -> {
+                    objects.setAdditionalProperty(ro.getId().toString(), ro);
+                });
+
+        response.setObjects(objects);
+        response.setDeliveryDate(Date.from(Instant.now()));
+        return response;
+    }
+    
+    private Response initResponse(GetDependenciesRequest filter, DBLayerDependencies dbLayer) throws SOSHibernateException {
         Set<RequestItem> requestItems = filter.getConfigurations().stream().collect(Collectors.toSet());
-        List<DBItemInventoryExtendedDependency> dbDependencies = DependencyUtils.getAllDependencies(dbLayer.getSession());
-        Set<DBItemInventoryExtendedDependency> dependencies = dbDependencies.stream().filter(Objects::nonNull).filter(item -> requestItems.contains(
-                item.getInvRequestItem()) || requestItems.contains(item.getDepRequestItem())).collect(Collectors.toSet());
-        Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
-        Map<Dependency, Set<Dependency>> itemsReferencedBy = DependencyUtils.resolveReferencedBy(dependencies);
-        itemsWithReferences.keySet().retainAll(requestItems);
-        itemsReferencedBy.keySet().retainAll(requestItems);
+        Map<RequestItem, Long> reqDeps = fillReferences(requestItems, dbLayer);
 
-        allItemsWithReferences.putAll(itemsWithReferences);
-        allItemsReferencedBy.putAll(itemsReferencedBy);
-
-        Set<Long> nextDependencyIds = Stream.concat(allItemsWithReferences.values().stream().flatMap(Set::stream), allItemsReferencedBy.values()
-                .stream().flatMap(Set::stream)).filter(d1 -> !allItemsWithReferences.keySet().contains(d1)).filter(d1 -> !allItemsReferencedBy
-                        .keySet().contains(d1)).map(Dependency::getId).collect(Collectors.toSet());
-
-        next(nextDependencyIds, dbDependencies);
-
-        Map<RequestItem, Long> reqDeps = Stream.concat(itemsWithReferences.keySet().stream(), itemsReferencedBy.keySet().stream()).distinct()
-                .collect(Collectors.toMap(Function.identity(), Dependency::getId, (K1, K2) -> K1));
-
+        Response response = new Response();
         ResponseObjects objects = new ResponseObjects();
         Map<Boolean, Set<RequestItem>> m = requestItems.stream().collect(Collectors.groupingBy(reqDeps::containsKey, Collectors.toSet()));
         Set<Long> requestedIds = m.getOrDefault(true, Collections.emptySet()).stream().map(reqDeps::get).collect(Collectors.toSet());
@@ -145,20 +173,66 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
                 requestedIds.add(ro.getId());
             });
         });
-        
         response.setRequestedItems(requestedIds);
-        
-        Stream.concat(allItemsWithReferences.keySet().stream(), allItemsReferencedBy.keySet().stream()).distinct().map(d -> map(d,
-                allItemsWithReferences.get(d), allItemsReferencedBy.get(d))).forEach(ro -> {
-                    objects.setAdditionalProperty(ro.getId().toString(), ro);
-                });
-        
         response.setObjects(objects);
-        response.setDeliveryDate(Date.from(Instant.now()));
         return response;
     }
-    
+
+    private Map<RequestItem, Long> fillReferences(Set<RequestItem> requestItems, DBLayerDependencies dbLayer) throws SOSHibernateException {
+        List<DBItemInventoryExtendedDependency> dbDependencies = DependencyUtils.getAllDependencies(dbLayer.getSession());
+        Set<DBItemInventoryExtendedDependency> dependencies = dbDependencies.stream().filter(Objects::nonNull).filter(item -> requestItems.contains(
+                item.getInvRequestItem()) || requestItems.contains(item.getDepRequestItem())).collect(Collectors.toSet());
+        Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
+        Map<Dependency, Set<Dependency>> itemsReferencedBy = DependencyUtils.resolveReferencedBy(dependencies);
+        itemsWithReferences.keySet().retainAll(requestItems);
+        itemsReferencedBy.keySet().retainAll(requestItems);
+        
+        allItemsWithReferences.putAll(itemsWithReferences);
+        allItemsReferencedBy.putAll(itemsReferencedBy);
+
+        Set<Long> nextDependencyIds = Stream.concat(allItemsWithReferences.values().stream().flatMap(Set::stream), allItemsReferencedBy.values()
+                .stream().flatMap(Set::stream)).filter(d1 -> !allItemsWithReferences.keySet().contains(d1)).filter(d1 -> !allItemsReferencedBy
+                        .keySet().contains(d1)).map(Dependency::getId).collect(Collectors.toSet());
+
+        next(nextDependencyIds, dbDependencies);
+
+        return Stream.concat(itemsWithReferences.keySet().stream(), itemsReferencedBy.keySet().stream()).distinct().collect(Collectors.toMap(Function
+                .identity(), Dependency::getId, (K1, K2) -> K1));
+    }
+
     private ResponseObject map(Dependency dependency, Set<Dependency> references, Set<Dependency> referencedBys) {
+        ResponseObject cfg = map(dependency);
+        if (references != null) {
+            Map<Boolean, Set<Long>> refs = references.stream().collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.mapping(
+                    Dependency::getId, Collectors.toSet())));
+            cfg.setReferences(refs.getOrDefault(false, Collections.emptySet()));
+            cfg.setEnforcedReferences(refs.getOrDefault(true, Collections.emptySet()));
+        }
+        if (referencedBys != null) {
+            Map<Boolean, Set<Long>> refs = referencedBys.stream().collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.mapping(
+                    Dependency::getId, Collectors.toSet())));
+            cfg.setReferencedBy(refs.getOrDefault(false, Collections.emptySet()));
+            cfg.setEnforcedReferencedBy(refs.getOrDefault(true, Collections.emptySet()));
+        }
+        return cfg;
+    }
+
+    private ResponseObject map(Dependency dependency, Set<Dependency> references, Set<Dependency> referencedBys, Set<Long> publishedInvIds) {
+        ResponseObject cfg = map(dependency);
+        if (references != null) {
+            cfg.setReferences(references.stream().map(Dependency::getId).collect(Collectors.toSet()));
+            cfg.setEnforcedReferences(Collections.emptySet());
+        }
+        if (referencedBys != null) {
+            Map<Boolean, Set<Long>> published = referencedBys.stream().map(Dependency::getId).collect(Collectors.groupingBy(publishedInvIds::contains,
+                    Collectors.toSet()));
+            cfg.setReferencedBy(published.getOrDefault(false, Collections.emptySet()));
+            cfg.setEnforcedReferencedBy(published.getOrDefault(true, Collections.emptySet()));
+        }
+        return cfg;
+    }
+    
+    private ResponseObject map(Dependency dependency) {
         ResponseObject cfg = new ResponseObject();
         cfg.setId(dependency.getId());
         cfg.setObjectType(dependency.getType());
@@ -168,18 +242,6 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         cfg.setDeployed(dependency.getDeployed());
         cfg.setReleased(dependency.getReleased());
         cfg.setDeployments(null);
-        if(references != null) {
-            Map<Boolean,Set<Long>> refs = references.stream()
-                    .collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.mapping(Dependency::getId, Collectors.toSet())));
-            cfg.setReferences(refs.getOrDefault(false, Collections.emptySet()));
-            cfg.setEnforcedReferences(refs.getOrDefault(true, Collections.emptySet()));
-        }
-        if(referencedBys != null) {
-            Map<Boolean,Set<Long>> refs = referencedBys.stream()
-                    .collect(Collectors.groupingBy(Dependency::getEnforce, Collectors.mapping(Dependency::getId, Collectors.toSet())));
-            cfg.setReferencedBy(refs.getOrDefault(false, Collections.emptySet()));
-            cfg.setEnforcedReferencedBy(refs.getOrDefault(true, Collections.emptySet()));
-        }
         return cfg;
     }
     

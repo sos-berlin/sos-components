@@ -26,13 +26,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class GetDependenciesRequest {
 
     /**
-     * configuration types
+     * operation types
      * <p>
      * 
      * 
      */
     @JsonProperty("operationType")
-    private OperationType operationType;
+    private OperationType operationType = OperationType.fromValue("DEPLOY");
     /**
      * 
      * (Required)
@@ -42,7 +42,7 @@ public class GetDependenciesRequest {
     private List<RequestItem> configurations = new ArrayList<RequestItem>();
 
     /**
-     * configuration types
+     * operation types
      * <p>
      * 
      * 
@@ -53,7 +53,7 @@ public class GetDependenciesRequest {
     }
 
     /**
-     * configuration types
+     * operation types
      * <p>
      * 
      * 
