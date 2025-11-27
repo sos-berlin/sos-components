@@ -5,8 +5,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -98,6 +100,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             
+            Map<String, String> oldNewNameMap = new HashMap<>();
+            
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, replace);
                 SOSCheckJavaVariableName.test("name", newName);
@@ -106,9 +110,14 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                     throw new JocObjectAlreadyExistException("Cannot rename " + item.getName() + " to " + newName);
                 }
                 events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
+                oldNewNameMap.put(item.getName(), newName);
+            }
 
-                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog));
-                setItem(item, Paths.get(item.getFolder()).resolve(newName), dbAuditLog.getId());
+            for (DBItemInventoryConfiguration item : dBFolderContent) {
+                auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session,
+                        dbAuditLog));
+                setItem(item, Paths.get(item.getFolder()).resolve(oldNewNameMap.get(item.getName())), dbAuditLog.getId());
+                events.add(item.getFolder());
                 JocInventory.updateConfiguration(dbLayer, item);
             }
             
@@ -118,11 +127,9 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             session.commit();
             auditLogObjectsLogging.log();
             
-            for (String event : events) {
-                JocInventory.postEvent(event);
-            }
+            events.forEach(JocInventory::postEvent);
             if (!events.isEmpty()) {
-                JocInventory.postFolderEvent(config.getFolder());
+                JocInventory.postFolderEvent(config.getPath());
             }
 
             return responseStatusJSOk(Date.from(Instant.now()));

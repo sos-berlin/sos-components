@@ -63,7 +63,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             Set<String> events = new HashSet<>();
             Set<String> folderEvents = new HashSet<>();
             List<Long> workflowInvIds = new ArrayList<>();
-            events.add(config.getPath());
             folderEvents.add(oldFolder);
             if (JocInventory.isWorkflow(config.getType())) {
                 workflowInvIds.add(config.getId());
@@ -101,6 +100,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             if (JocInventory.isFolder(type)) {
+                events.add(config.getPath());
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, JocInventory
                         .isDescriptor(config.getTypeAsEnum()));

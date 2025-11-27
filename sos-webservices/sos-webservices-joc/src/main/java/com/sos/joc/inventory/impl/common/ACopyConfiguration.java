@@ -107,11 +107,11 @@ public abstract class ACopyConfiguration extends JOCResourceImpl {
                 List<DBItemInventoryConfiguration> oldDBFolderContent = null;
                 if (forDescriptors) {
                     oldDBFolderContent = dbLayer.getFolderContent(
-                            config.getPath(), true, Arrays.asList(new Integer[] {ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()}), forDescriptors);
+                            config.getPath(), true, Collections.singletonList(ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), true);
                 } else if (in.getShallowCopy()) {
-                    oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, JocInventory.getTypesFromObjectsWithReferencesAndFolders(), forDescriptors);
+                    oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, JocInventory.getTypesFromObjectsWithReferencesAndFolders(), false);
                 } else {
-                    oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, forDescriptors);
+                    oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false);
                 }
                 if (oldDBFolderContent == null) {
                     oldDBFolderContent = Collections.emptyList();

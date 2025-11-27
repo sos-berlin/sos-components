@@ -251,12 +251,12 @@ public class JocInventory {
 
     public static List<Integer> getTypesFromObjectsWithReferences() {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue());
+                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
     }
 
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue(), ConfigurationType.FOLDER.intValue());
+                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.FOLDER.intValue());
     }
 
     public static List<Integer> getCalendarTypes() {
