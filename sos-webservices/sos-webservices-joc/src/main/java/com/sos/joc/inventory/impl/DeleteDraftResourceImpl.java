@@ -26,6 +26,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -198,7 +199,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 }
             }
-
+            DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
+            depDbLayer.updateEnforce(updated.stream().map(RequestFilter::getId).toList());
+            deleted.stream().map(RequestFilter::getId).forEach(depDbLayer::deleteDependencies);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (SOSHibernateException e) {
             Globals.rollback(session);

@@ -175,8 +175,17 @@ public class DBLayerDependencies extends DBLayer {
         }
     }
     
-    public void deleteDependencies (DBItemInventoryConfiguration item) throws SOSHibernateException {
-        List<DBItemInventoryDependency> resultsFound = getDependencies(item);
+    public void deleteDependencies (DBItemInventoryConfiguration item) {
+        deleteDependencies(item.getId());
+    } 
+    
+    public void deleteDependencies (Long id) {
+        List<DBItemInventoryDependency> resultsFound;
+        try {
+            resultsFound = getDependencies(id);
+        } catch (Exception e) {
+            throw new JocSosHibernateException(e);
+        }
         if(resultsFound != null) {
             resultsFound.stream().forEach(found -> {
                 try {
@@ -274,21 +283,6 @@ public class DBLayerDependencies extends DBLayer {
                 throw new JocSosHibernateException(e);
             }
         });
-//        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_DEPENDENCIES).append(" set invEnforce=true, depEnforce=true where ");
-//        if (invIds.size() == 1) {
-//            hql.append("invId=:invId ");
-//        } else {
-//            hql.append("invId in (:invIds) ");
-//        }
-//        hql.append("and invEnforce=false");
-//        hql.append("or depEnforce=false");
-//        Query<?> query = getSession().createQuery(hql);
-//        if (invIds.size() == 1) {
-//            query.setParameter("invId", invIds.iterator().next());
-//        } else {
-//            query.setParameterList("invIds", invIds);
-//        }
-//        return getSession().executeUpdate(query);
     }
     
     private static boolean isPublished(InventoryDBLayer invDbLayer, DBItemInventoryDependency dependency) throws SOSHibernateException {
