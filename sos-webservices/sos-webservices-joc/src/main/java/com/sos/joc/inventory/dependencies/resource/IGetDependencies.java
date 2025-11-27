@@ -14,9 +14,4 @@ public interface IGetDependencies {
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("dependencies")
     public JOCDefaultResponse postGetDependencies(@HeaderParam("X-Access-Token") String xAccessToken, byte[] dependencyFilter);
-
-    @POST
-    @Produces({ MediaType.APPLICATION_JSON })
-    @Path("dependencies2")
-    public JOCDefaultResponse postGetDependenciesNew(@HeaderParam("X-Access-Token") String xAccessToken, byte[] dependencyFilter);
 }
