@@ -16,6 +16,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.jobtemplate.JobTemplatesPropagate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -104,6 +105,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             }
             
             Globals.commit(session);
+            DependencyResolver.updateDependencies(propagate.getChangedWorkflows());
             // post events
             if (JobTemplatesPropagate.workflowIsChanged.test(report)) {
                 JocInventory.postEvent(getParent(report.getPath()));

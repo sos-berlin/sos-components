@@ -1147,6 +1147,9 @@ public class DependencyResolver {
     
     public static void updateDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        if (inventoryDbItem == null) {
+            return;
+        }
         new Thread(() -> {
             try {
                 SOSHibernateSession session = null;
@@ -1192,6 +1195,9 @@ public class DependencyResolver {
     
     public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, IOException {
+        if (inventoryDbItem == null) {
+            return;
+        }
         // this method is in use (JocInventory update and insert methods)
         ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
         resolveReferences(references, session);
