@@ -19,6 +19,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.jobtemplate.JobTemplatesPropagate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -121,6 +122,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                 }
             }
             Globals.commit(session);
+            DependencyResolver.updateDependencies(propagate.getChangedWorkflows());
             if (dbWorkflows != null && !dbWorkflows.isEmpty()) {
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
