@@ -1147,6 +1147,9 @@ public class DependencyResolver {
     
     public static void updateDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
+        if (inventoryDbItem == null) {
+            return;
+        }
         new Thread(() -> {
             try {
                 SOSHibernateSession session = null;
@@ -1164,13 +1167,16 @@ public class DependencyResolver {
         
     }
     
-    public static void updateDependencies(List<DBItemInventoryConfiguration> allCfgs)
+    public static void updateDependencies(Collection<DBItemInventoryConfiguration> allCfgs)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         updateDependencies(allCfgs, false);
     }
 
-    public static void updateDependencies(List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
+    public static void updateDependencies(Collection<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
+        if (allCfgs == null || allCfgs.isEmpty()) {
+            return;
+        }
         new Thread(() -> {
             try {
                 SOSHibernateSession session = null;
@@ -1187,17 +1193,24 @@ public class DependencyResolver {
         }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
     }
     
-    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException, IOException {
+    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
+            throws SOSHibernateException, IOException {
+        if (inventoryDbItem == null) {
+            return;
+        }
         // this method is in use (JocInventory update and insert methods)
-            ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
-            resolveReferences(references, session);
+        ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
+        resolveReferences(references, session);
             DBLayerDependencies layer = new DBLayerDependencies(session);
             // store new dependencies
             layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
     }
 
-    public static void insertOrRenewDependencies(SOSHibernateSession session, List<DBItemInventoryConfiguration> allCfgs, boolean withPool)
+    public static void insertOrRenewDependencies(SOSHibernateSession session, Collection<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
+        if (allCfgs == null) {
+            return;
+        }
         // this method is in use
         Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
         List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item)).collect(Collectors.toList());

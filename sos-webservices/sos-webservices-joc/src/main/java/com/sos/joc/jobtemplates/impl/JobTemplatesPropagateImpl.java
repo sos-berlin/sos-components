@@ -17,6 +17,7 @@ import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.jobtemplate.JobTemplatesPropagate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -103,9 +104,9 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             Report report = new Report();
             Date now = Date.from(Instant.now());
             report.setDeliveryDate(now);
+            JobTemplatesPropagate propagate = new JobTemplatesPropagate(jobTemplatesFilter, permittedFolders);
+            
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
-
-                JobTemplatesPropagate propagate = new JobTemplatesPropagate(jobTemplatesFilter, permittedFolders);
 
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), jobTemplatesFilter.getAuditLog());
 
@@ -128,6 +129,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                 }
             }
             Globals.commit(session);
+            DependencyResolver.updateDependencies(propagate.getChangedWorkflows());
             
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
                 // post events

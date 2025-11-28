@@ -98,6 +98,7 @@ public class JobTemplatesPropagate {
     private boolean withOptionalArgs = false;
     private boolean deleteUnknownNodeProps = false;
     private Set<Folder> permittedFolders = null;
+    private Set<DBItemInventoryConfiguration> changedWorkflowDbItems = new HashSet<>();
     
     public JobTemplatesPropagate() {
         //
@@ -123,6 +124,7 @@ public class JobTemplatesPropagate {
             IOException, SOSHibernateException {
         WorkflowReport report = template2Job(dbWorkflow.getPath(), workflow, jobTemplates, jobNames);
         if (workflowIsChanged.test(report)) {
+            changedWorkflowDbItems.add(dbWorkflow);
             validate(dbWorkflow, workflow, dbLayer);
             dbWorkflow.setDeployed(false);
             dbWorkflow.setModified(now);
@@ -138,6 +140,10 @@ public class JobTemplatesPropagate {
             Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         Workflow workflow = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
         return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
+    }
+    
+    public Set<DBItemInventoryConfiguration> getChangedWorkflows() {
+        return changedWorkflowDbItems;
     }
     
     private boolean forceUpdating() {
