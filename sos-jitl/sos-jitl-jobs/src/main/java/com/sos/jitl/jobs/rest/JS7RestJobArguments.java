@@ -2,13 +2,14 @@ package com.sos.jitl.jobs.rest;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.keystore.KeyStoreArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
 public class JS7RestJobArguments extends JobArguments  {
 	
 	public JS7RestJobArguments() { 
-		super(new CredentialStoreArguments()); 
+		super(new CredentialStoreArguments(), new KeyStoreArguments()); 
 	}
 	
     private final JobArgument<String> myReturnVariable = new JobArgument<>("return_variable", false);

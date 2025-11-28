@@ -493,8 +493,7 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 																}
 															}
 
-															((ObjectNode) mergedInput)
-																	.setAll((ObjectNode) fromJsonNode);
+															((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
 
 														} catch (JsonProcessingException e) {
 															logger.error("Invalid JSON for input option: " + jsonStr);

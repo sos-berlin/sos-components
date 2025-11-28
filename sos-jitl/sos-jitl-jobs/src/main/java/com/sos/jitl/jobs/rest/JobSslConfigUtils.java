@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 
-public class JobResourceUtils {
+public class JobSslConfigUtils {
 
 	
 	//extracting the truststore details
