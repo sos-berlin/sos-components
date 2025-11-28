@@ -1275,12 +1275,13 @@ public class DependencyResolver {
     }
     
     // this method is currently in use
-    public static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
+    private static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
         Set<DBItemInventoryDependency> dependencies = new HashSet<DBItemInventoryDependency>();
         InventoryDBLayer dblayer = new InventoryDBLayer(session);
         dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(reference.getReferencedItem().getId());
+            dependency.setInvType(reference.getReferencedItem().getTypeAsEnum());
             dependency.setDependencyType(item.getTypeAsEnum());
             dependency.setInvDependencyId(item.getId());
             // check if item is already deployed or released
@@ -1292,6 +1293,7 @@ public class DependencyResolver {
         dependencies.addAll(reference.getReferences().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(item.getId());
+            dependency.setInvType(item.getTypeAsEnum());
             dependency.setDependencyType(reference.getReferencedItem().getTypeAsEnum());
             dependency.setInvDependencyId(reference.getReferencedItem().getId());
             dependency.setPublished(isPublished(dblayer, reference.getReferencedItem()));
@@ -1320,21 +1322,21 @@ public class DependencyResolver {
         return newDbItem;
     }
     
-    public static ReferencedDbItem convert(DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies,
-            Map<Long, DBItemInventoryConfiguration> cfgs, SOSHibernateSession session) throws SOSHibernateException,
-            IOException {
-        ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
-        if(dependencies != null && !dependencies.isEmpty()) {
-            for(DBItemInventoryDependency dependency : dependencies) {
-                DBItemInventoryConfiguration cfg = cfgs.get(dependency.getInvDependencyId());
-                if(cfg != null) {
-                    newDbItem.getReferencedBy().add(cfg);
-                }
-            }
-        }
-        resolveReferences(newDbItem, session);
-        return newDbItem;
-    }
+//    public static ReferencedDbItem convert(DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies,
+//            Map<Long, DBItemInventoryConfiguration> cfgs, SOSHibernateSession session) throws SOSHibernateException,
+//            IOException {
+//        ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
+//        if(dependencies != null && !dependencies.isEmpty()) {
+//            for(DBItemInventoryDependency dependency : dependencies) {
+//                DBItemInventoryConfiguration cfg = cfgs.get(dependency.getInvDependencyId());
+//                if(cfg != null) {
+//                    newDbItem.getReferencedBy().add(cfg);
+//                }
+//            }
+//        }
+//        resolveReferences(newDbItem, session);
+//        return newDbItem;
+//    }
 
     public static JsonObject jsonObjectFromString(String jsonAsString) {
         JsonReader jsonReader = Json.createReader(new StringReader(jsonAsString));

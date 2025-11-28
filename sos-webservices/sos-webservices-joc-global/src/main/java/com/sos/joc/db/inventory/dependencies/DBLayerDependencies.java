@@ -206,18 +206,19 @@ public class DBLayerDependencies extends DBLayer {
             }
         }
         InventoryDBLayer dbLayer = new InventoryDBLayer(getSession());
-        dependencies.stream().filter(dep -> dep.getInvDependencyId().equals(item.getId())|| dep.getInvId().equals(item.getId()))
+        dependencies.stream().filter(dep -> dep.getInvDependencyId().equals(item.getId()))
                 .forEach(dependency -> {
                     try {
                         /*
                          * store o2:
-                         * object o1 refencedby object o2 -> invEnforce = false iff o1 is released/deployed, depEnforced = false 
+                         * object o1 reference dby object o2 -> invEnforce = false iff o1 is released/deployed, depEnforced = false 
                          * */
                         dependency.setDepEnforce(false);
-                        if(isPublished(dbLayer, dependency)) {
-                            dependency.setInvEnforce(true);
-                        } else {
+                        if(isPublished(dbLayer, dependency.getInvId(), dependency.getInvType()) 
+                                || ConfigurationType.JOBTEMPLATE.equals(item.getTypeAsEnum())) {
                             dependency.setInvEnforce(false);
+                        } else {
+                            dependency.setInvEnforce(true);
                         }
                         if(storedDependencies.contains(dependency)) {
                             getSession().update(dependency);
@@ -266,14 +267,14 @@ public class DBLayerDependencies extends DBLayer {
         }
         /*
          * rename o1:
-         *   object o1 refencedby object o2 -> invEnforce = true, depEnforced = true iff o2 is released/deployed
+         *   object o1 referenced by object o2 -> invEnforce = true, depEnforced = true iff o2 is released/deployed
          * */
         List<DBItemInventoryDependency> result = getReferencedByDependencies(invIds);
         result.forEach(dependency -> {
             dependency.setInvEnforce(true);
             try {
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(getSession());
-                if(isPublished(invDbLayer, dependency)) {
+                if(isPublished(invDbLayer, dependency.getInvDependencyId(), dependency.getDependencyTypeAsEnum())) {
                     dependency.setDepEnforce(true);
                 } else {
                     dependency.setDepEnforce(false);
@@ -285,11 +286,11 @@ public class DBLayerDependencies extends DBLayer {
         });
     }
     
-    private static boolean isPublished(InventoryDBLayer invDbLayer, DBItemInventoryDependency dependency) throws SOSHibernateException {
-        if(JocInventory.isDeployable(dependency.getDependencyTypeAsEnum())) {
-            return invDbLayer.isDeployed(dependency.getInvDependencyId());
-        } else if (JocInventory.isReleasable(dependency.getDependencyTypeAsEnum())) {
-            return invDbLayer.isReleased(dependency.getInvDependencyId());
+    private static boolean isPublished(InventoryDBLayer invDbLayer, Long id, ConfigurationType type) throws SOSHibernateException {
+        if(JocInventory.isDeployable(type)) {
+            return invDbLayer.isDeployed(id);
+        } else if (JocInventory.isReleasable(type)) {
+            return invDbLayer.isReleased(id);
         }
         return false;
     }

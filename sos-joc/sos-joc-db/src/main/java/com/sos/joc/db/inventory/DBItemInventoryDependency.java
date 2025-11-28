@@ -52,7 +52,19 @@ public class DBItemInventoryDependency extends DBItem {
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean depEnforce;
 
+    @Transient
+    private ConfigurationType invType;
     
+    @Transient
+    public ConfigurationType getInvType() {
+        return invType;
+    }
+
+    @Transient
+    public void setInvType(ConfigurationType invType) {
+        this.invType = invType;
+    }
+
     public Integer getDependencyType() {
         return dependencyType;
     }
