@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -107,6 +109,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
+            DependencyResolver.updateDependencies(Stream.concat(dbItemsToUpdate.stream(), newDbItems.stream()).toList());
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
