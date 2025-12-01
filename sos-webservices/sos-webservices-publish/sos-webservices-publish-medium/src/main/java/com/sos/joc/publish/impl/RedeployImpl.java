@@ -145,7 +145,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                                     DBItemInventoryConfiguration cfg = layer.getConfiguration(item.getInventoryConfigurationId());
                                     if (cfg != null) {
                                         List<DBItemInventoryDependency> dbDependencies = dependencyLayer.getRequestedDependencies(cfg);
-                                        return DependencyResolver.convert(layer.getSession(), cfg, dbDependencies);
+                                        return DependencyResolver.resolveInventoryItemFromDependency(layer.getSession(), cfg, dbDependencies);
                                     } else {
                                         return new ReferencedDbItem(null);
                                     }

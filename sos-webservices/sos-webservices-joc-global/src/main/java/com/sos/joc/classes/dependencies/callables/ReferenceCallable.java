@@ -21,7 +21,8 @@ public class ReferenceCallable implements Callable<ReferencedDbItem>{
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("identifyDependencies");
-            ReferencedDbItem item = DependencyResolver.resolveReferencedBy(session, inventoryItem);
+//            ReferencedDbItem item = DependencyResolver.resolveReferencedBy(session, inventoryItem);
+            ReferencedDbItem item = DependencyResolver.createReferencedDbItem(inventoryItem);
             DependencyResolver.resolveReferences(item, session);
             return item;
         } finally {

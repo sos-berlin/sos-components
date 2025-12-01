@@ -5,6 +5,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,7 +21,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -108,418 +108,398 @@ public class DependencyResolver {
       });
 
     
-    public static ReferencedDbItem resolve(SOSHibernateSession session, String name, ConfigurationType type)
-            throws SOSHibernateException, IOException {
-        DBItemInventoryConfiguration dbItem = null;
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        List<DBItemInventoryConfiguration> allConfigs = dbLayer.getConfigurationsByType(DependencyResolver.dependencyTypes);
-        if(!ConfigurationType.FOLDER.equals(type)) {
-            Optional<DBItemInventoryConfiguration> optItem = allConfigs.stream()
-                    .filter(item -> item.getName().equals(name) && item.getTypeAsEnum().equals(type)).findFirst();
-            if(optItem.isPresent()) {
-                dbItem = optItem.get();
-            }
-        }
-        Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems = allConfigs.stream() .collect(
-                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, 
-                        Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
-        DependencyResolver.dependencyTypes.forEach(ctype -> groupedItems.putIfAbsent(ConfigurationType.fromValue(ctype), Collections.emptyMap()));
-
-        ReferencedDbItem resolvedItem = resolveReferencedBy(dbItem, groupedItems);
-        resolveReferences(resolvedItem, groupedItems);
-        return resolvedItem;
-    }
-
     // with db access for dependency resolution of a single or few items or to use with threading
-    public static ReferencedDbItem resolveReferencedBy(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
-        // this method is in use
-        ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
-        cfg.setReferencedItem(inventoryDbItem);
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        switch(inventoryDbItem.getTypeAsEnum()) {
-        case LOCK:
-            List<DBItemInventoryConfiguration> workflowsWithLocks =  dbLayer.getUsedWorkflowsByLockId(inventoryDbItem.getName());
-            if(workflowsWithLocks != null) {
-                cfg.getReferencedBy().addAll(workflowsWithLocks);
-            }
-            break;
-        case JOBRESOURCE:
-            List<DBItemInventoryConfiguration> workflowsWithJobResource =  dbLayer.getUsedWorkflowsByJobResource(inventoryDbItem.getName());
-            if(workflowsWithJobResource != null) {
-                cfg.getReferencedBy().addAll(workflowsWithJobResource);
-            }
-            List<DBItemInventoryConfiguration> jobTemplatesByJobResource = dbLayer.getUsedJobTemplatesByJobResource(inventoryDbItem.getName());
-            if(jobTemplatesByJobResource != null) {
-                cfg.getReferencedBy().addAll(jobTemplatesByJobResource);
-            }
-            break;
-        case NOTICEBOARD:
-            List<DBItemInventoryConfiguration> workflowsWithNoticeBoards =  dbLayer.getUsedWorkflowsByBoardName(inventoryDbItem.getName());
-            if(workflowsWithNoticeBoards != null) {
-                cfg.getReferencedBy().addAll(workflowsWithNoticeBoards);
-            }
-            break;
-        case WORKFLOW:
-            List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(inventoryDbItem.getName());
-            if (fileOrderSources != null) {
-                cfg.getReferencedBy().addAll(fileOrderSources);
-            }
-            List<DBItemInventoryConfiguration> workflowSchedules = dbLayer.getUsedSchedulesByWorkflowName(inventoryDbItem.getName());
-            if(workflowSchedules != null) {
-                cfg.getReferencedBy().addAll(workflowSchedules);
-            }
-            List<DBItemInventoryConfiguration> workflowsWithInstruction = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(
-                    inventoryDbItem.getName());
-            if(workflowsWithInstruction != null) {
-                cfg.getReferencedBy().addAll(workflowsWithInstruction);
-            }
-            break;
-        case WORKINGDAYSCALENDAR:
-        case NONWORKINGDAYSCALENDAR:
-            List<DBItemInventoryConfiguration> schedulesBasedOnCalendar = dbLayer.getUsedSchedulesByCalendarName(inventoryDbItem.getName());
-            if(schedulesBasedOnCalendar != null) {
-                cfg.getReferencedBy().addAll(schedulesBasedOnCalendar);
-            }
-            List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(inventoryDbItem.getName());
-            if (calendars != null) {
-                cfg.getReferencedBy().addAll(calendars);
-            }
-            break;
-        case JOBTEMPLATE:
-            List<DBItemInventoryConfiguration> workflowsByJobTemplate = dbLayer.getUsedWorkflowsByJobTemplateName(inventoryDbItem.getName());
-            if(workflowsByJobTemplate != null) {
-                cfg.getReferencedBy().addAll(workflowsByJobTemplate);
-            }
-            break;
-        case INCLUDESCRIPT:
-            // TODO: 
-            List<DBItemInventoryConfiguration> isWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
-            Set<DBItemInventoryConfiguration> isWorkflows = isWorkflowsOrJobTemplatesByIncludeScript.stream()
-                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
-            Set<DBItemInventoryConfiguration> isJobTemplates = isWorkflowsOrJobTemplatesByIncludeScript.stream()
-                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
-            resolveIncludeScriptByWorkflow(cfg, isWorkflows);
-            resolveIncludeScriptByJobTemplate(cfg, isJobTemplates);
-            break;
-        default:
-            break;
-        }
-        return cfg;
+//    public static ReferencedDbItem resolveReferencedBy(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem) throws SOSHibernateException {
+//        // this method is in use
+//        ReferencedDbItem cfg = createReferencedDbItem(inventoryDbItem);
+//        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//        switch(inventoryDbItem.getTypeAsEnum()) {
+//        case LOCK:
+//            List<DBItemInventoryConfiguration> workflowsWithLocks =  dbLayer.getUsedWorkflowsByLockId(inventoryDbItem.getName());
+//            if(workflowsWithLocks != null) {
+//                cfg.getReferencedBy().addAll(workflowsWithLocks);
+//            }
+//            break;
+//        case JOBRESOURCE:
+//            List<DBItemInventoryConfiguration> workflowsWithJobResource =  dbLayer.getUsedWorkflowsByJobResource(inventoryDbItem.getName());
+//            if(workflowsWithJobResource != null) {
+//                cfg.getReferencedBy().addAll(workflowsWithJobResource);
+//            }
+//            List<DBItemInventoryConfiguration> jobTemplatesByJobResource = dbLayer.getUsedJobTemplatesByJobResource(inventoryDbItem.getName());
+//            if(jobTemplatesByJobResource != null) {
+//                cfg.getReferencedBy().addAll(jobTemplatesByJobResource);
+//            }
+//            break;
+//        case NOTICEBOARD:
+//            List<DBItemInventoryConfiguration> workflowsWithNoticeBoards =  dbLayer.getUsedWorkflowsByBoardName(inventoryDbItem.getName());
+//            if(workflowsWithNoticeBoards != null) {
+//                cfg.getReferencedBy().addAll(workflowsWithNoticeBoards);
+//            }
+//            break;
+//        case WORKFLOW:
+//            List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(inventoryDbItem.getName());
+//            if (fileOrderSources != null) {
+//                cfg.getReferencedBy().addAll(fileOrderSources);
+//            }
+//            List<DBItemInventoryConfiguration> workflowSchedules = dbLayer.getUsedSchedulesByWorkflowName(inventoryDbItem.getName());
+//            if(workflowSchedules != null) {
+//                cfg.getReferencedBy().addAll(workflowSchedules);
+//            }
+//            List<DBItemInventoryConfiguration> workflowsWithInstruction = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(
+//                    inventoryDbItem.getName());
+//            if(workflowsWithInstruction != null) {
+//                cfg.getReferencedBy().addAll(workflowsWithInstruction);
+//            }
+//            break;
+//        case WORKINGDAYSCALENDAR:
+//        case NONWORKINGDAYSCALENDAR:
+//            List<DBItemInventoryConfiguration> schedulesBasedOnCalendar = dbLayer.getUsedSchedulesByCalendarName(inventoryDbItem.getName());
+//            if(schedulesBasedOnCalendar != null) {
+//                cfg.getReferencedBy().addAll(schedulesBasedOnCalendar);
+//            }
+//            List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(inventoryDbItem.getName());
+//            if (calendars != null) {
+//                cfg.getReferencedBy().addAll(calendars);
+//            }
+//            break;
+//        case JOBTEMPLATE:
+//            List<DBItemInventoryConfiguration> workflowsByJobTemplate = dbLayer.getUsedWorkflowsByJobTemplateName(inventoryDbItem.getName());
+//            if(workflowsByJobTemplate != null) {
+//                cfg.getReferencedBy().addAll(workflowsByJobTemplate);
+//            }
+//            break;
+//        case INCLUDESCRIPT:
+//            // TODO: 
+//            List<DBItemInventoryConfiguration> isWorkflowsOrJobTemplatesByIncludeScript = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
+//            Set<DBItemInventoryConfiguration> isWorkflows = isWorkflowsOrJobTemplatesByIncludeScript.stream()
+//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).collect(Collectors.toSet());
+//            Set<DBItemInventoryConfiguration> isJobTemplates = isWorkflowsOrJobTemplatesByIncludeScript.stream()
+//                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBTEMPLATE)).collect(Collectors.toSet());
+//            resolveIncludeScriptByWorkflow(cfg, isWorkflows);
+//            resolveIncludeScriptByJobTemplate(cfg, isJobTemplates);
+//            break;
+//        default:
+//            break;
+//        }
+//        return cfg;
+//    }
+//    
+    public static ReferencedDbItem createReferencedDbItem (DBItemInventoryConfiguration inventoryDbItem) {
+        return new ReferencedDbItem(inventoryDbItem);
     }
     
     // with minimal db access for dependency resolution of a collection of items
-    public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem,
-            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws SOSHibernateException, IOException {
-        // this method is currently not in use
-        ReferencedDbItem cfg = new ReferencedDbItem(inventoryDbItem);
-        cfg.setReferencedItem(inventoryDbItem);
-        switch(inventoryDbItem.getTypeAsEnum()) {
-        case LOCK:
-            resolveLockReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
-            break;
-        case JOBRESOURCE:
-            resolveJobResourcesReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
-            resolveJobResourceByJobTemplate(cfg, groupedItems.get(ConfigurationType.JOBTEMPLATE).values());
-            break;
-        case NOTICEBOARD:
-            resolveBoardReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
-            break;
-        case WORKFLOW:
-            resolveWorkflowReferencedBy(cfg, groupedItems);
-            break;
-        case SCHEDULE:
-            resolveAllCalendarReferencedBySchedule(cfg, groupedItems);
-            break;
-        case WORKINGDAYSCALENDAR:
-            resolveNonWorkingDaysCalendarsFromCalendars(cfg, groupedItems);
-            break;
-        case NONWORKINGDAYSCALENDAR:
-            resolveNonWorkingDaysCalendarsFromCalendars(cfg, groupedItems);
-            break;
-        case JOBTEMPLATE:
-            resolveJobTemplateReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
-            break;
-        case INCLUDESCRIPT:
-            resolveIncludeScriptByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
-            resolveIncludeScriptByJobTemplate(cfg, groupedItems.get(ConfigurationType.JOBTEMPLATE).values());
-            break;
-        default:
-            break;
-        }
-        return cfg;
-    }
-    
-    public static void resolveIncludeScriptByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
-        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
-                + item.getReferencedItem().getName() + "\\s*").asPredicate();
-        for(DBItemInventoryConfiguration wf : workflows) {
-            if (hasScriptInclude.test(wf.getContent())) {
-                try {
-                    Workflow w = Globals.objectMapper.readValue(wf.getContent(), Workflow.class);
-                    if (w.getJobs() != null) {
-                        w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
-                            if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
-                                ExecutableScript es = job.getExecutable().cast();
-                                if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
-                                    String[] scriptLines = es.getScript().split("\n");
-                                    for (int i = 0; i < scriptLines.length; i++) {
-                                        String line = scriptLines[i];
-                                        if (hasScriptInclude.test(line)) {
-                                            Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
-                                            if (m.find()) {
-                                                if (item.getReferencedItem().getName().equals(m.group(3))) {
-                                                    item.getReferencedBy().add(wf);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                } catch (JsonProcessingException e) {
-                    // do nothing !
-                }
-            }
-        }
-    }
-    
-    public static void resolveJobResourceByJobTemplate(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> jobTemplates) {
-        for(DBItemInventoryConfiguration cfg : jobTemplates) {
-            String json = cfg.getContent();
-            JsonObject jobTemplate = jsonObjectFromString(json);
-            List<String> wfJobResourceNames = new ArrayList<String>(); 
-            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
-            if(!wfJobResourceNames.isEmpty()) {
-                for (String jobResource : wfJobResourceNames) {
-                    if(jobResource.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(cfg);
-                    }
-                }
-            }
-        }
-    }
-    
-    public static void resolveIncludeScriptByJobTemplate(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> jobTemplates) {
-        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
-                + item.getReferencedItem().getName() + "\\s*").asPredicate();
-        for(DBItemInventoryConfiguration jobTemplate : jobTemplates) {
-            if (hasScriptInclude.test(jobTemplate.getContent())) {
-                try {
-                    JobTemplate jt = Globals.objectMapper.readValue(jobTemplate.getContent(), JobTemplate.class);
-                    if (jt.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(jt.getExecutable().getTYPE())) {
-                        ExecutableScript es = jt.getExecutable().cast();
-                        if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
-                            String[] scriptLines = es.getScript().split("\n");
-                            for (int i = 0; i < scriptLines.length; i++) {
-                                String line = scriptLines[i];
-                                if (hasScriptInclude.test(line)) {
-                                    Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
-                                    if (m.find()) {
-                                        if (item.getReferencedItem().getName().equals(m.group(3))) {
-                                            item.getReferencedBy().add(jobTemplate);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (JsonProcessingException e) {
-                    // do nothing !
-                }
-            }
-        }
-    }
-    
-    public static void resolveLockReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
-        for(DBItemInventoryConfiguration cfg : workflows) {
-            String json = cfg.getContent();
-            JsonObject workflow = jsonObjectFromString(json);
-            //IncludeScript
-            List<String> wfLockNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
-            if(!wfLockNames.isEmpty()) {
-                for (String lock : wfLockNames) {
-                    if(lock.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(cfg);
-                    }
-                }
-            }
-        }
-    }
-    
-    public static void resolveJobResourcesReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
-        for(DBItemInventoryConfiguration cfg : cfgs) {
-            String json = cfg.getContent();
-            JsonObject workflow = jsonObjectFromString(json);
-            List<String> wfJobResourceNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
-            if(!wfJobResourceNames.isEmpty()) {
-                for (String jobResource : wfJobResourceNames) {
-                    if(jobResource.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(cfg);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void resolveBoardReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
-        for(DBItemInventoryConfiguration cfg : cfgs) {
-            String json = cfg.getContent();
-            JsonObject workflow = jsonObjectFromString(json);
-            List<String> wfBoardNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
-            if(!wfBoardNames.isEmpty()) {
-                for (String board : wfBoardNames) {
-                    if(board.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(cfg);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void resolveWorkflowReferencedBy(ReferencedDbItem item, Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> groupedItems) {
-        // resolve workflows (add order instructions)
-        for(DBItemInventoryConfiguration cfg : groupedItems.get(ConfigurationType.WORKFLOW).values()) {
-            String json = cfg.getContent();
-            JsonObject workflow = jsonObjectFromString(json);
-            List<String> wfWorkflowNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
-            if(!wfWorkflowNames.isEmpty()) {
-                for (String wf : wfWorkflowNames) {
-                    if(wf.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(cfg);
-                    }
-                }
-            }
-        }
-        // file order sources
-        for(DBItemInventoryConfiguration fos : groupedItems.get(ConfigurationType.FILEORDERSOURCE).values()) {
-            String json = fos.getContent();
-            JsonObject fosItem = jsonObjectFromString(json);
-            List<String> fosWorkflows = new ArrayList<String>();
-            getValuesRecursively("", fosItem, WORKFLOWNAME_SEARCH, fosWorkflows);
-            if(!fosWorkflows.isEmpty()) {
-                for(String wf : fosWorkflows) {
-                    if(wf.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(fos);
-                    }
-                }
-            }
-            
-        }
-        // schedules
-        for(DBItemInventoryConfiguration schedule : groupedItems.get(ConfigurationType.SCHEDULE).values()) {
-            String json = schedule.getContent();
-            JsonObject scheduleItem = jsonObjectFromString(json);
-            List<String> scheduleWorkflows = new ArrayList<String>();
-            getValuesRecursively("", scheduleItem, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
-            if(!scheduleWorkflows.isEmpty()) {
-                for(String wf : scheduleWorkflows) {
-                    if(wf.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(schedule);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void resolveCalendarReferencedBySchedule(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
-        for(DBItemInventoryConfiguration schedule : cfgs) {
-            String json = schedule.getContent();
-            JsonObject scheduleItem = jsonObjectFromString(json);
-            List<String> wfCalendarNames = new ArrayList<String>(); 
-            getValuesRecursively("", scheduleItem, CALENDARNAME_SEARCH, wfCalendarNames);
-            if(!wfCalendarNames.isEmpty()) {
-                for (String cal : wfCalendarNames) {
-                    if(cal.replaceAll("\"","").equals(item.getName())) {
-                        item.getReferencedBy().add(schedule);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void resolveAllCalendarReferencedBySchedule(ReferencedDbItem item, 
-            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws JsonMappingException, JsonProcessingException {
-        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.SCHEDULE).values();
-        for(DBItemInventoryConfiguration schedule : cfgs) {
-            Set<String> scheduleCalendars = new HashSet<String>();
-            Schedule s = JocInventory.convertSchedule(schedule.getContent(), Schedule.class);
-            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
-                scheduleCalendars.add(cal.getCalendarName());
-                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
-                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
-            }));
-            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
-            if(!scheduleCalendars.isEmpty()) {
-                for(String cal : scheduleCalendars) {
-                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
-                    if(wCalItem != null) {
-                        item.getReferences().add(wCalItem);
-                    }
-                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
-                    if(nwCalItem != null) {
-                        item.getReferences().add(nwCalItem);
-                    }
-                }
-            }
-        }
-    }
-    
-    public static void resolveNonWorkingDaysCalendarsFromCalendars(ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-            throws JsonParseException, JsonMappingException, IOException {
-        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).values();
-        Set<String> nonWorkingDaysCalendars = new HashSet<String>();
-        for(DBItemInventoryConfiguration calendar : cfgs) {
-            Calendar workingDayCal = (Calendar)JocInventory.content2IJSObject(calendar.getContent(), ConfigurationType.WORKINGDAYSCALENDAR);
-            Optional.ofNullable(workingDayCal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
-                .ifPresent(cals -> nonWorkingDaysCalendars.addAll(cals));
-        }
-        if(!nonWorkingDaysCalendars.isEmpty()) {
-            groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).entrySet().stream()
-                .filter(entry ->  nonWorkingDaysCalendars.contains(entry.getKey()))
-                .forEach(entry ->item.getReferences().add(entry.getValue()));
-        }
-        
-    }
-    
-    public static void resolveNonWorkingDaysCalendarsFromSchedule(ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-            throws JsonParseException, JsonMappingException, IOException {
-        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.SCHEDULE).values();
-        Set<String> nonWorkingDaysCalendars = new HashSet<String>();
-        for(DBItemInventoryConfiguration calendar : cfgs) {
-            Schedule schedule = (Schedule)JocInventory.content2IJSObject(calendar.getContent(), ConfigurationType.SCHEDULE);
-            schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName)
-            .filter(Objects::nonNull).forEach(nwdCal -> nonWorkingDaysCalendars.add(nwdCal));
-        }
-        if(!nonWorkingDaysCalendars.isEmpty()) {
-            groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).entrySet().stream()
-                .filter(entry ->  nonWorkingDaysCalendars.contains(entry.getKey()))
-                .forEach(entry ->item.getReferences().add(entry.getValue()));
-        }
-        
-    }
-    
-    public static void resolveJobTemplateReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs)
-            throws JsonMappingException, JsonProcessingException {
-        for(DBItemInventoryConfiguration cfg : cfgs) {
-            Workflow workflow = Globals.objectMapper.readValue(cfg.getContent(), Workflow.class);
-            if(workflow.getJobs() != null) {
-                Map<String,Job> jobs = workflow.getJobs().getAdditionalProperties();
-                for(Job job : jobs.values()) {
-                    if(job.getJobTemplate() != null) {
-                        if(job.getJobTemplate().getName().equals(item.getName())) {
-                            item.getReferencedBy().add(cfg);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+//    public static ReferencedDbItem resolveReferencedBy(DBItemInventoryConfiguration inventoryDbItem,
+//            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws SOSHibernateException, IOException {
+//        // this method is currently not in use
+//        ReferencedDbItem cfg = createReferencedDbItem(inventoryDbItem);
+//        switch(inventoryDbItem.getTypeAsEnum()) {
+//        case LOCK:
+//            resolveLockReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+//            break;
+//        case JOBRESOURCE:
+//            resolveJobResourcesReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+//            resolveJobResourceByJobTemplate(cfg, groupedItems.get(ConfigurationType.JOBTEMPLATE).values());
+//            break;
+//        case NOTICEBOARD:
+//            resolveBoardReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+//            break;
+//        case WORKFLOW:
+//            resolveWorkflowReferencedBy(cfg, groupedItems);
+//            break;
+//        case SCHEDULE:
+//            resolveAllCalendarReferencedBySchedule(cfg, groupedItems);
+//            break;
+//        case WORKINGDAYSCALENDAR:
+//            resolveNonWorkingDaysCalendarsFromCalendars(cfg, groupedItems);
+//            break;
+//        case NONWORKINGDAYSCALENDAR:
+//            resolveNonWorkingDaysCalendarsFromCalendars(cfg, groupedItems);
+//            break;
+//        case JOBTEMPLATE:
+//            resolveJobTemplateReferencedByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+//            break;
+//        case INCLUDESCRIPT:
+//            resolveIncludeScriptByWorkflow(cfg, groupedItems.get(ConfigurationType.WORKFLOW).values());
+//            resolveIncludeScriptByJobTemplate(cfg, groupedItems.get(ConfigurationType.JOBTEMPLATE).values());
+//            break;
+//        default:
+//            break;
+//        }
+//        return cfg;
+//    }
+//    
+//    public static void resolveIncludeScriptByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
+//        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
+//                + item.getReferencedItem().getName() + "\\s*").asPredicate();
+//        for(DBItemInventoryConfiguration wf : workflows) {
+//            if (hasScriptInclude.test(wf.getContent())) {
+//                try {
+//                    Workflow w = Globals.objectMapper.readValue(wf.getContent(), Workflow.class);
+//                    if (w.getJobs() != null) {
+//                        w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
+//                            if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
+//                                ExecutableScript es = job.getExecutable().cast();
+//                                if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+//                                    String[] scriptLines = es.getScript().split("\n");
+//                                    for (int i = 0; i < scriptLines.length; i++) {
+//                                        String line = scriptLines[i];
+//                                        if (hasScriptInclude.test(line)) {
+//                                            Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+//                                            if (m.find()) {
+//                                                if (item.getReferencedItem().getName().equals(m.group(3))) {
+//                                                    item.getReferencedBy().add(wf);
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        });
+//                    }
+//                } catch (JsonProcessingException e) {
+//                    // do nothing !
+//                }
+//            }
+//        }
+//    }
+//    
+//    public static void resolveJobResourceByJobTemplate(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> jobTemplates) {
+//        for(DBItemInventoryConfiguration cfg : jobTemplates) {
+//            String json = cfg.getContent();
+//            JsonObject jobTemplate = jsonObjectFromString(json);
+//            List<String> wfJobResourceNames = new ArrayList<String>(); 
+//            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
+//            if(!wfJobResourceNames.isEmpty()) {
+//                for (String jobResource : wfJobResourceNames) {
+//                    if(jobResource.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(cfg);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    public static void resolveIncludeScriptByJobTemplate(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> jobTemplates) {
+//        Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+"
+//                + item.getReferencedItem().getName() + "\\s*").asPredicate();
+//        for(DBItemInventoryConfiguration jobTemplate : jobTemplates) {
+//            if (hasScriptInclude.test(jobTemplate.getContent())) {
+//                try {
+//                    JobTemplate jt = Globals.objectMapper.readValue(jobTemplate.getContent(), JobTemplate.class);
+//                    if (jt.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(jt.getExecutable().getTYPE())) {
+//                        ExecutableScript es = jt.getExecutable().cast();
+//                        if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+//                            String[] scriptLines = es.getScript().split("\n");
+//                            for (int i = 0; i < scriptLines.length; i++) {
+//                                String line = scriptLines[i];
+//                                if (hasScriptInclude.test(line)) {
+//                                    Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+//                                    if (m.find()) {
+//                                        if (item.getReferencedItem().getName().equals(m.group(3))) {
+//                                            item.getReferencedBy().add(jobTemplate);
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                } catch (JsonProcessingException e) {
+//                    // do nothing !
+//                }
+//            }
+//        }
+//    }
+//    
+//    public static void resolveLockReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> workflows) {
+//        for(DBItemInventoryConfiguration cfg : workflows) {
+//            String json = cfg.getContent();
+//            JsonObject workflow = jsonObjectFromString(json);
+//            //IncludeScript
+//            List<String> wfLockNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+//            if(!wfLockNames.isEmpty()) {
+//                for (String lock : wfLockNames) {
+//                    if(lock.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(cfg);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    public static void resolveJobResourcesReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+//        for(DBItemInventoryConfiguration cfg : cfgs) {
+//            String json = cfg.getContent();
+//            JsonObject workflow = jsonObjectFromString(json);
+//            List<String> wfJobResourceNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, INSTRUCTION_ADDORDERS_SEARCH, wfJobResourceNames);
+//            if(!wfJobResourceNames.isEmpty()) {
+//                for (String jobResource : wfJobResourceNames) {
+//                    if(jobResource.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(cfg);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    public static void resolveBoardReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+//        for(DBItemInventoryConfiguration cfg : cfgs) {
+//            String json = cfg.getContent();
+//            JsonObject workflow = jsonObjectFromString(json);
+//            List<String> wfBoardNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+//            if(!wfBoardNames.isEmpty()) {
+//                for (String board : wfBoardNames) {
+//                    if(board.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(cfg);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    public static void resolveWorkflowReferencedBy(ReferencedDbItem item, Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> groupedItems) {
+//        // resolve workflows (add order instructions)
+//        for(DBItemInventoryConfiguration cfg : groupedItems.get(ConfigurationType.WORKFLOW).values()) {
+//            String json = cfg.getContent();
+//            JsonObject workflow = jsonObjectFromString(json);
+//            List<String> wfWorkflowNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+//            if(!wfWorkflowNames.isEmpty()) {
+//                for (String wf : wfWorkflowNames) {
+//                    if(wf.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(cfg);
+//                    }
+//                }
+//            }
+//        }
+//        // file order sources
+//        for(DBItemInventoryConfiguration fos : groupedItems.get(ConfigurationType.FILEORDERSOURCE).values()) {
+//            String json = fos.getContent();
+//            JsonObject fosItem = jsonObjectFromString(json);
+//            List<String> fosWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", fosItem, WORKFLOWNAME_SEARCH, fosWorkflows);
+//            if(!fosWorkflows.isEmpty()) {
+//                for(String wf : fosWorkflows) {
+//                    if(wf.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(fos);
+//                    }
+//                }
+//            }
+//            
+//        }
+//        // schedules
+//        for(DBItemInventoryConfiguration schedule : groupedItems.get(ConfigurationType.SCHEDULE).values()) {
+//            String json = schedule.getContent();
+//            JsonObject scheduleItem = jsonObjectFromString(json);
+//            List<String> scheduleWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", scheduleItem, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
+//            if(!scheduleWorkflows.isEmpty()) {
+//                for(String wf : scheduleWorkflows) {
+//                    if(wf.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(schedule);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    public static void resolveCalendarReferencedBySchedule(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs) {
+//        for(DBItemInventoryConfiguration schedule : cfgs) {
+//            String json = schedule.getContent();
+//            JsonObject scheduleItem = jsonObjectFromString(json);
+//            List<String> wfCalendarNames = new ArrayList<String>(); 
+//            getValuesRecursively("", scheduleItem, CALENDARNAME_SEARCH, wfCalendarNames);
+//            if(!wfCalendarNames.isEmpty()) {
+//                for (String cal : wfCalendarNames) {
+//                    if(cal.replaceAll("\"","").equals(item.getName())) {
+//                        item.getReferencedBy().add(schedule);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    public static void resolveAllCalendarReferencedBySchedule(ReferencedDbItem item, 
+//            Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems) throws JsonMappingException, JsonProcessingException {
+//        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.SCHEDULE).values();
+//        for(DBItemInventoryConfiguration schedule : cfgs) {
+//            Set<String> scheduleCalendars = new HashSet<String>();
+//            Schedule s = JocInventory.convertSchedule(schedule.getContent(), Schedule.class);
+//            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+//                scheduleCalendars.add(cal.getCalendarName());
+//                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+//                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+//            }));
+//            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+//            if(!scheduleCalendars.isEmpty()) {
+//                for(String cal : scheduleCalendars) {
+//                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
+//                    if(wCalItem != null) {
+//                        item.getReferences().add(wCalItem);
+//                    }
+//                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+//                    if(nwCalItem != null) {
+//                        item.getReferences().add(nwCalItem);
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    public static void resolveNonWorkingDaysCalendarsFromCalendars(ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+//            throws JsonParseException, JsonMappingException, IOException {
+//        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).values();
+//        Set<String> nonWorkingDaysCalendars = new HashSet<String>();
+//        for(DBItemInventoryConfiguration calendar : cfgs) {
+//            Calendar workingDayCal = (Calendar)JocInventory.content2IJSObject(calendar.getContent(), ConfigurationType.WORKINGDAYSCALENDAR);
+//            Optional.ofNullable(workingDayCal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
+//                .ifPresent(cals -> nonWorkingDaysCalendars.addAll(cals));
+//        }
+//        if(!nonWorkingDaysCalendars.isEmpty()) {
+//            groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).entrySet().stream()
+//                .filter(entry ->  nonWorkingDaysCalendars.contains(entry.getKey()))
+//                .forEach(entry ->item.getReferences().add(entry.getValue()));
+//        }
+//        
+//    }
+//    
+//    public static void resolveNonWorkingDaysCalendarsFromSchedule(ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+//            throws JsonParseException, JsonMappingException, IOException {
+//        Collection<DBItemInventoryConfiguration> cfgs = groupedItems.get(ConfigurationType.SCHEDULE).values();
+//        Set<String> nonWorkingDaysCalendars = new HashSet<String>();
+//        for(DBItemInventoryConfiguration calendar : cfgs) {
+//            Schedule schedule = (Schedule)JocInventory.content2IJSObject(calendar.getContent(), ConfigurationType.SCHEDULE);
+//            schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName)
+//            .filter(Objects::nonNull).forEach(nwdCal -> nonWorkingDaysCalendars.add(nwdCal));
+//        }
+//        if(!nonWorkingDaysCalendars.isEmpty()) {
+//            groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).entrySet().stream()
+//                .filter(entry ->  nonWorkingDaysCalendars.contains(entry.getKey()))
+//                .forEach(entry ->item.getReferences().add(entry.getValue()));
+//        }
+//        
+//    }
+//    
+//    public static void resolveJobTemplateReferencedByWorkflow(ReferencedDbItem item, Collection<DBItemInventoryConfiguration> cfgs)
+//            throws JsonMappingException, JsonProcessingException {
+//        for(DBItemInventoryConfiguration cfg : cfgs) {
+//            Workflow workflow = Globals.objectMapper.readValue(cfg.getContent(), Workflow.class);
+//            if(workflow.getJobs() != null) {
+//                Map<String,Job> jobs = workflow.getJobs().getAdditionalProperties();
+//                for(Job job : jobs.values()) {
+//                    if(job.getJobTemplate() != null) {
+//                        if(job.getJobTemplate().getName().equals(item.getName())) {
+//                            item.getReferencedBy().add(cfg);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
     // with db access for dependency resolution of a single or few items or to use with threading
     public static void resolveReferences (ReferencedDbItem item, SOSHibernateSession session) throws IOException {
         // this method is in use
@@ -829,362 +809,362 @@ public class DependencyResolver {
     }
     
     // with db access for dependency resolution of a single or few items or to use with threading
-    public static void resolveReferences (ResponseItem item, SOSHibernateSession session)
-            throws JsonMappingException, JsonProcessingException {
-        // this method is in use
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        String json = Globals.objectMapper.writeValueAsString(item.getDependency().getConfiguration());
-        List<DBItemInventoryConfiguration> results = null;
-        JsonObject instructions = null;
-        JsonObject jobScripts = null;
-        switch (item.getDependency().getObjectType()) {
-        // determine references in configurations json
-        case WORKFLOW:
-            DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getDependency().getId(), null);
-            if(wfSearch != null) {
-                instructions = jsonObjectFromString(wfSearch.getInstructions());
-                jobScripts = jsonObjectFromString(wfSearch.getJobsScripts());
-            }
-            JsonObject workflow = jsonObjectFromString(json);
-            //Lock
-            if(instructions != null) {
-                List<String> lockIds = getValuesFromObject(instructions, INSTRUCTION_LOCKS_SEARCH);
-                for(String lockId : lockIds) {
-                    results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            } else {
-                List<String> wfLockNames = new ArrayList<String>(); 
-                getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
-                if(!wfLockNames.isEmpty()) {
-                    for (String lock : wfLockNames) {
-                        results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                        }
-                    }
-                }
-            }
-            //JobResource
-            if(instructions != null) {
-                List<String> wfInstructionJobResourceNames = getValuesFromObject(instructions, JOBRESOURCENAMES_SEARCH);
-                for(String jobResourceName : wfInstructionJobResourceNames) {
-                    results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            } else {
-                List<String> wfJobResourceNames = new ArrayList<String>(); 
-                getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
-                if(!wfJobResourceNames.isEmpty()) {
-                    for (String jobResource : wfJobResourceNames) {
-                        results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                        }
-                    }
-                }
-            }
-            //NoticeBoards
-            if(instructions != null) {
-                List<String> boardNames = getValuesFromObject(instructions, INSTRUCTION_BOARDS_SEARCH);
-                for(String boardName : boardNames) {
-                    results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            } else {
-                List<String> wfBoardNames = new ArrayList<String>(); 
-                getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
-                if(!wfBoardNames.isEmpty()) {
-                    for (String board : wfBoardNames) {
-                        results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                        }
-                    }
-                }
-            }
-            //Workflow
-            if(instructions != null) {
-                List<String> wfInstructionWorkflowNames = getValuesFromObject(instructions, INSTRUCTION_ADDORDERS_SEARCH);
-                for(String workflowName : wfInstructionWorkflowNames) {
-                    results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            } else {
-                List<String> wfWorkflowNames = new ArrayList<String>(); 
-                getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
-                if(!wfWorkflowNames.isEmpty()) {
-                    for (String wf : wfWorkflowNames) {
-                        results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                        }
-                    }
-                }
-            }
-            // ScriptIncludes
-            if(jobScripts != null) {
-                List<String> wfSearchJobScriptNames = getValuesFromObject(jobScripts, INCLUDESCRIPT_SEARCH);
-                for(String script : wfSearchJobScriptNames) {
-                    Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                    if (m.find()) {
-                        String scriptName = m.group(2);
-                        results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                        }
-                    }
-                }
-            } else {
-                if(json.contains("##!include")) {
-                    List<String> wfJobScriptNames = new ArrayList<String>();
-                    getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
-                    if(!wfJobScriptNames.isEmpty()) {
-                        for(String script : wfJobScriptNames) {
-                            Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                            if (m.find()) {
-                                String scriptName = m.group(2);
-                                results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                                if(!results.isEmpty()) {
-                                    item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        case SCHEDULE:
-            // Workflow
-            JsonObject schedule = jsonObjectFromString(json);
-            List<String> scheduleWorkflows = new ArrayList<String>();
-            getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
-            if(!scheduleWorkflows.isEmpty()) {
-                for(String wf : scheduleWorkflows) {
-                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            }
-            // Calendars
-            Set<String> scheduleCalendars = new HashSet<String>();
-            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
-            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
-                scheduleCalendars.add(cal.getCalendarName());
-                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
-                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
-            }));
-            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
-            if(!scheduleCalendars.isEmpty()) {
-                for(String cal : scheduleCalendars) {
-                    results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
-                    if(!results.isEmpty()) {
-                        results.forEach(result -> item.getReferences().add(new ResponseItem(convert(result))));
-                    }
-                }
-            }
-            break;
-        case JOBTEMPLATE:
-            // jobResource
-            JsonObject jobTemplate = jsonObjectFromString(json);
-            List<String> jobTemplateJobResources = new ArrayList<String>();
-            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
-            if(!jobTemplateJobResources.isEmpty()) {
-                for(String jobresource : jobTemplateJobResources) {
-                    results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            }
-            // include scripts
-            if(json.contains("##!include")) {
-                List<String> wfJobScriptNames = new ArrayList<String>();
-                getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
-                if(!wfJobScriptNames.isEmpty()) {
-                    for(String script : wfJobScriptNames) {
-                        Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                        if (m.find()) {
-                            String scriptName = m.group(2);
-                            results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        case FILEORDERSOURCE:
-            // Workflow
-            JsonObject fos = jsonObjectFromString(json);
-            List<String> fosWorkflows = new ArrayList<String>();
-            getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
-            if(!fosWorkflows.isEmpty()) {
-                for(String wf : fosWorkflows) {
-                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
-                    }
-                }
-            }
-            break;
-        default:
-            break;
-        }
-    }
-    
+//    public static void resolveReferences (ResponseItem item, SOSHibernateSession session)
+//            throws JsonMappingException, JsonProcessingException {
+//        // this method is in use
+//        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//        String json = Globals.objectMapper.writeValueAsString(item.getDependency().getConfiguration());
+//        List<DBItemInventoryConfiguration> results = null;
+//        JsonObject instructions = null;
+//        JsonObject jobScripts = null;
+//        switch (item.getDependency().getObjectType()) {
+//        // determine references in configurations json
+//        case WORKFLOW:
+//            DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getDependency().getId(), null);
+//            if(wfSearch != null) {
+//                instructions = jsonObjectFromString(wfSearch.getInstructions());
+//                jobScripts = jsonObjectFromString(wfSearch.getJobsScripts());
+//            }
+//            JsonObject workflow = jsonObjectFromString(json);
+//            //Lock
+//            if(instructions != null) {
+//                List<String> lockIds = getValuesFromObject(instructions, INSTRUCTION_LOCKS_SEARCH);
+//                for(String lockId : lockIds) {
+//                    results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            } else {
+//                List<String> wfLockNames = new ArrayList<String>(); 
+//                getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+//                if(!wfLockNames.isEmpty()) {
+//                    for (String lock : wfLockNames) {
+//                        results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
+//                        if(!results.isEmpty()) {
+//                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                        }
+//                    }
+//                }
+//            }
+//            //JobResource
+//            if(instructions != null) {
+//                List<String> wfInstructionJobResourceNames = getValuesFromObject(instructions, JOBRESOURCENAMES_SEARCH);
+//                for(String jobResourceName : wfInstructionJobResourceNames) {
+//                    results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            } else {
+//                List<String> wfJobResourceNames = new ArrayList<String>(); 
+//                getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
+//                if(!wfJobResourceNames.isEmpty()) {
+//                    for (String jobResource : wfJobResourceNames) {
+//                        results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
+//                        if(!results.isEmpty()) {
+//                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                        }
+//                    }
+//                }
+//            }
+//            //NoticeBoards
+//            if(instructions != null) {
+//                List<String> boardNames = getValuesFromObject(instructions, INSTRUCTION_BOARDS_SEARCH);
+//                for(String boardName : boardNames) {
+//                    results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            } else {
+//                List<String> wfBoardNames = new ArrayList<String>(); 
+//                getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+//                if(!wfBoardNames.isEmpty()) {
+//                    for (String board : wfBoardNames) {
+//                        results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
+//                        if(!results.isEmpty()) {
+//                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                        }
+//                    }
+//                }
+//            }
+//            //Workflow
+//            if(instructions != null) {
+//                List<String> wfInstructionWorkflowNames = getValuesFromObject(instructions, INSTRUCTION_ADDORDERS_SEARCH);
+//                for(String workflowName : wfInstructionWorkflowNames) {
+//                    results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            } else {
+//                List<String> wfWorkflowNames = new ArrayList<String>(); 
+//                getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+//                if(!wfWorkflowNames.isEmpty()) {
+//                    for (String wf : wfWorkflowNames) {
+//                        results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+//                        if(!results.isEmpty()) {
+//                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                        }
+//                    }
+//                }
+//            }
+//            // ScriptIncludes
+//            if(jobScripts != null) {
+//                List<String> wfSearchJobScriptNames = getValuesFromObject(jobScripts, INCLUDESCRIPT_SEARCH);
+//                for(String script : wfSearchJobScriptNames) {
+//                    Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+//                    if (m.find()) {
+//                        String scriptName = m.group(2);
+//                        results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+//                        if(!results.isEmpty()) {
+//                            item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                        }
+//                    }
+//                }
+//            } else {
+//                if(json.contains("##!include")) {
+//                    List<String> wfJobScriptNames = new ArrayList<String>();
+//                    getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
+//                    if(!wfJobScriptNames.isEmpty()) {
+//                        for(String script : wfJobScriptNames) {
+//                            Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+//                            if (m.find()) {
+//                                String scriptName = m.group(2);
+//                                results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+//                                if(!results.isEmpty()) {
+//                                    item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            break;
+//        case SCHEDULE:
+//            // Workflow
+//            JsonObject schedule = jsonObjectFromString(json);
+//            List<String> scheduleWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
+//            if(!scheduleWorkflows.isEmpty()) {
+//                for(String wf : scheduleWorkflows) {
+//                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            }
+//            // Calendars
+//            Set<String> scheduleCalendars = new HashSet<String>();
+//            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
+//            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+//                scheduleCalendars.add(cal.getCalendarName());
+//                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+//                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+//            }));
+//            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+//            if(!scheduleCalendars.isEmpty()) {
+//                for(String cal : scheduleCalendars) {
+//                    results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+//                    if(!results.isEmpty()) {
+//                        results.forEach(result -> item.getReferences().add(new ResponseItem(convert(result))));
+//                    }
+//                }
+//            }
+//            break;
+//        case JOBTEMPLATE:
+//            // jobResource
+//            JsonObject jobTemplate = jsonObjectFromString(json);
+//            List<String> jobTemplateJobResources = new ArrayList<String>();
+//            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
+//            if(!jobTemplateJobResources.isEmpty()) {
+//                for(String jobresource : jobTemplateJobResources) {
+//                    results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            }
+//            // include scripts
+//            if(json.contains("##!include")) {
+//                List<String> wfJobScriptNames = new ArrayList<String>();
+//                getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
+//                if(!wfJobScriptNames.isEmpty()) {
+//                    for(String script : wfJobScriptNames) {
+//                        Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
+//                        if (m.find()) {
+//                            String scriptName = m.group(2);
+//                            results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
+//                            if(!results.isEmpty()) {
+//                                item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            break;
+//        case FILEORDERSOURCE:
+//            // Workflow
+//            JsonObject fos = jsonObjectFromString(json);
+//            List<String> fosWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
+//            if(!fosWorkflows.isEmpty()) {
+//                for(String wf : fosWorkflows) {
+//                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
+//                    if(!results.isEmpty()) {
+//                        item.getReferences().add(new ResponseItem(convert(results.get(0))));
+//                    }
+//                }
+//            }
+//            break;
+//        default:
+//            break;
+//        }
+//    }
+//    
     // with no further db access for dependency resolution of a collection of items
-    public static ReferencedDbItem resolveReferences (ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
-            throws IOException {
-        // this method is currently not in use
-        String json = item.getReferencedItem().getContent();
-        switch (item.getReferencedItem().getTypeAsEnum()) {
-        // determine references in configurations json
-        case WORKFLOW:
-            JsonObject workflow = jsonObjectFromString(json);
-            //Lock
-            List<String> wfLockNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
-            if(!wfLockNames.isEmpty()) {
-                for (String lock : wfLockNames) {
-                    DBItemInventoryConfiguration lockItem = groupedItems.get(ConfigurationType.LOCK).get(lock);
-                    if(lockItem != null) {
-                        item.getReferences().add(lockItem);
-                    }
-                }
-            }
-            //JobResource
-            List<String> wfJobResourceNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
-            if(!wfJobResourceNames.isEmpty()) {
-                for (String jobResource : wfJobResourceNames) {
-                    DBItemInventoryConfiguration jobResourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobResource);
-                    if(jobResourceItem != null) {
-                        item.getReferences().add(jobResourceItem);
-                    }
-                }
-            }
-            //NoticeBoards
-            List<String> wfBoardNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
-            if(!wfBoardNames.isEmpty()) {
-                for (String board : wfBoardNames) {
-                    DBItemInventoryConfiguration boardItem = groupedItems.get(ConfigurationType.NOTICEBOARD).get(board);
-                    if(boardItem != null) {
-                        item.getReferences().add(boardItem);
-                    }
-                }
-            }
-            //Workflow
-            List<String> wfWorkflowNames = new ArrayList<String>(); 
-            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
-            if(!wfWorkflowNames.isEmpty()) {
-                for (String wf : wfWorkflowNames) {
-                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
-                    if(workflowItem != null) {
-                        item.getReferences().add(workflowItem);
-                    }
-                }
-            }
-            // ScriptIncludes
-            if(json.contains("##!include")) {
-                
-            }
-            break;
-        case SCHEDULE:
-            JsonObject schedule = jsonObjectFromString(json);
-            // Workflow
-            List<String> scheduleWorkflows = new ArrayList<String>();
-            getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
-            if(!scheduleWorkflows.isEmpty()) {
-                for(String wf : scheduleWorkflows) {
-                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
-                    if(workflowItem != null) {
-                        item.getReferences().add(workflowItem);
-                    }
-                }
-            }
-            // Calendars
-            Set<String> scheduleCalendars = new HashSet<String>();
-            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
-            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
-                scheduleCalendars.add(cal.getCalendarName());
-                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
-                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
-            }));
-            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
-            if(!scheduleCalendars.isEmpty()) {
-                for(String cal : scheduleCalendars) {
-                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
-                    if(wCalItem != null) {
-                        item.getReferences().add(wCalItem);
-                    }
-                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
-                    if(nwCalItem != null) {
-                        item.getReferences().add(nwCalItem);
-                    }
-                }
-            }
-            break;
-        case JOBTEMPLATE:
-            // jobResource
-            JsonObject jobTemplate = jsonObjectFromString(json);
-            List<String> jobTemplateJobResources = new ArrayList<String>();
-            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
-            if(!jobTemplateJobResources.isEmpty()) {
-                for(String jobresource : jobTemplateJobResources) {
-                    DBItemInventoryConfiguration jobresourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobresource);
-                    if(jobresourceItem != null) {
-                        item.getReferences().add(jobresourceItem);
-                    }
-                }
-            }
-            break;
-        case FILEORDERSOURCE:
-            // Workflow
-            JsonObject fos = jsonObjectFromString(json);
-            List<String> fosWorkflows = new ArrayList<String>();
-            getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
-            if(!fosWorkflows.isEmpty()) {
-                for(String wf : fosWorkflows) {
-                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
-                    if(workflowItem != null) {
-                        item.getReferences().add(workflowItem);
-                    }
-                }
-            }
-            break;
-        case WORKINGDAYSCALENDAR:
-            // Calendars
-            Set<String> nwCalendars = new HashSet<String>();
-            Calendar calendar = (Calendar)JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
-            Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
-                .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
-            if(!nwCalendars.isEmpty()) {
-                for(String cal : nwCalendars) {
-                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
-                    if(nwCalItem != null) {
-                        item.getReferences().add(nwCalItem);
-                    }
-                }
-            }
-            break;
-        default:
-            break;
-        }
-        return item;
-    }
-    
+//    public static ReferencedDbItem resolveReferences (ReferencedDbItem item, Map<ConfigurationType, Map<String,DBItemInventoryConfiguration>> groupedItems)
+//            throws IOException {
+//        // this method is currently not in use
+//        String json = item.getReferencedItem().getContent();
+//        switch (item.getReferencedItem().getTypeAsEnum()) {
+//        // determine references in configurations json
+//        case WORKFLOW:
+//            JsonObject workflow = jsonObjectFromString(json);
+//            //Lock
+//            List<String> wfLockNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
+//            if(!wfLockNames.isEmpty()) {
+//                for (String lock : wfLockNames) {
+//                    DBItemInventoryConfiguration lockItem = groupedItems.get(ConfigurationType.LOCK).get(lock);
+//                    if(lockItem != null) {
+//                        item.getReferences().add(lockItem);
+//                    }
+//                }
+//            }
+//            //JobResource
+//            List<String> wfJobResourceNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
+//            if(!wfJobResourceNames.isEmpty()) {
+//                for (String jobResource : wfJobResourceNames) {
+//                    DBItemInventoryConfiguration jobResourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobResource);
+//                    if(jobResourceItem != null) {
+//                        item.getReferences().add(jobResourceItem);
+//                    }
+//                }
+//            }
+//            //NoticeBoards
+//            List<String> wfBoardNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
+//            if(!wfBoardNames.isEmpty()) {
+//                for (String board : wfBoardNames) {
+//                    DBItemInventoryConfiguration boardItem = groupedItems.get(ConfigurationType.NOTICEBOARD).get(board);
+//                    if(boardItem != null) {
+//                        item.getReferences().add(boardItem);
+//                    }
+//                }
+//            }
+//            //Workflow
+//            List<String> wfWorkflowNames = new ArrayList<String>(); 
+//            getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
+//            if(!wfWorkflowNames.isEmpty()) {
+//                for (String wf : wfWorkflowNames) {
+//                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+//                    if(workflowItem != null) {
+//                        item.getReferences().add(workflowItem);
+//                    }
+//                }
+//            }
+//            // ScriptIncludes
+//            if(json.contains("##!include")) {
+//                
+//            }
+//            break;
+//        case SCHEDULE:
+//            JsonObject schedule = jsonObjectFromString(json);
+//            // Workflow
+//            List<String> scheduleWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
+//            if(!scheduleWorkflows.isEmpty()) {
+//                for(String wf : scheduleWorkflows) {
+//                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+//                    if(workflowItem != null) {
+//                        item.getReferences().add(workflowItem);
+//                    }
+//                }
+//            }
+//            // Calendars
+//            Set<String> scheduleCalendars = new HashSet<String>();
+//            Schedule s = JocInventory.convertSchedule(json, Schedule.class);
+//            Optional.ofNullable(s.getCalendars()).ifPresent(cals -> cals.forEach(cal -> {
+//                scheduleCalendars.add(cal.getCalendarName());
+//                Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).stream()
+//                    .forEach(nwCal -> scheduleCalendars.add(cal.getCalendarName()));
+//            }));
+//            Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
+//            if(!scheduleCalendars.isEmpty()) {
+//                for(String cal : scheduleCalendars) {
+//                    DBItemInventoryConfiguration wCalItem = groupedItems.get(ConfigurationType.WORKINGDAYSCALENDAR).get(cal);
+//                    if(wCalItem != null) {
+//                        item.getReferences().add(wCalItem);
+//                    }
+//                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+//                    if(nwCalItem != null) {
+//                        item.getReferences().add(nwCalItem);
+//                    }
+//                }
+//            }
+//            break;
+//        case JOBTEMPLATE:
+//            // jobResource
+//            JsonObject jobTemplate = jsonObjectFromString(json);
+//            List<String> jobTemplateJobResources = new ArrayList<String>();
+//            getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
+//            if(!jobTemplateJobResources.isEmpty()) {
+//                for(String jobresource : jobTemplateJobResources) {
+//                    DBItemInventoryConfiguration jobresourceItem = groupedItems.get(ConfigurationType.JOBRESOURCE).get(jobresource);
+//                    if(jobresourceItem != null) {
+//                        item.getReferences().add(jobresourceItem);
+//                    }
+//                }
+//            }
+//            break;
+//        case FILEORDERSOURCE:
+//            // Workflow
+//            JsonObject fos = jsonObjectFromString(json);
+//            List<String> fosWorkflows = new ArrayList<String>();
+//            getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
+//            if(!fosWorkflows.isEmpty()) {
+//                for(String wf : fosWorkflows) {
+//                    DBItemInventoryConfiguration workflowItem = groupedItems.get(ConfigurationType.WORKFLOW).get(wf);
+//                    if(workflowItem != null) {
+//                        item.getReferences().add(workflowItem);
+//                    }
+//                }
+//            }
+//            break;
+//        case WORKINGDAYSCALENDAR:
+//            // Calendars
+//            Set<String> nwCalendars = new HashSet<String>();
+//            Calendar calendar = (Calendar)JocInventory.content2IJSObject(json, ConfigurationType.WORKINGDAYSCALENDAR);
+//            Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
+//                .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
+//            if(!nwCalendars.isEmpty()) {
+//                for(String cal : nwCalendars) {
+//                    DBItemInventoryConfiguration nwCalItem = groupedItems.get(ConfigurationType.NONWORKINGDAYSCALENDAR).get(cal);
+//                    if(nwCalItem != null) {
+//                        item.getReferences().add(nwCalItem);
+//                    }
+//                }
+//            }
+//            break;
+//        default:
+//            break;
+//        }
+//        return item;
+//    }
+//    
     public static void updateDependencies(DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException {
         if (inventoryDbItem == null) {
@@ -1195,7 +1175,7 @@ public class DependencyResolver {
                 SOSHibernateSession session = null;
                 try {
                     session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
-                    insertOrRenewDependencies(session, inventoryDbItem);
+                    resolve(session, inventoryDbItem);
                 } finally {
                     Globals.disconnect(session);
                 }
@@ -1222,7 +1202,7 @@ public class DependencyResolver {
                 SOSHibernateSession session = null;
                 try {
                     session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
-                    insertOrRenewDependencies(session, allCfgs, withPool);
+                    resolveThreaded(session, allCfgs, withPool);
                 } finally {
                     Globals.disconnect(session);
                 }
@@ -1233,24 +1213,25 @@ public class DependencyResolver {
         }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
     }
     
-    public static void insertOrRenewDependencies(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
+    public static void resolve(SOSHibernateSession session, DBItemInventoryConfiguration inventoryDbItem)
             throws SOSHibernateException, IOException {
         if (inventoryDbItem == null) {
             return;
         }
         // this method is in use (JocInventory update and insert methods)
-        ReferencedDbItem references = resolveReferencedBy(session, inventoryDbItem);
+        ReferencedDbItem references = createReferencedDbItem(inventoryDbItem);
         resolveReferences(references, session);
-            DBLayerDependencies layer = new DBLayerDependencies(session);
-            // store new dependencies
-            layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
+        DBLayerDependencies layer = new DBLayerDependencies(session);
+        // store new dependencies
+        layer.insertOrReplaceDependencies(references.getReferencedItem(), convert(references, session));
     }
 
-    public static void insertOrRenewDependencies(SOSHibernateSession session, Collection<DBItemInventoryConfiguration> allCfgs, boolean withPool)
+    public static void resolveThreaded(SOSHibernateSession session, Collection<DBItemInventoryConfiguration> allCfgs, boolean withPool)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
         if (allCfgs == null) {
             return;
         }
+        Date threadsStarted = Date.from(Instant.now());
         // this method is in use
         Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
         List<ReferenceCallable> callables = allCfgs.stream().map(item -> new ReferenceCallable(item)).collect(Collectors.toList());
@@ -1283,7 +1264,8 @@ public class DependencyResolver {
             }
             DBLayerDependencies layer = new DBLayerDependencies(session);
             referencedItems.stream()
-                .filter(item -> !(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty()))
+//                .filter(item -> !(item.getReferencedBy().isEmpty() && item.getReferences().isEmpty()))
+                .filter(item -> !item.getReferences().isEmpty())
                 .forEach(ref -> {
                     try {
                         layer.insertOrReplaceDependencies(ref.getReferencedItem(), convert(ref, layer.getSession()));
@@ -1291,6 +1273,9 @@ public class DependencyResolver {
                         LOGGER.error("", e);
                     }
                 });
+            Date threadsFinished = Date.from(Instant.now());
+            Long duration = ChronoUnit.MILLIS.between(threadsStarted.toInstant(), threadsFinished.toInstant());
+            LOGGER.info("update dependencies finished after " + duration + " milliseconds.");
         }
     }
 
@@ -1318,31 +1303,31 @@ public class DependencyResolver {
             DBItemInventoryConfiguration inventoryObject) throws SOSHibernateException {
         List<DBItemInventoryDependency> dependencies = new ArrayList<DBItemInventoryDependency>();
         DBLayerDependencies dbLayer = new DBLayerDependencies(session);
-        dependencies = dbLayer.getDependencies(inventoryObject);
+        dependencies = dbLayer.getReferencesDependencies(inventoryObject.getId());
         return dependencies;
     }
     
-    public static List<DBItemInventoryDependency> getStoredDependencies (DBItemInventoryConfiguration item,
-            List<DBItemInventoryDependency> allDependencies) {
-        return allDependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).collect(Collectors.toList());
-    }
+//    public static List<DBItemInventoryDependency> getStoredDependencies (DBItemInventoryConfiguration item,
+//            List<DBItemInventoryDependency> allDependencies) {
+//        return allDependencies.stream().filter(dep -> dep.getInvId().equals(item.getId())).collect(Collectors.toList());
+//    }
     
     // this method is currently in use
     private static Set<DBItemInventoryDependency> convert(ReferencedDbItem reference, SOSHibernateSession session) {
         Set<DBItemInventoryDependency> dependencies = new HashSet<DBItemInventoryDependency>();
         InventoryDBLayer dblayer = new InventoryDBLayer(session);
-        dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
-            DBItemInventoryDependency dependency = new DBItemInventoryDependency();
-            dependency.setInvId(reference.getReferencedItem().getId());
-            dependency.setInvType(reference.getReferencedItem().getTypeAsEnum());
-            dependency.setDependencyType(item.getTypeAsEnum());
-            dependency.setInvDependencyId(item.getId());
-            // check if item is already deployed or released
-            dependency.setPublished(isPublished(dblayer, item));
-            dependency.setInvEnforce(!dependency.getPublished());
-            dependency.setDepEnforce(!dependency.getPublished());
-            return dependency;
-        }).collect(Collectors.toSet()));
+//        dependencies.addAll(reference.getReferencedBy().stream().map(item -> {
+//            DBItemInventoryDependency dependency = new DBItemInventoryDependency();
+//            dependency.setInvId(reference.getReferencedItem().getId());
+//            dependency.setInvType(reference.getReferencedItem().getTypeAsEnum());
+//            dependency.setDependencyType(item.getTypeAsEnum());
+//            dependency.setInvDependencyId(item.getId());
+//            // check if item is already deployed or released
+//            dependency.setPublished(isPublished(dblayer, item));
+//            dependency.setInvEnforce(!dependency.getPublished());
+//            dependency.setDepEnforce(!dependency.getPublished());
+//            return dependency;
+//        }).collect(Collectors.toSet()));
         dependencies.addAll(reference.getReferences().stream().map(item -> {
             DBItemInventoryDependency dependency = new DBItemInventoryDependency();
             dependency.setInvId(item.getId());
@@ -1359,20 +1344,27 @@ public class DependencyResolver {
     }
     
     // this method is in use
-    public static ReferencedDbItem convert(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
+    public static ReferencedDbItem resolveInventoryItemFromDependency(SOSHibernateSession session, DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException, IOException {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        ReferencedDbItem newDbItem = new ReferencedDbItem(invCfg);
-        if(dependencies != null && !dependencies.isEmpty()) {
-            for(DBItemInventoryDependency dependency : dependencies) {
-                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvDependencyId());
-                if(cfg != null) {
-                    newDbItem.getReferencedBy().add(cfg);
-                }
-            }
-        }
-        resolveReferences(newDbItem, session);
-        return newDbItem;
+        ReferencedDbItem newReferencedDbItem = createReferencedDbItem(invCfg);
+//        if(dependencies != null && !dependencies.isEmpty()) {
+//            for(DBItemInventoryDependency dependency : dependencies) {
+//                DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvDependencyId());
+//                if(cfg != null) {
+//                    newDbItem.getReferencedBy().add(cfg);
+//                }
+//            }
+//        }
+          if(dependencies != null && !dependencies.isEmpty()) {
+              for(DBItemInventoryDependency dependency : dependencies) {
+                  DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(dependency.getInvId());
+                  if(cfg != null) {
+                      newReferencedDbItem.getReferences().add(cfg);
+                  }
+              }
+          }
+        return newReferencedDbItem;
     }
     
 //    public static ReferencedDbItem convert(DBItemInventoryConfiguration invCfg, List<DBItemInventoryDependency> dependencies,
@@ -1467,26 +1459,26 @@ public class DependencyResolver {
         }
     }
 
-    public static ConfigurationObject convert(DBItemInventoryConfiguration item) {
-        ConfigurationObject object = new ConfigurationObject();
-        try {
-            object.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getTypeAsEnum()));
-        } catch (IOException e) {
-            return null;
-        }
-        object.setId(item.getId());
-        object.setConfigurationDate(item.getModified());
-        object.setDeleted(false);
-        object.setDeliveryDate(Date.from(Instant.now()));
-        object.setDeployed(item.getDeployed());
-        object.setReleased(item.getReleased());
-        object.setName(item.getName());
-        object.setPath(item.getPath());
-        object.setValid(item.getValid());
-        object.setObjectType(item.getTypeAsEnum());
-        return object;
-    }
-    
+//    public static ConfigurationObject convert(DBItemInventoryConfiguration item) {
+//        ConfigurationObject object = new ConfigurationObject();
+//        try {
+//            object.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getTypeAsEnum()));
+//        } catch (IOException e) {
+//            return null;
+//        }
+//        object.setId(item.getId());
+//        object.setConfigurationDate(item.getModified());
+//        object.setDeleted(false);
+//        object.setDeliveryDate(Date.from(Instant.now()));
+//        object.setDeployed(item.getDeployed());
+//        object.setReleased(item.getReleased());
+//        object.setName(item.getName());
+//        object.setPath(item.getPath());
+//        object.setValid(item.getValid());
+//        object.setObjectType(item.getTypeAsEnum());
+//        return object;
+//    }
+//    
     private static boolean isPublished(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config) {
         try {
             if(JocInventory.isDeployable(config.getTypeAsEnum())) {

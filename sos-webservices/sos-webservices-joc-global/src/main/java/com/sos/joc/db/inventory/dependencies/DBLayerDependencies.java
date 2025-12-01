@@ -199,7 +199,7 @@ public class DBLayerDependencies extends DBLayer {
     
     public void insertOrReplaceDependencies (DBItemInventoryConfiguration item, Set<DBItemInventoryDependency> dependencies)
             throws SOSHibernateException {
-        List<DBItemInventoryDependency> storedDependencies = getDependencies(item);
+        List<DBItemInventoryDependency> storedDependencies = getReferencesDependencies(item.getId());
         for(DBItemInventoryDependency storedDependency : storedDependencies) {
             if (!dependencies.contains(storedDependency)) {
                 getSession().delete(storedDependency);
