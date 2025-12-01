@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -524,23 +525,15 @@ public class DependencyResolver {
                 List<String> lockIds = getValuesFromObject(wfsearchInstructions, INSTRUCTION_LOCKS_SEARCH);
                 if (!lockIds.isEmpty()) {
                     // check from instructions info from WindowsSearch
-                    for(String lockId : lockIds) {
-                        results = dbLayer.getConfigurationByName(lockId.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            lockIds.stream().peek(lockId -> lockId.replaceAll("\"","")), ConfigurationType.LOCK.intValue()));
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
                     List<String> wfLockNames = new ArrayList<String>(); 
                     getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
                     if(!wfLockNames.isEmpty()) {
-                        for (String lock : wfLockNames) {
-                            results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(results.get(0));
-                            }
-                        }
+                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                wfLockNames.stream().peek(lockId -> lockId.replaceAll("\"","")), ConfigurationType.LOCK.intValue()));
                     }
                 }
             } else {
@@ -548,12 +541,8 @@ public class DependencyResolver {
                 List<String> wfLockNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, LOCKNAME_SEARCH, wfLockNames);
                 if(!wfLockNames.isEmpty()) {
-                    for (String lock : wfLockNames) {
-                        results = dbLayer.getConfigurationByName(lock.replaceAll("\"",""), ConfigurationType.LOCK.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfLockNames.stream().peek(lockId -> lockId.replaceAll("\"","")), ConfigurationType.LOCK.intValue()));
                 }
             }
             //JobResource
@@ -561,32 +550,20 @@ public class DependencyResolver {
                 // check from instructions info from WindowsSearch
                 List<String> wfSearchJobsJobResourceNames = getValuesFromObject(wfsearchJobs, JOBRESOURCENAMES_SEARCH);
                 if(!wfSearchJobsJobResourceNames.isEmpty()) {
-                    for(String jobResourceName : wfSearchJobsJobResourceNames) {
-                        results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfSearchJobsJobResourceNames.stream().peek(jobResourceName -> jobResourceName.replaceAll("\"","")), ConfigurationType.JOBRESOURCE.intValue()));
                 } else {
                     List<String> wfSearchJobsJobResources = getValuesFromObject(wfsearchJobs, JOBRESOURCES_SEARCH);
                     if(!wfSearchJobsJobResources.isEmpty()) {
-                        for(String jobResourceName : wfSearchJobsJobResources) {
-                            results = dbLayer.getConfigurationByName(jobResourceName.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(results.get(0));
-                            }
-                        }
+                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                wfSearchJobsJobResourceNames.stream().peek(jobResourceName -> jobResourceName.replaceAll("\"","")), ConfigurationType.JOBRESOURCE.intValue()));
                     } else {
                         // fallback: if result in WindowsSearch is empty check again directly in json
                         List<String> wfJobResourceNames = new ArrayList<String>(); 
                         getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
                         if(!wfJobResourceNames.isEmpty()) {
-                            for (String jobResource : wfJobResourceNames) {
-                                results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                                if(!results.isEmpty()) {
-                                    item.getReferences().add(results.get(0));
-                                }
-                            }
+                            item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                    wfJobResourceNames.stream().peek(jobResourceName -> jobResourceName.replaceAll("\"","")), ConfigurationType.JOBRESOURCE.intValue()));
                         }
                     }
                 }
@@ -595,12 +572,8 @@ public class DependencyResolver {
                 List<String> wfJobResourceNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, JOBRESOURCENAMES_SEARCH, wfJobResourceNames);
                 if(!wfJobResourceNames.isEmpty()) {
-                    for (String jobResource : wfJobResourceNames) {
-                        results = dbLayer.getConfigurationByName(jobResource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfJobResourceNames.stream().peek(jobResourceName -> jobResourceName.replaceAll("\"","")), ConfigurationType.JOBRESOURCE.intValue()));
                 }
             }
             //NoticeBoards
@@ -608,23 +581,15 @@ public class DependencyResolver {
                 // check from instructions info from WindowsSearch
                 List<String> boardNames = getValuesFromObject(wfsearchInstructions, INSTRUCTION_BOARDS_SEARCH);
                 if(!boardNames.isEmpty()) {
-                    for(String boardName : boardNames) {
-                        results = dbLayer.getConfigurationByName(boardName.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            boardNames.stream().peek(boardName -> boardName.replaceAll("\"","")), ConfigurationType.NOTICEBOARD.intValue()));
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
                     List<String> wfBoardNames = new ArrayList<String>(); 
                     getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
                     if(!wfBoardNames.isEmpty()) {
-                        for (String board : wfBoardNames) {
-                            results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(results.get(0));
-                            }
-                        }
+                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                wfBoardNames.stream().peek(boardName -> boardName.replaceAll("\"","")), ConfigurationType.NOTICEBOARD.intValue()));
                     }
                 }
             } else {
@@ -632,12 +597,8 @@ public class DependencyResolver {
                 List<String> wfBoardNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, INSTRUCTION_BOARDS_SEARCH, wfBoardNames);
                 if(!wfBoardNames.isEmpty()) {
-                    for (String board : wfBoardNames) {
-                        results = dbLayer.getConfigurationByName(board.replaceAll("\"",""), ConfigurationType.NOTICEBOARD.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfBoardNames.stream().peek(boardName -> boardName.replaceAll("\"","")), ConfigurationType.NOTICEBOARD.intValue()));
                 }
             }
             //Workflow
@@ -645,23 +606,15 @@ public class DependencyResolver {
                 // check from instructions info from WindowsSearch
                 List<String> wfInstructionWorkflowNames = getValuesFromObject(wfsearchInstructions, INSTRUCTION_ADDORDERS_SEARCH);
                 if(!wfInstructionWorkflowNames.isEmpty()) {
-                    for(String workflowName : wfInstructionWorkflowNames) {
-                        results = dbLayer.getConfigurationByName(workflowName.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfInstructionWorkflowNames.stream().peek(workflowName -> workflowName.replaceAll("\"","")), ConfigurationType.WORKFLOW.intValue()));
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
                     List<String> wfWorkflowNames = new ArrayList<String>(); 
                     getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
                     if(!wfWorkflowNames.isEmpty()) {
-                        for (String wf : wfWorkflowNames) {
-                            results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(results.get(0));
-                            }
-                        }
+                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                wfWorkflowNames.stream().peek(workflowName -> workflowName.replaceAll("\"","")), ConfigurationType.WORKFLOW.intValue()));
                     }
                 }
             } else {
@@ -669,42 +622,26 @@ public class DependencyResolver {
                 List<String> wfWorkflowNames = new ArrayList<String>(); 
                 getValuesRecursively("", workflow, WORKFLOWNAME_SEARCH, wfWorkflowNames);
                 if(!wfWorkflowNames.isEmpty()) {
-                    for (String wf : wfWorkflowNames) {
-                        results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfWorkflowNames.stream().peek(workflowName -> workflowName.replaceAll("\"","")), ConfigurationType.WORKFLOW.intValue()));
                 }
             }
             // ScriptIncludes
             if(wfsearchScripts != null) {
                 List<String> wfSearchJobScriptNames = getValuesFromObject(wfsearchScripts, INCLUDESCRIPT_SEARCH);
-                for(String script : wfSearchJobScriptNames) {
-                    Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                    if (m.find()) {
-                        String scriptName = m.group(2);
-                        results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                        if(!results.isEmpty()) {
-                            item.getReferences().add(results.get(0));
-                        }
-                    }
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        wfSearchJobScriptNames.stream()
+                                .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity())
+                                .map(mr -> mr.group(3)), ConfigurationType.INCLUDESCRIPT.intValue()));
             } else {
-                if(json.contains("##!include")) {
+                if(JsonConverter.hasScriptIncludes.test(json)) {
                     List<String> wfJobScriptNames = new ArrayList<String>();
                     getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
                     if(!wfJobScriptNames.isEmpty()) {
-                        for(String script : wfJobScriptNames) {
-                            Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                            if (m.find()) {
-                                String scriptName = m.group(2);
-                                results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                                if(!results.isEmpty()) {
-                                    item.getReferences().add(results.get(0));
-                                }
-                            }
-                        }
+                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                                wfJobScriptNames.stream()
+                                        .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity())
+                                        .map(mr -> mr.group(3)), ConfigurationType.INCLUDESCRIPT.intValue()));
                     }
                 }
             }
@@ -716,12 +653,8 @@ public class DependencyResolver {
             List<String> scheduleWorkflows = new ArrayList<String>();
             getValuesRecursively("", schedule, WORKFLOWNAMES_SEARCH, scheduleWorkflows);
             if(!scheduleWorkflows.isEmpty()) {
-                for(String wf : scheduleWorkflows) {
-                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
-                    }
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        scheduleWorkflows.stream().peek(workflowName -> workflowName.replaceAll("\"","")), ConfigurationType.WORKFLOW.intValue()));
             }
             // Calendars
             Set<String> scheduleCalendars = new HashSet<String>();
@@ -733,12 +666,8 @@ public class DependencyResolver {
             }));
             Optional.ofNullable(s.getNonWorkingDayCalendars()).ifPresent(cals -> cals.forEach(cal -> scheduleCalendars.add(cal.getCalendarName())));
             if(!scheduleCalendars.isEmpty()) {
-                for(String cal : scheduleCalendars) {
-                    results = dbLayer.getConfigurationByName(cal.replaceAll("\"",""), ConfigurationType.WORKINGDAYSCALENDAR.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().addAll(results);
-                    }
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        scheduleCalendars.stream().peek(calendarName -> calendarName.replaceAll("\"","")), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
             }
             break;
         case JOBTEMPLATE:
@@ -748,28 +677,18 @@ public class DependencyResolver {
             List<String> jobTemplateJobResources = new ArrayList<String>();
             getValuesRecursively("", jobTemplate, JOBRESOURCENAMES_SEARCH, jobTemplateJobResources);
             if(!jobTemplateJobResources.isEmpty()) {
-                for(String jobresource : jobTemplateJobResources) {
-                    results = dbLayer.getConfigurationByName(jobresource.replaceAll("\"",""), ConfigurationType.JOBRESOURCE.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
-                    }
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        jobTemplateJobResources.stream().peek(jobResourceName -> jobResourceName.replaceAll("\"","")), ConfigurationType.JOBRESOURCE.intValue()));
             }
             // include script
-            if(json.contains("##!include")) {
+            if(JsonConverter.hasScriptIncludes.test(json)) {
                 List<String> wfJobScriptNames = new ArrayList<String>();
                 getValuesRecursively("", jobTemplate, SCRIPT_SEARCH, wfJobScriptNames);
                 if(!wfJobScriptNames.isEmpty()) {
-                    for(String script : wfJobScriptNames) {
-                        Matcher m = JsonConverter.scriptIncludePattern.matcher(script);
-                        if (m.find()) {
-                            String scriptName = m.group(2);
-                            results = dbLayer.getConfigurationByName(scriptName, ConfigurationType.INCLUDESCRIPT.intValue());
-                            if(!results.isEmpty()) {
-                                item.getReferences().add(results.get(0));
-                            }
-                        }
-                    }
+                    item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                            wfJobScriptNames.stream()
+                                    .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity())
+                                    .map(mr -> mr.group(3)), ConfigurationType.INCLUDESCRIPT.intValue()));
                 }
             }
             break;
@@ -780,12 +699,8 @@ public class DependencyResolver {
             List<String> fosWorkflows = new ArrayList<String>();
             getValuesRecursively("", fos, WORKFLOWNAME_SEARCH, fosWorkflows);
             if(!fosWorkflows.isEmpty()) {
-                for(String wf : fosWorkflows) {
-                    results = dbLayer.getConfigurationByName(wf.replaceAll("\"",""), ConfigurationType.WORKFLOW.intValue());
-                    if(!results.isEmpty()) {
-                        item.getReferences().add(results.get(0));
-                    }
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        fosWorkflows.stream().peek(workflowName -> workflowName.replaceAll("\"","")), ConfigurationType.WORKFLOW.intValue()));
             }
             break;
         case WORKINGDAYSCALENDAR:
@@ -795,14 +710,10 @@ public class DependencyResolver {
             Optional.ofNullable(calendar.getExcludes()).map(Frequencies::getNonWorkingDayCalendars)
                 .ifPresent(cals -> cals.forEach(cal -> nwCalendars.add(cal)));
             if(!nwCalendars.isEmpty()) {
-                for(String cal : nwCalendars) {
-                    results = dbLayer.getConfigurationByName(cal, ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
-                    results.stream().filter(dbItem -> ConfigurationType.NONWORKINGDAYSCALENDAR.equals(dbItem.getTypeAsEnum()))
-                        .findFirst().ifPresent(nwCal ->item.getReferences().add(nwCal));
-                }
+                item.getReferences().addAll(dbLayer.getConfigurationsByNames(
+                        nwCalendars.stream().peek(nwCalendarName -> nwCalendarName.replaceAll("\"","")), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
             }
             break;
-            
         default:
             break;
         }
