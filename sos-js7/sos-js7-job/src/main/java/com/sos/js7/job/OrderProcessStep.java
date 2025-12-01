@@ -1,5 +1,7 @@
 package com.sos.js7.job;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -277,6 +279,20 @@ public class OrderProcessStep<A extends JobArguments> {
 
     public OrderProcessStepLogger getLogger() {
         return logger;
+    }
+
+    public PrintWriter getOut() {
+        if (internalStep == null) {
+            return new PrintWriter(new StringWriter());
+        }
+        return internalStep.out();
+    }
+
+    public PrintWriter getErr() {
+        if (internalStep == null) {
+            return new PrintWriter(new StringWriter());
+        }
+        return internalStep.err();
     }
 
     public A getDeclaredArguments() {
