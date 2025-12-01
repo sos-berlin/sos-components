@@ -12,8 +12,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -22,9 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -37,19 +33,12 @@ import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.controller.model.workflow.Workflow;
-import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Frequencies;
-import com.sos.inventory.model.job.ExecutableScript;
-import com.sos.inventory.model.job.ExecutableType;
-import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.dependencies.callables.ReferenceCallable;
@@ -61,10 +50,7 @@ import com.sos.joc.db.inventory.DBItemInventoryDependency;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-//import com.sos.joc.model.inventory.dependencies.get.ResponseItem;
-import com.sos.joc.model.inventory.dependencies.update.ResponseItem;
 
 public class DependencyResolver {
 
@@ -92,7 +78,7 @@ public class DependencyResolver {
     private static final String threadNamePrefix = "Thread-DepResolver-";
     private static final AtomicInteger threadNameSuffix = new AtomicInteger();
 
-    public static final List<Integer> dependencyTypes = Collections.unmodifiableList(new ArrayList<Integer>() {
+    public static final Set<Integer> dependencyTypes = Collections.unmodifiableSet(new HashSet<Integer>() {
         private static final long serialVersionUID = 1L;
         {
             add(ConfigurationType.WORKFLOW.intValue());
@@ -1081,6 +1067,9 @@ public class DependencyResolver {
         if (inventoryDbItem == null) {
             return;
         }
+        if (!dependencyTypes.contains(inventoryDbItem.getType())) {
+            return;
+        }
         new Thread(() -> {
             try {
                 SOSHibernateSession session = null;
@@ -1100,7 +1089,10 @@ public class DependencyResolver {
     
     public static void updateDependencies(Collection<DBItemInventoryConfiguration> allCfgs)
             throws SOSHibernateException, JsonMappingException, JsonProcessingException, InterruptedException {
-        updateDependencies(allCfgs, false);
+        if (allCfgs == null) {
+            return;
+        }
+        updateDependencies(allCfgs.stream().filter(i -> dependencyTypes.contains(i.getType())).toList(), false);
     }
 
     public static void updateDependencies(Collection<DBItemInventoryConfiguration> allCfgs, boolean withPool)
