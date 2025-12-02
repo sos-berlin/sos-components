@@ -480,9 +480,9 @@ public class DailyPlanHelper {
         int dbItemsCount = dbItems == null ? 0 : dbItems.size();
         if (missingNames.size() != dbItemsCount) {
             // throw new DBMissingDataException(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller,
-            // SOSString.join(missingNames, SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList())))));
+            // SOSString.join(missingNames), SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList()))));
             LOGGER.info(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller, SOSString.join(
-                    missingNames, SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList())))));
+                    missingNames), SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList()))));
         }
 
         if (dbItemsCount > 0) {
