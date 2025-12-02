@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,8 +31,37 @@ public class SOSString {
     private static final String TO_STRING_TRUNCATED_VALUE_SUFFIX = "<truncated>";
     private static final int TO_STRING_TRUNCATE_VALUE_IF_LONGER_THAN = 255;
 
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
+
     public static boolean isEmpty(String string) {
         return string == null || string.isEmpty();
+    }
+
+    public static boolean isNumeric(String val) {
+        if (val == null) {
+            return false;
+        }
+        return NUMERIC_PATTERN.matcher(val).matches();
+    }
+
+    /** Checks whether a given string represents a valid boolean value ("true" or "false").
+     *
+     * This method is necessary because Java's built-in Boolean.parseBoolean(String) does not throw an exception or indicate invalid input.<br/>
+     * It simply returns false for any string that is not exactly "true" (ignoring case).
+     * <p>
+     * For example:
+     * <ul>
+     * <li>Boolean.parseBoolean("xxxx") -> false</li>
+     * </ul>
+     *
+     * @param s the string to check
+     * @return true if the string is "true" or "false" (case-insensitive), false otherwise */
+    public static boolean isBoolean(String val) {
+        if (val == null) {
+            return false;
+        }
+        String lower = val.toLowerCase();
+        return lower.equals("true") || lower.equals("false");
     }
 
     public static boolean equals(String a, String b) {

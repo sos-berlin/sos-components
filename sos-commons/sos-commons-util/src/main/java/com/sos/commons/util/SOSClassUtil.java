@@ -190,26 +190,6 @@ public class SOSClassUtil {
         }
     }
 
-    /** Checks whether a given string represents a valid boolean value ("true" or "false").
-     *
-     * This method is necessary because Java's built-in Boolean.parseBoolean(String) does not throw an exception or indicate invalid input.<br/>
-     * It simply returns false for any string that is not exactly "true" (ignoring case).
-     * <p>
-     * For example:
-     * <ul>
-     * <li>Boolean.parseBoolean("xxxx") -> false</li>
-     * </ul>
-     *
-     * @param s the string to check
-     * @return true if the string is "true" or "false" (case-insensitive), false otherwise */
-    public static boolean isBoolean(String s) {
-        if (s == null) {
-            return false;
-        }
-        String lower = s.toLowerCase();
-        return lower.equals("true") || lower.equals("false");
-    }
-
     private static String getSimpleName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
     }
