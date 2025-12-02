@@ -2277,7 +2277,7 @@ public class InventoryDBLayer extends DBLayer {
                 hql.append(" and type=:type");
             }
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("name", names.map(String::toLowerCase).collect(Collectors.toList()));
+            query.setParameterList("names", names.map(String::toLowerCase).collect(Collectors.toList()));
             if (isCalendar) {
                 query.setParameterList("types", JocInventory.getCalendarTypes());
             } else {
