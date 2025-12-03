@@ -14,7 +14,7 @@ public class SOSArgumentHelper {
     public static final String DEFAULT_LIST_VALUE_DELIMITER = ";";
 
     private static final String DISPLAY_VALUE_TRUNCATING_SUFFIX = "<truncated>";
-    private static final int DISPLAY_VALUE_MAX_LENGTH = 255;
+    private static final int DISPLAY_VALUE_MAX_LENGTH = 1_000;
     private static final int DISPLAY_VALUE_USED_LENGTH = DISPLAY_VALUE_MAX_LENGTH - DISPLAY_VALUE_TRUNCATING_SUFFIX.length();
 
     public static String getDisplayValue(Object value, DisplayMode mode) {
