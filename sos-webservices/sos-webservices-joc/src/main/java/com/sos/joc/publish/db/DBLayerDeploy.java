@@ -1463,8 +1463,7 @@ public class DBLayerDeploy {
             if (result == null) {
                 return Collections.emptyList();
             }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
+            return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }

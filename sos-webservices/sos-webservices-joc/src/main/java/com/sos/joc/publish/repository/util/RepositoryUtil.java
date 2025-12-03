@@ -1151,7 +1151,7 @@ public abstract class RepositoryUtil {
                             Collectors.groupingByConcurrent(item -> item.getType() + ":" + item.getName(), 
                             Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getId))));
         return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
-                .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
+                .filter(item -> !OperationType.DELETE.value().equals(item.getOperation())).collect(Collectors.toSet());
     }
 
     private static Set<Path> readFolders(Path repository) throws IOException {
