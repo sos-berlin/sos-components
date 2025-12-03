@@ -314,11 +314,11 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "StrictHostkeyChecking":
                     argsLoader.setBooleanArgumentValue(args.getStrictHostkeyChecking(), n);
                     break;
-                case "DisableAutoDetectShell": // JS7 - YADE-632
-                    argsLoader.setBooleanArgumentValue(args.getDisableAutoDetectShell(), n);
-                    break;
                 case "ConfigurationFiles":
                     parseConfigurationFiles(argsLoader, args, n);
+                    break;
+                case "DisableAutoDetectShell": // JS7 - YADE-632
+                    argsLoader.setBooleanArgumentValue(args.getDisableAutoDetectShell(), n);
                     break;
                 }
             }

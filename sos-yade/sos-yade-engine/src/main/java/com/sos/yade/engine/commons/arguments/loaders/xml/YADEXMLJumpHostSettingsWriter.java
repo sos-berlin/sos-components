@@ -213,6 +213,9 @@ public class YADEXMLJumpHostSettingsWriter {
             }
             sb.append("</ConfigurationFiles>");
         }
+        if (args.getDisableAutoDetectShell().isDirty()) { // JS7 - YADE-632
+            sb.append("<DisableAutoDetectShell>").append(args.getDisableAutoDetectShell().getValue()).append("</DisableAutoDetectShell>");
+        }
         // YADE 1 - compatibility
         if (args.getServerAliveInterval().isDirty()) {
             sb.append("<ServerAliveInterval>").append(cdata(args.getServerAliveInterval().getValue())).append("</ServerAliveInterval>");
