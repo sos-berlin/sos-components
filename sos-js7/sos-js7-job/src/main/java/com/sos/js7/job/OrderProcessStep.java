@@ -106,19 +106,31 @@ public class OrderProcessStep<A extends JobArguments> {
         this.resolverPrefixes = step.resolverPrefixes;
     }
 
-    /** Execute another job<br />
-     * 
-     * @param clazz Job class
-     * @throws Exception */
+    protected BlockingInternalJob.Step getInternalStep() {
+        return internalStep;
+    }
+
+    /** Executes another job of the specified job class.
+     * <p>
+     * All arguments from the current job step are automatically populated to the job being executed.<br/>
+     *
+     * @param clazz the job class to execute
+     * @param <AJ> the generic type of the job's arguments (used internally for type safety)
+     * @throws Exception if the job cannot be executed */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz) throws Exception {
         executeJob(clazz, (Map<String, JobArgument<?>>) null, false);
     }
 
-    /** Execute another job<br />
-     * 
-     * @param clazz Job class
-     * @param executeJobArguments Map (key=argument name,value=argument value)
-     * @throws Exception */
+    /** Executes another job of the specified job class with additional arguments.
+     * <p>
+     * This method behaves like {@link #executeJob(Class)}, which automatically populates all arguments from the current job step.<br/>
+     * Additionally, extra arguments can be provided via the {@code executeJobArguments} map.<br />
+     * This can be helpful when some arguments are not set in the current job step or need to be calculated/recalculated for the job being executed.
+     *
+     * @param clazz the job class to execute
+     * @param executeJobArguments a map of additional argument names and values to pass to the job
+     * @param <AJ> the generic type of the job's arguments (used internally for type safety)
+     * @throws Exception if the job cannot be executed */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Map<String, Object> executeJobArguments) throws Exception {
         Map<String, JobArgument<?>> map = null;
         if (executeJobArguments != null && executeJobArguments.size() > 0) {
@@ -130,12 +142,16 @@ public class OrderProcessStep<A extends JobArguments> {
         executeJob(clazz, map, false);
     }
 
-    /** Execute another job<br />
-     * 
-     * @param <AJ>
-     * @param clazz
-     * @param executeJobArguments
-     * @throws Exception */
+    /** Executes another job of the specified job class with additional arguments.
+     * <p>
+     * This method behaves like {@link #executeJob(Class)}, which automatically populates all arguments from the current job step.<br/>
+     * Additionally, extra arguments can be provided via the {@code executeJobArguments} varargs.<br/>
+     * This can be helpful when some arguments are not set in the current job step or need to be calculated/recalculated for the job being executed.
+     *
+     * @param clazz the job class to execute
+     * @param executeJobArguments additional {@link JobArgument} objects to pass to the job
+     * @param <AJ> the generic type of the job's arguments (used internally for type safety)
+     * @throws Exception if the job cannot be executed */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, JobArgument<?>... executeJobArguments) throws Exception {
         executeJob(clazz, executeJobArguments == null || executeJobArguments.length == 0 ? null : Arrays.asList(executeJobArguments));
     }
@@ -277,10 +293,17 @@ public class OrderProcessStep<A extends JobArguments> {
         return cancelableResources;
     }
 
+    /** Returns the logger instance.
+     * 
+     * @return the {@link OrderProcessStepLogger} instance */
     public OrderProcessStepLogger getLogger() {
         return logger;
     }
 
+    /** Returns the output writer used by this step.<br/>
+     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+     *
+     * @return the {@link PrintWriter} for this step */
     public PrintWriter getOut() {
         if (internalStep == null) {
             return new PrintWriter(new StringWriter());
@@ -288,6 +311,10 @@ public class OrderProcessStep<A extends JobArguments> {
         return internalStep.out();
     }
 
+    /** Returns the error writer used by this step.<br/>
+     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+     *
+     * @return the {@link PrintWriter} for error output */
     public PrintWriter getErr() {
         if (internalStep == null) {
             return new PrintWriter(new StringWriter());
@@ -295,21 +322,30 @@ public class OrderProcessStep<A extends JobArguments> {
         return internalStep.err();
     }
 
+    /** Returns an object containing all declared arguments for this job.
+     * <p>
+     * The returned object extends {@link JobArguments}.
+     *
+     * @return the object holding all declared arguments */
     public A getDeclaredArguments() {
         return declaredArguments;
     }
 
+    /** Returns all declared arguments for this job as a list.
+     * <p>
+     * This is an alternative to {@link #getDeclaredArguments()}, providing the arguments as a {@link List} of {@link JobArgument} instances.
+     *
+     * @return a {@link List} containing all {@link JobArgument} instances declared for this job */
     public List<JobArgument<?>> getAllDeclaredArguments() {
         return allDeclaredArguments;
     }
 
-    public Map<String, Map<String, DetailValue>> getLastOutcomes() {
-        if (lastOutcomes == null) {
-            lastOutcomes = historicOutcomes2map();
-        }
-        return lastOutcomes;
-    }
-
+    /** Returns the arguments of all used job resources as a map.
+     * <p>
+     * The returned map contains resource argument names as keys and their corresponding {@link DetailValue} objects as values, each containing the name of the
+     * job resource and the resource argument's value.
+     *
+     * @return a {@link Map} of resource argument names to {@link DetailValue} objects */
     public Map<String, DetailValue> getJobResourcesArgumentsAsNameDetailValueMap() {
         if (jobResourcesValues == null) {
             jobResourcesValues = jobResources2map();
@@ -317,47 +353,128 @@ public class OrderProcessStep<A extends JobArguments> {
         return jobResourcesValues;
     }
 
-    public Map<String, String> getJobResourcesArgumentsAsNameValueStringMap() {
-        Map<String, String> result = new HashMap<>();
+    /** Returns the arguments of all used job resources as a simple name-value map.
+     * <p>
+     * Unlike {@link #getJobResourcesArgumentsAsNameDetailValueMap()}, this method returns a map where the values are the plain job resource argument values
+     * extracted from {@link DetailValue} objects, ignoring their source. The keys are the job resource argument names.
+     *
+     * @return a {@link Map} of job resource argument names to their plain values */
+    public Map<String, Object> getJobResourcesArgumentsAsNameValueMap() {
+        Map<String, Object> result = new HashMap<>();
         for (Map.Entry<String, DetailValue> entry : getJobResourcesArgumentsAsNameDetailValueMap().entrySet()) {
             String key = entry.getKey();
             if (key == null) {
                 continue;
             }
-            Object val = entry.getValue().getValue();
-            result.put(key, val == null ? null : val.toString());
+            result.put(key, entry.getValue().getValue());
         }
         return result;
     }
 
+    /** Returns the arguments of all used job resources as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getJobResourcesArgumentsAsNameValueMap()}, which returns plain values as {@link Object}, this method converts the job resource argument
+     * values from {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the job resource argument names.
+     *
+     * @return a {@link Map} of job resource argument names to their string values */
+    public Map<String, String> getJobResourcesArgumentsAsNameValueStringMap() {
+        return JobHelper.asNameValueStringMapFromMapWithObjectValue(getJobResourcesArgumentsAsNameValueMap());
+    }
+
+    /** Returns the environment variables declared in the job resources used by this job step.
+     * <p>
+     * The returned map contains the environment variable names as keys and their corresponding values as {@link String}.
+     *
+     * @return a {@link Map} of environment variable names to their values
+     * @throws JobProblemException if the job resources environment variables cannot be retrieved */
+    public Map<String, String> getJobResourcesEnv() throws JobProblemException {
+        if (internalStep == null) {
+            return null;
+        }
+        return JobHelper.getFromEither(internalStep.env()).entrySet().stream().filter(e -> e.getValue().isPresent()).collect(Collectors.toMap(
+                Map.Entry::getKey, e -> e.getValue().get()));
+    }
+
+    /** Returns the last outcomes of previous jobs as a nested map.
+     * <p>
+     * The outer map's keys are outcome statuses (e.g., "Succeeded" or "Failed").<br/>
+     * Each value is an inner map where the key is the outcome variable name and the value is a {@link DetailValue} object containing the outcome's variable
+     * source and its value.
+     *
+     * @return a {@link Map} of outcome status to a map of outcome variable names to {@link DetailValue} objects */
+    public Map<String, Map<String, DetailValue>> getLastOutcomes() {
+        if (lastOutcomes == null) {
+            lastOutcomes = historicOutcomes2map();
+        }
+        return lastOutcomes;
+    }
+
+    /** Returns the last succeeded outcomes of previous jobs as a map.
+     * <p>
+     * The returned map contains outcome variable names as keys and their corresponding {@link DetailValue} objects as values.
+     * <p>
+     * This is a shortcut for retrieving the "Succeeded" entries from {@link #getLastOutcomes()}.
+     *
+     * @return a {@link Map} of outcome variable names to {@link DetailValue} objects for succeeded outcomes */
     public Map<String, DetailValue> getLastSucceededOutcomes() {
         return getLastOutcomes().get(OrderOutcome.Succeeded.class.getSimpleName());
     }
 
+    /** Returns the last succeeded outcomes of previous jobs as a simple name-value map.
+     * <p>
+     * Unlike {@link #getLastSucceededOutcomes()}, this method returns a map where the values are the plain outcome values extracted from {@link DetailValue}
+     * objects, ignoring their source. The keys are the outcome variable names.
+     *
+     * @return a {@link Map} of outcome variable names to their plain values for succeeded outcomes */
     public Map<String, Object> getLastSucceededOutcomesAsNameValueMap() {
         return JobHelper.asNameValueMapFromMapWithDetailValue(getLastSucceededOutcomes());
     }
 
+    /** Returns the last succeeded outcomes of previous jobs as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getLastSucceededOutcomesAsNameValueMap()}, which returns plain values as {@link Object}, this method converts the outcome values from
+     * {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the outcome variable names.
+     *
+     * @return a {@link Map} of outcome variable names to their string values for succeeded outcomes */
     public Map<String, String> getLastSucceededOutcomesAsNameValueStringMap() {
         return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastSucceededOutcomes());
     }
 
+    /** Returns the last failed outcomes of previous jobs as a map.
+     * <p>
+     * The returned map contains outcome variable names as keys and their corresponding {@link DetailValue} objects as values.
+     * <p>
+     * This is a shortcut for retrieving the "Failed" entries from {@link #getLastOutcomes()}.
+     *
+     * @return a {@link Map} of outcome variable names to {@link DetailValue} objects for failed outcomes */
     public Map<String, DetailValue> getLastFailedOutcomes() {
         return getLastOutcomes().get(OrderOutcome.Failed.class.getSimpleName());
     }
 
+    /** Returns the last failed outcomes of previous jobs as a simple name-value map.
+     * <p>
+     * Unlike {@link #getLastFailedOutcomes()}, this method returns a map where the values are the plain outcome values extracted from {@link DetailValue}
+     * objects, ignoring their source. The keys are the outcome variable names.
+     *
+     * @return a {@link Map} of outcome variable names to their plain values for failed outcomes */
     public Map<String, Object> getLastFailedOutcomesAsNameValueMap() {
         return JobHelper.asNameValueMapFromMapWithDetailValue(getLastFailedOutcomes());
     }
 
+    /** Returns the last failed outcomes of previous jobs as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getLastFailedOutcomesAsNameValueMap()}, which returns plain values as {@link Object}, this method converts the outcome values from
+     * {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the outcome variable names.
+     *
+     * @return a {@link Map} of outcome variable names to their string values for failed outcomes */
     public Map<String, String> getLastFailedOutcomesAsNameValueStringMap() {
         return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastFailedOutcomes());
     }
 
-    protected BlockingInternalJob.Step getInternalStep() {
-        return internalStep;
-    }
-
+    /** Returns the declared argument with the specified name.
+     *
+     * @param name the name of the argument to retrieve
+     * @return the {@link JobArgument} corresponding to the given name, or {@code null} if no such argument exists */
     public JobArgument<?> getDeclaredArgument(String name) {
         if (allDeclaredArguments != null) {
             return allDeclaredArguments.stream().filter(a -> (a.getName() != null && a.getName().equals(name)) || (a.getNameAliases() != null && a
@@ -366,46 +483,51 @@ public class OrderProcessStep<A extends JobArguments> {
         return null;
     }
 
-    /** JobArgument<?> instead of JobArgument<A> because of dynamicArguments */
+    /** Returns the value of the declared argument with the specified name.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the value of the argument as an {@link Object}, or {@code null} if no such argument exists */
     public Object getDeclaredArgumentValue(String name) {
-        JobArgument<?> a = getDeclaredArgument(name);
-        if (a != null) {
-            return a.getValue();
-        }
-        return null;
+        // JobArgument<?> instead of JobArgument<A> because of dynamicArguments
+        JobArgument<?> arg = getDeclaredArgument(name);
+        return arg == null ? null : arg.getValue();
     }
 
+    /** Returns the value of the declared argument with the specified name as a {@link String}.
+     * <p>
+     * Unlike {@link #getDeclaredArgumentValue()}, which returns the value as an {@link Object}, this method converts the argument value into a {@link String}.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the argument value as a {@link String}, or {@code null} if no such argument exists */
     public String getDeclaredArgumentValueAsString(String name) {
         Object obj = getDeclaredArgumentValue(name);
         return obj == null ? null : obj.toString();
     }
 
-    private String getDisplayValue(String name) {
-        JobArgument<?> ar = allArguments.get(name);
-        if (ar == null) {
-            return DisplayMode.UNKNOWN.getValue();
+    /** Returns the value of the argument with the specified name, searching all available arguments.
+     * <p>
+     * Unlike {@link #getDeclaredArgumentValue(String)}, which only looks at declared arguments, this method searches through all arguments of the job,
+     * including declared, outcome, resource-provided arguments, etc.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the argument value as an {@link Object}, or {@code null} if no such argument exists */
+    public Object getArgumentValue(String name) {
+        if (allArguments == null) {
+            return null;
         }
-        if (logger.isDebugEnabled()) {
-            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(ar.getValue(), ar.getDisplayMode());
-        }
-        return ar.getDisplayValue();
+        JobArgument<?> arg = allArguments.get(name);
+        return arg == null ? null : arg.getValue();
     }
 
-    private String getDisplayValue(String name, Object originalValue) {
-        if (allArguments == null) {
-            if (logger.isDebugEnabled()) {
-                return SOSArgumentHelper.getDisplayValue(originalValue, DisplayMode.UNMASKED);
-            }
-            return DisplayMode.UNKNOWN.getValue();
-        }
-        JobArgument<?> ar = allArguments.get(name);
-        if (ar == null) {
-            return DisplayMode.UNKNOWN.getValue();
-        }
-        if (logger.isDebugEnabled()) {
-            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(originalValue, ar.getDisplayMode());
-        }
-        return SOSArgumentHelper.getDisplayValue(originalValue, ar.getDisplayMode());
+    /** Returns the value of the declared argument with the specified name as a {@link String}, searching all available arguments.
+     * <p>
+     * Unlike {@link #getArgumentValue()}, which returns the value as an {@link Object}, this method converts the argument value into a {@link String}.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the argument value as a {@link String}, or {@code null} if no such argument exists */
+    public String getArgumentValueAsString(String name) {
+        Object obj = getArgumentValue(name);
+        return obj == null ? null : obj.toString();
     }
 
     /** Retrieves the value of the specified argument **before it has been categorized or finalized**.
@@ -642,31 +764,75 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
+    /** Returns all available arguments as a map.
+     * <p>
+     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br/>
+     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of argument names to {@link JobArgument} objects */
     public Map<String, JobArgument<?>> getAllArguments() {
         return allArguments;
     }
 
+    /** Returns all available arguments of the specified type as a map.
+     * <p>
+     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br />
+     * The {@code type} parameter filters which arguments to include,<br/>
+     * e.g., {@link JobArgument.Type#DECLARED} or {@link JobArgument.Type#UNDECLARED}.
+     *
+     * @param type the type of arguments to include in the returned map
+     * @return a {@link Map} of argument names to {@link JobArgument} objects of the specified type */
     public Map<String, JobArgument<?>> getAllArguments(JobArgument.Type type) {
         return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
                 Map.Entry::getValue));
     }
 
+    /** Returns all available arguments as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of argument names to their values */
     public Map<String, Object> getAllArgumentsAsNameValueMap() {
         return JobHelper.asNameValueMap(allArguments);
     }
 
+    /** Returns all available arguments as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getAllArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
+     * The map contains argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of argument names to their string values */
     public Map<String, String> getAllArgumentsAsNameValueStringMap() {
         return JobHelper.asNameValueStringMap(allArguments);
     }
 
+    /** Returns all undeclared arguments as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * This includes undeclared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of undeclared argument names to their values */
     public Map<String, Object> getUndeclaredArgumentsAsNameValueMap() {
         return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
     }
 
+    /** Returns all undeclared arguments as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getUndeclaredArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into
+     * {@link String}. The map contains argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of undeclared argument names to their string values */
     public Map<String, String> getUndeclaredArgumentsAsNameValueStringMap() {
         return JobHelper.asNameValueStringMap(getAllArguments(Type.UNDECLARED));
     }
 
+    /** Returns the arguments provided by the order as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * These arguments are sourced specifically from the order.
+     *
+     * @return a {@link Map} of order argument names to their values */
     public Map<String, Object> getOrderArgumentsAsNameValueMap() {
         if (internalStep == null) {
             return Collections.emptyMap();
@@ -674,20 +840,24 @@ public class OrderProcessStep<A extends JobArguments> {
         return JobHelper.asJavaValues(internalStep.order().arguments());
     }
 
+    /** Returns the arguments provided by the order as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getOrderArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
+     * The map contains order argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of order argument names to their string values */
     public Map<String, String> getOrderArgumentsAsNameValueStringMap() {
         return JobHelper.asNameValueStringMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
     }
 
-    @SuppressWarnings("unused")
-    private Object getArgumentValue(String name) {
-        if (allArguments.containsKey(name)) {
-            return allArguments.get(name).getValue();
-        }
-        try {
-            return getNamedValue(name);
-        } catch (JobProblemException e) {
-            return null;
-        }
+    /** Returns the step outcome object used to define the result of this job step.
+     * <p>
+     * The returned {@link OrderProcessStepOutcome} can be used, for example, to set the return code and assign outcome variables.<br/>
+     * Both the return code and the outcome variables are automatically propagated to and available for subsequent jobs in the workflow.
+     *
+     * @return the {@link OrderProcessStepOutcome} for this job step */
+    public OrderProcessStepOutcome getOutcome() {
+        return outcome;
     }
 
     protected Object getNamedValue(final JobArgument<?> arg) throws JobProblemException {
@@ -753,6 +923,21 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
+    /** Returns an object containing all declared arguments of the specified class.
+     * <p>
+     * These arguments are automatically populated as declared in the current job step instance.<br/>
+     * The returned object extends {@link ASOSArguments}.
+     * <p>
+     * Example:
+     * 
+     * <pre>
+     * 
+     * CredentialStoreArguments csArgs = js7Step.getIncludedArguments(CredentialStoreArguments.class);
+     * </pre>
+     *
+     * @param clazz the class of the arguments to retrieve
+     * @return the object holding all declared arguments of the specified class
+     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
     public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws JobArgumentException {
         try {
             T instance = clazz.getDeclaredConstructor().newInstance();
@@ -770,11 +955,24 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
-    /** ScriptEngine method
+    /** Returns an object containing all declared arguments of the specified class, identified by its class key.
+     * <p>
+     * This method is intended for use in GraalVM jobs or scenarios where the class type is not directly available, allowing a simpler call using a string key
+     * instead of a Java {@code Class} object.
+     * <p>
+     * Internally, this method calls {@link #getIncludedArguments(Class)}.<br />
+     * The returned object extends {@link ASOSArguments}.
+     * <p>
+     * Example GraalVM JavaScript:
      * 
-     * @param clazzKey
-     * @return
-     * @throws JobArgumentException */
+     * <pre>
+     * 
+     * var csArgs = js7Step.getIncludedArguments("CREDENTIAL_STORE");
+     * </pre>
+     *
+     * @param clazzKey the class key of the arguments to retrieve
+     * @return the object holding all declared arguments of the specified class
+     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
     public ASOSArguments getIncludedArguments(String clazzKey) throws JobArgumentException {
         if (clazzKey == null) {
             return null;
@@ -905,6 +1103,34 @@ public class OrderProcessStep<A extends JobArguments> {
         return workflowPosition;
     }
 
+    private String getDisplayValue(String name) {
+        JobArgument<?> ar = allArguments.get(name);
+        if (ar == null) {
+            return DisplayMode.UNKNOWN.getValue();
+        }
+        if (logger.isDebugEnabled()) {
+            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(ar.getValue(), ar.getDisplayMode());
+        }
+        return ar.getDisplayValue();
+    }
+
+    private String getDisplayValue(String name, Object originalValue) {
+        if (allArguments == null) {
+            if (logger.isDebugEnabled()) {
+                return SOSArgumentHelper.getDisplayValue(originalValue, DisplayMode.UNMASKED);
+            }
+            return DisplayMode.UNKNOWN.getValue();
+        }
+        JobArgument<?> ar = allArguments.get(name);
+        if (ar == null) {
+            return DisplayMode.UNKNOWN.getValue();
+        }
+        if (logger.isDebugEnabled()) {
+            return SOSArgumentHelper.getDisplayValueIgnoreUnknown(originalValue, ar.getDisplayMode());
+        }
+        return SOSArgumentHelper.getDisplayValue(originalValue, ar.getDisplayMode());
+    }
+
     private void setOrderPreparationParameterNames() {
         if (orderPreparationParameterNames == null) {
             if (internalStep == null) {
@@ -974,14 +1200,6 @@ public class OrderProcessStep<A extends JobArguments> {
             return JobHelper.DEFAULT_RETURN_CODE_FAILED;
         }
         return returnCode;
-    }
-
-    public Map<String, String> getJobResourcesEnv() throws JobProblemException {
-        if (internalStep == null) {
-            return null;
-        }
-        return JobHelper.getFromEither(internalStep.env()).entrySet().stream().filter(e -> e.getValue().isPresent()).collect(Collectors.toMap(
-                Map.Entry::getKey, e -> e.getValue().get()));
     }
 
     private List<HistoricOutcome> getEngineHistoricOutcomes() {
@@ -1279,10 +1497,6 @@ public class OrderProcessStep<A extends JobArguments> {
             resolverPrefixes = new ArrayList<>();
         }
         return resolverPrefixes;
-    }
-
-    public OrderProcessStepOutcome getOutcome() {
-        return outcome;
     }
 
     protected class ExecuteJobBean {
