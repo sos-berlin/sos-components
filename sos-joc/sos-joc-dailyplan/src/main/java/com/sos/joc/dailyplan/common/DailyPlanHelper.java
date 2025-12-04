@@ -455,7 +455,7 @@ public class DailyPlanHelper {
         return result;
     }
 
-    public static void mapMissingNonWorkingDayCalendars(String caller, InventoryDBLayer dbLayer, List<String> currentNonWorkingDayCalendarsNames,
+    public static void mapMissingNonWorkingDayCalendars(String logPrefix, InventoryDBLayer dbLayer, List<String> currentNonWorkingDayCalendarsNames,
             Map<String, Calendar> allNonWorkingDayCalendars) throws Exception {
         List<String> missingNames = currentNonWorkingDayCalendarsNames.stream().distinct().filter(name -> !allNonWorkingDayCalendars.containsKey(
                 name)).collect(Collectors.toList());
@@ -464,12 +464,13 @@ public class DailyPlanHelper {
             return;
         }
 
+        logPrefix = logPrefix.startsWith("[") ? logPrefix : "[" + logPrefix + "]";
         List<DBItemInventoryReleasedConfiguration> dbItems = null;
         boolean newSession = false;
         try {
             newSession = dbLayer.getSession() == null;
             if (newSession) {
-                dbLayer.setSession(Globals.createSosHibernateStatelessConnection(caller + "-mapMissingNonWorkingDayCalendars"));
+                dbLayer.setSession(Globals.createSosHibernateStatelessConnection(logPrefix + "-mapMissingNonWorkingDayCalendars"));
             }
             dbItems = dbLayer.getReleasedConfigurations(missingNames, ConfigurationType.NONWORKINGDAYSCALENDAR);
         } finally {
@@ -481,8 +482,8 @@ public class DailyPlanHelper {
         if (missingNames.size() != dbItemsCount) {
             // throw new DBMissingDataException(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller,
             // SOSString.join(missingNames), SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList()))));
-            LOGGER.info(String.format("[%s][mapMissingNonWorkingDayCalendars][missingNames=%s][found released]%s", caller, SOSString.join(
-                    missingNames), SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList()))));
+            LOGGER.info(String.format("%s[mapMissingNonWorkingDayCalendars][missingNames=%s][found released=%s]released=%s", logPrefix, SOSString
+                    .join(missingNames), dbItemsCount, SOSString.join(dbItems.stream().map(i -> i.getName()).collect(Collectors.toList()))));
         }
 
         if (dbItemsCount > 0) {
@@ -494,8 +495,8 @@ public class DailyPlanHelper {
                 c.setPath(dbItem.getPath());
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[" + caller + "][mapMissingNonWorkingDayCalendars][NonWorkingDaysCalendar=%s]%s", c.getName(),
-                            SOSString.toString(c, true)));
+                    LOGGER.debug(String.format(logPrefix + "[mapMissingNonWorkingDayCalendars][NonWorkingDaysCalendar=%s]%s", c.getName(), SOSString
+                            .toString(c, true)));
                 }
 
                 allNonWorkingDayCalendars.put(c.getName(), c);

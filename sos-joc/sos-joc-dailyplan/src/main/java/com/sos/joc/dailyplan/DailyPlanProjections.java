@@ -74,6 +74,7 @@ public class DailyPlanProjections {
     private Map<String, Long> workflowsAvg = new HashMap<>();
     private Map<String, ScheduleOrderCounter> schedulesOrders = new HashMap<>();
 
+    // Cheap atomic read; negligible unless millions+ calls/sec
     private final AtomicBoolean prioRequested = new AtomicBoolean(false);
 
     private DailyPlanProjections() {
@@ -249,7 +250,7 @@ public class DailyPlanProjections {
 
                 for (DBItemDailyPlanSubmission s : l) {
                     if (prioRequested.get()) {
-                        LOGGER.info(getAbortedMsg(logPrefix, "calculatePlanned"));
+                        LOGGER.info(getAbortedMsg(logPrefix, "calculatePlanned stopped at submission " + getSubmissionInfo(s)));
                         return result;
                     }
 
@@ -262,6 +263,10 @@ public class DailyPlanProjections {
                     String submissionDateTime = SOSDate.getDateTimeAsString(result.plannedLastDate);
                     int orders = 0;
                     try (ScrollableResults<DBItemDailyPlanOrder> sr = dbLayer.getDailyPlanOrdersBySubmission(s.getId())) {
+                        if (prioRequested.get()) {
+                            LOGGER.info(getAbortedMsg(logPrefix, "calculatePlanned stopped at submission " + getSubmissionInfo(s) + " orders"));
+                            return result;
+                        }
                         // TODO manage cyclic jobs more performantly
                         if (sr != null) {
                             Set<String> cyclic = new HashSet<>();
@@ -519,6 +524,11 @@ public class DailyPlanProjections {
             return;
         }
 
+        if (prioRequested.get()) {
+            LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly"));
+            return;
+        }
+
         String lp = logPrefix + "[dbInsertMonthly]";
         Date created = new Date();
         List<DBItemDailyPlanProjection> items = new ArrayList<>();
@@ -527,7 +537,7 @@ public class DailyPlanProjections {
             // String year = yearEntry.getKey();
             m: for (Map.Entry<String, MonthItem> monthEntry : yearEntry.getValue().getAdditionalProperties().entrySet()) {
                 if (prioRequested.get()) {
-                    LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly"));
+                    LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly stopped at " + monthEntry.getKey()));
                     return;
                 }
 
@@ -558,7 +568,7 @@ public class DailyPlanProjections {
             try (SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-dbInsertMonthly")) {
                 for (DBItemDailyPlanProjection item : items) {
                     if (prioRequested.get()) {
-                        LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly"));
+                        LOGGER.info(getAbortedMsg(logPrefix, "dbInsertMonthly save stopped at " + item.getId()));
                         return;
                     }
                     session.save(item);
@@ -665,7 +675,12 @@ public class DailyPlanProjections {
         final AtomicReference<MonthsItem> msiRef = new AtomicReference<>(msi);
         SOSDate.getDatesInRange(dateFrom, dateTo).stream().filter(date -> {
             return plannedDates == null || !plannedDates.contains(date);
-        }).forEach(asDailyPlanSingleDate -> {
+        }).anyMatch(asDailyPlanSingleDate -> {
+            if (prioRequested.get()) {
+                LOGGER.info(getAbortedMsg(logPrefix, "getProjectionYear stopped at " + asDailyPlanSingleDate));
+                return true; // stop stream
+            }
+
             // SOSDate.getDatesInRange(dateFrom, dateTo).stream().parallel().forEach(asDailyPlanSingleDate -> {
             try {
                 settings.setDailyPlanDate(SOSDate.getDate(asDailyPlanSingleDate));
@@ -706,6 +721,8 @@ public class DailyPlanProjections {
             } catch (Exception e) {
                 LOGGER.info(lp + "[" + asDailyPlanSingleDate + "]" + e, e);
             }
+
+            return false; // continue stream
         });
 
         YearsItem result = new YearsItem();
@@ -837,6 +854,12 @@ public class DailyPlanProjections {
 
     private String getAbortedMsg(String logPrefix, String caller) {
         return String.format("%s[%s]%s", logPrefix, caller, MSG_ABORTED);
+    }
+
+    private String getSubmissionInfo(DBItemDailyPlanSubmission s) {
+        String sd = SOSDate.tryGetDateTimeAsString(s.getSubmissionForDate());
+        String c = SOSDate.tryGetDateTimeAsString(s.getCreated());
+        return sd + "(id=" + s.getId() + ", created=" + c + ")";
     }
 
     private class DailyPlanResult {

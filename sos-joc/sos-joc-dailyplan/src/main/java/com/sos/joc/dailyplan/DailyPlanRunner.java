@@ -112,15 +112,23 @@ import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 /** DailyPlanRunner as a service perform 2 steps:<br/>
- * 1) handle/generate daily plan<br/>
- * 2) generate projections<br/>
- * - if projections generations is already active(e.g. started by the recreate projection web service), it is cancelled because step 1) generates the most
- * current daily plan<br/>
- */
+ * 1) Handle/Generate Daily Plan<br/>
+ * 2) Generate Projections<br/>
+ * - if a Projections generations is already active(e.g. started by the recreate projection web service):<br/>
+ * -- DailyPlanRunner as service sends a request to the current Projections generation to stop,<br/>
+ * --- this is necessary because step 1) generates the most current Daily Plan<br/>
+ * -- DailyPlanRunner as service waits up to the maximum duration defined by RECREATE_PROJECTIONS_BY_SERVICE_* properties<br />
+ * --- if the maximum duration is exceeded, DailyPlanRunner as service skips the Projection generation */
 public class DailyPlanRunner extends TimerTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRunner.class);
     private static final String IDENTIFIER = DailyPlanRunner.class.getSimpleName();
+
+    // maximum total duration: MAX_TRIES * TIMEOUT_SECONDS = 5 minutes
+    private static final int RECREATE_PROJECTIONS_BY_SERVICE_MAX_TRIES = 5 * 60;
+    private static final long RECREATE_PROJECTIONS_BY_SERVICE_TRIES_TIMEOUT_SECONDS = 1;
+    // log progress every n tries
+    private static final int RECREATE_PROJECTIONS_BY_SERVICE_TRIES_LOG_STEP = 30;
 
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
@@ -212,22 +220,20 @@ public class DailyPlanRunner extends TimerTask {
     // see DailyPlanRunner class annotation
     private void recreateProjectionsByService() {
         try {
-            int maxTries = 60;
-            long timeout = 1;
-
             LOGGER.info(getRecreateProjectionMsg(settings));
 
-            for (int i = 0; i < maxTries; i++) {
+            for (int i = 0; i < RECREATE_PROJECTIONS_BY_SERVICE_MAX_TRIES; i++) {
                 if (cancel.get()) {
                     return;
                 }
                 if (isRecreateProjectionsAlreadyRunning(recreateProjections(settings))) {// e.g. started by a web service
-                    int a = i + 1;
-                    if (a % 10 == 0) {
-                        LOGGER.info(String.format("[%s][recreateProjectionsByService]attempt=%s of max=%s", settings.getStartMode(), a, maxTries));
+                    int attempt = i + 1;
+                    if (attempt % RECREATE_PROJECTIONS_BY_SERVICE_TRIES_LOG_STEP == 0) {
+                        LOGGER.info(String.format("[%s][recreateProjectionsByService]attempt=%s of max=%s", settings.getStartMode(), attempt,
+                                RECREATE_PROJECTIONS_BY_SERVICE_MAX_TRIES));
                     }
                     try {
-                        TimeUnit.SECONDS.sleep(timeout);
+                        TimeUnit.SECONDS.sleep(RECREATE_PROJECTIONS_BY_SERVICE_TRIES_TIMEOUT_SECONDS);
                     } catch (InterruptedException e) {
                         return;
                     }
@@ -303,8 +309,8 @@ public class DailyPlanRunner extends TimerTask {
                 if (controllerSchedules.size() > 0) {
                     LOGGER.info(String.format("[%s][%s][%s][Plan Order automatically]found %s schedules", startupMode, method, controllerId,
                             controllerSchedules.size()));
-                    
-                    //JOC-2140: one addOrders test call without orders to avoid 'invalid session token'-problem
+
+                    // JOC-2140: one addOrders test call without orders to avoid 'invalid session token'-problem
                     try {
                         ControllerApi.of(controllerId).addOrders(Flux.empty());
                         TimeUnit.MILLISECONDS.sleep(100);
@@ -353,7 +359,7 @@ public class DailyPlanRunner extends TimerTask {
             }
 
             if (ageOfPlansToBeClosedAutomatically == 0) {
-                LOGGER.info(String.format("[%s][closePlans][skip] because of daily plan settings", startupMode));
+                LOGGER.info(String.format("[%s][closeOldPlans][skip] because of daily plan settings", startupMode));
             }
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
                 | JocConfigurationException | DBOpenSessionException e) {
@@ -618,8 +624,8 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private static List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflow(String controllerId) throws SOSHibernateException,
-            IOException {
+    private static List<DBBeanReleasedSchedule2DeployedWorkflow> getReleasedSchedule2DeployedWorkflow(String controllerId)
+            throws SOSHibernateException, IOException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
@@ -803,7 +809,8 @@ public class DailyPlanRunner extends TimerTask {
         return SOSAuthFolderPermissions.isPermittedForFolder(DailyPlanHelper.getFolderFromPath(calendar.getPath()), settings.getPermittedFolders());
     }
 
-    private static List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar) throws SOSHibernateException {
+    private static List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar)
+            throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
@@ -866,7 +873,7 @@ public class DailyPlanRunner extends TimerTask {
                     ld = ld.minusDays(Integer.valueOf(ageOfPlansToBeClosedAutomatically - 1).longValue());
                 }
                 String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
-                LOGGER.info(String.format("[%s][closePlans][%s]older than %s", startupMode, controllerId, date));
+                LOGGER.info(String.format("[%s][closeOldPlans][%s]older than %s", startupMode, controllerId, date));
                 PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
                 Predicate<Map.Entry<PlanId, JPlan>> isDailyPlanPlan = e -> e.getKey().planSchemaId().equals(dailyPlanSchemaId);
                 Predicate<Map.Entry<PlanId, JPlan>> planIsOlder = e -> e.getKey().planKey().string().compareTo(date) < 0;
@@ -875,13 +882,13 @@ public class DailyPlanRunner extends TimerTask {
 
                 proxy.currentState().toPlan().entrySet().stream().filter(isDailyPlanPlan).filter(planIsOlder).filter(isOpen).map(Map.Entry::getKey)
                         .map(pId -> {
-                            LOGGER.info(String.format("[%s][closePlan][%s]try %s/%s", startupMode, controllerId, PlanSchemas.DailyPlanPlanSchemaId,
-                                    pId.planKey().string()));
+                            LOGGER.info(String.format("[%s][closeOldPlans][%s]try %s/%s", startupMode, controllerId,
+                                    PlanSchemas.DailyPlanPlanSchemaId, pId.planKey().string()));
                             return JControllerCommand.changePlan(pId, JPlanStatus.Closed());
                         }).map(JControllerCommand::apply).forEach(command -> proxy.api().executeCommand(command).thenAccept(e -> ProblemHelper
                                 .postProblemEventIfExist(e, null, null, controllerId)));
             } catch (Exception e) {
-                LOGGER.error(String.format("[%s][closePlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+                LOGGER.error(String.format("[%s][closeOldPlans][%s]fails: %s", startupMode, controllerId, e.toString()), e);
             }
         }
     }
@@ -894,7 +901,7 @@ public class DailyPlanRunner extends TimerTask {
             ld = ld.minusMonths(1l);
             String date = ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-            LOGGER.info(String.format("[%s][unknownPlansCanBeOpenFrom][%s] %s", startupMode, controllerId, date));
+            LOGGER.info(String.format("[%s][setUnknownPlansAreOpenFromDate][%s] %s", startupMode, controllerId, date));
             PlanSchemaId dailyPlanSchemaId = PlanSchemaId.of(PlanSchemas.DailyPlanPlanSchemaId);
             JControllerProxy proxy = Proxy.of(controllerId);
 
@@ -915,7 +922,7 @@ public class DailyPlanRunner extends TimerTask {
             }
 
         } catch (Exception e) {
-            LOGGER.error(String.format("[%s][unknownPlansAreOpenFrom][%s]fails: %s", startupMode, controllerId, e.toString()), e);
+            LOGGER.error(String.format("[%s][setUnknownPlansAreOpenFromDate][%s]fails: %s", startupMode, controllerId, e.toString()), e);
         }
     }
 
