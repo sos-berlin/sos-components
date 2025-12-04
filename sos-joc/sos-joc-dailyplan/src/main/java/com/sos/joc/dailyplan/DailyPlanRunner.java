@@ -140,6 +140,7 @@ public class DailyPlanRunner extends TimerTask {
 
     private Map<String, Calendar> calculateStartTimesCalendars = new HashMap<String, Calendar>();
     private Map<String, Calendar> calculateStartTimesNonWorkingCalendars = new HashMap<String, Calendar>();
+    private Set<String> calculateStartTimesNonWorkingCalendarsNotReleased = new HashSet<>();
 
     public DailyPlanRunner(DailyPlanSettings settings) {
         this.settings = settings;
@@ -207,6 +208,7 @@ public class DailyPlanRunner extends TimerTask {
     private void clear() {
         calculateStartTimesCalendars.clear();
         calculateStartTimesNonWorkingCalendars.clear();
+        calculateStartTimesNonWorkingCalendarsNotReleased.clear();
     }
 
     private boolean isAutomaticStart() {
@@ -1095,8 +1097,14 @@ public class DailyPlanRunner extends TimerTask {
                                 .toString(restrictions)));
                     }
                     // all NonWorkingDaysCalendars - merged result of "baseCalendar.getExcludes" and "restrictionsCalendar.getExcludes"
-                    Map<String, Calendar> mergedNonWorkingDayCalendars = getMergedNonWorkingDayCalendars(isDebugEnabled, logPrefix, invDbLayer,
-                            calendar, assignedCalendar);
+                    Map<String, Calendar> mergedNonWorkingDayCalendars = null;
+                    try {
+                        mergedNonWorkingDayCalendars = getMergedNonWorkingDayCalendars(isDebugEnabled, logPrefix, invDbLayer, calendar,
+                                assignedCalendar);
+                    } catch (DBMissingDataException e) {
+                        LOGGER.warn(String.format("%s[skip][not found released NonWorkingDayCalendar(s)]%s", logPrefix, e.getMessage()));
+                        continue;
+                    }
 
                     int plannedOrdersCount = 0;
                     List<String> frequencyResolverDates = null;
@@ -1365,14 +1373,24 @@ public class DailyPlanRunner extends TimerTask {
 
         Map<String, Calendar> m = new HashMap<>();
         if (mergedNames.size() > 0) {
+            if (calculateStartTimesNonWorkingCalendarsNotReleased.containsAll(mergedNames)) {
+                throw new DBMissingDataException(SOSString.join(mergedNames));
+            }
+
             DailyPlanHelper.mapMissingNonWorkingDayCalendars(logPrefix, dbLayer, mergedNames.stream().collect(Collectors.toList()),
                     calculateStartTimesNonWorkingCalendars);
+            Set<String> notReleased = new HashSet<>();
             for (String name : mergedNames) {
                 Calendar c = calculateStartTimesNonWorkingCalendars.get(name);
                 if (c == null) {
+                    notReleased.add(name);
                     continue;
                 }
                 m.put(name, c);
+            }
+            if (notReleased.size() > 0) {
+                calculateStartTimesNonWorkingCalendarsNotReleased.addAll(notReleased);
+                throw new DBMissingDataException(SOSString.join(notReleased));
             }
         }
         return m;
