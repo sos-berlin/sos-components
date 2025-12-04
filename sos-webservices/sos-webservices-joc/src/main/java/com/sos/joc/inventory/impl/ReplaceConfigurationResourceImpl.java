@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -120,10 +121,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 events.add(item.getFolder());
                 JocInventory.updateConfiguration(dbLayer, item);
             }
-            
-            DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-            depDbLayer.updateEnforce(dBFolderContent.stream().map(DBItemInventoryConfiguration::getId).toList());
-            
+            DependencyResolver.updateDependencies(dBFolderContent);
             session.commit();
             auditLogObjectsLogging.log();
             

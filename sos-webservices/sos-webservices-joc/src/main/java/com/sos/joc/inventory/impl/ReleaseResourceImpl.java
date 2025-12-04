@@ -42,6 +42,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.PublishSemaphore;
@@ -206,6 +207,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
     private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
             JocError jocError, DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders) {
+        Set<DBItemInventoryConfiguration> updateDependenciesFor = new HashSet<>();
         List<Err419> bulkErrors = new ArrayList<>();
         for (RequestFilter requestFilter : toDelete) {
             if (requestFilter == null) {
@@ -213,6 +215,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                updateDependenciesFor.add(conf);
                 delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, auditLogObjectsLogging, true);
             } catch (DBMissingDataException ex) {
                 // ignore missing objects at deletion
@@ -223,6 +226,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     bulkErrors.add(new BulkError(LOGGER).get(ex, jocError, "Id: " + requestFilter.getId()));
                 }
             }
+        }
+        try {
+            DependencyResolver.updateDependencies(updateDependenciesFor);
+        } catch (Exception e) {
+            LOGGER.error("dependencies not updated due to: " , e);
         }
         return bulkErrors;
 
@@ -272,6 +280,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions, JocError jocError,
             DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders, boolean preDeploy) {
 
+        Set<DBItemInventoryConfiguration> updateDependenciesFor = new HashSet<>();
         List<Err419> bulkErrors = new ArrayList<>();
         Map<String, Workflow> cachedWorkflows = new HashMap<>();
         for (RequestFilter requestFilter : toUpdate) {
@@ -280,6 +289,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                updateDependenciesFor.add(conf);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
                     bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging, preDeploy));
                     JocInventory.postEvent(conf.getFolder());
@@ -393,8 +403,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setModified(dbAuditLog.getCreated());
         dbLayer.getSession().update(conf);
         // after successful update, set enforce flag to false for related dependencies 
-        PublishUtils.resetDependenciesEnforcementAfterPublish(Collections.singleton(conf.getId()), dbLayer.getSession());
-
+        DependencyResolver.updateDependencies(conf);
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));
 
