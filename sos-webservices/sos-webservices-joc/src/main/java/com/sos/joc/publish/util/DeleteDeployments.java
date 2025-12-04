@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -274,10 +275,10 @@ public class DeleteDeployments {
                 }
                 if(!itemsFromTrashByType.isEmpty()) {
                     Set<String> parentFolders = new HashSet<String>();
+                    List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
                     for (ConfigurationType objType : RESTORE_ORDER) {
                         Set<DBItemInventoryConfigurationTrash> itemsFromTrash = itemsFromTrashByType.get(objType.intValue());
                         if(itemsFromTrash != null) {
-                            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
                             for (DBItemInventoryConfigurationTrash trashItem : itemsFromTrash) {
                                 if (trashItem != null) {
                                     parentFolders.add(trashItem.getFolder());
@@ -287,9 +288,9 @@ public class DeleteDeployments {
                                     invDbLayer.getSession().delete(trashItem);
                                 }
                             }
-                            DependencyResolver.updateDependencies(updated);
                         }
                     }
+                    DependencyResolver.updateDependencies(updated);
                     for(String parentFolder : parentFolders) {
                         JocInventory.makeParentDirs(invDbLayer, Paths.get(parentFolder), ConfigurationType.FOLDER);
                         JocInventory.postFolderEvent(parentFolder);
@@ -492,22 +493,32 @@ public class DeleteDeployments {
             String accessToken, JocError jocError, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
         SOSHibernateSession newHibernateSession = null;
         try {
+            newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
+            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+            Map<DBItemDeploymentHistory, DBItemInventoryConfiguration> toUpdate = optimisticEntries.stream().collect(Collectors.toMap(Function.identity(), 
+                    item-> {
+                        try {
+                            return  dbLayer.getSession().get(DBItemInventoryConfiguration.class, item.getInventoryConfigurationId());
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        }
+                    }));
             if (either.isLeft()) {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
                 newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
-                final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 // update all previously optimistically stored entries with the error message and change the state
+                Set<DBItemInventoryConfiguration> updated = new HashSet<>();
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
                     optimistic.setDeleteDate(null);
                     dbLayer.getSession().update(optimistic);
-                    DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(optimistic.getName(), optimistic.getType());
+                    DBItemInventoryConfiguration orig = toUpdate.get(optimistic);
                     if (orig != null) {
                         orig.setDeployed(true);
                         dbLayer.getSession().update(orig);
@@ -531,6 +542,7 @@ public class DeleteDeployments {
                     UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId).thenAccept(either2 -> processAfterRevoke(either2,
                             controllerId, account, commitId2, accessToken, jocError));
                 }
+                DependencyResolver.updateDependencies(toUpdate.values());
             }
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
