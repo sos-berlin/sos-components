@@ -44,6 +44,7 @@ import com.sos.joc.model.plan.Plan;
 import com.sos.joc.model.plan.Plans;
 import com.sos.joc.model.plan.PlansFilter;
 import com.sos.joc.model.plan.PlansOpenCloseFilter;
+import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.plan.common.PlanHelper;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.joc.plan.resource.IPlansResource;
@@ -103,8 +104,10 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             filterBytes = initLogging(API_CALL_IDS, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, PlansOpenCloseFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
-                    accessToken).getNoticeBoards().getView());
+            // this API is called also if add order dialog is started -> add order::create
+            ControllerPermissions perms = getBasicControllerPermissions(filter.getControllerId(), accessToken);
+            boolean permitted = perms.getNoticeBoards().getView() || perms.getOrders().getCreate();
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), permitted);
             if (response != null) {
                 return response;
             }
