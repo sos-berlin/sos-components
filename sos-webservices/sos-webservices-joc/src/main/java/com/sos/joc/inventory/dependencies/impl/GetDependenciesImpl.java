@@ -17,6 +17,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.common.JocStreamingOutput;
 import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
@@ -31,6 +32,7 @@ import com.sos.joc.model.inventory.dependencies.get.ResponseObjects;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
 
 
 @Path("inventory")
@@ -41,7 +43,7 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
     private Map<Dependency, Set<Dependency>> allItemsReferencedBy = new HashMap<>();
     
     @Override
-    public JOCDefaultResponse postGetDependencies(String xAccessToken, byte[] dependencyFilter) {
+    public JOCDefaultResponse postGetDependencies(String xAccessToken, String acceptEncoding, byte[] dependencyFilter) {
         SOSHibernateSession hibernateSession = null;
         try {
             dependencyFilter = initLogging(API_CALL, dependencyFilter, xAccessToken, CategoryType.INVENTORY);
@@ -49,7 +51,15 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
             GetDependenciesRequest filter = Globals.objectMapper.readValue(dependencyFilter, GetDependenciesRequest.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(xAccessToken);
             DBLayerDependencies dblayer = new DBLayerDependencies(hibernateSession);
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(createResponse(filter, dblayer)));
+            boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
+            byte[] response = Globals.objectMapper.writeValueAsBytes(createResponse(filter, dblayer));
+            
+            if (response.length < 1024 * 512) { // response < 512 kB
+                return responseStatus200(response);
+            } else { // response > 512 kB
+                return JOCDefaultResponse.responseStatus200(new JocStreamingOutput(withGzipEncoding, response), 
+                        MediaType.APPLICATION_JSON, setGzipHeadersForStreamingOutput(withGzipEncoding), getJocAuditTrail());
+            }
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -214,4 +224,13 @@ public class GetDependenciesImpl extends JOCResourceImpl implements IGetDependen
         return cfg;
     }
     
+    private Map<String, Object> setGzipHeadersForStreamingOutput(boolean withGzipEncoding) {
+        Map<String, Object> headers = new HashMap<String, Object>();
+        if (withGzipEncoding) {
+            headers.put("Content-Encoding", "gzip");
+        }
+        headers.put("Transfer-Encoding", "chunked");
+        return headers;
+    }
+
 }
