@@ -1,5 +1,13 @@
 package com.sos.js7.job;
 
+/** Represents an argument value object with additional information about its source.
+ * <p>
+ * The <code>getSource</code> method provides context for the value:
+ * <ul>
+ * <li>For a JobResource, it is the job resource name.</li>
+ * <li>For the last outcomes, it is the position.</li>
+ * </ul>
+ */
 public class DetailValue {
 
     private final Object value;
