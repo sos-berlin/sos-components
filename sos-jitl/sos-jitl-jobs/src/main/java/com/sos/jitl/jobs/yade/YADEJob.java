@@ -34,7 +34,7 @@ public class YADEJob extends Job<YADEJobArguments> {
         try {
             // Load Arguments from Settings XML
             argsLoader = new YADEXMLArgumentsLoader().load(step.getLogger(), args.getSettings().getValue(), args.getProfile().getValue(), step
-                    .getAllArgumentsAsNameValueStringMap(), args.getSettingsReplacerCaseSensitive().getValue(), args
+                    .getAllArgumentsAsNameStringValueMap(), args.getSettingsReplacerCaseSensitive().getValue(), args
                             .getSettingsReplacerKeepUnresolved().getValue());
 
             // Set YADE parallelism from the Job Argument
