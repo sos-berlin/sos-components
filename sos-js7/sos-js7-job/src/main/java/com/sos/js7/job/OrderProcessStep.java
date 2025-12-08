@@ -156,12 +156,16 @@ public class OrderProcessStep<A extends JobArguments> {
         executeJob(clazz, executeJobArguments == null || executeJobArguments.length == 0 ? null : Arrays.asList(executeJobArguments));
     }
 
-    /** Execute another job<br />
-     * 
-     * @param <AJ>
-     * @param clazz
-     * @param executeJobArguments
-     * @throws Exception */
+    /** Executes another job of the specified job class with additional arguments.
+     * <p>
+     * This method behaves like {@link #executeJob(Class)}, which automatically populates all arguments from the current job step.<br/>
+     * Additionally, extra arguments can be provided via the {@code executeJobArguments} collection.<br />
+     * This can be helpful when some arguments are not set in the current job step or need to be calculated/recalculated for the job being executed.
+     *
+     * @param clazz the job class to execute
+     * @param executeJobArguments a map of additional argument names and values to pass to the job
+     * @param <AJ> the generic type of the job's arguments (used internally for type safety)
+     * @throws Exception if the job cannot be executed */
     public <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Collection<JobArgument<?>> executeJobArguments)
             throws Exception {
         Map<String, JobArgument<?>> map = null;
@@ -264,16 +268,22 @@ public class OrderProcessStep<A extends JobArguments> {
         applyArguments(arguments);
     }
 
-    /** Single Cancelable Resource
+    /** Single Cancelable Resource. Sets a resource object (e.g. a database {@code Connection}) that can be invoked when the current job step is canceled.
+     * <p>
+     * The assigned resource will be returned via {@link #getCancelableResource()} and can react appropriately when the job step's {@code cancel} handling is
+     * triggered. <br/>
+     * Implementations of this job should override the corresponding cancellation callback method ({@link Job#onProcessOrderCanceled(OrderProcessStep)})<br/>
+     * and retrieve the resource via {@code getCancelableResource()} in order to perform cleanup or other cancellation-related actions.
+     * </p>
      * 
-     * @param cancelableResource */
+     * @param resource the resource object to be handled on job step cancellation */
     public void setCancelableResource(Object cancelableResource) {
         getCancelableResources().put(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER, cancelableResource);
     }
 
-    /** Single Cancelable Resource
+    /** Single Cancelable Resource.
      * 
-     * @return Cancelable Resource */
+     * @return Cancelable Resource. */
     public Object getCancelableResource() {
         return getCancelableResources().get(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER);
     }
@@ -377,8 +387,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * values from {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the job resource argument names.
      *
      * @return a {@link Map} of job resource argument names to their string values */
-    public Map<String, String> getJobResourcesArgumentsAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMapFromMapWithObjectValue(getJobResourcesArgumentsAsNameValueMap());
+    public Map<String, String> getJobResourcesArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getJobResourcesArgumentsAsNameValueMap());
     }
 
     /** Returns the environment variables declared in the job resources used by this job step.
@@ -436,8 +446,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the outcome variable names.
      *
      * @return a {@link Map} of outcome variable names to their string values for succeeded outcomes */
-    public Map<String, String> getLastSucceededOutcomesAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastSucceededOutcomes());
+    public Map<String, String> getLastSucceededOutcomesAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithDetailValue(getLastSucceededOutcomes());
     }
 
     /** Returns the last failed outcomes of previous jobs as a map.
@@ -467,8 +477,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * {@link DetailValue} objects into {@link String}, ignoring their source. The keys are the outcome variable names.
      *
      * @return a {@link Map} of outcome variable names to their string values for failed outcomes */
-    public Map<String, String> getLastFailedOutcomesAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMapFromMapWithDetailValue(getLastFailedOutcomes());
+    public Map<String, String> getLastFailedOutcomesAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithDetailValue(getLastFailedOutcomes());
     }
 
     /** Returns the declared argument with the specified name.
@@ -803,8 +813,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * The map contains argument names as keys and their string values as values.
      *
      * @return a {@link Map} of argument names to their string values */
-    public Map<String, String> getAllArgumentsAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMap(allArguments);
+    public Map<String, String> getAllArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMap(allArguments);
     }
 
     /** Returns all undeclared arguments as a simple name-value map.
@@ -823,8 +833,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * {@link String}. The map contains argument names as keys and their string values as values.
      *
      * @return a {@link Map} of undeclared argument names to their string values */
-    public Map<String, String> getUndeclaredArgumentsAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMap(getAllArguments(Type.UNDECLARED));
+    public Map<String, String> getUndeclaredArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMap(getAllArguments(Type.UNDECLARED));
     }
 
     /** Returns the arguments provided by the order as a simple name-value map.
@@ -846,8 +856,8 @@ public class OrderProcessStep<A extends JobArguments> {
      * The map contains order argument names as keys and their string values as values.
      *
      * @return a {@link Map} of order argument names to their string values */
-    public Map<String, String> getOrderArgumentsAsNameValueStringMap() {
-        return JobHelper.asNameValueStringMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
+    public Map<String, String> getOrderArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
     }
 
     /** Returns the step outcome object used to define the result of this job step.

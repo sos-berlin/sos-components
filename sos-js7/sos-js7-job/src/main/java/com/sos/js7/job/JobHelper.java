@@ -191,7 +191,7 @@ public class JobHelper {
         return result;
     }
 
-    public static Map<String, String> asNameValueStringMap(Map<String, JobArgument<?>> map) {
+    public static Map<String, String> asNameStringValueMap(Map<String, JobArgument<?>> map) {
         if (SOSCollection.isEmpty(map)) {
             return Collections.emptyMap();
         }
@@ -209,7 +209,7 @@ public class JobHelper {
         return result;
     }
 
-    public static Map<String, String> asNameValueStringMapFromMapWithDetailValue(Map<String, DetailValue> map) {
+    public static Map<String, String> asNameStringValueMapFromMapWithDetailValue(Map<String, DetailValue> map) {
         if (SOSCollection.isEmpty(map)) {
             return Collections.emptyMap();
         }
@@ -225,7 +225,7 @@ public class JobHelper {
         return result;
     }
 
-    public static Map<String, String> asNameValueStringMapFromMapWithObjectValue(Map<String, Object> map) {
+    public static Map<String, String> asNameStringValueMapFromMapWithObjectValue(Map<String, Object> map) {
         if (SOSCollection.isEmpty(map)) {
             return Collections.emptyMap();
         }
