@@ -387,8 +387,12 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(scheduleCalendars.stream(), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
                 } else {
-                    allItemsGrouped.get(ConfigurationType.WORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
-                    allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
+                    if(allItemsGrouped.get(ConfigurationType.WORKINGDAYSCALENDAR) != null) {
+                        allItemsGrouped.get(ConfigurationType.WORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
+                    }
+                    if(allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR) != null) {
+                        allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
+                    }
                 }
             }
             break;
