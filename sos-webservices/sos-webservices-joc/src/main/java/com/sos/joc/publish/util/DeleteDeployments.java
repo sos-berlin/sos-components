@@ -320,7 +320,6 @@ public class DeleteDeployments {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
-            Globals.closeFactory();
         }
     }
 
