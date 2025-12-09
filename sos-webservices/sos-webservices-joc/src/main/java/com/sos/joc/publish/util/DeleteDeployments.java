@@ -320,6 +320,7 @@ public class DeleteDeployments {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
+            Globals.closeFactory();
         }
     }
 
@@ -506,7 +507,6 @@ public class DeleteDeployments {
                     }));
             if (either.isLeft()) {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
-                newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
@@ -524,7 +524,7 @@ public class DeleteDeployments {
                         dbLayer.getSession().update(orig);
                     }
                 }
-                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+//                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
             } else {
                 if (toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty()) {
                     JControllerProxy proxy = Proxy.of(controllerId);

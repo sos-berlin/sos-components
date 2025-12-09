@@ -234,7 +234,7 @@ public class StoreDeployments {
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer, wsIdentifier);
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+//                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
