@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -569,6 +570,7 @@ public class DependencyResolver {
             List<ReferenceCallable> callables = allCfgs.stream().filter(onlyReferncingItemsFilter)
                     .map(item -> new ReferenceCallable(item, toSubMap.apply(item))).collect(Collectors.toList());
             if (!callables.isEmpty()) {
+                ExecutorService executorService = null;
                 Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
                 if(callables.size() == 1) {
                     try {
@@ -580,22 +582,23 @@ public class DependencyResolver {
                             LOGGER.error("", e);
                         }
                     }
-                }
-                ExecutorService executorService = null;
-                try {
-                    for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
-                        try {
-                            referencedItems.add(result.get());
-                        } catch (ExecutionException e) {
-                            if (e.getCause() != null) {
-                                LOGGER.error("", e.getCause());
-                            } else {
-                                LOGGER.error("", e);
+                } else {
+                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), poolSize));
+                    try {
+                        for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
+                            try {
+                                referencedItems.add(result.get());
+                            } catch (ExecutionException e) {
+                                if (e.getCause() != null) {
+                                    LOGGER.error("", e.getCause());
+                                } else {
+                                    LOGGER.error("", e);
+                                }
                             }
                         }
+                    } finally {
+                        executorService.shutdown();
                     }
-                } finally {
-                    executorService.shutdown();
                 }
                 referencedItemStream = referencedItems.stream();
             }
