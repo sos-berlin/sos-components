@@ -102,7 +102,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
                     jtUsedBy.setHash(jt.getHash());
                     
                     Set<JobTemplateUsedByWorkflow> jtWorkflows = new HashSet<>();
-                    List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByJobTemplateName(dbJobTemplate.getName());
+                    Set<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByJobTemplateName(dbJobTemplate.getName());
                     for (DBItemInventoryConfiguration workflow : workflows) {
                         
                         JobTemplateUsedByWorkflow jtW = new JobTemplateUsedByWorkflow();

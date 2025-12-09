@@ -3,6 +3,7 @@ package com.sos.joc.documentation.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,7 +48,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
             } else {
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(connection);
                 List<DBItemInventoryConfiguration> usedObjects = invDbLayer.getUsedObjectsByDocName(docRef);
-                List<DBItemInventoryConfiguration> usedJobs = invDbLayer.getUsedJobsByDocName(docRef);
+                Set<DBItemInventoryConfiguration> usedJobs = invDbLayer.getUsedJobsByDocName(docRef);
                 Stream<DBItemInventoryConfiguration> usedByStream = Stream.empty();
                 if (usedObjects != null) {
                     usedByStream = usedObjects.stream();

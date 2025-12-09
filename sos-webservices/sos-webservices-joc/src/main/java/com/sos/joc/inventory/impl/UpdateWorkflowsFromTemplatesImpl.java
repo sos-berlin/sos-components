@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -70,7 +71,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
-            List<DBItemInventoryConfiguration> dbWorkflows = null;
+            Collection<DBItemInventoryConfiguration> dbWorkflows = null;
             if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
                 List<String> workflowNames = in.getWorkflowPaths().stream().map(p -> JocInventory.pathToName(p)).distinct().collect(Collectors.toList());
                 dbWorkflows = dbLayer.getConfigurationByNames(workflowNames, ConfigurationType.WORKFLOW.intValue());

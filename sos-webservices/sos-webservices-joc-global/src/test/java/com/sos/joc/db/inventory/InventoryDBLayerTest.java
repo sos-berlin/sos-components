@@ -169,7 +169,7 @@ public class InventoryDBLayerTest {
 
             String val = "RenameFileJob";
 
-            List<DBItemInventoryConfiguration> result = dbLayer.getUsedJobsByDocName(val);
+            Set<DBItemInventoryConfiguration> result = dbLayer.getUsedJobsByDocName(val);
             for (DBItemInventoryConfiguration entry : result) {
                 LOGGER.info(SOSString.toString(entry));
             }
@@ -233,7 +233,7 @@ public class InventoryDBLayerTest {
 
             String val = "test";
 
-            List<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobResource(val);
+            Set<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobResource(val);
             for (DBItemInventoryConfiguration entry : result) {
                 LOGGER.info(SOSString.toString(entry));
             }
@@ -296,7 +296,7 @@ public class InventoryDBLayerTest {
             session = factory.openStatelessSession();
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            List<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobTemplateNames(folder, recursive, jobTemplateNames);
+            Set<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobTemplateNames(folder, recursive, jobTemplateNames);
             for (DBItemInventoryConfiguration entry : result) {
                 LOGGER.info(SOSString.toString(entry));
             }

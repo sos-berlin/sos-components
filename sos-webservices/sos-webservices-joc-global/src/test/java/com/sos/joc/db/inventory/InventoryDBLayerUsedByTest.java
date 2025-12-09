@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class InventoryDBLayerUsedByTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<DBItemInventoryConfiguration> items = dbLayer.getUsedWorkflowsByLockId(lockId);
+            Set<DBItemInventoryConfiguration> items = dbLayer.getUsedWorkflowsByLockId(lockId);
 
             LOGGER.info(String.format("[testUsedLocks][lockId=%s]found=%s", lockId, items.size()));
             for (DBItemInventoryConfiguration item : items) {

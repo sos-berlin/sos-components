@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -146,7 +147,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
         }
     }
     
-    private List<Workflow> getWorkflows(List<DBItemInventoryConfiguration> workflows) {
+    private List<Workflow> getWorkflows(Collection<DBItemInventoryConfiguration> workflows) {
         if (workflows == null) {
             return null;
         }

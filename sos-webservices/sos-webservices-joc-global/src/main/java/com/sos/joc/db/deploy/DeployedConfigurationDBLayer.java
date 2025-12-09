@@ -737,7 +737,7 @@ public class DeployedConfigurationDBLayer {
             hql.append("and ");
             hql.append(jsonFunc).append(" is not null ");
             // sometimes two rows in DBITEM_SEARCH_WORKFLOWS for the same Workflow -> then use youngest
-            hql.append("and sw.modified=(select max(sw2.modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw2 ");;
+            hql.append("and sw.modified=(select max(sw2.modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw2 ");
             hql.append(" where sw2.inventoryConfigurationId=sw.inventoryConfigurationId");
             hql.append(" and sw2.deployed=1)");
 

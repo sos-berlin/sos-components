@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
@@ -171,7 +170,7 @@ public class AgentHelper {
         Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
         
         if (missedAliases != null && !missedAliases.isEmpty()) {
-            List<DBItemInventoryConfiguration> workflowsByMissedAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(missedAliases, true);
+            Set<DBItemInventoryConfiguration> workflowsByMissedAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(missedAliases, true);
             workflowsByMissedAgentNames.stream().peek(w -> w.setDeployed(false)).forEach(w -> {
                 if (w.getValid()) {
                     try {
@@ -190,7 +189,7 @@ public class AgentHelper {
         }
 
         if (agentNamesAndAliases != null && !agentNamesAndAliases.isEmpty()) {
-            List<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, false);
+            Set<DBItemInventoryConfiguration> invalidWorkflowsByAgentNames = invDbLayer.getUsedWorkflowsByAgentNames(agentNamesAndAliases, false);
 //            List<Long> workflowInvIds = new ArrayList<>();
             if (!invalidWorkflowsByAgentNames.isEmpty()) {
                 invalidWorkflowsByAgentNames.stream().filter(w -> {

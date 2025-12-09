@@ -962,13 +962,13 @@ public class JocInventory {
         String hash = hash(workflow);
         boolean deployed = deploymentIds != null;
 
-        DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, deployed ? hash : null);
+        DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, !deployed);
         if (item == null) {
             if (deleteDeployments) {
                 return;
             }
             if (deployed) {
-                DBItemSearchWorkflow draft = dbLayer.getSearchWorkflow(inventoryId, null);
+                DBItemSearchWorkflow draft = dbLayer.getSearchWorkflow(inventoryId, false);
                 if (draft != null) {
                     item = draft;
                 }
@@ -993,15 +993,14 @@ public class JocInventory {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, false);
             }
         } else {
-            if (deployed) {// same hash
+            if (!hash.equals(item.getContentHash())) {
+                item.setContentHash(hash);
+                item.setModified(new Date());
+                item = convert(item, workflow);
+                dbLayer.getSession().update(item);
+            }
+            if (deployed) {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, deleteDeployments);
-            } else {
-                if (!hash.equals(item.getContentHash())) {
-                    item.setContentHash(hash);
-                    item.setModified(new Date());
-                    item = convert(item, workflow);
-                    dbLayer.getSession().update(item);
-                }
             }
         }
     }
@@ -1165,7 +1164,7 @@ public class JocInventory {
         Predicate<String> workflowNamePredicate = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
-            List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
+            Set<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
                 Predicate<String> lockNamePredicate = Pattern.compile("\"lockName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration workflow : workflows) {
@@ -1187,7 +1186,7 @@ public class JocInventory {
             }
             break;
         case JOBRESOURCE: // determine Workflows and JobTemplates with Jobs containing JobResource
-            List<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
+            Set<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
             if (workflows2 != null && !workflows2.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows2) {
                     boolean changed = false;
@@ -1259,7 +1258,7 @@ public class JocInventory {
             break;
 
         case NOTICEBOARD: // determine Workflows with PostNotice or ExpectNotice reference
-            List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
+            Set<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
                     Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
@@ -1346,7 +1345,7 @@ public class JocInventory {
                     }
                 }
             }
-            List<DBItemInventoryConfiguration> addOrderWorkflows = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(config.getName());
+            Set<DBItemInventoryConfiguration> addOrderWorkflows = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(config.getName());
             if (addOrderWorkflows != null && !addOrderWorkflows.isEmpty()) {
                 for (DBItemInventoryConfiguration addOrderWorkflow : addOrderWorkflows) {
                     boolean changed = workflowNamePredicate.test(addOrderWorkflow.getContent());
@@ -1487,7 +1486,7 @@ public class JocInventory {
             break;
             
         case JOBTEMPLATE:
-            List<DBItemInventoryConfiguration> workflows5 = dbLayer.getUsedWorkflowsByJobTemplateName(config.getName());
+            Set<DBItemInventoryConfiguration> workflows5 = dbLayer.getUsedWorkflowsByJobTemplateName(config.getName());
             if (workflows5 != null && !workflows5.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows5) {
                     boolean changed = false;
@@ -1657,6 +1656,7 @@ public class JocInventory {
     }
     
     public static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
+        // TODO use isJsonHashEqual below!!!
         return SOSString.hashMD5(
                 Globals.prettyPrintObjectMapper.writeValueAsString(
                     Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
@@ -1664,6 +1664,10 @@ public class JocInventory {
                 SOSString.hashMD5(
                     Globals.prettyPrintObjectMapper.writeValueAsString(
                         Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(type)))));
+    }
+    
+    public static boolean isJsonHashEqual(String json1, IConfigurationObject json2) throws IOException {
+        return SOSString.hashMD5(json1).equals(SOSString.hashMD5(Globals.objectMapper.writeValueAsString(json2)));
     }
     
 }

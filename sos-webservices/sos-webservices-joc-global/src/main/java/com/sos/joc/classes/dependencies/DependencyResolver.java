@@ -157,14 +157,13 @@ public class DependencyResolver {
         // this method is in use
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         String json = item.getReferencedItem().getContent();
-        List<DBItemInventoryConfiguration> results = null;
         JsonObject wfsearchInstructions = null;
         JsonObject wfsearchJobs = null;
         JsonObject wfsearchScripts = null;
         switch (item.getReferencedItem().getTypeAsEnum()) {
         // determine references in configurations json
         case WORKFLOW:
-            DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getId(), null);
+            DBItemSearchWorkflow wfSearch = dbLayer.getSearchWorkflow(item.getId());
             if(wfSearch != null) {
                 wfsearchInstructions = jsonObjectFromString(wfSearch.getInstructions());
                 wfsearchJobs = jsonObjectFromString(wfSearch.getJobs());
@@ -524,7 +523,6 @@ public class DependencyResolver {
         }
         // this method is in use (JocInventory update and insert methods)
         ReferencedDbItem references = createReferencedDbItem(inventoryDbItem);
-        InventoryDBLayer dblayer = new InventoryDBLayer(session);
         resolveReferences(references, session);
         DBLayerDependencies layer = new DBLayerDependencies(session);
         // store new dependencies

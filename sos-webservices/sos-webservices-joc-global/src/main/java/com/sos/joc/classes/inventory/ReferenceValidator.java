@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -73,7 +74,7 @@ public class ReferenceValidator {
 
     private static void validateAddOrderInstructionArguments(String workflowName, Requirements orderPreparation, InventoryDBLayer dbLayer,
             String accessToken) {
-        List<DBItemInventoryConfiguration> dbWorkflows = dbLayer.getAddOrderWorkflowsByWorkflowName(workflowName);
+        Set<DBItemInventoryConfiguration> dbWorkflows = dbLayer.getAddOrderWorkflowsByWorkflowName(workflowName);
         if (dbWorkflows != null) {
             String invalidWorkflows = dbWorkflows.stream().map(dbWorkflow -> {
                 try {
