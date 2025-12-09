@@ -570,7 +570,6 @@ public class DependencyResolver {
             List<ReferenceCallable> callables = allCfgs.stream().filter(onlyReferncingItemsFilter)
                     .map(item -> new ReferenceCallable(item, toSubMap.apply(item))).collect(Collectors.toList());
             if (!callables.isEmpty()) {
-                ExecutorService executorService = null;
                 Set<ReferencedDbItem> referencedItems = new HashSet<ReferencedDbItem>();
                 if(callables.size() == 1) {
                     try {
@@ -583,8 +582,9 @@ public class DependencyResolver {
                         }
                     }
                 } else {
-                    executorService = Executors.newFixedThreadPool(Math.min(callables.size(), poolSize));
+                    ExecutorService executorService = null;
                     try {
+                        executorService = Executors.newFixedThreadPool(Math.min(callables.size(), poolSize));
                         for (Future<ReferencedDbItem> result : executorService.invokeAll(callables)) {
                             try {
                                 referencedItems.add(result.get());
@@ -597,7 +597,9 @@ public class DependencyResolver {
                             }
                         }
                     } finally {
-                        executorService.shutdown();
+                        if(executorService != null) {
+                            executorService.shutdown();
+                        }
                     }
                 }
                 referencedItemStream = referencedItems.stream();
