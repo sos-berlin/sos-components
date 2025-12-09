@@ -382,20 +382,25 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
         // Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException:
         // Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
-        DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
+        List<DBItemInventoryReleasedConfiguration> constrainedReleaseItems = 
+                dbLayer.getReleasedConfigurationByNameAndType(conf.getName(), conf.getType());
 
         if (releaseItem == null) {
             // delete all other db items with same objectType and name
             // dbLayer.deleteContraintViolatedReleasedConfigurations(null, conf.getName(), conf.getType());
-            if (contraintReleaseItem != null) {
-                dbLayer.getSession().delete(contraintReleaseItem);
+            if (!constrainedReleaseItems.isEmpty()) {
+                for (DBItemInventoryReleasedConfiguration constrained : constrainedReleaseItems) {
+                    dbLayer.getSession().delete(constrained);
+                }
             }
             dbLayer.getSession().save(setReleaseItem(null, conf, dbAuditLog.getCreated()));
         } else {
             // delete all other db items with same objectType and name but different id
             // dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
-            if (contraintReleaseItem != null && !contraintReleaseItem.getId().equals(releaseItem.getId())) {
-                dbLayer.getSession().delete(contraintReleaseItem);
+            for (DBItemInventoryReleasedConfiguration constrained : constrainedReleaseItems) {
+                if (constrained != null && !constrained.getId().equals(releaseItem.getId())) {
+                    dbLayer.getSession().delete(constrainedReleaseItems);
+                }
             }
             dbLayer.getSession().update(setReleaseItem(releaseItem, conf, dbAuditLog.getCreated()));
         }
