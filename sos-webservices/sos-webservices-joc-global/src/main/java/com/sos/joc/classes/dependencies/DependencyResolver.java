@@ -180,7 +180,7 @@ public class DependencyResolver {
                     if(allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(lockIds.stream(), ConfigurationType.LOCK.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.LOCK).stream().filter(getPredicate(lockIds)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(lockIds)).forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -191,7 +191,7 @@ public class DependencyResolver {
                         if(allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfLockNames.stream(), ConfigurationType.LOCK.intValue()));
                         } else {
-                            allItemsGrouped.get(ConfigurationType.LOCK).stream().filter(getPredicate(wfLockNames)).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(wfLockNames)).forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -204,7 +204,7 @@ public class DependencyResolver {
                     if(allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfLockNames.stream(), ConfigurationType.LOCK.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.LOCK).stream().filter(getPredicate(wfLockNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()).stream().filter(getPredicate(wfLockNames)).forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -217,7 +217,7 @@ public class DependencyResolver {
                     if(allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfSearchJobsJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.JOBRESOURCE).stream().filter(getPredicate(wfSearchJobsJobResourceNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(wfSearchJobsJobResourceNames)).forEach(item.getReferences()::add);
                     }
                 } else {
                     List<String> wfSearchJobsJobResources = getValuesFromObject(wfsearchJobs, JOBRESOURCES_SEARCH);
@@ -226,7 +226,7 @@ public class DependencyResolver {
                         if(allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfSearchJobsJobResources.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                         } else {
-                            allItemsGrouped.get(ConfigurationType.JOBRESOURCE).stream().filter(getPredicate(wfSearchJobsJobResources)).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(wfSearchJobsJobResources)).forEach(item.getReferences()::add);
                         }
                         
                     } else {
@@ -238,7 +238,7 @@ public class DependencyResolver {
                             if (allItemsGrouped.isEmpty()) {
                                 item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                             } else {
-                                allItemsGrouped.get(ConfigurationType.JOBRESOURCE).stream().filter(getPredicate(wfJobResourceNames)).forEach(item.getReferences()::add);
+                                allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(wfJobResourceNames)).forEach(item.getReferences()::add);
                             }
                         }
                     }
@@ -252,7 +252,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfJobResourceNames.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.JOBRESOURCE).stream().filter(getPredicate(wfJobResourceNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(wfJobResourceNames)).forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -265,7 +265,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(boardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.NOTICEBOARD).stream().filter(getPredicate(boardNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(boardNames)).forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -276,7 +276,7 @@ public class DependencyResolver {
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                         } else {
-                            allItemsGrouped.get(ConfigurationType.NOTICEBOARD).stream().filter(getPredicate(wfBoardNames)).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(wfBoardNames)).forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -289,7 +289,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfBoardNames.stream(), ConfigurationType.NOTICEBOARD.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.NOTICEBOARD).stream().filter(getPredicate(wfBoardNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()).stream().filter(getPredicate(wfBoardNames)).forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -302,7 +302,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfInstructionWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.WORKFLOW).stream().filter(getPredicate(wfInstructionWorkflowNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(wfInstructionWorkflowNames)).forEach(item.getReferences()::add);
                     }
                 } else {
                     // fallback: if result in WindowsSearch is empty check again directly in json
@@ -313,7 +313,7 @@ public class DependencyResolver {
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                         } else {
-                            allItemsGrouped.get(ConfigurationType.WORKFLOW).stream().filter(getPredicate(wfWorkflowNames)).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(wfWorkflowNames)).forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -326,7 +326,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(wfWorkflowNames.stream(), ConfigurationType.WORKFLOW.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.WORKFLOW).stream().filter(getPredicate(wfWorkflowNames)).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(wfWorkflowNames)).forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -340,7 +340,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.INCLUDESCRIPT).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
                     }
                 }
             } else {
@@ -354,7 +354,7 @@ public class DependencyResolver {
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                         } else {
-                            allItemsGrouped.get(ConfigurationType.INCLUDESCRIPT).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
                         }
                     }
                 }
@@ -371,7 +371,7 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(scheduleWorkflows.stream(), ConfigurationType.WORKFLOW.intValue()));
                 } else {
-                    allItemsGrouped.get(ConfigurationType.WORKFLOW).stream().filter(getPredicate(scheduleWorkflows)).forEach(item.getReferences()::add);
+                    allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(scheduleWorkflows)).forEach(item.getReferences()::add);
                 }
             }
             // Calendars
@@ -388,12 +388,8 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(scheduleCalendars.stream(), ConfigurationType.WORKINGDAYSCALENDAR.intValue()));
                 } else {
-                    if(allItemsGrouped.get(ConfigurationType.WORKINGDAYSCALENDAR) != null) {
-                        allItemsGrouped.get(ConfigurationType.WORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
-                    }
-                    if(allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR) != null) {
-                        allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
-                    }
+                    allItemsGrouped.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
+                    allItemsGrouped.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(scheduleCalendars)).forEach(item.getReferences()::add);
                 }
             }
             break;
@@ -408,7 +404,7 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(jobTemplateJobResources.stream(), ConfigurationType.JOBRESOURCE.intValue()));
                 } else {
-                    allItemsGrouped.get(ConfigurationType.JOBRESOURCE).stream().filter(getPredicate(jobTemplateJobResources)).forEach(item.getReferences()::add);
+                    allItemsGrouped.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptySet()).stream().filter(getPredicate(jobTemplateJobResources)).forEach(item.getReferences()::add);
                     
                 }
             }
@@ -423,7 +419,7 @@ public class DependencyResolver {
                     if (allItemsGrouped.isEmpty()) {
                         item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                     } else {
-                        allItemsGrouped.get(ConfigurationType.INCLUDESCRIPT).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                        allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
                     }
                 }
             }
@@ -439,7 +435,7 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(fosWorkflows.stream(), ConfigurationType.WORKFLOW.intValue()));
                 } else {
-                    allItemsGrouped.get(ConfigurationType.WORKFLOW).stream().filter(getPredicate(fosWorkflows)).forEach(item.getReferences()::add);
+                    allItemsGrouped.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptySet()).stream().filter(getPredicate(fosWorkflows)).forEach(item.getReferences()::add);
                 }
             }
             break;
@@ -454,7 +450,7 @@ public class DependencyResolver {
                 if (allItemsGrouped.isEmpty()) {
                     item.getReferences().addAll(dbLayer.getConfigurationsByNames(nwCalendars.stream(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()));
                 } else {
-                    allItemsGrouped.get(ConfigurationType.NONWORKINGDAYSCALENDAR).stream().filter(getPredicate(nwCalendars)).forEach(item.getReferences()::add);
+                    allItemsGrouped.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()).stream().filter(getPredicate(nwCalendars)).forEach(item.getReferences()::add);
                 }
             }
             break;
