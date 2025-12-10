@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -939,6 +940,7 @@ public class ExportUtils {
         InventoryDBLayer invDbLayer = new InventoryDBLayer(session);
         InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
         InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
+        InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
         
         // workflow tags
         BiFunction<ExportedTagItem, ResponseBaseSearchItem, ExportedTagItem> toExportedTagItem = (eti, r) -> {
@@ -976,6 +978,9 @@ public class ExportUtils {
                         new ExportedJobTagItem(), toExportedJobTagItem, combineExportedJobTagItem)))).values().stream().collect(Collectors.toList()));
 
         // order tags
+        Map<String, String> groupedOrderTags = dbOrderTagLayer.getGroupedTags(null, true).stream().filter(GroupedTag::hasGroup).collect(Collectors
+                .toMap(GroupedTag::getTag, GroupedTag::toString, (k1, k2) -> k1));
+
         List<Integer> types = Arrays.asList(ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
         Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags = invDbLayer.getConfigurationsWithOrderTags(types).stream().collect(
                 Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum));
@@ -983,17 +988,17 @@ public class ExportUtils {
         Map<String, String> workflowsWithTags = invDbLayer.getWorkflowWithOrderTags();
         
         ExportedOrderTags ot = new ExportedOrderTags();
-        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags));
-        ot.setSchedules(getSchedulesOrderTags(confWithTags));
-        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags));
+        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags, groupedOrderTags));
+        ot.setSchedules(getSchedulesOrderTags(confWithTags, groupedOrderTags));
+        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags, groupedOrderTags));
         
         tagsToExport.setOrderTags(ot);
 
         return tagsToExport;
     }
     
-    private static List<FileOrderSourceOrderTags> getFileOrderSourceOrderTags(
-            Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags) {
+    private static List<FileOrderSourceOrderTags> getFileOrderSourceOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags,
+            Map<String, String> groupedOrderTags) {
         List<FileOrderSourceOrderTags> ot = new ArrayList<>();
         if (confWithTags.containsKey(ConfigurationType.FILEORDERSOURCE)) {
             ot = confWithTags.get(ConfigurationType.FILEORDERSOURCE).stream().map(dbItem -> {
@@ -1002,6 +1007,7 @@ public class ExportUtils {
                     if (fos.getTags() == null || fos.getTags().isEmpty()) {
                         return null;
                     }
+                    fos.setTags(fos.getTags().stream().map(t -> groupedOrderTags.getOrDefault(t, t)).collect(Collectors.toSet()));
                     fos.setName(dbItem.getName());
                     return fos;
                 } catch (Exception e) {
@@ -1016,7 +1022,8 @@ public class ExportUtils {
         return ot;
     }
     
-    private static List<ScheduleOrderTags> getSchedulesOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags) {
+    private static List<ScheduleOrderTags> getSchedulesOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags,
+            Map<String, String> groupedOrderTags) {
         List<ScheduleOrderTags> ot = new ArrayList<>();
         if (confWithTags.containsKey(ConfigurationType.SCHEDULE)) {
             ot = confWithTags.get(ConfigurationType.SCHEDULE).stream().map(dbItem -> {
@@ -1031,6 +1038,7 @@ public class ExportUtils {
                                 op.setPositions(null);
                                 op.setPriority(null);
                                 op.setVariables(null);
+                                op.setTags(op.getTags().stream().map(t -> groupedOrderTags.getOrDefault(t, t)).collect(Collectors.toSet()));
                             }).toList());
                     if (sch.getOrderParameterisations().isEmpty()) {
                         return null;
@@ -1049,11 +1057,13 @@ public class ExportUtils {
         return ot;
     }
     
-    private static List<AddOrdersOrderTags> getAddOrderOrderTags(Map<String, String> workflowsWithTags) {
+    private static List<AddOrdersOrderTags> getAddOrderOrderTags(Map<String, String> workflowsWithTags, Map<String, String> groupedOrderTags) {
         List<AddOrdersOrderTags> ot = workflowsWithTags.entrySet().stream().map(dbItem -> {
             try {
                 AddOrdersOrderTags aoot = Globals.objectMapper.readValue(dbItem.getValue(), AddOrdersOrderTags.class);
                 aoot.setName(dbItem.getKey());
+                aoot.getAddOrderTags().getAdditionalProperties().replaceAll((k, v) -> v.stream().map(t -> groupedOrderTags.getOrDefault(t, t))
+                        .collect(Collectors.toCollection(LinkedHashSet::new)));
                 return aoot;
             } catch (Exception e) {
                 LOGGER.error("", e);
@@ -1071,6 +1081,7 @@ public class ExportUtils {
         InventoryDBLayer invDbLayer = new InventoryDBLayer(session);
         InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
         InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
+        InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
         Map<String, ExportedTagItem> tags = new HashMap<>();
         Set<ExportedJobTagItem> jobTags = new HashSet<>();
         
@@ -1116,9 +1127,11 @@ public class ExportUtils {
         confWithTags.get(ConfigurationType.SCHEDULE).removeIf(i -> !deployableNamesPerType.get(ConfigurationType.SCHEDULE).contains(i.getName()));
 
         ExportedOrderTags ot = new ExportedOrderTags();
-        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags));
-        ot.setSchedules(getSchedulesOrderTags(confWithTags));
-        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags));
+        Map<String, String> groupedOrderTags = dbOrderTagLayer.getGroupedTags(null, true).stream().filter(GroupedTag::hasGroup).collect(Collectors
+                .toMap(GroupedTag::getTag, GroupedTag::toString, (k1, k2) -> k1));
+        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags, groupedOrderTags));
+        ot.setSchedules(getSchedulesOrderTags(confWithTags, groupedOrderTags));
+        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags, groupedOrderTags));
         
         tagsToExport.setTags(tags.values().stream().collect(Collectors.toList()));
         tagsToExport.setJobTags(jobTags.stream().collect(Collectors.toList()));

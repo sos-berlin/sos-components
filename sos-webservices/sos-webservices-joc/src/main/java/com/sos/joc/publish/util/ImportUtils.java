@@ -1772,7 +1772,7 @@ public class ImportUtils {
     private static <T extends IDBItemTag> Map<String, T> updateTags(ATagDBLayer<T> dbLayer, List<GroupedTag> groupedTagsFromArchive,
             Map<String, GroupedTag> groupedTags, Map<String, Long> dbGroupsMap, Date now, Map<String, T> tagsWithNewGroupId)
             throws SOSHibernateException {
-        List<T> tags = dbLayer.getAllTags();
+        List<T> tags = dbLayer.getAllTags(); // ordered by ordering
         List<GroupedTag> specificGroupedTags = new ArrayList<>(groupedTagsFromArchive);
         Map<String, T> updatedTags = new HashMap<>();
         for (T item : tags) {
@@ -1876,7 +1876,6 @@ public class ImportUtils {
     private static void updateFileOrderSources(Optional<List<FileOrderSourceOrderTags>> orderTags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
-        //Set<DBItemInventoryConfiguration> updatedFileOrderSources = new HashSet<>();
         ConfigurationType objectType = ConfigurationType.FILEORDERSOURCE;
         InventoryDBLayer dbLayer = new InventoryDBLayer(invDBLayer.getSession());
         if (orderTags.isPresent()) {
@@ -1914,7 +1913,6 @@ public class ImportUtils {
                 }
             });
         }
-        //return updatedFileOrderSources;
     }
     
     private static void updateSchedules(Optional<List<ScheduleOrderTags>> orderTags,
@@ -2108,7 +2106,8 @@ public class ImportUtils {
                     int index = pos.getAndIncrement();
                     String orderTagsKey = index < 10 ? "0" + index : "" + index;
                     String oldTags = String.join(",", Optional.ofNullable(ao.getTags()).orElse(Collections.emptySet()));
-                    ao.setTags(orderTags.remove(orderTagsKey));
+                    ao.setTags(Optional.ofNullable(orderTags.remove(orderTagsKey)).map(t -> t.stream().map(GroupedTag::new).map(GroupedTag::getTag)
+                            .collect(Collectors.toSet())).orElse(null));
                     String newTags = String.join(",", Optional.ofNullable(ao.getTags()).orElse(Collections.emptySet()));
                     if (!oldTags.equals(newTags)) {
                        b.set(true); 
