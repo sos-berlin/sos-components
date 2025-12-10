@@ -1,51 +1,39 @@
 
 package com.sos.joc.model.tag;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-
-/**
- * Ex-/Import schema for inventory object references for tag items
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
-    "type"
+    "tags"
 })
-public class ExportedTaggedObject {
+public class FileOrderSourceOrderTags {
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
     private String name;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    private String type;
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> tags = new LinkedHashSet<String>();
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -57,7 +45,6 @@ public class ExportedTaggedObject {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -65,38 +52,24 @@ public class ExportedTaggedObject {
         this.name = name;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public String getType() {
-        return type;
+    @JsonProperty("tags")
+    public Set<String> getTags() {
+        return tags;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
+    @JsonProperty("tags")
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("type", type).toString();
+        return new ToStringBuilder(this).append("name", name).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(type).toHashCode();
+        return new HashCodeBuilder().append(name).append(tags).toHashCode();
     }
 
     @Override
@@ -104,11 +77,11 @@ public class ExportedTaggedObject {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportedTaggedObject) == false) {
+        if ((other instanceof FileOrderSourceOrderTags) == false) {
             return false;
         }
-        ExportedTaggedObject rhs = ((ExportedTaggedObject) other);
-        return new EqualsBuilder().append(name, rhs.name).append(type, rhs.type).isEquals();
+        FileOrderSourceOrderTags rhs = ((FileOrderSourceOrderTags) other);
+        return new EqualsBuilder().append(name, rhs.name).append(tags, rhs.tags).isEquals();
     }
 
 }

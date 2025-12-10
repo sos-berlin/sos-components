@@ -23,6 +23,7 @@ public interface IImportResource {
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("format") String format,
             @FormDataParam("overwrite") boolean overwrite,
+            @FormDataParam("overwriteTags") Boolean overwriteTags,
             @FormDataParam("targetFolder") String targetFolder,
             @FormDataParam("prefix") String prefix,
             @FormDataParam("suffix") String suffix,

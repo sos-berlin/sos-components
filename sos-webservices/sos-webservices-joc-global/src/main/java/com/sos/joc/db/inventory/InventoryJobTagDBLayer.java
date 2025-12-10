@@ -43,6 +43,11 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
         return DBLayer.DBITEM_INV_JOB_TAGGINGS;
     }
 
+    @Override
+    public DBItemInventoryJobTag newDBItem() {
+        return new DBItemInventoryJobTag();
+    }
+
     public Set<DBItemInventoryJobTagging> getTaggings(Long cid) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -332,6 +337,29 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             query.setParameter("jobName", jobName);
 
             return GroupedTag.toString(getSession().getResultList(query));
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<InventoryJobTagItem> getAllJobTags() {
+        try {
+            StringBuilder sql = new StringBuilder(
+                    "select g.name as group, tg.workflowName as workflowName, tg.jobName as jobName, t.name as tagName, t.ordering as ordering from ")
+                            .append(getTagTable()).append(" t left join ").append(getTaggingTable()).append(" tg on t.id = tg.tagId left join ")
+                            .append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId");
+
+            Query<InventoryJobTagItem> query = getSession().createQuery(sql.toString(), InventoryJobTagItem.class);
+
+            List<InventoryJobTagItem> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+
+            return result;
+
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

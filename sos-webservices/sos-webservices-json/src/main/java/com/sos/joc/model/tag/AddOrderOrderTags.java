@@ -2,22 +2,24 @@
 package com.sos.joc.model.tag;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.LinkedHashSet;
+import java.util.Map;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
 
 })
-public class ExportedJobTagItems {
+public class AddOrderOrderTags {
 
     @JsonIgnore
     private Map<String, LinkedHashSet<String>> additionalProperties = new HashMap<String, LinkedHashSet<String>>();
@@ -64,10 +66,10 @@ public class ExportedJobTagItems {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportedJobTagItems) == false) {
+        if ((other instanceof AddOrderOrderTags) == false) {
             return false;
         }
-        ExportedJobTagItems rhs = ((ExportedJobTagItems) other);
+        AddOrderOrderTags rhs = ((AddOrderOrderTags) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

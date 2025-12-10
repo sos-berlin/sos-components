@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -17,6 +18,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -39,9 +42,11 @@ import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.items.InventoryJobTagItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -52,17 +57,22 @@ import com.sos.joc.model.agent.transfer.Agent;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.folder.ExportFolderFilter;
+import com.sos.joc.model.tag.AddOrdersOrderTags;
 import com.sos.joc.model.tag.ExportedJobTagItem;
 import com.sos.joc.model.tag.ExportedJobTagItems;
+import com.sos.joc.model.tag.ExportedOrderTags;
 import com.sos.joc.model.tag.ExportedTagItem;
 import com.sos.joc.model.tag.ExportedTaggedObject;
 import com.sos.joc.model.tag.ExportedTags;
+import com.sos.joc.model.tag.FileOrderSourceOrderTags;
+import com.sos.joc.model.tag.ScheduleOrderTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -81,7 +91,8 @@ public class ExportUtils {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
-    public static final String TAGS_ENTRY_NAME = "workflow.tags.json";
+    public static final String TAGS_ENTRY_OLD_NAME = "workflow.tags.json";
+    public static final String TAGS_ENTRY_NAME = "tags.json";
     
     public static final Map<ConfigurationType, String> extensionMap = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
@@ -466,14 +477,14 @@ public class ExportUtils {
         return streamingOutput;
     }
 
-    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) {
-        return writeZipFileShallow(deployables, dbLayer, jocVersion, apiVersion, inventoryVersion, false, null);
-    }
+//    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
+//            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
+//        return writeZipFileShallow(deployables, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
+//    }
 
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
-        ExportedTags tags = getTagsToExportFromConfigurationObjects(deployables, dbLayer.getSession());
+            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths, boolean withAllTags) {
+        ExportedTags tags = getTagsToExportFromConfigurationObjects(deployables, withAllTags, dbLayer.getSession());
         
         Map<String, String> groupedOrderTags = getGroupedOrderTags(deployables, dbLayer.getSession());
 
@@ -675,14 +686,14 @@ public class ExportUtils {
         return streamingOutput;
     }
 
-    public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) throws Exception {
-        return writeTarGzipFileShallow(configurations, dbLayer, jocVersion, apiVersion, inventoryVersion, false, null);
-    }
+//    public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
+//            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
+//        return writeTarGzipFileShallow(configurations, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
+//    }
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
-        ExportedTags tags = getTagsToExportFromConfigurationObjects(configurations, dbLayer.getSession());
+            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths, boolean withAllTags) throws Exception {
+        ExportedTags tags = getTagsToExportFromConfigurationObjects(configurations, withAllTags, dbLayer.getSession());
         
         Map<String, String> groupedOrderTags = getGroupedOrderTags(configurations, dbLayer.getSession());
 
@@ -913,9 +924,151 @@ public class ExportUtils {
         return hasObjectsWithOrderTags ? dbOrderTagLayer.getGroupedTags(null, true).stream().distinct().collect(
                 Collectors.toMap(GroupedTag::getTag, GroupedTag::toString)) : Collections.emptyMap();
     }
+    
+    private static ExportedTags getTagsToExportFromConfigurationObjects(Set<ConfigurationObject> deployables, boolean withAllTags,
+            SOSHibernateSession session) {
+        if (withAllTags) {
+            return getAllTagsToExport(session);
+        } else {
+            return getTagsToExportFromConfigurationObjects(deployables, session);
+        }
+    }
+
+    private static ExportedTags getAllTagsToExport(SOSHibernateSession session) {
+        ExportedTags tagsToExport = new ExportedTags();
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(session);
+        InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
+        InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
+        
+        // workflow tags
+        BiFunction<ExportedTagItem, ResponseBaseSearchItem, ExportedTagItem> toExportedTagItem = (eti, r) -> {
+            eti.setName(new GroupedTag(r.getGroup(), r.getName()).toString());
+            eti.setOrdering(r.getOrdering());
+            ExportedTaggedObject eto = new ExportedTaggedObject();
+            eto.setName(r.getPath());
+            eto.setType(ConfigurationType.WORKFLOW.value());
+            eti.getUsedBy().add(eto);
+            return eti;
+        };
+        BinaryOperator<ExportedTagItem> combineExportedTagItem = (eti, newEti) -> {
+            eti.getUsedBy().addAll(newEti.getUsedBy());
+            return eti;
+        };
+        tagsToExport.setTags(tagDbLayer.getWorkflowTags().stream().collect(Collectors.groupingBy(ResponseBaseSearchItem::getName, Collectors
+                .collectingAndThen(Collectors.toList(), b -> b.stream().reduce(new ExportedTagItem(), toExportedTagItem, combineExportedTagItem))))
+                .values().stream().collect(Collectors.toList()));
+
+        // job tags
+        BiFunction<ExportedJobTagItem, InventoryJobTagItem, ExportedJobTagItem> toExportedJobTagItem = (ejti, jti) -> {
+            ejti.setName(jti.getWorkflowName());
+            if (ejti.getJobs() == null) {
+                ejti.setJobs(new ExportedJobTagItems()); 
+            }
+            ejti.getJobs().addAdditionalProperties(jti.getJobName(), new GroupedTag(jti.getGroup(), jti.getTagName()).toString());
+            return ejti;
+        };
+        BinaryOperator<ExportedJobTagItem> combineExportedJobTagItem = (ejti, newEjti) -> {
+            newEjti.getJobs().getAdditionalProperties().forEach((k, v) -> ejti.getJobs().addAdditionalProperties(k, v));
+            return ejti;
+        };
+        tagsToExport.setJobTags(dbJobTagLayer.getAllJobTags().stream().collect(Collectors.groupingBy(InventoryJobTagItem::getWorkflowName, Collectors
+                .collectingAndThen(Collectors.toList(), b -> b.stream().sorted(Comparator.comparingInt(InventoryJobTagItem::getOrdering)).reduce(
+                        new ExportedJobTagItem(), toExportedJobTagItem, combineExportedJobTagItem)))).values().stream().collect(Collectors.toList()));
+
+        // order tags
+        List<Integer> types = Arrays.asList(ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
+        Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags = invDbLayer.getConfigurationsWithOrderTags(types).stream().collect(
+                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum));
+        
+        Map<String, String> workflowsWithTags = invDbLayer.getWorkflowWithOrderTags();
+        
+        ExportedOrderTags ot = new ExportedOrderTags();
+        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags));
+        ot.setSchedules(getSchedulesOrderTags(confWithTags));
+        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags));
+        
+        tagsToExport.setOrderTags(ot);
+
+        return tagsToExport;
+    }
+    
+    private static List<FileOrderSourceOrderTags> getFileOrderSourceOrderTags(
+            Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags) {
+        List<FileOrderSourceOrderTags> ot = new ArrayList<>();
+        if (confWithTags.containsKey(ConfigurationType.FILEORDERSOURCE)) {
+            ot = confWithTags.get(ConfigurationType.FILEORDERSOURCE).stream().map(dbItem -> {
+                try {
+                    FileOrderSourceOrderTags fos = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSourceOrderTags.class);
+                    if (fos.getTags() == null || fos.getTags().isEmpty()) {
+                        return null;
+                    }
+                    fos.setName(dbItem.getName());
+                    return fos;
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
+                return null;
+            }).filter(Objects::nonNull).toList();
+        }
+        if (ot.isEmpty()) {
+            ot = null;
+        }
+        return ot;
+    }
+    
+    private static List<ScheduleOrderTags> getSchedulesOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags) {
+        List<ScheduleOrderTags> ot = new ArrayList<>();
+        if (confWithTags.containsKey(ConfigurationType.SCHEDULE)) {
+            ot = confWithTags.get(ConfigurationType.SCHEDULE).stream().map(dbItem -> {
+                try {
+                    ScheduleOrderTags sch = Globals.objectMapper.readValue(dbItem.getContent(), ScheduleOrderTags.class);
+                    if (sch.getOrderParameterisations() == null) {
+                        return null;
+                    }
+                    sch.setOrderParameterisations(sch.getOrderParameterisations().stream().filter(op -> op.getTags() != null && !op.getTags()
+                            .isEmpty()).peek(op -> {
+                                op.setForceJobAdmission(null);
+                                op.setPositions(null);
+                                op.setPriority(null);
+                                op.setVariables(null);
+                            }).toList());
+                    if (sch.getOrderParameterisations().isEmpty()) {
+                        return null;
+                    }
+                    sch.setName(dbItem.getName());
+                    return sch;
+                } catch (Exception e) {
+                    LOGGER.error("", e);
+                }
+                return null;
+            }).filter(Objects::nonNull).toList();
+        }
+        if (ot.isEmpty()) {
+            ot = null;
+        }
+        return ot;
+    }
+    
+    private static List<AddOrdersOrderTags> getAddOrderOrderTags(Map<String, String> workflowsWithTags) {
+        List<AddOrdersOrderTags> ot = workflowsWithTags.entrySet().stream().map(dbItem -> {
+            try {
+                AddOrdersOrderTags aoot = Globals.objectMapper.readValue(dbItem.getValue(), AddOrdersOrderTags.class);
+                aoot.setName(dbItem.getKey());
+                return aoot;
+            } catch (Exception e) {
+                LOGGER.error("", e);
+            }
+            return null;
+        }).filter(Objects::nonNull).toList();
+        if (ot.isEmpty()) {
+            ot = null;
+        }
+        return ot;
+    }
 
     private static ExportedTags getTagsToExportFromConfigurationObjects(Set<ConfigurationObject> deployables, SOSHibernateSession session) {
         ExportedTags tagsToExport = new ExportedTags();
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(session);
         InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
         InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
         Map<String, ExportedTagItem> tags = new HashMap<>();
@@ -943,8 +1096,33 @@ public class ExportUtils {
             });
         }
         
+        // order tags
+        List<Integer> types = Arrays.asList(ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
+        Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags = invDbLayer.getConfigurationsWithOrderTags(types).stream().collect(
+                Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum));
+
+        Map<String, String> workflowsWithTags = invDbLayer.getWorkflowWithOrderTags();
+
+        Map<ConfigurationType, Set<String>> deployableNamesPerType = deployables.stream().collect(Collectors.groupingBy(
+                ConfigurationObject::getObjectType, Collectors.mapping(ConfigurationObject::getName, Collectors.toSet())));
+        deployableNamesPerType.putIfAbsent(ConfigurationType.FILEORDERSOURCE, Collections.emptySet());
+        deployableNamesPerType.putIfAbsent(ConfigurationType.SCHEDULE, Collections.emptySet());
+        deployableNamesPerType.putIfAbsent(ConfigurationType.WORKFLOW, Collections.emptySet());
+
+        workflowsWithTags.keySet().retainAll(deployableNamesPerType.get(ConfigurationType.WORKFLOW));
+
+        confWithTags.get(ConfigurationType.FILEORDERSOURCE).removeIf(i -> !deployableNamesPerType.get(ConfigurationType.FILEORDERSOURCE).contains(i
+                .getName()));
+        confWithTags.get(ConfigurationType.SCHEDULE).removeIf(i -> !deployableNamesPerType.get(ConfigurationType.SCHEDULE).contains(i.getName()));
+
+        ExportedOrderTags ot = new ExportedOrderTags();
+        ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags));
+        ot.setSchedules(getSchedulesOrderTags(confWithTags));
+        ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags));
+        
         tagsToExport.setTags(tags.values().stream().collect(Collectors.toList()));
         tagsToExport.setJobTags(jobTags.stream().collect(Collectors.toList()));
+        tagsToExport.setOrderTags(ot);
         return tagsToExport;
     }
     

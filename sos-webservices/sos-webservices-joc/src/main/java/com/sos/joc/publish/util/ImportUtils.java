@@ -3,6 +3,7 @@ package com.sos.joc.publish.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -16,16 +17,22 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -48,27 +55,52 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.AdmissionTime;
+import com.sos.inventory.model.instruction.CaseWhen;
+import com.sos.inventory.model.instruction.ConsumeNotices;
+import com.sos.inventory.model.instruction.Cycle;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.StickySubagent;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.report.Report;
+import com.sos.inventory.model.schedule.OrderParameterisation;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.script.Script;
+import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.WorkflowConverter;
+import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.db.history.DBItemHistoryOrderTag;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryJobTag;
+import com.sos.joc.db.inventory.DBItemInventoryJobTagging;
+import com.sos.joc.db.inventory.DBItemInventoryOrderTag;
+import com.sos.joc.db.inventory.DBItemInventoryTag;
 import com.sos.joc.db.inventory.DBItemInventoryTagGroup;
+import com.sos.joc.db.inventory.DBItemInventoryTagging;
+import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
+import com.sos.joc.db.inventory.InventoryOrderTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagGroupDBLayer;
+import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -103,10 +135,15 @@ import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
+import com.sos.joc.model.tag.AddOrderOrderTags;
+import com.sos.joc.model.tag.AddOrdersOrderTags;
 import com.sos.joc.model.tag.ExportedJobTagItem;
 import com.sos.joc.model.tag.ExportedJobTagItems;
+import com.sos.joc.model.tag.ExportedOrderTags;
 import com.sos.joc.model.tag.ExportedTagItem;
 import com.sos.joc.model.tag.ExportedTags;
+import com.sos.joc.model.tag.FileOrderSourceOrderTags;
+import com.sos.joc.model.tag.ScheduleOrderTags;
 import com.sos.joc.model.tag.common.JobTags;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
@@ -673,8 +710,10 @@ public class ImportUtils {
                         jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
-                if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
-                  tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toByteArray(), ExportedTags.class);
+                if (entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
+                    tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                } else if (entryName.equals(ExportUtils.TAGS_ENTRY_OLD_NAME)) {
+                    tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toString(), ExportedTags.class);
                 }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
                 if (fromArchive != null) {
@@ -810,7 +849,7 @@ public class ImportUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.objectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -818,8 +857,10 @@ public class ImportUtils {
                         jocMetaInfo.setVersionId(fromFile.getVersionId());
                     }
                 }
-                if(entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
-                  tagsFromArchive = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                if (entryName.equals(ExportUtils.TAGS_ENTRY_NAME)) {
+                    tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toString(), ExportedTags.class);
+                } else if (entryName.equals(ExportUtils.TAGS_ENTRY_OLD_NAME)) {
+                    tagsFromArchive = Globals.objectMapper.readValue(outBuffer.toString(), ExportedTags.class);
                 }
                 ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
                 if (fromArchive != null) {
@@ -1539,8 +1580,549 @@ public class ImportUtils {
         }
     }
     
-    public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<String, String> oldNewNameMap, ExportedTags tagsFromArchive,
-            SOSHibernateSession session) throws SOSHibernateException {
+    public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            ExportedTags tagsFromArchive, Boolean overwriteTags, SOSHibernateSession session) throws SOSHibernateException {
+        if (Boolean.TRUE.equals(overwriteTags)) {
+            importTagsForced(cfgs, oldNewNameMap, tagsFromArchive, session);
+        } else {
+            importTags(cfgs, oldNewNameMap, tagsFromArchive, session);
+        }
+    }
+
+    public static void importTagsForced(List<DBItemInventoryConfiguration> cfgs, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            ExportedTags tagsFromArchive, SOSHibernateSession session) throws SOSHibernateException {
+        // determine group/tag assigment over all tags
+
+        BinaryOperator<GroupedTag> merge = (gt1, gt2) -> {
+            if (gt1.getGroup().equals(gt2.getGroup())) {
+                return gt1;
+            } else if (gt1.hasGroup() && gt2.hasGroup()) {
+                throw new IllegalArgumentException("The imported tag '" + gt1.getTag() + "' has more than one group");
+            } else {
+                throw new IllegalArgumentException("The imported tag '" + gt1.getTag() + "' is both ungrouped and grouped");
+            }
+        };
+        
+        Collector<GroupedTag, ?, Map<String, GroupedTag>> toMapCollector = Collectors.toMap(GroupedTag::getTag, Function.identity(), merge);
+
+        List<GroupedTag> groupedWorkflowTags = Optional.ofNullable(tagsFromArchive.getTags()).orElse(Collections.emptyList()).stream().sorted(
+                Comparator.nullsLast(Comparator.comparingInt(ExportedTagItem::getOrdering))).map(ExportedTagItem::getName).filter(Objects::nonNull)
+                .distinct().map(GroupedTag::new).peek(GroupedTag::testJavaNameRules).collect(Collectors.toList());
+
+        List<GroupedTag> groupedJobTags = Optional.ofNullable(tagsFromArchive.getJobTags()).orElse(Collections.emptyList()).stream().map(
+                ExportedJobTagItem::getJobs).filter(Objects::nonNull).map(ExportedJobTagItems::getAdditionalProperties).filter(Objects::nonNull).map(
+                        Map::values).flatMap(Collection::stream).flatMap(Collection::stream).distinct().map(GroupedTag::new).peek(
+                                GroupedTag::testJavaNameRules).collect(Collectors.toList());
+
+        Stream<String> groupedOrderTagsStream = Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getFileOrderSources).map(
+                t -> t.stream().map(FileOrderSourceOrderTags::getTags).filter(Objects::nonNull).flatMap(Collection::stream).distinct()).orElse(Stream
+                        .empty());
+
+        groupedOrderTagsStream = Stream.concat(groupedOrderTagsStream, Optional.ofNullable(tagsFromArchive.getOrderTags()).map(
+                ExportedOrderTags::getWorkflows).map(t -> t.stream().map(AddOrdersOrderTags::getAddOrderTags).filter(Objects::nonNull).map(
+                        AddOrderOrderTags::getAdditionalProperties).filter(Objects::nonNull).map(Map::values).flatMap(Collection::stream).flatMap(
+                                Collection::stream).distinct()).orElse(Stream.empty()));
+
+        groupedOrderTagsStream = Stream.concat(groupedOrderTagsStream, Optional.ofNullable(tagsFromArchive.getOrderTags()).map(
+                ExportedOrderTags::getSchedules).map(t -> t.stream().map(ScheduleOrderTags::getOrderParameterisations).filter(Objects::nonNull)
+                        .flatMap(Collection::stream).map(OrderParameterisation::getTags).filter(Objects::nonNull).flatMap(Collection::stream)
+                        .distinct()).orElse(Stream.empty()));
+
+        List<GroupedTag> groupedOrderTags = groupedOrderTagsStream.map(GroupedTag::new).peek(GroupedTag::testJavaNameRules).collect(Collectors
+                .toList());
+
+        // -> to provide java names rules and that every tag can have at least one group
+        Map<String, GroupedTag> groupedTags = Stream.of(groupedWorkflowTags, groupedJobTags, groupedOrderTags).flatMap(Collection::stream).collect(
+                toMapCollector);
+
+        if (!groupedTags.isEmpty()) {
+
+            InventoryTagGroupDBLayer dbGroupTagLayer = new InventoryTagGroupDBLayer(session);
+
+            Set<String> groups = groupedTags.values().stream().map(GroupedTag::getGroup).filter(Optional::isPresent).map(Optional::get).collect(
+                    Collectors.toSet());
+            List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbGroupTagLayer.getGroups(groups);
+            Map<String, Long> dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
+                    DBItemInventoryTagGroup::getId));
+
+            Date now = Date.from(Instant.now());
+
+            // insert new groups if necessary
+            if (!groups.isEmpty()) {
+                int maxGroupsOrdering = dbGroupTagLayer.getMaxGroupsOrdering();
+                for (String group : groups) {
+                    if (!dbGroupsMap.containsKey(group)) {
+                        DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
+                        item.setName(group);
+                        item.setModified(now);
+                        item.setOrdering(++maxGroupsOrdering);
+                        session.save(item);
+                        dbGroupsMap.put(group, item.getId());
+                    }
+                }
+            }
+            
+            // workflow tags
+            InventoryTagDBLayer tagDBLayer = new InventoryTagDBLayer(session);
+            Map<String, DBItemInventoryTag> updatedTags = updateTags(tagDBLayer, groupedWorkflowTags, groupedTags, dbGroupsMap, now, null);
+
+            // job tags
+            InventoryJobTagDBLayer jobTagDBLayer = new InventoryJobTagDBLayer(session);
+            Map<String, DBItemInventoryJobTag> updatedJobTags = updateTags(jobTagDBLayer, groupedJobTags, groupedTags, dbGroupsMap, now, null);
+
+            // orderTags
+            InventoryOrderTagDBLayer orderTagDBLayer = new InventoryOrderTagDBLayer(session);
+            Map<String, DBItemInventoryOrderTag> orderTagsWithNewGroupId = new HashMap<>();
+            Map<String, DBItemInventoryOrderTag> updatedOrderTags = updateTags(orderTagDBLayer, groupedOrderTags, groupedTags, dbGroupsMap,
+                    now, orderTagsWithNewGroupId);
+
+            //history orderTags
+            List<DBItemHistoryOrderTag> historyOrderTags =  OrderTags.getTagsByTagNames(orderTagsWithNewGroupId.keySet(), session);
+            for (DBItemHistoryOrderTag historyOrderTag : historyOrderTags) {
+                Optional<Long> newGroupId = Optional.ofNullable(orderTagsWithNewGroupId.get(historyOrderTag.getTagName())).map(
+                        DBItemInventoryOrderTag::getGroupId);
+                if (newGroupId.isPresent()) {
+                    historyOrderTag.setGroupId(newGroupId.get());
+                    // TODO ordering ???
+                    session.update(historyOrderTag);
+                }
+            }
+            
+            // tagging
+            DBLayerDeploy dbDepLayer = new DBLayerDeploy(session);
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap = cfgs.stream().collect(Collectors.groupingBy(
+                    DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
+            
+            // workflow tagging
+            Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = getTagsPerWorkflows(tagsFromArchive.getTags(), cfgsMap, oldNewNameMap,
+                    dbDepLayer);
+            
+            for (Map.Entry<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflow : tagsPerWorkflows.entrySet()) {
+                List<DBItemInventoryTagging> dbTagItems = tagDBLayer.getTaggings(tagsPerWorkflow.getKey().getId());
+                List<Long> tagIds = tagsPerWorkflow.getValue().stream().map(GroupedTag::new).map(GroupedTag::getTag).map(updatedTags::get).filter(
+                        Objects::nonNull).map(DBItemInventoryTag::getId).collect(Collectors.toList());
+
+                for (DBItemInventoryTagging dbTagItem : dbTagItems) {
+                    if (tagIds.contains(dbTagItem.getTagId())) {
+                        tagIds.remove(dbTagItem.getTagId());
+                        if (tagsPerWorkflow.getKey().getName().equals(dbTagItem.getName())) {
+                            continue;
+                        } else { // maybe new name because of suffix/prefix during import
+                            dbTagItem.setModified(now);
+                            dbTagItem.setName(tagsPerWorkflow.getKey().getName());
+                            session.update(dbTagItems);
+                        }
+                    } else {
+                        session.delete(dbTagItem);
+                    }
+                }
+                for (Long tagId : tagIds) {
+                    DBItemInventoryTagging newItem = new DBItemInventoryTagging();
+                    newItem.setCid(tagsPerWorkflow.getKey().getId());
+                    newItem.setName(tagsPerWorkflow.getKey().getName());
+                    newItem.setType(tagsPerWorkflow.getKey().getType());
+                    newItem.setModified(now);
+                    newItem.setTagId(tagId);
+                    session.save(newItem);
+                }
+            }
+            
+            // job tagging
+            Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = getJobTagsPerWorkflows(tagsFromArchive.getJobTags(), cfgsMap,
+                    oldNewNameMap, dbDepLayer);
+            
+            for (Map.Entry<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflow : jobTagsPerWorkflows.entrySet()) {
+                Set<DBItemInventoryJobTagging> dbJobTagItems = jobTagDBLayer.getTaggings(jobTagsPerWorkflow.getKey().getId());
+
+                for (DBItemInventoryJobTagging dbJobTagItem : dbJobTagItems) {
+                    session.delete(dbJobTagItem);
+                }
+                
+                for (JobTags jts : jobTagsPerWorkflow.getValue()) {
+                    for (String jobTag : jts.getJobTags()) {
+                        Optional<Long> tagId = Optional.ofNullable(updatedJobTags.get(new GroupedTag(jobTag).getTag())).map(
+                                DBItemInventoryJobTag::getId);
+                        if (tagId.isPresent()) {
+                            DBItemInventoryJobTagging newItem = new DBItemInventoryJobTagging();
+                            newItem.setCid(jobTagsPerWorkflow.getKey().getId());
+                            newItem.setWorkflowName(jobTagsPerWorkflow.getKey().getName());
+                            newItem.setJobName(jts.getJobName());
+                            newItem.setModified(now);
+                            newItem.setTagId(tagId.get());
+                            session.save(newItem);
+                        }
+                    }
+                }
+            }
+            
+            // order tagging
+            // fileordersources
+            updateFileOrderSources(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getFileOrderSources), cfgsMap,
+                    oldNewNameMap, dbDepLayer, now, true);
+            // schedules
+            updateSchedules(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getSchedules), cfgsMap, oldNewNameMap,
+                    dbDepLayer, now, true);
+            // workflows
+            updateWorkflows(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getWorkflows), cfgsMap, oldNewNameMap,
+                    dbDepLayer, now, true);
+
+        }
+    }
+    
+    private static <T extends IDBItemTag> Map<String, T> updateTags(ATagDBLayer<T> dbLayer, List<GroupedTag> groupedTagsFromArchive,
+            Map<String, GroupedTag> groupedTags, Map<String, Long> dbGroupsMap, Date now, Map<String, T> tagsWithNewGroupId)
+            throws SOSHibernateException {
+        List<T> tags = dbLayer.getAllTags();
+        List<GroupedTag> specificGroupedTags = new ArrayList<>(groupedTagsFromArchive);
+        Map<String, T> updatedTags = new HashMap<>();
+        for (T item : tags) {
+            GroupedTag gt = groupedTags.get(item.getName());
+            if (gt != null) {
+                specificGroupedTags.removeAll(Collections.singleton(gt));
+                Long groupId = gt.getGroup().map(dbGroupsMap::get).orElse(0L);
+                if (!groupId.equals(item.getGroupId())) {
+                    item.setGroupId(groupId);
+                    item.setModified(now);
+                    dbLayer.getSession().update(item);
+                    if (tagsWithNewGroupId != null) {
+                        tagsWithNewGroupId.put(item.getName(), item);
+                    }
+                }
+                updatedTags.put(item.getName(), item);
+            }
+        }
+        if (!specificGroupedTags.isEmpty()) { // new workflow/job/order tags if necessary
+            int maxOrdering = dbLayer.getMaxOrdering();
+            for (GroupedTag gt : specificGroupedTags) {
+                Long groupId = gt.getGroup().map(dbGroupsMap::get).orElse(0L);
+                T newItem = dbLayer.newDBItem();
+                newItem.setGroupId(groupId);
+                newItem.setModified(now);
+                newItem.setOrdering(++maxOrdering);
+                newItem.setName(gt.getTag());
+                dbLayer.getSession().save(newItem);
+                updatedTags.put(newItem.getName(), newItem);
+            }
+        }
+        return updatedTags;
+    }
+    
+    private static Map<DBItemInventoryConfiguration, Set<String>> getTagsPerWorkflows(List<ExportedTagItem> tags,
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            DBLayerDeploy invDBLayer) {
+        Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = new HashMap<>();
+        if (tags != null) {
+
+            tags.stream().sorted(Comparator.comparingInt(ExportedTagItem::getOrdering)).forEachOrdered(tag -> {
+                tag.getUsedBy().forEach(o -> {
+                    if (o.getName() != null) {
+                        try {
+                            ConfigurationType objectType = ConfigurationType.fromValue(o.getType());
+                            DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap
+                                    .getOrDefault(objectType, Collections.emptyMap()).getOrDefault(o.getName(), o.getName()));
+                            if (conf == null) {
+                                conf = invDBLayer.getConfigurationByName(o.getName(), objectType.intValue());
+                                if (conf != null) {
+                                    cfgsMap.putIfAbsent(objectType, new HashMap<>());
+                                    cfgsMap.get(objectType).put(conf.getName(), conf);
+                                }
+                            }
+                            if (conf != null) {
+                                tagsPerWorkflows.putIfAbsent(conf, new HashSet<>());
+                                tagsPerWorkflows.get(conf).add(tag.getName());
+                            }
+                        } catch (IllegalArgumentException e1) {
+                            //
+                        }
+                    }
+                });
+            });
+        }
+        return tagsPerWorkflows;
+    }
+    
+    private static Map<DBItemInventoryConfiguration, Set<JobTags>> getJobTagsPerWorkflows(List<ExportedJobTagItem> jobTags,
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            DBLayerDeploy invDBLayer) {
+        Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = new HashMap<>();
+        ConfigurationType objectType = ConfigurationType.WORKFLOW;
+        if (jobTags != null) {
+            jobTags.forEach(w -> {
+                if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null && !w.getJobs().getAdditionalProperties().isEmpty() && w
+                        .getName() != null) {
+                    DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap
+                            .getOrDefault(objectType, Collections.emptyMap()).getOrDefault(w.getName(), w.getName()));
+                    if (conf == null) {
+                        conf = invDBLayer.getConfigurationByName(w.getName(), objectType.intValue());
+                        if (conf != null) {
+                            cfgsMap.putIfAbsent(objectType, new HashMap<>());
+                            cfgsMap.get(objectType).put(conf.getName(), conf);
+                        }
+                    }
+                    if (conf != null) {
+                        jobTagsPerWorkflows.put(conf, w.getJobs().getAdditionalProperties().entrySet().stream().map(e -> {
+                            JobTags jt = new JobTags();
+                            jt.setJobName(e.getKey());
+                            jt.setJobTags(e.getValue());
+                            return jt;
+                        }).collect(Collectors.toSet()));
+                    }
+                }
+            });
+        }
+        return jobTagsPerWorkflows;
+    }
+    
+    private static void updateFileOrderSources(Optional<List<FileOrderSourceOrderTags>> orderTags,
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
+        //Set<DBItemInventoryConfiguration> updatedFileOrderSources = new HashSet<>();
+        ConfigurationType objectType = ConfigurationType.FILEORDERSOURCE;
+        InventoryDBLayer dbLayer = new InventoryDBLayer(invDBLayer.getSession());
+        if (orderTags.isPresent()) {
+            orderTags.get().forEach(f -> {
+                if (f.getTags() != null) {
+                    Set<String> tagsWithoutGroup = f.getTags().stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(Collectors.toSet());
+                    try {
+                        DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap.getOrDefault(
+                                objectType, Collections.emptyMap()).getOrDefault(f.getName(), f.getName()));
+                        if (conf == null || overwriteTags) { // otherwise it is already updated by "normal" import"
+                            if (conf == null) {
+                                conf = invDBLayer.getConfigurationByName(f.getName(), objectType.intValue());
+                            }
+                            if (conf != null) {
+                                com.sos.inventory.model.fileordersource.FileOrderSource fos =
+                                        (com.sos.inventory.model.fileordersource.FileOrderSource) JocInventory.content2IJSObject(conf.getContent(),
+                                                objectType);
+                                if (!tagsWithoutGroup.equals(fos.getTags())) {
+                                    fos.setTags(tagsWithoutGroup);
+                                    conf.setContent(JocInventory.toString(fos));
+                                    conf.setModified(now);
+                                    if (overwriteTags) {
+                                        invDBLayer.getSession().update(conf);
+                                    } else {
+                                        JocInventory.updateConfiguration(dbLayer, conf, fos);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }
+            });
+        }
+        //return updatedFileOrderSources;
+    }
+    
+    private static void updateSchedules(Optional<List<ScheduleOrderTags>> orderTags,
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
+        
+        ConfigurationType objectType = ConfigurationType.SCHEDULE;
+        InventoryDBLayer dbLayer = new InventoryDBLayer(invDBLayer.getSession());
+        if (orderTags.isPresent()) {
+            orderTags.get().forEach(s -> {
+                if (s.getOrderParameterisations() != null) {
+                    Map<String, Set<String>> tagsWithoutGroupPerOrderName = s.getOrderParameterisations().stream().collect(Collectors.toMap(
+                            OrderParameterisation::getOrderName, o -> o.getTags().stream().map(GroupedTag::new).map(GroupedTag::getTag).collect(
+                                    Collectors.toSet()), (k1, k2) -> k1));
+                    try {
+                        DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap.getOrDefault(
+                                objectType, Collections.emptyMap()).getOrDefault(s.getName(), s.getName()));
+                        if (conf == null || overwriteTags) { // otherwise it is already updated by "normal" import"
+                            if (conf == null) {
+                                conf = invDBLayer.getConfigurationByName(s.getName(), objectType.intValue());
+                            }
+                            if (conf != null) {
+                                Schedule sch = (Schedule) JocInventory.content2IJSObject(conf.getContent(), objectType);
+                                AtomicBoolean b = new AtomicBoolean(false);
+                                sch.getOrderParameterisations().forEach(op -> {
+                                    String oldTags = String.join(",", Optional.ofNullable(op.getTags()).orElse(Collections.emptySet()));
+                                    op.setTags(tagsWithoutGroupPerOrderName.get(op.getOrderName()));
+                                    String newTags = String.join(",", Optional.ofNullable(op.getTags()).orElse(Collections.emptySet()));
+                                    if (!oldTags.equals(newTags)) {
+                                        b.set(true);
+                                    }
+                                });
+                                if (b.get()) {
+                                    conf.setContent(JocInventory.toString(sch));
+                                    conf.setModified(now);
+                                    if (overwriteTags) {
+                                        invDBLayer.getSession().update(conf);
+                                    } else {
+                                        JocInventory.updateConfiguration(dbLayer, conf, sch);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }
+            });
+        }
+    }
+    
+    private static void updateWorkflows(Optional<List<AddOrdersOrderTags>> orderTags,
+            Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
+
+        ConfigurationType objectType = ConfigurationType.WORKFLOW;
+        InventoryDBLayer dbLayer = new InventoryDBLayer(invDBLayer.getSession());
+        if (orderTags.isPresent()) {
+            orderTags.get().forEach(w -> {
+                if (w.getAddOrderTags() != null && w.getAddOrderTags().getAdditionalProperties() != null && !w.getAddOrderTags()
+                        .getAdditionalProperties().isEmpty()) {
+                    try {
+                        DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap.getOrDefault(
+                                objectType, Collections.emptyMap()).getOrDefault(w.getName(), w.getName()));
+                        if (conf == null || overwriteTags) { // otherwise it is already updated by "normal" import"
+                            if (conf == null) {
+                                conf = invDBLayer.getConfigurationByName(w.getName(), objectType.intValue());
+                            }
+                            if (conf != null) {
+                                Workflow wf = (Workflow) JocInventory.content2IJSObject(conf.getContent(), objectType);
+                                AtomicBoolean b = new AtomicBoolean(false);
+                                AtomicInteger pos = new AtomicInteger(0);
+                                updateWorkflowInstructions(wf.getInstructions(), new HashMap<>(w.getAddOrderTags().getAdditionalProperties()), pos,
+                                        b);
+                                if (b.get()) {
+                                    conf.setContent(JocInventory.toString(wf));
+                                    conf.setModified(now);
+                                    if (overwriteTags) {
+                                        invDBLayer.getSession().update(conf);
+                                        JocInventory.handleWorkflowSearch(dbLayer, wf, conf.getId());
+                                    } else {
+                                        JocInventory.updateConfiguration(dbLayer, conf, wf);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+                }
+            });
+        }
+    }
+    
+    private static void updateWorkflowInstructions(List<Instruction> insts, Map<String, LinkedHashSet<String>> orderTags, AtomicInteger pos,
+            AtomicBoolean b) {
+        if (insts != null && !orderTags.isEmpty()) {
+        
+            for (int i = 0; i < insts.size(); i++) {
+                Instruction inst = insts.get(i);
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin fj = inst.cast();
+                    if (fj.getBranches() != null) {
+                        for (Branch branch : fj.getBranches()) {
+                            if (branch.getWorkflow() != null) {
+                                updateWorkflowInstructions(branch.getWorkflow().getInstructions(), orderTags, pos, b);
+                            }
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        updateWorkflowInstructions(fl.getWorkflow().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case CONSUME_NOTICES:
+                    ConsumeNotices cn = inst.cast();
+                    if (cn.getSubworkflow() == null) {
+                        updateWorkflowInstructions(cn.getSubworkflow().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    if (ie.getThen() != null) {
+                        updateWorkflowInstructions(ie.getThen().getInstructions(), orderTags, pos, b);
+                    }
+                    if (ie.getElse() != null) {
+                        updateWorkflowInstructions(ie.getElse().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case CASE_WHEN:
+                    CaseWhen cw = inst.cast();
+                    if (cw.getCases() != null) {
+                        for (When when : cw.getCases()) {
+                            if (when.getThen() != null) {
+                                updateWorkflowInstructions(when.getThen().getInstructions(), orderTags, pos, b);
+                            }
+                        }
+                    }
+                    if (cw.getElse() != null) {
+                        updateWorkflowInstructions(cw.getElse().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    if (tc.getTry() != null) {
+                        updateWorkflowInstructions(tc.getTry().getInstructions(), orderTags, pos, b);
+                    }
+                    if (tc.getCatch() != null) {
+                        updateWorkflowInstructions(tc.getCatch().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case LOCK:
+                    com.sos.inventory.model.instruction.Lock l = inst.cast();
+                    if (l.getLockedWorkflow() != null) {
+                        updateWorkflowInstructions(l.getLockedWorkflow().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    if (c.getCycleWorkflow() != null) {
+                        updateWorkflowInstructions(c.getCycleWorkflow().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case STICKY_SUBAGENT:
+                    StickySubagent sticky = inst.cast();
+                    if (sticky.getSubworkflow() != null) {
+                        updateWorkflowInstructions(sticky.getSubworkflow().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case OPTIONS:
+                    Options opts = inst.cast();
+                    if (opts.getBlock() != null) {
+                        updateWorkflowInstructions(opts.getBlock().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case ADMISSION_TIME:
+                    AdmissionTime at = inst.cast();
+                    if (at.getBlock() != null) {
+                        updateWorkflowInstructions(at.getBlock().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    int index = pos.getAndIncrement();
+                    String orderTagsKey = index < 10 ? "0" + index : "" + index;
+                    String oldTags = String.join(",", Optional.ofNullable(ao.getTags()).orElse(Collections.emptySet()));
+                    ao.setTags(orderTags.remove(orderTagsKey));
+                    String newTags = String.join(",", Optional.ofNullable(ao.getTags()).orElse(Collections.emptySet()));
+                    if (!oldTags.equals(newTags)) {
+                       b.set(true); 
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
+            ExportedTags tagsFromArchive, SOSHibernateSession session) throws SOSHibernateException {
 //        List<DBItemInventoryTag> newTags = new ArrayList<>();
 //        List<DBItemInventoryTag> storedTags = new ArrayList<>();
    
@@ -1549,6 +2131,7 @@ public class ImportUtils {
             
             InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
             InventoryTagGroupDBLayer dbGroupLayer = new InventoryTagGroupDBLayer(session);
+            DBLayerDeploy dbDepLayer = new DBLayerDeploy(session);
             Date now = Date.from(Instant.now());
             Map<String, DBItemInventoryTagGroup> allGroups = dbGroupLayer.getAllGroups().stream().collect(Collectors.toMap(
                     DBItemInventoryTagGroup::getName, Function.identity()));
@@ -1596,137 +2179,31 @@ public class ImportUtils {
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap = cfgs.stream().collect(Collectors.groupingBy(
                     DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
             
-            if (tagsFromArchive.getTags() != null) {
-                
-                Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = new HashMap<>();
-                tagsFromArchive.getTags().stream().sorted(Comparator.comparingInt(ExportedTagItem::getOrdering)).forEachOrdered(tag -> {
-                    tag.getUsedBy().forEach(o -> {
-                        try {
-                            DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(ConfigurationType.fromValue(o.getType()), Collections.emptyMap())
-                                    .get(oldNewNameMap.getOrDefault(o.getName(), o.getName()));
-                            if (conf != null) {
-                                tagsPerWorkflows.putIfAbsent(conf, new HashSet<>());
-                                tagsPerWorkflows.get(conf).add(tag.getName());
-                            }
-                        } catch (IllegalArgumentException e1) {
-                            //
-                        }
-                    });
-                });
-                
-                if (!tagsPerWorkflows.isEmpty()) {
-                    TaggingImpl.storeTaggings(tagsPerWorkflows, dbGroupsMap, dbLayer, true);
-                }
+            Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = getTagsPerWorkflows(tagsFromArchive.getTags(), cfgsMap, oldNewNameMap,
+                    dbDepLayer);
+
+            if (!tagsPerWorkflows.isEmpty()) {
+                TaggingImpl.storeTaggings(tagsPerWorkflows, dbGroupsMap, dbLayer, true);
             }
             
-            if (tagsFromArchive.getJobTags() != null) {
-                Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = new HashMap<>();
-                tagsFromArchive.getJobTags().forEach(w -> {
-                    if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null && !w.getJobs().getAdditionalProperties().isEmpty() && w
-                            .getName() != null) {
-                        DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap()).get(oldNewNameMap
-                                .getOrDefault(w.getName(), w.getName()));
-                        if (conf != null) {
-                            jobTagsPerWorkflows.put(conf, w.getJobs().getAdditionalProperties().entrySet().stream().map(e -> {
-                                JobTags jt = new JobTags();
-                                jt.setJobName(e.getKey());
-                                jt.setJobTags(e.getValue());
-                                return jt;
-                            }).collect(Collectors.toSet()));
-                        }
-                    }
-                });
-                if (!jobTagsPerWorkflows.isEmpty()) {
-                    com.sos.joc.tags.job.impl.TaggingImpl.storeTaggings(jobTagsPerWorkflows, dbGroupsMap, new InventoryJobTagDBLayer(session), true);
-                }
+            Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = getJobTagsPerWorkflows(tagsFromArchive.getJobTags(), cfgsMap,
+                    oldNewNameMap, dbDepLayer);
+
+            if (!jobTagsPerWorkflows.isEmpty()) {
+                com.sos.joc.tags.job.impl.TaggingImpl.storeTaggings(jobTagsPerWorkflows, dbGroupsMap, new InventoryJobTagDBLayer(session), true);
             }
             
+            // order tagging
+            // fileordersources
+            updateFileOrderSources(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getFileOrderSources), cfgsMap,
+                    oldNewNameMap, dbDepLayer, now, false);
+            // schedules
+            updateSchedules(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getSchedules), cfgsMap, oldNewNameMap,
+                    dbDepLayer, now, false);
+            // workflows
+            updateWorkflows(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getWorkflows), cfgsMap, oldNewNameMap,
+                    dbDepLayer, now, false);
             
-//            if (!tagsFromArchive.getTags().isEmpty()) {
-//                tagsFromArchive.getTags().stream().forEach(item -> {
-//                    GroupedTag gt = new GroupedTag(item.getName());
-//                    final DBItemInventoryTag tag = dbLayer.getTag(gt.getTag());
-//                    List<ExportedTaggedObject> taggingItems = item.getUsedBy();
-//                    if (tag != null) {
-//                        tag.setModified(now);
-//                        try {
-//                            session.update(tag);
-//                        } catch (SOSHibernateException e) {
-//                            throw new JocSosHibernateException(e);
-//                        }
-//                        storedTags.add(tag);
-//                        List<DBItemInventoryTagging> existingTaggings = dbLayer.getTaggingsByTagId(tag.getId());
-//                        taggingItems.stream().forEach(tagging -> {
-//                            List<DBItemInventoryTagging> taggingsByNameType = dbLayer.getTaggings(tagging.getName(), ConfigurationType.fromValue(
-//                                    tagging.getType()).intValue());
-//                            existingTaggings.addAll(taggingsByNameType.stream().filter(tagItem -> tagItem.getTagId().equals(tag.getId())).collect(
-//                                    Collectors.toList()));
-//                            taggingItems.stream().forEach(used -> {
-//                                DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg
-//                                        .getType().equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
-//                                if (config != null) {
-//                                    DBItemInventoryTagging exTagging = existingTaggings.stream().filter(cfgTagging -> cfgTagging.getName().equals(
-//                                            config.getName()) && cfgTagging.getType().equals(config.getType())).findAny().orElse(null);
-//                                    if (exTagging != null) {
-//                                        exTagging.setTagId(tag.getId());
-//                                        exTagging.setModified(now);
-//                                        try {
-//                                            session.update(exTagging);
-//                                        } catch (SOSHibernateException e) {
-//                                            throw new JocSosHibernateException(e);
-//                                        }
-//                                    }
-//                                }
-//                            });
-//                        });
-//                    } else {
-//                        DBItemInventoryTag newTag = new DBItemInventoryTag();
-//                        newTag.setName(item.getName());
-//                        newTag.setOrdering(item.getOrdering());
-//                        newTag.setModified(now);
-//                        newTags.add(newTag);
-//                        try {
-//                            session.save(newTag);
-//                        } catch (SOSHibernateException e) {
-//                            throw new JocSosHibernateException(e);
-//                        }
-//                        storedTags.add(newTag);
-//                        taggingItems.stream().forEach(used -> {
-//                            DBItemInventoryConfiguration config = cfgs.stream().filter(cfg -> cfg.getName().equals(used.getName()) && cfg.getType()
-//                                    .equals(ConfigurationType.fromValue(used.getType()).intValue())).findAny().orElse(null);
-//                            if (config != null) {
-//                                DBItemInventoryTagging newTagging = new DBItemInventoryTagging();
-//                                newTagging.setCid(config.getId());
-//                                newTagging.setName(used.getName());
-//                                newTagging.setType(ConfigurationType.fromValue(used.getType()).intValue());
-//                                newTagging.setTagId(newTag.getId());
-//                                newTagging.setModified(now);
-//                                try {
-//                                    session.save(newTagging);
-//                                } catch (SOSHibernateException e) {
-//                                    throw new JocSosHibernateException(e);
-//                                }
-//                            }
-//                        });
-//
-//                    }
-//                });
-//            }
-//            if (storedTags != null) {
-//                AtomicInteger ordering = new AtomicInteger(1);
-//                List<DBItemInventoryTag> allDbTags = dbLayer.getAllTags();
-//                // new HashSet<DBItemInventoryTag>(storedTags);
-//                // get all Tags from db and merge them to update ordering for all tags
-//                // for each item from import file json -> DBItemInventoryTag -> items.add()
-//                Stream.concat(allDbTags.stream(), storedTags.stream()).distinct().sorted(Comparator.comparing(DBItemInventoryTag::getOrdering)
-//                        .thenComparing(DBItemInventoryTag::getName)).peek(item -> item.setOrdering(ordering.getAndIncrement())).forEach(tag -> {
-//                            try {
-//                                session.update(tag);
-//                            } catch (SOSHibernateException e) {
-//                                throw new JocSosHibernateException(e);
-//                            }
-//                        });
-//            }
         }
     }
 }

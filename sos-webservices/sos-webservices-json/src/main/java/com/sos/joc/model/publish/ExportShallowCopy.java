@@ -18,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deployables",
-    "releasables"
+    "releasables",
+    "inclAllTags"
 })
 public class ExportShallowCopy {
 
@@ -38,6 +39,8 @@ public class ExportShallowCopy {
      */
     @JsonProperty("releasables")
     private ReleasablesFilter releasables;
+    @JsonProperty("inclAllTags")
+    private Boolean inclAllTags = false;
 
     /**
      * Filter for valid and invalid Deployable Objects
@@ -83,14 +86,24 @@ public class ExportShallowCopy {
         this.releasables = releasables;
     }
 
+    @JsonProperty("inclAllTags")
+    public Boolean getInclAllTags() {
+        return inclAllTags;
+    }
+
+    @JsonProperty("inclAllTags")
+    public void setInclAllTags(Boolean inclAllTags) {
+        this.inclAllTags = inclAllTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deployables", deployables).append("releasables", releasables).toString();
+        return new ToStringBuilder(this).append("deployables", deployables).append("releasables", releasables).append("inclAllTags", inclAllTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployables).append(releasables).toHashCode();
+        return new HashCodeBuilder().append(deployables).append(releasables).append(inclAllTags).toHashCode();
     }
 
     @Override
@@ -102,7 +115,7 @@ public class ExportShallowCopy {
             return false;
         }
         ExportShallowCopy rhs = ((ExportShallowCopy) other);
-        return new EqualsBuilder().append(deployables, rhs.deployables).append(releasables, rhs.releasables).isEquals();
+        return new EqualsBuilder().append(deployables, rhs.deployables).append(releasables, rhs.releasables).append(inclAllTags, rhs.inclAllTags).isEquals();
     }
 
 }

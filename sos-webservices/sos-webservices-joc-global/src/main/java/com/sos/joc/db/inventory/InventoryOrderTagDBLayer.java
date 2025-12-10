@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +15,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryOrderTagDBLayer extends ATagDBLayer<DBItemInventoryOrderTag> {
 
@@ -31,6 +33,11 @@ public class InventoryOrderTagDBLayer extends ATagDBLayer<DBItemInventoryOrderTa
     @Override
     protected String getTaggingTable() {
         return null;
+    }
+    
+    @Override
+    public DBItemInventoryOrderTag newDBItem() {
+        return new DBItemInventoryOrderTag();
     }
     
     public List<String> getTagsWithGroups(Collection<String> tagNames) {
@@ -64,6 +71,29 @@ public class InventoryOrderTagDBLayer extends ATagDBLayer<DBItemInventoryOrderTa
             }
 
             return result.stream().map(GroupedTag::toString).collect(Collectors.toList());
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<DBItemInventoryConfiguration> getCongurations(Collection<String> tagNames) {
+        try {
+            StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where type in (:types)");
+            sql.append(" and content like :hasTags");
+
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(sql.toString());
+            query.setParameterList("types", Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(),
+                    ConfigurationType.SCHEDULE.intValue()));
+            query.setParameter("hasTags", "%\"tags\"%");
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
 
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

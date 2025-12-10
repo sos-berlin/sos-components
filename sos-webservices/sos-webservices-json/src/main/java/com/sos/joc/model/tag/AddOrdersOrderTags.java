@@ -8,44 +8,28 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-
-/**
- * Ex-/Import schema for inventory object references for tag items
- * <p>
- * 
- * 
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "name",
-    "type"
+    "addOrderTags"
 })
-public class ExportedTaggedObject {
+public class AddOrdersOrderTags {
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
     private String name;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    private String type;
+    @JsonProperty("addOrderTags")
+    private AddOrderOrderTags addOrderTags;
 
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -57,7 +41,6 @@ public class ExportedTaggedObject {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -65,38 +48,24 @@ public class ExportedTaggedObject {
         this.name = name;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public String getType() {
-        return type;
+    @JsonProperty("addOrderTags")
+    public AddOrderOrderTags getAddOrderTags() {
+        return addOrderTags;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
+    @JsonProperty("addOrderTags")
+    public void setAddOrderTags(AddOrderOrderTags addOrderInstructions) {
+        this.addOrderTags = addOrderInstructions;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("type", type).toString();
+        return new ToStringBuilder(this).append("name", name).append("addOrderTags", addOrderTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(type).toHashCode();
+        return new HashCodeBuilder().append(name).append(addOrderTags).toHashCode();
     }
 
     @Override
@@ -104,11 +73,11 @@ public class ExportedTaggedObject {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportedTaggedObject) == false) {
+        if ((other instanceof AddOrdersOrderTags) == false) {
             return false;
         }
-        ExportedTaggedObject rhs = ((ExportedTaggedObject) other);
-        return new EqualsBuilder().append(name, rhs.name).append(type, rhs.type).isEquals();
+        AddOrdersOrderTags rhs = ((AddOrdersOrderTags) other);
+        return new EqualsBuilder().append(name, rhs.name).append(addOrderTags, rhs.addOrderTags).isEquals();
     }
 
 }

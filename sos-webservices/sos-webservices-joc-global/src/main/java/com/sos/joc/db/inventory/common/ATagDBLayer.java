@@ -36,6 +36,8 @@ public abstract class ATagDBLayer<T extends IDBItemTag> extends DBLayer {
 
     protected abstract String getTaggingTable();
     
+    public abstract T newDBItem();
+    
     public List<String> getAllTagNames() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder("select new ").append(GroupedTag.class.getName());

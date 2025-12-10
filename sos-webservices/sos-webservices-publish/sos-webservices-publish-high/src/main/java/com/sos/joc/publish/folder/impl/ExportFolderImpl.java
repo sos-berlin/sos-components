@@ -110,7 +110,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 configurationsForShallowCopy = ExportUtils.getFolderConfigurationObjectsForShallowCopy(filter, account, dbLayer);
                 configurationsForShallowCopy = configurationsForShallowCopy.stream()
-                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                        .filter(Objects::nonNull).filter(item -> canAdd(item.getPath(), permittedFolders)).collect(Collectors.toSet());
                 final Stream<ConfigurationObject> stream = configurationsForShallowCopy.stream();
                 CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
                         dbAudit.getId(), dbAudit.getCreated()));
@@ -143,7 +143,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     stream = ExportUtils.writeTarGzipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion,
-                            filter.getUseShortPath(), filter.getShallowCopy().getFolders());
+                            filter.getUseShortPath(), filter.getShallowCopy().getFolders(), filter.getShallowCopy().getInclAllTags());
                 }
             } else {
                 if (filter.getForSigning() != null) {
@@ -151,7 +151,7 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
                     		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
                     stream = ExportUtils.writeZipFileShallow(configurationsForShallowCopy, dbLayer, jocVersion, apiVersion, inventoryVersion,
-                            filter.getUseShortPath(), filter.getShallowCopy().getFolders());
+                            filter.getUseShortPath(), filter.getShallowCopy().getFolders(), filter.getShallowCopy().getInclAllTags());
                 }
             }
             return responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());

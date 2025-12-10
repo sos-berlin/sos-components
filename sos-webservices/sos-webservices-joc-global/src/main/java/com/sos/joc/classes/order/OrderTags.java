@@ -772,7 +772,7 @@ public class OrderTags {
                 " or "));
         hql.append(" where " + clause);
 
-        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString(), DBItemHistoryOrderTag.class);
+        Query<DBItemHistoryOrderTag> query = connection.createQuery(hql.toString());
         AtomicInteger counter = new AtomicInteger();
         for (List<String> chunk : chunkedTagNames) {
             query.setParameterList("tagNames" + counter.getAndIncrement(), chunk);

@@ -902,7 +902,7 @@ public class JocInventory {
         });
     }
 
-    private static void handleWorkflowSearch(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
             if (config == null && !SOSString.isEmpty(item.getContent())) {

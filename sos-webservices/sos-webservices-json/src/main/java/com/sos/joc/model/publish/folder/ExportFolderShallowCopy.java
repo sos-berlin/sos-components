@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -30,7 +29,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "onlyValidObjects",
     "withoutDrafts",
     "withoutDeployed",
-    "withoutReleased"
+    "withoutReleased",
+    "inclAllTags"
 })
 public class ExportFolderShallowCopy {
 
@@ -59,6 +59,8 @@ public class ExportFolderShallowCopy {
     private Boolean withoutDeployed = false;
     @JsonProperty("withoutReleased")
     private Boolean withoutReleased = false;
+    @JsonProperty("inclAllTags")
+    private Boolean inclAllTags = false;
 
     /**
      * 
@@ -150,14 +152,24 @@ public class ExportFolderShallowCopy {
         this.withoutReleased = withoutReleased;
     }
 
+    @JsonProperty("inclAllTags")
+    public Boolean getInclAllTags() {
+        return inclAllTags;
+    }
+
+    @JsonProperty("inclAllTags")
+    public void setInclAllTags(Boolean inclAllTags) {
+        this.inclAllTags = inclAllTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("objectTypes", objectTypes).append("folders", folders).append("recursive", recursive).append("onlyValidObjects", onlyValidObjects).append("withoutDrafts", withoutDrafts).append("withoutDeployed", withoutDeployed).append("withoutReleased", withoutReleased).toString();
+        return new ToStringBuilder(this).append("objectTypes", objectTypes).append("folders", folders).append("recursive", recursive).append("onlyValidObjects", onlyValidObjects).append("withoutDrafts", withoutDrafts).append("withoutDeployed", withoutDeployed).append("withoutReleased", withoutReleased).append("inclAllTags", inclAllTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(withoutDeployed).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(withoutReleased).toHashCode();
+        return new HashCodeBuilder().append(folders).append(inclAllTags).append(withoutDeployed).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(withoutReleased).toHashCode();
     }
 
     @Override
@@ -169,7 +181,7 @@ public class ExportFolderShallowCopy {
             return false;
         }
         ExportFolderShallowCopy rhs = ((ExportFolderShallowCopy) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(withoutDeployed, rhs.withoutDeployed).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(withoutReleased, rhs.withoutReleased).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(inclAllTags, rhs.inclAllTags).append(withoutDeployed, rhs.withoutDeployed).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(withoutReleased, rhs.withoutReleased).isEquals();
     }
 
 }

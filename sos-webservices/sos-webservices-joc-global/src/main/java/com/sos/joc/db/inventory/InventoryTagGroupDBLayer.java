@@ -39,12 +39,51 @@ public class InventoryTagGroupDBLayer extends ATagDBLayer<DBItemInventoryTagGrou
     protected String getTaggingTable() {
         return null;
     }
+
+    @Override
+    public DBItemInventoryTagGroup newDBItem() {
+        return new DBItemInventoryTagGroup();
+    }
     
     public List<DBItemInventoryTagGroup> getAllGroups() throws DBConnectionRefusedException, DBInvalidDataException {
         return getTags((Set<String>) null);
     }
     
     public Integer deleteGroupIds(List<Long> groupIds, Set<String> tagNames, Set<JOCEvent> events) throws SOSHibernateException {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return 0;
+        }
+        boolean isTransactional = getSession().isTransactionOpened();
+        boolean isAutocommit = getSession().isAutoCommit();
+        if (!isTransactional) {
+            if (isAutocommit) {
+                getSession().setAutoCommit(false); 
+            }
+            getSession().beginTransaction();
+        }
+        try {
+            Integer result = deleteGroupIdsTransactional(groupIds, tagNames, events);
+            if (!isTransactional) {
+                getSession().commit();
+                getSession().close();
+                if (isAutocommit) {
+                    getSession().setAutoCommit(true); 
+                }
+            }
+            return result;
+        } catch (SOSHibernateException e) {
+            if (!isTransactional) {
+                getSession().rollback();
+                getSession().close();
+                if (isAutocommit) {
+                    getSession().setAutoCommit(true); 
+                }
+            }
+            throw e;
+        }
+    }
+    
+    private Integer deleteGroupIdsTransactional(List<Long> groupIds, Set<String> tagNames, Set<JOCEvent> events) throws SOSHibernateException {
         if (groupIds == null || groupIds.isEmpty()) {
             return 0;
         }

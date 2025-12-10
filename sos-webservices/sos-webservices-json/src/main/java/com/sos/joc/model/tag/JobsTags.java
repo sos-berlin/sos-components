@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.tag.common.JobTags;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -78,7 +77,7 @@ public class JobsTags {
      * 
      */
     @JsonProperty("jobs")
-    public Set<com.sos.joc.model.tag.common.JobTags> getJobs() {
+    public Set<JobTags> getJobs() {
         return jobs;
     }
 
@@ -88,7 +87,7 @@ public class JobsTags {
      * 
      */
     @JsonProperty("jobs")
-    public void setJobs(Set<com.sos.joc.model.tag.common.JobTags> jobs) {
+    public void setJobs(Set<JobTags> jobs) {
         this.jobs = jobs;
     }
 

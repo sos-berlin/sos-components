@@ -20,35 +20,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "tags",
-    "jobTags"
+    "jobTags",
+    "orderTags"
 })
 public class ExportedTags {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("tags")
     private List<ExportedTagItem> tags = new ArrayList<ExportedTagItem>();
     @JsonProperty("jobTags")
     private List<ExportedJobTagItem> jobTags = new ArrayList<ExportedJobTagItem>();
+    @JsonProperty("orderTags")
+    private ExportedOrderTags orderTags;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("tags")
     public List<ExportedTagItem> getTags() {
         return tags;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("tags")
     public void setTags(List<ExportedTagItem> tags) {
         this.tags = tags;
@@ -64,14 +52,24 @@ public class ExportedTags {
         this.jobTags = jobTags;
     }
 
+    @JsonProperty("orderTags")
+    public ExportedOrderTags getOrderTags() {
+        return orderTags;
+    }
+
+    @JsonProperty("orderTags")
+    public void setOrderTags(ExportedOrderTags orderTags) {
+        this.orderTags = orderTags;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tags", tags).append("jobTags", jobTags).toString();
+        return new ToStringBuilder(this).append("tags", tags).append("jobTags", jobTags).append("orderTags", orderTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobTags).append(tags).toHashCode();
+        return new HashCodeBuilder().append(jobTags).append(tags).append(orderTags).toHashCode();
     }
 
     @Override
@@ -83,7 +81,7 @@ public class ExportedTags {
             return false;
         }
         ExportedTags rhs = ((ExportedTags) other);
-        return new EqualsBuilder().append(jobTags, rhs.jobTags).append(tags, rhs.tags).isEquals();
+        return new EqualsBuilder().append(jobTags, rhs.jobTags).append(tags, rhs.tags).append(orderTags, rhs.orderTags).isEquals();
     }
 
 }

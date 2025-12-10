@@ -71,7 +71,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 			FormDataBodyPart body, 
             String format,
 			boolean overwrite,
-			String targetFolder,
+			Boolean overwriteTags,
+            String targetFolder,
 			String prefix, 
 			String suffix,
 			String timeSpent,
@@ -87,6 +88,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setAuditLog(auditLog);
         filter.setTargetFolder(!"/".equals(targetFolder) ? targetFolder : null);
         filter.setOverwrite(overwrite);
+        filter.setOverwriteTags(Boolean.TRUE.equals(overwriteTags));
         filter.setPrefix(prefix);
         filter.setSuffix(suffix);
         filter.setFormat(ArchiveFormat.fromValue(format));
@@ -147,26 +149,27 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 LOGGER.info(String.format("  and API schema version: %1$s", jocMetaInfo.getApiVersion()));
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-            Set<String> agentNames = agentDbLayer.getVisibleAgentNames();
             
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
-            final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
-            Map<String, String> oldNewNameMap = new HashMap<>();
+            Map<ConfigurationType, Map<String, String>> oldNewNameMap = new HashMap<>();
             List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
             
             if (!configurations.isEmpty()) {
+                DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+                InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
+                Set<String> agentNames = agentDbLayer.getVisibleAgentNames();
+                Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
+                final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                
                 if (filter.getOverwrite()) {
-                    Stream<ConfigurationObject> cfgStream = configurations.stream();
+                    Stream<ConfigurationObject> cfgStream = configurations.stream().filter(Objects::nonNull);
                     if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                         cfgStream = cfgStream.peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()));
                         // filter according to folder permissions on target folder
                     }
                     filteredConfigurations = cfgStream.filter(configuration 
-                            -> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                            -> canAdd(configuration.getPath(), permittedFolders)).collect(Collectors.toSet());
                     if (!filteredConfigurations.isEmpty()) {
                         Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
                                 .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
@@ -174,12 +177,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                 for (ConfigurationObject configuration : configurationObjectsByType) {
-                                    DBItemInventoryConfiguration existingItem = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                                    if(existingItem != null) {
-                                        String jsonFromFile = Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration());
-                                        if(!JocInventory.isJsonHashEqual(existingItem.getContent(), jsonFromFile, existingItem.getTypeAsEnum())) {
-                                            storedConfigurations.add(
-                                                    dbLayer.updateInventoryConfiguration(configuration, existingItem, account, auditLogId, agentNames));
+                                    DBItemInventoryConfiguration existingItem = dbLayer.getConfigurationByName(configuration.getName(), configuration
+                                            .getObjectType());
+                                    if (existingItem != null) {
+                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration())) {
+                                            storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
+                                                    auditLogId, agentNames));
                                         } else {
                                             /*
                                              * hash is equal, content did not differ, but overwrite is set to true - conflicting
@@ -218,7 +221,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                         
                                         storedConfigurations.add(dbLayer.saveInventoryConfiguration(updateable.getConfigurationObject(), account,
                                                 auditLogId, agentNames));
-                                        oldNewNameMap.put(updateable.getOldName(), updateable.getNewName());
+                                        oldNewNameMap.putIfAbsent(updateable.getConfigurationObject().getObjectType(), new HashMap<>());
+                                        oldNewNameMap.get(updateable.getConfigurationObject().getObjectType()).put(updateable.getOldName(), updateable
+                                                .getNewName());
                                     }
                                 }
                             }
@@ -248,7 +253,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         for (ConfigurationType type : importOrder) {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                                for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                                for (ConfigurationObject configuration : configurationObjectsByType) {
                                     DBItemInventoryConfiguration existingConfiguration = 
                                             dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
                                     if (existingConfiguration == null) {
@@ -292,7 +297,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             
             if (values.getTags() != null) {
-                ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), hibernateSession);
+                ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), filter.getOverwriteTags(), hibernateSession);
             }
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
             List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations();

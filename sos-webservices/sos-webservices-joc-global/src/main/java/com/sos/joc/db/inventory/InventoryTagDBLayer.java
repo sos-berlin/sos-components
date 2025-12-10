@@ -21,6 +21,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 
@@ -40,6 +41,11 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
     @Override
     protected String getTaggingTable() {
         return DBLayer.DBITEM_INV_TAGGINGS;
+    }
+
+    @Override
+    public DBItemInventoryTag newDBItem() {
+        return new DBItemInventoryTag();
     }
 
     public List<DBItemInventoryTagging> getTaggings(Long cid) {
@@ -109,6 +115,41 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<DBItemInventoryTagging> getTaggings(List<String> names, Integer type) {
+        if (names == null || names.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryTagging> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getTaggings(SOSHibernate.getInClausePartition(i, names), type));
+            }
+            return result;
+        } else {
+            try {
+                StringBuilder sql = new StringBuilder();
+                sql.append("from ").append(DBLayer.DBITEM_INV_TAGGINGS);
+                sql.append(" where name in (:name) and type=:type");
+
+                Query<DBItemInventoryTagging> query = getSession().createQuery(sql.toString());
+                query.setParameterList("name", names);
+                query.setParameter("type", type);
+
+                List<DBItemInventoryTagging> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+
+                return result;
+
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
+            }
         }
     }
 
@@ -251,6 +292,32 @@ public class InventoryTagDBLayer extends ATagDBLayer<DBItemInventoryTag> {
                 // this method is exclusively used for tagging events. That should not throw exception. It affects only missing events.
                 return Collections.emptyList();
             }
+        }
+    }
+    
+    public List<ResponseBaseSearchItem> getWorkflowTags() {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select g.name as group, ic.name as path, t.name as name, t.ordering as ordering from ");
+            sql.append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg left join ");
+            sql.append(DBLayer.DBITEM_INV_TAGS).append(" t on t.id = tg.tagId left join ");
+            sql.append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on g.id = t.groupId left join ");
+            sql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on tg.cid = ic.id");
+
+            sql.append(" where tg.type=:type");
+
+            Query<ResponseBaseSearchItem> query = getSession().createQuery(sql.toString(), ResponseBaseSearchItem.class);
+            query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+
+            List<ResponseBaseSearchItem> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+
+            return result;
+
+        } catch (Exception ex) {
+            throw new JocSosHibernateException(ex);
         }
     }
     
