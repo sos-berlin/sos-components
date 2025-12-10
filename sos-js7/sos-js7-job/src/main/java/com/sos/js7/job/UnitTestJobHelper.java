@@ -104,6 +104,11 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
                 simulateCancelIfConfigured(job, step);
                 this.job.processOrder(step);
+
+                if (step.getOutcome().isFailed()) { // see simulateCancelIfConfigured
+                    return step.failed(step.getOutcome().getMessage(), null);
+                }
+
                 return step.processed();
             } catch (Throwable e) {
                 try {
@@ -122,14 +127,16 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 public void run() {
 
                     String name = Thread.currentThread().getName();
-                    LOGGER.info(String.format("[%s][start][simulateCancelIfConfigured][%ss]...", name, stepConfig.cancelAfterSeconds));
+                    step.getLogger().info(String.format("[%s][start][simulateCancelIfConfigured][after %ss]...", name,
+                            stepConfig.cancelAfterSeconds));
                     try {
                         TimeUnit.SECONDS.sleep(stepConfig.cancelAfterSeconds);
-                        job.onProcessOrderCanceled(step);
+                        job.cancelProcessOrder(step);
                     } catch (Exception e) {
-
+                        step.getLogger().error(String.format("[%s][simulateCancelIfConfigured]s", name, e.toString(), e));
                     }
-                    LOGGER.info(String.format("[%s][end][simulateCancelIfConfigured][%ss]", name, stepConfig.cancelAfterSeconds));
+                    step.getLogger().info(String.format("[%s][end][simulateCancelIfConfigured]after %ss", name, stepConfig.cancelAfterSeconds));
+                    step.getOutcome().setFailed("due to simulated cancel/kill");
                 }
             };
             thread.start();

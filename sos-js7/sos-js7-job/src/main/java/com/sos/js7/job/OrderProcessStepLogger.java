@@ -11,6 +11,8 @@ import com.sos.js7.job.JobArguments.LogLevel;
 
 import js7.launcher.forjava.internal.BlockingInternalJob;
 
+/** Represents a logger object which supports five log levels:<br/>
+ * INFO, DEBUG, TRACE, WARN, and ERROR. */
 public class OrderProcessStepLogger implements ISOSLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderProcessStepLogger.class);

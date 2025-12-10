@@ -34,19 +34,24 @@ import com.sos.js7.job.ValueSource.ValueSourceType;
  */
 public class JobArgument<T> extends SOSArgument<T> {
 
+    /** Indicates whether the argument is declared or undeclared. */
     public enum Type {
         DECLARED, UNDECLARED;
     }
 
+    /** Represents the structure type of the argument value. */
     public enum ArgumentType {
         SET, MAP, LIST, FLAT
     }
 
+    /** Represents the specific type for flat argument values. */
     public enum ArgumentFlatType {
         STRING, BOOLEAN, INTEGER, LONG, DOUBLE, BIGDECIMAL, ENUM, URI, CHARSET, PATH, FILE, OBJECT, LIST_VALUE_SINGLTON_MAP
     }
 
-    /** TODO: currently only ALL in use (ALL, ORDER_PREPARATION) */
+    /** Represents the scope of the argument.
+     *
+     * @apiNote Currently only {@link #ALL} is in use. */
     public enum Scope {
         ALL, ORDER_PREPARATION;
     }
@@ -216,7 +221,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         return type;
     }
 
-    /** Returns the structural type of this argument.
+    /** Returns the structural type of the argument value.
      * <p>
      * An argument can be a single value ({@code FLAT}) or a collection such as a {@code LIST}, {@code SET}, or {@code MAP}.
      *
@@ -225,7 +230,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         return argumentType;
     }
 
-    /** Returns the specific flat data type of this argument.
+    /** Returns the specific type for flat argument value.
      * <p>
      * This only applies when the argument is of type {@link ArgumentType#FLAT},<br/>
      * and it indicates the concrete data type the flat value should be interpreted as (e.g., STRING, BOOLEAN, PATH, etc.).
