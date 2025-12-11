@@ -394,6 +394,9 @@ public class OrdersHelper {
         if (o.state() instanceof Order.Sleeping) {
             return false;
         }
+        if (o.state() instanceof Order.WaitingForAdmission) {
+            return false;
+        }
         return o.isGoCommandable() && !o.isSuspended();
     }
 
