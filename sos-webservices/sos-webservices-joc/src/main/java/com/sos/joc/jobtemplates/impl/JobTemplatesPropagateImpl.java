@@ -112,11 +112,12 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
 
                 for (Map.Entry<String, Set<String>> entry : jobTemplateNamesPerWorkflowName.entrySet()) {
                     String workflowName = entry.getKey();
-                    DBItemInventoryConfiguration dbWorkflow = dbLayer.getConfigurationByName(JocInventory.pathToName(workflowName),
-                            ConfigurationType.WORKFLOW.intValue()).get(0);
-                    if (dbWorkflow == null) {
+                    List<DBItemInventoryConfiguration> dbWorkflows = dbLayer.getConfigurationByName(JocInventory.pathToName(workflowName),
+                            ConfigurationType.WORKFLOW.intValue());
+                    if (dbWorkflows == null || dbWorkflows.isEmpty()) {
                         continue; // TODO report?
                     }
+                    DBItemInventoryConfiguration dbWorkflow = dbWorkflows.get(0);
                     if (!folderIsPermitted(dbWorkflow.getFolder(), permittedFolders)) {
                         WorkflowReport wr = new WorkflowReport();
                         wr.setPath(dbWorkflow.getPath());
