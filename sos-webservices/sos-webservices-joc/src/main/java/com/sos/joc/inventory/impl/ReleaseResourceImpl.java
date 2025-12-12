@@ -76,7 +76,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
-import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -227,11 +226,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             }
         }
-        try {
-            DependencyResolver.updateDependencies(updateDependenciesFor);
-        } catch (Exception e) {
-            LOGGER.error("dependencies not updated due to: " , e);
-        }
         return bulkErrors;
 
         // Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException:
@@ -280,7 +274,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions, JocError jocError,
             DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders, boolean preDeploy) {
 
-        Set<DBItemInventoryConfiguration> updateDependenciesFor = new HashSet<>();
         List<Err419> bulkErrors = new ArrayList<>();
         Map<String, Workflow> cachedWorkflows = new HashMap<>();
         for (RequestFilter requestFilter : toUpdate) {
@@ -289,7 +282,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
-                updateDependenciesFor.add(conf);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
                     bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging, preDeploy));
                     JocInventory.postEvent(conf.getFolder());

@@ -769,4 +769,29 @@ public class DependencyResolver {
         } catch (SOSHibernateException e) {}
         return false;
     }
+    
+    public static void updateDependenciesForRenaming(DBItemInventoryConfiguration conf) {
+        if (conf == null) {
+            return;
+        }
+        if (!dependencyTypes.contains(conf.getType())) {
+            return;
+        }
+        new Thread(() -> {
+            try {
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection("DependencyResolver");
+                    DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
+                    depDbLayer.updateEnforce(Collections.singletonList(conf.getId()));
+                } finally {
+                    Globals.disconnect(session);
+                }
+            } catch (Exception e) {
+                //TODO use ProblemHelper
+                LOGGER.error("", e);
+            }
+        }, threadNamePrefix + Math.abs(threadNameSuffix.incrementAndGet() % 1000)).start();
+    }
+
 }

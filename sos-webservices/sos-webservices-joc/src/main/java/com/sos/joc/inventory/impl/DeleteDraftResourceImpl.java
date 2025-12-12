@@ -21,6 +21,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
+import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -46,6 +47,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     
     private List<RequestFilter> updated = new ArrayList<>();
     private List<RequestFilter> deleted = new ArrayList<>();
+    private List<DBItemInventoryConfiguration> updatedDbItems = new ArrayList<>();
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, byte[] inBytes) {
@@ -199,9 +201,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 }
             }
-            DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-            depDbLayer.updateEnforce(updated.stream().map(RequestFilter::getId).toList());
-            deleted.stream().map(RequestFilter::getId).forEach(depDbLayer::deleteDependencies);
+            if(!updatedDbItems.isEmpty()) {
+                DependencyResolver.updateDependencies(updatedDbItems);
+            }
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (SOSHibernateException e) {
             Globals.rollback(session);
@@ -233,6 +235,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 item.setModified(lastDeployment.getDeploymentDate());
                 JocInventory.updateConfiguration(dbLayer, item);
                 updated.add(r);
+                updatedDbItems.add(item);
             }
         } else if (JocInventory.isReleasable(type)) {
             DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(item.getId());
@@ -249,6 +252,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 item.setModified(releasedItem.getModified());
                 JocInventory.updateConfiguration(dbLayer, item);
                 updated.add(r);
+                updatedDbItems.add(item);
             }
         }
     }
