@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +26,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
-import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
@@ -198,8 +196,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                         dbAuditLog));
                 setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
-                DBLayerDependencies depDbLayer = new DBLayerDependencies(session);
-                depDbLayer.updateEnforce(Collections.singletonList(config.getId()));
+                DependencyResolver.updateDependenciesForRenaming(config);
                 events.add(config.getFolder());
                 if (JocInventory.isWorkflow(config.getType())) {
                     workflowInvIds.add(config.getId());
