@@ -1122,9 +1122,10 @@ public class ExportUtils {
 
         workflowsWithTags.keySet().retainAll(deployableNamesPerType.get(ConfigurationType.WORKFLOW));
 
-        confWithTags.get(ConfigurationType.FILEORDERSOURCE).removeIf(i -> !deployableNamesPerType.get(ConfigurationType.FILEORDERSOURCE).contains(i
-                .getName()));
-        confWithTags.get(ConfigurationType.SCHEDULE).removeIf(i -> !deployableNamesPerType.get(ConfigurationType.SCHEDULE).contains(i.getName()));
+        confWithTags.getOrDefault(ConfigurationType.FILEORDERSOURCE, Collections.emptyList()).removeIf(i -> !deployableNamesPerType.get(
+                ConfigurationType.FILEORDERSOURCE).contains(i.getName()));
+        confWithTags.getOrDefault(ConfigurationType.SCHEDULE, Collections.emptyList()).removeIf(i -> !deployableNamesPerType.get(
+                ConfigurationType.SCHEDULE).contains(i.getName()));
 
         ExportedOrderTags ot = new ExportedOrderTags();
         Map<String, String> groupedOrderTags = dbOrderTagLayer.getGroupedTags(null, true).stream().filter(GroupedTag::hasGroup).collect(Collectors

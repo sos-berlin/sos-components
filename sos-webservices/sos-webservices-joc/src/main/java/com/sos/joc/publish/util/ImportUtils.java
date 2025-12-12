@@ -1756,15 +1756,13 @@ public class ImportUtils {
             }
             
             // order tagging
+            Optional<ExportedOrderTags> exportedOrderTags = Optional.ofNullable(tagsFromArchive.getOrderTags());
             // fileordersources
-            updateFileOrderSources(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getFileOrderSources), cfgsMap,
-                    oldNewNameMap, dbDepLayer, now, true);
+            updateFileOrderSources(exportedOrderTags.map(ExportedOrderTags::getFileOrderSources), cfgsMap, oldNewNameMap, dbDepLayer, now, true);
             // schedules
-            updateSchedules(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getSchedules), cfgsMap, oldNewNameMap,
-                    dbDepLayer, now, true);
+            updateSchedules(exportedOrderTags.map(ExportedOrderTags::getSchedules), cfgsMap, oldNewNameMap, dbDepLayer, now, true);
             // workflows
-            updateWorkflows(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getWorkflows), cfgsMap, oldNewNameMap,
-                    dbDepLayer, now, true);
+            updateWorkflows(exportedOrderTags.map(ExportedOrderTags::getWorkflows), cfgsMap, oldNewNameMap, dbDepLayer, now, true);
 
         }
     }
