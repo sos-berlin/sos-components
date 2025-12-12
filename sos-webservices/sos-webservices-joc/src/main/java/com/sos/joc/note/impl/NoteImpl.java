@@ -60,6 +60,8 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             note.setDeliveryDate(Date.from(Instant.now()));
             note.setNoteId(dbItem.getId());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(note));
+        } catch (DBMissingDataException e) {
+            return responseStatus434JSError(e, true);
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
