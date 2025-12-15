@@ -270,8 +270,8 @@ public class YADECommandExecutor {
         YADEProviderFile sourceOrTargetFile = isSource ? sourceFile : sourceFile.getTarget();
 
         logIfMultipleCommands(logger, delegator.getLabel(), arg, delegator.getArgs().getCommands().getCommandDelimiter(), sourceOrTargetFile);
-        String prefix = String.format("[%s][%s][%s][%s]", sourceFile.getIndex(), delegator.getLabel(), sourceOrTargetFile.getFullPath(), arg
-                .getName());
+        String prefix = String.format("[%s][%s][%s][%s]", sourceFile.getIndex(), delegator.getLabel(), arg.getName(), sourceOrTargetFile
+                .getFullPath());
         for (String command : arg.getValue()) {
             logger.info(prefix + "[" + command + "]...");
 
@@ -294,12 +294,14 @@ public class YADECommandExecutor {
     private static void logIfMultipleCommands(ISOSLogger logger, String delegatorLabel, SOSArgument<List<String>> commandsArg,
             SOSArgument<String> commandDelimiterArg, YADEProviderFile sourceOrTargetFile) {
         if (commandsArg.getValue().size() > 1) {
-            String add = "";
+            String prefix = "";
             if (sourceOrTargetFile != null) {
-                add = String.format("[%s][%s]", sourceOrTargetFile.getIndex(), sourceOrTargetFile.getFullPath());
+                prefix = String.format("[%s][%s][%s][%s]", sourceOrTargetFile.getIndex(), delegatorLabel, commandsArg.getName(), sourceOrTargetFile
+                        .getFullPath());
+            } else {
+                prefix = String.format("[%s][%s]", delegatorLabel, commandsArg.getName());
             }
-            logger.info("[%s]%s[%s]%s", delegatorLabel, add, commandsArg.getName(), SOSArgumentHelper.getListStringArgumentValueAsString(commandsArg,
-                    commandDelimiterArg.getValue()));
+            logger.info(prefix + SOSArgumentHelper.getListStringArgumentValueAsString(commandsArg, commandDelimiterArg.getValue()));
         }
     }
 
