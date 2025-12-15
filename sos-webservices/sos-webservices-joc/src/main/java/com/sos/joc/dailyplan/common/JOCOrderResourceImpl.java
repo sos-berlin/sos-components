@@ -211,7 +211,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         p.setWorkflowHasNote(Severity.fromValueOrNull(workflowNotes.get(item.getWorkflowName())));
         p.setOrderId(item.getOrderId());
         p.setSchedulePath(item.getSchedulePath());
-        p.setScheduleHasNote(Severity.fromValueOrNull(workflowNotes.get(item.getScheduleName())));
+        p.setScheduleHasNote(Severity.fromValueOrNull(scheduleNotes.get(item.getScheduleName())));
         p.setOrderName(item.getOrderName());
 
         DailyPlanOrderState orderState = new DailyPlanOrderState();
