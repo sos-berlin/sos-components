@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl.common;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -7,12 +8,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -66,7 +72,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             List<Long> workflowInvIds = new ArrayList<>();
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
-            List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
+            Set<DBItemInventoryConfiguration> updated = new HashSet<>();
             if (JocInventory.isFolder(type)) {
                 
                 if (!folderPermissions.isPermittedForFolder(newPathWithoutFix)) {
@@ -218,6 +224,13 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 tagDbLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
+            
+            Set<DBItemInventoryConfiguration> referendByItems = new HashSet<>();
+            for (DBItemInventoryConfiguration item : updated) {
+                referendByItems.addAll(getReferendByItems(item, dbLayer));
+            }
+            updated.addAll(referendByItems);
+            
             DependencyResolver.updateDependencies(updated);
             response.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
@@ -280,6 +293,109 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
         item.setContent(oldItem.getContent());
         item.setValid(validate(item, dbLayer));
         return item;
+    }
+    
+    private static Set<DBItemInventoryConfiguration> getReferendByItems(DBItemInventoryConfiguration config,
+            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException,
+                IOException {
+        Set<DBItemInventoryConfiguration> referendByItems = new HashSet<>();
+        switch (config.getTypeAsEnum()) {
+        case LOCK: // determine Workflows with Lock instructions
+            Set<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
+            if (workflows != null && !workflows.isEmpty()) {
+                referendByItems.addAll(workflows);
+            }
+            break;
+        case JOBRESOURCE: // determine Workflows and JobTemplates with Jobs containing JobResource
+            Set<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
+            if (workflows2 != null && !workflows2.isEmpty()) {
+                referendByItems.addAll(workflows2);
+            }
+            List<DBItemInventoryConfiguration> jobTemplates = dbLayer.getUsedJobTemplatesByJobResource(config.getName());
+            if (jobTemplates != null && !jobTemplates.isEmpty()) {
+                referendByItems.addAll(jobTemplates);
+            }
+            break;
+
+        case NOTICEBOARD: // determine Workflows with PostNotice or ExpectNotice reference
+            Set<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
+            if (workflow3 != null && !workflow3.isEmpty()) {
+                referendByItems.addAll(workflow3);
+            }
+            break;
+
+        case WORKFLOW: // determine Schedules and FileOrderSources with Workflow reference
+            List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
+            if (schedules != null && !schedules.isEmpty()) {
+                referendByItems.addAll(schedules);
+            }
+            List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(config.getName());
+            if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
+                referendByItems.addAll(fileOrderSources);
+            }
+            Set<DBItemInventoryConfiguration> addOrderWorkflows = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(config.getName());
+            if (addOrderWorkflows != null && !addOrderWorkflows.isEmpty()) {
+                referendByItems.addAll(addOrderWorkflows);
+            }
+            break;
+            
+        case WORKINGDAYSCALENDAR: // determine Schedules and Calendars with Calendar reference
+        case NONWORKINGDAYSCALENDAR:
+            List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
+            if (schedules1 != null && !schedules1.isEmpty()) {
+                referendByItems.addAll(schedules1);
+            }
+            
+            List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(config.getName());
+            if (calendars != null && !calendars.isEmpty()) {
+                referendByItems.addAll(calendars);
+            }
+            
+            break;
+            
+        case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
+            List<DBItemInventoryConfiguration> workflowsOrJobTemplates = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
+            if (workflowsOrJobTemplates != null && !workflowsOrJobTemplates.isEmpty()) {
+                referendByItems.addAll(workflowsOrJobTemplates);
+            }
+            break;
+            
+//        case JOBTEMPLATE:
+//            Set<DBItemInventoryConfiguration> workflows5 = dbLayer.getUsedWorkflowsByJobTemplateName(config.getName());
+//            if (workflows5 != null && !workflows5.isEmpty()) {
+//                for (DBItemInventoryConfiguration workflow : workflows5) {
+//                    boolean changed = false;
+//                    Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+//                    if (w.getJobs() != null) {
+//                        for (Map.Entry<String, Job> entry : w.getJobs().getAdditionalProperties().entrySet()) {
+//                            Job j = entry.getValue();
+//                            if (j.getJobTemplate() != null && j.getJobTemplate().getName() != null && j.getJobTemplate().getName().equals(config
+//                                    .getName())) {
+//                                j.getJobTemplate().setName(newName);
+//                                changed = true;
+//                            }
+//                        }
+//                    }
+//                    if (changed) { // TODO is it really ok that setDeployed(false)? I think, NO
+//                        workflow.setContent(Globals.objectMapper.writeValueAsString(w));
+//                        //workflow.setDeployed(false);
+//                        int i = items.indexOf(workflow);
+//                        if (i != -1) {
+//                            items.get(i).setContent(workflow.getContent());
+//                            //items.get(i).setDeployed(false);
+//                        } else {
+//                            JocInventory.updateConfiguration(dbLayer, workflow);
+//                            events.add(workflow.getFolder());
+//                        }
+//                    }
+//                }
+//            }
+//            break;
+//            
+        default:
+            break;
+        }
+        return referendByItems;
     }
 
 }
