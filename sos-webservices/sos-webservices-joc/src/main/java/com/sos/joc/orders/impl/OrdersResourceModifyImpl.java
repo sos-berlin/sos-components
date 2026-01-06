@@ -467,50 +467,58 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     prevPos = cop.getCurrentOrderPosition().toList();
                     prevPosString = cop.getCurrentOrderPosition().toString();
                 }
-                if (prevPos != null) {
-//                    final String prevPString = prevPosString;
-//                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
-//                            .toString().equals(prevPString)).findFirst();
-                    HistoricOutcome h = null;
-                    for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
-                        if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
-                            h = ho;
-                        }
-                    }
-                    if (h != null) {
-                        //HistoricOutcome h = hoOpt.get();
-                        Variables v = h.getOutcome().getNamedValues();
-                        if (v == null) {
-                            v = new Variables();
-                        }
-                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        if ("Disrupted".equals(h.getOutcome().getTYPE())) {
-                            String errMsg = null;
-                            try {
-                                errMsg = h.getOutcome().getReason().getProblem().getMessage();
-                            } catch (Exception e) {
-                                //
-                            }
-                            h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
-                        } else {
-                            h.getOutcome().setNamedValues(v);
-                        }
-                        historyOperations = getJHistoricOperations(h, getJocError(), "replace", null);
-                    } else {
-                        Variables v = new Variables();
-                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
-                                getJocError(), "append", null);
-                    }
-                } else {
-                    Variables v = new Variables();
-                    v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                    List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
-                    int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
-                    posList.add(Math.max(0, prev));
-                    historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
-                            getJocError(), "insert", cop.getCurrentOrderPosition());
+//                if (prevPos != null) {
+////                    final String prevPString = prevPosString;
+////                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
+////                            .toString().equals(prevPString)).findFirst();
+//                    HistoricOutcome h = null;
+//                    for (HistoricOutcome ho : cop.getHistoricOutcomes()) {
+//                        if (JPosition.fromList(ho.getPosition()).get().toString().equals(prevPosString)) {
+//                            h = ho;
+//                        }
+//                    }
+//                    if (h != null) {
+//                        //HistoricOutcome h = hoOpt.get();
+//                        Variables v = h.getOutcome().getNamedValues();
+//                        if (v == null) {
+//                            v = new Variables();
+//                        }
+//                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+//                        if ("Disrupted".equals(h.getOutcome().getTYPE())) {
+//                            String errMsg = null;
+//                            try {
+//                                errMsg = h.getOutcome().getReason().getProblem().getMessage();
+//                            } catch (Exception e) {
+//                                //
+//                            }
+//                            h = new HistoricOutcome(prevPos, new Outcome("Failed", errMsg, v, null, null));
+//                        } else {
+//                            h.getOutcome().setNamedValues(v);
+//                        }
+//                        historyOperations = getJHistoricOperations(h, getJocError(), "replace", null);
+//                    } else {
+//                        Variables v = new Variables();
+//                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+//                        historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)),
+//                                getJocError(), "append", null);
+//                    }
+//                } else {
+//                    Variables v = new Variables();
+//                    v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+//                    List<Object> posList = new LinkedList<>(cop.getCurrentOrderPosition().toList());
+//                    int prev = ((Integer) posList.remove(posList.size() - 1)) - 1;
+//                    posList.add(Math.max(0, prev));
+//                    historyOperations = getJHistoricOperations(new HistoricOutcome(posList, new Outcome("Succeeded", null, v, null, null)),
+//                            getJocError(), "insert", cop.getCurrentOrderPosition());
+//                }
+                if (prevPos == null) {
+                    prevPos = cop.getCurrentOrderPosition().toList();
                 }
+                
+                Variables v = new Variables();
+                v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+                historyOperations = getJHistoricOperations(new HistoricOutcome(prevPos, new Outcome("Succeeded", null, v, null, null)), getJocError(),
+                        "append", cop.getCurrentOrderPosition());
             }
             
             Optional<JPosition> orderPositionOpt = cop.workflowPositionToOrderPosition(positionOpt, modifyOrders.getCycleEndTime());
