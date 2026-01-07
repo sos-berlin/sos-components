@@ -42,6 +42,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.impl.ReleaseResourceImpl;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -123,6 +124,20 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
+                // JOC-2158: cancelOrder was missing here!
+                List<DBItemInventoryConfiguration> usedSchedules = dbLayer.getUsedSchedulesByWorkflowNames(
+                        allDeployments.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getTypeAsEnum()))
+                        .map(workflow -> workflow.getName()).collect(Collectors.toList()));
+                if(!usedSchedules.isEmpty()) {
+                    usedSchedules.stream().forEach(schedule -> {
+                        try {
+                            cancelOrders(accessToken, schedule, in.getCancelOrdersDateFrom(), dbLayer);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        }
+                    });
+                }
+                // JOC-2158: fix ends
                 Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken,
                         getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
                 workflowInvIds.addAll(deployedDeployables.stream().filter(i -> JocInventory.isWorkflow(i.getType())).map(
