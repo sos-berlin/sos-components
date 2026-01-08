@@ -18,7 +18,8 @@ public class YADEClientArguments extends ASOSArguments {
     private SOSArgument<Integer> expectedResultSetCount = new SOSArgument<>("ExpectedResultSetCount", false);
     // YADE1 - resultListFile - used only in the YADE JOB - contains the file path - the same as result_set_file_name...
     // private SOSArgument<Path> resultListFile = new SOSArgument<>("result_list_file", false);
-    private SOSArgument<Path> resultSetFile = new SOSArgument<>("ResultSetFile", false);
+    // String because can contains expressions, e.g. [date:.... timezone:]
+    private SOSArgument<String> resultSetFile = new SOSArgument<>("ResultSetFile", false);
 
     private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("SystemPropertyFiles", false);
 
@@ -38,7 +39,7 @@ public class YADEClientArguments extends ASOSArguments {
         return raiseErrorIfResultSetIs;
     }
 
-    public SOSArgument<Path> getResultSetFile() {
+    public SOSArgument<String> getResultSetFile() {
         return resultSetFile;
     }
 

@@ -599,11 +599,11 @@ public class YADEEngineJumpHostAddon {
                 fileList = new ConfigFile(arg.getName(), arg.getValue());
             }
 
-            private void setResultSetFile(SOSArgument<Path> arg) {
-                resultSetFile = new ConfigFile(arg.getName(), arg.getValue());
+            private void setResultSetFile(SOSArgument<String> arg) {
+                resultSetFile = new ConfigFile(arg.getName(), Path.of(arg.getValue()));
             }
 
-            private void setResultSetFile(SOSArgument<Path> arg, String jumpHostFileName) {
+            private void setResultSetFile(SOSArgument<String> arg, String jumpHostFileName) {
                 resultSetFile = new ConfigFile(arg.getName(), jumpHostFileName);
             }
         }

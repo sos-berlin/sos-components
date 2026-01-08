@@ -56,7 +56,7 @@ public class YADECopyMoveOperationsConfig {
         } else if (targetDelegator.getArgs().isRetryOnConnectionErrorEnabled()) {
             return targetDelegator.getArgs().getConnectionErrorRetryCountMax().getValue().intValue();
         } else {
-            return 1;
+            return 0;
         }
     }
 

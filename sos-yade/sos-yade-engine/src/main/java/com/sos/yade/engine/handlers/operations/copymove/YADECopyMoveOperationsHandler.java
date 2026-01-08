@@ -121,7 +121,7 @@ public class YADECopyMoveOperationsHandler {
                             cancel.set(true);
                             throw new RuntimeException(e);
                         }
-                        setFailedIfNonTransactional(logger, sourceFile, e);
+                        rollbackNonTransactional(logger, config, sourceDelegator, targetDelegator, sourceFile, false, e);
                         nonTransactionalErrorCounter.incrementAndGet();
                         lastNonTransactionalError.set(e);
                     }
@@ -165,7 +165,7 @@ public class YADECopyMoveOperationsHandler {
                     cancel.set(true);
                     throw e;
                 }
-                setFailedIfNonTransactional(logger, f, e);
+                rollbackNonTransactional(logger, config, sourceDelegator, targetDelegator, f, useCumulativeTargetFile, e);
                 nonTransactionalErrorCounter++;
                 lastNonTransactionalError = e;
             }
@@ -258,57 +258,62 @@ public class YADECopyMoveOperationsHandler {
             handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
         }
 
-        l: for (ProviderFile pf : sourceFiles) {
-            YADEProviderFile sourceFile = (YADEProviderFile) pf;
-            YADEProviderFile targetFile = sourceFile.getTarget();
-            String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
+        for (ProviderFile pf : sourceFiles) {
+            rollbackFile(logger, config, targetDelegator, isJumpHostRollback, pf);
+        }
+    }
 
-            // 1) a targetFile was not initialized because the transfer was aborted in a previous file
-            if (targetFile == null) {
-                // set state on sourceFile for Summary
-                sourceFile.setState(TransferEntryState.SELECTED);
-                sourceFile.setSubState(TransferEntryState.ABORTED);
-                continue l;
-            }
+    private static void rollbackFile(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
+            boolean isJumpHostRollback, ProviderFile pf) {
+        YADEProviderFile sourceFile = (YADEProviderFile) pf;
+        YADEProviderFile targetFile = sourceFile.getTarget();
+        String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
 
-            // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
-            if (isJumpHostRollback) {
-                targetFile.setSubState(TransferEntryState.ROLLED_BACK);
-                continue l;
-            }
+        // 1) a targetFile was not initialized because the transfer was aborted in a previous file
+        if (targetFile == null) {
+            // set state on sourceFile for Summary
+            sourceFile.setState(TransferEntryState.SELECTED);
+            sourceFile.setSubState(TransferEntryState.ABORTED);
+            return;
+        }
 
-            // 3) the targetFile was not created because it may have been skipped due to non-overwrite criteria
-            if (!targetFile.isTransferredOrTransferring()) {
-                continue l;
-            }
+        // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
+        if (isJumpHostRollback) {
+            targetFile.setSubState(TransferEntryState.ROLLED_BACK);
+            return;
+        }
 
-            // 4) a targetFile intergityHash file may have been created and needs to be deleted
-            if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
-                String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
-                try {
-                    if (targetDelegator.getProvider().deleteFileIfExists(path)) {
-                        logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), path);
-                    }
-                } catch (Exception e) {
-                    logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), path, e.toString());
-                }
-            }
+        // 3) the targetFile was not created because it may have been skipped due to non-overwrite criteria
+        if (!targetFile.isTransferredOrTransferring()) {
+            return;
+        }
 
-            // 5) the targetFile may have already been renamed to the final name or may still be a file with the atomic suffix/prefix
-            // - note for "if compress": all names already contain the compress extension
-            String targetFilePath = TransferEntryState.RENAMED.equals(targetFile.getSubState()) ? targetFile.getFinalFullPath() : targetFile
-                    .getFullPath();
-
-            // 6) delete targetFile
+        // 4) a targetFile intergityHash file may have been created and needs to be deleted
+        if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
+            String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
             try {
-                if (targetDelegator.getProvider().deleteFileIfExists(targetFilePath)) {
-                    logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath);
+                if (targetDelegator.getProvider().deleteFileIfExists(path)) {
+                    logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), path);
                 }
-                targetFile.setSubState(TransferEntryState.ROLLED_BACK);
             } catch (Exception e) {
-                logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
-                targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
+                logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), path, e.toString());
             }
+        }
+
+        // 5) the targetFile may have already been renamed to the final name or may still be a file with the atomic suffix/prefix
+        // - note for "if compress": all names already contain the compress extension
+        String targetFilePath = TransferEntryState.RENAMED.equals(targetFile.getSubState()) ? targetFile.getFinalFullPath() : targetFile
+                .getFullPath();
+
+        // 6) delete targetFile
+        try {
+            if (targetDelegator.getProvider().deleteFileIfExists(targetFilePath)) {
+                logger.info("[%s][%s][rollback][%s]deleted", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath);
+            }
+            targetFile.setSubState(TransferEntryState.ROLLED_BACK);
+        } catch (Exception e) {
+            logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
+            targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
         }
     }
 
@@ -321,17 +326,25 @@ public class YADECopyMoveOperationsHandler {
         // }
     }
 
-    private static void setFailedIfNonTransactional(ISOSLogger logger, YADEProviderFile f, Throwable ex) {
-        YADEProviderFile y = (YADEProviderFile) f;
-        if (y.getTarget() == null) {
-            y.setSubState(TransferEntryState.FAILED);
-        } else {
-            y.getTarget().setSubState(TransferEntryState.FAILED);
-        }
+    private static void rollbackNonTransactional(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile f, boolean useCumulativeTargetFile, Throwable ex) {
+
         if (ex != null) {
             String msg = ex.getMessage() == null ? ex.toString() : ex.getMessage();
             logger.warn(msg, ex.getCause());
         }
+
+        // rollback not possible - see YADEFileHandler.run() - transfer end - Move operation already performed, Source already renamed etc
+        if (TransferEntryState.MOVED.equals(f.getState()) || TransferEntryState.RENAMED.equals(f.getState())) {
+            return;
+        }
+
+        if (useCumulativeTargetFile) {
+            // TODO
+            // YADETargetCumulativeFileHelper.rollback(logger, config, targetDelegator);
+            return;
+        }
+        rollbackFile(logger, config, targetDelegator, targetDelegator.isJumpHost(), f);
     }
 
     private static Throwable getTransferFileException(Throwable ex) {
