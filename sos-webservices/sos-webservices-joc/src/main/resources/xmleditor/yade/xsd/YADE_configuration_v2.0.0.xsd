@@ -8715,7 +8715,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		The result set file is located on the host that runs the YADE Client.
 		</p>
                <p/>
-               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <p>This parameter supports masked replacements enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
                <ul>
                   <li>
                      <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
@@ -9182,7 +9182,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </ul>
 		             </p>
                <p/>
-               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <p>This parameter supports masked replacements enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
                <ul>
                   <li>
                      <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
@@ -9348,7 +9348,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			in any file transfer operation as the respective protocols would not support to select files based on wildcards.
 		</p>
                <p/>
-               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <p>This parameter supports masked replacements enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
                <ul>
                   <li>
                      <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
@@ -10205,7 +10205,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			The <em>CumulativeFilename</em> parameter specifies a filename relative to the <em>Target Directory</em>, or an absolute path to the cumulative file.
 		</p>
                <p/>
-               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <p>This parameter supports masked replacements enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
                <ul>
                   <li>
                      <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
