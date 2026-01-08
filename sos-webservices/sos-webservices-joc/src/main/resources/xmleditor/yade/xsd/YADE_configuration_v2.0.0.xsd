@@ -370,7 +370,8 @@
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+CredentialStoreFragmentRef"
                      shape="rect">CredentialStoreFragmentRef</a> <em>ref</em> attribute.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -2046,7 +2047,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>This parameter specifies the hostname (e.g. foo.org) or IP address (e.g. IPv4 192.168.0.1) of the (FTP, SFTP,SSH, etc.) server to which a connection has to be made.</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -2320,7 +2322,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 		Should the respective server system be part of a Windows domain then the syntax <em>domain\account</em> can be used.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -2531,7 +2534,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+SSHAuthentication"
                      shape="rect">SSHAuthentication</a>, e.g. SFTP.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -3240,7 +3244,8 @@ A fragment is referenced via this attribute value by a transfer profile.
         This is typically in the format: <em>https://&lt;account-name&gt;.blob.core.windows.net</em>
                </p>
                <p/>
-                <p>
+                <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -3472,7 +3477,8 @@ A fragment is referenced via this attribute value by a transfer profile.
         If not explicitly set, it is automatically derived from the <em>ServiceEndpoint</em> URL.<br/> 
         Required when using <em>SharedKey</em> authentication or generating <em>SAS</em> tokens dynamically.</p>
                <p/>
-                <p>
+                <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -3845,7 +3851,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </ul>
                </p>
                <p/>
-                <p>
+                <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -4045,7 +4052,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>Secret key associated with the Azure Storage account.<br/> 
         Used to authenticate requests by generating signatures for <em>Shared Key</em> or <em>SAS</em> token-based authentication.</p>
                <p/>
-                <p>
+                <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -4663,7 +4671,8 @@ A fragment is referenced via this attribute value by a transfer profile.
 		The location of the authentication file has to be accessbible for the account that runs the YADE Client.
 		For Unix systems file permissions 600 are required for authentication files.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -5006,7 +5015,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			As a drawback passphrases are visible in YADE configuration files if not protected as secure strings, e.g. from a <em>CredentialStore</em>.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -5512,7 +5522,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
         Domain for authentication at one of the systems involved in file transfer, e.g. an SMB server.
 		</p>
-				           <p>
+				           <p/>
+               <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
                <p/>
@@ -8703,6 +8714,83 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 		The result set file is located on the host that runs the YADE Client.
 		</p>
+               <p/>
+               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <ul>
+                  <li>
+                     <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
+                     <ul>
+                        <li>
+                           <strong>date format</strong> - must be a valid Java date format string, e.g. <em>yyyyMMddHHmmss</em>, <em>yyyy-MM-dd.HHmmss</em>, etc.
+                    <ul>
+                              <li>See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html.</li>
+                              <li>Note: Any unsupported letters are treated as literal characters. For example, the pattern <em>"yyyy-MM-dd-!!"</em> will be formatted as <em>"2026-01-01-!!"</em> for the date 2026-01-01.
+                        </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <strong>timezone:&lt;zone&gt;</strong> - this part is optional. If omitted, the system default timezone is used. <br/>
+                    The timezone can be specified in the following ways:
+                    <ol>
+                              <li>
+                                 <strong>Region ID</strong>:
+                            <ul>
+                                    <li>Examples: <em>Europe/Berlin</em>, <em>Asia/Kolkata</em>
+                                    </li>
+                                    <li>Interpreted according to the standard Java ZoneId rules, including daylight saving time if applicable.</li>
+                                 </ul>
+                              </li>
+                              <li>
+                                 <strong>Time zone offset</strong>:
+                            <ul>
+                                    <li>ISO-8601 compliant formats:
+                                    <ul>
+                                          <li>
+                                             <em>+02:00</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+05:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                    <li>Supported non-standard shorthand formats:
+                                    <ul>
+                                          <li>
+                                             <em>+2</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+5:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ol>
+                    Notes: 
+                    <ul>
+                              <li>Region-based time zones (Europe/Berlin, etc.) reflect daylight saving time transitions.</li>
+                              <li>Offset-based time zones represent a fixed offset and do not apply daylight saving time.</li>
+                           </ul>
+                        </li>
+                        <li>Examples:
+                    <ul>
+                              <li>
+                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -9093,6 +9181,83 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
 		             </p>
+               <p/>
+               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <ul>
+                  <li>
+                     <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
+                     <ul>
+                        <li>
+                           <strong>date format</strong> - must be a valid Java date format string, e.g. <em>yyyyMMddHHmmss</em>, <em>yyyy-MM-dd.HHmmss</em>, etc.
+                    <ul>
+                              <li>See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html.</li>
+                              <li>Note: Any unsupported letters are treated as literal characters. For example, the pattern <em>"yyyy-MM-dd-!!"</em> will be formatted as <em>"2026-01-01-!!"</em> for the date 2026-01-01.
+                        </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <strong>timezone:&lt;zone&gt;</strong> - this part is optional. If omitted, the system default timezone is used. <br/>
+                    The timezone can be specified in the following ways:
+                    <ol>
+                              <li>
+                                 <strong>Region ID</strong>:
+                            <ul>
+                                    <li>Examples: <em>Europe/Berlin</em>, <em>Asia/Kolkata</em>
+                                    </li>
+                                    <li>Interpreted according to the standard Java ZoneId rules, including daylight saving time if applicable.</li>
+                                 </ul>
+                              </li>
+                              <li>
+                                 <strong>Time zone offset</strong>:
+                            <ul>
+                                    <li>ISO-8601 compliant formats:
+                                    <ul>
+                                          <li>
+                                             <em>+02:00</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+05:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                    <li>Supported non-standard shorthand formats:
+                                    <ul>
+                                          <li>
+                                             <em>+2</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+5:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ol>
+                    Notes: 
+                    <ul>
+                              <li>Region-based time zones (Europe/Berlin, etc.) reflect daylight saving time transitions.</li>
+                              <li>Offset-based time zones represent a fixed offset and do not apply daylight saving time.</li>
+                           </ul>
+                        </li>
+                        <li>Examples:
+                    <ul>
+                              <li>
+                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -9182,6 +9347,83 @@ A fragment is referenced via this attribute value by a transfer profile.
                      shape="rect">HTTPSFragment</a> 
 			in any file transfer operation as the respective protocols would not support to select files based on wildcards.
 		</p>
+               <p/>
+               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <ul>
+                  <li>
+                     <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
+                     <ul>
+                        <li>
+                           <strong>date format</strong> - must be a valid Java date format string, e.g. <em>yyyyMMddHHmmss</em>, <em>yyyy-MM-dd.HHmmss</em>, etc.
+                    <ul>
+                              <li>See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html.</li>
+                              <li>Note: Any unsupported letters are treated as literal characters. For example, the pattern <em>"yyyy-MM-dd-!!"</em> will be formatted as <em>"2026-01-01-!!"</em> for the date 2026-01-01.
+                        </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <strong>timezone:&lt;zone&gt;</strong> - this part is optional. If omitted, the system default timezone is used. <br/>
+                    The timezone can be specified in the following ways:
+                    <ol>
+                              <li>
+                                 <strong>Region ID</strong>:
+                            <ul>
+                                    <li>Examples: <em>Europe/Berlin</em>, <em>Asia/Kolkata</em>
+                                    </li>
+                                    <li>Interpreted according to the standard Java ZoneId rules, including daylight saving time if applicable.</li>
+                                 </ul>
+                              </li>
+                              <li>
+                                 <strong>Time zone offset</strong>:
+                            <ul>
+                                    <li>ISO-8601 compliant formats:
+                                    <ul>
+                                          <li>
+                                             <em>+02:00</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+05:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                    <li>Supported non-standard shorthand formats:
+                                    <ul>
+                                          <li>
+                                             <em>+2</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+5:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ol>
+                    Notes: 
+                    <ul>
+                              <li>Region-based time zones (Europe/Berlin, etc.) reflect daylight saving time transitions.</li>
+                              <li>Offset-based time zones represent a fixed offset and do not apply daylight saving time.</li>
+                           </ul>
+                        </li>
+                        <li>Examples:
+                    <ul>
+                              <li>
+                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -9962,6 +10204,83 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			The <em>CumulativeFilename</em> parameter specifies a filename relative to the <em>Target Directory</em>, or an absolute path to the cumulative file.
 		</p>
+               <p/>
+               <p>Masked replacement supports substitution masks enclosed in square brackets [ ].<br/>The following format strings are supported:</p>
+               <ul>
+                  <li>
+                     <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
+                     <ul>
+                        <li>
+                           <strong>date format</strong> - must be a valid Java date format string, e.g. <em>yyyyMMddHHmmss</em>, <em>yyyy-MM-dd.HHmmss</em>, etc.
+                    <ul>
+                              <li>See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html.</li>
+                              <li>Note: Any unsupported letters are treated as literal characters. For example, the pattern <em>"yyyy-MM-dd-!!"</em> will be formatted as <em>"2026-01-01-!!"</em> for the date 2026-01-01.
+                        </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <strong>timezone:&lt;zone&gt;</strong> - this part is optional. If omitted, the system default timezone is used. <br/>
+                    The timezone can be specified in the following ways:
+                    <ol>
+                              <li>
+                                 <strong>Region ID</strong>:
+                            <ul>
+                                    <li>Examples: <em>Europe/Berlin</em>, <em>Asia/Kolkata</em>
+                                    </li>
+                                    <li>Interpreted according to the standard Java ZoneId rules, including daylight saving time if applicable.</li>
+                                 </ul>
+                              </li>
+                              <li>
+                                 <strong>Time zone offset</strong>:
+                            <ul>
+                                    <li>ISO-8601 compliant formats:
+                                    <ul>
+                                          <li>
+                                             <em>+02:00</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+05:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                    <li>Supported non-standard shorthand formats:
+                                    <ul>
+                                          <li>
+                                             <em>+2</em> – interpreted as +02:00</li>
+                                          <li>
+                                             <em>+5:30</em> – interpreted as +05:30</li>
+                                       </ul>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ol>
+                    Notes: 
+                    <ul>
+                              <li>Region-based time zones (Europe/Berlin, etc.) reflect daylight saving time transitions.</li>
+                              <li>Offset-based time zones represent a fixed offset and do not apply daylight saving time.</li>
+                           </ul>
+                        </li>
+                        <li>Examples:
+                    <ul>
+                              <li>
+                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                              <li>
+                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -10804,6 +11123,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			This parameter expects a regular expression for a filename pattern. 
 			If the expression matches the filename then the regular expression groups in the match are replaced.
 		</p>
+               <p/>
                <p>
 			               <strong>Use with capturing groups</strong>
 		             </p>
@@ -10827,6 +11147,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Name of renamed file: AabcBBdefCCC</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
 			               <strong>Use without capturing groups</strong>
 		             </p>
@@ -10847,9 +11168,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Name of renamed file: 1234_World.txt</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
-			For further information see java.util.regex.Pattern
-		</p>
+			For further information see <em>java.util.regex.Pattern</em>
+		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -10889,21 +11211,99 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>String replacement: any string</li>
                      <li>Masked replacement: aa;[filename:];bb</li>
                   </ul>
-			A masked replacement supports masks for substitution in the filename with format strings that are enclosed with [ and ].
+			A masked replacement supports masks for substitution in the filename with format strings that are enclosed in square brackets [ ].<br/>
 			The following format strings are supported:
 			<ul>
-                     <li>[date: date format ]<br/>
-				date format must be a valid Java data format string, e.g. yyyyMMddHHmmss, yyyy-MM-dd.HHmmss etc.</li>
-                     <li>[filename:]<br/> 
-				will be substituted by the original file name including the file extension</li>
-                     <li>[filename:lowercase]<br/>
-				will be substituted by the original file name including the file extension with all characters
-				converted to lower case.</li>
-                     <li>[filename:uppercase]<br/>
-				will be substituted by the original file name including the file extension with all characters 
-				converted to upper case</li>
+                     <li>
+                        <strong>[date:&lt;date format&gt; [timezone:&lt;zone&gt;]]</strong>
+                        <ul>
+                           <li>
+                              <strong>date format</strong> - must be a valid Java date format string, e.g. <em>yyyyMMddHHmmss</em>, <em>yyyy-MM-dd.HHmmss</em>, etc.
+                    <ul>
+                                 <li>See https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html.</li>
+                                 <li>Note: Any unsupported letters are treated as literal characters. For example, the pattern <em>"yyyy-MM-dd-!!"</em> will be formatted as <em>"2026-01-01-!!"</em> for the date 2026-01-01.
+                        </li>
+                              </ul>
+                           </li>
+                           <li>
+                              <strong>timezone:&lt;zone&gt;</strong> - this part is optional. If omitted, the system default timezone is used. <br/>
+                    The timezone can be specified in the following ways:
+                    <ol>
+                                 <li>
+                                    <strong>Region ID</strong>:
+                            <ul>
+                                       <li>Examples: <em>Europe/Berlin</em>, <em>Asia/Kolkata</em>
+                                       </li>
+                                       <li>Interpreted according to the standard Java ZoneId rules, including daylight saving time if applicable.</li>
+                                    </ul>
+                                 </li>
+                                 <li>
+                                    <strong>Time zone offset</strong>:
+                            <ul>
+                                       <li>ISO-8601 compliant formats:
+                                    <ul>
+                                             <li>
+                                                <em>+02:00</em> – interpreted as +02:00</li>
+                                             <li>
+                                                <em>+05:30</em> – interpreted as +05:30</li>
+                                          </ul>
+                                       </li>
+                                       <li>Supported non-standard shorthand formats:
+                                    <ul>
+                                             <li>
+                                                <em>+2</em> – interpreted as +02:00</li>
+                                             <li>
+                                                <em>+5:30</em> – interpreted as +05:30</li>
+                                          </ul>
+                                       </li>
+                                    </ul>
+                                 </li>
+                              </ol>
+                    Notes: 
+                    <ul>
+                                 <li>Region-based time zones (Europe/Berlin, etc.) reflect daylight saving time transitions.</li>
+                                 <li>Offset-based time zones represent a fixed offset and do not apply daylight saving time.</li>
+                              </ul>
+                           </li>
+                           <li>Examples:
+                    <ul>
+                                 <li>
+                                    <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                 <li>
+                                    <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                              </ul>
+                           </li>
+                        </ul>
+                     </li>
+                     <li>
+                        <strong>[filename:[lowercase|uppercase]]</strong> 
+                        <ul>
+                           <li>
+                              <strong>[filename:]</strong>
+                              <br/>will be substituted by the original file name including the file extension</li>
+                           <li>
+                              <strong>[filename:lowercase]</strong>
+                              <br/>will be substituted by the original file name including the file extension with all characters converted to lower case.</li>
+                           <li>
+                              <strong>[filename:uppercase]</strong>
+                              <br/>will be substituted by the original file name including the file extension with all characters converted to upper case</li>
+                        </ul>
+                     </li>
                   </ul>
 		             </p>
+               <p/>
                <p>
 			               <strong>Use with capturing groups</strong>
 		             </p>
@@ -10927,6 +11327,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Name of renamed file: AabcBBdefCCC</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
 			               <strong>Use without capturing groups</strong>
 		             </p>
@@ -10947,9 +11348,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Name of renamed file: 1234_World.txt</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
-			For further information see java.util.regex.Pattern
-		</p>
+			For further information see <em>java.util.regex.Pattern</em>
+		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
