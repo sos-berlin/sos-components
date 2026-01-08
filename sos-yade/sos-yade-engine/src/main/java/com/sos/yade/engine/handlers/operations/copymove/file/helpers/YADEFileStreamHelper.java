@@ -30,21 +30,24 @@ public class YADEFileStreamHelper {
 
     // reread Source file on errors starting from the last position
     public static void skipSourceInputStreamToPosition(InputStream sourceStream, YADETargetProviderFile targetFile) throws IOException {
-        long startPosition = targetFile.getBytesProcessed();
-        long skipped = sourceStream.skip(startPosition);
-        s: while (skipped < startPosition) {
-            long newlySkipped = sourceStream.skip(startPosition - skipped);
-            if (newlySkipped == 0) {
-                break s;
+        long toSkip = targetFile.getBytesProcessed();
+        byte[] buffer = new byte[8192];
+
+        while (toSkip > 0) {
+            int len = (int) Math.min(buffer.length, toSkip);
+            int read = sourceStream.read(buffer, 0, len);
+            if (read == -1) {
+                // throw new EOFException("Stream end reached before skipping all bytes");
+                return;
             }
-            skipped += newlySkipped;
+            toSkip -= read;
         }
     }
 
     /** Target: OutputStream */
     public static OutputStream getTargetOutputStream(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, boolean useBufferedStreams) throws ProviderException {
-        OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), config.getTarget().isAppendEnabled());
+            YADETargetProviderFile targetFile, boolean isAppendEnabled, boolean useBufferedStreams) throws ProviderException {
+        OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), isAppendEnabled);
         if (useBufferedStreams) {
             return new BufferedOutputStream(os, config.getBufferSize());
         }

@@ -766,7 +766,7 @@ public class YADEXMLProfileHelper {
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
                     case "ResultSetFile":
-                        argsLoader.setPathArgumentValue(argsLoader.getClientArgs().getResultSetFile(), n);
+                        argsLoader.setStringArgumentValue(argsLoader.getClientArgs().getResultSetFile(), n);
                         break;
                     case "CheckResultSetCount":
                         parseSourceOptionResultSetCheckCount(argsLoader, n);

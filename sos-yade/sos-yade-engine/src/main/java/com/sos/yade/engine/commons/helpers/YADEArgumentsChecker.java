@@ -2,15 +2,17 @@ package com.sos.yade.engine.commons.helpers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
-import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsChecker {
@@ -18,9 +20,9 @@ public class YADEArgumentsChecker {
     public static void validateOrExit(ISOSLogger logger, AYADEArgumentsLoader argsLoader) throws YADEEngineInitializationException {
 
         boolean needTargetProvider = checkCommonArguments(argsLoader.getArgs(), argsLoader.getClientArgs());
-        checkClientArguments(argsLoader.getArgs(), argsLoader.getClientArgs(), needTargetProvider);
-        checkSourceArguments(argsLoader.getSourceArgs());
-        checkTargetArguments(argsLoader.getArgs(), argsLoader.getTargetArgs(), needTargetProvider);
+        checkClientArguments(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), needTargetProvider);
+        checkSourceArguments(logger, argsLoader.getSourceArgs());
+        checkTargetArguments(logger, argsLoader.getArgs(), argsLoader.getTargetArgs(), needTargetProvider);
         checkSourceTargetArguments(argsLoader.getArgs(), argsLoader.getSourceArgs(), argsLoader.getTargetArgs(), needTargetProvider);
 
         adjustSourceArguments(logger, argsLoader.getSourceArgs());
@@ -37,7 +39,7 @@ public class YADEArgumentsChecker {
         return YADEArgumentsHelper.needTargetProvider(args);
     }
 
-    private static void checkClientArguments(YADEArguments args, YADEClientArguments clientArgs, boolean needTargetProvider)
+    private static void checkClientArguments(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs, boolean needTargetProvider)
             throws YADEEngineInitializationException {
         if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             if (clientArgs == null || clientArgs.getResultSetFile().isEmpty()) {
@@ -45,15 +47,25 @@ public class YADEArgumentsChecker {
                         + "]Missing \"SourceFileOptions/ResultSet/" + clientArgs.getResultSetFile().getName() + "\" argument");
             }
         }
+        if (clientArgs != null && !clientArgs.getResultSetFile().isEmpty()) {
+            replaceExpressions(logger, YADEClientArguments.LABEL, clientArgs.getResultSetFile());
+        }
     }
 
-    private static void checkSourceArguments(YADESourceArguments sourceArgs) throws YADEEngineInitializationException {
+    private static void checkSourceArguments(ISOSLogger logger, YADESourceArguments sourceArgs) throws YADEEngineInitializationException {
         if (sourceArgs == null) {
             throw new YADEEngineInitializationException("Missing Source Arguments");
         }
-        if (!sourceArgs.isSingleFilesSelection() && sourceArgs.getDirectory().isEmpty()) {
-            throw new YADEEngineInitializationException(String.format("[%s]The \"%s\" argument is missing but is required if %s is set",
-                    YADESourceArguments.LABEL, sourceArgs.getDirectory().getName(), YADEArgumentsHelper.toString(sourceArgs.getFileSpec())));
+        if (sourceArgs.isSingleFilesSelection()) {
+            if (sourceArgs.isFilePathEnabled()) {
+                replaceExpressionsForListArg(null, YADESourceArguments.LABEL, sourceArgs.getFilePath());
+            }
+        } else {
+            if (sourceArgs.getDirectory().isEmpty()) {
+                throw new YADEEngineInitializationException(String.format("[%s]The \"%s\" argument is missing but is required if %s is set",
+                        YADESourceArguments.LABEL, sourceArgs.getDirectory().getName(), YADEArgumentsHelper.toString(sourceArgs.getFileSpec())));
+            }
+            replaceExpressions(null, YADESourceArguments.LABEL, sourceArgs.getFileSpec());
         }
         if (sourceArgs.isPollingEnabled()) {
             if (sourceArgs.getPolling().getPollingWait4SourceFolder().getValue() && sourceArgs.getDirectory() == null) {
@@ -64,10 +76,15 @@ public class YADEArgumentsChecker {
 
     }
 
-    private static void checkTargetArguments(YADEArguments args, YADETargetArguments targetArgs, boolean needTargetProvider)
+    private static void checkTargetArguments(ISOSLogger logger, YADEArguments args, YADETargetArguments targetArgs, boolean needTargetProvider)
             throws YADEEngineInitializationException {
-        if (needTargetProvider && targetArgs == null) {
-            throw new YADEEngineInitializationException("Missing Target Arguments");
+        if (needTargetProvider) {
+            if (targetArgs == null) {
+                throw new YADEEngineInitializationException("Missing Target Arguments");
+            }
+            if (!targetArgs.getCumulativeFileName().isEmpty()) {
+                replaceExpressions(logger, YADETargetArguments.LABEL, targetArgs.getCumulativeFileName());
+            }
         }
     }
 
@@ -120,6 +137,31 @@ public class YADEArgumentsChecker {
             logger.info("[%s][configured \"%s\" is missing, using '.' as the default]%s=.", YADETargetArguments.LABEL, targetArgs.getDirectory()
                     .getName(), targetArgs.getDirectory().getName());
             targetArgs.getDirectory().setValue(".");
+        }
+    }
+
+    private static void replaceExpressions(ISOSLogger logger, String label, SOSArgument<String> arg) throws YADEEngineInitializationException {
+        try {
+            String val = arg.getValue();
+            YADEExpressionResolver.replaceDateExpressions(arg);
+            if (logger != null && !val.equals(arg.getValue())) {
+                logger.info("[" + label + "]" + YADEArgumentsHelper.toString(arg));
+            }
+        } catch (Exception e) {
+            throw new YADEEngineInitializationException("[" + label + "]" + e.toString());
+        }
+    }
+
+    private static void replaceExpressionsForListArg(ISOSLogger logger, String label, SOSArgument<List<String>> arg)
+            throws YADEEngineInitializationException {
+        try {
+            List<String> val = arg.getValue();
+            YADEExpressionResolver.replaceDateExpressionsForListArg(arg);
+            if (logger != null && !val.equals(arg.getValue())) {
+                logger.info("[" + label + "]" + YADEArgumentsHelper.toStringFromListString(arg));
+            }
+        } catch (Exception e) {
+            throw new YADEEngineInitializationException("[" + label + "]" + e.toString());
         }
     }
 }

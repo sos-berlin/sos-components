@@ -404,6 +404,9 @@ public class YADEClientBannerWriter {
         }
         if (!targetArgs.getCumulativeFileName().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileName()));
+            if (targetArgs.getCumulativeFileSeparator().isEmpty()) { // see targetArgs.isCumulateFilesEnabled()
+                sb.append(" (ignored because " + targetArgs.getCumulativeFileSeparator().getName() + " is empty)");
+            }
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileDelete()));
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCumulativeFileSeparator()));
         }

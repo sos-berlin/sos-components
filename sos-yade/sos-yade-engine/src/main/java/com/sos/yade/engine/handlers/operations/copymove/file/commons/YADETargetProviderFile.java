@@ -12,17 +12,20 @@ public class YADETargetProviderFile extends YADEProviderFile {
         super(targetDelegator, fullPath, 0L, 0L, null, false);
     }
 
-    public void updateProgressSize(int bytesProcessed) {
+    public void updateBytesProcessed(int bytesProcessed) {
         this.bytesProcessed += bytesProcessed;
     }
 
     public void finalizeFileSize() {
         setSize(bytesProcessed);
-        bytesProcessed = 0L;
+        resetBytesProcessed();
     }
 
     public long getBytesProcessed() {
         return bytesProcessed;
     }
 
+    public void resetBytesProcessed() {
+        bytesProcessed = 0L;
+    }
 }
