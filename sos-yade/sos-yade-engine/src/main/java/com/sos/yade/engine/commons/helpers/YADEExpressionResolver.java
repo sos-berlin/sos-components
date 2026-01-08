@@ -133,7 +133,7 @@ public class YADEExpressionResolver {
         }
 
         Matcher matcher = DATE_EXPRESSION.matcher(input);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         ZonedDateTime nowDefault = null; // default system time zone date time
 
         while (matcher.find()) {
@@ -188,11 +188,9 @@ public class YADEExpressionResolver {
                 minutes = -minutes;
                 hours = -hours;
             }
-
             return ZoneOffset.ofHoursMinutes(hours, minutes);
         }
 
         return ZoneId.of(timezone);
     }
-
 }
