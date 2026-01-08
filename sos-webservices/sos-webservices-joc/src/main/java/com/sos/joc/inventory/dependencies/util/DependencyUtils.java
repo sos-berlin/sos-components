@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -42,8 +43,8 @@ public class DependencyUtils {
         if (dependencies != null && !dependencies.isEmpty()) {
             Predicate<DBItemInventoryExtendedDependency> isNotSelfReferenced = item -> !item.getInvId().equals(item.getDepId());
             Map<Dependency, Set<Dependency>> resolved = new HashMap<>();
-            dependencies.stream().map(DBItemInventoryExtendedDependency::getReferencedBy).forEach(dep -> resolved.putIfAbsent(dep,
-                    new HashSet<Dependency>()));
+            dependencies.stream().map(DBItemInventoryExtendedDependency::getReferencedBy).filter(Objects::nonNull)
+                    .forEach(dep -> resolved.putIfAbsent(dep, new HashSet<Dependency>()));
             dependencies.stream().filter(isNotSelfReferenced).forEach(item -> resolved.get(item.getReferencedBy()).add(item.getDependency()));
             return resolved;
         } else {

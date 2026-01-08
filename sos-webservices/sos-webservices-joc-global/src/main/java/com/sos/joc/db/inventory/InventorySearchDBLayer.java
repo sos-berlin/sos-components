@@ -1521,31 +1521,33 @@ public class InventorySearchDBLayer extends DBLayer {
         WorkflowSearchParamResult result = new WorkflowSearchParamResult();
         if (criticality != null) {
             boolean isNormalCriticality = JobCriticality.NORMAL.equals(criticality);
-            if (!isNormalCriticality) {
-                result.value = criticality.value();
-            }
+            result.value = criticality.value();
+            hql.append("and ");
             if (oracle == null) {
                 String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.criticalities");
-                hql.append("and lower(").append(jsonFunc).append(") ");
-                // TODO check ..
                 if (isNormalCriticality) {
-                    hql.append("is null ");
-                } else {
-                    hql.append("like :jobCriticality ");
+                    hql.append("(lower(").append(jsonFunc).append(") is null or ");
+                }
+                hql.append("lower(").append(jsonFunc).append(") like :jobCriticality");
+                if (isNormalCriticality) {
+                    hql.append(")");
                 }
             } else {
                 if (isNormalCriticality) {
                     // NOT JSON_EXISTS...
-                    hql.append(" not ").append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY)).append(" ");
-                } else {
-                    if (oracle.jsonFallbackToRegex) {
-                        result.value = SOSHibernateJsonExists.getOracleRegExLikeSearch("$.criticalities", result.value);
-                        result.usePercentsForLike = false;
-                    }
-                    hql.append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY, JsonOperator.LIKE,
-                            ":jobCriticality", JsonCaseSensitivity.INSENSITIVE));
+                    hql.append("(not ").append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY)).append(" or ");
+                }
+                if (oracle.jsonFallbackToRegex) {
+                    result.value = SOSHibernateJsonExists.getOracleRegExLikeSearch("$.criticalities", result.value);
+                    result.usePercentsForLike = false;
+                }
+                hql.append(SOSHibernateJsonExists.getFunction("sw.jobs", "$.criticalities", JsonPathType.ARRAY, JsonOperator.LIKE, ":jobCriticality",
+                        JsonCaseSensitivity.INSENSITIVE));
+                if (isNormalCriticality) {
+                    hql.append(")");
                 }
             }
+            hql.append(" ");
         }
         return getReturn(result);
     }

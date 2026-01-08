@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.job.JobCriticality;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -121,8 +122,11 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("jobName")
     private String jobName;
+    // without generated default value false (see also getJobNameExactMatch), 
+    // otherwise SOSReflection.isEmpty(in.getAdvanced()) returns always false if in.getAdvanced() != null
+    // in SearchResourceImpl.getSearchResult() (line 61)
     @JsonProperty("jobNameExactMatch")
-    private Boolean jobNameExactMatch = false;
+    private Boolean jobNameExactMatch;
     /**
      * criticalities
      * <p>
@@ -396,6 +400,9 @@ public class RequestSearchAdvancedItem {
 
     @JsonProperty("jobNameExactMatch")
     public Boolean getJobNameExactMatch() {
+        if (jobNameExactMatch == null) {
+            return false;
+        }
         return jobNameExactMatch;
     }
 
