@@ -31,7 +31,7 @@ public class YADEFileReplacementHelperTest {
         // replaceWhat = "123"; // expected result: 1abc12defX<formatted date>-1abc12def123.TXT-1ABC12DEF123.TXT.TXT
 
         String replaceWith = "X[date:yyyy-MM-dd-HH-mm-ss timezone:Etc/UTC]-[filename:]-[filename:uppercase]";
-        replaceWith = "XYZ";
+        // replaceWith = "XYZ";
         execute("/tmp/1abc12def123.TXT", replaceWhat, replaceWith);
     }
 
