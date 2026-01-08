@@ -113,8 +113,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
 
             List<ResponseSearchItem> r = new ArrayList<>();
             if (items != null) {
-                List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).collect(Collectors
-                        .toList());
+                List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).distinct().toList();
                 RequestSearchAdvancedItem workflowAdvanced = cloneAdvanced4WorkflowSearch(in);
                 RequestSearchAdvancedItem jobResourceAdvanced = setAdvanced4JobResourceSearch(workflowAdvanced, in.getReturnType());
                 boolean checkworkflowAdvanced = !SOSReflection.isEmpty(workflowAdvanced) || !SOSString.isEmpty(in.getAdvanced().getWorkflow());

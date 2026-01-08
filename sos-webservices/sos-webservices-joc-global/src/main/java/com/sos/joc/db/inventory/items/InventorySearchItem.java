@@ -1,5 +1,8 @@
 package com.sos.joc.db.inventory.items;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventorySearchItem {
@@ -128,5 +131,22 @@ public class InventorySearchItem {
 
     public void setCountReleased(Number val) {
         countReleased = val;
+    }
+    
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(id).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof InventorySearchItem) == false) {
+            return false;
+        }
+        InventorySearchItem rhs = ((InventorySearchItem) other);
+        return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
 }
