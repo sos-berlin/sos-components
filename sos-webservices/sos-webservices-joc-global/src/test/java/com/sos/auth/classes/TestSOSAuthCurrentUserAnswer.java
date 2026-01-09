@@ -3,6 +3,8 @@ package com.sos.auth.classes;
 import static org.junit.Assert.assertEquals;
 
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.junit.Test;
 
@@ -28,6 +30,24 @@ public class TestSOSAuthCurrentUserAnswer {
         assertEquals("testSOSAuthCurrentUserAnswer getRole", "role", sosAuthCurrentAccountAnswer.getRole());
         assertEquals("testSOSAuthCurrentUserAnswer getUser", "user", sosAuthCurrentAccountAnswer.getAccount());
         assertEquals("testSOSAuthCurrentUserAnswer getPermission", "permission", sosAuthCurrentAccountAnswer.getPermission());
+    }
+    
+    //@Test
+    public void decodeIdToken() throws Exception {
+        //tokens from authentication debug.log
+        //decodeIdToken("...");
+    }
+    
+    private void decodeIdToken(String idToken) throws Exception {
+
+        String[] tokenParts = idToken.split("\\.");
+        Base64.Decoder decoder = Base64.getUrlDecoder();
+
+        System.out.println(new String(decoder.decode(tokenParts[0]), StandardCharsets.UTF_8));
+        
+        if (tokenParts.length > 1) {
+            System.out.println(new String(decoder.decode(tokenParts[1]), StandardCharsets.UTF_8));
+        }
     }
 
 }

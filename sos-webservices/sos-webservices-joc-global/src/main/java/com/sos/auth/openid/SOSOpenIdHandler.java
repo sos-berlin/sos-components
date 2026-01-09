@@ -238,7 +238,7 @@ public class SOSOpenIdHandler {
             } else {
                 valid = valid && webserviceCredentials.getClientId().equals(aud);
             }
-            valid = valid && webserviceCredentials.getAuthenticationUrl().equals(iss);
+            valid = valid && authenticationUrlIsValid(webserviceCredentials.getAuthenticationUrl(), iss);
             valid = valid && webserviceCredentials.getAccount().equals(account);
 
             valid = valid && expiresIn > 0;
@@ -263,6 +263,14 @@ public class SOSOpenIdHandler {
                 jsonReaderConfigurationResponse.close();
             }
         }
+    }
+    
+    private boolean authenticationUrlIsValid(String authUrlFromIdentityService, String authUrlFromIdToken) {
+        if (authUrlFromIdentityService == null || authUrlFromIdToken == null) {
+            return false;
+        }
+        // compare without https default port 443
+        return authUrlFromIdentityService.replaceFirst(":443/", "/").equals(authUrlFromIdToken.replaceFirst(":443/", "/"));
     }
 
     public boolean accountAccessTokenIsValid(SOSOpenIdAccountAccessToken accessToken) {
