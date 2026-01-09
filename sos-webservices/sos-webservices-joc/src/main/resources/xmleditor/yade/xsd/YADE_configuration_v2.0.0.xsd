@@ -8771,21 +8771,21 @@ A fragment is referenced via this attribute value by a transfer profile.
                         <li>Examples:
                     <ul>
                               <li>
-                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                 <em>[date:yyyyMMddHHmmss]</em> - current date using the Java default time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+02:00]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+2]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+05:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+5:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-02:00]</em> - current date at fixed offset -02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-2]</em> - current date at fixed offset -02:00</li>
                            </ul>
                         </li>
                      </ul>
@@ -9238,21 +9238,21 @@ A fragment is referenced via this attribute value by a transfer profile.
                         <li>Examples:
                     <ul>
                               <li>
-                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                 <em>[date:yyyyMMddHHmmss]</em> - current date using the Java default time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+02:00]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+2]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+05:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+5:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-02:00]</em> - current date at fixed offset -02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-2]</em> - current date at fixed offset -02:00</li>
                            </ul>
                         </li>
                      </ul>
@@ -9404,21 +9404,21 @@ A fragment is referenced via this attribute value by a transfer profile.
                         <li>Examples:
                     <ul>
                               <li>
-                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                 <em>[date:yyyyMMddHHmmss]</em> - current date using the Java default time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+02:00]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+2]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+05:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+5:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-02:00]</em> - current date at fixed offset -02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-2]</em> - current date at fixed offset -02:00</li>
                            </ul>
                         </li>
                      </ul>
@@ -10261,21 +10261,21 @@ A fragment is referenced via this attribute value by a transfer profile.
                         <li>Examples:
                     <ul>
                               <li>
-                                 <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                 <em>[date:yyyyMMddHHmmss]</em> - current date using the Java default time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+02:00]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+2]</em> - current date at fixed offset +02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+05:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:+5:30]</em> - current date at fixed offset +05:30</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-02:00]</em> - current date at fixed offset -02:00</li>
                               <li>
-                                 <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                                 <em>[date:yyyyMMddHHmmss timezone:-2]</em> - current date at fixed offset -02:00</li>
                            </ul>
                         </li>
                      </ul>
@@ -11268,21 +11268,21 @@ A fragment is referenced via this attribute value by a transfer profile.
                            <li>Examples:
                     <ul>
                                  <li>
-                                    <em>[date:yyyyMMdd]</em> - current date using the Java default time zone</li>
+                                    <em>[date:yyyyMMddHHmmss]</em> - current date using the Java default time zone</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:Europe/Berlin]</em> - current date in the Europe/Berlin time zone</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:+02:00]</em> - current date at fixed offset +02:00</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:+02:00]</em> - current date at fixed offset +02:00</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:+2]</em> - current date at fixed offset +02:00</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:+2]</em> - current date at fixed offset +02:00</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:+05:30]</em> - current date at fixed offset +05:30</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:+05:30]</em> - current date at fixed offset +05:30</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:+5:30]</em> - current date at fixed offset +05:30</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:+5:30]</em> - current date at fixed offset +05:30</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:-02:00]</em> - current date at fixed offset -02:00</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:-02:00]</em> - current date at fixed offset -02:00</li>
                                  <li>
-                                    <em>[date:yyyyMMdd timezone:-2]</em> - current date at fixed offset -02:00</li>
+                                    <em>[date:yyyyMMddHHmmss timezone:-2]</em> - current date at fixed offset -02:00</li>
                               </ul>
                            </li>
                         </ul>
