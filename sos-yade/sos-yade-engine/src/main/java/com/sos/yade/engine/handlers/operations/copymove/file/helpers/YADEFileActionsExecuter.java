@@ -24,10 +24,11 @@ public class YADEFileActionsExecuter {
         // 1) Target - individual operations
         if (config.getTarget().needsFilePostProcessing()) {
             YADETargetProviderFile targetFile = sourceFile.getTarget();
+
             if (targetFile != null) {
                 executeAfterFile = true;
 
-                // 1) Target - Rename
+                // 1) Target - Rename (if not skipped)
                 if (targetFile.needsRename()) {
                     // TODO merge content if append and atomic
                     // if not atomic - content already appended??? if not atomic but rename?

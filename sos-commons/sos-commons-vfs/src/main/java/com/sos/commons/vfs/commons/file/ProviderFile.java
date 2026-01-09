@@ -30,6 +30,10 @@ public class ProviderFile {
         return name;
     }
 
+    public void setFullPath(String val) {
+        fullPath = val;
+    }
+
     public String getFullPath() {
         return fullPath;
     }

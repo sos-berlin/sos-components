@@ -92,12 +92,22 @@ public class YADEFileHandler {
 
                 // 2) Target: check should be transferred...
                 if (!config.getTarget().isOverwriteFilesEnabled()) {
-                    if (targetDelegator.getProvider().exists(targetFile.getFinalFullPath())) {
+                    ProviderFile tf = targetDelegator.getProvider().getFileIfExists(targetFile.getFinalFullPath());
+                    // if (targetDelegator.getProvider().exists(targetFile.getFinalFullPath())) {
+                    if (tf != null) {
+                        targetFile.setFullPath(targetFile.getFinalFullPath()); // reset possible rename, atomic etc
+
+                        logger.info("[%s][%s][%s=%s, Bytes=%s, ModificationDate(UTC)=%s][%s=%s, Bytes=%s, ModificationDate(UTC)=%s",
+                                fileTransferLogPrefix, YADEClientBannerWriter.formatState(TransferEntryState.TRANSFERRING), sourceDelegator
+                                        .getLabel(), sourceFile.getFullPath(), sourceFile.getSize(), sourceFile.getLastModifiedAsUTCString(),
+                                targetDelegator.getLabel(), targetFile.getFinalFullPath(), tf.getSize(), tf.getLastModifiedAsUTCString());
+
                         targetFile.setState(TransferEntryState.NOT_OVERWRITTEN);
-                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
-                                targetDelegator.getLabel(), targetFile.getFinalFullPath());
+                        logger.info("[%s][%s][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), YADEClientBannerWriter.formatState(targetFile
+                                .getState()), targetFile.getFinalFullPath());
 
                         YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
+                        finalizeIfNonTransactional(isMoveOperation, false, fileTransferLogPrefix);
                         return;
                     }
                 }
@@ -119,12 +129,12 @@ public class YADEFileHandler {
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
             if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
-                logger.info("[%s][%s][%s,bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                logger.info("[%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
                         sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[%s][%s][%s,bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
-                            sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
+                    logger.debug("[%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile
+                            .getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
                 }
             }
 
@@ -272,27 +282,34 @@ public class YADEFileHandler {
                     sourceMessageDigest);
             YADEChecksumFileHelper.setTargetIntegrityHash(sourceFile, targetMessageDigest);
 
-            if (!config.isTransactionalEnabled() && (isMoveOperation || config.getSource().needsFilePostProcessing() || config.getTarget()
-                    .needsFilePostProcessing())) {
-                // If NOT Transactional
-                // - MOVE operations - remove source file
-                // - Source - Replacement if enabled, Commands AfterFile/BeforeRename
-                // - Target - Replacement/Rename(Atomic) if enabled, IntergityHash, KeepLastModifiedDate, Commands AfterFile/BeforeRename
-                if (isMoveOperation) {
-                    if (!sourceDelegator.isJumpHost()) {
-                        if (sourceDelegator.getProvider().deleteFileIfExists(sourceFile.getFullPath())) {
-                            logger.info("[%s][%s][%s]deleted", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath());
-                        }
-                        sourceFile.setState(TransferEntryState.MOVED);
-                    }
-                }
-                YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                        config.getTarget().getAtomic() != null, useLastModified);
-            }
+            finalizeIfNonTransactional(isMoveOperation, useLastModified, fileTransferLogPrefix);
         } catch (YADEEngineTransferFileException e) {
             throw e;
         } catch (Throwable e) {
             throwException(fileTransferLogPrefix, targetFile, e, "");
+        }
+    }
+
+    private void finalizeIfNonTransactional(boolean isMoveOperation, boolean useLastModified, String fileTransferLogPrefix) throws Exception {
+        if (!config.isTransactionalEnabled() && (isMoveOperation || config.getSource().needsFilePostProcessing() || config.getTarget()
+                .needsFilePostProcessing())) {
+            // If NOT Transactional
+            // - MOVE operations - remove source file
+            // - Source: Replacement if enabled, Commands AfterFile/BeforeRename
+            // - Target:
+            // -- if not skipped - Replacement/Rename(Atomic) if enabled, IntergityHash, KeepLastModifiedDate, Commands AfterFile/BeforeRename
+            // -- if skipped - Commands AfterFile
+            if (isMoveOperation) {
+                if (!sourceDelegator.isJumpHost()) {
+                    sourceFile.setState(TransferEntryState.MOVED);
+                    if (sourceDelegator.getProvider().deleteFileIfExists(sourceFile.getFullPath())) {
+                        logger.info("[%s][%s][%s/deleted]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), YADEClientBannerWriter.formatState(
+                                sourceFile.getState()), sourceFile.getFullPath());
+                    }
+                }
+            }
+            YADEFileActionsExecuter.postProcessingOnSuccess(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
+                    config.getTarget().getAtomic() != null, useLastModified);
         }
     }
 
