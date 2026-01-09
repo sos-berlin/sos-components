@@ -56,14 +56,14 @@ import com.sos.yade.engine.exceptions.YADEEngineInvalidExpressionException;
  * <p>
  * Examples:
  * <ul>
- * <li>[date:yyyyMMdd] - current date using the Java default time zone</li>
- * <li>[date:yyyyMMdd timezone:Europe/Berlin] - current date in the Europe/Berlin time zone</li>
- * <li>[date:yyyyMMdd timezone:+02:00] - current date at fixed offset +02:00</li>
- * <li>[date:yyyyMMdd timezone:+2] - current date at fixed offset +02:00</li>
- * <li>[date:yyyyMMdd timezone:+05:30] - current date at fixed offset +05:30</li>
- * <li>[date:yyyyMMdd timezone:+5:30] - current date at fixed offset +05:30</li>
- * <li>[date:yyyyMMdd timezone:-02:00] - current date at fixed offset -02:00</li>
- * <li>[date:yyyyMMdd timezone:-2] - current date at fixed offset -02:00</li>
+ * <li>[date:yyyyMMddHHmmss] - current date using the Java default time zone</li>
+ * <li>[date:yyyyMMddHHmmss timezone:Europe/Berlin] - current date in the Europe/Berlin time zone</li>
+ * <li>[date:yyyyMMddHHmmss timezone:+02:00] - current date at fixed offset +02:00</li>
+ * <li>[date:yyyyMMddHHmmss timezone:+2] - current date at fixed offset +02:00</li>
+ * <li>[date:yyyyMMddHHmmss timezone:+05:30] - current date at fixed offset +05:30</li>
+ * <li>[date:yyyyMMddHHmmss timezone:+5:30] - current date at fixed offset +05:30</li>
+ * <li>[date:yyyyMMddHHmmss timezone:-02:00] - current date at fixed offset -02:00</li>
+ * <li>[date:yyyyMMddHHmmss timezone:-2] - current date at fixed offset -02:00</li>
  * </ul>
  * </p>
  * Exceptions are propagated to the caller if the format or timezone is invalid. */
