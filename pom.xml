@@ -26,6 +26,7 @@
     <module>sos-joc</module>
     <module>sos-jitl</module>
     <module>sos-js7</module>
+    <module>sos-help-files</module>
   </modules>
 
   <properties>

@@ -133,14 +133,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            checkDependencies(session, in);
+//            checkDependencies(session, in);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             // released schedules with referenced workflows
             Map<String, List<String>> renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer);
             // schedules from the request
             Set<String> inSchedulesPaths = in.getUpdate().stream().filter(r -> r.getObjectType().equals(ConfigurationType.SCHEDULE)).map(
                     RequestFilter::getPath).collect(Collectors.toSet());
-            // already releasedschedules with no renaming
+            // already released schedules with no renaming
             Set<String> keys = renamedOldSchedulePathsWithWorkflowNames.keySet().stream().filter(path -> inSchedulesPaths.contains(path)).collect(
                     Collectors.toSet());
             // remove schedules that are not renamed
