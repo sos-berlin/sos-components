@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -331,15 +332,18 @@ public class DependencyResolver {
             }
             // ScriptIncludes
             if(wfsearchScripts != null) {
-                List<String> wfSearchJobScriptNames = getValuesFromObject(wfsearchScripts, INCLUDESCRIPT_SEARCH);
-                if(!wfSearchJobScriptNames.isEmpty()) {
-                    Stream<String> names = wfSearchJobScriptNames.stream()
-                            .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity())
-                            .map(mr -> mr.group(3));
-                    if (allItemsGrouped.isEmpty()) {
-                        item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
-                    } else {
-                        allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                if(JsonConverter.hasScriptIncludes.test(wfSearch.getJobsScripts())) {
+                    List<String> wfSearchJobScriptNames = getValuesFromObject(wfsearchScripts, INCLUDESCRIPT_SEARCH);
+                    if(!wfSearchJobScriptNames.isEmpty()) {
+                            Stream<String> names = wfSearchJobScriptNames.stream().map(script -> Arrays.asList(script.split("\n")))
+                                .flatMap(List::stream).map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results)
+                                .flatMap(Function.identity()).map(mr -> mr.group(3));
+                        if (allItemsGrouped.isEmpty()) {
+                            item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
+                        } else {
+                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream()
+                                .filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                        }
                     }
                 }
             } else {
@@ -347,13 +351,14 @@ public class DependencyResolver {
                     List<String> wfJobScriptNames = new ArrayList<String>();
                     getValuesRecursively("", workflow, SCRIPT_SEARCH, wfJobScriptNames);
                     if(!wfJobScriptNames.isEmpty()) {
-                        Stream<String> names = wfJobScriptNames.stream()
-                                .map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results).flatMap(Function.identity())
-                                .map(mr -> mr.group(3));
+                        Stream<String> names = wfJobScriptNames.stream().map(script -> Arrays.asList(script.split("\n")))
+                                .flatMap(List::stream).map(JsonConverter.scriptIncludePattern::matcher).map(Matcher::results)
+                                .flatMap(Function.identity()).map(mr -> mr.group(3));
                         if (allItemsGrouped.isEmpty()) {
                             item.getReferences().addAll(dbLayer.getConfigurationsByNames(names, ConfigurationType.INCLUDESCRIPT.intValue()));
                         } else {
-                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream().filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
+                            allItemsGrouped.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptySet()).stream()
+                                .filter(getPredicate(names.toList())).forEach(item.getReferences()::add);
                         }
                     }
                 }
