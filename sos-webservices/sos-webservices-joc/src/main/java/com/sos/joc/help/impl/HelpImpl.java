@@ -68,7 +68,7 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
 
             return JOCDefaultResponse.responseStatus200(helpFileStream, getMediaType(path), null, getJocAuditTrail());
         } catch (Exception e) {
-            return responseStatusJSError(e, getMediaType("html"));
+            return responseStatusJSError(e);
         }
     }
     
@@ -106,6 +106,9 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
             break;
         case "pdf":
             type = "application/" + type;
+            break;
+        case "js":
+            type = "text/javascript";
             break;
         case "javascript":
         case "css":
