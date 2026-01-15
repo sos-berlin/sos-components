@@ -86,8 +86,8 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
 
             } else if (dbItem.getContent() != null && !dbItem.getContent().isEmpty()) {
                 if ("markdown".equals(type)) {
-                    return JOCDefaultResponse.responsePlainStatus200(createHTMLfromMarkdown(dbItem).getBytes(StandardCharsets.UTF_8),
-                            MediaType.TEXT_PLAIN + "; charset=UTF-8", auditTrail);
+                    return JOCDefaultResponse.responsePlainStatus200(createHTMLfromMarkdown(dbItem).getBytes(StandardCharsets.UTF_8), getType("html"),
+                            auditTrail);
                 } else {
                     return JOCDefaultResponse.responsePlainStatus200(dbItem.getContent().getBytes(StandardCharsets.UTF_8), getType(type), auditTrail);
                 }

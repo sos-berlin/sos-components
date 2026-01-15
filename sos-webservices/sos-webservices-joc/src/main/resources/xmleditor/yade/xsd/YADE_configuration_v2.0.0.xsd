@@ -9717,10 +9717,20 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>With a value "true" the content of source files will be appended to the corresponding target files.</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
-			If <em>AppendFiles</em> is specified with the value "true" 
-			then the parameter <em>DisableOverwriteFiles</em> will be ignored.
-		</p>
+            Behavior in combination with other parameters:
+            <ul>
+                     <li>
+                        <em>AppendFiles=true</em>
+                        <ol>
+                           <li>
+                              <em>DisableOverwriteFiles=true</em> will be ignored and <em>DisableOverwriteFiles</em> will be internally set to <em>false</em>.</li>
+                           <li>The transfer will fail if <em>TransferOptions / Transactional=true</em> or <em>Atomicity / AtomicPrefix | AtomicSuffix</em> are used, as appending to temporary target files is not supported.</li>
+                        </ol>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -10376,14 +10386,14 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>
-			This parameter specifies whether a transfer should be processed within a single transaction, 
-			i.e. either all objects are successfully transferred or none.
+			This parameter specifies whether a transfer should be processed within a single transaction, i.e. either all objects are successfully transferred or none.
 		</p>
                <p>
 			Should an error occur during a transfer operation then all transfers will be rolled back.
 		</p>
+               <p/>
                <p>
-			When specifying the value true then the following applies:
+			When specifying the value <em>true</em> then the following applies:
 			<ul>
                      <li>The <a target="_blank"
                            href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+AtomicSuffix"
@@ -10391,14 +10401,10 @@ A fragment is referenced via this attribute value by a transfer profile.
 				and <a target="_blank"
                            href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+AtomicPrefix"
                            shape="rect">AtomicPrefix</a> parameter
-				are used that cause target files to be created with a suffix such as "~" (default) and 
-				that causes the respective files to be renamed to their target file name after the transfer of all files
+				are used that cause target files to be created with a suffix such as "~" (default) and that causes the respective files to be renamed to their target file name after the transfer of all files
 				has been successfully completed.</li>
-                     <li>If at least one file out of a set of files cannot be transferred successfully then no
-				files will be renamed, instead the temporarily created files are removed from the target system.</li>
-                     <li>The parameter remove_files 
-				that causes files to be removed after successful transfer will be effective only after all
-				files have been successfully transferred. Otherwise no files will be removed.</li>
+                     <li>If at least one file out of a set of files cannot be transferred successfully then no files will be renamed, instead the temporarily created files are removed from the target system.</li>
+                     <li>Operation <em>Move</em>: files are removed from the source only after all files have been successfully transferred. Otherwise, no files are removed.</li>
                   </ul>
 		             </p>
             </div>
