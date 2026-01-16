@@ -523,15 +523,16 @@ public class HttpClient {
         baseHttpClientBuilder = BaseHttpClient.withBuilder();
         baseHttpClientBuilder.withConnectTimeout(Duration.ofSeconds(jobArgs.getConnectionTimeout().getValue()));
         baseHttpClientBuilder.withLogger(logger);
-        KeyStore trustStore = readTruststore(jobArgs);
-        if (trustStore != null) {
-            baseHttpClientBuilder.withSSLContext(createSslContext(trustStore));
-        }
-        if (jobArgs.getUri().toString().startsWith("https:") && trustStore == null) {
-            if (jobArgs.getTruststorePath().getValue() != null) {
-                throw new JobArgumentException(String.format("truststore (%1$s) not found.", jobArgs.getTruststorePath().getValue().toString()));
+        if (jobArgs.getUri().toString().startsWith("https:")) {
+            KeyStore trustStore = readTruststore(jobArgs);
+            if (trustStore != null) {
+                baseHttpClientBuilder.withSSLContext(createSslContext(trustStore));
             } else {
-                throw new JobArgumentException("Couldn't find required truststore");
+                if (jobArgs.getTruststorePath().getValue() != null) {
+                    throw new JobArgumentException(String.format("truststore (%1$s) not found.", jobArgs.getTruststorePath().getValue().toString()));
+                } else {
+                    throw new JobArgumentException("Couldn't find required truststore");
+                }
             }
         }
         baseHttpClientBuilder.withAuth(jobArgs.getUser().getValue(), jobArgs.getPwd().getValue());
