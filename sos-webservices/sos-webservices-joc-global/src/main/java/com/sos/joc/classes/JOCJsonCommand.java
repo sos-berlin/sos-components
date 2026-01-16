@@ -329,8 +329,7 @@ public class JOCJsonCommand {
         try {
             createClient();
             HttpExecutionResult<String> result = client.executeGET(uri,
-                    client.mergeWithDefaultHeaders(Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken())),
-                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                    client.mergeWithDefaultHeaders(Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken())));
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (HttpConnectTimeoutException e) {
             throw new ControllerConnectionRefusedException(jocError, e);
