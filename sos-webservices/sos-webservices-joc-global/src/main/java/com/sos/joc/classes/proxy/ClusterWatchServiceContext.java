@@ -15,7 +15,7 @@ import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
 import js7.cluster.watch.ClusterWatchService;
-import js7.data.cluster.ClusterState;
+import js7.data.cluster.ClusterState.HasNodes;
 import js7.data.cluster.ClusterWatchId;
 import js7.data.cluster.ClusterWatchProblems;
 import js7.data.node.NodeId;
@@ -135,7 +135,7 @@ public class ClusterWatchServiceContext {
                         + lossNodeId + ": " + e.toString()));
             }
         }
-        scala.util.Either<Problem, ClusterState> state = service.clusterState();
+        scala.util.Either<Problem, HasNodes> state = service.clusterState();
         if (state.isLeft()) {
             LOGGER.info("[ClusterWatchService] " + state.left().toOption().get().toString());
         } else {
