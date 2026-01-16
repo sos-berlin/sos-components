@@ -105,7 +105,7 @@ public class SOSKeycloakHandler {
             result = client.executePOST(requestUri, requestHeaders,
                     BodyPublishers.ofByteArray(HttpUtils.createUrlEncodedBodyfromMap(body).getBytes(StandardCharsets.UTF_8)), BodyHandlers.ofString());
         } else {
-            result = client.executeGET(requestUri, requestHeaders, BodyHandlers.ofString());
+            result = client.executeGET(requestUri, requestHeaders);
         }
         String response = result.response().body();
         LOGGER.debug(response);
