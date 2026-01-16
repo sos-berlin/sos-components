@@ -358,10 +358,12 @@ public class JOCJsonCommand {
     
     private void init() throws ControllerConnectionRefusedException {
         baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withRequestTimeout(
-                Duration.ofMillis(Globals.httpSocketTimeout)).withLogger(new SLF4JLogger(LOGGER)).withSSLContext(SSLContext.getInstance()
-                        .getSSLContext());
-        if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
-            throw new ControllerConnectionRefusedException("Couldn't find required truststore");
+                Duration.ofMillis(Globals.httpSocketTimeout)).withLogger(new SLF4JLogger(LOGGER));
+        if (url.startsWith("https:")) {
+            if (SSLContext.getInstance().getTrustStore() == null) {
+                throw new ControllerConnectionRefusedException("Couldn't find required truststore");
+            }
+            baseHttpClientBuilder.withSSLContext(SSLContext.getInstance().getSSLContext());
         }
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {
