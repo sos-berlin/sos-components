@@ -118,7 +118,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         debugURI(request.uri());
         debugHeaders("HttpRequest headers", request.headers());
         if (logger.isDebugEnabled()) {
-            HttpExecutionResult<T> result = new HttpExecutionResult<>(this, client.send(request, bodyHandler));;
+            HttpExecutionResult<T> result = new HttpExecutionResult<>(this, client.send(request, bodyHandler));
             logger.debug("[HttpResponse code] " + result.response().statusCode());
             return result;
         } else {
@@ -209,6 +209,11 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     /** Executes a GET request and returns response as String */
     public HttpExecutionResult<String> executeGET(URI uri) throws Exception {
         return executeWithResponseBody(createGETRequest(uri));
+    }
+    
+    /** Executes a GET request with request headers and returns response as String */
+    public HttpExecutionResult<String> executeGET(URI uri, Map<String, String> headers) throws Exception {
+        return executeWithResponseBody(createGETRequest(uri, headers));
     }
 
     /** Executes a GET request and returns response as JsonNode */
