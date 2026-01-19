@@ -408,7 +408,7 @@ public class JobArgument<T> extends SOSArgument<T> {
     protected void setArgumentType() throws Exception {
         try {
             setArgumentType(getClazzType());
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
         if (argumentType == null) {
             argumentType = ArgumentType.FLAT;
@@ -549,7 +549,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         if (type instanceof ParameterizedType) {
             try {
                 return ((ParameterizedType) type).getActualTypeArguments()[paramIndex];
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 return Object.class;
             }
         } else {

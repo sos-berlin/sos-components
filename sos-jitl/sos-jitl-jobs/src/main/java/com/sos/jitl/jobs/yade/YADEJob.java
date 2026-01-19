@@ -46,7 +46,7 @@ public class YADEJob extends Job<YADEJobArguments> {
             // Execute YADE Transfer
             YADEEngine engine = new YADEEngine();
             files = engine.execute(step.getLogger(), argsLoader, false);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             exception = e;
             throw e;
         } finally {

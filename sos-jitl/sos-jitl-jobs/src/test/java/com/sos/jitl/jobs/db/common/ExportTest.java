@@ -69,7 +69,7 @@ public class ExportTest {
                     break;
                 }
                 session.commit();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw e;
             } finally {
                 executor.close(rs);

@@ -42,13 +42,13 @@ public class PLSQLJob extends CancelableDatabaseJob<PLSQLJobArguments> {
             session = factory.openStatelessSession(PLSQLJob.class.getSimpleName());
             addCancelableResource(step, session);
             process(step, session);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             if (factory != null) {
                 try {
                     factory.close(session);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
         }

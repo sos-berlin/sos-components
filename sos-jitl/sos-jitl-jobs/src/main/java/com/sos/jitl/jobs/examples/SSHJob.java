@@ -42,7 +42,7 @@ public class SSHJob extends Job<SSHJobArguments> {
                 step.getLogger().info("[getExitCodesToIgnore.contains(" + testExitCode + ")]" + step.getDeclaredArguments().getExitCodesToIgnore()
                         .getValue().contains(testExitCode));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             if (provider != null) {
@@ -62,7 +62,7 @@ public class SSHJob extends Job<SSHJobArguments> {
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
                 p.disconnect();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }

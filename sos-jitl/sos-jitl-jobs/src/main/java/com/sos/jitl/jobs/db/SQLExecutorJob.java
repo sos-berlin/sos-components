@@ -39,7 +39,7 @@ public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArgument
             addCancelableResource(step, session);
             process(step, session);
             step.getLogger().info("result: " + step.getOutcome().getVariables());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             if (factory != null) {
@@ -58,7 +58,7 @@ public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArgument
                 step.getLogger().debug("[load from file]%s", path);
                 statements = executor.getStatements(replaceVars(step, path));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
         if (statements == null) {
             statements = executor.getStatements(args.getCommand());
@@ -191,7 +191,7 @@ public class SQLExecutorJob extends CancelableDatabaseJob<SQLExecutorJobArgument
                     warning.append(warn);
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             executor.close(rs);

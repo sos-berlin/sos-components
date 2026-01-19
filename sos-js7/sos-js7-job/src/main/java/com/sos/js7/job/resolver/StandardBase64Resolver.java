@@ -28,7 +28,7 @@ public class StandardBase64Resolver extends JobArgumentValueResolver {
             while (iterator.hasNext()) {
                 try {
                     iterator.set(SOSBase64.decode(iterator.nextWithoutPrefix()));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new JobArgumentException(iterator, e);
                 }
             }

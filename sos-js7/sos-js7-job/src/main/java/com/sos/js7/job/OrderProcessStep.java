@@ -190,7 +190,7 @@ public class OrderProcessStep<A extends JobArguments> {
         Job<AJ> job = null;
         try {
             job = clazz.getDeclaredConstructor(JobContext.class).newInstance((JobContext) null);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             job = clazz.getDeclaredConstructor().newInstance();
         }
 
@@ -221,7 +221,7 @@ public class OrderProcessStep<A extends JobArguments> {
 
             cancelableExecuteJobs.put(je.getJobKey(), step);
             job.processOrder(step);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             job.onStop();
@@ -235,7 +235,7 @@ public class OrderProcessStep<A extends JobArguments> {
             for (Map.Entry<String, OrderProcessStep> e : cancelableExecuteJobs.entrySet()) {
                 try {
                     e.getValue().getExecuteJobBean().getJob().cancelProcessOrder(e.getValue());
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     logger.warn("[cancelExecuteJobs][" + e.getKey() + "]" + e.toString(), e);
                 }
             }
@@ -648,7 +648,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     vs.setSource(e.getValue().getSource());
                     try {
                         allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue().getValue(), vs));
-                    } catch (Throwable ex) {
+                    } catch (Exception ex) {
                         getLogger().error("[LastSucceededOutcomes][" + e.getKey() + "]" + ex.toString());
                     }
                 }
@@ -663,7 +663,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         try {
                             allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
                                     ValueSourceType.ORDER)));
-                        } catch (Throwable ex) {
+                        } catch (Exception ex) {
                             getLogger().error("[OrderVariables][" + e.getKey() + "]" + ex.toString());
                         }
                     }
@@ -678,7 +678,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         try {
                             allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
                                     ValueSourceType.JOB)));
-                        } catch (Throwable ex) {
+                        } catch (Exception ex) {
                             getLogger().error("[JobArgument][" + e.getKey() + "]" + ex.toString());
                         }
                     }
@@ -704,7 +704,7 @@ public class OrderProcessStep<A extends JobArguments> {
                             // aja.setValueSource(vs);
                         }
                         // allArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
-                    } catch (Throwable ex) {
+                    } catch (Exception ex) {
                         getLogger().error("[JobResources][" + dv.getSource() + "][" + e.getKey() + "]" + ex.toString());
                     }
                 }
@@ -717,7 +717,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 try {
                     ValueSource vs = new ValueSource(ValueSourceType.JOB_ARGUMENT);
                     allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), vs));
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     getLogger().error("[JobEnvironment.JobArgument][" + e.getKey() + "]" + ex.toString());
                 }
             }
@@ -733,7 +733,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         JobArgument<?> ar = JobArgument.createUndeclaredArgument(name, o, vs);
                         // ar.setIsDirty(false);
                         allArguments.put(name, ar);
-                    } catch (Throwable e1) {
+                    } catch (Exception e1) {
                         getLogger().error("[orderPreparation][" + name + "]" + e1.toString());
                     }
                 }
@@ -746,7 +746,7 @@ public class OrderProcessStep<A extends JobArguments> {
                     try {
                         allArguments.put(e.getKey(), JobArgument.createUndeclaredArgument(e.getKey(), e.getValue(), new ValueSource(
                                 ValueSourceType.JOB_ARGUMENT)));
-                    } catch (Throwable ex) {
+                    } catch (Exception ex) {
                         getLogger().error("[unitTestUndeclaredArguments][" + e.getKey() + "]" + ex.toString(), e);
                     }
                 }
@@ -765,7 +765,7 @@ public class OrderProcessStep<A extends JobArguments> {
             for (Map.Entry<String, List<JobArgument<?>>> entry : groupedArguments.entrySet()) {
                 try {
                     JobArgumentValueResolverCache.resolve(entry.getKey(), logger, entry.getValue(), allArguments);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     Throwable ex = e.getCause() == null ? e : e.getCause();
                     throw new JobArgumentException(String.format("[%s]%s", JobArgumentValueResolverCache.getResolverClassName(entry.getKey()), ex
                             .toString()), ex);
@@ -912,7 +912,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         }
                         l.add(arg);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     logger.warn2allLoggers(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
                             .toString()), e);
                 }
@@ -960,7 +960,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 instance.setArguments(args);
             }
             return instance;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new JobArgumentException(e.toString(), e);
         }
     }
@@ -1062,7 +1062,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
             try {
                 jobInstructionLabel = internalStep.instructionLabel().get().string();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 getLogger().error(String.format("[getJobInstructionLabel]%s", e.toString()));
             }
         }
@@ -1076,7 +1076,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
             try {
                 workflowPath = (String) getNamedValue(INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 getLogger().error(String.format("[getWorkflowPath][%s]%s", INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
             }
         }
@@ -1311,7 +1311,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 logArgumentsBySource(ll);
                 logAllArguments(ll);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error2allLoggers(getStepInfo(), e.toString(), e);
         } finally {
             if (ae != null) {

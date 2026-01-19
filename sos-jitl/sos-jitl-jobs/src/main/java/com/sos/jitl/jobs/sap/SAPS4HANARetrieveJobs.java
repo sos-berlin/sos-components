@@ -20,7 +20,7 @@ public class SAPS4HANARetrieveJobs extends Job<CommonJobArguments> {
             httpClient = new HttpClient(step.getDeclaredArguments(), step.getLogger());
             ResponseJobs result = httpClient.retrieveJobs();
             step.getLogger().info("result: \n" + Globals.objectMapperPrettyPrint.writeValueAsString(result));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             if (httpClient != null) {

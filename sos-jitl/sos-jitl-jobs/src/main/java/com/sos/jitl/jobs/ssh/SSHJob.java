@@ -164,7 +164,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             if (resolvedReturnValuesFileName != null) {
                 step.getOutcome().putVariables(executePostCommand(jobArgs, provider, resolvedReturnValuesFileName, isWindowsShell, logger));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (jobArgs.getRaiseExceptionOnError().getValue()) {
                 if (jobArgs.getIgnoreError().getValue()) {
                     logger.debug(e.toString(), e);
@@ -215,7 +215,7 @@ public class SSHJob extends Job<SSHJobArguments> {
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
                 p.disconnect();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().error(String.format("[%s][job name=%s][cancelSSHProvider]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }

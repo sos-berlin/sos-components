@@ -110,7 +110,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
                 }
 
                 return step.processed();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 try {
                     step.checkAndLogParameterization(null, null);
                 } catch (Exception e1) {
@@ -228,7 +228,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
                     }
                     declared.add(arg.getName());
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
             }
         }
         return declared;
@@ -244,7 +244,7 @@ public class UnitTestJobHelper<A extends JobArguments> {
             setDefaultEnvVar(JobHelper.ENV_NAME_AGENT_HOME, "");
             setDefaultEnvVar(JobHelper.ENV_NAME_AGENT_CONFIG_DIR, "");
             setDefaultEnvVar(JobHelper.ENV_NAME_AGENT_WORK_DIR, "");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.info(String.format(
                     "[can't set env][use 'Run Configurations -> Environment' instead or allow access with '--add-opens java.base/java.util=ALL-UNNAMED']%s",
                     e.toString()));

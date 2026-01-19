@@ -685,7 +685,7 @@ public abstract class AFileOperations {
     private String getDuration(long millis) {
         try {
             return SOSDate.getDuration(Duration.ofMillis(millis));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return millis + "ms";
         }
     }
@@ -693,7 +693,7 @@ public abstract class AFileOperations {
     private String getDateTime(long millis) {
         try {
             return SOSDate.getDateTimeAsString(millis);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return millis + "ms";
         }
     }
