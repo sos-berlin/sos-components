@@ -64,7 +64,7 @@
 		</dependency>
 		<dependency>
             <groupId>com.sos-berlin</groupId>
-            <artifactId>sos-help-files</artifactId>
+            <artifactId>sos-joc-help-files</artifactId>
             <version>${project.version}</version>
         </dependency>
 		<dependency>
