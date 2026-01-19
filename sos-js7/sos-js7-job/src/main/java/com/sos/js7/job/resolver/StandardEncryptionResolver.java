@@ -42,7 +42,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
             while (iterator.hasNext()) {
                 try {
                     iterator.set(Decrypt.decrypt(EncryptedValue.getInstance(arg.getName(), iterator.nextWithoutPrefix()), privKey));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new JobArgumentException(iterator, e);
                 }
             }
@@ -57,7 +57,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
             PrivateKey pk = KeyUtil.getPrivateKey(arg == null || arg.getValue() == null ? null : arg.getValue().toString());
             arg.setDisplayMode(DisplayMode.UNMASKED);
             return pk;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             String m = arg == null || arg.getValue() == null ? " missing" : ("=" + arg.getValue().toString());
             throw new SOSKeyException("[argument " + ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH + m + "]" + e.toString(), e);
         }

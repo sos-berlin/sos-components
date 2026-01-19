@@ -45,7 +45,7 @@ public class JocApiJob extends Job<JocApiJobArguments> {
                 step.getLogger().info("Error occured on first post!");
             }
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             ex.close();

@@ -62,12 +62,12 @@ public class Export2XML {
             }
             writer.write("</RESULTSET>");
             logger.info("[export][%s]total data rows written=%s, duration=%s", outputFile, dataRows, SOSDate.getDuration(start, Instant.now()));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             removeOutputFile = true;
             String f = outputFile.toString();
             try {
                 f = outputFile.toAbsolutePath().toString();
-            } catch (Throwable ee) {
+            } catch (Exception ee) {
 
             }
             throw new Exception(String.format("[%s]%s", f, e.toString()), e);
@@ -96,7 +96,7 @@ public class Export2XML {
             try {
                 // use dom for CDATA because e.g. nested CDATA
                 return SOSXmlTransformer.nodeToString(dom.createCDATASection(SOSHibernateSQLExecutor.sqlValueToString(o)));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 return new StringBuilder("<![CDATA[").append(o.toString()).append("]]>").toString();
             }
         }

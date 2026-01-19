@@ -68,7 +68,7 @@ public class ExecuteMonitoring {
             monitoringStatus.setOrderSummary(ordersHistoricSummary);
 
             return monitoringStatus;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().error(e);
             throw e;
         } finally {
@@ -102,7 +102,7 @@ public class ExecuteMonitoring {
         try (PrintWriter outWriter = new PrintWriter(filename)) {
             step.getLogger().info(output);
             outWriter.println(output);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().error(e);
         }
 

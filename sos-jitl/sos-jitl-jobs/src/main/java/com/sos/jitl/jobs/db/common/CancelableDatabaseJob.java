@@ -48,7 +48,7 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]cancel statement ...");
                 try {
                     session.getCurrentStatement().cancel();
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     step.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][cancel statement]" + ex.toString(), ex);
                 }
                 currentStatementCanceled = true;
@@ -61,7 +61,7 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
                 try {
                     step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][hibernate]connection rollback ...");
                     conn.rollback();
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     step.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection rollback]" + ex.toString(), ex);
                 }
             } else {
@@ -72,7 +72,7 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
             // 3) Abort connection
             try {
                 conn.abort(Runnable::run);
-            } catch (Throwable ex) {
+            } catch (Exception ex) {
                 step.getLogger().warn("[" + OPERATION_CANCEL_KILL + "][hibernate][connection abort]" + ex.toString(), ex);
             }
 
@@ -102,7 +102,7 @@ public abstract class CancelableDatabaseJob<A extends JobArguments> extends Job<
                 // ((Connection) o).close();
                 ((Connection) o).abort(Runnable::run);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().error(String.format("[%s][job name=%s][cancelSQLConnection]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
     }

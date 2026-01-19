@@ -259,7 +259,7 @@ public class JobHelper {
                         map.put(arg.getName(), arg.getValue());
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 //
             }
         }
@@ -291,7 +291,7 @@ public class JobHelper {
     private static Value getDateAsStringValue(Date date) {
         try {
             return StringValue.of(SOSDate.getDateTimeAsString(date));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return StringValue.of(date == null ? "" : date.toString());
         }
     }

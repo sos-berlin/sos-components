@@ -43,7 +43,7 @@ public class ExampleUpperCaseResolver extends JobArgumentValueResolver {
                 try {
                     // Set converted value
                     iterator.set(iterator.nextWithoutPrefix().toUpperCase());
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new JobArgumentException(iterator, e);
                 }
             }
