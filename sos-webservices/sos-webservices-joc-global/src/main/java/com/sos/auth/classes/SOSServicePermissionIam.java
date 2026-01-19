@@ -193,11 +193,19 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
     }
     
+    public JOCDefaultResponse loginOIDCCredentialFlow(String identityService, String accessToken, String openIdHeaderValue) {
+        return loginPost(null, null, null, identityService, accessToken, null, openIdHeaderValue, null, null, null,
+                null, null, null, null, null, null);
+    }
+    
     private JOCDefaultResponse loginPost(@Context HttpServletRequest servletRequest, @HeaderParam("X-IDENTITY-SERVICE") String identityService,
             String origin, byte[] body) {
         
         try {
-            GetTokenRequest requestBody = Globals.objectMapper.readValue(body, GetTokenRequest.class);
+            GetTokenRequest requestBodyObj = Globals.objectMapper.readValue(body, GetTokenRequest.class);
+            Map<String, String> requestBody = Map.of("grant_type", "authorization_code", "code", requestBodyObj.getCode(), "redirect_uri",
+                    requestBodyObj.getRedirect_uri(), "code_verifier", requestBodyObj.getCode_verifier());
+
             identityService = identityService.replaceFirst("^OIDC(-JOC)?:", "");
 
             OidcProperties provider =  SOSAuthHelper.getOIDCProperties(identityService);
