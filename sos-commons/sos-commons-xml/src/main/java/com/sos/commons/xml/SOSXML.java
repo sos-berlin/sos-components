@@ -289,7 +289,7 @@ public class SOSXML {
             }
             try {
                 return (Node) xpath.compile(expression).evaluate(node, XPathConstants.NODE);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSXMLXPathException(String.format("[%s][%s]%s", expression, node.getNodeName(), e.toString()), e);
             }
         }
@@ -300,7 +300,7 @@ public class SOSXML {
             }
             try {
                 return (NodeList) xpath.compile(expression).evaluate(node, XPathConstants.NODESET);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSXMLXPathException(String.format("[%s][%s]%s", expression, node.getNodeName(), e.toString()), e);
             }
         }

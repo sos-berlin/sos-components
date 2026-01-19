@@ -100,7 +100,7 @@ public class YADESourceFilesSelector {
 
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
         }
     }
@@ -185,7 +185,7 @@ public class YADESourceFilesSelector {
             ProviderFile file = null;
             try {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Throwable ex = e.getCause() == null ? e : e.getCause();
                 throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), e);
             }

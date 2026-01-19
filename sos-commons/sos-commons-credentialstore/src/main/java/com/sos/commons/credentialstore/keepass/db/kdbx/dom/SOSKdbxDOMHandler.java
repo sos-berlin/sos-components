@@ -40,7 +40,7 @@ public class SOSKdbxDOMHandler extends ASOSKdbxHandler {
     protected DomDatabaseWrapper load() throws SOSKeePassDatabaseException {
         try (InputStream is = Files.newInputStream(getKeePassFile())) {
             return DomDatabaseWrapper.load(getCredentials(), is);
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             throw new SOSKeePassDatabaseException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(getKeePassFile()), ex.toString()), ex);
         }
     }
@@ -106,7 +106,7 @@ public class SOSKdbxDOMHandler extends ASOSKdbxHandler {
         try {
             Field f = FieldUtils.getField(obj.getClass(), "element", true);
             f.set(obj, setNewItemTimes((Element) f.get(obj)));
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 
@@ -114,7 +114,7 @@ public class SOSKdbxDOMHandler extends ASOSKdbxHandler {
         try {
             Field f = FieldUtils.getField(obj.getClass(), "element", true);
             f.set(obj, setModifiedItemTimes((Element) f.get(obj)));
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 
@@ -139,7 +139,7 @@ public class SOSKdbxDOMHandler extends ASOSKdbxHandler {
             if (e != null) {
                 e.setTextContent(dateFormatter.format(d));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 }

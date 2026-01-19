@@ -95,7 +95,7 @@ public class YADESourceFilesPolling {
 
                     result = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, excludedFileExtension, true);
                     currentFilesCount = result.size();
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     logger.error("%s[selectFiles]%s", logPrefix, e.toString());
                 }
 
@@ -154,7 +154,7 @@ public class YADESourceFilesPolling {
                 try {
                     sourceDelegator.getProvider().ensureConnected();
                     return;
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     if (PollingMethod.Forever.equals(method)) {
                         if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
                             throw new YADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
@@ -180,7 +180,7 @@ public class YADESourceFilesPolling {
                     YADEClientHelper.waitFor(WAIT_SECONDS_ON_CONNECTION_ERROR);
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineSourcePollingException(YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e));
         }
     }

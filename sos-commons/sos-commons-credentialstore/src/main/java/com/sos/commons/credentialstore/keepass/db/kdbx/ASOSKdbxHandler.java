@@ -83,7 +83,7 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
                 }
                 return entry.getBinaryProperty(propertyName);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSKeePassAttachmentException(e);
         }
         return null;
@@ -101,7 +101,7 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
         }
         try {
             entry.setBinaryProperty(propertyName, Files.readAllBytes(attachment));
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new SOSKeePassAttachmentException(t);
         }
         return entry;
@@ -139,7 +139,7 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
         }
         try (FileOutputStream fos = new FileOutputStream(file.toFile())) {
             getDatabase().save(getCredentials(), fos);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSKeePassDatabaseException(e);
         }
     }

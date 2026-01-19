@@ -28,7 +28,7 @@ public class SOSKdbxJAXBHandler extends ASOSKdbxHandler {
     protected JaxbDatabase load() throws SOSKeePassDatabaseException {
         try (InputStream is = Files.newInputStream(getKeePassFile())) {
             return JaxbDatabase.load(getCredentials(), is);
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             throw new SOSKeePassDatabaseException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(getKeePassFile()), ex.toString()), ex);
         }
     }
@@ -98,7 +98,7 @@ public class SOSKdbxJAXBHandler extends ASOSKdbxHandler {
             b.setTimes(setNewItemTimes(b.getTimes()));
 
             f.set(obj, b);
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 
@@ -110,7 +110,7 @@ public class SOSKdbxJAXBHandler extends ASOSKdbxHandler {
             b.setTimes(setNewItemTimes(b.getTimes()));
 
             f.set(obj, b);
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 
@@ -122,7 +122,7 @@ public class SOSKdbxJAXBHandler extends ASOSKdbxHandler {
             b.setTimes(setModifiedItemTimes(b.getTimes()));
 
             f.set(obj, b);
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
     }
 

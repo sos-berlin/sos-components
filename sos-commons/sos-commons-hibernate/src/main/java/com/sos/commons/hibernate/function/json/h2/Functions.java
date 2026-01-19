@@ -54,7 +54,7 @@ public class Functions {
         JsonStructure json;
         try (JsonReader r = Json.createReader(new StringReader(jsonValue))) {
             json = r.read();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // H2 throws an exception,e.g.: Exception calling user-defined function: "jsonArrayLength"(<arguments>) <exception>
             // So, the H2 message contains the values of "jsonValue" and "path"
             throw e;
@@ -68,7 +68,7 @@ public class Functions {
             }
             String p = path.startsWith("$.") ? path.substring(2) : path;
             return extractValue(json, Arrays.stream(p.split("\\.")).iterator());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             System.err.println("[resolveJsonValue][" + jsonValue + "][" + path + "]" + e);
             return Optional.empty();
         }

@@ -219,7 +219,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         byte[] bytes = null;
         try {
             bytes = Files.readAllBytes(file);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateSQLExecutorException(String.format("cannot read file %s", file), e);
         }
         executeStatements(new String(bytes));
@@ -534,7 +534,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         byte[] bytes = null;
         try {
             bytes = Files.readAllBytes(file);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateSQLExecutorException(String.format("cannot read file %s", file), e);
         }
         return getStatements(new String(bytes));
@@ -700,7 +700,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(file);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateSQLExecutorException(String.format("cannot read file %s", file), e);
         }
         updateBlob(fis, result, tableName, columnName, condition);
@@ -724,7 +724,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         FileReader fr = null;
         try {
             fr = new FileReader(file);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateSQLExecutorException(String.format("cannot read file %s", file), e);
         }
         updateClob(fr, result, tableName, columnName, condition);
@@ -847,7 +847,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
                 sb.append((char) b);
             }
             br.close();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return e.toString();
         }
         return sb.toString();

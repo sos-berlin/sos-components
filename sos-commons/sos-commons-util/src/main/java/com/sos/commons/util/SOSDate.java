@@ -113,7 +113,7 @@ public class SOSDate {
                 df.setTimeZone(timeZone);
             }
             return df.parse(date);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             String add = timeZone == null ? "" : "[" + timeZone + "]";
             throw new SOSInvalidDataException(String.format("[%s][%s]%s%s", date, format, add, e.toString()), e);
         }
@@ -229,7 +229,7 @@ public class SOSDate {
     public static String getTimeAsString(Instant it) {
         try {
             return it.toString().split("T")[1].replace("Z", "");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             return it.toString();
         }
     }
@@ -309,7 +309,7 @@ public class SOSDate {
                 df.setTimeZone(timeZone);
             }
             return df.format(date);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             String add = timeZone == null ? "" : "[" + timeZone + "]";
             throw new SOSInvalidDataException(String.format("[%s][%s]%s%s", date, format, add, e.toString()), e);
         }
@@ -492,7 +492,7 @@ public class SOSDate {
         for (int i = arr.length - 1; i >= 0; i--) {
             try {
                 seconds += Integer.valueOf(arr[i].trim()) * num[j++];
-            } catch (Throwable e) {
+            } catch (Exception e) {
             }
         }
         return seconds;

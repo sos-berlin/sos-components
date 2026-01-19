@@ -280,7 +280,7 @@ public class SOSHibernate {
             try {
                 field.setAccessible(true);
                 id[i] = field.get(item);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSHibernateException(String.format("[getId][can't get field]%s", item.getClass().getSimpleName(), e.toString()), e);
             }
         }
@@ -354,7 +354,7 @@ public class SOSHibernate {
                 }
                 return sb.toString();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
         return null;
     }

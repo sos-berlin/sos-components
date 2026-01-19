@@ -110,7 +110,7 @@ public class YADEEngine {
             targetDelegator = YADEProviderDelegatorFactory.createTargetDelegator(logger, argsLoader.getArgs(), argsLoader.getTargetArgs());
         } catch (YADEEngineInitializationException e) {
             throw e;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineInitializationException(e);
         }
 
@@ -163,7 +163,7 @@ public class YADEEngine {
 
                 /** 16) Source/Target: execute commands after operation on success */
                 YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 onError(logger, sourceDelegator, targetDelegator, exception);
                 exception = e;
             } finally {
@@ -222,7 +222,7 @@ public class YADEEngine {
 
                     /** 16) Source/Target: execute commands after operation on success */
                     YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     onError(logger, sourceDelegator, targetDelegator, exception);
                     exception = e;
                 } finally {
@@ -296,7 +296,7 @@ public class YADEEngine {
         if (exceptions.size() == 0) {
             try {
                 YADEClientHelper.writeResultSet(logger, argsLoader.getArgs().getOperation().getValue(), argsLoader.getClientArgs(), files);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 exceptions.add(e);
             }
         }

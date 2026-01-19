@@ -175,7 +175,7 @@ public class SOSString {
             } else if (o instanceof Date) {
                 try {
                     sb.append(SOSDate.getDateTimeAsString((Date) o));
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     sb.append(o == null ? TO_STRING_NULL_VALUE : o.toString());
                 }
             } else {
@@ -206,7 +206,7 @@ public class SOSString {
                             }
                             r.add(fn + "=" + toString(val, excludeFieldNames, excludeNullValues, error, recursion));
                             // r.add(fn + "=" + val);
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             error++;
                             if (!r.contains(TO_STRING_UNKNOWN_VALUE)) {
                                 // r.add(fn + "=<unknown>");
@@ -223,7 +223,7 @@ public class SOSString {
                 }
             }
             return sb.toString();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // t.printStackTrace();
             // return TO_STRING_UNKNOWN_VALUE instead of o.toString() to avoid StackOverflowException(if o.toString() uses SOSString.toString)
             return TO_STRING_UNKNOWN_VALUE;

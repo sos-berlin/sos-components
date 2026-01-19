@@ -86,7 +86,7 @@ public class KeyStoreReader {
             KeyStore ks = KeyStore.getInstance(type.name());
             ks.load(is, pass);
             return ks;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new Exception(String.format("[%s.load][%s][%s]%s", KeyStoreReader.class.getSimpleName(), storeType, path, e), e);
         }
     }

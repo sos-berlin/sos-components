@@ -154,7 +154,7 @@ public class SOSHibernateSynchronizer {
                             delete.clearBatch();
                             sourceConnection.commit();
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         throw new SQLException("[source]" + e.toString(), e);
                     }
                 }
@@ -210,7 +210,7 @@ public class SOSHibernateSynchronizer {
     private void rollback(String source, Connection connection) {
         try {
             connection.rollback();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error("[" + source + "]" + e.toString(), e);
         }
     }
@@ -219,7 +219,7 @@ public class SOSHibernateSynchronizer {
         if (orig != SYNCHRONIZER_AUTO_COMMIT) {
             try {
                 connection.setAutoCommit(orig);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.error("[" + source + "]" + e.toString(), e);
             }
         }
@@ -264,7 +264,7 @@ public class SOSHibernateSynchronizer {
                 setDeleteQuery();
             } catch (SQLException e) {
                 throw e;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SQLException(e);
             }
         }

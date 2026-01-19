@@ -73,7 +73,7 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
                 }
             } catch (SOSHibernateConfigurationException e) {
                 throw e;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSHibernateConfigurationException(e.toString(), e);
             }
         }
@@ -113,7 +113,7 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
 
                 return KeyUtil.getPrivateKey(keystorePath, keystoreType, keystorePwd, keystoreKeyPwd, keystoreAlias);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
         return null;

@@ -97,7 +97,7 @@ public class YADERemoveOperationHandler {
 
             // YADE JS7 (YADE1 does not execute AfterFile commands in case of a DELETE operation)
             YADECommandExecutor.executeAfterFile(logger, sourceDelegator, sourceFile);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             sourceFile.setState(TransferEntryState.FAILED);
 
             String msg = String.format("[%s][%s][%s][%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(sourceFile.getState()),
