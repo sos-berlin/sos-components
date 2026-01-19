@@ -172,7 +172,7 @@ public class SOSPath {
                         } else {
                             result.addFile(p);
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                     }
                     Files.delete(p);
                 }

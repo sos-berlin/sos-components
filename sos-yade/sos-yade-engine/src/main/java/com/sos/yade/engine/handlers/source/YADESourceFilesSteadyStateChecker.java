@@ -81,7 +81,7 @@ public class YADESourceFilesSteadyStateChecker {
             return file.getSteady().isSteady();
         } catch (YADEEngineSourceSteadyFilesException e) {
             throw e;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineSourceSteadyFilesException(e);
         }
     }

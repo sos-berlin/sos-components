@@ -113,7 +113,7 @@ public class SOSSQLCommandExtractor {
                     }
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         } finally {
             if (s != null) {

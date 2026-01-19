@@ -32,7 +32,7 @@ public class YADEClientHelper {
                 try (BufferedReader reader = Files.newBufferedReader(file)) {
                     p.load(reader);
                     logger.info("[%s][%s]loaded", method, file);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     logger.warn("[%s][%s][failed]%s", method, file, e.toString());
                 }
             } else {
@@ -79,7 +79,7 @@ public class YADEClientHelper {
         try {
             SOSPath.overwrite(file, sb.toString());
             // SOSPath.append(file, sb.toString());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineException("[writeResultSet][" + file + "]" + e, e);
         }
         if (!logEntries) {

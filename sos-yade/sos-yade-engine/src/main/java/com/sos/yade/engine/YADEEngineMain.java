@@ -47,9 +47,11 @@ public class YADEEngineMain {
                 if (main.engine != null) {
                     main.engine.cancel(main.logger);
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-                Thread.currentThread().interrupt();
+            } catch (Error e) {
+                e.printStackTrace();
+                throw e;
             }
         }));
 
@@ -98,7 +100,7 @@ public class YADEEngineMain {
             files = engine.execute(logger, argsLoader, true);
 
             return 0;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             exception = e;
             logger.error(e.toString(), e);
             return ERROR_EXIT_CODE;

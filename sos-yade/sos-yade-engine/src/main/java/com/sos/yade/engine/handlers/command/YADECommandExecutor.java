@@ -242,7 +242,7 @@ public class YADECommandExecutor {
                         } else {
                             logger.info("[%s][%s][%s][skip]Directory does not exist", delegator.getLabel(), argumentName, command);
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         throw new YADEEngineCommandException(String.format("[%s][%s][%s]%s", delegator.getLabel(), argumentName, command, delegator
                                 .getDirectory()), e);
                     }

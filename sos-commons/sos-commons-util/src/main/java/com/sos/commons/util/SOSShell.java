@@ -96,7 +96,7 @@ public class SOSShell {
             result.setCommand(pb.command().get(pb.command().size() - 1));
             out.join();
             err.join();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (result.isTimeoutExeeded() && timeout != null) {
                 result.setException(new SOSTimeoutExeededException(timeout.toString(), e));
             } else {
@@ -176,7 +176,7 @@ public class SOSShell {
         try {
             int err = Kernel32.INSTANCE.GetLastError();
             return String.format("Kernel32.GetLastError:err=%s,msg=%s", err, new Win32Exception(err).getMessage());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return String.format("Exception on get Kernel32.GetLastError:%s", e.toString());
         }
     }
@@ -238,7 +238,7 @@ public class SOSShell {
                 sb.append(", ").append(System.getenv("PROCESSOR_IDENTIFIER"));
             }
             LOGGER.info(sb.toString());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }
@@ -259,7 +259,7 @@ public class SOSShell {
                     LOGGER.debug(String.format("[Classpath]%s", cp));
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }
@@ -301,7 +301,7 @@ public class SOSShell {
         }
         try {
             return Integer.parseInt(runtimeBean.getName().split("@")[0]);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -376,7 +376,7 @@ public class SOSShell {
             } else {
                 logger.info(String.format("[CpuLoad][System=%s]", systemValue));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
     }

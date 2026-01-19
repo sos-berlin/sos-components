@@ -269,7 +269,7 @@ public class YADEEngineJumpHostAddon {
             }
         } catch (YADEEngineJumpHostException e) {
             throw e;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineJumpHostException(e.toString(), e);
         } finally {
             deleteJumpHostTempDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);

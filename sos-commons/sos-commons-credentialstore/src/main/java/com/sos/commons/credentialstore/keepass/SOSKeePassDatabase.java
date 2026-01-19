@@ -188,7 +188,7 @@ public class SOSKeePassDatabase {
 
         try {
             Files.write(targetFile, data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSKeePassAttachmentException(String.format("[%s][%s][%s]can't write attachment to file: %s", entry.getPath(), propertyName,
                     getFilePath(targetFile), e.toString()), e);
         }
@@ -383,7 +383,7 @@ public class SOSKeePassDatabase {
         }
         try {
             return Module.valueOf(m.toUpperCase());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return DEFAULT_MODULE;
         }
     }
@@ -443,7 +443,7 @@ public class SOSKeePassDatabase {
             }
 
             System.out.println(SOSKeePassDatabase.getProperty(uri));
-        } catch (Throwable t) {
+        } catch (Exception t) {
             exitStatus = 99;
             t.printStackTrace();
         } finally {

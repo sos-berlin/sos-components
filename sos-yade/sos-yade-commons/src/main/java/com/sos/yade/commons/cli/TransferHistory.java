@@ -231,7 +231,7 @@ public class TransferHistory {
                 serialize2File(returnValues, serialized);
             }
             return EXIT_STATUS_SUCCESS;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return EXIT_STATUS_ERROR;
         }
@@ -264,7 +264,7 @@ public class TransferHistory {
         if (!isEmpty(val)) {
             try {
                 result = Boolean.parseBoolean(val);
-            } catch (Throwable e) {
+            } catch (Exception e) {
             }
         }
         return result;
@@ -337,7 +337,7 @@ public class TransferHistory {
         DateFormat df = new SimpleDateFormat(format);
         try {
             return df.parse(dateTime).toInstant();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             PARSE_ERRORS.add("[" + arg + "]set datetime to now");
             return null;
         }
@@ -347,7 +347,7 @@ public class TransferHistory {
         // return TransferOperation.fromValue(val).value();
         try {
             return TransferOperation.valueOf(val.toUpperCase()).value();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             PARSE_ERRORS.add("[" + arg + "]set operation to UNKNOWN");
             return TransferOperation.UNKNOWN.value();
         }
@@ -357,7 +357,7 @@ public class TransferHistory {
         // return TransferProtocol.fromValue(val).value();
         try {
             return TransferProtocol.valueOf(val.toUpperCase()).value();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             PARSE_ERRORS.add("[" + arg + "]set protocol to UNKNOWN");
             return TransferProtocol.UNKNOWN.value();
         }
@@ -366,7 +366,7 @@ public class TransferHistory {
     private static int getPort(String arg, String val) {
         try {
             return Integer.parseInt(val);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             PARSE_ERRORS.add("[" + arg + "]set port to " + DEFAULT_PORT);
             return DEFAULT_PORT;
         }
@@ -399,7 +399,7 @@ public class TransferHistory {
             entry.setTarget(arr[1]);
             try {
                 entry.setSize(Long.parseLong(arr[2]));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 entry.setErrorMessage(arr[2]);
             }
             break;
@@ -408,7 +408,7 @@ public class TransferHistory {
             try {
                 entry.setSize(Long.parseLong(arr[2]));
                 entry.setErrorMessage(arr[3]);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 entry.setErrorMessage(arr[2] + DELIMITER + arr[3]);
             }
             break;
@@ -461,7 +461,7 @@ public class TransferHistory {
                 if (p.getAccount() == null) {
                     p.setAccount(url.getUserInfo());
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
             }
         }
 
@@ -488,7 +488,7 @@ public class TransferHistory {
             String env = System.getenv(IS_WINDOWS ? "COMPUTERNAME" : "HOSTNAME");
             try {
                 HOSTNAME = isEmpty(env) ? InetAddress.getLocalHost().getHostName() : env;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 HOSTNAME = DEFAULT_HOSTNAME;
             }
         }
@@ -573,7 +573,7 @@ public class TransferHistory {
             displayProtocol("Target:", r.getTarget());
             displayEntries("Entries:", r.getEntries());
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             System.err.println(String.format("[%s][can't deserialize result]%s", TransferHistory.class.getSimpleName(), e.toString()));
         }
     }

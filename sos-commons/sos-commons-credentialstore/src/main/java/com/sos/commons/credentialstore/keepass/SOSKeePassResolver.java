@@ -56,7 +56,7 @@ public class SOSKeePassResolver {
             if (!SOSString.isEmpty(databaseFile)) {
                 file = SOSKeePassDatabase.getCurrentPath(Paths.get(databaseFile.trim()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[%s]%s", databaseFile, e.toString()));
             }
@@ -65,7 +65,7 @@ public class SOSKeePassResolver {
             if (!SOSString.isEmpty(databaseKeyFile)) {
                 keyFile = SOSKeePassDatabase.getCurrentPath(Paths.get(databaseKeyFile.trim()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[%s]%s", databaseKeyFile, e.toString()));
             }
@@ -101,7 +101,7 @@ public class SOSKeePassResolver {
                 }
             }
             return val;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw e;
         }
     }

@@ -243,7 +243,7 @@ public class SOSXmlXsdValidator {
                                 error = null;
                                 return;
                             }
-                        } catch (Throwable ex) {
+                        } catch (Exception ex) {
                             LOGGER.warn(String.format("[exception on enum handling][%s]%s", msg, ex.toString()), ex);
                         }
                     } else if (msg.startsWith("cvc-elt.1") || msg.startsWith("cvc-complex-type.2.4.a")) {
@@ -259,7 +259,7 @@ public class SOSXmlXsdValidator {
                     elementName = currentElement.peek();
                     position = getCurrentElementPosition();
                     depth = currentDepth;
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     elementName = rootElement == null ? "XML" : rootElement;
                     position = "1";
                 }

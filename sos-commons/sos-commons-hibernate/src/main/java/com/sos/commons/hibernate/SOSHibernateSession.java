@@ -259,7 +259,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                         try {
                             currentStatement.cancel();
                             LOGGER.info(method + "[currentStatement][cancel]executed");
-                        } catch (Throwable t) {
+                        } catch (Exception t) {
                             LOGGER.info(method + "[currentStatement][cancel]" + t);
                         }
                     }
@@ -277,7 +277,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                             try {
                                 statement.cancel();
                                 LOGGER.info(method + "[hibernate][JdbcCoordinator][statement][cancel]executed");
-                            } catch (Throwable t) {
+                            } catch (Exception t) {
                                 LOGGER.info(method + "[hibernate][JdbcCoordinator][statement][cancel]" + t);
                             }
                         }
@@ -286,7 +286,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                             jdbcCoordinator.cancelLastQuery();
                             isTerminateInProgress = true;
                             LOGGER.info(method + "[hibernate][JdbcCoordinator][cancelLastQuery]executed");
-                        } catch (Throwable ex) {// throws an exception if the statement has already been closed
+                        } catch (Exception ex) {// throws an exception if the statement has already been closed
                             LOGGER.info(method + "[hibernate][JdbcCoordinator][cancelLastQuery]" + ex);
                         }
                     }
@@ -306,7 +306,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                                             s.cancel();
                                             LOGGER.info(method + "[hikari][ProxyConnection][statement][cancel]executed");
                                         }
-                                    } catch (Throwable t) {
+                                    } catch (Exception t) {
                                         LOGGER.info(method + "[hikari][ProxyConnection][statement][cancel]" + t);
                                     }
                                 }
@@ -324,7 +324,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                             try {
                                 doRollback();
                                 LOGGER.info(method + "[session][rollback]executed");
-                            } catch (Throwable r) {
+                            } catch (Exception r) {
                                 LOGGER.info(method + "[session][rollback]" + r);
                             }
                         }
@@ -334,7 +334,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                                 try {
                                     connection.rollback();
                                     LOGGER.info(method + "[connection][rollback]executed");
-                                } catch (Throwable r) {
+                                } catch (Exception r) {
                                     LOGGER.info(method + "[connection][rollback]" + r);
                                 }
                             }
@@ -342,12 +342,12 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                                 // connection.abort(Runnable::run);
                                 connection.close();
                                 LOGGER.info(method + "[connection][close]executed");
-                            } catch (Throwable ex) {
+                            } catch (Exception ex) {
                                 LOGGER.info(method + "[connection][close]" + ex);
                             }
                         }
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.warn(String.format("%s%s", method, e.toString()), e);
                 } finally {
                     terminated = isTerminateInProgress;
@@ -355,7 +355,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                     close();
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(String.format("%s%s", SOSHibernate.getMethodName(logIdentifier, "terminate"), e.toString()), e);
         } finally {
             isTerminateInProgress = false;
@@ -1262,7 +1262,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                     LOGGER.debug(String.format("%s[skip]currentSession=null", SOSHibernate.getMethodName(logIdentifier, "closeSession")));
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
         }
         currentSession = null;
     }
@@ -1283,7 +1283,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
                     }
                 }
             }
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             //
         }
 
