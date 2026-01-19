@@ -35,7 +35,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInvalidResponseDataException;
-import com.sos.joc.model.security.oidc.GetTokenRequest;
 import com.sos.joc.model.security.oidc.GetTokenResponse;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
@@ -51,19 +50,19 @@ public class GetToken {
     private BaseHttpClient client;
     private BaseHttpClient.Builder baseHttpClientBuilder;
     
-    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin)
             throws Exception {
         setTrustStore(props);
         setUriBuilder(props, openIdConfigurationResponse, requestBody, origin);
     }
     
-    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin,
+    public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin,
             KeyStore truststore) throws SOSSSLException {
         this.truststore = truststore;
         setUriBuilder(props, openIdConfigurationResponse, requestBody, origin);
     }
 
-    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, GetTokenRequest requestBody, String origin)
+    private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin)
             throws SOSSSLException {
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
         
@@ -85,14 +84,11 @@ public class GetToken {
         }
     }
     
-    private void createBody(GetTokenRequest requestBody) {
-        body.put("grant_type", "authorization_code");
-        body.put("code", requestBody.getCode());
-        body.put("redirect_uri", requestBody.getRedirect_uri());
-        body.put("code_verifier", requestBody.getCode_verifier());
+    private void createBody(Map<String, String> requestBody) {
+        body.putAll(requestBody);
     }
     
-    private void createBody(String clientSecret, OidcProperties props, GetTokenRequest requestBody) {
+    private void createBody(String clientSecret, OidcProperties props, Map<String, String> requestBody) {
         createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
         if (!SOSString.isEmpty(clientSecret)) {
@@ -204,7 +200,10 @@ public class GetToken {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
         baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
-                .withLogger(new SLF4JLogger(LOGGER)).withHeader("Origin", origin);
+                .withLogger(new SLF4JLogger(LOGGER));
+        if (!SOSString.isEmpty(origin)) {
+            baseHttpClientBuilder.withHeader("Origin", origin);
+        }
         if(truststore != null) {
             try {
                 baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));

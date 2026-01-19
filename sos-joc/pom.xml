@@ -21,5 +21,6 @@
 		<module>sos-joc-history</module>
 		<module>sos-joc-monitoring</module>
 		<module>sos-joc-logmanagement</module>
+		<module>sos-joc-help-files</module>
 	</modules>
 </project>
