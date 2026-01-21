@@ -80,11 +80,11 @@ public class SOSKeycloakHandler {
         if (!(xKeycloakAccessToken == null || xKeycloakAccessToken.isEmpty())) {
             requestHeaders.put(AUTHORIZATION, BEARER + " " + xKeycloakAccessToken);
         }
-        if (truststore != null) {
+        String serviceUrl = webserviceCredentials.getServiceUrl();
+        if (truststore != null && serviceUrl.startsWith("https:")) {
             builder.withSSLContext(com.sos.joc.classes.SSLContext.createSslContext(truststore));
         }
         BaseHttpClient client = builder.build();
-        String serviceUrl = webserviceCredentials.getServiceUrl();
         if (serviceUrl.endsWith("/")) {
             serviceUrl = serviceUrl.substring(0, serviceUrl.length() - 1);
         }

@@ -139,13 +139,13 @@ public class GetOpenIdConfiguration {
     }
 
     private void init(String url) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+        if (url.startsWith("https:") && truststore == null) {
+            throw new JocConfigurationException("Couldn't find required truststore");
+        }
         baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
                 .withLogger(new SLF4JLogger(LOGGER));
-        if(truststore != null) {
+        if(url.startsWith("https:")) {
             baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
-        }
-        if (url.startsWith("https:") && truststore == null) {
-            throw new ControllerConnectionRefusedException("Couldn't find required truststore");
         }
     }
     
