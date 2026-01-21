@@ -105,7 +105,7 @@ public class SOSOpenIdHandler {
             Builder builder = BaseHttpClient.withBuilder().withLogger(new SLF4JLogger(LOGGER))
                     .withConnectTimeout(Duration.ofMillis(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT))
                     .withHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
-            if (truststore != null) {
+            if (truststore != null && requestUri.toString().startsWith("https:")) {
                 builder.withSSLContext(SSLContext.createSslContext(truststore));
             }
             BaseHttpClient client = builder.build();

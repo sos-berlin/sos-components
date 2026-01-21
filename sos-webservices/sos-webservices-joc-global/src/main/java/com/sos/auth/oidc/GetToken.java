@@ -1,10 +1,10 @@
 package com.sos.auth.oidc;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -204,7 +204,7 @@ public class GetToken {
         if (!SOSString.isEmpty(origin)) {
             baseHttpClientBuilder.withHeader("Origin", origin);
         }
-        if(truststore != null) {
+        if(url.startsWith("https:")) {
             try {
                 baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
             } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
@@ -214,13 +214,8 @@ public class GetToken {
     }
     
     private String asBodyString(Map<String, String> params) {
-        return params.entrySet().stream().map(entry -> {
-            try {
-                return URLEncoder.encode(entry.getKey(), "UTF-8") + "=" + URLEncoder.encode(entry.getValue(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new JocException(e);
-            }
-        }).collect(Collectors.joining("&"));
+        return params.entrySet().stream().map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry
+                .getValue(), StandardCharsets.UTF_8)).collect(Collectors.joining("&"));
     }
     
 }
