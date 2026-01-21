@@ -582,18 +582,7 @@ public class OrdersHelper {
         if (isInRetryInstruction || isRetryState(jOrder)) {
             OrderRetryState rs = new OrderRetryState();
             rs.setNext(oItem.getState().getUntil());
-            if (positionsSize > 2) {
-                try {
-                    String lastPosition = (String) origPos.toList().get(positionsSize - 2);
-                    if (lastPosition.startsWith("try+")) {
-                        rs.setAttempt(Integer.valueOf(lastPosition.substring(4)) + 1);
-                    } else if (lastPosition.startsWith("catch+")) {
-                        rs.setAttempt(Integer.valueOf(lastPosition.substring(6)) + 1);
-                    }
-                } catch (Exception e) {
-                    //
-                }
-            }
+            rs.setAttempt(origPos.asScala().catchCount());
             o.setRetryState(rs);
             if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always caught
                 o.setLastOutcome(outcomes.get(outcomes.size() - 2).getOutcome());
