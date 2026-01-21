@@ -113,7 +113,7 @@ public class JobArgumentValueIterator implements Iterator<Object> {
     public Object current() {
         try {
             return filteredValues.get(currentIndex - 1);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return null;
         }
     }

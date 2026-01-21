@@ -94,12 +94,12 @@ public class Export2JSON {
             try (OutputStream os = new FileOutputStream(outputFile.toFile())) {
                 baos.writeTo(os);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             removeOutputFile = true;
             String f = outputFile.toString();
             try {
                 f = outputFile.toAbsolutePath().toString();
-            } catch (Throwable ee) {
+            } catch (Exception ee) {
 
             }
             throw new Exception(String.format("[%s]%s", f, e.toString()), e);
@@ -107,13 +107,13 @@ public class Export2JSON {
             if (gen != null) {
                 try {
                     gen.close();
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
             if (baos != null) {
                 try {
                     baos.close();
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
             if (removeOutputFile) {

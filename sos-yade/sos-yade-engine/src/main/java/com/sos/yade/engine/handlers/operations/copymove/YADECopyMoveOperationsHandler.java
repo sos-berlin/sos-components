@@ -55,7 +55,7 @@ public class YADECopyMoveOperationsHandler {
             processFiles(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile, cancel);
             finalizeTransactionIfNeeded(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile,
                     cancel);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // rollback - does not throws exception
             onError(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
             throw e;
@@ -160,7 +160,7 @@ public class YADECopyMoveOperationsHandler {
             try {
                 new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, f, cancel).run(isMoveOperation, useCumulativeTargetFile,
                         useLastModified);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 if (config.isTransactionalEnabled()) {
                     cancel.set(true);
                     throw e;

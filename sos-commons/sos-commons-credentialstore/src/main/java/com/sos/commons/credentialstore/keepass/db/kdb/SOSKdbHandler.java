@@ -43,19 +43,10 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
         }
 
         KdbDatabase database = null;
-        InputStream is = null;
-        try {
-            is = Files.newInputStream(getKeePassFile());
+        try (InputStream is = Files.newInputStream(getKeePassFile())) {
             database = KdbDatabase.load(getCredentials(), is);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSKeePassDatabaseException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(getKeePassFile()), e.toString()), e);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Throwable te) {
-                }
-            }
         }
         setDatabase(database);
     }
@@ -74,7 +65,7 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
             }
             try {
                 cred = new KdbCredentials.Password(pass.getBytes());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSKeePassCredentialException(e);
             }
         } else {
@@ -88,19 +79,10 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s]pass=?, keyFile=%s", method, SOSKeePassDatabase.getFilePath(keyFile)));
             }
-            InputStream is = null;
-            try {
-                is = Files.newInputStream(keyFile);
+            try (InputStream is = Files.newInputStream(keyFile)) {
                 cred = new KdbCredentials.KeyFile(pass.getBytes(), is);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw new SOSKeePassCredentialException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(keyFile), e.toString()), e);
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (Throwable te) {
-                    }
-                }
             }
         }
         return cred;
@@ -138,7 +120,7 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
     public byte[] getBinaryProperty(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
         try {
             return ((KdbEntry) entry).getBinaryData();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSKeePassAttachmentException(e);
         }
     }

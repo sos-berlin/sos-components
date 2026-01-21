@@ -35,7 +35,7 @@ public class EmptyJobExample implements BlockingInternalJob {
             engine.eval("js instance onStart());");
             onStart();
             return right(null);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return left(Problem.fromThrowable(e));
         }
     }
@@ -44,7 +44,7 @@ public class EmptyJobExample implements BlockingInternalJob {
     public void stop() {
         try {
             onStop();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

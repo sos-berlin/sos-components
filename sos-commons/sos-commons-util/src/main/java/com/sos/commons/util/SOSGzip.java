@@ -143,7 +143,7 @@ public class SOSGzip {
                             tos.closeArchiveEntry();
 
                             result.addFile(p);
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             LOGGER.error(String.format("[compress][file][%s]%s", p, e.toString()), e);
                         }
                     } else if (f.isDirectory()) {
@@ -228,7 +228,7 @@ public class SOSGzip {
                         if (setLastModifiedTime) {
                             try {
                                 SOSPath.setLastModifiedTime(outputPath, entry.getLastModifiedDate());
-                            } catch (Throwable e) {
+                            } catch (Exception e) {
                                 LOGGER.warn(String.format("[decompress][setLastModifiedTime][%s=%s]%s", entry.getName(), entry.getLastModifiedDate(),
                                         e.toString()), e);
                             }
@@ -252,7 +252,7 @@ public class SOSGzip {
             if (source != null) {
                 try {
                     source.close();
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
         }

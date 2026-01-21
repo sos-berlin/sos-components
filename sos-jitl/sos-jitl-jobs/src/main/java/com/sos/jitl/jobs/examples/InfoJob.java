@@ -115,7 +115,7 @@ public class InfoJob extends Job<InfoJobArguments> {
         try {
             Map<String, String> m = step.getJobResourcesEnv();
             step.getLogger().info("[step.getJobResourcesEnv]" + m);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             step.getLogger().warn(String.format("[step.getJobResourcesEnv]%s", e.toString()), e);
         }
 

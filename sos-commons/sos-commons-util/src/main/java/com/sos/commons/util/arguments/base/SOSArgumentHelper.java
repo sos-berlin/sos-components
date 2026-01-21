@@ -66,7 +66,7 @@ public class SOSArgumentHelper {
         }
         try {
             return SOSDate.resolveAge("s", arg.getValue()).longValue();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return defaultValue;
         }
     }

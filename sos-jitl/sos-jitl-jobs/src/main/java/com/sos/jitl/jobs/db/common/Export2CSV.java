@@ -66,12 +66,12 @@ public class Export2CSV {
                 logger.info("[export][%s]total rows written=%s (header=%s, data=%s), duration=%s", file, headerRows + dataRows, headerRows, dataRows,
                         SOSDate.getDuration(start, Instant.now()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             removeOutputFile = true;
             String f = file.toString();
             try {
                 f = file.getCanonicalPath();
-            } catch (Throwable ee) {
+            } catch (Exception ee) {
 
             }
             throw new Exception(String.format("[%s]%s", f, e.toString()), e);

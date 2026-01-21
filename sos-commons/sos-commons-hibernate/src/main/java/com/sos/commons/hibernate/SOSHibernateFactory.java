@@ -137,7 +137,7 @@ public class SOSHibernateFactory implements Serializable {
             if (sessionFactory != null && !sessionFactory.isClosed()) {
                 sessionFactory.close();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
         }
         sessionFactory = null;
@@ -431,7 +431,7 @@ public class SOSHibernateFactory implements Serializable {
                             databaseMetaData = new SOSHibernateDatabaseMetaData(dbms, connection.getMetaData());
                         });
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.warn(String.format("[setDatabaseMetaData][%s]%s", dbms, e.toString()), e);
                 }
             }

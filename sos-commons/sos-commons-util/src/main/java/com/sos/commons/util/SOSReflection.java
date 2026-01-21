@@ -164,7 +164,7 @@ public class SOSReflection {
                         return false;
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 return false;
             }
         }

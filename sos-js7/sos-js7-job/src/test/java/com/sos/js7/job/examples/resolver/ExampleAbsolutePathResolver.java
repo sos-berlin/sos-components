@@ -63,7 +63,7 @@ public class ExampleAbsolutePathResolver extends JobArgumentValueResolver {
 
                 arg.setDisplayMode(DisplayMode.UNMASKED);
                 // arg.setDisplayMode(DisplayMode.MASKED);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 if (failOnResolverError(allArguments)) {
                     throw new JobArgumentException(iterator, e);
                 }

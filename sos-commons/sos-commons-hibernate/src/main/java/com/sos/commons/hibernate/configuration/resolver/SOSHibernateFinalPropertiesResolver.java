@@ -189,7 +189,7 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         Dbms dbms = null;
         try {
             dbms = (Dbms) f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DBMS);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(e.toString());
         }
         return dbms == null ? Dbms.UNKNOWN : dbms;

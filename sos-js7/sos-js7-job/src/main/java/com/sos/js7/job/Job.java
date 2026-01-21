@@ -206,7 +206,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                                     .getName(), mockLevel));
                             return step.success();
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         switch (mockLevel) {
                         case OFF:
                         case ERROR:
@@ -255,7 +255,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         String jobName = getJobName(jobStep);
         try {
             onProcessOrderCanceled(jobStep);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             jobStep.getLogger().error(String.format("[%s][job name=%s][onProcessOrderCanceled]%s", OPERATION_CANCEL_KILL, jobName, e.toString()), e);
         }
         jobStep.cancelExecuteJobs();
@@ -264,7 +264,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
     private String getJobName(OrderProcessStep<A> jobStep) {
         try {
             return jobStep == null ? "unknown" : jobStep.getJobName();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return "unknown";
         }
     }
@@ -329,7 +329,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 }
             } catch (JobRequiredArgumentMissingException e) {
                 exceptions.add(e);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 exceptions.add(new JobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
                         .toString()), e));
             }
@@ -378,7 +378,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     if (arg.isRequired() && arg.getValue() == null) {
                         throw new JobRequiredArgumentMissingException(arg.getName(), arg.getName());
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     arg.setNotAcceptedValue(a.getValue(), e);
                 }
                 return;
@@ -443,7 +443,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         }
         try {
             return val.getClass().getName();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return e.toString();
         }
     }
@@ -483,7 +483,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                 val = convertMapValue(step, arg, val);
                 break;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             arg.setNotAcceptedValue(val, e);
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
             val = arg.getDefaultValue();
@@ -502,7 +502,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     } else {
                         return JobArgument.convertFlatValue(arg, v);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     arg.setNotAcceptedValue(v + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
@@ -514,7 +514,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             } else {
                 val = stream.collect(Collectors.toList());
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             arg.setNotAcceptedValue(valAsString, e);
             arg.getNotAcceptedValue().setSource(arg.getValueSource());
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
@@ -534,14 +534,14 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     } else {
                         return JobArgument.convertFlatValue(arg, entry);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     arg.setNotAcceptedValue(entry + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             arg.setNotAcceptedValue(valAsString, e);
             arg.getNotAcceptedValue().setSource(arg.getValueSource());
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
@@ -561,14 +561,14 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     } else {
                         return Map.entry(entry.getKey(), JobArgument.convertFlatValue(arg, entry.getValue()));
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     arg.setNotAcceptedValue(entry.getValue() + " of " + valAsString, e);
                     arg.getNotAcceptedValue().setSource(arg.getValueSource());
                     arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             arg.setNotAcceptedValue(valAsString, e);
             arg.getNotAcceptedValue().setSource(arg.getValueSource());
             arg.getNotAcceptedValue().setUsedValueSource(new ValueSource(ValueSourceType.JAVA));
@@ -599,12 +599,12 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             if (arg.getValue() != null) {
                 try {
                     arg.setClazzType(arg.getValue().getClass());
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             } else if (val != null) {
                 try {
                     arg.setClazzType(val.getClass());
-                } catch (Throwable e) {
+                } catch (Exception e) {
                 }
             }
             if (arg.getClazzType() == null) {
@@ -682,7 +682,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                     if (rawType instanceof Class && Job.class.isAssignableFrom((Class<?>) rawType)) {
                         try {
                             return (Class<A>) pt.getActualTypeArguments()[0];
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             return (Class<A>) JobArguments.class; // Fallback
                         }
                     }
@@ -691,7 +691,7 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             }
             throw new JobArgumentException(String.format("%s superclass with type parameter not found for %s", Job.class.getSimpleName(),
                     getClass()));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new JobArgumentException(String.format("Can't evaluate JobArguments class for job %s: %s", getClass().getName(), e.toString()), e);
         }
     }

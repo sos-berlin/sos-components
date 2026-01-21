@@ -43,7 +43,7 @@ public class JobArgumentValueResolverCache {
         try {
             cacheStandardResolvers();
             cacheCustomResolvers();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
         LOGGER.info("end");
@@ -79,14 +79,14 @@ public class JobArgumentValueResolverCache {
                 for (Class<?> clazz : classes) {
                     try {
                         cacheResolver(clazz);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         LOGGER.error("[" + jar + "][" + clazz + "]" + e.toString(), e);
                     }
                 }
             }
         } catch (NoSuchFileException e) {
             LOGGER.warn("[" + dir.toAbsolutePath() + "]" + e.toString());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error("[" + dir.toAbsolutePath() + "]" + e.toString(), e);
         }
     }

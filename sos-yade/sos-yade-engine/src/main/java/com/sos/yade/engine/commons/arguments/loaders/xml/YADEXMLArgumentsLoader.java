@@ -78,7 +78,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             }
         } catch (YADEEngineSettingsLoadException e) {
             throw e;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e);
         } finally {
             root = null;

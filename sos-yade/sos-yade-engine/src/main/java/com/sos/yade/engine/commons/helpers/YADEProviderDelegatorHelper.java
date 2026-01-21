@@ -23,7 +23,7 @@ public class YADEProviderDelegatorHelper {
         if (!args.isRetryOnConnectionErrorEnabled()) {
             try {
                 delegator.getProvider().ensureConnected();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throwConnectionException(delegator, e);
             }
             return;
@@ -36,7 +36,7 @@ public class YADEProviderDelegatorHelper {
             try {
                 delegator.getProvider().ensureConnected();
                 return;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 if (retryCounter == maxRetries) {
                     throwConnectionException(delegator, e);
                 }

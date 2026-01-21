@@ -71,7 +71,7 @@ public class YADEArgumentsHelper {
                 sb.append(toString(arg));
                 add = true;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.warn(sb + e.toString());
         }
         try {

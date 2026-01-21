@@ -98,10 +98,10 @@ public class JobArguments {
                             return null;
                         }
                         return JobArgument.createDeclaredArgumentFromIncluded(sa, f);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         return null;
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList());

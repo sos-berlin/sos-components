@@ -35,7 +35,7 @@ public class SOSHibernateCredentiaStoreResolver implements ISOSHibernateConfigur
                 configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, r.resolve(password));
             }
             return configuration;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
         }
     }

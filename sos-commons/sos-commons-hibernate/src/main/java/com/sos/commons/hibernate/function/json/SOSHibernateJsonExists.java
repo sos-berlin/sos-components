@@ -309,7 +309,7 @@ public class SOSHibernateJsonExists extends StandardSQLFunction {
         try {
             String q = getLiteralValue(arg);
             return q == null ? true : Boolean.parseBoolean(q);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return true;
         }
     }

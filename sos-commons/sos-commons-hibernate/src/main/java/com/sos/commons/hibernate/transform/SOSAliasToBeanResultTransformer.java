@@ -40,7 +40,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         try {
             setter = SOSReflection.getAllDeclaredMethodsAsMap(resultClass).entrySet().stream().filter(e -> e.getKey().startsWith("set") && e
                     .getValue().getParameterCount() == 1).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new RuntimeException("[" + resultClass + "]failed to initialize setter methods", e);
         }
     }
@@ -49,7 +49,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         T obj = null;
         try {
             obj = resultClass.getDeclaredConstructor().newInstance();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new RuntimeException("[" + resultClass + "]failed to instantiate result class", e);
         }
         return obj;
@@ -63,7 +63,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         }
         try {
             m.invoke(obj, value);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new RuntimeException("[" + resultClass + "][alias=" + alias + "][setter=" + setterName + " parameterType=" + getSetterParameterType(
                     m) + "][value=" + value + ",type=" + getValueType(value) + "][failed to invoke setter method]" + e.toString(), e);
         }
@@ -73,7 +73,7 @@ public class SOSAliasToBeanResultTransformer<T> implements TupleTransformer<T> {
         String type = "";
         try {
             type = m.getParameterTypes()[0].getName();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             type = "<exception:" + e.toString() + ">";
         }
         return type;

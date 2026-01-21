@@ -45,7 +45,7 @@ public class SOSHibernateDatabaseMetaData {
             minorVersion = metaData.getDatabaseMinorVersion();
 
             metaDataAvailable = true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn(String.format("[setMetaData][%s]%s", dbms, e.toString()), e);
         }
     }

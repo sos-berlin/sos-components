@@ -147,7 +147,7 @@ public class GenericMethodsTest {
         Type gsc = clazz.getGenericSuperclass();
         try {
             return (Class<?>) ((ParameterizedType) gsc).getActualTypeArguments()[0];
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (gsc.getTypeName().endsWith(">")) {
                 throw e;
             }

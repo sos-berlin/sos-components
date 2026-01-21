@@ -20,6 +20,7 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassCredentialException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassKeyFileException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 
 public class SOSKdbxCreds implements Credentials {
@@ -45,19 +46,14 @@ public class SOSKdbxCreds implements Credentials {
                     handleBinaryKey(is, password);
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (keyFile == null) {
                 throw new SOSKeePassCredentialException(e);
             } else {
                 throw new SOSKeePassCredentialException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(keyFile), e.toString()), e);
             }
         } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Throwable te) {
-                }
-            }
+            SOSClassUtil.closeQuietly(is);
         }
     }
 
@@ -126,7 +122,7 @@ public class SOSKdbxCreds implements Credentials {
         byte[] ba = null;
         try {
             ba = ByteStreams.toByteArray(keyFile);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new IllegalStateException(e);
         }
         return ba;
