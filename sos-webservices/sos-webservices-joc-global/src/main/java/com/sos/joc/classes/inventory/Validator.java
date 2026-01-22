@@ -224,8 +224,10 @@ public class Validator {
                     Jobs jobs = workflow.getJobs() == null ? new Jobs() : workflow.getJobs();
                     Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
                     hasLicense = AgentHelper.hasClusterLicense();
+                    Set<String> retryConfs = new HashSet<>();
                     validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(),
-                            new HashMap<String, String>(), invalidAgentRefs, boardNames, false, dbLayer);
+                            new HashMap<String, String>(), invalidAgentRefs, boardNames, retryConfs, false, dbLayer);
+                    validateRetries(retryConfs);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     // validateJobTags(jobs);
                     validateAdmissionTime(jobs);
@@ -335,9 +337,11 @@ public class Validator {
                 Jobs jobs = workflow.getJobs() == null ? new Jobs() : workflow.getJobs();
                 Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
                 hasLicense = AgentHelper.hasClusterLicense();
+                Set<String> retryConfs = new HashSet<>();
                 validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), new HashMap<String, String>(),
-                        invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), false,
+                        invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), retryConfs, false,
                         workflowJsonsByName);
+                validateRetries(retryConfs);
                 // validateJobTags(jobs);
                 validateAdmissionTime(jobs);
                 validateLockRefs(json, invObjNames.getOrDefault(ConfigurationType.LOCK, Collections.emptySet()));
@@ -389,6 +393,14 @@ public class Validator {
             }
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
+        }
+    }
+    
+    private static void validateRetries(Set<String> retryConfs) {
+        if (!retryConfs.isEmpty()) {
+            String tryPos = retryConfs.iterator().next();
+            throw new JocConfigurationException("$." + tryPos.substring(0, tryPos.length() - 1)
+                    + ": 'Try' instruction has 'Retry' configuration but 'Retry' instruction is missing in the catch block");
         }
     }
 
@@ -860,8 +872,9 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
-            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, boolean forkListExist, InventoryDBLayer dbLayer)
-            throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
+            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs, boolean forkListExist,
+            InventoryDBLayer dbLayer) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException,
+            SOSHibernateException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -960,7 +973,7 @@ public class Validator {
                             String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                             if (branch.getWorkflow() != null) {
                                 validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                        orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                        orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                             }
                             branchIndex++;
                         }
@@ -981,7 +994,7 @@ public class Validator {
                     if (fl.getWorkflow() != null) {
                         firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, true, dbLayer);
+                                labels, invalidAgentRefs, boardNames, retryConfs, true, dbLayer);
                     }
                     break;
                 case IF:
@@ -989,11 +1002,11 @@ public class Validator {
                     validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
                         validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case CASE_WHEN:
@@ -1003,31 +1016,38 @@ public class Validator {
                         validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
                         if (when.getThen() != null) {
                             validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                    orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                         }
                         caseIndex++;
                     }
                     if (caseWhen.getElse() != null) {
                         validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
+                    if (tryCatch.getMaxTries() != null || tryCatch.getRetryDelays() != null) {
+                        //has retry configuration -> requires retry instruction in catch
+                        retryConfs.add(instPosition);
+                    }
                     if (tryCatch.getTry() != null) {
                         validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     if (tryCatch.getCatch() != null) {
                         validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
+                    break;
+                case RETRY:
+                    validateRetryInstruction(instPosition, retryConfs);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
                     if (lock.getLockedWorkflow() != null) {
                         validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case PROMPT:
@@ -1077,7 +1097,7 @@ public class Validator {
                     }
                     if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case POST_NOTICE:
@@ -1124,7 +1144,7 @@ public class Validator {
                     validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case STICKY_SUBAGENT:
@@ -1140,14 +1160,14 @@ public class Validator {
                         firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions",
                                 "StickySubagent");
                         validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case ADMISSION_TIME:
@@ -1155,7 +1175,7 @@ public class Validator {
                     validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
                         validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, dbLayer);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case SLEEP:
@@ -1171,7 +1191,7 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
-            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, boolean forkListExist,
+            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs, boolean forkListExist,
             Map<String, String> allWorkflowJsonsByName) throws SOSJsonSchemaException, JsonProcessingException, IOException,
             JocConfigurationException {
         if (instructions != null) {
@@ -1272,7 +1292,7 @@ public class Validator {
                             String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                             if (branch.getWorkflow() != null) {
                                 validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                        orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                        orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                             }
                             branchIndex++;
                         }
@@ -1293,7 +1313,7 @@ public class Validator {
                     if (fl.getWorkflow() != null) {
                         firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, true, allWorkflowJsonsByName);
+                                labels, invalidAgentRefs, boardNames, retryConfs, true, allWorkflowJsonsByName);
                     }
                     break;
                 case IF:
@@ -1301,11 +1321,11 @@ public class Validator {
                     validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
                         validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case CASE_WHEN:
@@ -1315,31 +1335,38 @@ public class Validator {
                         validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
                         if (when.getThen() != null) {
                             validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                    orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                         }
                         caseIndex++;
                     }
                     if (caseWhen.getElse() != null) {
                         validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
+                    if (tryCatch.getMaxTries() != null || tryCatch.getRetryDelays() != null) {
+                        //has retry configuration -> requires retry instruction in catch
+                        retryConfs.add(instPosition);
+                    }
                     if (tryCatch.getTry() != null) {
                         validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     if (tryCatch.getCatch() != null) {
                         validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
+                    break;
+                case RETRY:
+                    validateRetryInstruction(instPosition, retryConfs);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
                     if (lock.getLockedWorkflow() != null) {
                         validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case PROMPT:
@@ -1389,7 +1416,7 @@ public class Validator {
                     }
                     if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case POST_NOTICE:
@@ -1436,7 +1463,7 @@ public class Validator {
                     validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case STICKY_SUBAGENT:
@@ -1452,14 +1479,14 @@ public class Validator {
                         firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions",
                                 "StickySubagent");
                         validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
                         validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case ADMISSION_TIME:
@@ -1467,7 +1494,7 @@ public class Validator {
                     validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
                         validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, forkListExist, allWorkflowJsonsByName);
+                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case SLEEP:
@@ -1480,6 +1507,16 @@ public class Validator {
                 index++;
             }
         }
+    }
+    
+    private static void validateRetryInstruction(String pos, Set<String> retryConfs) {
+        int lastIndexOfCatchBlock = pos.lastIndexOf("catch.instructions");
+        if (lastIndexOfCatchBlock == -1) {
+            throw new JocConfigurationException("$." + pos.substring(0, pos.length() - 1)
+                    + ": 'Retry' instruction is not located in a catch block");
+        }
+        String parentTryPosition = pos.substring(0, lastIndexOfCatchBlock);
+        retryConfs.remove(parentTryPosition);
     }
 
     @SuppressWarnings("unchecked")
