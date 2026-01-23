@@ -5,22 +5,28 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +42,18 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.common.EncryptedValue;
@@ -58,6 +76,7 @@ import com.sos.commons.util.keystore.KeyStoreContainer;
 import com.sos.commons.util.keystore.KeyStoreType;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.ssl.SslArguments;
+import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.exception.SOSKeyException;
 import com.sos.js7.job.DetailValue;
 import com.sos.js7.job.JobArgument;
@@ -67,9 +86,14 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 
+import jakarta.ws.rs.core.UriBuilder;
+
 public class ApiExecutor implements AutoCloseable {
 
     private static final String X_ID_TOKEN = "X-ID-TOKEN";
+    private static final String X_IDENTITY_SERVICE = "X-IDENTITY-SERVICE"; 
+    private static final String X_OPENID_CONFIGURATION = "X-OPENID-CONFIGURATION";
+    private static final String CLIENT_SECRET_INDICATOR = "client_secret_basic";
 
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
@@ -126,6 +150,7 @@ public class ApiExecutor implements AutoCloseable {
     private final OrderProcessStep<?> step;
 
     private BaseHttpClient client;
+    private BaseHttpClient oidcClient;
     private URI jocUri;
     private List<String> jocUris;
     private Config config;
@@ -162,24 +187,35 @@ public class ApiExecutor implements AutoCloseable {
         return login(Duration.ofSeconds(30));
     }
 
+    public ApiResponse login(Map<String, String> headers) throws Exception {
+        return login(Duration.ofSeconds(30), headers);
+    }
+    
     public ApiResponse login(Duration connectTimeout) throws Exception {
+        return login(Duration.ofSeconds(30), null);
+    }
+
+    public ApiResponse login(Duration connectTimeout, Map<String, String> headers) throws Exception {
         /*
-         * TODO: first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
+         * first check variables from OrderProcessStep if required values are available if available use this configuration if not available use
          * configuration from private.conf
          */
         boolean isDebugEnabled = step.getLogger().isDebugEnabled();
         Map<String, String> loginRequestHeaders = new HashMap<String, String>();
-        loginRequestHeaders.put("Accept", "application/json, text/plain");
-        loginRequestHeaders.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        if(headers != null) {
+            loginRequestHeaders = headers;
+        } else {
+            loginRequestHeaders.put("Accept", "application/json, text/plain");
+            loginRequestHeaders.put(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_JSON);
+        }
         step.getLogger().debug("***ApiExecutor***");
         jocUris = getUris();
         String latestError = "";
-        // String latestResponse = "";
         URI loginUri = null;
         Exception latestException = null;
         for (String uri : jocUris) {
             try {
-                createClient(uri, connectTimeout);
+                createClient(uri, connectTimeout, (headers != null || !headers.isEmpty()));
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
                 HttpExecutionResult<String> result = client.executePOST(loginUri, client.mergeWithDefaultHeaders(loginRequestHeaders));
@@ -333,6 +369,11 @@ public class ApiExecutor implements AutoCloseable {
         client = null;
     }
 
+    public void closeOidcClient() {
+        SOSClassUtil.closeQuietly(oidcClient);
+        oidcClient = null;
+    }
+
     public void closeQuietly(String accessToken) {
         if(accessToken != null) {
             try {
@@ -367,26 +408,39 @@ public class ApiExecutor implements AutoCloseable {
         return args;
     }
 
-    private void createClient(String jocUri, Duration connectTimeout) throws Exception {
+    private void createClient(String jocUri, Duration connectTimeout, boolean oidc) throws Exception {
         close();
-
         if (config == null) {
             readConfig();
         }
-
         step.getLogger().debug("initiate REST api client");
-
         Builder builder = BaseHttpClient.withBuilder();
         builder = builder.withLogger(step.getLogger());
         builder = builder.withConnectTimeout(connectTimeout);
-        builder = builder.withAuth(getAuthConfig());
+        if (!oidc) {
+            builder = builder.withAuth(getAuthConfig());
+        }
         builder = builder.withProxyConfig(getProxyConfig());
-
         if (jocUri.toLowerCase().startsWith("https:")) {
             builder.withSSL(getSslArguments());
         }
-
         client = builder.build();
+    }
+
+    private void createOidcClient(String jocUri, Duration connectTimeout, String oidcTruststorePath, String oidcTruststorePasswd, 
+            String oidcTruststoreType) throws Exception {
+        closeOidcClient();
+        step.getLogger().debug("initiate OIDC api client");
+        Builder builder = BaseHttpClient.withBuilder();
+        builder = builder.withLogger(step.getLogger());
+        builder = builder.withConnectTimeout(connectTimeout);
+        if (jocUri.toLowerCase().startsWith("https:")) {
+            SSLContext sslContext = createOidcSslContext(oidcTruststorePath, oidcTruststorePasswd, oidcTruststoreType);
+            if(sslContext != null) {
+                builder.withSSLContext(sslContext);
+            }
+        }
+        oidcClient = builder.build();
     }
 
     // TODO
@@ -868,5 +922,230 @@ public class ApiExecutor implements AutoCloseable {
         }
         responseHeaders = client.toJoinedValueResponseHeaders(response);
     }
+    public ApiResponse loginWithOIDC(String issuer, String clientId, String clientSecret,
+            String xIdentityService) throws Exception {
+        return loginWithOIDC(Duration.ofSeconds(30), issuer, clientId, clientSecret, xIdentityService, 
+                null, null, null);
+    }
 
+    public ApiResponse loginWithOIDC(String issuer, String clientId, String clientSecret,
+            String xIdentityService, String oidcTruststorePath, String oidcTruststorePasswd, 
+            String oidcTruststoreType) throws Exception {
+        return loginWithOIDC(Duration.ofSeconds(30), issuer, clientId, clientSecret, xIdentityService, 
+                oidcTruststorePath, oidcTruststorePasswd, oidcTruststoreType);
+    }
+
+    public ApiResponse loginWithOIDC(Duration connectTimeout, String issuer, String clientId,
+            String clientSecret, String xIdentityService, String oidcTruststorePath, 
+            String oidcTruststorePasswd, String oidcTruststoreType) throws Exception {
+        boolean isDebugEnabled = step.getLogger().isDebugEnabled();
+        step.getLogger().debug("***ApiExecutor OIDC login***");
+        String latestError = "";
+        Exception latestException = null;
+        HttpExecutionResult<String> result = null; 
+        JsonValue value = null;
+        ObjectMapper objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+        // STEP 1: get the OpenIdConfiguration for the issuer
+        URI openIdConfigurationUrl = null;
+        String endSessionEndpoint = "";
+        String revocationEndpoint = "";
+        String tokenEndpoint = "";
+        List<String> tokenAuthMethodsSupported = new ArrayList<>();
+        List<String> claimsSupported = new ArrayList<>();
+        String jwksUri = "";
+        String openIdConfiurationResponse = "";
+        try {
+            openIdConfigurationUrl = UriBuilder.fromPath(issuer).path("/.well-known/openid-configuration").build();
+            createOidcClient(openIdConfigurationUrl.toString(), connectTimeout, oidcTruststorePath, oidcTruststorePasswd,
+                    oidcTruststoreType);
+            result = oidcClient.executeGET(openIdConfigurationUrl);
+            openIdConfiurationResponse = result.response().body();
+            JsonObject responseJson = jsonObjectFromString(openIdConfiurationResponse);
+            value = responseJson.get("end_session_endpoint");
+            if(value != null && value instanceof JsonString) {
+                endSessionEndpoint = ((JsonString)value).getString();
+            }
+            value = responseJson.get("revocation_endpoint");
+            if(value != null && value instanceof JsonString) {
+                revocationEndpoint = ((JsonString)value).getString();
+            }
+            value = responseJson.get("token_endpoint");
+            if(value != null && value instanceof JsonString) {
+                tokenEndpoint = ((JsonString)value).getString();
+            }
+            value = responseJson.get("token_endpoint_auth_methods_supported");
+            if(value != null && value instanceof JsonArray) {
+                 List<JsonString> js = value.asJsonArray().getValuesAs(JsonString.class);
+                 tokenAuthMethodsSupported = js.stream().map(JsonString::getString).collect(Collectors.toList());
+            }
+            value = responseJson.get("claims_supported");
+            if(value != null && value instanceof JsonArray) {
+                List<JsonString> js = value.asJsonArray().getValuesAs(JsonString.class);
+                claimsSupported = js.stream().map(JsonString::getString).collect(Collectors.toList());
+            }
+            value = responseJson.get("jwks_uri");
+            if(value != null && value instanceof JsonString) {
+                jwksUri = ((JsonString)value).getString();
+            }
+        } catch (ConnectException | SOSConnectionRefusedException e) {
+            latestError = String.format("connection to URI %1$s failed. Could not retrieve openId configuration.", openIdConfigurationUrl.toString());
+            if (isDebugEnabled) {
+                step.getLogger().debug(latestError);
+            }
+            latestException = e;
+        } catch (Exception e) {
+            latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
+            if (isDebugEnabled) {
+                step.getLogger().debug(latestError);
+            }
+            latestException = e;
+        }
+        // STEP 2: Get the OIDC-AccessToken with the openIdConfiguration from the response of STEP 1
+        URI getTokenUri = null;
+        try {
+            getTokenUri = UriBuilder.fromPath(tokenEndpoint).build();
+            
+            Map<String, String> oidcRequestHeaders = new HashMap<String, String>();
+            oidcRequestHeaders.put("Accept", "application/json");
+            oidcRequestHeaders.put("content-type", "application/x-www-form-urlencoded");
+            Map<String, String> requestBody = Collections.emptyMap();
+            if(tokenAuthMethodsSupported.contains(CLIENT_SECRET_INDICATOR)) {
+                oidcRequestHeaders.put(HttpUtils.HEADER_AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret)
+                        .getBytes()));
+                requestBody = Map.of("grant_type", "client_credentials");
+            } else {
+                requestBody = Map.of("grant_type", "client_credentials", "client_id", clientId, "client_secret", clientSecret);
+            }
+            
+            result = oidcClient.executePOST(getTokenUri, oidcClient.mergeWithDefaultHeaders(oidcRequestHeaders), 
+                    getUrlEncodedBodyString(requestBody));
+            String response = result.response().body();
+            JsonObject responseJson = jsonObjectFromString(response);
+            /** 
+             *     "token_type",
+             *     "expires_in",
+             *     "ext_expires_in",
+             *     "expires_on",
+             *     "access_token",
+             *     "refresh_token",
+             *     "id_token"
+             * */
+            String tokenType = "";
+            String expiresIn = "";
+            String extExpiresIn = "";
+            String expiresOn = "";
+            String accessToken = "";
+            String refreshToken = "";
+            String idToken = "";
+            value = responseJson.get("token_type");
+            if(value instanceof JsonString) {
+                tokenType = ((JsonString)value).getString();
+            }
+            value = responseJson.get("expires_in");
+            if(value instanceof JsonString) {
+                expiresIn = ((JsonString)value).getString();
+            }
+            value = responseJson.get("ext_expires_in");
+            if(value instanceof JsonString) {
+                extExpiresIn = ((JsonString)value).getString();
+            }
+            value = responseJson.get("expires_on");
+            if(value instanceof JsonString) {
+                expiresOn = ((JsonString)value).getString();
+            }
+            value = responseJson.get("access_token");
+            if(value instanceof JsonString) {
+                accessToken = ((JsonString)value).getString();
+            }
+            value = responseJson.get("refresh_token");
+            if(value instanceof JsonString) {
+                refreshToken = ((JsonString)value).getString();
+            }
+            value = responseJson.get("id_token");
+            if(value instanceof JsonString) {
+                idToken = ((JsonString)value).getString();
+            }
+            
+            if (isDebugEnabled) {
+                step.getLogger().debug("[oidc - get access token]" + BaseHttpClient.formatExecutionResult(result));
+            }
+            int code = result.response().statusCode();
+            if (!HttpUtils.isSuccessful(code)) {
+                if (HttpUtils.isServerError(code)) {
+                    throw new SOSConnectionRefusedException(BaseHttpClient.formatExecutionResult(result));
+                }
+                if (HttpUtils.isUnauthorized(code)) {
+                    String message = (String) client.getJsonProperty(result.response(), "message");
+                    if (SOSString.isEmpty(message)) {
+                        latestException = new Exception("login failed.");
+                        throw latestException;
+                    } else {
+                        latestError = code + " : " + HttpUtils.getReasonPhrase(code) + " " + message;
+                        throw new Exception(latestError);
+                    }
+                }
+            }
+            step.getLogger().info(X_IDENTITY_SERVICE + "=" + xIdentityService);
+            step.getLogger().info(X_ID_TOKEN + "=" + accessToken);
+            step.getLogger().info(X_OPENID_CONFIGURATION + "=" + Base64.getUrlEncoder().encodeToString(
+                    openIdConfiurationResponse.getBytes(StandardCharsets.UTF_8)));
+            Map<String,String> oidcLoginHeaders = Map.of(X_IDENTITY_SERVICE, xIdentityService, X_ID_TOKEN, accessToken, 
+                    X_OPENID_CONFIGURATION, Base64.getUrlEncoder().encodeToString(openIdConfiurationResponse.getBytes(StandardCharsets.UTF_8)));
+            return login(oidcLoginHeaders);
+        } catch (ConnectException | SOSConnectionRefusedException e) {
+            if(getTokenUri != null) {
+                latestError = String.format("connection to URI %1$s failed. Could not retrieve accessToken.", getTokenUri.toString());
+                if (isDebugEnabled) {
+                    step.getLogger().debug(latestError);
+                }
+            }
+            latestException = e;
+        } catch (Exception e) {
+            latestError = String.format("%1$s occurred: %2$s", e.getClass(), e.getMessage());
+            if (isDebugEnabled) {
+                step.getLogger().debug(latestError);
+            }
+            latestException = e;
+        } finally {
+            if(oidcClient != null) {
+                oidcClient.close();
+            }
+        }
+        step.getLogger().info("No OIDC connection attempt was successful.");
+        throw latestException;
+    }
+    
+    private static JsonObject jsonObjectFromString(String jsonAsString) {
+        JsonReader jsonReader = Json.createReader(new StringReader(jsonAsString));
+        JsonObject object = jsonReader.readObject();
+        jsonReader.close();
+        return object;
+    }
+
+    private SSLContext createOidcSslContext(String oidcTruststorePath, String oidcTruststorePasswd, String oidcTruststoreType)
+            throws Exception {
+        if (oidcTruststorePath != null && !oidcTruststorePath.trim().isEmpty()) {
+            KeyStore trustStore = KeyStore.getInstance(oidcTruststoreType);
+            if(trustStore != null) {
+                trustStore.load(Files.newInputStream(Paths.get(oidcTruststorePath)), oidcTruststorePasswd.toCharArray());
+                TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                factory.init(trustStore);
+                SSLContext sslContext = SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
+                sslContext.init(null, factory.getTrustManagers(), null);
+                return sslContext;
+            }
+        }
+        return null;
+    }
+
+    private String getUrlEncodedBodyString(Map<String, String> params) {
+        return params.entrySet().stream()
+            .map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
+            .collect(Collectors.joining("&"));
+    }
+    
 }
