@@ -94,6 +94,9 @@ public class ApiExecutor implements AutoCloseable {
     private static final String X_IDENTITY_SERVICE = "X-IDENTITY-SERVICE"; 
     private static final String X_OPENID_CONFIGURATION = "X-OPENID-CONFIGURATION";
     private static final String CLIENT_SECRET_INDICATOR = "client_secret_basic";
+    private static final String DEFAULT_TRUSTSTORE_PATH = "lib/security/cacerts";
+    private static final String DEFAULT_TRUSTSTORE_TYPE = "PKCS12";
+    private static final String DEFAULT_TRUSTSTORE_PW = "changeit";
 
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
@@ -1137,6 +1140,19 @@ public class ApiExecutor implements AutoCloseable {
                 SSLContext sslContext = SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
                 sslContext.init(null, factory.getTrustManagers(), null);
                 return sslContext;
+            }
+        } else { // fallback: try using Javas cacerts instead
+            String javaHome = System.getProperty("JAVA_HOME");
+            if(javaHome != null && !javaHome.isEmpty()) {
+                KeyStore trustStore = KeyStore.getInstance(DEFAULT_TRUSTSTORE_TYPE);
+                if(trustStore != null) {
+                    trustStore.load(Files.newInputStream(Paths.get(javaHome).resolve(DEFAULT_TRUSTSTORE_PATH)), DEFAULT_TRUSTSTORE_PW.toCharArray());
+                    TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    factory.init(trustStore);
+                    SSLContext sslContext = SSLContext.getInstance(SslContextFactory.DEFAULT_PROTOCOL);
+                    sslContext.init(null, factory.getTrustManagers(), null);
+                    return sslContext;
+                }
             }
         }
         return null;
