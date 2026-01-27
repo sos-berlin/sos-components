@@ -25,11 +25,13 @@ import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotices;
-import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.ParameterType;
+import com.sos.inventory.model.workflow.Parameters;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.SubAgent;
@@ -180,12 +182,13 @@ public class Autosys2JS7Converter {
         LOGGER.info(String.format("[%s][parse][end]%s", method, SOSDate.getDuration(appStart, Instant.now())));
 
         // 3 - Config Report - after 2 because the reporting files maybe deleted by analyzer.analyzeAndCreateDiagram
-        ConverterReportWriter.writeConfigReport(reportDir.resolve("config_errors.csv"), reportDir.resolve("config_warnings.csv"), reportDir.resolve(
-                "config_analyzer.csv"));
+        Path csvReportDir = reportDir.resolve(Report.FOLDER_NAME_CSV_REPORTS);
+        ConverterReportWriter.writeConfigReport(csvReportDir.resolve("config_errors.csv"), csvReportDir.resolve("config_warnings.csv"), csvReportDir
+                .resolve("config_analyzer.csv"));
 
         // 4 - Parser Reports
-        ConverterReportWriter.writeParserReport("Autosys", reportDir.resolve("parser_summary.csv"), reportDir.resolve("parser_errors.csv"), reportDir
-                .resolve("parser_warnings.csv"), reportDir.resolve("parser_analyzer.csv"));
+        ConverterReportWriter.writeParserReport("Autosys", csvReportDir.resolve("parser_summary.csv"), csvReportDir.resolve("parser_errors.csv"),
+                csvReportDir.resolve("parser_warnings.csv"), csvReportDir.resolve("parser_analyzer.csv"));
 
         // 5 - Convert to JS7
         Instant start = Instant.now();
@@ -197,8 +200,8 @@ public class Autosys2JS7Converter {
         // 5.1 - Converter Reports
         AutosysReport.analyze(cr.getStandaloneJobs(), cr.getBoxJobs());
 
-        ConverterReportWriter.writeConverterReport(reportDir.resolve("converter_errors.csv"), reportDir.resolve("converter_warnings.csv"), reportDir
-                .resolve("converter_analyzer.csv"));
+        ConverterReportWriter.writeConverterReport(csvReportDir.resolve("converter_errors.csv"), csvReportDir.resolve("converter_warnings.csv"),
+                csvReportDir.resolve("converter_analyzer.csv"));
 
         // 6 - Write JS7 files
         start = Instant.now();
@@ -251,7 +254,7 @@ public class Autosys2JS7Converter {
         write(outputDir, "FileOrderSources", result.getFileOrderSources(), true, null);
 
         // 6.1 - Summary Report
-        ConverterReportWriter.writeSummaryReport(reportDir.resolve("converter_summary.csv"));
+        ConverterReportWriter.writeSummaryReport(csvReportDir.resolve("converter_summary.csv"));
 
         LOGGER.info(String.format("[%s][[JS7]write][end]%s", method, SOSDate.getDuration(start, Instant.now())));
 
@@ -417,6 +420,13 @@ public class Autosys2JS7Converter {
             Workflow w = new Workflow();
             w.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jilJob.getDescription().getValue()));
             w.setTimeZone(runTimeTimezone == null ? Autosys2JS7Converter.CONFIG.getWorkflowConfig().getDefaultTimeZone() : runTimeTimezone);
+
+            Parameter p = new Parameter();
+            p.setType(ParameterType.String);
+            p.setDefault("${file}");
+            Parameters ps = new Parameters();
+            ps.getAdditionalProperties().put("file", p);
+            w.setOrderPreparation(new Requirements(ps, false));
 
             WorkflowResult wr = new WorkflowResult();
             wr.setName(JS7ConverterHelper.getJS7ObjectName(jilJob.getName()));

@@ -293,7 +293,17 @@ public class JS7ConverterHelper {
         try {
             // return Stream.of(time.trim().split(":")).filter(t -> t.length() == 2).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors
             // .joining(":"));
-            return Stream.of(time.trim().split(":")).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors.joining(":"));
+            String v = Stream.of(time.trim().split(":")).map(t -> toTimePart(Integer.parseInt(t.trim()))).collect(Collectors.joining(":"));
+            String[] arr = v.split(":");
+            switch (arr.length) {
+            case 1:
+                v += ":00:00";
+                break;
+            case 2:
+                v += ":00"; // seconds
+                break;
+            }
+            return v;
         } catch (Throwable e) {
             String msg = String.format("[normalizeTime][time=%s]%s", time, e.toString());
             LOGGER.error(msg);
@@ -304,7 +314,7 @@ public class JS7ConverterHelper {
 
     //
     public static String toMins(Integer mins) {
-        return "00:" + mins + ":00";
+        return "00:" + toTimePart(mins) + ":00";
     }
 
     public static String toRepeat(List<Integer> startMinutes) {
@@ -321,7 +331,7 @@ public class JS7ConverterHelper {
             repeats.add(minute - lastMinute);
             lastMinute = minute;
         }
-        return toTimePart(new BigDecimal(repeats.stream().mapToDouble(i -> i).average().orElse(0.00)).setScale(0, RoundingMode.HALF_UP).intValue());
+        return toMins(new BigDecimal(repeats.stream().mapToDouble(i -> i).average().orElse(0.00)).setScale(0, RoundingMode.HALF_UP).intValue());
     }
 
     private static String toTimePart(Integer i) {

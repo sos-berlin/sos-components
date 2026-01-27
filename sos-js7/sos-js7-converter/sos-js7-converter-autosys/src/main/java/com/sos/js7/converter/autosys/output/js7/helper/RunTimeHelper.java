@@ -91,7 +91,7 @@ public class RunTimeHelper {
             }
             for (String time : times) {
                 Period p = new Period();
-                p.setSingleStart(time);
+                p.setSingleStart(JS7ConverterHelper.normalizeTime(time));
                 p.setWhenHoliday(WhenHolidayType.SUPPRESS);
                 periods.add(p);
             }
@@ -100,7 +100,7 @@ public class RunTimeHelper {
             if (config.getGenerateConfig().getCyclicOrders()) {
                 Period p = new Period();
                 p.setBegin(JS7ConverterHelper.toMins(j.getRunTime().getStartMins().getValue().get(0)));
-                p.setEnd("24:00");
+                p.setEnd("24:00:00");
                 p.setRepeat(JS7ConverterHelper.toRepeat(j.getRunTime().getStartMins().getValue()));
                 p.setWhenHoliday(WhenHolidayType.SUPPRESS);
                 periods.add(p);
@@ -115,9 +115,9 @@ public class RunTimeHelper {
         if (periods.size() == 0) {
             Period p = new Period();
             if (runWindow != null) {
-                p.setSingleStart(runWindow.getFrom());
+                p.setSingleStart(JS7ConverterHelper.normalizeTime(runWindow.getFrom()));
             } else {
-                p.setSingleStart("00:00");
+                p.setSingleStart("00:00:00");
             }
             p.setWhenHoliday(WhenHolidayType.SUPPRESS);
             periods.add(p);

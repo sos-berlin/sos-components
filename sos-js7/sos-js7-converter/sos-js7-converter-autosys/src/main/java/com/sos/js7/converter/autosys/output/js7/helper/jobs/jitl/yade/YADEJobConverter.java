@@ -178,7 +178,7 @@ public class YADEJobConverter {
                     target = j.getFtpLocalName().getValue();
                 }
 
-                sb.append("  <Profile provile_id=\"" + j.getName() + "\">").append(JS7ConverterHelper.JS7_NEW_LINE);
+                sb.append("  <Profile profile_id=\"" + j.getName() + "\">").append(JS7ConverterHelper.JS7_NEW_LINE);
                 sb.append("  <Operation>").append(JS7ConverterHelper.JS7_NEW_LINE);
                 sb.append("  <Copy>").append(JS7ConverterHelper.JS7_NEW_LINE);
 
@@ -271,7 +271,7 @@ public class YADEJobConverter {
                     targetDir = target;
                 }
 
-                sb.append("  <Profile provile_id=\"" + j.getName() + "\">").append(JS7ConverterHelper.JS7_NEW_LINE);
+                sb.append("  <Profile profile_id=\"" + j.getName() + "\">").append(JS7ConverterHelper.JS7_NEW_LINE);
                 sb.append("  <Operation>").append(JS7ConverterHelper.JS7_NEW_LINE);
                 sb.append("  <Copy>").append(JS7ConverterHelper.JS7_NEW_LINE);
 

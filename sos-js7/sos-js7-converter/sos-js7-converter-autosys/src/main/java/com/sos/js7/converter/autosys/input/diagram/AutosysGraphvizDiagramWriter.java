@@ -111,9 +111,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         this.boxName = box.getName();
         if (prepareContent(box)) {
             this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, box, true, AFileParser.EXPORT_FILE_PREFIX_BOX);
-            if (Range.optimizeDependencies.equals(this.range)) {
-                outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
-            }
+            // if (Range.optimizeDependencies.equals(this.range)) {
+            // outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
+            // }
             // LOGGER.info("[createDiagram][" + range + "][BOX]" + outputPath);
 
             return createDiagram(config, range.name(), outputPath, box.getName());
@@ -145,9 +145,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             if (prepareContent(entry.getValue())) {
                 String name = AFileParser.EXPORT_FILE_PREFIX_STANDALONE + "_all";
                 this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory.resolve(entry.getKey()).resolve(name), null, true);
-                if (Range.optimizeDependencies.equals(this.range)) {
-                    outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
-                }
+                // if (Range.optimizeDependencies.equals(this.range)) {
+                // outputPath = outputPath.getParent().resolve(outputPath.getFileName() + "[" + range.name() + "]");
+                // }
                 // LOGGER.info("[createDiagram][" + range + "][standaloneJobs]" + outputPath);
 
                 createDiagram(config, range.name(), outputPath, name);

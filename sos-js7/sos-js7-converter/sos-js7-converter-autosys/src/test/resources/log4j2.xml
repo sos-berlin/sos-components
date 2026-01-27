@@ -21,10 +21,8 @@
 	<Loggers>
 		<Root level="info">
 			<AppenderRef ref="console" />
-			<!-- 
-			<AppenderRef ref="fileLogger" />
-			-->
+			<!-- <AppenderRef ref="fileLogger" /> -->
 		</Root>
-		<Logger name="com.sos.js7" level="debug" />
+		<Logger name="com.sos.js7" level="info" />
 	</Loggers>
 </Configuration>

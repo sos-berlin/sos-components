@@ -231,7 +231,7 @@ public class BoardHelper {
 
                 if (j == null) {
                     if (Autosys2JS7Converter.NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND) {
-                        LOGGER.info("[IGNORED][CONDITION]BECAUSE JOB NOT FOUND][current job=" + currentJob.getName() + "][ignored condition=" + j2c
+                        LOGGER.info("[Condition(Ignored)][because job not found][current job=" + currentJob.getName() + "][ignored condition=" + j2c
                                 .getCondition() + "]job not found=" + j2c.getCondition().getJobName());
                         js7Name = null;
                     } else {
