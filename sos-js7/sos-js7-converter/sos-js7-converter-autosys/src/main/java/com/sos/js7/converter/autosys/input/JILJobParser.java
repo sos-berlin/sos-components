@@ -182,7 +182,7 @@ public class JILJobParser extends AFileParser {
         private final Path file;
 
         private XMLWriter(Path parent, String name) {
-            this.file = parent.resolve("js7_converter_" + name + ".xml");
+            this.file = parent.resolve("js7_converter_input_file_generated_from_jil.xml");
             try {
                 SOSPath.deleteIfExists(this.file);
                 // Files.createDirectory(parent);

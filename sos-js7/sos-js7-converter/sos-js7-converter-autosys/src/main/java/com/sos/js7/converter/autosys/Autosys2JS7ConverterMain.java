@@ -19,6 +19,7 @@ public class Autosys2JS7ConverterMain extends JS7ConverterMain {
     }
 
     public static void main(String[] args) {
+        Autosys2JS7Converter.CONFIG.getGenerateConfig().withCyclicOrders(false);
         new Autosys2JS7ConverterMain().doMain(Autosys2JS7Converter.CONFIG, args);
     }
 
