@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,10 +20,16 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
 import com.sos.js7.converter.autosys.common.v12.job.JobFT;
+import com.sos.js7.converter.autosys.common.v12.job.JobFTP;
+import com.sos.js7.converter.autosys.common.v12.job.JobFTPS;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
+import com.sos.js7.converter.autosys.common.v12.job.JobHTTP;
 import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
+import com.sos.js7.converter.autosys.common.v12.job.JobSCP;
+import com.sos.js7.converter.autosys.common.v12.job.JobSQL;
 import com.sos.js7.converter.autosys.common.v12.job.attr.CommonJobCondition;
+import com.sos.js7.converter.autosys.common.v12.job.custom.JobWSDOC;
 import com.sos.js7.converter.commons.annotation.ArgumentInclude;
 import com.sos.js7.converter.commons.annotation.ArgumentSetter;
 import com.sos.js7.converter.commons.report.ParserReport;
@@ -83,6 +90,18 @@ public class JobParser {
             return new JobBOX(source, reference);
         case OMTF:
             return new JobOMTF(source, reference);
+        case HTTP:
+            return new JobHTTP(source, reference);
+        case FTP:
+            return new JobFTP(source, reference);
+        case FTPS:
+            return new JobFTPS(source, reference);
+        case SCP:
+            return new JobSCP(source, reference);
+        case SQL:
+            return new JobSQL(source, reference);
+        case WSDOC:
+            return new JobWSDOC(source, reference);
         default:
             return new JobNotSupported(source, reference);
         }
@@ -101,6 +120,12 @@ public class JobParser {
         JOB_METHODS.put(ConverterJobType.CMD, getJobMethods(JobCMD.class));
         JOB_METHODS.put(ConverterJobType.FT, getJobMethods(JobFT.class));
         JOB_METHODS.put(ConverterJobType.FW, getJobMethods(JobFW.class));
+        JOB_METHODS.put(ConverterJobType.HTTP, getJobMethods(JobHTTP.class));
+        JOB_METHODS.put(ConverterJobType.FTP, getJobMethods(JobFTP.class));
+        JOB_METHODS.put(ConverterJobType.FTPS, getJobMethods(JobFTP.class));
+        JOB_METHODS.put(ConverterJobType.SCP, getJobMethods(JobSCP.class));
+        JOB_METHODS.put(ConverterJobType.SQL, getJobMethods(JobSQL.class));
+        JOB_METHODS.put(ConverterJobType.WSDOC, getJobMethods(JobWSDOC.class));
         JOB_METHODS.put(ConverterJobType.NOT_SUPPORTED, getJobMethods(JobNotSupported.class));
         JOB_METHODS.put(ConverterJobType.OMTF, getJobMethods(JobOMTF.class));
     }
@@ -111,7 +136,7 @@ public class JobParser {
             return e.isAnnotationPresent(ArgumentInclude.class);
         }).collect(Collectors.toList());
 
-        JOB_INCLUDES_METHODS = new HashMap<>();
+        JOB_INCLUDES_METHODS = new LinkedHashMap<>();
         for (Field f : fields) {
             f.setAccessible(true);
             ArgumentInclude a = f.getAnnotation(ArgumentInclude.class);

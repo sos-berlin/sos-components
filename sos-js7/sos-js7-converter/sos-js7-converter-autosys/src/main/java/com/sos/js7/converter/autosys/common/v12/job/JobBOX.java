@@ -2,7 +2,9 @@ package com.sos.js7.converter.autosys.common.v12.job;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
@@ -44,6 +46,12 @@ public class JobBOX extends ACommonJob {
      */
     private SOSArgument<Integer> priority = new SOSArgument<>(ATTR_PRIORITY, false);
 
+    // nested boxes - the parent box
+    private JobBOX parentBox = null;
+    // nested boxes - direct child boxes of this BOX
+    private List<JobBOX> childBoxes = new ArrayList<>();
+
+    // all box jobs (including child boxes)
     private List<ACommonJob> jobs = new ArrayList<>();
 
     public JobBOX(Path source, boolean reference) {
@@ -77,6 +85,19 @@ public class JobBOX extends ACommonJob {
         priority.setValue(JS7ConverterHelper.integerValue(val));
     }
 
+    public void setParentBox(JobBOX val) {
+        parentBox = val;
+        if (parentBox != null) {
+            if (!parentBox.childBoxes.contains(this)) {
+                parentBox.childBoxes.add(this);
+            }
+        }
+    }
+
+    public JobBOX getParentBox() {
+        return parentBox;
+    }
+
     public void setJobs(List<ACommonJob> val) {
         jobs = val;
     }
@@ -89,8 +110,34 @@ public class JobBOX extends ACommonJob {
         return boxSuccess.getValue() != null || boxFailure.getValue() != null;
     }
 
-    public String getParentBoxName() {
-        return getBox() == null ? null : getBox().getBoxName().getValue();
+    /** Direct child boxes of this BOX */
+    public List<JobBOX> getChildBoxes() {
+        return childBoxes;
     }
 
+    /** Returns the chain of parent boxes in order from Root to Leaf
+     * 
+     * Example: (ROOT) BOX_A -> BOX_B -> BOX_C */
+    public List<JobBOX> getParentBoxChain() {
+        List<JobBOX> chain = new ArrayList<>();
+        JobBOX current = parentBox;
+        while (current != null) {
+            chain.add(current);
+            current = current.getParentBox();
+        }
+        Collections.reverse(chain);
+        return chain.isEmpty() ? null : chain;
+    }
+
+    /** Returns the path of parent boxes in order from Root to Leaf.
+     * 
+     * Example: (ROOT) BOX_A / BOX_B / BOX_C */
+    public String getParentBoxPath() {
+        List<JobBOX> chain = getParentBoxChain();
+        if (chain == null) {
+            return null;
+        }
+
+        return chain.stream().map(b -> b.getBoxName()).collect(Collectors.joining(" / "));
+    }
 }

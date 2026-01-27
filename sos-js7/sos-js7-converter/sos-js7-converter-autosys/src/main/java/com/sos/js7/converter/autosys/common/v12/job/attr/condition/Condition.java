@@ -18,7 +18,7 @@ public class Condition implements Serializable {
     // reset if:
     // 1) 0 - according to the answer - 0 is the same as in the last 24 hours - is that correct?
     // 2) 24:00
-    public static boolean ADJUST_LOOK_BACK_FOR_JS7 = false;
+    public static boolean adjustLookBackForJS7 = false;
 
     public enum ConditionType {
         DONE, FAILURE, NOTRUNNING, SUCCESS, TERMINATED, EXITCODE, VARIABLE, JS7_UNKNOWN, JS7_INTERNAL
@@ -85,7 +85,7 @@ public class Condition implements Serializable {
     private String getLookBack(Map<MapKeys, String> resultMap) {
         String l = resultMap.get(MapKeys.LOOKBACK);
 
-        if (ADJUST_LOOK_BACK_FOR_JS7) {
+        if (adjustLookBackForJS7) {
             if (l != null) {
                 if (l.equals("0") || l.equals("24") || l.equals("24:00")) {
                     l = null;

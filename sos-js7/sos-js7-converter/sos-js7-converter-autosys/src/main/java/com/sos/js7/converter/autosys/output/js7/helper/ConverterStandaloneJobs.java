@@ -17,8 +17,7 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
-import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
-import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
@@ -37,24 +36,18 @@ public class ConverterStandaloneJobs {
         this.result = result;
     }
 
-    public void convert(List<ACommonJob> standaloneJobs, ConverterJobType type) {
+    public void convert(List<ACommonJob> standaloneJobs) {
         String method = "convert";
         int size = standaloneJobs.size();
 
-        LOGGER.info(String.format("[%s][standalone][%s jobs=%s][start]...", method, type, size));
-        switch (type) {
-        case CMD:
-            for (ACommonJob j : standaloneJobs) {
-                convertStandalone(result, (JobCMD) j);
-            }
-            break;
-        default:
-            break;
+        LOGGER.info(String.format("[%s][standalone][jobs=%s][start]...", method, size));
+        for (ACommonJob j : standaloneJobs) {
+            convertStandalone(result, j);
         }
-        LOGGER.info(String.format("[%s][standalone][%s jobs=%s][end]", method, type, size));
+        LOGGER.info(String.format("[%s][standalone][jobs=%s][end]", method, size));
     }
 
-    private void convertStandalone(JS7ConverterResult result, JobCMD jilJob) {
+    private void convertStandalone(JS7ConverterResult result, ACommonJob jilJob) {
         WorkflowResult wr = convertStandaloneWorkflow(result, converter.getAnalyzer(), jilJob);
 
         if (!jilJob.hasRunTime()) {
@@ -64,7 +57,7 @@ public class ConverterStandaloneJobs {
         converter.convertSchedule(result, wr, jilJob);
     }
 
-    private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, AutosysAnalyzer analyzer, JobCMD jilJob) {
+    private WorkflowResult convertStandaloneWorkflow(JS7ConverterResult result, AutosysAnalyzer analyzer, ACommonJob jilJob) {
         String runTimeTimezone = jilJob.getRunTime().getTimezone().getValue();
 
         converter.getAnalyzer().getConditionAnalyzer().handleStandaloneJobConditions(analyzer, jilJob);
@@ -83,7 +76,7 @@ public class ConverterStandaloneJobs {
 
         // WORKFLOW JOBS
         Jobs js = new Jobs();
-        js.setAdditionalProperty(wr.getName(), converter.getJob(result, jilJob));
+        js.setAdditionalProperty(wr.getName(), converter.getJob(result, (ACommonMachineJob) jilJob));
         w.setJobs(js);
 
         // INSTRUCTIONS

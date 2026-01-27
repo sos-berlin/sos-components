@@ -41,11 +41,16 @@ public abstract class ACommonJob {
      * FW - File Watcher<br/>
      * FT - File Trigger<br/>
      * OTMF - Text File Reading and Monitoring<br/>
+     * HTTP - HTTP calls<br/>
+     * FTP - FTP transfers<br/>
+     * SCP - SCP/SFTP transfers<br/>
+     * SQL - database statement execution<br/>
+     * WSDOC - custom job type - web service calls (SOAP etc)<br/>
      * <br/>
      * NOT_SUPPORTED - sos type<br/>
      */
     public enum ConverterJobType {
-        CMD, BOX, FW, FT, OMTF, NOT_SUPPORTED
+        CMD, BOX, FW, FT, OMTF, HTTP, FTP, FTPS, SCP, SQL, WSDOC, NOT_SUPPORTED
     }
 
     public static final String LIST_VALUE_DELIMITER = ";";
@@ -371,6 +376,7 @@ public abstract class ACommonJob {
         return runTime;
     }
 
+    // ???
     public SOSArgument<String> getInsertJobX() {
         return insertJob;
     }

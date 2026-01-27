@@ -40,8 +40,15 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
+import com.sos.js7.converter.autosys.common.v12.job.JobFTP;
+import com.sos.js7.converter.autosys.common.v12.job.JobFTPS;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
+import com.sos.js7.converter.autosys.common.v12.job.JobHTTP;
+import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
+import com.sos.js7.converter.autosys.common.v12.job.JobSCP;
+import com.sos.js7.converter.autosys.common.v12.job.JobSQL;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
+import com.sos.js7.converter.autosys.common.v12.job.custom.JobWSDOC;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.DirectoryParser;
@@ -63,6 +70,12 @@ import com.sos.js7.converter.autosys.output.js7.helper.RunTimeHelper;
 import com.sos.js7.converter.autosys.output.js7.helper.beans.Job2Condition;
 import com.sos.js7.converter.autosys.output.js7.helper.beans.Resource2Lock;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobsHelper;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.NotSupportedJobConverter;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.ShellJobConverter;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.JITLJobConverter;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.db.DBJobConverter;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.rest.RESTJobConverter;
+import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.yade.YADEJobConverter;
 import com.sos.js7.converter.autosys.report.AutosysReport;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.JS7ConverterResult;
@@ -106,6 +119,9 @@ public class Autosys2JS7Converter {
     // Note: do not use this to programmatically set when the reference directory is not used - due to side effects (no OK/OK-WORKFLOW boards created etc.)
     public static boolean HAS_REFERENCES = false;
 
+    public static boolean OPTIMIZE_BOX_JOBS_CONDITIONS = true;
+    public static boolean OPTIMIZE_STANDALONE_JOBS_CONDITIONS = false;
+
     private AutosysAnalyzer analyzer;
     private Map<String, JS7Agent> machine2js7Agent = new HashMap<>();
 
@@ -115,7 +131,7 @@ public class Autosys2JS7Converter {
                 Autosys2JS7Converter.CONFIG, reportDir, false);
         LOGGER.info("[" + input + "][isXMLParser=" + isXMLParser + "]" + parser.getClass().getName());
 
-        DirectoryParserResult dpr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input);
+        DirectoryParserResult dpr = DirectoryParser.parse(CONFIG.getParserConfig(), parser, input, reportDir);
         LOGGER.info("[" + input + "]" + dpr.getCountFiles() + " files parsed");
 
         if (references != null) {
@@ -123,17 +139,12 @@ public class Autosys2JS7Converter {
             parser = isXMLParser ? new XMLJobParser(Autosys2JS7Converter.CONFIG, reportDir, true) : new JILJobParser(Autosys2JS7Converter.CONFIG,
                     reportDir, true);
             LOGGER.info("[" + references + "][isXMLParser=" + isXMLParser + "]" + parser.getClass().getName());
-            dpr.mergeReferences(DirectoryParser.parse(CONFIG.getParserConfig(), parser, references));
+            dpr.mergeReferences(DirectoryParser.parse(CONFIG.getParserConfig(), parser, references, reportDir));
         }
         return dpr;
     }
 
     private static boolean isXMLInputFiles(Path input) throws IOException {
-        if (CONFIG.getParserConfig().hasExtensions()) {
-            long r = CONFIG.getParserConfig().getExtensions().stream().filter(e -> e.equalsIgnoreCase("xml")).count();
-            return r > 0;
-        }
-
         boolean r = false;
         if (Files.isDirectory(input)) {
             List<Path> l = SOSPath.getFileList(input, ".*\\.xml$", java.util.regex.Pattern.CASE_INSENSITIVE);
@@ -180,7 +191,7 @@ public class Autosys2JS7Converter {
         Instant start = Instant.now();
         LOGGER.info(String.format("[%s][JS7][convert][start]...", method));
 
-        ConverterResult cr = convert(reportDir, pr, analyzer, references);
+        ConverterResult cr = convert(outputDir, reportDir, pr, analyzer, references);
         JS7ConverterResult result = cr.getResult();
         LOGGER.info(String.format("[%s][JS7][convert][end]%s", method, SOSDate.getDuration(start, Instant.now())));
         // 5.1 - Converter Reports
@@ -273,7 +284,7 @@ public class Autosys2JS7Converter {
         }
     }
 
-    private static ConverterResult convert(Path reportDir, DirectoryParserResult pr, AutosysAnalyzer analyzer, Path references) {
+    private static ConverterResult convert(Path outputDir, Path reportDir, DirectoryParserResult pr, AutosysAnalyzer analyzer, Path references) {
         // ----------------------------
         BoardHelper.clear();
         RunTimeHelper.clear();
@@ -281,9 +292,9 @@ public class Autosys2JS7Converter {
         BOXJobsHelper.clear();
         ConverterBOXJobs.clear();
         AdditionalInstructionsHelper.clear();
-        // -------------------------
-        String method = "convert";
 
+        JITLJobConverter.clear();
+        // -------------------------
         Autosys2JS7Converter c = new Autosys2JS7Converter();
         c.analyzer = analyzer;
 
@@ -296,21 +307,21 @@ public class Autosys2JS7Converter {
         Map<ConverterJobType, List<ACommonJob>> jobsPerType = pr.getJobs().stream().collect(Collectors.groupingBy(ACommonJob::getConverterJobType,
                 Collectors.toList()));
 
-        boolean optimize = true;
-        if (optimize) {
+        if (OPTIMIZE_BOX_JOBS_CONDITIONS || OPTIMIZE_STANDALONE_JOBS_CONDITIONS) {
             for (Map.Entry<ConverterJobType, List<ACommonJob>> entry : jobsPerType.entrySet()) {
                 ConverterJobType key = entry.getKey();
                 switch (key) {
                 case BOX:
-                    try {
-                        analyzer.getConditionAnalyzer().handleBOXConditions(analyzer, entry.getValue());
-                    } catch (Throwable e1) {
-                        LOGGER.error("[BOX]" + e1.toString(), e1);
+                    if (OPTIMIZE_BOX_JOBS_CONDITIONS) {
+                        try {
+                            analyzer.getConditionAnalyzer().handleBOXConditions(analyzer, entry.getValue());
+                        } catch (Throwable e1) {
+                            LOGGER.error("[BOX]" + e1.toString(), e1);
+                        }
                     }
                     break;
                 default:
-                    boolean optimizeStandalone = false;
-                    if (optimizeStandalone) {
+                    if (OPTIMIZE_STANDALONE_JOBS_CONDITIONS) {
                         try {
                             analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(entry.getValue());
                         } catch (Throwable e1) {
@@ -322,18 +333,25 @@ public class Autosys2JS7Converter {
             }
         }
 
-        int size = 0;
+        // int size = 0;
         for (Map.Entry<ConverterJobType, List<ACommonJob>> entry : jobsPerType.entrySet()) {
             ConverterJobType key = entry.getKey();
             List<ACommonJob> value = entry.getValue();
-            size = value.size();
+            // size = value.size();
 
             switch (key) {
             case CMD:
+            case HTTP:
+            case FTP:
+            case FTPS:
+            case SCP:
+            case SQL:
+            case WSDOC:
+            case NOT_SUPPORTED:
                 standaloneJobs.addAll(value);
 
                 ConverterStandaloneJobs converterStandaloneJobs = new ConverterStandaloneJobs(c, result);
-                converterStandaloneJobs.convert(standaloneJobs, key);
+                converterStandaloneJobs.convert(standaloneJobs);
                 break;
             case FW:
                 for (ACommonJob j : value) {
@@ -347,10 +365,6 @@ public class Autosys2JS7Converter {
                 converterBOXJobs.convert(boxJobs);
                 break;
             default:
-                LOGGER.info(String.format("[%s][%s jobs=%s]not implemented yet", method, key, size));
-                for (ACommonJob j : value) {
-                    ConverterReport.INSTANCE.addAnalyzerRecord(j.getSource(), j.getName(), j.getJobType().getValue() + ":not implemented yet");
-                }
                 break;
             }
         }
@@ -360,6 +374,7 @@ public class Autosys2JS7Converter {
         c.convertAgents(result, reportDir);
         c.convertLocks(result);
         c.convertCalendars(result);
+        c.convertYADE(outputDir, result);
 
         Report.moveJILReportFiles(reportDir);
         Report.writeJS7Reports(pr, reportDir, analyzer);
@@ -375,9 +390,9 @@ public class Autosys2JS7Converter {
         try {
             OutConditionHolder h = analyzer.getConditionAnalyzer().getJobOUTConditions(jilJob);
             if (h == null) {
-                LOGGER.info("[FW][" + jilJob.getName() + "]IGNORED BECAUSE NOT USED");
+                LOGGER.info("[convertStandaloneFW][IGNORED][FW][BECAUSE NOT USED (no jobs that use this FW in conditions)]" + jilJob.getName());
                 ConverterReport.INSTANCE.addAnalyzerRecord(jilJob.getSource(), jilJob.getName(), jilJob.getJobType().getValue()
-                        + "[standalone FW]IGNORED BECAUSE NOT USED");
+                        + "[standalone FW]IGNORED BECAUSE NOT USED (no jobs that use this FW in conditions)");
                 return null;
             }
 
@@ -391,7 +406,7 @@ public class Autosys2JS7Converter {
                 });
             });
             if (jobsConditions.size() == 0) {
-                LOGGER.info("[FW][" + jilJob.getName() + "]IGNORED BECAUSE NO JOBS FOUND");
+                LOGGER.info("[convertStandaloneFW][FW][" + jilJob.getName() + "]IGNORED BECAUSE NO JOBS FOUND");
                 ConverterReport.INSTANCE.addAnalyzerRecord(jilJob.getSource(), jilJob.getName(), jilJob.getJobType().getValue()
                         + "[standalone FW]IGNORED BECAUSE NO JOBS FOUND");
                 return null;
@@ -536,7 +551,11 @@ public class Autosys2JS7Converter {
         }
     }
 
-    public Job getJob(JS7ConverterResult result, JobCMD jilJob) {
+    private void convertYADE(Path outputDir, JS7ConverterResult result) {
+        YADEJobConverter.convert(outputDir);
+    }
+
+    public Job getJob(JS7ConverterResult result, ACommonMachineJob jilJob) {
         Job j = new Job();
         j.setTitle(JS7ConverterHelper.getJS7InventoryObjectTitle(jilJob.getDescription().getValue()));
         j = setFromConfig(j);
@@ -544,7 +563,34 @@ public class Autosys2JS7Converter {
         JS7Agent js7Agent = getAgent(jilJob);
 
         j = JS7AgentHelper.setAgent(j, js7Agent);
-        j = setExecutable(j, jilJob, js7Agent.getPlatform());
+        switch (jilJob.getConverterJobType()) {
+        case CMD:
+            j = ShellJobConverter.setExecutable(j, (JobCMD) jilJob, js7Agent.getPlatform());
+            break;
+        case HTTP:
+            j = RESTJobConverter.setExecutable(j, (JobHTTP) jilJob, js7Agent.getPlatform());
+            break;
+        case FTP:
+            j = YADEJobConverter.setExecutable(j, (JobFTP) jilJob, js7Agent.getPlatform());
+            break;
+        case FTPS:
+            j = YADEJobConverter.setExecutable(j, (JobFTPS) jilJob, js7Agent.getPlatform());
+            break;
+        case SCP:
+            j = YADEJobConverter.setExecutable(j, (JobSCP) jilJob, js7Agent.getPlatform());
+            break;
+        case SQL:
+            j = DBJobConverter.setExecutable(j, (JobSQL) jilJob, js7Agent.getPlatform());
+            break;
+        case WSDOC:
+            j = RESTJobConverter.setExecutable(j, (JobWSDOC) jilJob, js7Agent.getPlatform());
+            break;
+        case NOT_SUPPORTED:
+            j = NotSupportedJobConverter.setExecutable(j, (JobNotSupported) jilJob, js7Agent.getPlatform());
+        default:
+            break;
+        }
+
         j = setJobOptions(j, jilJob);
         return j;
     }
@@ -794,97 +840,7 @@ public class Autosys2JS7Converter {
         return source;
     }
 
-    private Job setExecutable(Job j, JobCMD jilJob, String platform) {
-        boolean isMock = CONFIG.getMockConfig().hasForcedScript();
-        boolean isUnix = platform.equals(Platform.UNIX.name());
-        String commentBegin = isUnix ? "# " : "REM ";
-
-        StringBuilder header = new StringBuilder();
-        if (isMock) {
-            header.append(getScriptBegin("", isUnix)).append(commentBegin).append("Mock mode").append(JS7ConverterHelper.JS7_NEW_LINE);
-        }
-
-        String command = jilJob.getCommand().getValue();
-
-        if (header.length() == 0) {
-            header.append(getScriptBegin(command, isUnix));
-        }
-        StringBuilder script = new StringBuilder(header);
-        if (!SOSString.isEmpty(jilJob.getProfile().getValue())) {
-            if (isMock) {
-                script.append(commentBegin);
-            }
-            String commandPrefix = isUnix ? CONFIG.getJobConfig().getForcedUnixCommandPrefix() : CONFIG.getJobConfig()
-                    .getForcedWindowsCommandPrefix();
-            if (!SOSString.isEmpty(commandPrefix)) {
-                script.append(commandPrefix).append(" ");
-            }
-            script.append(jilJob.getProfile().getValue()).append(JS7ConverterHelper.JS7_NEW_LINE);
-        }
-        if (isMock) {
-            script.append(commentBegin);
-        }
-        script.append(command);
-
-        if (isMock) {
-            script.append(JS7ConverterHelper.JS7_NEW_LINE);
-            String mockScript = isUnix ? CONFIG.getMockConfig().getForcedUnixScript() : CONFIG.getMockConfig().getForcedWindowsScript();
-            if (!SOSString.isEmpty(mockScript)) {
-                script.append(mockScript);
-                script.append(JS7ConverterHelper.JS7_NEW_LINE);
-            }
-        }
-
-        ExecutableScript es = new ExecutableScript();
-        es.setScript(script.toString());
-        es.setV1Compatible(CONFIG.getJobConfig().getForcedV1Compatible());
-        // TODO Check
-        if (jilJob.getFailCodes().getValue() != null) {
-            JobReturnCode rc = new JobReturnCode();
-            rc.setFailure(JS7ConverterHelper.integerListValue(jilJob.getFailCodes().getValue(), ","));
-            es.setReturnCodeMeaning(rc);
-        } else {
-            if (jilJob.getSuccessCodes().getValue() != null) {
-                if (!jilJob.getSuccessCodes().getValue().equals("0")) {
-                    JobReturnCode rc = new JobReturnCode();
-                    rc.setSuccess(JS7ConverterHelper.integerListValue(jilJob.getFailCodes().getValue(), ","));
-                    es.setReturnCodeMeaning(rc);
-                }
-            } else if (jilJob.getMaxExitSuccess().getValue() != null) {
-                try {
-                    List<Integer> l = new ArrayList<>();
-                    for (int i = 0; i <= jilJob.getMaxExitSuccess().getValue().intValue(); i++) {
-                        l.add(Integer.valueOf(i));
-                    }
-                    if (l.size() > 0) {
-                        JobReturnCode rc = new JobReturnCode();
-                        rc.setSuccess(l);
-                        es.setReturnCodeMeaning(rc);
-                    }
-                } catch (Throwable e) {
-                    LOGGER.error("[" + jilJob + "][getMaxExitSuccess]" + e, e);
-                }
-            }
-        }
-        j.setExecutable(es);
-        return j;
-    }
-
-    private String getScriptBegin(String command, boolean isUnix) {
-        if (isUnix) {
-            if (command != null && !command.toString().startsWith("#!/")) {
-                StringBuilder sb = new StringBuilder();
-                if (!SOSString.isEmpty(CONFIG.getJobConfig().getDefaultUnixShebang())) {
-                    sb.append(CONFIG.getJobConfig().getDefaultUnixShebang());
-                    sb.append(JS7ConverterHelper.JS7_NEW_LINE);
-                    return sb.toString();
-                }
-            }
-        }
-        return "";
-    }
-
-    private static Job setJobOptions(Job j, JobCMD jilJob) {
+    private static Job setJobOptions(Job j, ACommonJob jilJob) {
         if (jilJob.getMaxRunAlarm().getValue() != null) {
             j.setWarnIfLonger(String.valueOf(jilJob.getMaxRunAlarm().getValue() * 60));
         }
