@@ -30,8 +30,8 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
-import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
@@ -72,7 +72,7 @@ public class ConverterBOXJobs {
             jobMap.put(job.getName(), (JobBOX) job);
         }
 
-        Map<String, List<JobBOX>> roots = new HashMap<>();
+        //Map<String, List<JobBOX>> roots = new HashMap<>();
 
         for (ACommonJob job : jobs) {
             String rootName = findRoot((JobBOX) job, jobMap);
@@ -87,16 +87,10 @@ public class ConverterBOXJobs {
         return rootBoxes;
     }
 
+    // TODO
     private static String findRoot(JobBOX job, Map<String, JobBOX> jobMap) {
         JobBOX current = job;
-        while (current.getParentBoxName() != null) {
-            JobBOX parent = jobMap.get(current.getParentBoxName());
-            if (parent == null) {
-                // Falls Parent nicht in der Liste ist → behandeln als Root
-                return current.getBoxName();
-            }
-            current = parent;
-        }
+
         return current.getBoxName();
     }
 
@@ -173,9 +167,18 @@ public class ConverterBOXJobs {
         for (ACommonJob j : box.getJobs()) {
             // String jn = normalizeName(result, j, j.getName());
             String jn = JS7ConverterHelper.getJS7ObjectName(j.getName());
-            if (j instanceof JobCMD) {
-                jobs.setAdditionalProperty(jn, converter.getJob(result, (JobCMD) j));
-            } else {
+            switch (j.getConverterJobType()) {
+            case CMD:
+            case HTTP:
+            case FTP:
+            case FTPS:
+            case SCP:
+            case SQL:
+            case WSDOC:
+            case NOT_SUPPORTED:
+                jobs.setAdditionalProperty(jn, converter.getJob(result, (ACommonMachineJob) j));
+                break;
+            default:
                 String add = "[not impemented yet]type=" + j.getConverterJobType();
                 if (ConverterJobType.BOX.equals(j.getConverterJobType())) {
                     add = "[nested BOX detected]type=" + j.getConverterJobType();

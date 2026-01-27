@@ -47,7 +47,7 @@ public class JILJobParser extends AFileParser {
 
     public void writeXMLStart(Path parent, String name) {
         xmlWriter = new XMLWriter(parent, name);
-        xmlWriter.write("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+        xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         xmlWriter.write("<ArrayOfJIL>");
     }
 
@@ -68,14 +68,18 @@ public class JILJobParser extends AFileParser {
             LinkedHashMap<String, String> m = null;
             try (BufferedReader br = new BufferedReader(new FileReader(file.toFile()))) {
                 String line;
+                // int c = 0;
                 while ((line = br.readLine()) != null) {
+                    // c++;
+                    String l = line.trim();
                     if (SOSString.isEmpty(line)) {
                         continue;
                     }
-                    String l = line.trim();
                     if (l.startsWith("/*")) {
                         continue;
                     }
+
+                    // LOGGER.info("LINE=" + c);
 
                     if (l.startsWith("insert_job")) {
                         COUNTER_INSERT_JOB++;
@@ -185,7 +189,6 @@ public class JILJobParser extends AFileParser {
             } catch (Exception e) {
                 LOGGER.error("[SOSPath.deleteIfExists][" + parent + "]" + e.toString(), e);
             }
-            LOGGER.info("[file]" + file);
         }
 
         private void write(String content) {

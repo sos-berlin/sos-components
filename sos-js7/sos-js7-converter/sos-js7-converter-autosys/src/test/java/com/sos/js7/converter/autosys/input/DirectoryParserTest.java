@@ -31,7 +31,8 @@ public class DirectoryParserTest {
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir, reference), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new XMLJobParser(config, reportDir, reference), inputDir,
+                reportDir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);
@@ -46,7 +47,8 @@ public class DirectoryParserTest {
 
         AutosysConverterConfig config = new AutosysConverterConfig();
         Instant start = Instant.now();
-        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir, reference), inputDir);
+        DirectoryParserResult r = DirectoryParser.parse(config.getParserConfig(), new JILJobParser(config, reportDir, reference), inputDir,
+                reportDir);
         LOGGER.info("[parse][duration]" + SOSDate.getDuration(start, Instant.now()));
 
         log(r);

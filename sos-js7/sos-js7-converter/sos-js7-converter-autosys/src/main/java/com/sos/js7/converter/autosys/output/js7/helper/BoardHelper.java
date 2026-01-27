@@ -42,9 +42,9 @@ public class BoardHelper {
     private static final String JS7_AND = " " + JS7ConverterHelper.JS7_NOTICE_AND;
     private static final String JS7_OR = " " + JS7ConverterHelper.JS7_NOTICE_OR;
 
-    // create a ConsumeNotive if condition job is a cyclic job
+    // create a ConsumeNotice if condition job is a cyclic job
     // was true before 2024-10-31 ...
-    private static boolean CYCLIC_TO_COMSUME = false;
+    private static final boolean CYCLIC_TO_COMSUME = false;
 
     public static void clear() {
         JS7_BOARDS.clear();
@@ -231,7 +231,8 @@ public class BoardHelper {
 
                 if (j == null) {
                     if (Autosys2JS7Converter.NOT_CREATE_NOTICES_IF_JOB_NOT_FOUND) {
-                        LOGGER.info("IGNORED BECAUSE JOB NOT FOUND=" + j2c.getCondition());
+                        LOGGER.info("[IGNORED][CONDITION]BECAUSE JOB NOT FOUND][current job=" + currentJob.getName() + "][ignored condition=" + j2c
+                                .getCondition() + "]job not found=" + j2c.getCondition().getJobName());
                         js7Name = null;
                     } else {
                         JS7_BOARDS.put(j2c.getCondition(), Paths.get(js7Name));

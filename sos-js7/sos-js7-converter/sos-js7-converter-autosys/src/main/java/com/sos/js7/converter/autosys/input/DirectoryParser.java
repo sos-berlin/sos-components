@@ -26,20 +26,18 @@ public class DirectoryParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryParser.class);
 
-    public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input) {
+    public static DirectoryParserResult parse(ParserConfig config, AFileParser parser, Path input, Path reportDir) {
         DirectoryParserResult r = new DirectoryParser().new DirectoryParserResult(input, parser.getParserType());
 
         String method = "parse";
         if (Files.exists(input)) {
             try {
                 JILJobParser jilParser = (parser instanceof JILJobParser) ? (JILJobParser) parser : null;
-                Path parent = null;
                 boolean inputIsDirectory = false;
                 if (Files.isDirectory(input)) {
                     inputIsDirectory = true;
                     if (jilParser != null) {
-                        parent = input.getParent();
-                        jilParser.writeXMLStart(parent, input.getFileName().toString());
+                        jilParser.writeXMLStart(reportDir, input.getFileName().toString());
                     }
 
                     try (Stream<Path> stream = Files.walk(input)) {
@@ -57,12 +55,7 @@ public class DirectoryParser {
                     }
                 } else {
                     if (jilParser != null) {
-                        try {
-                            parent = input.getParent().getParent();
-                        } catch (Throwable e) {
-                            parent = input.getParent();
-                        }
-                        jilParser.writeXMLStart(parent, input.getFileName().toString());
+                        jilParser.writeXMLStart(reportDir, input.getFileName().toString());
                         if (parser.acceptFile(input)) {
                             parser.parse(r, input);
                         }
@@ -77,8 +70,8 @@ public class DirectoryParser {
 
                     if (!jilParser.isReferences()) {
 
-                        Report.writeJILParserDuplicatesReport(parent);
-                        Report.writeJILParserMultipleAttributes(parent);
+                        Report.writeJILParserDuplicatesReport(reportDir);
+                        Report.writeJILParserMultipleAttributes(reportDir);
 
                         int totalDuplicates = 0;
                         for (Map.Entry<String, Map<Path, Integer>> e : JILJobParser.INSERT_JOBS.entrySet()) {
@@ -101,10 +94,10 @@ public class DirectoryParser {
                     }
                     JILJobParser.INSERT_JOBS.clear();
 
-                    LOGGER.info("[parse][" + jilParser.getXMLFile() + "]start...");
+                    LOGGER.info("[parse][xml][created by the JS7 converter][" + jilParser.getXMLFile() + "]start...");
                     XMLJobParser xmlParser = new XMLJobParser(jilParser.getConfig(), jilParser.getReportDir(), jilParser.isReferences());
-                    r = DirectoryParser.parse(config, xmlParser, jilParser.getXMLFile());
-                    LOGGER.info("[parse][" + jilParser.getXMLFile() + "]end");
+                    r = DirectoryParser.parse(config, xmlParser, jilParser.getXMLFile(), reportDir);
+                    LOGGER.info("[parse][xml][created by the JS7 converter][" + jilParser.getXMLFile() + "]end");
 
                     if (xmlParser.getSplitConfigurationMainDir() != null) {
                         if (inputIsDirectory) {
@@ -155,6 +148,12 @@ public class DirectoryParser {
         private DirectoryParserResult(Path input, ParserType parserType) {
             this.input = input;
             this.parserType = parserType;
+        }
+
+        public void reset() {
+            jobNames = new HashSet<>();
+            jobs = new ArrayList<>();
+            countFiles = 0;
         }
 
         public void mergeReferences(DirectoryParserResult other) {
@@ -209,10 +208,5 @@ public class DirectoryParser {
             return input;
         }
 
-        public void reset() {
-            jobNames = new HashSet<>();
-            jobs = new ArrayList<>();
-            countFiles = 0;
-        }
     }
 }

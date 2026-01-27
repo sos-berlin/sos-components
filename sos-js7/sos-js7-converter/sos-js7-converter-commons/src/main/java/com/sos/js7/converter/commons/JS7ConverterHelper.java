@@ -865,6 +865,13 @@ public class JS7ConverterHelper {
         return val.replace('\u003C', '\u02C2').replace('\u003E', '\u02C3');
     }
 
+    public static String replaceDoubleSlashBackSlashes(String val) {
+        if (val == null) {
+            return val;
+        }
+        return val.replace("\\\\", "\\").replace("//", "/");
+    }
+
     private static boolean isNumeric(String val) {
         if (val == null) {
             return false;

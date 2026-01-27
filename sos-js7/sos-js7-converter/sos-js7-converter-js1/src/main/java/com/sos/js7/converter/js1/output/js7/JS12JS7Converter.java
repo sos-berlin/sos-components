@@ -412,6 +412,7 @@ public class JS12JS7Converter {
 
             rw.writeLine("Details:");
         }
+        rw.resetLogger();
 
         for (Map.Entry<CalendarType, Map<String, Map<String, Calendar>>> groupedEntry : groupedByType.entrySet()) {
             for (Map.Entry<String, Map<String, Calendar>> entry : new TreeMap<>(groupedEntry.getValue()).entrySet()) {

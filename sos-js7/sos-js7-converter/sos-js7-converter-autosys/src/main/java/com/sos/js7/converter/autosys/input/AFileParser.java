@@ -98,7 +98,16 @@ public abstract class AFileParser {
                 count++;
                 mainJobsDuplicates.put(jobName, count);
             }
-            mainJobs.put(jobName, (JobBOX) job);
+            JobBOX box = (JobBOX) job;
+
+            String parentBox = box.getBox() != null && !box.getBox().getBoxName().isEmpty() ? box.getBox().getBoxName().getValue() : null;
+
+            if (parentBox != null && !jobName.equals(parentBox)) {
+                if (mainJobs.containsKey(parentBox)) {
+                    box.setParentBox(mainJobs.get(parentBox));
+                }
+            }
+            mainJobs.put(jobName, box);
         }
 
         public void addChild(String boxName, ACommonJob job) {

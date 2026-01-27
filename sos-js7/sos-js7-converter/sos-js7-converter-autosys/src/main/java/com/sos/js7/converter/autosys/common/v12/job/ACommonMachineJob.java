@@ -24,7 +24,7 @@ public abstract class ACommonMachineJob extends ACommonJob {
      * For example, 'C\:\tmp' is valid; 'C:\tmp' is not. <br/>
      * <br/>
      * JS7 - 100% - Mapping to Agents. Agent Cluster. No "machine chooser supported" */
-    private SOSArgument<String> machine = new SOSArgument<>(ATTR_MACHINE, true);
+    private SOSArgument<String> machine = new SOSArgument<>(ATTR_MACHINE, false); // false - because used for not supported jobs(JobNotSupported)
 
     /** profile - Specify a Job Profile<br/>
      * This attribute is optional for the following job types: Command(CMD), File Watcher(FW)<br/>

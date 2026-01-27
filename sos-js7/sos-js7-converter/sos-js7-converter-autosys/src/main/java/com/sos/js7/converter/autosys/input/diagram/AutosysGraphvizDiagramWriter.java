@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
@@ -17,17 +20,26 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.common.v12.job.JobCMD;
 import com.sos.js7.converter.autosys.common.v12.job.JobFT;
+import com.sos.js7.converter.autosys.common.v12.job.JobFTP;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
+import com.sos.js7.converter.autosys.common.v12.job.JobHTTP;
+import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
+import com.sos.js7.converter.autosys.common.v12.job.JobSCP;
+import com.sos.js7.converter.autosys.common.v12.job.JobSQL;
 import com.sos.js7.converter.autosys.common.v12.job.attr.condition.Condition;
+import com.sos.js7.converter.autosys.common.v12.job.custom.JobWSDOC;
 import com.sos.js7.converter.autosys.config.items.AutosysDiagramConfig;
 import com.sos.js7.converter.autosys.input.AFileParser;
 import com.sos.js7.converter.autosys.input.analyzer.AutosysAnalyzer;
+import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.input.diagram.AGraphvizDiagramWriter;
 
 public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutosysGraphvizDiagramWriter.class);
 
     public enum Range {
         original, optimizeDependencies
@@ -156,7 +168,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
 
         if (prepareContent(standaloneJob)) {
             this.outputPath = PathResolver.getJILMainOutputPath(outputDirectory, standaloneJob, true, AFileParser.EXPORT_FILE_PREFIX_STANDALONE);
-            // LOGGER.info("[createDiagram][" + range + "][standaloneJob]" + outputPath);
+            LOGGER.debug("[createDiagram][" + range + "][standaloneJob]" + outputPath);
 
             return createDiagram(config, range.name(), outputPath, standaloneJob.getName());
         }
@@ -215,7 +227,9 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         StringBuilder c = getFolderContent(jobs);
 
         if (Range.optimizeDependencies.equals(this.range)) {
-            jobs = analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(jobs);
+            if (Autosys2JS7Converter.OPTIMIZE_STANDALONE_JOBS_CONDITIONS) {
+                jobs = analyzer.getConditionAnalyzer().handleStandaloneJobsConditions(jobs);
+            }
         }
 
         for (ACommonJob j : jobs) {
@@ -258,7 +272,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         String fullName;
         boolean onlyFolderInfo = standaloneJobsSize > -1;
 
-        String parentBoxName = null;
+        String parentBoxPath = null;
         if (box == null) {
             folderType = "Standalone";
             app = getJILApplication(standaloneJob);
@@ -279,7 +293,7 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             group = getJILGroup(box);
             description = box.getDescription().getValue();
             name = box.getName();
-            parentBoxName = box.getParentBoxName();
+            parentBoxPath = box.getParentBoxPath();
 
             this.folder = PathResolver.getJILJobParentPathNormalized(box);
             fullName = box.getJobFullPathFromJILDefinition().toString();
@@ -293,12 +307,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
         StringBuilder tableBox = new StringBuilder();
         tableBox.append("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">").append(NEW_LINE);
 
-        if (parentBoxName != null) {
+        if (parentBoxPath != null) {
             tableBox.append("  <tr>");
             tableBox.append("<td align=\"left\" width=\"80px\">").append(getWithFont(folderType + " parent")).append("&nbsp;</td>");
             tableBox.append("<td align=\"left\" colspan=\"3\">");
             tableBox.append("<b><i>");
-            tableBox.append(getWithFont(parentBoxName));
+            tableBox.append(getWithFont(parentBoxPath));
             tableBox.append("</i></b>");
             tableBox.append("</td>");
             tableBox.append("</tr>").append(NEW_LINE);
@@ -887,10 +901,80 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
             writeJobRow(sb, fw.getWatchFile());
             writeJobRow(sb, fw.getWatchInterval());
             break;
+        case HTTP:
+            JobHTTP http = (JobHTTP) job;
+            writeJobRow(sb, http.getProviderUrl());
+            writeJobRow(sb, http.getInvocationType());
+            writeJobRow(sb, http.getRequestBody());
+            writeJobRow(sb, http.getContentType());
+            writeJobRow(sb, http.getTimeout());
+            writeJobRow(sb, http.getResponseFile());
+            writeJobRow(sb, http.getReturnCode());
+            writeJobRow(sb, http.getJ2eeConnUser());
+            writeJobRow(sb, http.getJ2eeNoGlobalProxyDefaults());
+            writeJobRow(sb, http.getJ2eeAuthenticationOrder());
+            writeJobRow(sb, http.getJ2eeProxyPort());
+            break;
+        case FTP:
+        case FTPS:
+            JobFTP ftp = (JobFTP) job;
+            writeJobRow(sb, ftp.getFtpUseSsl());
+            writeJobRow(sb, ftp.getFtpSslMode());
+            writeJobRow(sb, ftp.getFtpTransferType());
+            writeJobRow(sb, ftp.getFtpTransferDirection());
+            writeJobRow(sb, ftp.getFtpLocalName());
+            writeJobRow(sb, ftp.getFtpRemoteName());
+            writeJobRow(sb, ftp.getFtpServerName());
+            writeJobRow(sb, ftp.getFtpServerPort());
+            writeJobRow(sb, ftp.getFtpServerUser());
+            writeJobRow(sb, ftp.getFtpLocalUser());
+            writeJobRow(sb, ftp.getFtpUserType());
+            break;
+        case SCP:
+            JobSCP scp = (JobSCP) job;
+            writeJobRow(sb, scp.getScpTargetOs());
+            writeJobRow(sb, scp.getScpProtocol());
+            writeJobRow(sb, scp.getScpTransferDirection());
+            writeJobRow(sb, scp.getScpServerName());
+            writeJobRow(sb, scp.getScpServerPort());
+            writeJobRow(sb, scp.getScpRemoteDir());
+            writeJobRow(sb, scp.getScpRemoteName());
+            writeJobRow(sb, scp.getScpLocalName());
+            writeJobRow(sb, scp.getScpLocalUser());
+            writeJobRow(sb, scp.getScpDeleteSourcedir());
+            break;
+        case SQL:
+            JobSQL sql = (JobSQL) job;
+            writeJobRow(sb, sql.getConnectString());
+            writeJobRow(sb, sql.getSqlCommand());
+            writeJobRow(sb, sql.getDestinationFile());
+            break;
+        case WSDOC:
+            JobWSDOC wsdoc = (JobWSDOC) job;
+            writeJobRow(sb, wsdoc.getEndpointUrl());
+            writeJobRow(sb, wsdoc.getWsdlUrl());
+            writeJobRow(sb, wsdoc.getWsdlOperation());
+            writeJobRow(sb, wsdoc.getServiceName());
+            writeJobRow(sb, wsdoc.getPortName());
+            writeJobRow(sb, wsdoc.getWsGlobalProxyDefaults());
+            writeJobRow(sb, wsdoc.getWsParameters());
+            break;
         case NOT_SUPPORTED:
             sb.append("  <tr>");
-            sb.append("<td align=\"left\" colspan=\"4\">NOT SUPPORTED").append("</td>");
+            sb.append("<td align=\"left\" colspan=\"4\"><b>NOT SUPPORTED</b>").append("</td>");
             sb.append("</tr>").append(NEW_LINE);
+
+            JobNotSupported ns = (JobNotSupported) job;
+            if (ns.getUnknown() != null) {
+                for (SOSArgument<String> a : ns.getUnknown()) {
+                    writeJobRow(sb, a);
+                }
+
+                sb.append("  <tr>");
+                sb.append("<td align=\"left\" colspan=\"4\">&nbsp;").append("</td>");
+                sb.append("</tr>").append(NEW_LINE);
+            }
+
             break;
         case OMTF:
             JobOMTF omtf = (JobOMTF) job;
