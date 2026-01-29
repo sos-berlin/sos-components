@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.hierynomus.protocol.transport.TransportException;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSClassUtil;
@@ -55,6 +56,11 @@ import net.schmizz.sshj.xfer.FileSystemFile;
 
 public class SSHJProvider extends SSHProvider {
 
+    /** Maximum number of concurrent (unconfirmed) SFTP WRITE/READ requests allowed to be in flight.<br/>
+     * Used to pipeline writes and improve throughput on high-latency connections. */
+    private static final int REMOTE_FILE_MAX_UNCONFIRMED_WRITES = 16;
+    private static final int REMOTE_FILE_MAX_UNCONFIRMED_READS = 16;
+
     private SSHClient sshClient;
     private Map<String, Command> commands = new ConcurrentHashMap<>();
     private boolean reusableResourceEnabled;
@@ -92,10 +98,13 @@ public class SSHJProvider extends SSHProvider {
 
             // creates a shared SFTPClient by default
             enableReusableResource();
-        } catch (Throwable e) {
-            if (isConnected()) {
-                disconnect();
-            }
+        } catch (Exception e) {
+            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+            // error in methods executed after connect() - e.g. if retry, roll back...
+            // Call disconnect() in the application's finally block.
+            // if (isConnected()) {
+            // disconnect();
+            // }
             throw new ProviderConnectException(String.format("%s[%s]", getLogPrefix(), getAccessInfo()), e);
         }
     }
@@ -156,7 +165,7 @@ public class SSHJProvider extends SSHProvider {
             } else {
                 return SSHJProviderUtils.exists(reusable.getSFTPClient(), path);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -189,7 +198,7 @@ public class SSHJProvider extends SSHProvider {
                 }
                 return true;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
 
@@ -214,7 +223,7 @@ public class SSHJProvider extends SSHProvider {
             }
         } catch (SOSNoSuchFileException e) {
             return false;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
@@ -237,16 +246,16 @@ public class SSHJProvider extends SSHProvider {
             }
         } catch (SOSNoSuchFileException e) {
             return false;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
     }
 
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
-    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
-        validatePrerequisites("renameFileIfSourceExists", source, "source");
-        validateArgument("renameFileIfSourceExists", target, "target");
+    public boolean moveFileIfExists(String source, String target) throws ProviderException {
+        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", target, "target");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
@@ -266,7 +275,7 @@ public class SSHJProvider extends SSHProvider {
                 }
                 return false;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
     }
@@ -326,7 +335,7 @@ public class SSHJProvider extends SSHProvider {
             } else {
                 SSHJProviderUtils.uploadContent(reusable.getSFTPClient(), path, content);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -346,47 +355,87 @@ public class SSHJProvider extends SSHProvider {
             } else {
                 SSHJProviderUtils.setFileLastModifiedFromMillis(reusable.getSFTPClient(), path, milliseconds);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
+    }
+
+    /** Overrides {@link IProvider#supportsReadOffset()} */
+    public boolean supportsReadOffset() {
+        return true;
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws ProviderException {
+        return getInputStream(path, 0L);
+    }
+
+    /** Overrides {@link IProvider#getInputStream(String, long)} */
+    @Override
+    public InputStream getInputStream(String path, long offset) throws ProviderException {
         validatePrerequisites("getInputStream", path, "path");
 
-        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         SSHJProviderReusableResource reusable = getReusableResource();
         final boolean closeSFTPClient = reusable == null;
+
+        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        final AtomicReference<RemoteFile> remoteFileRef = new AtomicReference<>();
         try {
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
-
             sftpRef.set(sftpClient);
-            RemoteFile remoteFile = sftpRef.get().open(path);
-            return remoteFile.new ReadAheadRemoteFileInputStream(16) {
 
-                private final AtomicBoolean close = new AtomicBoolean();
+            RemoteFile remoteFile = sftpRef.get().open(path);
+            remoteFileRef.set(remoteFile);
+            return remoteFile.new ReadAheadRemoteFileInputStream(REMOTE_FILE_MAX_UNCONFIRMED_READS, offset) {
+
+                private final AtomicBoolean closed = new AtomicBoolean();
 
                 @Override
                 public void close() throws IOException {
-                    if (close.get()) {
+                    if (closed.getAndSet(true)) {
                         return;
                     }
+
+                    IOException exception = null;
+                    // 1) close the stream (ReadAheadRemoteFileInputStream)
                     try {
                         super.close();
-                    } finally {
-                        SOSClassUtil.closeQuietly(remoteFile);
-                        if (closeSFTPClient) {
-                            SOSClassUtil.closeQuietly(sftpRef.get());
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 2) close remote file
+                    try {
+                        SOSClassUtil.close(remoteFileRef.getAndSet(null));
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 3) close sftp client
+                    if (closeSFTPClient) {
+                        try {
+                            SOSClassUtil.close(sftpRef.getAndSet(null));
+                        } catch (IOException e) {
+                            exception = SOSException.mergeException(exception, e);
                         }
-                        close.set(true);
+                    }
+
+                    if (exception != null) {
+                        throw exception;
                     }
                 }
             };
-        } catch (Throwable e) {
+        } catch (Exception e) {
+            try {
+                SOSClassUtil.close(remoteFileRef.getAndSet(null));
+            } catch (IOException ex) {
+                e = SOSException.mergeException(e, ex);
+            }
             if (closeSFTPClient) {
-                SOSClassUtil.closeQuietly(sftpRef.get());
+                try {
+                    SOSClassUtil.close(sftpRef.getAndSet(null));
+                } catch (IOException ex) {
+                    e = SOSException.mergeException(e, ex);
+                }
             }
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -397,44 +446,72 @@ public class SSHJProvider extends SSHProvider {
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
         validatePrerequisites("getOutputStream", path, "path");
 
-        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         SSHJProviderReusableResource reusable = getReusableResource();
         final boolean closeSFTPClient = reusable == null;
+
+        final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
+        final AtomicReference<RemoteFile> remoteFileRef = new AtomicReference<>();
         try {
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
-
             sftpRef.set(sftpClient);
+
             EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT);
             if (append) {
                 mode.add(OpenMode.APPEND);
             } else {
-                // transferMode = ChannelSftp.RESUME; //TODO?
                 mode.add(OpenMode.TRUNC);
             }
             RemoteFile remoteFile = sftpRef.get().open(path, mode);
-            return remoteFile.new RemoteFileOutputStream(0, 16) {
+            remoteFileRef.set(remoteFile);
+            return remoteFile.new RemoteFileOutputStream(0, REMOTE_FILE_MAX_UNCONFIRMED_WRITES) {
 
-                private final AtomicBoolean close = new AtomicBoolean();
+                private final AtomicBoolean closed = new AtomicBoolean();
 
                 @Override
                 public void close() throws IOException {
-                    if (close.get()) {
+                    if (closed.getAndSet(true)) {
                         return;
                     }
+
+                    // 1) close the stream (RemoteFileOutputStream)
+                    IOException exception = null;
                     try {
                         super.close();
-                    } finally {
-                        SOSClassUtil.closeQuietly(remoteFile);
-                        if (closeSFTPClient) {
-                            SOSClassUtil.closeQuietly(sftpRef.get());
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 2) close remote file
+                    try {
+                        SOSClassUtil.close(remoteFileRef.getAndSet(null));
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 3) close sftp client
+                    if (closeSFTPClient) {
+                        try {
+                            SOSClassUtil.close(sftpRef.getAndSet(null));
+                        } catch (IOException e) {
+                            exception = SOSException.mergeException(exception, e);
                         }
-                        close.set(true);
+                    }
+
+                    if (exception != null) {
+                        throw exception;
                     }
                 }
             };
-        } catch (Throwable e) {
+        } catch (Exception e) {
+            try {
+                SOSClassUtil.close(remoteFileRef.getAndSet(null));
+            } catch (IOException ex) {
+                e = SOSException.mergeException(e, ex);
+            }
             if (closeSFTPClient) {
-                SOSClassUtil.closeQuietly(sftpRef.get());
+                try {
+                    SOSClassUtil.close(sftpRef.getAndSet(null));
+                } catch (IOException ex) {
+                    e = SOSException.mergeException(e, ex);
+                }
             }
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -534,7 +611,7 @@ public class SSHJProvider extends SSHProvider {
     @Override
     public void validatePrerequisites(String method) throws ProviderException {
         if (sshClient == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "SSHClient");
+            throw new ProviderClientNotInitializedException(getLogPrefix(), SSHClient.class, method);
         }
     }
 
@@ -588,7 +665,7 @@ public class SSHJProvider extends SSHProvider {
                 SSHJProviderUtils.put(reusable.getSFTPClient(), source, target);
                 reusable.getSFTPClient().chmod(target, perm);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
         }
     }
@@ -605,7 +682,7 @@ public class SSHJProvider extends SSHProvider {
             } else {
                 SSHJProviderUtils.put(reusable.getSFTPClient(), source, target);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
@@ -622,7 +699,7 @@ public class SSHJProvider extends SSHProvider {
             } else {
                 reusable.getSFTPClient().get(reusable.getSFTPClient().canonicalize(source), new FileSystemFile(target));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
     }
@@ -748,7 +825,7 @@ public class SSHJProvider extends SSHProvider {
             for (Map.Entry<String, String> entry : env.getGlobalEnvs().entrySet()) {
                 try {
                     session.setEnvVar(entry.getKey(), entry.getValue());
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     throw new Exception(String.format("[can't set ssh session environment variable][%s=%s]%s", entry.getKey(), entry.getValue(), e
                             .toString()), e);
                 }

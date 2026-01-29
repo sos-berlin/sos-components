@@ -1,8 +1,7 @@
 package com.sos.yade.engine.commons.helpers;
 
-import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -13,14 +12,19 @@ import com.sos.yade.engine.exceptions.YADEEngineTargetConnectionException;
 
 public class YADEProviderDelegatorHelper {
 
-    public static void ensureConnected(ISOSLogger logger, AYADEProviderDelegator delegator) throws YADEEngineConnectionException {
+    public static void ensureConnected(ISOSLogger logger, AYADEProviderDelegator delegator, final RetryOnConnectionError retry)
+            throws YADEEngineConnectionException {
+        ensureConnected(logger, delegator, null, retry);
+    }
+
+    public static void ensureConnected(ISOSLogger logger, AYADEProviderDelegator delegator, String action, final RetryOnConnectionError retry)
+            throws YADEEngineConnectionException {
         if (delegator == null) {
             return;
         }
 
-        YADESourceTargetArguments args = delegator.getArgs();
         // without retry
-        if (!args.isRetryOnConnectionErrorEnabled()) {
+        if (!retry.isEnabled()) {
             try {
                 delegator.getProvider().ensureConnected();
             } catch (Exception e) {
@@ -30,18 +34,18 @@ public class YADEProviderDelegatorHelper {
         }
 
         // with retry
-        int maxRetries = args.getConnectionErrorRetryCountMax().getValue().intValue();
-        long retryInterval = SOSArgumentHelper.asSeconds(args.getConnectionErrorRetryInterval(), 0L);
-        for (int retryCounter = 0; retryCounter <= maxRetries; retryCounter++) {
+        for (int retryCounter = 0; retryCounter <= retry.getMaxRetries(); retryCounter++) {
             try {
                 delegator.getProvider().ensureConnected();
                 return;
             } catch (Exception e) {
-                if (retryCounter == maxRetries) {
+                if (retryCounter == retry.getMaxRetries()) {
                     throwConnectionException(delegator, e);
                 }
-                logger.info("[%s]retry=%s of %s in %ss due to %s", delegator.getLabel(), (retryCounter + 1), maxRetries, retryInterval, e.toString());
-                YADEClientHelper.waitFor(retryInterval);
+                String actionLog = action == null ? "" : "[" + action + "]";
+                logger.info("[%s]%s[Retry=%s/%s starts in %ss]due to %s", delegator.getLabel(), actionLog, (retryCounter + 1), retry.getMaxRetries(),
+                        retry.getInterval(), e.toString());
+                YADEClientHelper.waitFor(retry.getInterval());
             }
         }
     }

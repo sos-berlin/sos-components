@@ -1,10 +1,9 @@
 package com.sos.commons.exception;
 
-
 public class SOSException extends Exception {
 
     private static final long serialVersionUID = 1L;
-    
+
     public SOSException() {
         super();
     }
@@ -12,16 +11,24 @@ public class SOSException extends Exception {
     public SOSException(String message) {
         super(message);
     }
-    
+
     public SOSException(Throwable cause) {
         super(cause);
     }
-    
+
     public SOSException(String message, Throwable cause) {
         super(message, cause);
     }
 
     public SOSException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public static <T extends Throwable> T mergeException(T primary, T secondary) {
+        if (primary != null && secondary != null) {
+            primary.addSuppressed(secondary);
+            return primary;
+        }
+        return secondary != null ? secondary : primary;
     }
 }

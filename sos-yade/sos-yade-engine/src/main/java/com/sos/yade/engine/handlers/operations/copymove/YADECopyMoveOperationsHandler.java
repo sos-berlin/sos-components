@@ -17,6 +17,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEParallelExecutorFactory;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
@@ -75,22 +76,10 @@ public class YADECopyMoveOperationsHandler {
     private static void processFiles(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, boolean useCumulativeTargetFile,
             AtomicBoolean cancel) throws Exception {
-        try {
-            if (config.processFilesSequentially()) {
-                processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile,
-                        cancel);
-            } else {
-                processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, cancel);
-            }
-        } catch (Throwable e) {
-            throw e;
-        } finally {
-            // re-connect - e.g. for rollback, after operation commands...
-            if (config.isTransactionalEnabled() || sourceDelegator.getArgs().getCommands().isPostProcessingOnOperationErrorEnabled()
-                    || targetDelegator.getArgs().getCommands().isPostProcessingOnOperationErrorEnabled()) {
-                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator);
-                YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator);
-            }
+        if (config.processFilesSequentially()) {
+            processFilesSequentially(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, useCumulativeTargetFile, cancel);
+        } else {
+            processFilesInParallel(logger, config, sourceDelegator, targetDelegator, sourceFiles, isMoveOperation, cancel);
         }
     }
 
@@ -246,11 +235,21 @@ public class YADECopyMoveOperationsHandler {
             return;
         }
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
+        logger.info("* Transactional rollback");
+        logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
+
+        // try to reconnect (only target), because the operation is transactional and multiple files may need to be rolled back using the current connection
+        try {
+            YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, "rollback", config.getRetry());
+        } catch (YADEEngineConnectionException e) {
+            logger.error("[%s][rollback]%s", targetDelegator.getLabel(), e.toString());
+            return;
+        }
 
         boolean isJumpHostRollback = false;
         if (targetDelegator.isJumpHost()) {
             // Source(Any Provider) -> Jump(SSHProvider)
-            logger.info("[" + targetDelegator.getLabel() + "]rollback");
+            // logger.info("[" + targetDelegator.getLabel() + "]rollback");
             isJumpHostRollback = true;
         }
 
@@ -302,8 +301,7 @@ public class YADECopyMoveOperationsHandler {
 
         // 5) the targetFile may have already been renamed to the final name or may still be a file with the atomic suffix/prefix
         // - note for "if compress": all names already contain the compress extension
-        String targetFilePath = TransferEntryState.RENAMED.equals(targetFile.getSubState()) ? targetFile.getFinalFullPath() : targetFile
-                .getFullPath();
+        String targetFilePath = targetFile.getCurrentFullPath();
 
         // 6) delete targetFile
         try {
@@ -328,12 +326,6 @@ public class YADECopyMoveOperationsHandler {
 
     private static void rollbackNonTransactional(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, YADEProviderFile f, boolean useCumulativeTargetFile, Throwable ex) {
-
-        if (ex != null) {
-            String msg = ex.getMessage() == null ? ex.toString() : ex.getMessage();
-            logger.warn(msg, ex.getCause());
-        }
-
         // rollback not possible - see YADEFileHandler.run() - transfer end - Move operation already performed, Source already renamed etc
         if (TransferEntryState.MOVED.equals(f.getState()) || TransferEntryState.RENAMED.equals(f.getState())) {
             return;
@@ -344,6 +336,8 @@ public class YADECopyMoveOperationsHandler {
             // YADETargetCumulativeFileHelper.rollback(logger, config, targetDelegator);
             return;
         }
+
+        // do not attempt to reconnect, as the operation is non-transactional and no rollback is required
         rollbackFile(logger, config, targetDelegator, targetDelegator.isJumpHost(), f);
     }
 

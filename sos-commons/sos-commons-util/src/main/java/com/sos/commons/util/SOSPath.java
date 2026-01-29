@@ -351,8 +351,10 @@ public class SOSPath {
         }
     }
 
-    public static void renameTo(final Path source, final Path target) throws IOException {
-        LOGGER.debug("..trying to move File " + source.toString() + " to " + target.toString());
+    public static void move(final Path source, final Path target) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("..trying to move File " + source.toString() + " to " + target.toString());
+        }
         if (!Files.exists(target)) {
             try {
                 Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
@@ -364,8 +366,8 @@ public class SOSPath {
         }
     }
 
-    public static void renameTo(final String source, final String target) throws IOException {
-        renameTo(SOSPath.toAbsolutePath(source), SOSPath.toAbsolutePath(target));
+    public static void move(final String source, final String target) throws IOException {
+        move(SOSPath.toAbsolutePath(source), SOSPath.toAbsolutePath(target));
     }
 
     public static String subFileMask(final String filespec, final String substitute) throws IOException {

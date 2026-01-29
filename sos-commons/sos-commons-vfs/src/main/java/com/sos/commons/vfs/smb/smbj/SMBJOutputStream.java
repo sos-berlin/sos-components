@@ -5,6 +5,7 @@ import java.io.OutputStream;
 
 import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.util.SOSClassUtil;
 
 public class SMBJOutputStream extends OutputStream {
@@ -45,11 +46,40 @@ public class SMBJOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        SOSClassUtil.closeQuietly(os);
-        SOSClassUtil.closeQuietly(file);
-        if (closeShare) {
-            SOSClassUtil.closeQuietly(share);
+        IOException exception = null;
+
+        // 1) close os
+        try {
+            SOSClassUtil.close(os);
+        } catch (IOException e) {
+            exception = SOSException.mergeException(exception, e);
         }
-        super.close();
+        // 2) close file
+        try {
+            SOSClassUtil.close(file);
+        } catch (IOException e) {
+            exception = SOSException.mergeException(exception, e);
+        }
+        // 3) close share
+        if (closeShare) {
+            try {
+                SOSClassUtil.close(share);
+            } catch (IOException e) {
+                exception = SOSException.mergeException(exception, e);
+            } catch (Exception e) {
+                exception = SOSException.mergeException(exception, new IOException(e));
+            }
+        }
+        // 4) super.close() is called for completeness.
+        // OutputStream.close() is a no-op today, but subclasses may override it.
+        try {
+            super.close();
+        } catch (IOException e) {
+            exception = SOSException.mergeException(exception, e);
+        }
+
+        if (exception != null) {
+            throw exception;
+        }
     }
 }

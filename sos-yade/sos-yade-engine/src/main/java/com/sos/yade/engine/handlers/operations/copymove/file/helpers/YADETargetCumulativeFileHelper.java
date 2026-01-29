@@ -63,7 +63,7 @@ public class YADETargetCumulativeFileHelper {
         if (config.getTarget().getCumulate().getFile().needsRename()) {
             if (config.getTarget().isDeleteCumulativeFileEnabled()) {
                 if (config.getTarget().getCompress() == null) {
-                    targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
+                    targetDelegator.getProvider().moveFileIfExists(transferPath, finalPath);
                 } else {
                     compress(logger, config, targetDelegator, transferPath, finalPath);
                     targetDelegator.getProvider().deleteFileIfExists(transferPath);
@@ -88,7 +88,7 @@ public class YADETargetCumulativeFileHelper {
                     logger.info("[%s][%s][%s]updated", targetDelegator.getLabel(), LABEL, finalPath);
                 } else {
                     if (config.getTarget().getCompress() == null) {
-                        targetDelegator.getProvider().renameFileIfSourceExists(transferPath, finalPath);
+                        targetDelegator.getProvider().moveFileIfExists(transferPath, finalPath);
                     } else {
                         compress(logger, config, targetDelegator, transferPath, finalPath);
                         targetDelegator.getProvider().deleteFileIfExists(transferPath);

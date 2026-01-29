@@ -102,18 +102,10 @@ public class YADEXMLGeneralHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "RetryCountMax":
-                    argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryCountMax(), n);
-                    if (argsLoader.getTargetArgs() != null) {
-                        argsLoader.getTargetArgs().getConnectionErrorRetryCountMax().setValue(argsLoader.getSourceArgs()
-                                .getConnectionErrorRetryCountMax().getValue());
-                    }
+                    argsLoader.setIntegerArgumentValue(argsLoader.getArgs().getConnectionErrorRetryCountMax(), n);
                     break;
                 case "RetryInterval":
-                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getConnectionErrorRetryInterval(), n);
-                    if (argsLoader.getTargetArgs() != null) {
-                        argsLoader.getTargetArgs().getConnectionErrorRetryInterval().setValue(argsLoader.getSourceArgs()
-                                .getConnectionErrorRetryInterval().getValue());
-                    }
+                    argsLoader.setStringArgumentValue(argsLoader.getArgs().getConnectionErrorRetryInterval(), n);
                     break;
                 }
             }

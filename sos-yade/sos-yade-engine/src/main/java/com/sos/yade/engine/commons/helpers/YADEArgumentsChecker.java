@@ -97,8 +97,14 @@ public class YADEArgumentsChecker {
             throw new YADEEngineInitializationException("Missing Target Arguments");
         }
         // adjust
-        if (!targetArgs.getCumulativeFileName().isEmpty()) {
+        if (targetArgs.isCumulateFilesEnabled()) {
             replaceExpressions(logger, YADETargetArguments.LABEL, targetArgs.getCumulativeFileName());
+
+            if (args.isParallelismEnabled()) {
+                args.getParallelism().setValue(Integer.valueOf(1));
+                logger.info("[%s][%s]due to %s", YADEArguments.LABEL, YADEArgumentsHelper.toString(args.getParallelism()), YADEArgumentsHelper
+                        .toString(targetArgs.getCumulativeFileName()));
+            }
         }
 
         if (!sourceArgs.isSingleFilesSelection() && targetArgs.getDirectory().isEmpty()) {
@@ -130,6 +136,25 @@ public class YADEArgumentsChecker {
                 targetArgs.getOverwriteFiles().setValue(Boolean.valueOf(true));
                 logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toStringAsOppositeValue(targetArgs
                         .getOverwriteFiles()), YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+            }
+
+            // see YADETargetArguments.isResumeFilesEnabled()
+            if (targetArgs.getResumeFiles().isTrue()) {
+                targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
+                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
+                        YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+            }
+        }
+        // see YADETargetArguments.isResumeFilesEnabled()
+        if (targetArgs.getResumeFiles().isTrue()) {
+            if (!args.getRetryOnConnectionError().isEnabled()) {
+                targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
+                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
+                        YADEArgumentsHelper.toString(args.getConnectionErrorRetryCountMax()));
+            } else if (targetArgs.isCompressFilesEnabled()) {
+                targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
+                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
+                        YADEArgumentsHelper.toString(targetArgs.getCompressedFileExtension()));
             }
         }
 

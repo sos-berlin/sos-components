@@ -119,7 +119,7 @@ public class YADEFileActionsExecuter {
 
         YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, sourceFile, isSource);
 
-        if (delegator.getProvider().renameFileIfSourceExists(oldPath, newPath)) {
+        if (delegator.getProvider().moveFileIfExists(oldPath, newPath)) {
             // for error tests
             // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
 

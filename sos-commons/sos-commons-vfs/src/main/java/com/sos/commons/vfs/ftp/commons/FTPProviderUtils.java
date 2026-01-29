@@ -52,7 +52,7 @@ public class FTPProviderUtils {
         }
     }
 
-    public static FTPFile getFTPFile(String caller, FTPClient client, String path) throws Exception {
+    public static FTPFile getFTPFileIfExists(String caller, FTPClient client, String path) throws Exception {
         if (client == null || path == null) {
             return null;
         }

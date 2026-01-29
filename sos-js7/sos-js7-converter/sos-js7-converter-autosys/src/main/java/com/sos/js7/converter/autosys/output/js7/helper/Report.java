@@ -2147,7 +2147,7 @@ public class Report {
     public static void moveJILReportFiles(Path reportDir) {
         if (FILE_JIL_PARSER_DUPLICATES != null && Files.exists(FILE_JIL_PARSER_DUPLICATES)) {
             try {
-                SOSPath.renameTo(FILE_JIL_PARSER_DUPLICATES, reportDir.resolve(FILE_JIL_PARSER_DUPLICATES.getFileName()));
+                SOSPath.move(FILE_JIL_PARSER_DUPLICATES, reportDir.resolve(FILE_JIL_PARSER_DUPLICATES.getFileName()));
             } catch (IOException e) {
                 LOGGER.error("[moveJILReportFiles][" + FILE_JIL_PARSER_DUPLICATES + "]" + e, e);
             }

@@ -39,7 +39,7 @@ public class SSHJProviderUtils {
             if (attr != null) {
                 return type.equals(attr.getType());
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (logger.isDebugEnabled()) {
                 logger.debug("%s[is][%s][type=%s]%s", logPrefix, path, type, e.toString());
             }

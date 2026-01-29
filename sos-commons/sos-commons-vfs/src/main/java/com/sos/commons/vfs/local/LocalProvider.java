@@ -3,6 +3,8 @@ package com.sos.commons.vfs.local;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -63,7 +65,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
     /** Overrides {@link IProvider#connect())} */
     @Override
     public void connect() throws ProviderConnectException {
-        getLogger().info(getAccessInfo());
+        getLogger().info(getConnectedMsg());
     }
 
     /** Overrides {@link IProvider#isConnected()} */
@@ -115,7 +117,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             return exists(getAbsoluteNormalizedPath(path));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -135,7 +137,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
                 getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
             }
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -147,7 +149,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             return SOSPath.deleteIfExists(getAbsoluteNormalizedPath(path));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -159,25 +161,25 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             return Files.deleteIfExists(getAbsoluteNormalizedPath(path));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
-    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
-        validateArgument("renameFileIfSourceExists", source, "source");
-        validateArgument("renameFileIfSourceExists", target, "target");
+    public boolean moveFileIfExists(String source, String target) throws ProviderException {
+        validateArgument("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", target, "target");
 
         try {
             Path p = getAbsoluteNormalizedPath(source);
             if (exists(p)) {
-                SOSPath.renameTo(p, getAbsoluteNormalizedPath(target));
+                SOSPath.move(p, getAbsoluteNormalizedPath(target));
                 return true;
             }
             return false;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
     }
@@ -221,7 +223,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             SOSPath.overwrite(getAbsoluteNormalizedPath(path), content);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -234,20 +236,36 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
         try {
             SOSPath.setLastModifiedFromMillis(path, milliseconds);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
+    }
+
+    /** Overrides {@link IProvider#supportsReadOffset()} */
+    public boolean supportsReadOffset() {
+        return false;
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws ProviderException {
+        return getInputStream(path, 0L);
+    }
+
+    /** Overrides {@link IProvider#getInputStream(String, long)} */
+    @Override
+    public InputStream getInputStream(String path, long offset) throws ProviderException {
         validateArgument("getInputStream", path, "path");
 
         try {
-            return Files.newInputStream(getAbsoluteNormalizedPath(path));
-            // return new FileInputStream(getPath(path).toFile());
-        } catch (Throwable e) {
+            if (offset <= 0) {
+                return Files.newInputStream(getAbsoluteNormalizedPath(path));
+            }
+
+            FileChannel channel = FileChannel.open(getAbsoluteNormalizedPath(path), StandardOpenOption.READ);
+            channel.position(offset);
+            return Channels.newInputStream(channel);
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -264,8 +282,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
             } else {
                 return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             }
-            // return new FileOutputStream(getPath(path).toFile(), append);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }

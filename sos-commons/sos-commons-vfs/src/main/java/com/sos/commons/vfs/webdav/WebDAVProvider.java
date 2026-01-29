@@ -24,6 +24,8 @@ import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderUtils;
 import com.sos.commons.vfs.webdav.commons.WebDAVResource;
 
+/** @implNote WebDAVProvider class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying connection or
+ *           transport errors */
 public class WebDAVProvider extends HTTPProvider {
 
     public WebDAVProvider(ISOSLogger logger, WebDAVProviderArguments args) throws ProviderInitializationException {
@@ -53,7 +55,7 @@ public class WebDAVProvider extends HTTPProvider {
 
         try {
             return WebDAVProviderUtils.exists(getClient(), new URI(normalizePath(path)));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -91,16 +93,16 @@ public class WebDAVProvider extends HTTPProvider {
             // create given directory
             WebDAVProviderUtils.createDirectory(this, uri);
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
-    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
-        validatePrerequisites("renameFileIfSourceExists", source, "source");
-        validateArgument("renameFileIfSourceExists", target, "target");
+    public boolean moveFileIfExists(String source, String target) throws ProviderException {
+        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", target, "target");
         try {
             URI sourceURI = new URI(normalizePath(source));
             URI targetURI = new URI(normalizePath(target));
@@ -113,10 +115,13 @@ public class WebDAVProvider extends HTTPProvider {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             return true;
-        } catch (Throwable e) {
+        } catch (IOException e) {
+            throwProviderConnectException(source + "->" + target, e);
+            return false;
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
     }
@@ -126,10 +131,15 @@ public class WebDAVProvider extends HTTPProvider {
     public ProviderFile getFileIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileIfExists", path, "path");
 
+        URI uri = null;
         try {
-            return createProviderFile(WebDAVProviderUtils.getResource(this, new URI(normalizePath(path))));
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            uri = new URI(normalizePath(path));
+            return createProviderFile(WebDAVProviderUtils.getResource(this, uri));
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return null;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 

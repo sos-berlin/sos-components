@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.webdav.commons;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
@@ -22,6 +21,8 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
 
+/** @implNote WebDAVProviderUtils class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying
+ *           connection or transport errors */
 public class WebDAVProviderUtils {
 
     // possible recursion
@@ -39,7 +40,7 @@ public class WebDAVProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 return false;
             }
-            throw new IOException(BaseHttpClient.formatExecutionResult(result));
+            throw new Exception(BaseHttpClient.formatExecutionResult(result));
         }
         return true;
     }
@@ -48,7 +49,7 @@ public class WebDAVProviderUtils {
         HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
         HttpExecutionResult<Void> result = provider.getClient().executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
         if (!HttpUtils.isSuccessful(result.response().statusCode())) {
-            throw new IOException(BaseHttpClient.formatExecutionResult(result));
+            throw new Exception(BaseHttpClient.formatExecutionResult(result));
         }
         if (provider.getLogger().isDebugEnabled()) {
             provider.getLogger().debug("%s[createDirectory][%s]created", provider.getLogPrefix(), uri);
@@ -68,7 +69,7 @@ public class WebDAVProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 return null;
             }
-            throw new IOException(BaseHttpClient.formatExecutionResult(result));
+            throw new Exception(BaseHttpClient.formatExecutionResult(result));
         }
         List<WebDAVResource> resources = parseWebDAVResources(provider, uri, depth, result);
         return resources.isEmpty() ? null : resources.get(0);
@@ -88,7 +89,7 @@ public class WebDAVProviderUtils {
             // if (HttpUtils.isNotFound(code)) {
             // return 0;
             // }
-            throw new IOException(BaseHttpClient.formatExecutionResult(executeResult));
+            throw new Exception(BaseHttpClient.formatExecutionResult(executeResult));
         }
 
         Set<String> subDirectories = new HashSet<>();

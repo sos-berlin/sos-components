@@ -113,7 +113,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
         try {
             return refreshFileMetadata(file, getFileIfExists(file.getFullPath()));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(file.getFullPath()), e);
         }
     }
@@ -122,18 +122,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     @Override
     public String toPathStyle(String path) {
         return SOSPathUtils.isUnixStylePathSeparator(getPathSeparator()) ? SOSPathUtils.toUnixStyle(path) : SOSPathUtils.toWindowsStyle(path);
-    }
-
-    /** Overrides {@link IProvider#onInputStreamClosed(String)} */
-    @Override
-    public void onInputStreamClosed(String path) throws ProviderException {
-
-    }
-
-    /** Overrides {@link IProvider#onOutputStreamClosed(String)} */
-    @Override
-    public void onOutputStreamClosed(String path) throws ProviderException {
-
     }
 
     /** Overrides {@link IProvider#executeCommand(String)} */
@@ -201,7 +189,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
                 try (BufferedReader reader = Files.newBufferedReader(file)) {
                     p.load(reader);
                     logger.info("[%s][%s][%s]loaded", getLabel(), method, file);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     logger.warn("[%s][%s][%s][failed]%s", getLabel(), method, file, e.toString());
                 }
             } else {
@@ -336,7 +324,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
         try {
             return String.valueOf(Math.round(val / 1000)).concat("s");
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return String.valueOf(val).concat("ms");
         }
     }
@@ -386,7 +374,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
             if (ProviderCredentialStoreResolver.resolve(arguments, arguments.getProxy(), additionalCredentialStoreArg)) {
                 onCredentialStoreResolved();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }
     }

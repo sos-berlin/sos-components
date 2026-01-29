@@ -46,10 +46,13 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
  * -- set Content-Lenght throws the java.lang.IllegalArgumentException: restricted header name: "Content-Length" Exception...<br/>
  * - When using an HTTP Proxy, the exception "[411]Length Required" is thrown....<br/>
  * -- [411]Length Required - Server rejected the request because the Content-Length header field is not defined and the server requires<br/>
- */
+ * 
+ * @implNote HTTPProvider class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying connection or
+ *           transport errors */
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     private BaseHttpClient client;
+    private boolean connected = false;
 
     public HTTPProvider(ISOSLogger logger, HTTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
@@ -86,23 +89,32 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
 
         try {
-            Builder builder = BaseHttpClient.withBuilder();
-            builder = builder.withLogger(getLogger());
-            builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
-            builder = builder.withDefaultHeaders(getArguments().getHttpHeaders().getValue());
-            builder = builder.withAuth(getAuthConfig());
-            builder = builder.withProxyConfig(getProxyConfig());
-            if (isSecureConnectionEnabled()) {
-                builder = builder.withSSL(getArguments().getSsl());
-                logIfHostnameVerificationDisabled(getArguments().getSsl());
+            if (client == null) {
+                Builder builder = BaseHttpClient.withBuilder();
+                builder = builder.withLogger(getLogger());
+                builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
+                builder = builder.withDefaultHeaders(getArguments().getHttpHeaders().getValue());
+                builder = builder.withAuth(getAuthConfig());
+                builder = builder.withProxyConfig(getProxyConfig());
+                if (isSecureConnectionEnabled()) {
+                    builder = builder.withSSL(getArguments().getSsl());
+                    logIfHostnameVerificationDisabled(getArguments().getSsl());
+                }
+                client = builder.build();
             }
-            client = builder.build();
-
             getLogger().info(getConnectMsg());
             HttpExecutionResult<Void> result = connect(getArguments().getBaseURI());
+            connected = true;
+
             getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
-        } catch (Throwable e) {
-            disconnect();
+        } catch (Exception e) {
+            connected = false;
+
+            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+            // error in methods executed after connect() - e.g. if retry, roll back...
+            // Call disconnect() in the application's finally block.
+
+            // disconnectInternal();
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
@@ -110,20 +122,15 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        return client != null;
+        return connected && client != null;
     }
 
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        if (client == null) {
-            return;
+        if (disconnectInternal()) {
+            getLogger().info(getDisconnectedMsg());
         }
-
-        SOSClassUtil.closeQuietly(client);
-        client = null;
-
-        getLogger().info(getDisconnectedMsg());
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
@@ -148,12 +155,15 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(uri == null ? path : uri.toString()), e);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return false;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -172,8 +182,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public boolean deleteIfExists(String path) throws ProviderException {
         validatePrerequisites("deleteIfExists", path, "path");
 
+        URI uri = null;
         try {
-            URI uri = new URI(normalizePath(path));
+            uri = new URI(normalizePath(path));
 
             HttpExecutionResult<Void> result = client.executeDELETENoResponseBody(uri);
             int code = result.response().statusCode();
@@ -181,12 +192,15 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return false;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -196,7 +210,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return deleteIfExists(path);
     }
 
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)}<br/>
+    /** Overrides {@link IProvider#moveFileIfExists(String, String)}<br/>
      * PUT,DELETE implementation<br />
      * - alternative - MOVE (may not be supported by the server…)
      * 
@@ -214,9 +228,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      * @return
      * @throws ProviderException */
     @Override
-    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
-        validatePrerequisites("renameFileIfSourceExists", source, "source");
-        validateArgument("renameFileIfSourceExists", target, "target");
+    public boolean moveFileIfExists(String source, String target) throws ProviderException {
+        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", target, "target");
 
         InputStream is = null;
         try {
@@ -244,14 +258,17 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             deleteIfExists(source);
             return true;
         } catch (SOSNoSuchFileException e) { // is = getInputStream(s);
             return false;
-        } catch (Throwable e) {
+        } catch (IOException e) {
+            throwProviderConnectException(source + "->" + target, e);
+            return false;
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         } finally {
             SOSClassUtil.closeQuietly(is);
@@ -263,8 +280,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public ProviderFile getFileIfExists(String path) throws ProviderException {
         validatePrerequisites("getFileIfExists", path, "path");
 
+        URI uri = null;
         try {
-            URI uri = new URI(normalizePath(path));
+            uri = new URI(normalizePath(path));
 
             HttpExecutionResult<Void> result = client.executeGETNoResponseBody(uri);
             int code = result.response().statusCode();
@@ -272,12 +290,15 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return createProviderFile(uri, result.response());
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return null;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
 
     }
@@ -297,7 +318,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             return content.toString();
         } catch (SOSNoSuchFileException e) {
             return null;
-        } catch (Throwable e) {
+        } catch (IOException e) {
+            throwProviderConnectException(path, e);
+            return null;
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -325,25 +349,69 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public InputStream getInputStream(String path) throws ProviderException {
         validatePrerequisites("getInputStream", path, "path");
 
+        URI uri = null;
         try {
-            return client.getHTTPInputStream(new URI(normalizePath(path)));
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            uri = new URI(normalizePath(path));
+            InputStream is = client.getHTTPInputStream(uri);
+            if (is == null) {
+                throw new Exception("InputStream is null");
+            }
+            return is;
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return null;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
+        }
+    }
+
+    /** Overrides {@link IProvider#supportsReadOffset()} */
+    public boolean supportsReadOffset() {
+        return false;
+    }
+
+    /** Overrides {@link IProvider#getInputStream(String, long)}<br/>
+     * 
+     * @apiNote this method is implemented in the same way as webdav {@link WebDAVProvider#getInputStream(String, long)}.<br/>
+     */
+    @Override
+    public InputStream getInputStream(String path, long offset) throws ProviderException {
+        validatePrerequisites("getInputStream", path, "path");
+
+        URI uri = null;
+        try {
+            uri = new URI(normalizePath(path));
+            InputStream is = client.getHTTPInputStream(uri, offset);
+            if (is == null) {
+                throw new Exception("InputStream is null");
+            }
+            return is;
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return null;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
     /** Overrides {@link IProvider#getOutputStream(String, boolean)}<br/>
      * 
+     * @apiNote YADE - not used - see {@link #upload(String, InputStream, long, boolean)} methods
      * @apiNote this method is implemented in the same way as webdav {@link WebDAVProvider#getOutputStream(String,boolean)}.<br/>
      */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
         validatePrerequisites("getOutputStream", path, "path");
 
+        URI uri = null;
         try {
-            return new HttpOutputStream(client, new URI(normalizePath(path)), false);
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            uri = new URI(normalizePath(path));
+            return new HttpOutputStream(client, uri, false);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return null;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -358,20 +426,24 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
+            // 1) PUT file
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
-            // PUT not returns file size
+            // 2) get uploaded file size (PUT not returns file size)
             result = client.executeHEADOrGETNoResponseBody(uri);
             code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             return client.getFileSize(result.response());
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(uri == null ? path : uri.toString()), e);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return -1L;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -379,23 +451,26 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     @Override
     public void validatePrerequisites(String method) throws ProviderException {
         if (client == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "HTTPPClient");
+            throw new ProviderClientNotInitializedException(getLogPrefix(), BaseHttpClient.class, method);
         }
     }
 
     public void uploadContent(String path, String content, boolean isWebDAV) throws ProviderException {
         validatePrerequisites("uploadContent", path, "path");
 
+        URI uri = null;
         try {
-            URI uri = new URI(normalizePath(path));
+            uri = new URI(normalizePath(path));
 
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new IOException(BaseHttpClient.formatExecutionResult(result));
+                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
-        } catch (Throwable e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -410,6 +485,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     public boolean isSecureConnectionEnabled() {
         return Protocol.HTTPS.equals(getArguments().getProtocol().getValue()) || Protocol.WEBDAVS.equals(getArguments().getProtocol().getValue());
+    }
+
+    public void throwProviderConnectException(String path, IOException e) throws ProviderException {
+        throwProviderConnectException(path, null, e);
+    }
+
+    public void throwProviderConnectException(String path, URI uri, IOException e) throws ProviderException {
+        connected = false;
+        throw new ProviderConnectException(getPathOperationPrefix(path, uri), e);
+    }
+
+    public String getPathOperationPrefix(String path, URI uri) {
+        return super.getPathOperationPrefix(uri == null ? path : uri.toString());
     }
 
     private HttpExecutionResult<Void> connect(URI uri) throws Exception {
@@ -442,6 +530,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             connect(getArguments().getBaseURI());
         }
         return result;
+    }
+
+    // without logging
+    private boolean disconnectInternal() {
+        if (client == null) {
+            connected = false;
+            return false;
+        }
+
+        SOSClassUtil.closeQuietly(client);
+        client = null;
+        connected = false;
+        return true;
     }
 
     private ProviderFile createProviderFile(URI uri, HttpResponse<?> response) throws Exception {

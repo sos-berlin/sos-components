@@ -6,6 +6,7 @@ import java.time.Instant;
 import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.yade.commons.Yade.TransferOperation;
 
 public class YADEArguments extends ASOSArguments {
@@ -74,6 +75,11 @@ public class YADEArguments extends ASOSArguments {
     // YADE 1 used in code but not defined in schema...
     // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
 
+    // RetryOnConnectionError
+    private RetryOnConnectionError retryOnConnectionError = null;
+    private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("RetryCountMax", false);
+    private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("RetryInterval", false, "1s");
+
     /** internal usage */
     private SOSArgument<Instant> start = new SOSArgument<>(null, false);
     private SOSArgument<Instant> end = new SOSArgument<>(null, false);
@@ -124,6 +130,72 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<Instant> getEnd() {
         return end;
+    }
+
+    public SOSArgument<Integer> getConnectionErrorRetryCountMax() {
+        return connectionErrorRetryCountMax;
+    }
+
+    public SOSArgument<String> getConnectionErrorRetryInterval() {
+        return connectionErrorRetryInterval;
+    }
+
+    public RetryOnConnectionError getRetryOnConnectionError() {
+        if (retryOnConnectionError == null) {
+            retryOnConnectionError = new RetryOnConnectionError();
+        }
+        return retryOnConnectionError;
+    }
+
+    public class RetryOnConnectionError {
+
+        private final int maxRetries;
+        private final long interval;
+        private final boolean enabled;
+
+        private RetryOnConnectionError() {
+            if (connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0) {
+                maxRetries = connectionErrorRetryCountMax.getValue().intValue();
+                interval = SOSArgumentHelper.asSeconds(connectionErrorRetryInterval, 1L);
+            } else {
+                maxRetries = 0;
+                interval = 0L;
+            }
+            enabled = maxRetries > 0;
+        }
+
+        private RetryOnConnectionError(int x) {
+            maxRetries = 0;
+            interval = 0L;
+            enabled = false;
+        }
+
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        public long getInterval() {
+            return interval;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public RetryOnConnectionError createNotEnabledInstance() {
+            return new RetryOnConnectionError(0);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("RetryOnConnectionError(");
+            sb.append(connectionErrorRetryCountMax.getName()).append("=").append(maxRetries);
+            sb.append(", ");
+            sb.append(connectionErrorRetryInterval.getName()).append("=").append(interval).append("s");
+            sb.append(")");
+            return sb.toString();
+        }
     }
 
 }

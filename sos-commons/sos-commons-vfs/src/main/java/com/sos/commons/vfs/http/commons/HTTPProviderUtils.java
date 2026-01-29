@@ -8,6 +8,8 @@ import java.net.URL;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.arguments.base.SOSArgument;
 
+/** @implNote HTTPProviderUtils class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying connection
+ *           or transport errors */
 public class HTTPProviderUtils {
 
     /** Returns a URI with a trailing slash (e.g., https://example.com/, https://example.com/test/).<br>

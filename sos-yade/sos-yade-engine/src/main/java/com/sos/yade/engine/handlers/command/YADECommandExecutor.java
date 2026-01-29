@@ -11,12 +11,14 @@ import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostCommandException;
 
 public class YADECommandExecutor {
@@ -75,13 +77,16 @@ public class YADECommandExecutor {
     }
 
     public static YADECommandResult executeAfterOperationOnError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, Throwable exception) {
+            YADETargetProviderDelegator targetDelegator, Throwable exception, RetryOnConnectionError retry) {
 
         YADECommandResult r = YADECommandResult.createInstance();
         SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationOnError();
         if (!arg.isEmpty()) {
             try {
+                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator, "executeAfterOperationOnError", retry);
                 executeAfterOperationCommands(logger, sourceDelegator, arg, exception);
+            } catch (YADEEngineConnectionException e) {
+                r.source = new YADEEngineCommandException(e.toString(), e);
             } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
@@ -90,7 +95,10 @@ public class YADECommandExecutor {
             arg = targetDelegator.getArgs().getCommands().getCommandsAfterOperationOnError();
             if (!arg.isEmpty()) {
                 try {
+                    YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, "executeAfterOperationOnError", retry);
                     executeAfterOperationCommands(logger, targetDelegator, arg, exception);
+                } catch (YADEEngineConnectionException e) {
+                    r.target = new YADEEngineCommandException(e.toString(), e);
                 } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }
@@ -100,13 +108,16 @@ public class YADECommandExecutor {
     }
 
     public static YADECommandResult executeAfterOperationFinal(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, Throwable exception) {
+            YADETargetProviderDelegator targetDelegator, Throwable exception, RetryOnConnectionError retry) {
 
         YADECommandResult r = YADECommandResult.createInstance();
         SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationFinal();
         if (!arg.isEmpty()) {
             try {
+                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator, "executeAfterOperationFinal", retry);
                 executeAfterOperationCommands(logger, sourceDelegator, arg, exception);
+            } catch (YADEEngineConnectionException e) {
+                r.source = new YADEEngineCommandException(e.toString(), e);
             } catch (YADEEngineCommandException e) {
                 r.source = e;
             }
@@ -115,7 +126,10 @@ public class YADECommandExecutor {
             arg = targetDelegator.getArgs().getCommands().getCommandsAfterOperationFinal();
             if (!arg.isEmpty()) {
                 try {
+                    YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, "executeAfterOperationFinal", retry);
                     executeAfterOperationCommands(logger, targetDelegator, arg, exception);
+                } catch (YADEEngineConnectionException e) {
+                    r.target = new YADEEngineCommandException(e.toString(), e);
                 } catch (YADEEngineCommandException e) {
                     r.target = e;
                 }

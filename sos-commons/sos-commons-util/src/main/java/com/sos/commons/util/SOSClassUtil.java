@@ -2,6 +2,7 @@ package com.sos.commons.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,6 +10,8 @@ import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.commons.exception.SOSMissingDataException;
 
 public class SOSClassUtil {
 
@@ -58,7 +61,7 @@ public class SOSClassUtil {
                 }
                 log.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
             }
-        } catch (Throwable ee) {
+        } catch (Exception ee) {
             LOGGER.error(ee.toString(), ee);
         }
 
@@ -79,7 +82,7 @@ public class SOSClassUtil {
                 sb.append(trace[i].toString()).append(newLine);
             }
             return sb.toString().trim();
-        } catch (Throwable ee) {
+        } catch (Exception ee) {
             LOGGER.error(ee.toString(), ee);
             return null;
         }
@@ -120,21 +123,57 @@ public class SOSClassUtil {
         return clazz.getProtectionDomain().getCodeSource().getLocation();
     }
 
-    public static void closeQuietly(Closeable closeable) {
+    /** Closes the given {@link Closeable} if it is not {@code null}.
+     *
+     * <p>
+     * This method is a convenience wrapper that performs a null-check before invoking {@link Closeable#close()}.
+     *
+     * @param closeable the {@link Closeable} to close, may be {@code null}
+     * @throws IOException if an I/O error occurs while closing the resource */
+    public static void close(Closeable closeable) throws IOException {
         if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (Exception e) {
-            }
+            closeable.close();
         }
     }
 
-    public static void closeQuietly(AutoCloseable closeable) {
+    /** Closes the given {@link AutoCloseable} if it is not {@code null}.
+     *
+     * <p>
+     * This method is a convenience wrapper that performs a null-check before invoking {@link AutoCloseable#close()}.
+     *
+     * @param closeable the {@link AutoCloseable} to close, may be {@code null}
+     * @throws Exception if an error occurs while closing the resource */
+    public static void close(AutoCloseable closeable) throws Exception {
         if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (Exception e) {
-            }
+            closeable.close();
+        }
+    }
+
+    /** Closes the given {@link Closeable} quietly.
+     *
+     * <p>
+     * If the resource is {@code null}, this method does nothing.<br/>
+     * Any exception thrown by {@link Closeable#close()} is caught and ignored.
+     *
+     * @param closeable the {@link Closeable} to close, may be {@code null} */
+    public static void closeQuietly(Closeable closeable) {
+        try {
+            close(closeable);
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** Closes the given {@link AutoCloseable} quietly.
+     *
+     * <p>
+     * If the resource is {@code null}, this method does nothing.<br/>
+     * Any exception thrown by {@link AutoCloseable#close()} is caught and ignored.
+     *
+     * @param closeable the {@link AutoCloseable} to close, may be {@code null} */
+    public static void closeQuietly(AutoCloseable closeable) {
+        try {
+            close(closeable);
+        } catch (Exception ignored) {
         }
     }
 
@@ -146,14 +185,20 @@ public class SOSClassUtil {
      *
      * @param inputStream The InputStream whose bytes are to be counted
      * @return The number of bytes in the InputStream
-     * @throws IOException If an I/O error occurs */
-    public static long countBytes(InputStream inputStream) throws IOException {
+     * @throws Exception If an error occurs */
+    public static long countBytes(InputStream input) throws Exception {
+        if (input == null) {
+            return 0L;
+        }
         try (OutputStream nullOutputStream = OutputStream.nullOutputStream()) {
-            return inputStream.transferTo(nullOutputStream);
+            return input.transferTo(nullOutputStream);
         }
     }
 
     public static byte[] toByteArray(InputStream input) throws IOException {
+        if (input == null) {
+            return null;
+        }
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[4096]; // 4KB Puffer
         int nRead;
@@ -163,13 +208,37 @@ public class SOSClassUtil {
         return buffer.toByteArray();
     }
 
+    public static void skipFully(InputStream input, long offset) throws Exception {
+        if (input == null) {
+            throw new SOSMissingDataException("input");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("offset must be >= 0");
+        }
+
+        byte[] buffer = new byte[8_192];
+        long toSkip = offset;
+        while (toSkip > 0) {
+            int len = (int) Math.min(buffer.length, toSkip);
+            int read = input.read(buffer, 0, len);
+            if (read == -1) {
+                throw new EOFException("Stream end reached before skipping all bytes");
+            }
+            toSkip -= read;
+        }
+    }
+
     /** @param contextClass
      * @param resourcePath no leading slash – path is relative to the classpath
      * @return InputStream */
-    public static InputStream openResourceStream(Class<?> contextClass, String resourcePath) {
-        if (contextClass == null || resourcePath == null) {
-            return null;
+    public static InputStream openResourceStream(Class<?> contextClass, String resourcePath) throws Exception {
+        if (contextClass == null) {
+            throw new SOSMissingDataException("contextClass");
         }
+        if (resourcePath == null) {
+            throw new SOSMissingDataException("resourcePath");
+        }
+
         InputStream is = contextClass.getClassLoader().getResourceAsStream(resourcePath);
         if (is == null) {
             throw new IllegalArgumentException("[" + contextClass.getName() + "]Resource not found: " + resourcePath);
@@ -182,8 +251,11 @@ public class SOSClassUtil {
      * @return resource file content
      * @throws Exception */
     public static String readResourceFile(Class<?> contextClass, String resourcePath) throws Exception {
-        if (contextClass == null || resourcePath == null) {
-            return null;
+        if (contextClass == null) {
+            throw new SOSMissingDataException("contextClass");
+        }
+        if (resourcePath == null) {
+            throw new SOSMissingDataException("resourcePath");
         }
         try (InputStream is = openResourceStream(contextClass, resourcePath)) {
             return SOSString.toString(is);
