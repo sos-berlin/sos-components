@@ -51,12 +51,16 @@ public class YADEProviderFile extends ProviderFile {
         state = val;
     }
 
-    public boolean isTransferred() {// succeeded?
+    public boolean isTransferred() {
         return TransferEntryState.TRANSFERRED.equals(state);
     }
 
-    public boolean isTransferredOrTransferring() {// succeeded?
-        return TransferEntryState.TRANSFERRED.equals(state) || TransferEntryState.TRANSFERRING.equals(state);
+    public boolean isTransferring() {
+        return TransferEntryState.TRANSFERRING.equals(state);
+    }
+
+    public boolean isTransferredOrTransferring() {
+        return isTransferred() || isTransferring();
     }
 
     // TODO TransferEntryState.SKIPPED - seems to be unused
@@ -90,6 +94,12 @@ public class YADEProviderFile extends ProviderFile {
 
     public String getFinalFullPathParent(AYADEProviderDelegator delegator) {
         return finalFullPath == null ? parentFullPath : delegator.getParentPath(finalFullPath);
+    }
+
+    /** The Source/Target file may have already been renamed to the final name or may still be a Target file with the Atomic Suffix/Prefix<br/>
+     * - Note for Target "if compress": all names already contain the compress extension */
+    public String getCurrentFullPath() {
+        return TransferEntryState.RENAMED.equals(getSubState()) ? getFinalFullPath() : getFullPath();
     }
 
     public YADETargetProviderFile getTarget() {

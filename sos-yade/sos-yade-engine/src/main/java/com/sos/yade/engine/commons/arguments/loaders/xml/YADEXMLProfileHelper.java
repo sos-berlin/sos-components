@@ -855,6 +855,9 @@ public class YADEXMLProfileHelper {
                 case "DisableOverwriteFiles":
                     argsLoader.setOppositeBooleanArgumentValue(argsLoader.getTargetArgs().getOverwriteFiles(), n);
                     break;
+                case "ResumeFiles":
+                    argsLoader.setBooleanArgumentValue(argsLoader.getTargetArgs().getResumeFiles(), n);
+                    break;
                 }
             }
         }

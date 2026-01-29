@@ -13,9 +13,8 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     /** - Transfer options ------- */
     private SOSArgument<Boolean> checkSize = new SOSArgument<>("CheckSize", false, Boolean.valueOf(true));
     private SOSArgument<Boolean> overwriteFiles = new SOSArgument<>("OverwriteFiles", false, Boolean.valueOf(true));
-
     private SOSArgument<Boolean> appendFiles = new SOSArgument<>("AppendFiles", false, Boolean.valueOf(false));
-
+    private SOSArgument<Boolean> resumeFiles = new SOSArgument<>("ResumeFiles", false, Boolean.valueOf(false));
     private SOSArgument<Boolean> keepModificationDate = new SOSArgument<>("KeepModificationDate", false, Boolean.valueOf(false));
 
     private SOSArgument<String> atomicPrefix = new SOSArgument<>("AtomicPrefix", false);
@@ -100,6 +99,14 @@ public class YADETargetArguments extends YADESourceTargetArguments {
 
     public SOSArgument<Boolean> getAppendFiles() {
         return appendFiles;
+    }
+
+    public SOSArgument<Boolean> getResumeFiles() {
+        return resumeFiles;
+    }
+
+    public boolean isResumeFilesEnabled(YADEArguments args) {
+        return (resumeFiles.isTrue() && args.getRetryOnConnectionError().isEnabled()) && (!appendFiles.isTrue() && !isCompressFilesEnabled());
     }
 
     public SOSArgument<Boolean> getCreateIntegrityHashFile() {

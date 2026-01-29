@@ -23,6 +23,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
+/** @implNote AzureBlobStorageClient class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying
+ *           connection or transport errors */
 public class AzureBlobStorageClient extends ABaseHttpClient {
 
     public static final String HEADER_X_MS_BLOB_TYPE = "x-ms-blob-type";

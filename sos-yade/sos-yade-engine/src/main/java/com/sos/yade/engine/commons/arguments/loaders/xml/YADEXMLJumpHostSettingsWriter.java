@@ -913,6 +913,7 @@ public class YADEXMLJumpHostSettingsWriter {
         if (args.getAppendFiles().isDirty()) {
             sb.append("<AppendFiles>").append(args.getAppendFiles().getValue()).append("</AppendFiles>");
         }
+        sb.append("<ResumeFiles>").append(args.getResumeFiles().getValue()).append("</ResumeFiles>");
         if (config.isAtomicEnabled()) {
             sb.append("<Atomicity>");
             if (config.getAtomicPrefix() != null) {
@@ -960,10 +961,10 @@ public class YADEXMLJumpHostSettingsWriter {
         if (args.getBufferSize().isDirty()) {
             sb.append("<BufferSize>").append(args.getBufferSize().getValue()).append("</BufferSize>");
         }
-        if (sourceTargetArgs.isRetryOnConnectionErrorEnabled()) {
+        if (args.getRetryOnConnectionError().isEnabled()) {
             sb.append("<RetryOnConnectionError>");
-            sb.append("<RetryCountMax>").append(sourceTargetArgs.getConnectionErrorRetryCountMax().getValue()).append("</RetryCountMax>");
-            sb.append("<RetryInterval>").append(cdata(sourceTargetArgs.getConnectionErrorRetryInterval().getValue())).append("</RetryInterval>");
+            sb.append("<RetryCountMax>").append(args.getConnectionErrorRetryCountMax().getValue()).append("</RetryCountMax>");
+            sb.append("<RetryInterval>").append(cdata(args.getConnectionErrorRetryInterval().getValue())).append("</RetryInterval>");
             sb.append("</RetryOnConnectionError>");
         }
 

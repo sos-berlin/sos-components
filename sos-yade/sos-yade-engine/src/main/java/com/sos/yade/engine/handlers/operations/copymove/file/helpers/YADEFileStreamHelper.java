@@ -2,7 +2,6 @@ package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
@@ -20,28 +19,12 @@ public class YADEFileStreamHelper {
 
     /** Source: InputStream */
     public static InputStream getSourceInputStream(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile, boolean useBufferedStreams) throws ProviderException {
-        InputStream is = sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath());
+            YADEProviderFile sourceFile, long sourceFileReadOffset, boolean useBufferedStreams) throws ProviderException {
+        InputStream is = sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath(), sourceFileReadOffset);
         if (useBufferedStreams) {
             return new BufferedInputStream(is, config.getBufferSize());
         }
         return is;
-    }
-
-    // reread Source file on errors starting from the last position
-    public static void skipSourceInputStreamToPosition(InputStream sourceStream, YADETargetProviderFile targetFile) throws IOException {
-        long toSkip = targetFile.getBytesProcessed();
-        byte[] buffer = new byte[8192];
-
-        while (toSkip > 0) {
-            int len = (int) Math.min(buffer.length, toSkip);
-            int read = sourceStream.read(buffer, 0, len);
-            if (read == -1) {
-                // throw new EOFException("Stream end reached before skipping all bytes");
-                return;
-            }
-            toSkip -= read;
-        }
     }
 
     /** Target: OutputStream */
@@ -60,38 +43,9 @@ public class YADEFileStreamHelper {
                 ((GZIPOutputStream) targetStream).finish();
             }
             targetStream.flush();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.warn("[finishTargetOutputStream][%s]%s", targetFile.getFullPath(), e.toString());
         }
-    }
-
-    public static void onStreamsClosed(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
-            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile) throws ProviderException {
-
-        ProviderException is = null;
-        ProviderException os = null;
-        try {
-            sourceDelegator.getProvider().onInputStreamClosed(sourceFile.getFullPath());
-        } catch (ProviderException e) {
-            is = e;
-        }
-        try {
-            targetDelegator.getProvider().onOutputStreamClosed(targetFile.getFullPath());
-        } catch (ProviderException e) {
-            os = e;
-        }
-        if (is != null && os != null) {
-            ProviderException combined = new ProviderException(
-                    "Error occurred during the execution of post-processing for InputStream and OutputStream closure.");
-            combined.addSuppressed(is);
-            combined.addSuppressed(os);
-            throw combined;
-        } else if (is != null) {
-            throw is;
-        } else if (os != null) {
-            throw os;
-        }
-
     }
 
 }

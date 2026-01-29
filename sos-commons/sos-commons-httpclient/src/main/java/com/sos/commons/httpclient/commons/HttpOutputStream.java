@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.http.HttpUtils;
@@ -40,6 +41,7 @@ public class HttpOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        IOException exception = null;
         try {
             byte[] bytes = buffer.toByteArray();
             HttpRequest.Builder builder = client.createRequestBuilder(uri)
@@ -61,11 +63,27 @@ public class HttpOutputStream extends OutputStream {
             if (!HttpUtils.isSuccessful(result.response().statusCode())) {
                 throw new IOException(BaseHttpClient.formatExecutionResult(result));
             }
+        } catch (IOException e) {
+            exception = e;
         } catch (Exception e) {
-            throw new IOException(e);
+            exception = new IOException(e);
         } finally {
-            SOSClassUtil.closeQuietly(buffer);
-            super.close();
+            // 1) close buffer
+            try {
+                SOSClassUtil.close(buffer);
+            } catch (IOException ex) {
+                exception = SOSException.mergeException(exception, ex);
+            }
+            // 2) super.close() is called for completeness.
+            // OutputStream.close() is a no-op today, but subclasses may override it.
+            try {
+                super.close();
+            } catch (IOException ex) {
+                exception = SOSException.mergeException(exception, ex);
+            }
+        }
+        if (exception != null) {
+            throw exception;
         }
     }
 

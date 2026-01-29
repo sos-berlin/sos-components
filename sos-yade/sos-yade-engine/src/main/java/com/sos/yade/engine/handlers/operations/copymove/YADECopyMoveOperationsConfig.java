@@ -4,6 +4,7 @@ import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.ftp.FTPProvider;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEParallelExecutorFactory;
@@ -11,13 +12,13 @@ import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetP
 
 public class YADECopyMoveOperationsConfig {
 
+    private final RetryOnConnectionError retry;
     private final Source source;
     private final Target target;
 
     private final TransferOperation operation;
     private final String integrityHashAlgorithm;
     private final int bufferSize;
-    private final int maxRetries;
     private final int parallelism;
     private final boolean transactional;
     private final boolean checkFileSize;
@@ -31,12 +32,12 @@ public class YADECopyMoveOperationsConfig {
         this.integrityHashAlgorithm = sourceDelegator.getArgs().getIntegrityHashAlgorithm().getValue();
         this.bufferSize = args.getBufferSize().getValue().intValue();
 
+        this.retry = args.getRetryOnConnectionError();
         this.source = new Source(sourceDelegator);
-        this.target = new Target(targetDelegator);
-        // based on source|target
-        this.maxRetries = getMaxRetries(sourceDelegator, targetDelegator);
+        this.target = new Target(args, targetDelegator);
+
         this.parallelism = getParallelism(args, sourceFilesSize);
-        this.checkFileSize = getCheckFileSize(sourceDelegator, targetDelegator, target);
+        this.checkFileSize = isCheckFileSizeEnabled(sourceDelegator, targetDelegator, target);
     }
 
     public boolean isMoveOperation() {
@@ -47,21 +48,8 @@ public class YADECopyMoveOperationsConfig {
         return TransferOperation.COPY.equals(operation);
     }
 
-    private int getMaxRetries(final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) {
-        if (sourceDelegator.getArgs().isRetryOnConnectionErrorEnabled() && targetDelegator.getArgs().isRetryOnConnectionErrorEnabled()) {
-            return Math.max(sourceDelegator.getArgs().getConnectionErrorRetryCountMax().getValue().intValue(), targetDelegator.getArgs()
-                    .getConnectionErrorRetryCountMax().getValue().intValue());
-        } else if (sourceDelegator.getArgs().isRetryOnConnectionErrorEnabled()) {
-            return sourceDelegator.getArgs().getConnectionErrorRetryCountMax().getValue().intValue();
-        } else if (targetDelegator.getArgs().isRetryOnConnectionErrorEnabled()) {
-            return targetDelegator.getArgs().getConnectionErrorRetryCountMax().getValue().intValue();
-        } else {
-            return 0;
-        }
-    }
-
     // TODO YADE1 checks source/target FTPS(S) provider because of a possible ASCII transfer mode - in this case the check should also be suppressed
-    private boolean getCheckFileSize(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, Target target) {
+    private boolean isCheckFileSizeEnabled(YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, Target target) {
         if (!targetDelegator.getArgs().getCheckSize().isTrue()) {
             return false;
         }
@@ -96,10 +84,6 @@ public class YADECopyMoveOperationsConfig {
         return bufferSize;
     }
 
-    public int getMaxRetries() {
-        return maxRetries;
-    }
-
     public int getParallelism() {
         return parallelism;
     }
@@ -121,6 +105,10 @@ public class YADECopyMoveOperationsConfig {
 
     public boolean isTransactionalEnabled() {
         return transactional;
+    }
+
+    public RetryOnConnectionError getRetry() {
+        return retry;
     }
 
     public Source getSource() {
@@ -186,11 +174,12 @@ public class YADECopyMoveOperationsConfig {
         private final boolean replacementEnabled;
         private final boolean overwriteFiles;
         private final boolean append;
+        private final boolean resume;
         private final boolean createIntegrityHashFile;
         private final boolean keepModificationDate;
         private final boolean needsFilePostProcessing;
 
-        private Target(YADETargetProviderDelegator targetDelegator) {
+        private Target(YADEArguments args, YADETargetProviderDelegator targetDelegator) {
             this.compress = initializeCompress(targetDelegator);
             this.atomic = initializeAtomic(targetDelegator);
             this.cumulate = initializeCumulate(targetDelegator, compress, atomic);
@@ -199,6 +188,7 @@ public class YADECopyMoveOperationsConfig {
             this.replacementEnabled = cumulate == null && targetDelegator.getArgs().isReplacementEnabled();
             this.overwriteFiles = cumulate == null && targetDelegator.getArgs().getOverwriteFiles().isTrue();
             this.append = cumulate == null ? targetDelegator.getArgs().getAppendFiles().isTrue() : true;
+            this.resume = targetDelegator.getArgs().isResumeFilesEnabled(args);
             this.createIntegrityHashFile = targetDelegator.getArgs().getCreateIntegrityHashFile().isTrue();
             this.keepModificationDate = targetDelegator.getArgs().getKeepModificationDate().isTrue();
             // ?? YADE1 not use compressFileExtension if cumulate
@@ -264,6 +254,10 @@ public class YADECopyMoveOperationsConfig {
             return append;
         }
 
+        public boolean isResumeEnabled() {
+            return resume;
+        }
+
         public boolean isCreateIntegrityHashFileEnabled() {
             return createIntegrityHashFile;
         }
@@ -298,8 +292,8 @@ public class YADECopyMoveOperationsConfig {
         }
 
         /** If the cumulative file should not be deleted before the operation (it means: the contents should be appended to an existing cumulative file)<br/>
-         * - the existing cumulative file is de-compressed to a temporary file If compress - it is not possible to update a compressed file directly with the
-         * compressed contents of a single source file.<br/>
+         * - the existing cumulative file is de-compressed to a temporary file<br/>
+         * If compress - it is not possible to update a compressed file directly with the compressed contents of a single source file.<br/>
          * -- it means: the content of single source file are written to a temporary cumulative file without compression<br/>
          * - When all source files have been processed:<br/>
          * -- transactional=true<br/>

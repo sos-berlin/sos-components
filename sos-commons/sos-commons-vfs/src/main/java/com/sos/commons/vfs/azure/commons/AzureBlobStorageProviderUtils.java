@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.azure.commons;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,8 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
 
+/** @implNote AzureBlobStorageProviderUtils class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling
+ *           underlying connection or transport errors */
 public class AzureBlobStorageProviderUtils {
 
     private static final String ROOT_FOLDER = "/";
@@ -47,7 +48,7 @@ public class AzureBlobStorageProviderUtils {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new IOException(provider.getClient().formatExecutionResultForException(result));
+                throw new Exception(provider.getClient().formatExecutionResultForException(result));
             }
             List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
             return resources.isEmpty() ? null : resources.get(0);
@@ -63,7 +64,7 @@ public class AzureBlobStorageProviderUtils {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new IOException(provider.getClient().formatExecutionResultForException(result));
+                throw new Exception(provider.getClient().formatExecutionResultForException(result));
             }
             return new AzureBlobStorageResource(containerName, blobPath, false, provider.getClient().getFileSize(result.response()), provider
                     .getClient().getLastModifiedInMillis(result.response()));
@@ -85,7 +86,7 @@ public class AzureBlobStorageProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 // return 0;
             }
-            throw new IOException(provider.getClient().formatExecutionResultForException(executeResult));
+            throw new Exception(provider.getClient().formatExecutionResultForException(executeResult));
         }
 
         Set<String> subDirectories = new HashSet<>();

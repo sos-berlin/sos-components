@@ -25,7 +25,11 @@ public class YADETargetProviderFile extends YADEProviderFile {
         return bytesProcessed;
     }
 
+    public void setBytesProcessed(long bytes) {
+        bytesProcessed = bytes;
+    }
+
     public void resetBytesProcessed() {
-        bytesProcessed = 0L;
+        setBytesProcessed(0L);
     }
 }

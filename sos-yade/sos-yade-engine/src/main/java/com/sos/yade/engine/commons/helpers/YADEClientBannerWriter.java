@@ -118,7 +118,7 @@ public class YADEClientBannerWriter {
         logger.info(SEPARATOR_LINE);
         logger.info("[Summary]" + summaryLine);
         if (detailsLines.length() > 0) {
-            logger.info("[Details]" + detailsLines);
+            logger.info("[Details]" + detailsLines.toString().trim());
         }
         // Error
         if (error != null) {
@@ -131,15 +131,22 @@ public class YADEClientBannerWriter {
         sb.append("[").append(YADEArguments.LABEL).append("]");
         sb.append(YADEArgumentsHelper.toString(args.getOperation()));
         sb.append(", ").append(YADEArgumentsHelper.toString(args.getTransactional()));
-        if (args.isParallelismEnabled()) {
-            sb.append(", ").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
-        }
         if (!args.getProfile().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
         }
         if (!args.getSettings().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
         }
+        if (args.isParallelismEnabled()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
+        }
+        if (args.getBufferSize().isDirty()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(args.getBufferSize()));
+        }
+        if (args.getRetryOnConnectionError().isEnabled()) {
+            sb.append(", ").append(args.getRetryOnConnectionError());
+        }
+
         logger.info(sb);
         if (logger.isDebugEnabled()) {
             logger.debug(YADEArgumentsHelper.toString(logger, YADEArguments.LABEL, args));
@@ -386,6 +393,9 @@ public class YADEClientBannerWriter {
         if (targetArgs.getAppendFiles().isTrue()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
         }
+        if (targetArgs.getResumeFiles().isTrue()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getResumeFiles()));
+        }
         if (!targetArgs.getAtomicPrefix().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAtomicPrefix()));
         }
@@ -457,7 +467,8 @@ public class YADEClientBannerWriter {
             }
             sb.append(", ");
         }
-        sb.append(file.getFinalFullPath());
+        // sb.append(file.getFinalFullPath());
+        sb.append(file.getCurrentFullPath());
         return sb.toString();
     }
 

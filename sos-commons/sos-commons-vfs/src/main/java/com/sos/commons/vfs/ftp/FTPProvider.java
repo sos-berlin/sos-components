@@ -2,6 +2,8 @@ package com.sos.commons.vfs.ftp;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -23,6 +26,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPHTTPClient;
 import org.apache.commons.net.ftp.FTPSClient;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
@@ -115,7 +119,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             getLogger().info(getConnectMsg());
 
             // create/connect FTP/FTPS client
-            client = createClient();
+            if (client == null) {
+                client = createClient();
+            }
             // Connect
             client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             FTPProtocolReply reply = new FTPProtocolReply(client);
@@ -142,10 +148,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             }
 
             getLogger().info(getConnectedMsg(getConnectedInfos()));
-        } catch (Throwable e) {
-            if (isConnected()) {
-                disconnect();
-            }
+        } catch (Exception e) {
+            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+            // error in methods executed after connect() - e.g. if retry, roll back...
+            // Call disconnect() in the application's finally block.
+            // if (isConnected()) {
+            // disconnect();
+            // }
             throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
 
@@ -238,7 +247,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 }
             }
             return false;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -277,7 +286,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             // create given directory
             createDirectory(path);
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -312,7 +321,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 }
             }
             return deleted;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -332,16 +341,16 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 }
             }
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
 
-    /** Overrides {@link IProvider#renameFileIfSourceExists(String, String)} */
+    /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
-    public boolean renameFileIfSourceExists(String source, String target) throws ProviderException {
-        validatePrerequisites("renameFileIfSourceExists", source, "source");
-        validateArgument("renameFileIfSourceExists", target, "target");
+    public boolean moveFileIfExists(String source, String target) throws ProviderException {
+        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", target, "target");
 
         try {
             if (!client.rename(source, target)) {// not positive reply
@@ -353,7 +362,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 }
             }
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
     }
@@ -364,8 +373,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         validatePrerequisites("getFileIfExists", path, "path");
 
         try {
-            return createProviderFile(path, FTPProviderUtils.getFTPFile("getFileIfExists", client, path));
-        } catch (Throwable e) {
+            return createProviderFile(path, FTPProviderUtils.getFTPFileIfExists("getFileIfExists", client, path));
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -386,7 +395,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 reply = new FTPProtocolReply(client);
                 return client.completePendingCommand() ? content.toString() : null;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path) + (reply == null ? "" : reply), e);
         } finally {
             if (reply == null) {
@@ -443,34 +452,70 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         }
     }
 
+    /** Overrides {@link IProvider#supportsReadOffset()} */
+    public boolean supportsReadOffset() {
+        return true;
+    }
+
     /** Overrides {@link IProvider#getInputStream(String)} */
     @Override
     public InputStream getInputStream(String path) throws ProviderException {
+        return getInputStream(path, 0L);
+    }
+
+    /** Overrides {@link IProvider#getInputStream(String, long)} */
+    @Override
+    public InputStream getInputStream(String path, long offset) throws ProviderException {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
+            if (offset > 0) {
+                // client.setRestartOffset docs: ... The restart marker is reset to zero after use...
+                // so - no manually reset needed
+                client.setRestartOffset(offset);
+            }
             InputStream is = client.retrieveFileStream(path);
             if (is == null) {
                 throw new ProviderException(String.format("%s[failed to open InputStream]%s", getPathOperationPrefix(path), new FTPProtocolReply(
                         client)));
             }
-            return is;
+            return new FilterInputStream(is) {
+
+                private final AtomicBoolean closed = new AtomicBoolean(false);
+
+                @Override
+                public void close() throws IOException {
+                    if (closed.getAndSet(true)) {
+                        return;
+                    }
+
+                    IOException exception = null;
+                    // 1) close stream - super.close() closes "is"
+                    try {
+                        super.close();
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 2) check completion
+                    try {
+                        boolean completed = client.completePendingCommand(); // can self thrown an IOException
+                        if (!completed) {
+                            exception = SOSException.mergeException(exception, new IOException(new FTPProtocolReply(client).toString()));
+                        }
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    } finally {
+                        // reset restart offset because the docs (see above) do not guarantee (unclear) it on error ...
+                        client.setRestartOffset(0L);
+                    }
+
+                    if (exception != null) {
+                        throw exception;
+                    }
+                }
+            };
         } catch (ProviderException e) {
             throw e;
-        } catch (IOException e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    /** Overrides {@link IProvider#onInputStreamClosed(String)} */
-    @Override
-    public void onInputStreamClosed(String path) throws ProviderException {
-        validatePrerequisites("onInputStreamClosed", path, "path");
-
-        try {
-            if (!client.completePendingCommand()) {
-                throw new IOException(new FTPProtocolReply(client).toString());
-            }
         } catch (IOException e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -484,22 +529,43 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
-            // return new FTPOutputStream(client, normalizePath(path), append);
-            return append ? client.appendFileStream(path) : client.storeFileStream(path);
-        } catch (IOException e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    /** Overrides {@link IProvider#onOutputStreamClosed(String)} */
-    @Override
-    public void onOutputStreamClosed(String path) throws ProviderException {
-        validatePrerequisites("onOutputStreamClosed", path, "path");
-
-        try {
-            if (!client.completePendingCommand()) {
-                throw new IOException(new FTPProtocolReply(client).toString());
+            OutputStream os = append ? client.appendFileStream(path) : client.storeFileStream(path);
+            if (os == null) {
+                throw new ProviderException(String.format("%s[failed to open OutputStream]%s", getPathOperationPrefix(path), new FTPProtocolReply(
+                        client)));
             }
+            return new FilterOutputStream(os) {
+
+                private final AtomicBoolean closed = new AtomicBoolean(false);
+
+                @Override
+                public void close() throws IOException {
+                    if (closed.getAndSet(true)) {
+                        return;
+                    }
+
+                    IOException exception = null;
+                    // 1) close stream - super.close() closes "os"
+                    try {
+                        super.close();
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+                    // 2) check completion
+                    try {
+                        boolean completed = client.completePendingCommand(); // can self thrown an IOException
+                        if (!completed) {
+                            exception = SOSException.mergeException(exception, new IOException(new FTPProtocolReply(client).toString()));
+                        }
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+
+                    if (exception != null) {
+                        throw exception;
+                    }
+                }
+            };
         } catch (IOException e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -523,7 +589,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
                 throw new Exception(reply.toString());
             }
             result.setStdOut(reply.getText());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             result.setException(e);
         } finally {
             if (timeout != null) {
@@ -545,7 +611,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     @Override
     public void validatePrerequisites(String method) throws ProviderException {
         if (client == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix() + method + "FTPClient");
+            throw new ProviderClientNotInitializedException(getLogPrefix(), FTPClient.class, method);
         }
     }
 
@@ -738,13 +804,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
             try {
                 ftps.execPBSZ(0);
                 debugCommand("execPBSZ(0)");
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 getLogger().warn("[execPBSZ(0)]" + e);
             }
             try {
                 ftps.execPROT("P");
                 debugCommand("execPROT(P)");
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 getLogger().warn("[execPROT(P)]" + e);
             }
 

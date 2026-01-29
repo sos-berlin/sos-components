@@ -36,7 +36,9 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 /** Base HTTP client wrapper for Java's HttpClient.<br/>
  * Provides convenient methods for executing HTTP requests with or without parsing the response body.<br/>
  * Supports GET, PUT, DELETE, and conditional HEAD fallback.<br/>
- */
+ * 
+ * @implNote ABaseHttpClient class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying connection or
+ *           transport errors */
 public abstract class ABaseHttpClient implements AutoCloseable {
 
     private static final Set<String> DEFAULT_SENSITIVE_HEADERS = Set.of(HttpUtils.HEADER_AUTHORIZATION, HttpUtils.HEADER_PROXY_AUTHORIZATION,
@@ -93,7 +95,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     public HttpRequest.Builder createRequestBuilder(URI uri) {
         return createRequestBuilder(uri, defaultHeaders);
     }
-    
+
     /** Creates a new HttpRequest builder with given headers
      * 
      * @param uri target URI
@@ -104,7 +106,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         setRequestTimeout(builder);
         return builder;
     }
-    
+
     /** Executes a generic request with a specified body handler
      * 
      * <p>
@@ -210,7 +212,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     public HttpExecutionResult<String> executeGET(URI uri) throws Exception {
         return executeWithResponseBody(createGETRequest(uri));
     }
-    
+
     /** Executes a GET request with request headers and returns response as String */
     public HttpExecutionResult<String> executeGET(URI uri, Map<String, String> headers) throws Exception {
         return executeWithResponseBody(createGETRequest(uri, headers));
@@ -258,21 +260,20 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             throws Exception {
         debugRequestBody(requestBody);
         return executePOST(uri, headers, Optional.ofNullable(requestBody), handler);
-//        return execute(createPOSTRequest(uri, headers, 
-//                requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody) : HttpRequest.BodyPublishers.noBody()),
-//                handler);
+        // return execute(createPOSTRequest(uri, headers,
+        // requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody) : HttpRequest.BodyPublishers.noBody()),
+        // handler);
     }
 
     /** Executes a POST request with request body as Optional and handles the response via provided handler */
-    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, Optional<String> requestBody, HttpResponse.BodyHandler<T> handler)
-            throws Exception {
-        if(requestBody == null) {
+    public <T> HttpExecutionResult<T> executePOST(URI uri, Map<String, String> headers, Optional<String> requestBody,
+            HttpResponse.BodyHandler<T> handler) throws Exception {
+        if (requestBody == null) {
             // the Optional object is null, not the string it should hold
             throw new SOSInvalidDataException("The Optional of the request body is null. Cannot execute request!");
-        } 
-        return execute(createPOSTRequest(uri, headers, 
-                requestBody.map(HttpRequest.BodyPublishers::ofString).orElse(HttpRequest.BodyPublishers.noBody())),
-                handler);
+        }
+        return execute(createPOSTRequest(uri, headers, requestBody.map(HttpRequest.BodyPublishers::ofString).orElse(HttpRequest.BodyPublishers
+                .noBody())), handler);
     }
 
     /** Executes a POST request with a BodyPublisher and handles the response via provided handler */
@@ -304,8 +305,8 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     /** Executes a POST request with request body and returns response as String */
     public HttpExecutionResult<String> executePOST(URI uri, Map<String, String> headers, String requestBody) throws Exception {
         debugRequestBody(requestBody);
-        return executeWithResponseBody(createPOSTRequest(uri, headers, 
-                requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody) : HttpRequest.BodyPublishers.noBody()));
+        return executeWithResponseBody(createPOSTRequest(uri, headers, requestBody != null ? HttpRequest.BodyPublishers.ofString(requestBody)
+                : HttpRequest.BodyPublishers.noBody()));
     }
 
     /** Executes a POST request with request body publisher and returns response as JsonNode */
@@ -472,6 +473,21 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return response.body();
     }
 
+    /** Executes a GET request and returns the response InputStream, optionally positioned at the given byte offset.
+     *
+     * TODO: Implement HTTP resume using Range requests (e.g. "Range: bytes=<offset>-") when supported by the server (Accept-Ranges: bytes). <br />
+     * The current implementation falls back to client-side skipping. */
+    public InputStream getHTTPInputStream(URI uri, long offset) throws Exception {
+        InputStream is = getHTTPInputStream(uri);
+        if (is == null) {
+            return null;
+        }
+        if (offset > 0) {
+            SOSClassUtil.skipFully(is, offset);
+        }
+        return is;
+    }
+
     /** Extracts file size from the response headers or content stream if chunked */
     public long getFileSize(HttpResponse<?> response) throws Exception {
         long size = response.headers().firstValueAsLong(HttpUtils.HEADER_CONTENT_LENGTH).orElse(-1);
@@ -608,11 +624,10 @@ public abstract class ABaseHttpClient implements AutoCloseable {
     public ISOSLogger getLogger() {
         return logger;
     }
-    
+
     /** If the response is not received within the specified timeout then an HttpTimeoutException is thrown
      * 
-     * @param timeout
-     */
+     * @param timeout */
     public void setRequestTimeout(Duration timeout) {
         this.requestTimeout = timeout;
     }
@@ -650,7 +665,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             logger.debug("[" + title + "]" + headerStr);
         }
     }
-    
+
     protected void setDefaultRequestHeaders(Map<String, String> headers) {
         this.defaultHeaders = headers;
 
@@ -665,13 +680,13 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             }
         }
     }
-    
+
     protected void debugURI(URI uri) {
         if (logger.isDebugEnabled() && uri != null) {
             logger.debug("[HttpRequest URI] " + uri.toString());
         }
     }
-    
+
     protected void debugRequestBody(String requestBody) {
         if (logger.isDebugEnabled() && requestBody != null) {
             logger.debug("[HttpRequest body] " + requestBody);
@@ -694,7 +709,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             }
         });
     }
-    
+
     private void setRequestTimeout(HttpRequest.Builder builder) {
         if (requestTimeout == null) {
             return;
@@ -774,7 +789,7 @@ public abstract class ABaseHttpClient implements AutoCloseable {
 
     private long getFileSizeIfChunkedTransferEncoding(URI uri) throws Exception {
         try (InputStream is = getHTTPInputStream(uri)) {
-            return SOSClassUtil.countBytes(is);
+            return is == null ? -1L : SOSClassUtil.countBytes(is);
         }
     }
 

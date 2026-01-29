@@ -1067,7 +1067,7 @@ public class HistoryModel {
                         Files.delete(notStartedOrderLog);
                         LOGGER.info(String.format("[%s][%s][%s]tmp order log file deleted", method, orderId, notStartedOrderLog));
                     } else {
-                        SOSPath.renameTo(notStartedOrderLog, orderLog);
+                        SOSPath.move(notStartedOrderLog, orderLog);
                     }
                 } catch (Exception e) {
                     LOGGER.warn(String.format("[%s][%s][%s]%s", method, orderId, notStartedOrderLog, e.toString()), e);
@@ -2029,7 +2029,7 @@ public class HistoryModel {
         } else {
             try {
                 Path target = historyLogParentDir.resolve("history_" + file.getFileName());
-                SOSPath.renameTo(file, target);
+                SOSPath.move(file, target);
                 result.append(prefix).append("Log file moved to ").append(target).append(".");
             } catch (Exception ex) {
                 try {

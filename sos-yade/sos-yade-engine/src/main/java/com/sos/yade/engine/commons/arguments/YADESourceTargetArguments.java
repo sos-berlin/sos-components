@@ -12,9 +12,6 @@ public class YADESourceTargetArguments extends ASOSArguments {
     // TODO source_dir/target_dir
     private SOSArgument<String> directory = new SOSArgument<>("Directory", false);
 
-    private SOSArgument<Integer> connectionErrorRetryCountMax = new SOSArgument<>("RetryCountMax", false);
-    private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("RetryInterval", false, "0s");
-
     /** - Replacing ------- */
     private SOSArgument<String> replacing = new SOSArgument<>("ReplaceWhat", false);
     private SOSArgument<String> replacement = new SOSArgument<>("ReplaceWith", false);
@@ -28,10 +25,6 @@ public class YADESourceTargetArguments extends ASOSArguments {
 
     /** Internal Argument - Source/Target/Jump */
     private SOSArgument<String> label = new SOSArgument<>(null, false);
-
-    public boolean isRetryOnConnectionErrorEnabled() {
-        return connectionErrorRetryCountMax.getValue() != null && connectionErrorRetryCountMax.getValue().intValue() > 0;
-    }
 
     public boolean isReplacementEnabled() {
         return !replacing.isEmpty() && !replacement.isEmpty();
@@ -59,14 +52,6 @@ public class YADESourceTargetArguments extends ASOSArguments {
 
     public SOSArgument<String> getDirectory() {
         return directory;
-    }
-
-    public SOSArgument<Integer> getConnectionErrorRetryCountMax() {
-        return connectionErrorRetryCountMax;
-    }
-
-    public SOSArgument<String> getConnectionErrorRetryInterval() {
-        return connectionErrorRetryInterval;
     }
 
     public SOSArgument<String> getReplacement() {
