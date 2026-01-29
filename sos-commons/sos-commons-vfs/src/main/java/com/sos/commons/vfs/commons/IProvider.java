@@ -108,8 +108,9 @@ public interface IProvider {
      * @throws ProviderException */
     public boolean deleteFileIfExists(String path) throws ProviderException;
 
-    /** Renames a file to a target file if the source file exists.<br/>
-     * If the target file exists, then the target file is replaced.
+    /** Moves a source file to a target file if the source file exists.<br/>
+     * If the target file exists, then the target file is replaced.<br/>
+     * Depending on the provider, this operation may be implemented as a rename or as a copy-and-delete.
      *
      * @param source the current path of the file
      * @param target the new path for the file
