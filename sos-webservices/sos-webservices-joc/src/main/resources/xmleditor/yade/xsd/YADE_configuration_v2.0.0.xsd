@@ -6619,9 +6619,21 @@ A fragment is referenced via this attribute value by a transfer profile.
             To control reconnect behavior, the YADE has two options:
             <ul>
                      <li>
-                        <em>RetryCountMax</em> - number of reconnection attempts (for each single file transfer) if there is a connection failure</li>
+                        <em>RetryCountMax</em> - number of reconnection attempts (for each single file transfer) if there is a connection failure.</li>
                      <li>
-                        <em>RetryInterval</em> - the wait interval between attempts</li>
+                        <em>RetryInterval</em> - the wait interval between attempts (default 1s).</li>
+                  </ul>
+            This behavior is applied in the following cases:
+            <ul>
+                     <li>Initial connection to the <em>Source</em> or <em>Target</em>
+                     </li>
+                     <li>During the transfer of individual files</li>
+                     <li>After the transfer
+                    <ul>
+                           <li>when a transactional rollback must be executed</li>
+                           <li>when PostProcessing commands (<em>CommandAfterOperationOnSuccess</em>, <em>CommandAfterOperationOnError</em>, or <em>CommandAfterOperationFinal</em>) are defined</li>
+                        </ul>
+                     </li>
                   </ul>
 		             </p>
             </div>
@@ -6657,7 +6669,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="RetryInterval" default="0s">
+	  <xs:element name="RetryInterval" default="1s">
 		    <xs:annotation>
          <xs:appinfo source="General/RetryOnConnectionError/RetryInterval"/>
          <xs:documentation>
@@ -9694,6 +9706,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="KeepModificationDate" minOccurs="0"/>
 				        <xs:element ref="DisableMakeDirectories" minOccurs="0"/>
 				        <xs:element ref="DisableOverwriteFiles" minOccurs="0"/>
+                <xs:element ref="ResumeFiles" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
@@ -9728,6 +9741,57 @@ A fragment is referenced via this attribute value by a transfer profile.
                               <em>DisableOverwriteFiles=true</em> will be ignored and <em>DisableOverwriteFiles</em> will be internally set to <em>false</em>.</li>
                            <li>The transfer will fail if <em>TransferOptions / Transactional=true</em> or <em>Atomicity / AtomicPrefix | AtomicSuffix</em> are used, as appending to temporary target files is not supported.</li>
                         </ol>
+                     </li>
+                  </ul>
+               </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="ResumeFiles" type="xs:boolean" default="false">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/ResumeFiles"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+        TODO: Description not completed
+        Note:
+        <ul>
+                     <li>This feature is primarily intended for unstable networks and the transfer of larger files.</li>
+                     <li>An absolute requirement for retransferring a file after connection interruptions is that <em>TransferOptions / RetryOnConnectionError</em> is configured.</li>
+                     <li>General behavior for file retransfer:
+                <ul>
+                           <li>
+                              <strong>Without Resume</strong> – after a connection interruption, a file is transferred completely from the beginning.</li>
+                           <li>
+                              <strong>With Resume</strong> – after a connection interruption, the source file is read from a specific, already transferred offset, and only the remaining part is transferred.</li>
+                        </ul>
+                     </li>
+                     <li>The following option should <strong>not</strong> be enabled:
+                <ul>
+                           <li>
+                              <em>TargetFileOptions / CompressFiles</em>
+                           </li>
+                        </ul>
+                     </li>
+                     <li>Supported protocols:
+                <ul>
+                           <li>Azure, HTTP, WebDAV, SMB – <strong>no</strong>
+                           </li>
+                           <li>FTP/FTPS – <strong>yes</strong>
+                           </li>
+                           <li>LOCAL – <strong>yes</strong>
+                           </li>
+                           <li>SFTP – <strong>yes</strong>
+                           </li>
+                        </ul>
                      </li>
                   </ul>
                </p>

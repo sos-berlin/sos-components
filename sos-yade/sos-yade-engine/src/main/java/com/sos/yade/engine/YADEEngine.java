@@ -172,7 +172,8 @@ public class YADEEngine {
                 }
 
                 /** 19) Source/Target: execute commands after operation on success */
-                YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
+                YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator, argsLoader.getArgs()
+                        .getRetryOnConnectionError());
             } catch (Exception e) {
                 onError(logger, argsLoader, sourceDelegator, targetDelegator, exception);
                 exception = e;
@@ -240,7 +241,8 @@ public class YADEEngine {
                     }
 
                     /** 19) Source/Target: execute commands after operation on success */
-                    YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator);
+                    YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator, argsLoader.getArgs()
+                            .getRetryOnConnectionError());
                 } catch (Exception e) {
                     onError(logger, argsLoader, sourceDelegator, targetDelegator, exception);
                     exception = e;
