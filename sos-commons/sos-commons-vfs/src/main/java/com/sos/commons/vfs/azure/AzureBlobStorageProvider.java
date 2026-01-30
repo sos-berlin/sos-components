@@ -175,6 +175,12 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         }
     }
 
+    /** Overrides {@link IProvider#injectConnectivityFault()} */
+    @Override
+    public void injectConnectivityFault() {
+
+    }
+
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {

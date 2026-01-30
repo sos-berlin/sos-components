@@ -126,6 +126,18 @@ public class SSHJProvider extends SSHProvider {
         }
     }
 
+    /** Overrides {@link IProvider#injectConnectivityFault()} */
+    @Override
+    public void injectConnectivityFault() {
+        if (sshClient != null) {
+            try {
+                sshClient.disconnect();
+            } catch (IOException e) {
+                getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+            }
+        }
+    }
+
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {

@@ -26,6 +26,8 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
@@ -130,6 +132,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     public void disconnect() {
         if (disconnectInternal()) {
             getLogger().info(getDisconnectedMsg());
+        }
+    }
+
+    /** Overrides {@link IProvider#injectConnectivityFault()} */
+    @Override
+    public void injectConnectivityFault() {
+        connected = false;
+        try {
+            ProxyConfigArguments args = new ProxyConfigArguments();
+            args.getHost().setValue("yade-connectivity-fault-proxy");
+            client = BaseHttpClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args)).build();
+        } catch (Exception e) {
+            getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
         }
     }
 
