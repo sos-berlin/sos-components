@@ -129,12 +129,14 @@ public class YADEFileHandler {
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
             if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
-                logger.info("[%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile.getFullPath(),
-                        sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
+                logger.info("[%s][%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
+                        .getState()), sourceDelegator.getLabel(), sourceFile.getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(),
+                        targetFile.getFullPath());
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceFile
-                            .getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(), targetFile.getFullPath());
+                    logger.debug("[%s][%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
+                            .getState()), sourceDelegator.getLabel(), sourceFile.getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(),
+                            targetFile.getFullPath());
                 }
             }
 

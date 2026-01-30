@@ -23,6 +23,8 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.proxy.ProxyConfig;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderUtils;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageResource;
@@ -178,7 +180,14 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-
+        connected = false;
+        try {
+            ProxyConfigArguments args = new ProxyConfigArguments();
+            args.getHost().setValue("yade-connectivity-fault-proxy");
+            client = AzureBlobStorageClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args)).build();
+        } catch (Exception e) {
+            getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+        }
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
