@@ -33,6 +33,15 @@ public class YADEArguments extends ASOSArguments {
     public static final String STARTUP_ARG_SOURCE_RECURSIVE = "source_recursive";
     // Target
     public static final String STARTUP_ARG_TARGET_DIR = "target_dir";
+
+    // Simulation. e.g.:
+    // - 1) 5 - inject one connectivity fault (disconnect etc.) after 5s
+    // - 2) 2;5;3 - inject connectivity faults sequentially after 2s, then 5s, then 3s
+    // STARTUP_ARG_SIM_CONN_FAULTS - shorthand for source AND target connectivity fault - e.g. "2;2" - inject faults for both providers at the same intervals
+    public static final String STARTUP_ARG_SIM_CONN_FAULTS = "sim_conn_faults";
+    public static final String STARTUP_ARG_SIM_CONN_FAULTS_SOURCE = "source_sim_conn_faults";
+    public static final String STARTUP_ARG_SIM_CONN_FAULTS_TARGET = "target_sim_conn_faults";
+
     /** Settings - replacement behavior<br/>
      * These arguments define how placeholder variables in the {@code Settings.xml} file are to be replaced or resolved. */
     /** see {@link SOSMapVariableReplacer#SOSMapVariableReplacer(java.util.Map, boolean, boolean)} */

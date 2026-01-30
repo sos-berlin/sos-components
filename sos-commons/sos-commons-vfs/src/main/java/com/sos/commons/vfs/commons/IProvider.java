@@ -62,6 +62,12 @@ public interface IProvider {
     /** Disconnects from the provider and performs any necessary logout or cleanup operations. */
     public void disconnect();
 
+    /** Injects a connectivity fault into the provider to deliberately trigger connection-related errors (e.g. unreachable endpoint, authentication failure).
+     *
+     * This method is intended for simulation and test scenarios only and is used to force failures at the same execution points where real connectivity or
+     * network-related errors would normally occur. */
+    public void injectConnectivityFault();
+
     /** Selects files based on the provided selection criteria.<br/>
      * The selection criteria can include options like recursion, file size limits, minimum/maximum number of files, etc.
      * 

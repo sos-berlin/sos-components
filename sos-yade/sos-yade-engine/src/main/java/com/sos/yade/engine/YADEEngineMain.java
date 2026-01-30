@@ -141,7 +141,12 @@ public class YADEEngineMain {
             if (sourceArgsWithoutPrefix.contains(newKey)) {
                 newKey = "source_" + newKey;
             }
-            r.put(newKey, entry.getValue());
+            if (YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS.equals(newKey)) {
+                r.put(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_SOURCE, entry.getValue());
+                r.put(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_TARGET, entry.getValue());
+            } else {
+                r.put(newKey, entry.getValue());
+            }
         }
         return r;
     }
@@ -154,9 +159,11 @@ public class YADEEngineMain {
         setOptionalSourceFilePath(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH);
         setOptionalSourceFileSpec(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         setOptionalBooleanArgument(argsLoader.getSourceArgs().getRecursive(), args, YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE);
+        setOptionalStringArgument(argsLoader.getSourceArgs().getSimConnFaults(), args, YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_SOURCE);
         // Target
         if (argsLoader.getTargetArgs() != null) {
             setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
+            setOptionalStringArgument(argsLoader.getTargetArgs().getSimConnFaults(), args, YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_TARGET);
         }
     }
 
@@ -204,6 +211,15 @@ public class YADEEngineMain {
         printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED, "<boolean>", "default: "
                 + YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
         printArgumentUsage(YADEArguments.STARTUP_ARG_PARALLELISM, "<integer>", "default: " + YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
+
+        System.out.println("    Simulation Options (connectivity fault injection):");
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_SOURCE, "<seconds>", "default: none" + "\n" + String.format("%-55s%s", "",
+                "e.g. \"5\" - inject one connectivity fault after 5s") + "\n" + String.format("%-60s%s", "",
+                        "\"5;2;3\" - inject connectivity faults 3 times (after 5s, then 2s, then 3s)"));
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS_TARGET, "<seconds>", "default: none" + "\n" + String.format("%-55s%s", "",
+                "same format as source, applied to target provider"));
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, "<seconds>", "shorthand for source AND target connectivity faults" + "\n"
+                + String.format("%-55s%s", "", "e.g. \"2;2\" - inject faults for both providers at the same intervals"));
 
         System.out.println("    Switches:");
         printArgumentUsage("-" + STARTUP_SWITCH_HELP_1 + " | --" + STARTUP_SWITCH_HELP_2, null, "displays usage", false);

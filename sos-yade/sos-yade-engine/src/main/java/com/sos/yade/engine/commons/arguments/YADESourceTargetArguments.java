@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons.arguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.commons.IProvider;
 
 public class YADESourceTargetArguments extends ASOSArguments {
 
@@ -22,6 +23,11 @@ public class YADESourceTargetArguments extends ASOSArguments {
      * Source -> CheckIntegrityHash, Target -> CreateIntegrityHashFile<br/>
      * Argument name is based on XML schema definition */
     private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("HashAlgorithm", false, "md5");
+
+    /** Simulation Argument
+     * 
+     * @see {@link IProvider#injectConnectivityFault()} */
+    private SOSArgument<String> simConnFaults = new SOSArgument<>(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, false);
 
     /** Internal Argument - Source/Target/Jump */
     private SOSArgument<String> label = new SOSArgument<>(null, false);
@@ -64,6 +70,10 @@ public class YADESourceTargetArguments extends ASOSArguments {
 
     public SOSArgument<String> getIntegrityHashAlgorithm() {
         return integrityHashAlgorithm;
+    }
+
+    public SOSArgument<String> getSimConnFaults() {
+        return simConnFaults;
     }
 
     public SOSArgument<String> getLabel() {

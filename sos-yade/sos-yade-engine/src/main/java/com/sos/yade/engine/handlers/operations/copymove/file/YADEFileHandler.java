@@ -272,11 +272,6 @@ public class YADEFileHandler {
                                 targetStream.write(buffer, 0, bytesRead);
                                 targetFile.updateBytesProcessed(bytesRead);
 
-                                if (targetFile.getBytesProcessed() > 1000 && attempts < 2) {
-                                    sourceDelegator.getProvider().disconnect();
-                                    throw new Exception("Simulated exception for retry");
-                                }
-
                                 YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
                                 YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
                             }
