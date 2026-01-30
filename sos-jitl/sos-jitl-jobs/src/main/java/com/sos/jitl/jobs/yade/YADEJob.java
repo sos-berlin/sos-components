@@ -87,6 +87,24 @@ public class YADEJob extends Job<YADEJobArguments> {
         if (!args.getTargetDir().isEmpty() && argsLoader.getTargetArgs() != null) {
             argsLoader.getTargetArgs().getDirectory().setValue(args.getTargetDir().getValue());
         }
+
+        applySimulation(argsLoader, args);
+    }
+
+    private void applySimulation(AYADEArgumentsLoader argsLoader, YADEJobArguments args) {
+        if (!args.getSimConnFaults().isEmpty()) {
+            argsLoader.getSourceArgs().getSimConnFaults().setValue(args.getSimConnFaults().getValue());
+            argsLoader.getTargetArgs().getSimConnFaults().setValue(args.getSimConnFaults().getValue());
+            return;
+        }
+
+        if (!args.getSourceSimConnFaults().isEmpty()) {
+            argsLoader.getSourceArgs().getSimConnFaults().setValue(args.getSourceSimConnFaults().getValue());
+        }
+
+        if (!args.getTargetSimConnFaults().isEmpty()) {
+            argsLoader.getTargetArgs().getSimConnFaults().setValue(args.getTargetSimConnFaults().getValue());
+        }
     }
 
     private void setOutcomeHistory(OrderProcessStep<YADEJobArguments> step, YADEJobArguments args, AYADEArgumentsLoader argsLoader,

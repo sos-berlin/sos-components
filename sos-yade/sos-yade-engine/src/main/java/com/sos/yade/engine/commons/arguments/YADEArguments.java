@@ -34,13 +34,16 @@ public class YADEArguments extends ASOSArguments {
     // Target
     public static final String STARTUP_ARG_TARGET_DIR = "target_dir";
 
-    // Simulation. e.g.:
+    // Connectivity fault simulation. e.g.:
     // - 1) 5 - inject one connectivity fault (disconnect etc.) after 5s
     // - 2) 2;5;3 - inject connectivity faults sequentially after 2s, then 5s, then 3s
-    // STARTUP_ARG_SIM_CONN_FAULTS - shorthand for source AND target connectivity fault - e.g. "2;2" - inject faults for both providers at the same intervals
+    /** Connectivity fault simulation - shorthand for "source_sim_conn_faults" AND "target_sim_conn_faults" fault - e.g. "2;2" - inject faults for both
+     * providers at the same intervals */
     public static final String STARTUP_ARG_SIM_CONN_FAULTS = "sim_conn_faults";
-    public static final String STARTUP_ARG_SIM_CONN_FAULTS_SOURCE = "source_sim_conn_faults";
-    public static final String STARTUP_ARG_SIM_CONN_FAULTS_TARGET = "target_sim_conn_faults";
+    /** Connectivity fault simulation for the source connection */
+    public static final String STARTUP_ARG_SOURCE_SIM_CONN_FAULTS = "source_sim_conn_faults";
+    /** Connectivity fault simulation for the target connection */
+    public static final String STARTUP_ARG_TARGET_SIM_CONN_FAULTS = "target_sim_conn_faults";
 
     /** Settings - replacement behavior<br/>
      * These arguments define how placeholder variables in the {@code Settings.xml} file are to be replaced or resolved. */

@@ -200,7 +200,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-
+        if (client != null) {
+            try {
+                client.disconnect();
+            } catch (IOException e) {
+                getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+            }
+        }
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */

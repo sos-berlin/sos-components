@@ -776,6 +776,8 @@ public class SSHJProvider extends SSHProvider {
     }
 
     private void connectInternal() throws Exception {
+        // Creates the client unconditionally (no null check), because SSHJClientFactory.createAuthenticatedClient() performs the connect and authentication.
+        // If a previous sshClient instance exists, it must be closed via disconnect().
         sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
         setServerVersion(sshClient.getTransport().getServerVersion());
     }

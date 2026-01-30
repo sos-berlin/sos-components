@@ -24,7 +24,7 @@ public class YADESourceTargetArguments extends ASOSArguments {
      * Argument name is based on XML schema definition */
     private SOSArgument<String> integrityHashAlgorithm = new SOSArgument<>("HashAlgorithm", false, "md5");
 
-    /** Simulation Argument
+    /** Connectivity fault simulation Argument
      * 
      * @see {@link IProvider#injectConnectivityFault()} */
     private SOSArgument<String> simConnFaults = new SOSArgument<>(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, false);

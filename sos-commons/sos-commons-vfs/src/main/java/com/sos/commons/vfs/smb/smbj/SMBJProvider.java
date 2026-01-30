@@ -72,8 +72,9 @@ public class SMBJProvider extends SMBProvider {
         }
 
         try {
-            client = createClient();
-
+            if (client == null) {
+                client = createClient();
+            }
             getLogger().info(getConnectMsg());
             Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
             try {
@@ -109,12 +110,7 @@ public class SMBJProvider extends SMBProvider {
 
         disableReusableResource();
 
-        if (session != null) { // check due to session.getConnection()
-            SOSClassUtil.closeQuietly(session); // session.close -> logout
-            SOSClassUtil.closeQuietly(session.getConnection());
-        }
-        SOSClassUtil.closeQuietly(client);// closes connections ...
-
+        closeSessionAndClient();
         session = null;
         client = null;
 
@@ -124,7 +120,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-
+        closeSessionAndClient();
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
@@ -543,6 +539,14 @@ public class SMBJProvider extends SMBProvider {
                 getLogger().warn(String.format("%s[applyConfiguratedProperties][%s=%s]%s", getLogPrefix(), key, val, te.toString()), te);
             }
         });
+    }
+
+    private void closeSessionAndClient() {
+        if (session != null) { // check due to session.getConnection()
+            SOSClassUtil.closeQuietly(session); // session.close -> logout
+            SOSClassUtil.closeQuietly(session.getConnection());
+        }
+        SOSClassUtil.closeQuietly(client);// closes connections ...
     }
 
     /** Returns normalized path without shareName
