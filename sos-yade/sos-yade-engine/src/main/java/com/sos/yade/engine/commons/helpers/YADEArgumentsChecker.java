@@ -137,13 +137,6 @@ public class YADEArgumentsChecker {
                 logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toStringAsOppositeValue(targetArgs
                         .getOverwriteFiles()), YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
             }
-
-            // see YADETargetArguments.isResumeFilesEnabled()
-            if (targetArgs.getResumeFiles().isTrue()) {
-                targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
-                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
-                        YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
-            }
         }
         // see YADETargetArguments.isResumeFilesEnabled()
         if (targetArgs.getResumeFiles().isTrue()) {

@@ -106,7 +106,8 @@ public class YADETargetArguments extends YADESourceTargetArguments {
     }
 
     public boolean isResumeFilesEnabled(YADEArguments args) {
-        return (resumeFiles.isTrue() && args.getRetryOnConnectionError().isEnabled()) && (!appendFiles.isTrue() && !isCompressFilesEnabled());
+        // return (resumeFiles.isTrue() && args.getRetryOnConnectionError().isEnabled()) && (!appendFiles.isTrue() && !isCompressFilesEnabled());
+        return (resumeFiles.isTrue() && args.getRetryOnConnectionError().isEnabled()) && (!isCompressFilesEnabled());
     }
 
     public SOSArgument<Boolean> getCreateIntegrityHashFile() {
