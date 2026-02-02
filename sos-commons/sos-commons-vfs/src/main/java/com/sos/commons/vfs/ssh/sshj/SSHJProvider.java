@@ -394,6 +394,10 @@ public class SSHJProvider extends SSHProvider {
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         final AtomicReference<RemoteFile> remoteFileRef = new AtomicReference<>();
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
             sftpRef.set(sftpClient);
 
@@ -464,6 +468,10 @@ public class SSHJProvider extends SSHProvider {
         final AtomicReference<SFTPClient> sftpRef = new AtomicReference<>();
         final AtomicReference<RemoteFile> remoteFileRef = new AtomicReference<>();
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
             sftpRef.set(sftpClient);
 

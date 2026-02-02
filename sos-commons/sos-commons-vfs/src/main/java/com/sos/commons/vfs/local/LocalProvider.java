@@ -249,7 +249,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
 
     /** Overrides {@link IProvider#supportsReadOffset()} */
     public boolean supportsReadOffset() {
-        return false;
+        return true;
     }
 
     /** Overrides {@link IProvider#getInputStream(String)} */
@@ -264,6 +264,10 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         validateArgument("getInputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             if (offset <= 0) {
                 return Files.newInputStream(getAbsoluteNormalizedPath(path));
             }
@@ -282,6 +286,10 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         validateArgument("getOutputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             Path p = getAbsoluteNormalizedPath(path);
             if (append) {
                 return Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.APPEND);

@@ -60,6 +60,8 @@ public abstract class AProviderArguments extends ASOSArguments {
     private SOSArgument<EnumSet<FileType>> validFileTypes = new SOSArgument<>("valid_file_types", false, EnumSet.of(FileType.REGULAR,
             FileType.SYMLINK));
 
+    private Boolean isHTTP = null;
+
     public void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
     }
@@ -120,6 +122,32 @@ public abstract class AProviderArguments extends ASOSArguments {
                 port.setValue(Integer.parseInt(arr[1]));
             }
         }
+    }
+
+    public boolean isHTTP() {
+        if (isHTTP == null) {
+            if (!protocol.isEmpty()) {
+                switch (protocol.getValue()) {
+                case AZURE_BLOB_STORAGE:
+                case HTTP:
+                case HTTPS:
+                case WEBDAV:
+                case WEBDAVS:
+                    isHTTP = true;
+                    break;
+                case FTP:
+                case FTPS:
+                case LOCAL:
+                case SFTP:
+                case SMB:
+                case SSH:
+                case UNKNOWN:
+                    isHTTP = false;
+                    break;
+                }
+            }
+        }
+        return isHTTP;
     }
 
 }

@@ -481,6 +481,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             if (offset > 0) {
                 // client.setRestartOffset docs: ... The restart marker is reset to zero after use...
                 // so - no manually reset needed
@@ -541,6 +545,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments> {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             OutputStream os = append ? client.appendFileStream(path) : client.storeFileStream(path);
             if (os == null) {
                 throw new ProviderException(String.format("%s[failed to open OutputStream]%s", getPathOperationPrefix(path), new FTPProtocolReply(

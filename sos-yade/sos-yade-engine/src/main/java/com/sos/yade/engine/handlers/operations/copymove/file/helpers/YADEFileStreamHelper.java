@@ -1,7 +1,5 @@
 package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
@@ -19,22 +17,19 @@ public class YADEFileStreamHelper {
 
     /** Source: InputStream */
     public static InputStream getSourceInputStream(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile, long sourceFileReadOffset, boolean useBufferedStreams) throws ProviderException {
-        InputStream is = sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath(), sourceFileReadOffset);
-        if (useBufferedStreams) {
-            return new BufferedInputStream(is, config.getBufferSize());
-        }
-        return is;
+            YADEProviderFile sourceFile, long sourceFileReadOffset) throws ProviderException {
+        return sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath(), sourceFileReadOffset);
     }
 
     /** Target: OutputStream */
     public static OutputStream getTargetOutputStream(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, boolean isAppendEnabled, boolean useBufferedStreams) throws ProviderException {
+            YADETargetProviderFile targetFile, boolean isAppendEnabled, boolean isCompress) throws ProviderException {
         OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), isAppendEnabled);
-        if (useBufferedStreams) {
-            return new BufferedOutputStream(os, config.getBufferSize());
+        try {
+            return isCompress ? new GZIPOutputStream(os) : os;
+        } catch (Exception e) {
+            throw new ProviderException("[" + targetDelegator.getLabel() + "][" + targetFile.getFullPath() + "]" + e, e);
         }
-        return os;
     }
 
     public static void finishTargetOutputStream(ISOSLogger logger, YADETargetProviderFile targetFile, OutputStream targetStream, boolean isCompress) {

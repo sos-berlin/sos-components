@@ -114,28 +114,34 @@ public class YADEArgumentsChecker {
                     .getName(), targetArgs.getDirectory().getValue(), YADEArgumentsHelper.toString(targetArgs.getDirectory()));
         }
         if (targetArgs.getAppendFiles().isTrue()) {
-            if (args.getTransactional().isTrue() || targetArgs.isAtomicityEnabled()) {
-                String startPart = "[" + YADETargetArguments.LABEL + "]" + YADEArgumentsHelper.toString(targetArgs.getAppendFiles())
-                        + " not compatible with ";
-                String notCompatiblePart = null;
-                if (args.getTransactional().isTrue()) {
-                    notCompatiblePart = YADEArgumentsHelper.toString(args.getTransactional());
-                } else {
-                    if (targetArgs.getAtomicPrefix().isDirty()) {
-                        notCompatiblePart = YADEArgumentsHelper.toString(targetArgs.getAtomicPrefix());
+            if (targetArgs.getProvider().isHTTP()) {
+                targetArgs.getAppendFiles().setValue(Boolean.valueOf(false));
+                logger.info("[%s][%s]due to HTTP providers currently not supporting appending to existing files", YADETargetArguments.LABEL,
+                        YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+            } else {
+                if (args.getTransactional().isTrue() || targetArgs.isAtomicityEnabled()) {
+                    String startPart = "[" + YADETargetArguments.LABEL + "]" + YADEArgumentsHelper.toString(targetArgs.getAppendFiles())
+                            + " not compatible with ";
+                    String notCompatiblePart = null;
+                    if (args.getTransactional().isTrue()) {
+                        notCompatiblePart = YADEArgumentsHelper.toString(args.getTransactional());
+                    } else {
+                        if (targetArgs.getAtomicPrefix().isDirty()) {
+                            notCompatiblePart = YADEArgumentsHelper.toString(targetArgs.getAtomicPrefix());
+                        }
+                        if (targetArgs.getAtomicSuffix().isDirty()) {
+                            notCompatiblePart = notCompatiblePart == null ? "" : notCompatiblePart + ", ";
+                            notCompatiblePart += YADEArgumentsHelper.toString(targetArgs.getAtomicSuffix());
+                        }
                     }
-                    if (targetArgs.getAtomicSuffix().isDirty()) {
-                        notCompatiblePart = notCompatiblePart == null ? "" : notCompatiblePart + ", ";
-                        notCompatiblePart += YADEArgumentsHelper.toString(targetArgs.getAtomicSuffix());
-                    }
+                    throw new YADEEngineInitializationException(startPart + notCompatiblePart + " (temporary target files used)");
                 }
-                throw new YADEEngineInitializationException(startPart + notCompatiblePart + " (temporary target files used)");
-            }
 
-            if (!targetArgs.getOverwriteFiles().isTrue()) {
-                targetArgs.getOverwriteFiles().setValue(Boolean.valueOf(true));
-                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toStringAsOppositeValue(targetArgs
-                        .getOverwriteFiles()), YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+                if (!targetArgs.getOverwriteFiles().isTrue()) {
+                    targetArgs.getOverwriteFiles().setValue(Boolean.valueOf(true));
+                    logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toStringAsOppositeValue(targetArgs
+                            .getOverwriteFiles()), YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+                }
             }
         }
         // see YADETargetArguments.isResumeFilesEnabled()
