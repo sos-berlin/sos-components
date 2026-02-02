@@ -426,6 +426,10 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         validatePrerequisites("getInputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
@@ -446,6 +450,10 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 

@@ -95,6 +95,7 @@ public class YADEProviderConnectivityFaultSimulator {
         } catch (Exception e) {
             logger.info("[%s][shutdown]%s", CLASS_NAME, e);
         } finally {
+            executor = null;
             logger.info("[%s][shutdown]all simulations finished", CLASS_NAME);
         }
     }

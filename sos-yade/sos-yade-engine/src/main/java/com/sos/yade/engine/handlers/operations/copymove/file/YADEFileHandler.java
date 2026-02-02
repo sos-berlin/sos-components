@@ -6,7 +6,6 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.GZIPOutputStream;
 
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
@@ -41,6 +40,8 @@ import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEChecksu
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileActionsExecuter;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileStreamHelper;
+import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADERetryFileHelper;
+import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADERetryFileHelper.Result;
 
 /** Single "transfer" file manager */
 public class YADEFileHandler {
@@ -49,7 +50,6 @@ public class YADEFileHandler {
     private static final long AZURE_BLOB_STORAGE_MAX_UPLOAD_FILESIZE = 50L * 1024 * 1024;// 50MB
     // SSH (buffer_size=32KB): 4.5GB ~ 1.15 minutes, 1.5 GB ~ 25 seconds
     private static final long LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN = 1073741824L;// 1GB
-    private static final long USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN = 10485760L;// 10 MB
 
     private final ISOSLogger logger;
     private final YADECopyMoveOperationsConfig config;
@@ -147,8 +147,6 @@ public class YADEFileHandler {
             MessageDigest targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
                     .isCreateIntegrityHashFileEnabled());
 
-            boolean useBufferedStreams = sourceFile.getSize() > USE_BUFFERED_STREAMS_IF_FILESIZE_GREATER_THAN ? true : false;
-
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
             // int cumulativeFileSeperatorLength = 0;
@@ -159,7 +157,7 @@ public class YADEFileHandler {
                 long sourceFileReadOffset = 0L;
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
-                            sourceFileReadOffset, useBufferedStreams)) {
+                            sourceFileReadOffset)) {
                         if (targetDelegator.isAzure()) {
                             targetFile.setSize(((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(),
                                     sourceStream, sourceFile.getSize()));
@@ -176,132 +174,53 @@ public class YADEFileHandler {
             } else {
                 // AppendFiles/CumulateFiles
                 boolean targetIsAppendEnabled = config.getTarget().isAppendEnabled();
-                long targetAppendFileSizeBeforeTransfer = 0L;
-                if (targetIsAppendEnabled && config.getRetry().isEnabled()) {
-                    ProviderFile t = targetDelegator.getProvider().rereadFileIfExists(targetFile);
-                    if (t != null) {
-                        targetAppendFileSizeBeforeTransfer = t.getSize();
-                    }
-                }
+                YADERetryFileHelper retryHelper = new YADERetryFileHelper(config.getRetry().isEnabled());
+                retryHelper.beforeTransfer(logger, targetDelegator, targetFile, targetIsAppendEnabled, config.getTarget().isResumeEnabled());
 
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
                     if (attempts > 0) { // retry on connection errors
-                        boolean resetBytesProcessed = true;
+                        // Observations on Windows with the LocalProvider as Target:
+                        // - For large files (~1.5 GB) and RetryInterval=1s, retrying may fail with
+                        // -- java.nio.file.FileSystemException ("The process cannot access the file because it is being used by another process").
+                        // - Root cause: On Windows, Java opens files without shared write access.
+                        // -- After closing the stream, external processes (e.g. antivirus ...) may temporarily hold a read lock on the file.
+                        // -- As a result, immediate reopen attempts can fail even though all Java streams have been properly closed (try-with-resources).
+                        // - Workarounds / solutions:
+                        // 1) Increase retry interval to allow external file scans to complete.
+                        // 2) Prefer transactional, atomic transfers (write to temporary file and atomically move/replace the target file after successful
+                        // transfer).
 
-                        if (config.getTarget().isResumeEnabled()) { // resume - try to transfer the source file beginning with the specific offset
-                            // if (useCumulativeTargetFile) {
-                            // not reset the bytes processed - starts with this offset
-                            // TODO check if additionally compress
-                            // }
-                            ProviderFile t = targetDelegator.getProvider().rereadFileIfExists(targetFile);
-                            // AppendFiles/CumulateFiles
-                            if (config.getTarget().isAppendEnabled()) {
-                                if (t == null) {
-                                    logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, 0L,
-                                            "restart from offset 0 (Target not found) ..."));
-                                } else {
-                                    long diff = t.getSize() - targetAppendFileSizeBeforeTransfer;
-                                    if (diff < 0) {
-                                        throw new Exception("[" + getAppendFilesArgName(useCumulativeTargetFile) + "]Target Bytes=" + t.getSize()
-                                                + " less as before Retry(Bytes=" + targetAppendFileSizeBeforeTransfer + ")");
-                                    } else if (diff == targetFile.getBytesProcessed()) {
-                                        if (diff > 0) {
-                                            resetBytesProcessed = false;
+                        // Resume example: SFTP->Local (~1.5GB) reduces transfer from ~27s to ~16s (including 1-2s RetryInterval + SFTP reconnect)
+                        Result onRetry = retryHelper.onRetry(logger, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile,
+                                useCumulativeTargetFile);
+                        switch (onRetry.getType()) {
+                        case RESTART: // "normal, append/cumulative or resume
+                            targetIsAppendEnabled = config.getTarget().isAppendEnabled();
 
-                                            logger.info(getResumeAppendFilesLogMessage(useCumulativeTargetFile, fileTransferLogPrefix, targetFile,
-                                                    diff, "resume at offset " + diff + " ..."));
-                                        }// else resetBytesProcessed
-                                    } else {
-                                        resetBytesProcessed = false;
-                                        targetFile.setBytesProcessed(diff);
-
-                                        logger.info(getResumeAppendFilesLogMessage(useCumulativeTargetFile, fileTransferLogPrefix, targetFile, diff,
-                                                "resume at offset " + diff + " ..."));
-                                    }
-                                }
-                            } else {
-                                if (t == null) {
-                                    logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, 0L,
-                                            "restart from offset 0 (Target not found) ..."));
-                                } else {
-                                    if (t.getSize() <= 0) {
-                                        if (t.getSize() == sourceFile.getSize()) { // transfer completed - 0 bytes
-                                            targetFile.setBytesProcessed(t.getSize());
-
-                                            logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, 0L,
-                                                    "no resume required (Source and Target sizes match: 0 Bytes)"));
-                                            break l;
-                                        }
-                                        logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, 0L, "restart from offset 0 (Target Bytes="
-                                                + t.getSize() + ") ..."));
-                                    } else {
-                                        if (t.getSize() == sourceFile.getSize()) { // transfer competed - n bytes
-                                            targetFile.setBytesProcessed(t.getSize());
-
-                                            logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, 0L,
-                                                    "no resume required (Source and Target sizes match: " + t.getSize() + " Bytes"));
-                                            break l;
-                                        } else if (t.getSize() > sourceFile.getSize()) { // not really possible but ...
-                                            logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, t.getSize(), "[Target Bytes=" + t
-                                                    .getSize() + " greater as Source Bytes=" + sourceFile.getSize()
-                                                    + "]restart from offset 0 (size mismatch) ..."));
-                                        } else {
-                                            resetBytesProcessed = false;
-                                            targetIsAppendEnabled = true;
-                                            targetFile.setBytesProcessed(t.getSize());
-
-                                            logger.info(getResumeLogMessage(fileTransferLogPrefix, targetFile, t.getSize(), "resume at offset " + t
-                                                    .getSize() + " ..."));
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            // AppendFiles/CumulateFiles
-                            if (targetIsAppendEnabled) {
-                                ProviderFile t = targetDelegator.getProvider().rereadFileIfExists(targetFile);
-                                if (t == null) {
-                                    logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, targetFile, 0L,
-                                            "restart from offset 0 (Target not found) ..."));
-                                } else {
-                                    long diff = t.getSize() - targetAppendFileSizeBeforeTransfer;
-                                    if (diff < 0) {
-                                        throw new Exception("[" + getAppendFilesArgName(useCumulativeTargetFile) + "]Target Bytes=" + t.getSize()
-                                                + " less as before Retry(Bytes=" + targetAppendFileSizeBeforeTransfer + ")");
-                                    } else if (diff == targetFile.getBytesProcessed()) {
-                                        if (diff > 0) {
-                                            resetBytesProcessed = false;
-
-                                            logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, targetFile, diff,
-                                                    "resume at offset " + diff + " ..."));
-                                        }// else resetBytesProcessed
-                                    } else {
-                                        resetBytesProcessed = false;
-                                        targetFile.setBytesProcessed(diff);
-
-                                        logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, targetFile, diff,
-                                                "resume at offset " + diff + " ..."));
-                                    }
-                                }
-                            } // else resetBytesProcessed
-                        }
-
-                        // reset - due to restart the whole transfer of the source file
-                        if (resetBytesProcessed) {
+                            // reset - due to restart the whole transfer of the source file
                             targetFile.resetBytesProcessed();// 0L
 
                             sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
                                     .isCheckIntegrityHashEnabled());
                             targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
                                     .isCreateIntegrityHashFileEnabled());
+                            break;
+                        case RESUME: // append/cumulative or resume
+                            targetIsAppendEnabled = true;
+
+                            targetFile.setBytesProcessed(onRetry.getOffset());
+                            break;
+                        case COMPLETED:
+                        case SKIPPED:
+                            break l;
                         }
                     }
 
                     // cumulativeFileSeperatorLength = 0;
+                    Exception exception = null;
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, targetFile
-                            .getBytesProcessed(), useBufferedStreams); OutputStream targetOutputStream = YADEFileStreamHelper.getTargetOutputStream(
-                                    config, targetDelegator, targetFile, targetIsAppendEnabled, useBufferedStreams); OutputStream targetStream =
-                                            compressTarget ? new GZIPOutputStream(targetOutputStream) : targetOutputStream) {
+                            .getBytesProcessed()); OutputStream targetStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator,
+                                    targetFile, targetIsAppendEnabled, compressTarget)) {
                         if (targetStream == null) {
                             throw new YADEEngineTargetOutputStreamException(
                                     "Failed to obtain OutputStream from Target Provider: target stream is null.");
@@ -310,7 +229,7 @@ public class YADEFileHandler {
                         if (useCumulativeTargetFile && !isCumulateTargetWritten) {
                             byte[] bytes = cumulativeTargetFileSeparator.getBytes();
                             // cumulativeFileSeperatorLength = bytes.length;
-                            targetOutputStream.write(bytes);
+                            targetStream.write(bytes);
 
                             YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
                             YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
@@ -338,8 +257,17 @@ public class YADEFileHandler {
                         break l;
                     } catch (Exception e) {
                         attempts++;
-                        handleException(fileTransferLogPrefix, targetFile, e, attempts, false);
+                        exception = e;
                     }
+                    // handle exception only after all streams have been closed by try-with-resources
+                    if (exception != null) {
+                        handleException(fileTransferLogPrefix, targetFile, exception, attempts, false);
+                    }
+
+                }
+
+                if (attempts > 0) {
+                    targetFile = retryHelper.afterTransfer(logger, targetDelegator, targetFile);
                 }
                 YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, targetFile, compressTarget);
             }
@@ -373,31 +301,6 @@ public class YADEFileHandler {
         } catch (Exception e) {
             throwException(fileTransferLogPrefix, targetFile, e, "");
         }
-    }
-
-    private String getAppendFilesRetryMsg(boolean useCumulativeTargetFile, String fileTransferLogPrefix, YADETargetProviderFile targetFile,
-            long bytesProcessed, String add) {
-        return getRetryLogMessage(fileTransferLogPrefix, targetFile, getAppendFilesArgName(useCumulativeTargetFile), bytesProcessed, add);
-    }
-
-    private String getResumeAppendFilesLogMessage(boolean useCumulativeTargetFile, String fileTransferLogPrefix, YADETargetProviderFile targetFile,
-            long bytesProcessed, String add) {
-        return getRetryLogMessage(fileTransferLogPrefix, targetFile, targetDelegator.getArgs().getResumeFiles().getName() + "]["
-                + getAppendFilesArgName(useCumulativeTargetFile), bytesProcessed, add);
-    }
-
-    private String getResumeLogMessage(String fileTransferLogPrefix, YADETargetProviderFile targetFile, long bytesProcessed, String add) {
-        return getRetryLogMessage(fileTransferLogPrefix, targetFile, targetDelegator.getArgs().getResumeFiles().getName(), bytesProcessed, add);
-    }
-
-    private String getRetryLogMessage(String fileTransferLogPrefix, YADETargetProviderFile targetFile, String argName, long bytesProcessed,
-            String add) {
-        return String.format("[%s][%s][%s][%s][%s][Bytes(processed)=%s/%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
-                .getState()), argName, targetDelegator.getLabel(), targetFile.getFullPath(), bytesProcessed, sourceFile.getSize(), add);
-    }
-
-    private String getAppendFilesArgName(boolean useCumulativeTargetFile) {
-        return useCumulativeTargetFile ? "CumulateFiles" : targetDelegator.getArgs().getAppendFiles().getName();
     }
 
     private void finalizeIfNonTransactional(boolean isMoveOperation, boolean useLastModified, String fileTransferLogPrefix) throws Exception {

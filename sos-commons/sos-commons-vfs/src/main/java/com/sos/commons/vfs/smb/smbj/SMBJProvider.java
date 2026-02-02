@@ -360,6 +360,10 @@ public class SMBJProvider extends SMBProvider {
         validatePrerequisites("getInputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             SMBJProviderReusableResource reusable = getReusableResource();
             DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 
@@ -375,6 +379,10 @@ public class SMBJProvider extends SMBProvider {
         validatePrerequisites("getOutputStream", path, "path");
 
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             SMBJProviderReusableResource reusable = getReusableResource();
             DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
 

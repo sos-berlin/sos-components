@@ -395,6 +395,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         URI uri = null;
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
+            }
+
             uri = new URI(normalizePath(path));
             InputStream is = client.getHTTPInputStream(uri, offset);
             if (is == null) {
@@ -420,6 +424,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
         URI uri = null;
         try {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
+            }
+
             uri = new URI(normalizePath(path));
             return new HttpOutputStream(client, uri, false);
         } catch (IOException e) {
