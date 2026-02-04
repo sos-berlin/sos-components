@@ -18,32 +18,61 @@ import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 public class YADEArgumentsChecker {
 
     public static void validateOrExit(ISOSLogger logger, AYADEArgumentsLoader argsLoader) throws YADEEngineInitializationException {
-        validateCommonArguments(argsLoader.getArgs());
+        boolean needTargetProvider = validateAndAdjusteCommonArguments(logger, argsLoader);
 
-        boolean needTargetProvider = YADEArgumentsHelper.needTargetProvider(argsLoader.getArgs());
         validateAndAdjustClientArguments(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), needTargetProvider);
         validateAndAdjustSourceArguments(logger, argsLoader.getSourceArgs());
         validateAndAdjustTargetArguments(logger, argsLoader.getArgs(), argsLoader.getSourceArgs(), argsLoader.getTargetArgs(), needTargetProvider);
         validateSourceTargetArguments(argsLoader.getArgs(), argsLoader.getSourceArgs(), argsLoader.getTargetArgs(), needTargetProvider);
     }
 
-    private static void validateCommonArguments(YADEArguments args) throws YADEEngineInitializationException {
-        if (args == null) {
+    private static boolean validateAndAdjusteCommonArguments(ISOSLogger logger, AYADEArgumentsLoader argsLoader)
+            throws YADEEngineInitializationException {
+        // validate
+        if (argsLoader.getArgs() == null) {
             throw new YADEEngineInitializationException("Missing YADEArguments");
         }
-        if (args.getOperation().getValue() == null) {
-            throw new YADEEngineInitializationException("Missing \"" + args.getOperation().getName() + "\" argument");
+        if (argsLoader.getArgs().getOperation().getValue() == null) {
+            throw new YADEEngineInitializationException("Missing \"" + argsLoader.getArgs().getOperation().getName() + "\" argument");
         }
+        boolean needTargetProvider = YADEArgumentsHelper.needTargetProvider(argsLoader.getArgs());
+        // adjust
+        if (argsLoader.getArgs().isParallelismEnabled()) {
+            // check source provider
+            if (argsLoader.getSourceArgs().getProvider().isFTP()) { // not supported - if source or target
+                argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
+                logger.info("[%s][%s]due to the source/target provider being an FTP-based provider, transferring files in parallel is not supported",
+                        YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
+            } else {
+                // check target provider
+                if (needTargetProvider) {
+                    if (argsLoader.getTargetArgs().getProvider().isFTP()) { // not supported - if source or target
+                        argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
+                        logger.info(
+                                "[%s][%s]due to the source/target provider being an FTP-based provider, transferring files in parallel is not supported",
+                                YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
+                    } else if (argsLoader.getTargetArgs().getProvider().isHTTP()) { // not supported - only if target
+                        argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
+                        logger.info(
+                                "[%s][%s]due to the target provider being an HTTP-based provider, transferring files in parallel is not supported",
+                                YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
+                    }
+                }
+            }
+        }
+        return needTargetProvider;
     }
 
     private static void validateAndAdjustClientArguments(ISOSLogger logger, YADEArguments args, YADEClientArguments clientArgs,
             boolean needTargetProvider) throws YADEEngineInitializationException {
+        // validate
         if (!needTargetProvider && TransferOperation.GETLIST.equals(args.getOperation().getValue())) {
             if (clientArgs == null || clientArgs.getResultSetFile().isEmpty()) {
                 throw new YADEEngineInitializationException("[" + YADEClientArguments.LABEL + "][" + TransferOperation.GETLIST
                         + "]Missing \"SourceFileOptions/ResultSet/" + clientArgs.getResultSetFile().getName() + "\" argument");
             }
         }
+        // adjust
         if (clientArgs != null && !clientArgs.getResultSetFile().isEmpty()) {
             replaceExpressions(logger, YADEClientArguments.LABEL, clientArgs.getResultSetFile());
         }
@@ -116,8 +145,8 @@ public class YADEArgumentsChecker {
         if (targetArgs.getAppendFiles().isTrue()) {
             if (targetArgs.getProvider().isHTTP()) {
                 targetArgs.getAppendFiles().setValue(Boolean.valueOf(false));
-                logger.info("[%s][%s]due to HTTP providers currently not supporting appending to existing files", YADETargetArguments.LABEL,
-                        YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+                logger.info("[%s][%s]due to the target provider being an HTTP-based provider, appending to existing files is not supported",
+                        YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
             } else {
                 if (args.getTransactional().isTrue() || targetArgs.isAtomicityEnabled()) {
                     String startPart = "[" + YADETargetArguments.LABEL + "]" + YADEArgumentsHelper.toString(targetArgs.getAppendFiles())
@@ -154,6 +183,12 @@ public class YADEArgumentsChecker {
                 targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
                 logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
                         YADEArgumentsHelper.toString(targetArgs.getCompressedFileExtension()));
+            } else {
+                if (targetArgs.getProvider().isHTTP()) {
+                    targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
+                    logger.info("[%s][%s]due to the target provider being an HTTP-based provider, resume is not supported", YADETargetArguments.LABEL,
+                            YADEArgumentsHelper.toString(targetArgs.getResumeFiles()));
+                }
             }
         }
 

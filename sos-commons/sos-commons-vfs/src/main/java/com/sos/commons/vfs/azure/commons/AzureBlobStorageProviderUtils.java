@@ -30,52 +30,52 @@ public class AzureBlobStorageProviderUtils {
             String directoryPath, List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
 
-        list(provider, selection, containerName, directoryPath, result, counterAdded);
+        list(provider, provider.requireAzureClient(), selection, containerName, directoryPath, result, counterAdded);
         return result;
     }
 
     public static AzureBlobStorageResource getResource(AzureBlobStorageProvider provider, String containerName, String blobPath, boolean directory,
             boolean recursive) throws Exception {
+
+        AzureBlobStorageClient client = provider.requireAzureClient();
         if (directory) {
-            HttpExecutionResult<String> result = provider.getClient().executeGETBlobList(containerName, blobPath, false);
+            HttpExecutionResult<String> result = client.executeGETBlobList(containerName, blobPath, false);
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
             if (provider.getLogger().isDebugEnabled()) {
-                provider.getLogger().debug("%s[getResource][directory]%s", provider.getLogPrefix(), provider.getClient()
-                        .formatExecutionResultForException(result));
+                provider.getLogger().debug("%s[getResource][directory]%s", provider.getLogPrefix(), client.formatExecutionResultForException(result));
             }
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new Exception(provider.getClient().formatExecutionResultForException(result));
+                throw new Exception(client.formatExecutionResultForException(result));
             }
             List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
             return resources.isEmpty() ? null : resources.get(0);
         } else {
-            HttpExecutionResult<Void> result = provider.getClient().executeHEADBlob(containerName, blobPath);
+            HttpExecutionResult<Void> result = provider.requireAzureClient().executeHEADBlob(containerName, blobPath);
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
             if (provider.getLogger().isDebugEnabled()) {
-                provider.getLogger().debug("%s[getResource][file]%s", provider.getLogPrefix(), provider.getClient().formatExecutionResultForException(
-                        result));
+                provider.getLogger().debug("%s[getResource][file]%s", provider.getLogPrefix(), client.formatExecutionResultForException(result));
             }
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
                 }
-                throw new Exception(provider.getClient().formatExecutionResultForException(result));
+                throw new Exception(client.formatExecutionResultForException(result));
             }
-            return new AzureBlobStorageResource(containerName, blobPath, false, provider.getClient().getFileSize(result.response()), provider
-                    .getClient().getLastModifiedInMillis(result.response()));
+            return new AzureBlobStorageResource(containerName, blobPath, false, provider.requireAzureClient().getFileSize(result.response()), client
+                    .getLastModifiedInMillis(result.response()));
         }
     }
 
-    private static int list(AzureBlobStorageProvider provider, ProviderFileSelection selection, String containerName, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws Exception {
+    private static int list(AzureBlobStorageProvider provider, AzureBlobStorageClient client, ProviderFileSelection selection, String containerName,
+            String directoryPath, List<ProviderFile> result, int counterAdded) throws Exception {
 
         directoryPath = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(directoryPath);
-        HttpExecutionResult<String> executeResult = provider.getClient().executeGETBlobList(containerName, directoryPath, false);
+        HttpExecutionResult<String> executeResult = client.executeGETBlobList(containerName, directoryPath, false);
         executeResult.formatWithResponseBody(true);
         int code = executeResult.response().statusCode();
         if (provider.getLogger().isDebugEnabled()) {
@@ -86,7 +86,7 @@ public class AzureBlobStorageProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 // return 0;
             }
-            throw new Exception(provider.getClient().formatExecutionResultForException(executeResult));
+            throw new Exception(client.formatExecutionResultForException(executeResult));
         }
 
         Set<String> subDirectories = new HashSet<>();
@@ -138,7 +138,7 @@ public class AzureBlobStorageProviderUtils {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
-            counterAdded = list(provider, selection, containerName, subDirectory, result, counterAdded);
+            counterAdded = list(provider, provider.requireAzureClient(), selection, containerName, subDirectory, result, counterAdded);
         }
         return counterAdded;
     }

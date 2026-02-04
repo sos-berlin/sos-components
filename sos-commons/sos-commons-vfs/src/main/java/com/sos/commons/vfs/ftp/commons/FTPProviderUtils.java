@@ -105,8 +105,9 @@ public class FTPProviderUtils {
 
     private static int list(FTPProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
             throws Exception {
-        FTPFile[] subDirInfos = provider.getClient().listFiles(directoryPath);
-        FTPProtocolReply reply = new FTPProtocolReply(provider.getClient());
+        FTPClient client = provider.requireFTPClient();
+        FTPFile[] subDirInfos = client.listFiles(directoryPath);
+        FTPProtocolReply reply = new FTPProtocolReply(client);
         if (!reply.isPositiveReply()) {
             throw new IOException(reply.toString());
         }

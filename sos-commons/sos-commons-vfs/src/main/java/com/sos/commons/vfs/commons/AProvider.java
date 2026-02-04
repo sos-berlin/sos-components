@@ -47,6 +47,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     private String accessInfo;
     private String label;
 
+    private boolean doneLogIfHostnameVerificationDisabled;
+
     public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
@@ -54,12 +56,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         resolveCredentialStore(additionalCredentialStoreArg);
         this.proxyConfig = this.arguments == null ? null : ProxyConfig.createInstance(this.arguments.getProxy());
     }
-
-    /** Validates that all required global properties (e.g., client, session) are properly initialized and not null.<br/>
-     * If any of the required properties are not set, an exception will be thrown.
-     * 
-     * @throws ProviderException if any required precondition is not met (e.g., uninitialized client or session). */
-    public abstract void validatePrerequisites(String method) throws ProviderException;
 
     /** Method to set a custom providerFileCreator (a function that generates ProviderFile using the builder)<br/>
      * Overrides {@link IProvider#setProviderFileCreator(Function)} */
@@ -95,7 +91,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         if (SOSCollection.isEmpty(paths)) {
             return false;
         }
-        validatePrerequisites("createDirectoriesIfNotExists");
 
         boolean result = false;
         for (String path : paths) {
@@ -109,8 +104,6 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     /** Overrides {@link IProvider#rereadFileIfExists(ProviderFile)} */
     @Override
     public ProviderFile rereadFileIfExists(ProviderFile file) throws ProviderException {
-        validatePrerequisites("rereadFileIfExists");
-
         try {
             return refreshFileMetadata(file, getFileIfExists(file.getFullPath()));
         } catch (Exception e) {
@@ -302,6 +295,17 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return String.format("%s[disconnected]%s", getLogPrefix(), accessInfo);
     }
 
+    public String getInjectConnectivityFaultMsg() {
+        return getInjectConnectivityFaultMsg(null);
+    }
+
+    public String getInjectConnectivityFaultMsg(Exception e) {
+        if (e == null) {
+            return getLogPrefix() + "[" + getClass().getSimpleName() + "]" + "[injectConnectivityFault]injected";
+        }
+        return getLogPrefix() + "[" + getClass().getSimpleName() + "]" + "[injectConnectivityFault]" + e;
+    }
+
     public String getAccessInfo() {
         return accessInfo;
     }
@@ -339,6 +343,11 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
 
     public void logIfHostnameVerificationDisabled(SslArguments args) {
         if (!args.getUntrustedSslVerifyCertificateHostname().isTrue()) {
+            if (doneLogIfHostnameVerificationDisabled) {
+                return;
+            }
+            doneLogIfHostnameVerificationDisabled = true;
+
             String name = args.getUntrustedSslVerifyCertificateHostname().getName();
             Boolean val = args.getUntrustedSslVerifyCertificateHostname().getValue();
             // e.g. YADE uses DisableCertificateHostnameVerification

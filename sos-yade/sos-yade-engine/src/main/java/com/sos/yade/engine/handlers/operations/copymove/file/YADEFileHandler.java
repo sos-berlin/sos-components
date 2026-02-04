@@ -158,6 +158,11 @@ public class YADEFileHandler {
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
                             sourceFileReadOffset)) {
+                        if (attempts > 0) {
+                            logger.info(YADERetryFileHelper.getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, null,
+                                    "unknown", "restart from offset 0"));
+                        }
+
                         if (targetDelegator.isAzure()) {
                             targetFile.setSize(((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(),
                                     sourceStream, sourceFile.getSize()));
@@ -175,49 +180,61 @@ public class YADEFileHandler {
                 // AppendFiles/CumulateFiles
                 boolean targetIsAppendEnabled = config.getTarget().isAppendEnabled();
                 YADERetryFileHelper retryHelper = new YADERetryFileHelper(config.getRetry().isEnabled());
-                retryHelper.beforeTransfer(logger, targetDelegator, targetFile, targetIsAppendEnabled, config.getTarget().isResumeEnabled());
 
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
-                    if (attempts > 0) { // retry on connection errors
-                        // Observations on Windows with the LocalProvider as Target:
-                        // - For large files (~1.5 GB) and RetryInterval=1s, retrying may fail with
-                        // -- java.nio.file.FileSystemException ("The process cannot access the file because it is being used by another process").
-                        // - Root cause: On Windows, Java opens files without shared write access.
-                        // -- After closing the stream, external processes (e.g. antivirus ...) may temporarily hold a read lock on the file.
-                        // -- As a result, immediate reopen attempts can fail even though all Java streams have been properly closed (try-with-resources).
-                        // - Workarounds / solutions:
-                        // 1) Increase retry interval to allow external file scans to complete.
-                        // 2) Prefer transactional, atomic transfers (write to temporary file and atomically move/replace the target file after successful
-                        // transfer).
-
-                        // Resume example: SFTP->Local (~1.5GB) reduces transfer from ~27s to ~16s (including 1-2s RetryInterval + SFTP reconnect)
-                        Result onRetry = retryHelper.onRetry(logger, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile,
-                                useCumulativeTargetFile);
-                        switch (onRetry.getType()) {
-                        case RESTART: // "normal, append/cumulative or resume
-                            targetIsAppendEnabled = config.getTarget().isAppendEnabled();
-
-                            // reset - due to restart the whole transfer of the source file
-                            targetFile.resetBytesProcessed();// 0L
-
-                            sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
-                                    .isCheckIntegrityHashEnabled());
-                            targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
-                                    .isCreateIntegrityHashFileEnabled());
-                            break;
-                        case RESUME: // append/cumulative or resume
-                            targetIsAppendEnabled = true;
-
-                            targetFile.setBytesProcessed(onRetry.getOffset());
-                            break;
-                        case COMPLETED:
-                        case SKIPPED:
-                            break l;
+                    try {
+                        if (!retryHelper.isBeforeTransferExecuted()) {
+                            retryHelper.beforeTransfer(logger, targetDelegator, targetFile, targetIsAppendEnabled, config.getTarget()
+                                    .isResumeEnabled());
                         }
+                        if (attempts > 0) { // retry on connection errors
+                            // Observations on Windows with the LocalProvider as Target:
+                            // - For large files (~1.5 GB) and RetryInterval=1s, retrying may fail with
+                            // -- java.nio.file.FileSystemException ("The process cannot access the file because it is being used by another process").
+                            // - Root cause: On Windows, Java opens files without shared write access.
+                            // -- After closing the stream, external processes (e.g. antivirus, indexer ...) may temporarily hold a read lock on the file.
+                            // -- As a result, immediate reopen attempts can fail even though all Java streams have been properly closed
+                            // (try-with-resources).
+                            // - Workarounds / solutions:
+                            // 1) Increase retry interval to allow external file scans to complete.
+                            // 2) Prefer transactional, atomic transfers (write to temporary file and atomically move/replace the target file after
+                            // successful
+                            // transfer).
+
+                            // Resume example: SFTP->Local (~1.5GB) reduces transfer from ~27s to ~16s (including 1-2s RetryInterval + SFTP reconnect)
+                            Result onRetry = retryHelper.onRetry(logger, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile,
+                                    useCumulativeTargetFile);
+                            switch (onRetry.getType()) {
+                            case RESTART: // "normal" transfer, append/cumulative or resume
+                                targetIsAppendEnabled = config.getTarget().isAppendEnabled();
+
+                                // reset - due to restart the whole transfer of the source file
+                                targetFile.resetBytesProcessed();// 0L
+
+                                sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
+                                        .isCheckIntegrityHashEnabled());
+                                targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
+                                        .isCreateIntegrityHashFileEnabled());
+                                break;
+                            case RESUME: // append/cumulative or resume
+                                targetIsAppendEnabled = true;
+
+                                targetFile.setBytesProcessed(onRetry.getOffset());
+                                break;
+                            case COMPLETED:
+                            case SKIPPED:
+                                break l;
+                            }
+                        }
+                    } catch (Exception e) { // connect exceptions on reread target file
+                        attempts++;
+                        handleException(fileTransferLogPrefix, targetFile, e, attempts, false);
+                        continue l;
                     }
 
                     // cumulativeFileSeperatorLength = 0;
                     Exception exception = null;
+                    // logger.info("START----------");
                     try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile, targetFile
                             .getBytesProcessed()); OutputStream targetStream = YADEFileStreamHelper.getTargetOutputStream(config, targetDelegator,
                                     targetFile, targetIsAppendEnabled, compressTarget)) {
@@ -266,8 +283,17 @@ public class YADEFileHandler {
 
                 }
 
+                // success but after retry - reread target file (size)
                 if (attempts > 0) {
-                    targetFile = retryHelper.afterTransfer(logger, targetDelegator, targetFile);
+                    l: while (attempts <= config.getRetry().getMaxRetries()) {
+                        try {
+                            targetFile = retryHelper.afterTransfer(logger, targetDelegator, targetFile);
+                            break l;
+                        } catch (Exception e) {
+                            attempts++;
+                            handleException(fileTransferLogPrefix, targetFile, e, attempts, false);
+                        }
+                    }
                 }
                 YADEFileActionsExecuter.finalizeTargetFileSize(targetDelegator, targetFile, compressTarget);
             }

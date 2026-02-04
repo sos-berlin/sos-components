@@ -61,7 +61,9 @@ public class SSHJProvider extends SSHProvider {
     private static final int REMOTE_FILE_MAX_UNCONFIRMED_WRITES = 16;
     private static final int REMOTE_FILE_MAX_UNCONFIRMED_READS = 16;
 
-    private SSHClient sshClient;
+    private final Object clientLock = new Object();
+    private volatile SSHClient sshClient;
+
     private Map<String, Command> commands = new ConcurrentHashMap<>();
     private boolean reusableResourceEnabled;
 
@@ -75,6 +77,7 @@ public class SSHJProvider extends SSHProvider {
         if (SOSString.isEmpty(getArguments().getHost().getValue())) {
             throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
+
         try {
             getLogger().info(getConnectMsg());
 
@@ -115,7 +118,9 @@ public class SSHJProvider extends SSHProvider {
      *          socket). */
     @Override
     public boolean isConnected() {
-        return sshClient == null ? false : sshClient.isConnected();
+        synchronized (clientLock) {
+            return sshClient == null ? false : sshClient.isConnected();
+        }
     }
 
     /** Overrides {@link IProvider#disconnect()} */
@@ -129,11 +134,14 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-        if (sshClient != null) {
-            try {
-                sshClient.disconnect();
-            } catch (IOException e) {
-                getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+        synchronized (clientLock) {
+            if (sshClient != null) {
+                try {
+                    sshClient.disconnect();
+                    getLogger().info(getInjectConnectivityFaultMsg());
+                } catch (IOException e) {
+                    getLogger().info(getInjectConnectivityFaultMsg(e));
+                }
             }
         }
     }
@@ -141,8 +149,6 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        validatePrerequisites("selectFiles");
-
         selection = ProviderFileSelection.createIfNull(selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
@@ -166,12 +172,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) throws ProviderException {
-        validatePrerequisites("exists", path, "path");
+        validateArgument("exists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     return SSHJProviderUtils.exists(sftp, path);
                 }
             } else {
@@ -185,12 +191,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
+        validateArgument("createDirectoriesIfNotExists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     if (SSHJProviderUtils.exists(sftp, path)) {
                         return false;
                     }
@@ -220,12 +226,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteIfExists", path, "path");
+        validateArgument("deleteIfExists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.delete(sftp, path);
                     return true;
                 }
@@ -243,12 +249,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#deleteFileIfExists(String)} */
     @Override
     public boolean deleteFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteIfExists", path, "path");
+        validateArgument("deleteIfExists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.deleteFile(sftp, path);
                     return true;
                 }
@@ -266,13 +272,13 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
     public boolean moveFileIfExists(String source, String target) throws ProviderException {
-        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", source, "source");
         validateArgument("moveFileIfExists", target, "target");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     if (SSHJProviderUtils.exists(sftp, source)) {
                         SSHJProviderUtils.rename(sftp, source, target);
                         return true;
@@ -295,12 +301,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileIfExists", path, "path");
+        validateArgument("getFileIfExists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     return createProviderFile(path, sftp.statExistence(path));
                 }
             } else {
@@ -308,7 +314,7 @@ public class SSHJProvider extends SSHProvider {
             }
         } catch (NoSuchFileException e) {
             return null;
-        } catch (IOException e) {
+        } catch (Exception e) { // IOException| IllegalStateException
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
 
@@ -317,18 +323,18 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
     public String getFileContentIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileContentIfExists", path, "path");
+        validateArgument("getFileContentIfExists", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     return SSHJProviderUtils.getFileContentIfExists(sftp, path);
                 }
             } else {
                 return SSHJProviderUtils.getFileContentIfExists(reusable.getSFTPClient(), path);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
     }
@@ -336,12 +342,12 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#writeFile(String,String)} */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        validatePrerequisites("writeFile", path, "path");
+        validateArgument("writeFile", path, "path");
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.uploadContent(sftp, path, content);
                 }
             } else {
@@ -355,13 +361,13 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String,long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
-        validatePrerequisites("setFileLastModifiedFromMillis", path, path);
+        validateArgument("setFileLastModifiedFromMillis", path, path);
         validateModificationTime(path, milliseconds);
 
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.setFileLastModifiedFromMillis(sftp, path, milliseconds);
                 }
             } else {
@@ -386,7 +392,7 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#getInputStream(String, long)} */
     @Override
     public InputStream getInputStream(String path, long offset) throws ProviderException {
-        validatePrerequisites("getInputStream", path, "path");
+        validateArgument("getInputStream", path, "path");
 
         SSHJProviderReusableResource reusable = getReusableResource();
         final boolean closeSFTPClient = reusable == null;
@@ -398,7 +404,7 @@ public class SSHJProvider extends SSHProvider {
                 getLogger().debug("%s[getInputStream][supportsReadOffset=%s, offset=%s]%s", getLogPrefix(), supportsReadOffset(), offset, path);
             }
 
-            SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
+            SFTPClient sftpClient = reusable == null ? requireSSHClient().newSFTPClient() : reusable.getSFTPClient();
             sftpRef.set(sftpClient);
 
             RemoteFile remoteFile = sftpRef.get().open(path);
@@ -460,7 +466,7 @@ public class SSHJProvider extends SSHProvider {
     /** Overrides {@link IProvider#getOutputStream(String,boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        validatePrerequisites("getOutputStream", path, "path");
+        validateArgument("getOutputStream", path, "path");
 
         SSHJProviderReusableResource reusable = getReusableResource();
         final boolean closeSFTPClient = reusable == null;
@@ -472,7 +478,7 @@ public class SSHJProvider extends SSHProvider {
                 getLogger().debug("%s[getOutputStream][append=%s]%s", getLogPrefix(), append, path);
             }
 
-            SFTPClient sftpClient = reusable == null ? sshClient.newSFTPClient() : reusable.getSFTPClient();
+            SFTPClient sftpClient = reusable == null ? requireSSHClient().newSFTPClient() : reusable.getSFTPClient();
             sftpRef.set(sftpClient);
 
             EnumSet<OpenMode> mode = EnumSet.of(OpenMode.WRITE, OpenMode.CREAT);
@@ -541,13 +547,9 @@ public class SSHJProvider extends SSHProvider {
     @Override
     public SOSCommandResult executeCommand(String command, SOSTimeout timeout, SOSEnv env) {
         SOSCommandResult result = new SOSCommandResult(command);
-        if (sshClient == null || !isConnected()) {
-            result.setException(new IOException("SSHClient not connected"));
-            return result;
-        }
 
         String uuid = createCommandIdentifier();
-        try (Session session = sshClient.startSession()) {
+        try (Session session = requireSSHClient().startSession()) {
             if (getArguments().getSimulateShell().getValue()) {
                 session.allocateDefaultPTY();
             }
@@ -579,9 +581,11 @@ public class SSHJProvider extends SSHProvider {
             // - the disconnect via sshj is necessary because the sshClient.isConnected() method doesn't actually check whether the connection (socket, etc.) is
             // established.
             // -- It checks the internal sshj flags. set these flags.
-            SOSClassUtil.closeQuietly(sshClient);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[executeCommand][sshClient disconnected]%s", getLogPrefix(), result);
+            synchronized (clientLock) {
+                SOSClassUtil.closeQuietly(sshClient);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[executeCommand][sshClient disconnected]%s", getLogPrefix(), result);
+                }
             }
 
             // TODO: implement an automatic reconnection here?
@@ -627,14 +631,6 @@ public class SSHJProvider extends SSHProvider {
         return r;
     }
 
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        if (sshClient == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix(), SSHClient.class, method);
-        }
-    }
-
     /** Overrides {@link AProvider#enableReusableResource()} */
     @Override
     public void enableReusableResource() {
@@ -677,7 +673,7 @@ public class SSHJProvider extends SSHProvider {
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.put(sftp, source, target);
                     sftp.chmod(target, perm);
                 }
@@ -696,7 +692,7 @@ public class SSHJProvider extends SSHProvider {
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     SSHJProviderUtils.put(sftp, source, target);
                 }
             } else {
@@ -713,7 +709,7 @@ public class SSHJProvider extends SSHProvider {
         try {
             SSHJProviderReusableResource reusable = getReusableResource();
             if (reusable == null) {
-                try (SFTPClient sftp = sshClient.newSFTPClient()) {
+                try (SFTPClient sftp = requireSSHClient().newSFTPClient()) {
                     sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
                 }
             } else {
@@ -772,8 +768,16 @@ public class SSHJProvider extends SSHProvider {
         return true;
     }
 
-    public SSHClient getSSHClient() {
-        return sshClient;
+    public SSHClient requireSSHClient() throws ProviderException {
+        synchronized (clientLock) {
+            if (sshClient == null) {
+                // 0 - getStackTrace
+                // 1 - requireClient
+                // 2 - caller
+                throw new ProviderClientNotInitializedException(getLogPrefix(), SSHClient.class, SOSClassUtil.getMethodName(2));
+            }
+            return sshClient;
+        }
     }
 
     protected ProviderFile createProviderFile(String path, FileAttributes attr) {
@@ -784,23 +788,28 @@ public class SSHJProvider extends SSHProvider {
     }
 
     private void connectInternal() throws Exception {
-        // Creates the client unconditionally (no null check), because SSHJClientFactory.createAuthenticatedClient() performs the connect and authentication.
-        // If a previous sshClient instance exists, it must be closed via disconnect().
-        sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
-        setServerVersion(sshClient.getTransport().getServerVersion());
+        synchronized (clientLock) {
+            // Creates the client unconditionally (no null check), because SSHJClientFactory.createAuthenticatedClient() performs the connect and
+            // authentication.
+            // If a previous sshClient instance exists, it must be closed via disconnect().
+            sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
+            setServerVersion(sshClient.getTransport().getServerVersion());
+        }
     }
 
     // without logging
     private boolean disconnectInternal() {
-        if (sshClient == null) {
+        synchronized (clientLock) {
+            if (sshClient == null) {
+                commands.clear();
+                return false;
+            }
             commands.clear();
-            return false;
-        }
-        commands.clear();
 
-        disableReusableResource();
-        SOSClassUtil.closeQuietly(sshClient);
-        sshClient = null;
+            disableReusableResource();
+            SOSClassUtil.closeQuietly(sshClient);
+            sshClient = null;
+        }
         return true;
     }
 
@@ -870,10 +879,4 @@ public class SSHJProvider extends SSHProvider {
         }
         return command;
     }
-
-    private void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, argValue, msg);
-    }
-
 }

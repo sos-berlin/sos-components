@@ -61,6 +61,8 @@ public abstract class AProviderArguments extends ASOSArguments {
             FileType.SYMLINK));
 
     private Boolean isHTTP = null;
+    private Boolean isFTP = null;
+    private boolean connectivityFaultSimulationEnabled;
 
     public void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
@@ -125,29 +127,53 @@ public abstract class AProviderArguments extends ASOSArguments {
     }
 
     public boolean isHTTP() {
-        if (isHTTP == null) {
-            if (!protocol.isEmpty()) {
-                switch (protocol.getValue()) {
-                case AZURE_BLOB_STORAGE:
-                case HTTP:
-                case HTTPS:
-                case WEBDAV:
-                case WEBDAVS:
-                    isHTTP = true;
-                    break;
-                case FTP:
-                case FTPS:
-                case LOCAL:
-                case SFTP:
-                case SMB:
-                case SSH:
-                case UNKNOWN:
-                    isHTTP = false;
-                    break;
-                }
+        evaluateIsProtocol();
+        return isHTTP == null ? false : isHTTP;
+    }
+
+    public boolean isFTP() {
+        evaluateIsProtocol();
+        return isFTP == null ? false : isFTP;
+    }
+
+    public void setConnectivityFaultSimulationEnabled(boolean val) {
+        connectivityFaultSimulationEnabled = val;
+    }
+
+    public boolean isConnectivityFaultSimulationEnabled() {
+        return connectivityFaultSimulationEnabled;
+    }
+
+    private void evaluateIsProtocol() {
+        if (isHTTP != null && isFTP != null) {
+            return;
+        }
+
+        if (!protocol.isEmpty()) {
+            switch (protocol.getValue()) {
+            case AZURE_BLOB_STORAGE:
+            case HTTP:
+            case HTTPS:
+            case WEBDAV:
+            case WEBDAVS:
+                isHTTP = true;
+                isFTP = false;
+                break;
+            case FTP:
+            case FTPS:
+                isHTTP = false;
+                isFTP = true;
+                break;
+            case LOCAL:
+            case SFTP:
+            case SMB:
+            case SSH:
+            case UNKNOWN:
+                isHTTP = false;
+                isFTP = false;
+                break;
             }
         }
-        return isHTTP;
     }
 
 }

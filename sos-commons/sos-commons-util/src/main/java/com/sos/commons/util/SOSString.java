@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -452,6 +453,25 @@ public class SOSString {
             return null;
         }
         return input.replaceAll("[\\r\\n]+", replacement);
+    }
+
+    /** Capitalizes the first character of the given string.
+     * <p>
+     * If the input is {@code null} or empty, it is returned unchanged.<br />
+     * Only the first character is converted to upper case, the remainder of the string is left as-is.
+     * </p>
+     *
+     * <p>
+     * The conversion uses {@link java.util.Locale#ROOT} to avoid locale-specific side effects (e.g. Turkish locale).
+     * </p>
+     *
+     * @param s the input string
+     * @return the input string with its first character capitalized, or the original value if {@code null} or empty */
+    public static String capitalizeFirst(String s) {
+        if (s == null || s.isEmpty()) {
+            return s;
+        }
+        return s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);
     }
 
 }

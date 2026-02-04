@@ -53,8 +53,9 @@ import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
 public class SMBJProvider extends SMBProvider {
 
-    private SMBClient client = null;
-    private Session session = null;
+    private final Object clientLock = new Object();
+    private volatile SMBClient client = null;
+    private volatile Session session = null;
 
     private boolean accessMaskMaximumAllowed = false;
     private boolean reusableResourceEnabled;
@@ -71,63 +72,70 @@ public class SMBJProvider extends SMBProvider {
             throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
 
-        try {
-            if (client == null) {
-                client = createClient();
-            }
-            getLogger().info(getConnectMsg());
-            Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
+        synchronized (clientLock) {
             try {
-                session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
-            } catch (Exception e) {
-                throw new ProviderAuthenticationException(e);
-            }
-            // creates a shared DiskShare connection by default
-            enableReusableResource();
+                if (client == null) {
+                    client = createClient();
+                }
+                getLogger().info(getConnectMsg());
+                Connection connection = client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
+                try {
+                    session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
+                } catch (Exception e) {
+                    throw new ProviderAuthenticationException(e);
+                }
+                // creates a shared DiskShare connection by default
+                enableReusableResource();
 
-            getLogger().info(getConnectedMsg());
-        } catch (Exception e) {
-            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-            // error in methods executed after connect() - e.g. if retry, roll back...
-            // Call disconnect() in the application's finally block.
-            // disconnect();
-            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+                getLogger().info(getConnectedMsg());
+            } catch (Exception e) {
+                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+                // error in methods executed after connect() - e.g. if retry, roll back...
+                // Call disconnect() in the application's finally block.
+                // disconnect();
+                throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+            }
         }
     }
 
     /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        return session != null;
+        synchronized (clientLock) {
+            return session != null && session.getConnection() != null && session.getConnection().isConnected();
+        }
     }
 
     /** Overrides {@link IProvider#disconnect()} */
     @Override
     public void disconnect() {
-        if (session == null && client == null) {
-            return;
+        synchronized (clientLock) {
+            if (session == null && client == null) {
+                return;
+            }
+
+            disableReusableResource();
+
+            closeSessionAndClient();
+            session = null;
+            client = null;
+
+            getLogger().info(getDisconnectedMsg());
         }
-
-        disableReusableResource();
-
-        closeSessionAndClient();
-        session = null;
-        client = null;
-
-        getLogger().info(getDisconnectedMsg());
     }
 
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-        closeSessionAndClient();
+        synchronized (clientLock) {
+            closeSessionAndClient();
+            getLogger().info(getInjectConnectivityFaultMsg());
+        }
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        validatePrerequisites("selectFiles");
-
         selection = ProviderFileSelection.createIfNull(selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
@@ -150,7 +158,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) throws ProviderException {
-        validatePrerequisites("exists", path, "path");
+        validateArgument("exists", path, "path");
 
         try {
             SMBJProviderReusableResource reusable = getReusableResource();
@@ -171,7 +179,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
+        validateArgument("createDirectoriesIfNotExists", path, "path");
 
         try {
             SMBJProviderReusableResource reusable = getReusableResource();
@@ -199,7 +207,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteIfExists", path, "path");
+        validateArgument("deleteIfExists", path, "path");
 
         try {
             SMBJProviderReusableResource reusable = getReusableResource();
@@ -219,7 +227,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#deleteFileIfExists(String)} */
     @Override
     public boolean deleteFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteFileIfExists", path, "path");
+        validateArgument("deleteFileIfExists", path, "path");
 
         try {
             SMBJProviderReusableResource reusable = getReusableResource();
@@ -239,7 +247,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
     public boolean moveFileIfExists(String source, String target) throws ProviderException {
-        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", source, "source");
         validateArgument("moveFileIfExists", target, "target");
 
         try {
@@ -262,7 +270,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileIfExists", path, "path");
+        validateArgument("getFileIfExists", path, "path");
 
         try {
             SMBJProviderReusableResource reusable = getReusableResource();
@@ -290,7 +298,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#getFileContentIfExists(String)} */
     @Override
     public String getFileContentIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileContentIfExists", path, "path");
+        validateArgument("getFileContentIfExists", path, "path");
 
         SMBJProviderReusableResource reusable = getReusableResource();
         DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
@@ -310,7 +318,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#writeFile(String,String)} */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        validatePrerequisites("writeFile", path, "path");
+        validateArgument("writeFile", path, "path");
 
         SMBJProviderReusableResource reusable = getReusableResource();
         DiskShare share = reusable == null ? connectShare(path) : reusable.getDiskShare(path);
@@ -325,7 +333,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#setFileLastModifiedFromMillis(String,long)} */
     @Override
     public void setFileLastModifiedFromMillis(String path, long milliseconds) throws ProviderException {
-        validatePrerequisites("setFileLastModifiedFromMillis", path, path);
+        validateArgument("setFileLastModifiedFromMillis", path, path);
         validateModificationTime(path, milliseconds);
 
         try {
@@ -357,7 +365,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#getInputStream(String, long)} */
     @Override
     public InputStream getInputStream(String path, long offset) throws ProviderException {
-        validatePrerequisites("getInputStream", path, "path");
+        validateArgument("getInputStream", path, "path");
 
         try {
             if (getLogger().isDebugEnabled()) {
@@ -376,7 +384,7 @@ public class SMBJProvider extends SMBProvider {
     /** Overrides {@link IProvider#getOutputStream(String,boolean)} */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        validatePrerequisites("getOutputStream", path, "path");
+        validateArgument("getOutputStream", path, "path");
 
         try {
             if (getLogger().isDebugEnabled()) {
@@ -389,17 +397,6 @@ public class SMBJProvider extends SMBProvider {
             return new SMBJOutputStream(accessMaskMaximumAllowed, share, reusable == null, getSMBPath(path), append);
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
-        }
-    }
-
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        if (client == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix(), SMBClient.class, method);
-        }
-        if (session == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix(), Session.class, method);
         }
     }
 
@@ -449,8 +446,16 @@ public class SMBJProvider extends SMBProvider {
      * 
      * @param path
      * @return connected DiskShare */
-    protected DiskShare connectShare(String path) {
-        return (DiskShare) session.connectShare(getShareName(path));
+    protected DiskShare connectShare(String path) throws ProviderException {
+        synchronized (clientLock) {
+            if (session == null) {
+                // 0 - getStackTrace
+                // 1 - requireClient
+                // 2 - caller
+                throw new ProviderClientNotInitializedException(getLogPrefix(), Session.class, SOSClassUtil.getMethodName(2));
+            }
+            return (DiskShare) session.connectShare(getShareName(path));
+        }
     }
 
     private SMBClient createClient() {
@@ -584,11 +589,6 @@ public class SMBJProvider extends SMBProvider {
     private ProviderFile createProviderFile(String fullPath, FileAllInformation info) {
         return createProviderFile(fullPath, info.getStandardInformation().getEndOfFile(), info.getBasicInformation().getLastWriteTime()
                 .toEpochMillis());
-    }
-
-    private void validatePrerequisites(String method, String paramValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, paramValue, msg);
     }
 
     @SuppressWarnings("unused")

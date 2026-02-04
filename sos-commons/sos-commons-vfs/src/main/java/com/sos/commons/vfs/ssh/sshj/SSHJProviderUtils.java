@@ -139,7 +139,7 @@ public class SSHJProviderUtils {
     protected static List<ProviderFile> selectFiles(SSHJProvider provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        try (SFTPClient sftp = provider.getSSHClient().newSFTPClient()) {
+        try (SFTPClient sftp = provider.requireSSHClient().newSFTPClient()) {
             list(provider, sftp, selection, directoryPath, result, counterAdded);
         }
         return result;

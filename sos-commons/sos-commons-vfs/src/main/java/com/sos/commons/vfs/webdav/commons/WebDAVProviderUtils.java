@@ -29,7 +29,7 @@ public class WebDAVProviderUtils {
     public static List<ProviderFile> selectFiles(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        list(provider, selection, directoryPath, result, counterAdded);
+        list(provider, provider.requireHTTPClient(), selection, directoryPath, result, counterAdded);
         return result;
     }
 
@@ -45,9 +45,9 @@ public class WebDAVProviderUtils {
         return true;
     }
 
-    public static void createDirectory(WebDAVProvider provider, URI uri) throws Exception {
-        HttpRequest.Builder builder = provider.getClient().createRequestBuilder(uri);
-        HttpExecutionResult<Void> result = provider.getClient().executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
+    public static void createDirectory(WebDAVProvider provider, BaseHttpClient client, URI uri) throws Exception {
+        HttpRequest.Builder builder = client.createRequestBuilder(uri);
+        HttpExecutionResult<Void> result = client.executeNoResponseBody(builder.method("MKCOL", BodyPublishers.noBody()).build());
         if (!HttpUtils.isSuccessful(result.response().statusCode())) {
             throw new Exception(BaseHttpClient.formatExecutionResult(result));
         }
@@ -56,14 +56,14 @@ public class WebDAVProviderUtils {
         }
     }
 
-    public static boolean directoryExists(WebDAVProvider provider, URI uri) throws Exception {
-        WebDAVResource resource = getResource(provider, uri);
+    public static boolean directoryExists(WebDAVProvider provider, BaseHttpClient client, URI uri) throws Exception {
+        WebDAVResource resource = getResource(provider, client, uri);
         return resource == null ? false : resource.isDirectory();
     }
 
-    public static WebDAVResource getResource(WebDAVProvider provider, URI uri) throws Exception {
+    public static WebDAVResource getResource(WebDAVProvider provider, BaseHttpClient client, URI uri) throws Exception {
         String depth = "0";
-        HttpExecutionResult<String> result = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(), uri, depth));
+        HttpExecutionResult<String> result = client.executeWithResponseBody(createPROPFINDRequest(client, uri, depth));
         int code = result.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
@@ -75,15 +75,14 @@ public class WebDAVProviderUtils {
         return resources.isEmpty() ? null : resources.get(0);
     }
 
-    private static int list(WebDAVProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws Exception {
+    private static int list(WebDAVProvider provider, BaseHttpClient client, ProviderFileSelection selection, String directoryPath,
+            List<ProviderFile> result, int counterAdded) throws Exception {
 
         URI directoryURI = HttpUtils.ensureDirectoryURI(new URI(provider.normalizePath(directoryPath)));
 
         // not use Depth infinity - maybe not supported by the server and possible timeouts to get all levels ...
         String depth = "1";
-        HttpExecutionResult<String> executeResult = provider.getClient().executeWithResponseBody(createPROPFINDRequest(provider.getClient(),
-                directoryURI, depth));
+        HttpExecutionResult<String> executeResult = client.executeWithResponseBody(createPROPFINDRequest(client, directoryURI, depth));
         int code = executeResult.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
             // if (HttpUtils.isNotFound(code)) {
@@ -129,7 +128,7 @@ public class WebDAVProviderUtils {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
-            counterAdded = list(provider, selection, subDirectory, result, counterAdded);
+            counterAdded = list(provider, provider.requireHTTPClient(), selection, subDirectory, result, counterAdded);
         }
         return counterAdded;
     }

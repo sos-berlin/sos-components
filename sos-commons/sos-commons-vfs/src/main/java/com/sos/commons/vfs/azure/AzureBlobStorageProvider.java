@@ -1,11 +1,13 @@
 package com.sos.commons.vfs.azure;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
@@ -13,6 +15,7 @@ import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.httpclient.azure.AzureBlobStorageClient;
 import com.sos.commons.httpclient.azure.AzureBlobStorageClient.Builder;
 import com.sos.commons.httpclient.azure.commons.AzureBlobStorageOutputStream;
+import com.sos.commons.httpclient.azure.commons.auth.AAzureStorageAuthProvider;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobPublicAuthProvider;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobSASAuthProvider;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobSharedKeyAuthProvider;
@@ -51,9 +54,12 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
  *           connection or transport errors */
 public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProviderArguments> {
 
-    private AzureBlobStorageClient client;
+    private final Object clientLock = new Object();
+    private volatile AzureBlobStorageClient client;
+    private volatile boolean connected = false;
+    private volatile boolean connectivityFaultSimulationActive;
+
     private String containerName;
-    private boolean connected = false;
 
     public AzureBlobStorageProvider(ISOSLogger logger, AzureBlobStorageProviderArguments args) throws ProviderInitializationException {
         super(logger, args, args == null ? null : args.getAccountKey(), args == null ? null : args.getSASToken());
@@ -99,8 +105,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             throw new ProviderConnectException(new SOSRequiredArgumentMissingException("ServiceEndpoint"));
         }
 
-        try {
-            if (client == null) {
+        synchronized (clientLock) {
+            try {
                 Builder builder = AzureBlobStorageClient.withBuilder();
                 builder = builder.withLogger(getLogger());
                 builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
@@ -129,44 +135,47 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 logIfHostnameVerificationDisabled(getArguments().getSsl());
 
                 client = builder.build();
-            }
-            getLogger().info(getConnectMsg());
-            // containing the XML response with details of all available container(s)
-            HttpExecutionResult<String> result = client.executeGETStorage();
-            result.formatWithResponseBody(true);
-            int code = result.response().statusCode();
-            if (!HttpUtils.isSuccessful(code)) {
-                if (!HttpUtils.isForbidden(code)) {// see client.executeGETStorage description Note
-                    if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
 
-                    } else {
-                        throw new Exception(client.formatExecutionResultForException(result));
+                getLogger().info(getConnectMsg());
+                // containing the XML response with details of all available container(s)
+                HttpExecutionResult<String> result = client.executeGETStorage();
+                result.formatWithResponseBody(true);
+                int code = result.response().statusCode();
+                if (!HttpUtils.isSuccessful(code)) {
+                    if (!HttpUtils.isForbidden(code)) {// see client.executeGETStorage description Note
+                        if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
+
+                        } else {
+                            throw new Exception(client.formatExecutionResultForException(result));
+                        }
                     }
                 }
+                connected = true;
+
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[connected][container(s)]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
+                }
+                getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
+                debugServiceProperties();
+            } catch (Exception e) {
+                connected = false;
+
+                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+                // error in methods executed after connect() - e.g. if retry, roll back...
+                // Call disconnect() in the application's finally block.
+
+                // disconnectInternal();
+                throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
             }
-            connected = true;
-
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[connected][container(s)]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
-            }
-            getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
-            debugServiceProperties();
-        } catch (Exception e) {
-            connected = false;
-
-            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-            // error in methods executed after connect() - e.g. if retry, roll back...
-            // Call disconnect() in the application's finally block.
-
-            // disconnectInternal();
-            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 
     /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        return connected && client != null;
+        synchronized (clientLock) {
+            return connected && client != null;
+        }
     }
 
     /** Overrides {@link IProvider#disconnect()} */
@@ -180,21 +189,31 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
+        connectivityFaultSimulationActive = true;
         connected = false;
-        try {
-            ProxyConfigArguments args = new ProxyConfigArguments();
-            args.getHost().setValue("yade-connectivity-fault-proxy");
-            client = AzureBlobStorageClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args)).build();
-        } catch (Exception e) {
-            getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+        synchronized (clientLock) {
+            try {
+                String prefix = "yade-connectivity-fault-";
+                ProxyConfigArguments args = new ProxyConfigArguments();
+                args.getHost().setValue(prefix + "proxy");
+
+                AAzureStorageAuthProvider p = new AzureBlobPublicAuthProvider(getLogger(), prefix + "user", Base64.getEncoder().encodeToString((prefix
+                        + "account-key").getBytes()), "123");
+
+                client = AzureBlobStorageClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args))
+                        .withServiceEndpoint("http://" + prefix + "service-endpoint").withAuthProvider(p).build();
+
+                getLogger().info(getInjectConnectivityFaultMsg());
+            } catch (Exception e) {
+                getLogger().info(getInjectConnectivityFaultMsg(e));
+                e.printStackTrace();
+            }
         }
     }
 
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        validatePrerequisites("selectFiles");
-
         selection = ProviderFileSelection.createIfNull(selection);
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         try {
@@ -215,12 +234,13 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) throws ProviderException {
-        validatePrerequisites("exists", path, "path");
+        validateArgument("exists", path, "path");
 
         try {
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
+            AzureBlobStorageClient client = requireAzureClient();
             HttpExecutionResult<Void> result = client.executeHEADBlob(containerName, blobPath);
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
@@ -248,7 +268,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteIfExists", path, "path");
+        validateArgument("deleteIfExists", path, "path");
 
         try {
             String containerName = getContainerName(path);
@@ -288,7 +308,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      * @throws ProviderException */
     @Override
     public boolean moveFileIfExists(String source, String target) throws ProviderException {
-        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", source, "source");
         validateArgument("moveFileIfExists", target, "target");
 
         InputStream is = null;
@@ -300,6 +320,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             String targetBlobPath = getBlobFilePath(target, targetContainerName);
 
             // 1) check if source exists
+            AzureBlobStorageClient client = requireAzureClient();
             HttpExecutionResult<Void> resultSource = client.executeHEADBlob(sourceContainerName, sourceBlobPath);
             resultSource.formatWithResponseBody(true);
             int code = resultSource.response().statusCode();
@@ -332,7 +353,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileIfExists", path, "path");
+        validateArgument("getFileIfExists", path, "path");
 
         try {
             String containerName = getContainerName(path);
@@ -353,12 +374,13 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      */
     @Override
     public String getFileContentIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileContentIfExists", path, "path");
+        validateArgument("getFileContentIfExists", path, "path");
 
         try {
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
+            AzureBlobStorageClient client = requireAzureClient();
             HttpExecutionResult<String> result = client.executeGETBlobContent(containerName, blobPath);
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
@@ -381,12 +403,13 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      */
     @Override
     public void writeFile(String path, String content) throws ProviderException {
-        validatePrerequisites("uploadContent", path, "path");
+        validateArgument("uploadContent", path, "path");
 
         try {
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
+            AzureBlobStorageClient client = requireAzureClient();
             HttpExecutionResult<String> result = client.executePUTBlob(containerName, blobPath, content.getBytes(StandardCharsets.UTF_8),
                     HttpUtils.HEADER_CONTENT_TYPE_BINARY);
             result.formatWithResponseBody(true);
@@ -423,7 +446,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      */
     @Override
     public InputStream getInputStream(String path, long offset) throws ProviderException {
-        validatePrerequisites("getInputStream", path, "path");
+        validateArgument("getInputStream", path, "path");
 
         try {
             if (getLogger().isDebugEnabled()) {
@@ -447,7 +470,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
      * @apiNote YADE - not used - see {@link #upload(InputStream, String, String)} methods */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        validatePrerequisites("getOutputStream", path, "path");
+        validateArgument("getOutputStream", path, "path");
 
         try {
             if (getLogger().isDebugEnabled()) {
@@ -457,7 +480,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
-            return new AzureBlobStorageOutputStream(client, containerName, blobPath);
+            return new AzureBlobStorageOutputStream(requireAzureClient(), containerName, blobPath);
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
@@ -468,7 +491,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
     // TODO - currently limitation - InputStream converted to ByteArray ...
     public long upload(String path, InputStream source, long sourceSize) throws ProviderException {
-        validatePrerequisites("upload", path, "path");
+        validateArgument("upload", path, "path");
         validateArgument("upload", source, "InputStream source");
 
         try {
@@ -484,21 +507,13 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         }
     }
 
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        if (client == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix(), AzureBlobStorageClient.class, method);
+    public AzureBlobStorageClient requireAzureClient() throws ProviderException {
+        synchronized (clientLock) {
+            if (client == null) {
+                throw new ProviderClientNotInitializedException(getLogPrefix(), AzureBlobStorageClient.class, SOSClassUtil.getMethodName());
+            }
+            return client;
         }
-    }
-
-    public void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, argValue, msg);
-    }
-
-    public AzureBlobStorageClient getClient() {
-        return client;
     }
 
     public ProviderFile createProviderFile(AzureBlobStorageResource resource) throws Exception {
@@ -514,14 +529,16 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
     // without logging
     private boolean disconnectInternal() {
-        if (client == null) {
-            connected = false;
-            return false;
-        }
+        synchronized (clientLock) {
+            if (client == null) {
+                connected = false;
+                return false;
+            }
 
-        SOSClassUtil.closeQuietly(client);
-        client = null;
-        connected = false;
+            SOSClassUtil.closeQuietly(client);
+            client = null;
+            connected = false;
+        }
         return true;
     }
 
@@ -530,7 +547,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             return;
         }
         try {
-            HttpExecutionResult<String> result = client.executeGETStorageServicePropertiers();
+            HttpExecutionResult<String> result = requireAzureClient().executeGETStorageServicePropertiers();
             result.formatWithResponseBody(true);
             getLogger().debug("%s[connected][service properties]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
         } catch (Exception e) {
@@ -589,6 +606,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     }
 
     private boolean deleteIfExists(String path, String containerName, String blobPath) throws Exception {
+        AzureBlobStorageClient client = requireAzureClient();
         HttpExecutionResult<String> result = client.executeDELETEBlob(containerName, blobPath);
         result.formatWithResponseBody(true);
         int code = result.response().statusCode();
@@ -603,6 +621,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
     /** @TODO user Header etc see TODO {@link ABaseHttpClient#getHTTPInputStream(java.net.URI, long)} */
     private InputStream getInputStream(String path, String containerName, String blobPath, long offset) throws Exception {
+        AzureBlobStorageClient client = requireAzureClient();
         HttpExecutionResult<InputStream> result = client.executeGETBlobInputStream(containerName, blobPath);
         result.formatWithResponseBody(true);
         int code = result.response().statusCode();
@@ -616,13 +635,33 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         if (is == null) {
             throw new Exception("response body InputStream is null");
         }
+
+        if (getArguments().isConnectivityFaultSimulationEnabled()) {
+            is = new FilterInputStream(is) {
+
+                @Override
+                public int read(byte b[]) throws IOException {
+                    if (connectivityFaultSimulationActive) {
+                        if (!isConnected()) {
+                            connectivityFaultSimulationActive = false;
+                            throw new IOException("Not connected");
+                        }
+                    }
+                    return super.read(b);
+                }
+            };
+        }
+
         if (offset > 0) {
             SOSClassUtil.skipFully(is, offset);
         }
+
         return is;
     }
 
     private long upload(InputStream source, String targetContainerName, String targetBlobPath) throws Exception {
+        // 1) PUT file
+        AzureBlobStorageClient client = requireAzureClient();
         HttpExecutionResult<String> result = client.executePUTBlob(targetContainerName, targetBlobPath, source, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
         result.formatWithResponseBody(true);
         int code = result.response().statusCode();
@@ -632,7 +671,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         if (getLogger().isDebugEnabled()) {
             getLogger().debug("%s[upload]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
         }
-        // PUT not returns file size
+        // 2) get uploaded file size (PUT not returns file size)
+        client = requireAzureClient();// refresh client state - maybe disconnected
         HttpExecutionResult<Void> resultExists = client.executeHEADBlob(targetContainerName, targetBlobPath);
         code = resultExists.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
