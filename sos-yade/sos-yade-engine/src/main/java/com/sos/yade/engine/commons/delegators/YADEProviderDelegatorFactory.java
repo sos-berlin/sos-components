@@ -38,6 +38,8 @@ public class YADEProviderDelegatorFactory {
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
     public static YADESourceProviderDelegator createSourceDelegator(ISOSLogger logger, YADEArguments args, YADESourceArguments sourceArgs)
             throws YADEEngineInitializationException {
+
+        sourceArgs.getProvider().setConnectivityFaultSimulationEnabled(!sourceArgs.getSimConnFaults().isEmpty());
         return new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), sourceArgs.getLabel().getValue(), false),
                 sourceArgs);
     }
@@ -48,6 +50,7 @@ public class YADEProviderDelegatorFactory {
         if (!YADEArgumentsHelper.needTargetProvider(args)) {
             return null;
         }
+        targetArgs.getProvider().setConnectivityFaultSimulationEnabled(!targetArgs.getSimConnFaults().isEmpty());
         return new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), targetArgs.getLabel().getValue(), true),
                 targetArgs);
     }
@@ -75,13 +78,10 @@ public class YADEProviderDelegatorFactory {
                 aa.getSsl().setUntrustedSslVerifyCertificateHostnameOppositeName(UNTRUSTER_SSL_VERIFY_CERTIFICATE_HOSTNAME_OPPOSITE_NAME);
                 aa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 p = new AzureBlobStorageProvider(logger, aa);
-                if (isTarget) {
-                    args.getParallelism().setValue(1);
-                }
                 break;
             case FTP:
                 p = new FTPProvider(logger, (FTPProviderArguments) providerArgs);
-                args.getParallelism().setValue(1);
+                ((FTPProvider) p).setReadBufferSize(args.getBufferSize().getValue());
                 break;
             case FTPS:
                 FTPSProviderArguments fa = (FTPSProviderArguments) providerArgs;
@@ -90,7 +90,7 @@ public class YADEProviderDelegatorFactory {
                     fa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new FTPProvider(logger, fa);
-                args.getParallelism().setValue(1);
+                ((FTPProvider) p).setReadBufferSize(args.getBufferSize().getValue());
                 break;
             case LOCAL:
                 p = new LocalProvider(logger, (LocalProviderArguments) providerArgs);
@@ -103,9 +103,6 @@ public class YADEProviderDelegatorFactory {
                     ha.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new HTTPProvider(logger, ha);
-                if (isTarget) {
-                    args.getParallelism().setValue(1);
-                }
                 break;
             case SFTP:
             case SSH:
@@ -122,9 +119,6 @@ public class YADEProviderDelegatorFactory {
                     wa.getSsl().setUntrustedSslNameAlias(UNTRUSTER_SSL);
                 }
                 p = new WebDAVProvider(logger, wa);
-                if (isTarget) {
-                    args.getParallelism().setValue(1);
-                }
                 break;
             case UNKNOWN:
             default:

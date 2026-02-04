@@ -11,7 +11,7 @@ public class SSHJProviderReusableResource extends AProviderReusableResource<SSHJ
 
     public SSHJProviderReusableResource(SSHJProvider provider) throws Exception {
         super(provider);
-        sftpClient = provider.getSSHClient().newSFTPClient();
+        sftpClient = provider.requireSSHClient().newSFTPClient();
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.sos.commons.httpclient.commons;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -11,6 +12,9 @@ import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.http.HttpUtils;
 
+/** @apiNote YADE - not used - see com.sos.commons.vfs.http.HTTPProvider.upload() methods<br/>
+ *          HttpOutputStream is avoided since the current implementation buffers the entire content in memory and performs the PUT operation only upon closing
+ *          the stream. This makes it impractical for large files due to excessive memory consumption. */
 public class HttpOutputStream extends OutputStream {
 
     private final BaseHttpClient client;

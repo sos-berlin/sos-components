@@ -43,7 +43,7 @@ public class YADEProviderConnectivityFaultSimulator {
         }
 
         if (delegator.getProvider() instanceof LocalProvider) {
-            logger.info("[%s][%s][LocalProvider][%s][skip]connectivity fault simulation not supported", CLASS_NAME, delegator.getLabel(), delegator
+            logger.info("[%s][LocalProvider][%s][%s][skip]connectivity fault simulation not supported", delegator.getLabel(), CLASS_NAME, delegator
                     .getArgs().getSimConnFaults().getValue());
             return;
         }
@@ -55,30 +55,32 @@ public class YADEProviderConnectivityFaultSimulator {
         }
 
         activeSimulations.incrementAndGet();
+        logger.info("[%s][%s]%s=%s", delegator.getLabel(), CLASS_NAME, delegator.getArgs().getSimConnFaults().getName(), delegator.getArgs()
+                .getSimConnFaults().getValue());
 
         getExecutor().submit(() -> {
 
-            if (timesLength > 1) {
-                logger.info("[%s][%s][%s]start...", CLASS_NAME, delegator.getLabel(), delegator.getArgs().getSimConnFaults().getValue());
-            }
+            // if (timesLength > 1) {
+            // logger.info("[%s][%s][%s]start...", CLASS_NAME, delegator.getLabel(), delegator.getArgs().getSimConnFaults().getValue());
+            // }
 
             Arrays.stream(times).forEachOrdered((t) -> {
                 try {
                     int seconds = Integer.parseInt(t.trim());
                     TimeUnit.SECONDS.sleep(seconds);
-                    logger.info("[%s][%s]inject connectivity fault now (%ss elapsed) ...", CLASS_NAME, delegator.getLabel(), t);
+                    logger.info("[%s][%s][%ss elapsed]inject connectivity fault now ...", delegator.getLabel(), CLASS_NAME, t);
                     delegator.getProvider().injectConnectivityFault();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    logger.info("[%s][%s]provider simulation interrupted", CLASS_NAME, delegator.getLabel());
+                    logger.info("[%s][%s]provider simulation interrupted", delegator.getLabel(), CLASS_NAME);
                 } catch (Exception e) {
-                    logger.error("[%s][%s][%s]%s", CLASS_NAME, delegator.getLabel(), t, e);
+                    logger.error("[%s][%s][%s]%s", delegator.getLabel(), CLASS_NAME, t, e);
                 }
             });
 
-            if (timesLength > 1) {
-                logger.info("[%s][%s][%s]end", CLASS_NAME, delegator.getLabel(), delegator.getArgs().getSimConnFaults().getValue());
-            }
+            // if (timesLength > 1) {
+            // logger.info("[%s][%s][%s]end", CLASS_NAME, delegator.getLabel(), delegator.getArgs().getSimConnFaults().getValue());
+            // }
 
             if (activeSimulations.decrementAndGet() == 0) {
                 shutdown(logger);

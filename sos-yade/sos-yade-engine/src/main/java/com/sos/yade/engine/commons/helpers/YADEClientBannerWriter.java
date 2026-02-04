@@ -138,7 +138,7 @@ public class YADEClientBannerWriter {
             sb.append(", ").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
         }
         if (args.isParallelismEnabled()) {
-            sb.append(", ").append(YADEArgumentsHelper.toString("Parallelism", args.getParallelism()));
+            sb.append(", ").append(YADEArgumentsHelper.toStringWithCapitalizedName(args.getParallelism()));
         }
         if (args.getBufferSize().isDirty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(args.getBufferSize()));

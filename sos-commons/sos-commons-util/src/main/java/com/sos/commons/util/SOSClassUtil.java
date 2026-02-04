@@ -19,12 +19,21 @@ public class SOSClassUtil {
     private static final String NEW_LINE = "\n";
 
     public static String getMethodName() {
-        return getMethodName(1);
+        // 0 - this method - SOSClassUtil.getMethodName()
+        // 1 - called method - SOSClassUtil.getMethodName(index=2)
+        // 2 - expected method
+        return getMethodName(2);
     }
 
     public static String getMethodName(int index) {
+        // for (StackTraceElement trace : new Throwable().getStackTrace()) {
+        // LOGGER.info(getSimpleName(trace.getClassName()) + "." + trace.getMethodName());
+        // }
         while (index >= 0) {
             try {
+                // 1 index more vs new Throwable().getStackTrace - for Thread.currentThread().getStackTrace itself
+                // StackTraceElement trace = Thread.currentThread().getStackTrace()[index];
+
                 StackTraceElement trace = new Throwable().getStackTrace()[index];
                 // String line = trace.getLineNumber() > 0 ? "(" + trace.getLineNumber() + ")" : "";
                 // return getSimpleName(trace.getClassName()) + "." + trace.getMethodName() + line;

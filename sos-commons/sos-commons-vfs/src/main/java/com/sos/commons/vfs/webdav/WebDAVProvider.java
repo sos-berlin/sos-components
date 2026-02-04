@@ -35,8 +35,6 @@ public class WebDAVProvider extends HTTPProvider {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        validatePrerequisites("selectFiles");
-
         selection = ProviderFileSelection.createIfNull(selection);
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         try {
@@ -51,12 +49,17 @@ public class WebDAVProvider extends HTTPProvider {
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) throws ProviderException {
-        validatePrerequisites("exists", path, "path");
+        validateArgument("exists", path, "path");
 
+        URI uri = null;
         try {
-            return WebDAVProviderUtils.exists(getClient(), new URI(normalizePath(path)));
+            uri = new URI(normalizePath(path));
+            return WebDAVProviderUtils.exists(requireHTTPClient(), uri);
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return false;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
@@ -72,44 +75,50 @@ public class WebDAVProvider extends HTTPProvider {
      */
     @Override
     public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validatePrerequisites("createDirectoriesIfNotExists", path, "path");
+        validateArgument("createDirectoriesIfNotExists", path, "path");
 
+        URI uri = null;
         try {
-            URI uri = new URI(normalizePath(path));
-            if (WebDAVProviderUtils.directoryExists(this, uri)) {
+            BaseHttpClient client = requireHTTPClient();
+            uri = new URI(normalizePath(path));
+            if (WebDAVProviderUtils.directoryExists(this, client, uri)) {
                 return false; // already exists
             }
 
             Deque<URI> parentsToCreate = new ArrayDeque<>();
             URI parent = HttpUtils.getParentURI(uri);
-            while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, parent)) {
+            while (parent != null && !parent.equals(uri) && !WebDAVProviderUtils.directoryExists(this, client, parent)) {
                 parentsToCreate.push(parent);
                 parent = HttpUtils.getParentURI(parent);
             }
             // create parent directories
             while (!parentsToCreate.isEmpty()) {
-                WebDAVProviderUtils.createDirectory(this, parentsToCreate.pop());
+                WebDAVProviderUtils.createDirectory(this, client, parentsToCreate.pop());
             }
             // create given directory
-            WebDAVProviderUtils.createDirectory(this, uri);
+            WebDAVProviderUtils.createDirectory(this, client, uri);
             return true;
+        } catch (IOException e) {
+            throwProviderConnectException(path, uri, e);
+            return false;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
     }
 
     /** Overrides {@link IProvider#moveFileIfExists(String, String)} */
     @Override
     public boolean moveFileIfExists(String source, String target) throws ProviderException {
-        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", source, "source");
         validateArgument("moveFileIfExists", target, "target");
         try {
             URI sourceURI = new URI(normalizePath(source));
             URI targetURI = new URI(normalizePath(target));
 
-            HttpRequest.Builder builder = getClient().createRequestBuilder(sourceURI);
+            BaseHttpClient client = requireHTTPClient();
+            HttpRequest.Builder builder = client.createRequestBuilder(sourceURI);
             builder.header("Destination", targetURI.toString());
-            HttpExecutionResult<Void> result = getClient().executeNoResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
+            HttpExecutionResult<Void> result = client.executeNoResponseBody(builder.method("MOVE", BodyPublishers.noBody()).build());
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
@@ -129,12 +138,12 @@ public class WebDAVProvider extends HTTPProvider {
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileIfExists", path, "path");
+        validateArgument("getFileIfExists", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            return createProviderFile(WebDAVProviderUtils.getResource(this, uri));
+            return createProviderFile(WebDAVProviderUtils.getResource(this, requireHTTPClient(), uri));
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;

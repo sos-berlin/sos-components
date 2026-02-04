@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.http;
 
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -53,8 +54,10 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
  *           transport errors */
 public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
-    private BaseHttpClient client;
-    private boolean connected = false;
+    private final Object clientLock = new Object();
+    private volatile BaseHttpClient client;
+    private volatile boolean connected = false;
+    private volatile boolean connectivityFaultSimulationActive;
 
     public HTTPProvider(ISOSLogger logger, HTTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
@@ -90,8 +93,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
 
-        try {
-            if (client == null) {
+        synchronized (clientLock) {
+            try {
                 Builder builder = BaseHttpClient.withBuilder();
                 builder = builder.withLogger(getLogger());
                 builder = builder.withConnectTimeout(Duration.ofSeconds(getArguments().getConnectTimeoutAsSeconds()));
@@ -103,28 +106,31 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                     logIfHostnameVerificationDisabled(getArguments().getSsl());
                 }
                 client = builder.build();
+
+                getLogger().info(getConnectMsg());
+                HttpExecutionResult<Void> result = connect(client, getArguments().getBaseURI());
+                connected = true;
+
+                getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
+            } catch (Exception e) {
+                connected = false;
+
+                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
+                // error in methods executed after connect() - e.g. if retry, roll back...
+                // Call disconnect() in the application's finally block.
+
+                // disconnectInternal();
+                throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
             }
-            getLogger().info(getConnectMsg());
-            HttpExecutionResult<Void> result = connect(getArguments().getBaseURI());
-            connected = true;
-
-            getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
-        } catch (Exception e) {
-            connected = false;
-
-            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-            // error in methods executed after connect() - e.g. if retry, roll back...
-            // Call disconnect() in the application's finally block.
-
-            // disconnectInternal();
-            throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
         }
     }
 
     /** Overrides {@link IProvider#isConnected()} */
     @Override
     public boolean isConnected() {
-        return connected && client != null;
+        synchronized (clientLock) {
+            return connected && client != null;
+        }
     }
 
     /** Overrides {@link IProvider#disconnect()} */
@@ -138,13 +144,17 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#injectConnectivityFault()} */
     @Override
     public void injectConnectivityFault() {
-        connected = false;
-        try {
-            ProxyConfigArguments args = new ProxyConfigArguments();
-            args.getHost().setValue("yade-connectivity-fault-proxy");
-            client = BaseHttpClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args)).build();
-        } catch (Exception e) {
-            getLogger().info(getLogPrefix() + "[injectConnectivityFault]" + e);
+        connectivityFaultSimulationActive = true;
+        synchronized (clientLock) {
+            connected = false;
+            try {
+                ProxyConfigArguments args = new ProxyConfigArguments();
+                args.getHost().setValue("yade-connectivity-fault-proxy");
+                client = BaseHttpClient.withBuilder().withLogger(getLogger()).withProxyConfig(ProxyConfig.createInstance(args)).build();
+                getLogger().info(getInjectConnectivityFaultMsg());
+            } catch (Exception e) {
+                getLogger().info(getInjectConnectivityFaultMsg(e));
+            }
         }
     }
 
@@ -158,12 +168,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#exists(String)} */
     @Override
     public boolean exists(String path) throws ProviderException {
-        validatePrerequisites("exists", path, "path");
+        validateArgument("exists", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
 
+            BaseHttpClient client = requireHTTPClient();
             HttpExecutionResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
@@ -195,12 +206,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#deleteIfExists(String)} */
     @Override
     public boolean deleteIfExists(String path) throws ProviderException {
-        validatePrerequisites("deleteIfExists", path, "path");
+        validateArgument("deleteIfExists", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
 
+            BaseHttpClient client = requireHTTPClient();
             HttpExecutionResult<Void> result = client.executeDELETENoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
@@ -244,7 +256,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      * @throws ProviderException */
     @Override
     public boolean moveFileIfExists(String source, String target) throws ProviderException {
-        validatePrerequisites("moveFileIfExists", source, "source");
+        validateArgument("moveFileIfExists", source, "source");
         validateArgument("moveFileIfExists", target, "target");
 
         InputStream is = null;
@@ -257,6 +269,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             HttpExecutionResult<Void> result;
             int code;
             long sourceSize = -1L;
+            BaseHttpClient client = requireHTTPClient();
             if (!client.isChunkedTransfer()) {
                 result = client.executeHEADOrGETNoResponseBody(sourceURI);
                 code = result.response().statusCode();
@@ -293,12 +306,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     /** Overrides {@link IProvider#getFileIfExists(String)} */
     @Override
     public ProviderFile getFileIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileIfExists", path, "path");
+        validateArgument("getFileIfExists", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
 
+            BaseHttpClient client = requireHTTPClient();
             HttpExecutionResult<Void> result = client.executeGETNoResponseBody(uri);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
@@ -308,7 +322,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
                 throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
-            return createProviderFile(uri, result.response());
+            return createProviderFile(client, uri, result.response());
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
@@ -324,9 +338,10 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      */
     @Override
     public String getFileContentIfExists(String path) throws ProviderException {
-        validatePrerequisites("getFileContentIfExists", path, "path");
+        validateArgument("getFileContentIfExists", path, "path");
 
         StringBuilder content = new StringBuilder();
+        BaseHttpClient client = requireHTTPClient();
         try (InputStream is = client.getHTTPInputStream(new URI(normalizePath(path))); Reader r = new InputStreamReader(is, StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(r)) {
             br.lines().forEach(content::append);
@@ -362,11 +377,13 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      */
     @Override
     public InputStream getInputStream(String path) throws ProviderException {
-        validatePrerequisites("getInputStream", path, "path");
+        validateArgument("getInputStream", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
+
+            BaseHttpClient client = requireHTTPClient();
             InputStream is = client.getHTTPInputStream(uri);
             if (is == null) {
                 throw new Exception("InputStream is null");
@@ -391,7 +408,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
      */
     @Override
     public InputStream getInputStream(String path, long offset) throws ProviderException {
-        validatePrerequisites("getInputStream", path, "path");
+        validateArgument("getInputStream", path, "path");
 
         URI uri = null;
         try {
@@ -400,10 +417,29 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             }
 
             uri = new URI(normalizePath(path));
+
+            BaseHttpClient client = requireHTTPClient();
             InputStream is = client.getHTTPInputStream(uri, offset);
             if (is == null) {
                 throw new Exception("InputStream is null");
             }
+
+            if (getArguments().isConnectivityFaultSimulationEnabled()) {
+                is = new FilterInputStream(is) {
+
+                    @Override
+                    public int read(byte b[]) throws IOException {
+                        if (connectivityFaultSimulationActive) {
+                            if (!isConnected()) {
+                                connectivityFaultSimulationActive = false;
+                                throw new IOException("Not connected");
+                            }
+                        }
+                        return super.read(b);
+                    }
+                };
+            }
+
             return is;
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
@@ -415,12 +451,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
     /** Overrides {@link IProvider#getOutputStream(String, boolean)}<br/>
      * 
-     * @apiNote YADE - not used - see {@link #upload(String, InputStream, long, boolean)} methods
+     * @apiNote YADE - not used - see {@link #upload(String, InputStream, long, boolean)} methods<br/>
+     *          HttpOutputStream is avoided since the current implementation buffers the entire content in memory and performs the PUT operation only upon
+     *          closing the stream. This makes it impractical for large files due to excessive memory consumption.
      * @apiNote this method is implemented in the same way as webdav {@link WebDAVProvider#getOutputStream(String,boolean)}.<br/>
      */
     @Override
     public OutputStream getOutputStream(String path, boolean append) throws ProviderException {
-        validatePrerequisites("getOutputStream", path, "path");
+        validateArgument("getOutputStream", path, "path");
 
         URI uri = null;
         try {
@@ -429,7 +467,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
             }
 
             uri = new URI(normalizePath(path));
-            return new HttpOutputStream(client, uri, false);
+
+            return new HttpOutputStream(requireHTTPClient(), uri, false);
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
@@ -443,19 +482,21 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
     }
 
     public long upload(String path, InputStream source, long sourceSize, boolean isWebDAV) throws ProviderException {
-        validatePrerequisites("upload", path, "path");
+        validateArgument("upload", path, "path");
         validateArgument("upload", source, "InputStream source");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
             // 1) PUT file
+            BaseHttpClient client = requireHTTPClient();
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
             // 2) get uploaded file size (PUT not returns file size)
+            client = requireHTTPClient(); // refresh client state - maybe disconnected
             result = client.executeHEADOrGETNoResponseBody(uri);
             code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
@@ -470,21 +511,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-        if (client == null) {
-            throw new ProviderClientNotInitializedException(getLogPrefix(), BaseHttpClient.class, method);
-        }
-    }
-
     public void uploadContent(String path, String content, boolean isWebDAV) throws ProviderException {
-        validatePrerequisites("uploadContent", path, "path");
+        validateArgument("uploadContent", path, "path");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
 
+            BaseHttpClient client = requireHTTPClient();
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
@@ -497,13 +531,16 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    public BaseHttpClient getClient() {
-        return client;
-    }
-
-    public void validatePrerequisites(String method, String argValue, String msg) throws ProviderException {
-        validatePrerequisites(method);
-        validateArgument(method, argValue, msg);
+    public BaseHttpClient requireHTTPClient() throws ProviderException {
+        synchronized (clientLock) {
+            if (client == null) {
+                // 0 - getStackTrace
+                // 1 - requireClient
+                // 2 - caller
+                throw new ProviderClientNotInitializedException(getLogPrefix(), BaseHttpClient.class, SOSClassUtil.getMethodName(2));
+            }
+            return client;
+        }
     }
 
     public boolean isSecureConnectionEnabled() {
@@ -523,7 +560,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         return super.getPathOperationPrefix(uri == null ? path : uri.toString());
     }
 
-    private HttpExecutionResult<Void> connect(URI uri) throws Exception {
+    private HttpExecutionResult<Void> connect(BaseHttpClient client, URI uri) throws Exception {
         String notFoundMsg = null;
 
         HttpExecutionResult<Void> result = client.executeHEADOrGETNoResponseBody(uri);
@@ -550,25 +587,27 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
 
             getArguments().setBaseURI(parentURI);
             setAccessInfo(getArguments().getAccessInfo());
-            connect(getArguments().getBaseURI());
+            connect(client, getArguments().getBaseURI());
         }
         return result;
     }
 
     // without logging
     private boolean disconnectInternal() {
-        if (client == null) {
-            connected = false;
-            return false;
-        }
+        synchronized (clientLock) {
+            if (client == null) {
+                connected = false;
+                return false;
+            }
 
-        SOSClassUtil.closeQuietly(client);
-        client = null;
-        connected = false;
-        return true;
+            SOSClassUtil.closeQuietly(client);
+            client = null;
+            connected = false;
+            return true;
+        }
     }
 
-    private ProviderFile createProviderFile(URI uri, HttpResponse<?> response) throws Exception {
+    private ProviderFile createProviderFile(BaseHttpClient client, URI uri, HttpResponse<?> response) throws Exception {
         long size = client.getFileSize(response);
         if (size < 0) {
             return null;

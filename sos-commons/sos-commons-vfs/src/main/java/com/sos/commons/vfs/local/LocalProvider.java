@@ -313,12 +313,6 @@ public class LocalProvider extends AProvider<LocalProviderArguments> {
         return new SOSCommandResult("nop");
     }
 
-    /** Overrides {@link AProvider#validatePrerequisites(String)} */
-    @Override
-    public void validatePrerequisites(String method) throws ProviderException {
-
-    }
-
     private Path getAbsoluteNormalizedPath(String path) {
         return SOSPath.toAbsoluteNormalizedPath(path);
     }

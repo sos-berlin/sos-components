@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSComparisonOperator;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
@@ -37,6 +38,10 @@ public class YADEArgumentsHelper {
 
     public static String toString(SOSArgument<?> arg) {
         return toString(arg.getName(), arg);
+    }
+
+    public static String toStringWithCapitalizedName(SOSArgument<?> arg) {
+        return toString(SOSString.capitalizeFirst(arg.getName()), arg);
     }
 
     public static String toStringFromListString(SOSArgument<List<String>> arg) {
