@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLSession;
@@ -451,6 +452,11 @@ public abstract class ABaseHttpClient implements AutoCloseable {
         return executeNoResponseBody(createPUTInputStreamRequest(uri, is, size, isWebDAV));
     }
 
+    /** Executes a PUT request with InputStream and WebDAV overwrite header, discarding response */
+    public HttpExecutionResult<Void> executePUTNoResponseBody(URI uri, Supplier<InputStream> supplier, long size, boolean isWebDAV) throws Exception {
+        return executeNoResponseBody(createPUTInputStreamRequest(uri, supplier, size, isWebDAV));
+    }
+
     /** Adds WebDAV Overwrite header if enabled */
     public static void withWebDAVOverwrite(HttpRequest.Builder builder, boolean withWebDAVOverwrite) {
         if (withWebDAVOverwrite) {
@@ -784,7 +790,22 @@ public abstract class ABaseHttpClient implements AutoCloseable {
             // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
             builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
         }
-        return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(() -> is)).build();
+        Supplier<InputStream> supplier = () -> {
+            return is;
+        };
+        return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(supplier)).build();
+    }
+
+    private HttpRequest createPUTInputStreamRequest(URI uri, Supplier<InputStream> supplier, long size, boolean isWebDAV) {
+        HttpRequest.Builder builder = createRequestBuilder(uri);
+        builder.header(HttpUtils.HEADER_CONTENT_TYPE, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
+        withWebDAVOverwrite(builder, isWebDAV);
+        // return builder.PUT(new InputStreamBodyPublisher(supplier, size)).build();
+        if (!chunkedTransfer) {
+            // set the HEADER_CONTENT_LENGTH to avoid chunked transfer
+            builder.header(HttpUtils.HEADER_CONTENT_LENGTH, String.valueOf(size));
+        }
+        return builder.PUT(HttpRequest.BodyPublishers.ofInputStream(supplier)).build();
     }
 
     private long getFileSizeIfChunkedTransferEncoding(URI uri) throws Exception {

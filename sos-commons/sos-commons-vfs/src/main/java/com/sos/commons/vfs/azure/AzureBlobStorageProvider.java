@@ -52,7 +52,7 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
  * 
  * @implNote AzureBlobStorageProvider class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying
  *           connection or transport errors */
-public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProviderArguments> {
+public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProviderArguments, Object> {
 
     private final Object clientLock = new Object();
     private volatile AzureBlobStorageClient client;

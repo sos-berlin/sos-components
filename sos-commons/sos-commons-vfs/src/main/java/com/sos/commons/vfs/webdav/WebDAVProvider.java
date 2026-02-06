@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
@@ -161,10 +162,10 @@ public class WebDAVProvider extends HTTPProvider {
         uploadContent(path, content, true);
     }
 
-    /** Overrides {@link HTTPProvider#upload(String, InputStream, long, boolean)} */
+    /** Overrides {@link HTTPProvider#upload(String, Supplier, long, boolean)} */
     @Override
-    public long upload(String path, InputStream source, long sourceSize) throws ProviderException {
-        return upload(path, source, sourceSize, true);
+    public void upload(String path, Supplier<InputStream> sourceSupplier, long sourceSize) throws ProviderException {
+        upload(path, sourceSupplier, sourceSize, true);
     }
 
     public ProviderFile createProviderFile(WebDAVResource resource) {

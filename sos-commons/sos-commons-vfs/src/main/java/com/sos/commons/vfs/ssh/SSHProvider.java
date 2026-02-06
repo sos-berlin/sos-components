@@ -8,6 +8,7 @@ import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.AProviderReusableResource;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.ProviderCredentialStoreResolver;
 import com.sos.commons.vfs.exceptions.ProviderException;
@@ -15,13 +16,13 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.commons.SSHServerInfo;
 
-public abstract class SSHProvider extends AProvider<SSHProviderArguments> {
+public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> extends AProvider<SSHProviderArguments, C> {
 
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private SSHServerInfo serverInfo;
     private String serverVersion;
 
-    public static SSHProvider createInstance(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
+    public static SSHProvider<?, ?> createInstance(ISOSLogger logger, SSHProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.ssh.sshj.SSHJProvider(logger, args);
     }
 

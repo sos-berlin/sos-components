@@ -148,8 +148,8 @@ public class SMBJProviderUtils {
         return share.openFile(smbPath, ams, fa, sa, SMB2CreateDisposition.FILE_OPEN, co);
     }
 
-    protected static int selectFiles(SMBJProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            DiskShare share, int counterAdded) throws Exception {
+    protected static int selectFiles(SMBJProvider provider, DiskShare share, ProviderFileSelection selection, String directoryPath,
+            List<ProviderFile> result, int counterAdded) throws Exception {
         List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
         for (FileIdBothDirectoryInformation info : infos) {
             if (selection.maxFilesExceeded(counterAdded)) {
@@ -164,7 +164,7 @@ public class SMBJProviderUtils {
             if (isDirectory(info)) {
                 if (selection.getConfig().isRecursive()) {
                     if (selection.checkDirectory(fullPath)) {
-                        counterAdded = selectFiles(provider, selection, fullPath, result, share, counterAdded);
+                        counterAdded = selectFiles(provider, share, selection, fullPath, result, counterAdded);
                     }
                 }
             } else {

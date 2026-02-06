@@ -26,7 +26,7 @@ public class SSHServerInfo {
     private String os = OS.UNKNOWN.name();
     private Shell shell = Shell.UNKNOWN;
 
-    public SSHServerInfo(SSHProvider provider, String serverVersion) {
+    public SSHServerInfo(SSHProvider<?, ?> provider, String serverVersion) {
         this.serverVersion = serverVersion;
         if (provider.getArguments().getDisableAutoDetectShell().isTrue()) {
             this.commandResult = new SOSCommandResult(serverVersion);
@@ -44,7 +44,7 @@ public class SSHServerInfo {
         analyze(provider);
     }
 
-    private void analyze(SSHProvider provider) {
+    private void analyze(SSHProvider<?, ?> provider) {
         if (commandResult == null) {
             return;
         }

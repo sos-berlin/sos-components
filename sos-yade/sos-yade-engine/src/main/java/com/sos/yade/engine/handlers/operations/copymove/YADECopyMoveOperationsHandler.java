@@ -1,11 +1,11 @@
 package com.sos.yade.engine.handlers.operations.copymove;
 
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.sos.commons.util.concurrency.SOSParallelWorkerExecutor;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -63,16 +63,6 @@ public class YADECopyMoveOperationsHandler {
         }
     }
 
-    public static void handleReusableResourcesBeforeTransfer(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator) {
-
-        if (!config.processFilesSequentially()) {
-            // preparing providers for multi-threading
-            sourceDelegator.getProvider().disableReusableResource();
-            targetDelegator.getProvider().disableReusableResource();
-        }
-    }
-
     private static void processFiles(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, boolean useCumulativeTargetFile,
             AtomicBoolean cancel) throws Exception {
@@ -83,44 +73,32 @@ public class YADECopyMoveOperationsHandler {
         }
     }
 
-    // cumulative file is not processed here - only sequential processing
     private static void processFilesInParallel(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean isMoveOperation, AtomicBoolean cancel)
             throws Exception {
 
-        handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
-
         AtomicInteger nonTransactionalErrorCounter = new AtomicInteger();
         AtomicReference<Throwable> lastNonTransactionalError = new AtomicReference<>();
-
-        ForkJoinPool threadPool = YADEParallelExecutorFactory.create(config.getParallelism(), sourceFiles.size());
-        try {
-            threadPool.submit(() -> {
-                sourceFiles.parallelStream().forEach(f -> {
-                    if (cancel.get()) {
-                        return;
+        try (SOSParallelWorkerExecutor<YADEProviderFile> executor = YADEParallelExecutorFactory.createExecutor(sourceFiles, config.getParallelism(),
+                config.isTransactionalEnabled(), cancel);) {
+            executor.execute(sourceFile -> {
+                try {
+                    new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, sourceFile, cancel).run(isMoveOperation, false, true);
+                } catch (Exception e) {
+                    if (config.isTransactionalEnabled()) {
+                        cancel.set(true);
+                        throw e;
                     }
-                    YADEProviderFile sourceFile = (YADEProviderFile) f;
-                    try {
-                        // useCumulativeTargetFile=false for transfers in parallel
-                        // useLastModified=true for transfers in parallel
-                        new YADEFileHandler(logger, config, sourceDelegator, targetDelegator, sourceFile, cancel).run(isMoveOperation, false, true);
-                    } catch (Exception e) {
-                        if (config.isTransactionalEnabled()) {
-                            cancel.set(true);
-                            throw new RuntimeException(e);
-                        }
-                        rollbackNonTransactional(logger, config, sourceDelegator, targetDelegator, sourceFile, false, e);
-                        nonTransactionalErrorCounter.incrementAndGet();
-                        lastNonTransactionalError.set(e);
-                    }
-                });
-
-            }).join();
+                    rollbackNonTransactional(logger, config, sourceDelegator, targetDelegator, sourceFile, false, e);
+                    nonTransactionalErrorCounter.incrementAndGet();
+                    lastNonTransactionalError.set(e);
+                }
+            });
+            executor.awaitAndShutdown();
         } catch (Exception e) {
-            throw new YADEEngineOperationException(getTransferFileException(e.getCause()));
+            throw new YADEEngineOperationException(getTransferFileException(e));
         } finally {
-            YADEParallelExecutorFactory.shutdown(threadPool);
+            YADEParallelExecutorFactory.cleanup(sourceDelegator, targetDelegator);
         }
 
         checkNonTransactionalResult(sourceFiles, nonTransactionalErrorCounter.get(), lastNonTransactionalError.get());
@@ -185,7 +163,6 @@ public class YADECopyMoveOperationsHandler {
             return;
         }
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
-        handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
 
         try {
             String moved = isMoveOperation ? YADEClientBannerWriter.formatState(TransferEntryState.MOVED) : "";
@@ -253,10 +230,6 @@ public class YADECopyMoveOperationsHandler {
             isJumpHostRollback = true;
         }
 
-        if (!isJumpHostRollback) {
-            handleReusableResourcesAfterTransfer(logger, config, sourceDelegator, targetDelegator);
-        }
-
         for (ProviderFile pf : sourceFiles) {
             rollbackFile(logger, config, targetDelegator, isJumpHostRollback, pf);
         }
@@ -313,15 +286,6 @@ public class YADECopyMoveOperationsHandler {
             logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
             targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
         }
-    }
-
-    private static void handleReusableResourcesAfterTransfer(ISOSLogger logger, YADECopyMoveOperationsConfig config,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator) {
-
-        // if (!config.processFilesSequentially()) {
-        sourceDelegator.getProvider().enableReusableResource();
-        targetDelegator.getProvider().enableReusableResource();
-        // }
     }
 
     private static void rollbackNonTransactional(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,

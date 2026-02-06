@@ -1,49 +1,27 @@
 package com.sos.yade.engine.commons.helpers;
 
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sos.commons.util.concurrency.SOSNamedThreadFactory;
+import com.sos.commons.util.concurrency.SOSParallelWorkerExecutor;
+import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
+import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 
 public class YADEParallelExecutorFactory {
 
-    /** Custom ForkJoinPool & parallelStream because this combination:<br/>
-     * - allows control over the number of threads created<br/>
-     * - blocks the main thread until all tasks are completed<br/>
-     * - does not increase memory usage (compared to using a Future list callback in case of a large number of files)<br/>
-     */
-    public static ForkJoinPool create(int configuredMaxThreads, int numberOfTasks) {
-        int maxThreads = numberOfTasks < configuredMaxThreads ? numberOfTasks : configuredMaxThreads;
-
-        return new ForkJoinPool(maxThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
-
-            private int count = 1;
-
-            @Override
-            public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-                ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                thread.setName("yade-thread-" + (count++));
-                return thread;
-            }
-
-        }, null, false);
-    }
-
-    public static void shutdown(ForkJoinPool pool) {
-        if (pool == null) {
-            return;
-        }
-        pool.shutdown();
-        try {
-            if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-                pool.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            // preserve interrupt status and force shutdown
-            pool.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+    public static SOSParallelWorkerExecutor<YADEProviderFile> createExecutor(List<ProviderFile> sourceFiles, int parallelism, boolean stopOnException,
+            AtomicBoolean cancel) {
+        int tasks = sourceFiles.size();
+        int workers = tasks < parallelism ? tasks : parallelism;
+        SOSParallelWorkerExecutor<YADEProviderFile> executor = new SOSParallelWorkerExecutor<>(workers, new SOSNamedThreadFactory("yade-worker"),
+                stopOnException, cancel);
+        executor.submitAll(sourceFiles.stream().map(f -> (YADEProviderFile) f).toList());
+        return executor;
     }
 
     public static int getParallelism(YADEArguments args, int sourceFilesSize) {
@@ -52,4 +30,17 @@ public class YADEParallelExecutorFactory {
         }
         return args.isParallelismEnabled() ? args.getParallelism().getValue().intValue() : 1;
     }
+
+    public static void cleanup(YADESourceProviderDelegator source, YADETargetProviderDelegator target) {
+        cleanup(source);
+        cleanup(target);
+    }
+
+    public static void cleanup(AYADEProviderDelegator delegator) {
+        if (delegator == null) {
+            return;
+        }
+        delegator.getProvider().reduceResourcePool();
+    }
+
 }

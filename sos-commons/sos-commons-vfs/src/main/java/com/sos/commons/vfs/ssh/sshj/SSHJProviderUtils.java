@@ -136,12 +136,10 @@ public class SSHJProviderUtils {
     }
 
     // possible recursion
-    protected static List<ProviderFile> selectFiles(SSHJProvider provider, ProviderFileSelection selection, String directoryPath,
+    protected static List<ProviderFile> selectFiles(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        try (SFTPClient sftp = provider.requireSSHClient().newSFTPClient()) {
-            list(provider, sftp, selection, directoryPath, result, counterAdded);
-        }
+        list(provider, sftp, selection, directoryPath, result, counterAdded);
         return result;
     }
 
