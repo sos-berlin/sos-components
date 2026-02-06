@@ -11,7 +11,7 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
     private final YADEDirectoryMapper directoryMapper;
 
-    public YADESourceProviderDelegator(AProvider<?> provider, YADESourceArguments args) {
+    public YADESourceProviderDelegator(AProvider<?, ?> provider, YADESourceArguments args) {
         super(provider, args);
 
         // set YADE specific ProviderContext

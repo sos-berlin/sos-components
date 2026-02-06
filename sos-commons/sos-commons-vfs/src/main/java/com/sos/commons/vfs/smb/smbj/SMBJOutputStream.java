@@ -10,8 +10,6 @@ import com.sos.commons.util.SOSClassUtil;
 
 public class SMBJOutputStream extends OutputStream {
 
-    private final DiskShare share;
-    private final boolean closeShare;
     private final File file;
     private final OutputStream os;
 
@@ -21,10 +19,7 @@ public class SMBJOutputStream extends OutputStream {
      *            match the expected format.
      * @param append
      * @throws IOException */
-    public SMBJOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final boolean closeShare, final String smbPath,
-            boolean append) throws IOException {
-        this.share = share;
-        this.closeShare = closeShare;
+    public SMBJOutputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath, boolean append) throws IOException {
         this.file = SMBJProviderUtils.openFileWithWriteAccess(accessMaskMaximumAllowed, share, smbPath, append);
         this.os = file.getOutputStream(append);
     }
@@ -60,17 +55,7 @@ public class SMBJOutputStream extends OutputStream {
         } catch (IOException e) {
             exception = SOSException.mergeException(exception, e);
         }
-        // 3) close share
-        if (closeShare) {
-            try {
-                SOSClassUtil.close(share);
-            } catch (IOException e) {
-                exception = SOSException.mergeException(exception, e);
-            } catch (Exception e) {
-                exception = SOSException.mergeException(exception, new IOException(e));
-            }
-        }
-        // 4) super.close() is called for completeness.
+        // 3) super.close() is called for completeness.
         // OutputStream.close() is a no-op today, but subclasses may override it.
         try {
             super.close();

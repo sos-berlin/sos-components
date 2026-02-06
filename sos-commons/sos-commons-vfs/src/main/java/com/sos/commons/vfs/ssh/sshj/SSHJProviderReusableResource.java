@@ -5,23 +5,26 @@ import com.sos.commons.vfs.commons.AProviderReusableResource;
 
 import net.schmizz.sshj.sftp.SFTPClient;
 
-public class SSHJProviderReusableResource extends AProviderReusableResource<SSHJProvider> {
+public class SSHJProviderReusableResource extends AProviderReusableResource<SFTPClient> {
 
-    private SFTPClient sftpClient;
+    private SFTPClient client;
 
-    public SSHJProviderReusableResource(SSHJProvider provider) throws Exception {
-        super(provider);
-        sftpClient = provider.requireSSHClient().newSFTPClient();
+    public SSHJProviderReusableResource(long id, SSHJProvider provider) throws Exception {
+        super(id, provider, SFTPClient.class);
+        client = provider.requireSSHClient().newSFTPClient();
+        logOnCreated();
     }
 
     @Override
     public void close() throws Exception {
-        SOSClassUtil.closeQuietly(sftpClient);
-        sftpClient = null;
+        SOSClassUtil.closeQuietly(client);
+        client = null;
+        logOnClosed();
     }
 
-    public SFTPClient getSFTPClient() {
-        return sftpClient;
+    @Override
+    public SFTPClient getResource() {
+        return client;
     }
 
 }

@@ -37,7 +37,7 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.exceptions.ProviderNoSuchFileException;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 
-public class LocalProvider extends AProvider<LocalProviderArguments> {
+public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
 
     public LocalProvider(ISOSLogger logger, LocalProviderArguments args) throws ProviderInitializationException {
         super(logger, args);

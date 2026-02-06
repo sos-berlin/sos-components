@@ -11,8 +11,6 @@ import com.sos.commons.util.SOSClassUtil;
 
 public class SMBJInputStream extends InputStream {
 
-    private final DiskShare share;
-    private final boolean closeShareOnStreamClose;
     private final File file;
     private final InputStream is;
 
@@ -22,11 +20,8 @@ public class SMBJInputStream extends InputStream {
      *            match the expected format.
      * @param offset
      * @throws IOException */
-    public SMBJInputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final boolean closeShareOnStreamClose, final String smbPath,
-            long offset) throws Exception {
-        this.share = share;
-        this.closeShareOnStreamClose = closeShareOnStreamClose;
-        if (!this.share.fileExists(smbPath)) {
+    public SMBJInputStream(final boolean accessMaskMaximumAllowed, final DiskShare share, final String smbPath, long offset) throws Exception {
+        if (!share.fileExists(smbPath)) {
             throw new SOSNoSuchFileException(smbPath, new Exception(smbPath));
         }
         this.file = SMBJProviderUtils.openFileWithReadAccess(accessMaskMaximumAllowed, share, smbPath);
@@ -76,17 +71,6 @@ public class SMBJInputStream extends InputStream {
         } catch (IOException e) {
             exception = SOSException.mergeException(exception, e);
         }
-        // 4) close share
-        if (closeShareOnStreamClose) {
-            try {
-                SOSClassUtil.close(share);
-            } catch (IOException e) {
-                exception = SOSException.mergeException(exception, e);
-            } catch (Exception e) {
-                exception = SOSException.mergeException(exception, new IOException(e));
-            }
-        }
-
         if (exception != null) {
             throw exception;
         }

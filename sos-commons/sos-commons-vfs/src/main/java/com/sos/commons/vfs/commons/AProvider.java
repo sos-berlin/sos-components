@@ -1,7 +1,6 @@
 package com.sos.commons.vfs.commons;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
-import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -28,7 +26,7 @@ import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
-public abstract class AProvider<A extends AProviderArguments> implements IProvider {
+public abstract class AProvider<A extends AProviderArguments, R> implements IProvider {
 
     public static long DEFAULT_FILE_ATTR_VALUE = -1L;
 
@@ -41,7 +39,8 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
     /** Source/Target type - logging - is not set if only one provider is used (e.g. SSH JITL Job) */
     private AProviderContext context;
 
-    private AProviderReusableResource<?> reusableResource;
+    /** Pool managing reusable provider resources (e.g. SFTP, SMB handles), created lazily and shared across operations */
+    private volatile ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> resourcePool;
 
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
@@ -142,30 +141,106 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         return null;
     }
 
-    // cancelCommands - other thread
-    /** Overrides {@link IProvider#cancelCommands()} */
+    /** Cancels currently running provider commands.
+     * <p>
+     * Overrides {@link IProvider#cancelCommands()}
+     * </p>
+     * <p>
+     * This method may be invoked from another thread and should attempt to interrupt or abort ongoing operations in a provider-specific manner.
+     * </p>
+     * 
+     * @return the result of the cancel operation */
     @Override
     public SOSCommandResult cancelCommands() {
         return null;
     }
 
-    public void enableReusableResource() {
-
+    /** Creates a new reusable resource pool for this provider.
+     * <p>
+     * Implementations must return a fully initialized, thread-safe pool managing provider-specific reusable resources.
+     *
+     * @return a new reusable resource pool
+     * @throws ProviderException if the pool cannot be created */
+    public ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> createResourcePool() throws ProviderException {
+        return null;
     }
 
-    public void enableReusableResource(AProviderReusableResource<?> resource) throws Exception {
-        reusableResource = resource;
+    /** Creates a new reusable resource pool for this provider using a path-specific configuration.
+     * <p>
+     * This variant allows providers to create path-dependent pools if required by the underlying protocol or implementation.
+     *
+     * @param path the path for which the resource pool is created
+     * @return a new reusable resource pool
+     * @throws ProviderException if the pool cannot be created */
+    public ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> createResourcePool(String path) throws ProviderException {
+        return null;
     }
 
-    public AProviderReusableResource<?> getReusableResource() {
-        return reusableResource;
-    }
+    /** Returns the reusable resource pool for this provider, creating it lazily if necessary.
+     * <p>
+     * The pool is initialized in a thread-safe manner and reused for all subsequent operations.
+     *
+     * @return the reusable resource pool
+     * @throws ProviderException if the pool cannot be created */
+    public ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> requireResourcePool() throws ProviderException {
 
-    public void disableReusableResource() {
-        if (reusableResource != null) {
-            SOSClassUtil.closeQuietly(reusableResource);
-            reusableResource = null;
+        ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> p = resourcePool;
+        if (p == null) {
+            synchronized (this) {
+                p = resourcePool;
+                if (p == null) {
+                    p = createResourcePool();
+                    resourcePool = p;
+                }
+            }
         }
+        return p;
+    }
+
+    /** Returns the reusable resource pool for this provider, creating it lazily if necessary and using a path-specific configuration.
+     * <p>
+     * The pool is initialized in a thread-safe manner and reused for all subsequent operations.
+     *
+     * @param path the path used for pool creation
+     * @return the reusable resource pool
+     * @throws ProviderException if the pool cannot be created */
+    public ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> requireResourcePool(String path) throws ProviderException {
+
+        ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> p = resourcePool;
+        if (p == null) {
+            synchronized (this) {
+                p = resourcePool;
+                if (p == null) {
+                    p = createResourcePool(path);
+                    resourcePool = p;
+                }
+            }
+        }
+        return p;
+    }
+
+    /** Returns the currently initialized reusable resource pool.
+     * <p>
+     * This method does not trigger pool creation and may return {@code null} if the pool has not yet been initialized.
+     *
+     * @return the reusable resource pool or {@code null} if not initialized */
+    public ProviderReusableResourcePool<? extends AProviderReusableResource<R>, R> getResourcePool() {
+        return resourcePool;
+    }
+
+    /** Reduces the pool size to the minimal number of reusable resources (1) */
+    public void reduceResourcePool() {
+        if (getResourcePool() == null) {
+            return;
+        }
+        resourcePool.reduce();
+    }
+
+    public void closeResourcePool() {
+        if (getResourcePool() == null) {
+            return;
+        }
+        resourcePool.closeAll();
     }
 
     public Properties getConfigurationPropertiesFromFiles() {
@@ -250,7 +325,7 @@ public abstract class AProvider<A extends AProviderArguments> implements IProvid
         }
     }
 
-    public void validateArgument(String method, InputStream argValue, String msg) throws ProviderException {
+    public void validateArgument(String method, Object argValue, String msg) throws ProviderException {
         if (argValue == null) {
             throw new ProviderException(getLogPrefix() + "[" + method + "]" + msg + " missing");
         }

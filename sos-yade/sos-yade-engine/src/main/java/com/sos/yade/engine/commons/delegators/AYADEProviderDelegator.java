@@ -10,7 +10,7 @@ import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
-    private final AProvider<?> provider;
+    private final AProvider<?, ?> provider;
     private final YADESourceTargetArguments args;
 
     private final String label;
@@ -22,7 +22,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isAzure;
     private final boolean isWindows;
 
-    public AYADEProviderDelegator(AProvider<?> provider, YADESourceTargetArguments args) {
+    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args) {
         this.provider = provider;
         this.args = args;
         this.label = args.getLabel().getValue();
@@ -35,7 +35,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     /** Overrides {@link IYADEProviderDelegator#getProvider()} */
     @Override
-    public AProvider<?> getProvider() {
+    public AProvider<?, ?> getProvider() {
         return provider;
     }
 

@@ -43,20 +43,12 @@ public class YADEArgumentsChecker {
                 argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
                 logger.info("[%s][%s]due to the source/target provider being an FTP-based provider, transferring files in parallel is not supported",
                         YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
-            } else {
-                // check target provider
-                if (needTargetProvider) {
-                    if (argsLoader.getTargetArgs().getProvider().isFTP()) { // not supported - if source or target
-                        argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
-                        logger.info(
-                                "[%s][%s]due to the source/target provider being an FTP-based provider, transferring files in parallel is not supported",
-                                YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
-                    } else if (argsLoader.getTargetArgs().getProvider().isHTTP()) { // not supported - only if target
-                        argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
-                        logger.info(
-                                "[%s][%s]due to the target provider being an HTTP-based provider, transferring files in parallel is not supported",
-                                YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
-                    }
+            } else if (needTargetProvider) {
+                if (argsLoader.getTargetArgs().getProvider().isFTP()) { // not supported - if source or target
+                    argsLoader.getArgs().getParallelism().setValue(Integer.valueOf(1));
+                    logger.info(
+                            "[%s][%s]due to the source/target provider being an FTP-based provider, transferring files in parallel is not supported",
+                            YADETargetArguments.LABEL, YADEArgumentsHelper.toStringWithCapitalizedName(argsLoader.getArgs().getParallelism()));
                 }
             }
         }

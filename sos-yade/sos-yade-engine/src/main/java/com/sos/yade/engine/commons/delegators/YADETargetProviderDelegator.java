@@ -7,7 +7,7 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 /** @apiNote COPY/MOVE operations */
 public class YADETargetProviderDelegator extends AYADEProviderDelegator {
 
-    public YADETargetProviderDelegator(AProvider<?> provider, YADETargetArguments args) {
+    public YADETargetProviderDelegator(AProvider<?, ?> provider, YADETargetArguments args) {
         super(provider, args);
 
         // set YADE specific ProviderContext

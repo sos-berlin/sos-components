@@ -6,15 +6,16 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
+import com.sos.commons.vfs.commons.AProviderReusableResource;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
-public abstract class SMBProvider extends AProvider<SMBProviderArguments> {
+public abstract class SMBProvider<R extends AProviderReusableResource<C>, C> extends AProvider<SMBProviderArguments, C> {
 
     private String shareName;
 
-    public static SMBProvider createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
+    public static SMBProvider<?,?> createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.smb.smbj.SMBJProvider(logger, args);
     }
 

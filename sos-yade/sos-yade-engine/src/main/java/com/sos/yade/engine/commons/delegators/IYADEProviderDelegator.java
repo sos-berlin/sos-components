@@ -5,7 +5,7 @@ import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public interface IYADEProviderDelegator {
 
-    public AProvider<?> getProvider();
+    public AProvider<?, ?> getProvider();
 
     public YADESourceTargetArguments getArgs();
 

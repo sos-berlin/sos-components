@@ -1,9 +1,9 @@
 package com.sos.yade.engine.handlers.operations.remove;
 
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sos.commons.util.concurrency.SOSParallelWorkerExecutor;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -49,30 +49,17 @@ public class YADERemoveOperationHandler {
 
     private static void processFilesInParallel(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, List<ProviderFile> sourceFiles,
             int parallelism, int sourceFilesSize, AtomicBoolean cancel) throws Exception {
-        // preparing provider for multi-threading
-        sourceDelegator.getProvider().disableReusableResource();
-
-        ForkJoinPool threadPool = YADEParallelExecutorFactory.create(parallelism, sourceFilesSize);
-        try {
-            threadPool.submit(() -> {
-                sourceFiles.parallelStream().forEach(sourceFile -> {
-                    if (cancel.get()) {
-                        return;
-                    }
-                    try {
-                        run(logger, sourceDelegator, (YADEProviderFile) sourceFile, true);
-                    } catch (Exception e) {
-                        // if (config.isTransactionalEnabled()) {
-                        cancel.set(true);
-                        throw new RuntimeException(e);
-                        // }
-                    }
-                });
-            }).join();
+        try (SOSParallelWorkerExecutor<YADEProviderFile> executor = YADEParallelExecutorFactory.createExecutor(sourceFiles, parallelism, true,
+                cancel);) {
+            executor.execute(sourceFile -> {
+                run(logger, sourceDelegator, sourceFile, true);
+            });
+            executor.awaitAndShutdown();
         } catch (Exception e) {
             throw new YADEEngineOperationException(getRemoveFileException(e.getCause()));
-        } finally {
-            YADEParallelExecutorFactory.shutdown(threadPool);
+        }
+        finally {
+            YADEParallelExecutorFactory.cleanup(sourceDelegator);
         }
     }
 

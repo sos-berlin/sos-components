@@ -104,7 +104,7 @@ public class YADEFileActionsExecuter {
 
             targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
-            logger.info("%s[file size does not match]target file deleted", msg);
+            logger.error("%s[file size does not match]target file deleted", msg);
 
             throw new YADEEngineTransferFileSizeException(msg + "file size does not match");
         }

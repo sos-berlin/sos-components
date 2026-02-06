@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
@@ -33,7 +34,6 @@ import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.command.YADEFileCommandVariablesResolver;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
-import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEChecksumFileHelper;
@@ -128,7 +128,7 @@ public class YADEFileHandler {
             YADECommandExecutor.executeBeforeFile(logger, sourceDelegator, targetDelegator, sourceFile);
             targetFile.setState(TransferEntryState.TRANSFERRING);
             // TODO config.getParallelMaxThreads() == 1 - make it sense if parallel because of random order?
-            if (config.getParallelism() == 1 && sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
+            if (sourceFile.getSize() >= LOG_TRANSFER_START_IF_FILESIZE_GREATER_THAN) {
                 logger.info("[%s][%s][%s][%s, Bytes=%s][%s][%s]start...", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
                         .getState()), sourceDelegator.getLabel(), sourceFile.getFullPath(), sourceFile.getSize(), targetDelegator.getLabel(),
                         targetFile.getFullPath());
@@ -156,20 +156,22 @@ public class YADEFileHandler {
                 // TODO compressing, cumulative, messageDigest, offset ...
                 long sourceFileReadOffset = 0L;
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
-                    try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
-                            sourceFileReadOffset)) {
+                    try {
                         if (attempts > 0) {
                             logger.info(YADERetryFileHelper.getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, null,
                                     "unknown", "restart from offset 0"));
                         }
-
-                        if (targetDelegator.isAzure()) {
-                            targetFile.setSize(((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(),
-                                    sourceStream, sourceFile.getSize()));
-                        } else {
-                            targetFile.setSize(((HTTPProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream,
-                                    sourceFile.getSize()));
+                        try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
+                                sourceFileReadOffset)) {
+                            if (targetDelegator.isAzure()) {
+                                ((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream, sourceFile
+                                        .getSize());
+                            } else {
+                                ((HTTPProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), () -> sourceStream, sourceFile
+                                        .getSize());
+                            }
                         }
+                        targetFile.setSize(sourceFile.getSize());
                         break l;
                     } catch (Exception e) {
                         attempts++;
@@ -488,28 +490,19 @@ public class YADEFileHandler {
 
             YADEClientHelper.waitFor(config.getRetry().getInterval());
 
-            boolean sourceConnected = false;
-            boolean targetConnected = false;
-
             // execute ensureConnected only once
             RetryOnConnectionError ensureConnectedRetry = config.getRetry().createNotEnabledInstance();
             String action = YADEClientBannerWriter.formatState(targetFile.getState());
             try {
                 YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator, action, ensureConnectedRetry);
-                sourceConnected = true;
             } catch (Exception ex) {
                 logger.info("[%s][Retry %s failed]%s", sourceDelegator.getLabel(), attempts, e.toString());
             }
             try {
                 YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, action, ensureConnectedRetry);
-                targetConnected = true;
             } catch (Exception ex) {
                 logger.info("[%s][Retry %s failed]%s", targetDelegator.getLabel(), attempts, e.toString());
             }
-            if (sourceConnected && targetConnected) {
-                YADECopyMoveOperationsHandler.handleReusableResourcesBeforeTransfer(config, sourceDelegator, targetDelegator);
-            }
-
         }
     }
 

@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -42,9 +43,6 @@ import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 
 /** TODO<br/>
- * - Parallelism<br/>
- * -- HTTPProvider is a Source - seems to work<br/>
- * -- HTTPProvider is a Target - doesn't work<br/>
  * - How to implement not chunked transfer?<br/>
  * -- set Content-Lenght throws the java.lang.IllegalArgumentException: restricted header name: "Content-Length" Exception...<br/>
  * - When using an HTTP Proxy, the exception "[411]Length Required" is thrown....<br/>
@@ -52,7 +50,7 @@ import com.sos.commons.vfs.webdav.WebDAVProvider;
  * 
  * @implNote HTTPProvider class must avoid throwing custom or new IOException instances, since IOException is reserved for signaling underlying connection or
  *           transport errors */
-public class HTTPProvider extends AProvider<HTTPProviderArguments> {
+public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
 
     private final Object clientLock = new Object();
     private volatile BaseHttpClient client;
@@ -477,35 +475,43 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments> {
         }
     }
 
-    public long upload(String path, InputStream source, long sourceSize) throws ProviderException {
-        return upload(path, source, sourceSize, false);
+    public void upload(String path, Supplier<InputStream> supplier, long sourceSize) throws ProviderException {
+        upload(path, supplier, sourceSize, false);
     }
 
-    public long upload(String path, InputStream source, long sourceSize, boolean isWebDAV) throws ProviderException {
+    /** Uploads a file via HTTP PUT.
+     * <p>
+     * Note: Do <b>not</b> attempt to check the file size immediately after the upload using an extra request (e.g., HEAD or GET).<br />
+     * Doing so is unreliable for several reasons:
+     * <ul>
+     * <li>The HTTP server may respond with a status like 204 No Content, which does not provide the file size.</li>
+     * <li>For servers handling many small files in parallel, the file may not be fully committed to storage at the instant the client performs the check.</li>
+     * <li>Such checks can introduce race conditions or unnecessary delays without improving correctness.</li>
+     * </ul>
+     * Instead, rely on the HTTP response code of the PUT request:
+     * <ul>
+     * <li>Any 2xx response indicates the file has been successfully received by the server.</li>
+     * <li>No further size verification is needed in typical scenarios.</li>
+     * </ul>
+     * <p>
+     * The input stream supplied to the PUT request should be fresh for each attempt (for example, via a {@link java.util.function.Supplier}), which allows
+     * retries without reusing a consumed stream. */
+    public void upload(String path, Supplier<InputStream> sourceSupplier, long sourceSize, boolean isWebDAV) throws ProviderException {
         validateArgument("upload", path, "path");
-        validateArgument("upload", source, "InputStream source");
+        validateArgument("upload", sourceSupplier, "Supplier InputStream source");
 
         URI uri = null;
         try {
             uri = new URI(normalizePath(path));
-            // 1) PUT file
+            // PUT file - PUT not returns file size
             BaseHttpClient client = requireHTTPClient();
-            HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, source, sourceSize, isWebDAV);
+            HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, sourceSupplier, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
                 throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
-            // 2) get uploaded file size (PUT not returns file size)
-            client = requireHTTPClient(); // refresh client state - maybe disconnected
-            result = client.executeHEADOrGETNoResponseBody(uri);
-            code = result.response().statusCode();
-            if (!HttpUtils.isSuccessful(code)) {
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
-            }
-            return client.getFileSize(result.response());
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
-            return -1L;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }

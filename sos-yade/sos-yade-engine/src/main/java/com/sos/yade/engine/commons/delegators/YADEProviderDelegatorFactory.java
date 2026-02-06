@@ -55,7 +55,7 @@ public class YADEProviderDelegatorFactory {
                 targetArgs);
     }
 
-    private static AProvider<?> initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
+    private static AProvider<?, ?> initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
             boolean isTarget) throws YADEEngineInitializationException {
 
         if (providerArgs == null) {
@@ -67,7 +67,7 @@ public class YADEProviderDelegatorFactory {
             throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
         }
         // <XXX>Provider.createInstance - multiple provider implementations available/possible
-        AProvider<?> p = null;
+        AProvider<?, ?> p = null;
         try {
             switch (protocol.getValue()) {
             case AZURE_BLOB_STORAGE:

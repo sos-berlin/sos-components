@@ -71,7 +71,7 @@ import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
  * --- 1. Use printWorkingDirectory() to determine the session's FTP root.<br/>
  * --- 2. If it’s not "/", prepend or adjust other FTP paths accordingly.<br/>
  */
-public class FTPProvider extends AProvider<FTPProviderArguments> {
+public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
     private final boolean isFTPS;
     private final Object clientLock = new Object();
