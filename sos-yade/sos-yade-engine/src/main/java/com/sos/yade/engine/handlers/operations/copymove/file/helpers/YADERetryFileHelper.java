@@ -49,12 +49,12 @@ public class YADERetryFileHelper {
         return beforeTransferExecuted;
     }
 
-    public YADETargetProviderFile afterTransfer(ISOSLogger logger, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile)
-            throws Exception {
+    public YADETargetProviderFile afterTransfer(ISOSLogger logger, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile,
+            boolean compressTarget) throws Exception {
         if (!retryEnabled) {
             return targetFile;
         }
-        if (appendEnabled) {
+        if (appendEnabled || compressTarget) {
             return targetFile;
         }
         ProviderFile f = targetDelegator.getProvider().rereadFileIfExists(targetFile);

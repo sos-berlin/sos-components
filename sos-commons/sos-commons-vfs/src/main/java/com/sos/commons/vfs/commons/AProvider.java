@@ -6,6 +6,10 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import com.sos.commons.util.SOSCollection;
@@ -33,6 +37,10 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     private final ISOSLogger logger;
     private final A arguments;
     private final ProxyConfig proxyConfig;
+
+    /** see {@link #ensureConnected()} */
+    private final ReentrantLock reconnectLock = new ReentrantLock(true);
+    private final AtomicBoolean reconnecting = new AtomicBoolean(false);
 
     /** Default providerFileCreator function creates a standard ProviderFile using the builder */
     private Function<ProviderFileBuilder, ProviderFile> providerFileCreator = builder -> builder.build(this);
@@ -75,12 +83,57 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         return context;
     }
 
-    /** Overrides {@link IProvider#ensureConnected())} */
+    /** Overrides {@link IProvider#ensureConnected())}<br/>
+     * /** Ensures that the provider is connected.
+     * <p>
+     * If the provider is already connected, this method returns immediately.<br/>
+     * Otherwise, exactly one thread performs the reconnect while all other concurrent threads wait until the reconnect attempt completes.
+     * <p>
+     * Reconnection semantics:
+     * <ul>
+     * <li>If another thread is currently reconnecting, this method blocks until that reconnect attempt finishes.</li>
+     * <li>If the provider is still not connected after the reconnect attempt completed in another thread, a {@link ProviderConnectException} is thrown.</li>
+     * <li>If this thread performs the reconnect, it will disconnect any existing state and establish a new connection.</li>
+     * </ul>
+     * <p>
+     * This method is thread-safe and guarantees that connect/disconnect operations are never executed concurrently.
+     *
+     * @throws ProviderConnectException if reconnecting fails or the provider remains disconnected after another thread finished reconnecting */
     @Override
     public void ensureConnected() throws ProviderConnectException {
-        if (!isConnected()) {
-            disconnect();
-            connect();
+        if (isConnected()) {
+            return;
+        }
+
+        // Another thread is already reconnecting: wait
+        if (!reconnecting.compareAndSet(false, true)) {
+            waitForReconnect(); // maybe connected, maybe failed ...
+
+            if (!isConnected()) {
+                // ensureConnected(); ???
+                // Reconnect failed in other thread
+                throw new ProviderConnectException(String.format("%s[%s]Not connected", getLogPrefix(), getAccessInfo()));
+            }
+            return;
+        }
+
+        try {
+            reconnectLock.lock();
+            try {
+                if (isConnected()) {
+                    return;
+                }
+                disconnect();
+                connect();
+            } finally {
+                reconnectLock.unlock();
+            }
+        } catch (ProviderConnectException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ProviderConnectException(String.format("%s[%s]Reconnect failed", getLogPrefix(), getAccessInfo()), e);
+        } finally {
+            reconnecting.set(false);
         }
     }
 
@@ -241,6 +294,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
             return;
         }
         resourcePool.closeAll();
+        resourcePool = null;
     }
 
     public Properties getConfigurationPropertiesFromFiles() {
@@ -460,6 +514,15 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
             }
         } catch (Exception e) {
             throw new ProviderInitializationException(e);
+        }
+    }
+
+    private void waitForReconnect() throws ProviderConnectException {
+        while (reconnecting.get()) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new ProviderConnectException("Interrupted while waiting for reconnect");
+            }
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
         }
     }
 

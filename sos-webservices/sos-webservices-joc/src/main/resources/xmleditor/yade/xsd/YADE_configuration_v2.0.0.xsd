@@ -9761,35 +9761,58 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>
-        TODO: Description not completed
-        Note:
-        <ul>
-                     <li>This feature is primarily intended for unstable networks and the transfer of larger files.</li>
-                     <li>An absolute requirement for retransferring a file after connection interruptions is that <em>TransferOptions / RetryOnConnectionError</em> is configured.</li>
-                     <li>General behavior for file retransfer:
+        This feature is primarily intended for unstable networks and the transfer of larger files.
+        <br/>
+                  <ul>
+                     <li>
+                        <strong>Requirements</strong>:
                 <ul>
                            <li>
-                              <strong>Without Resume</strong> – after a connection interruption, a file is transferred completely from the beginning.</li>
+                              <em>TransferOptions / RetryOnConnectionError</em> must be enabled</li>
                            <li>
-                              <strong>With Resume</strong> – after a connection interruption, the source file is read from a specific, already transferred offset, and only the remaining part is transferred.</li>
+                              <em>TargetFileOptions / CompressFiles</em> must not be enabled</li>
                         </ul>
                      </li>
-                     <li>The following option should <strong>not</strong> be enabled:
+                     <li>
+                        <strong>General behavior for file retransfer</strong>:
                 <ul>
                            <li>
-                              <em>TargetFileOptions / CompressFiles</em>
+                              <strong>Resume = false (default)</strong>
+                              <ul>
+                                 <li>After a connection interruption, the file transfer is restarted from the beginning.</li>
+                              </ul>
+                           </li>
+                           <li>
+                              <strong>Resume = true</strong>
+                              <ul>
+                                 <li>After a connection interruption, the transfer continues from the last successfully transferred byte offset.</li>
+                                 <li>Only the remaining part of the source file is read and transferred.</li>
+                              </ul>
                            </li>
                         </ul>
                      </li>
-                     <li>Supported protocols:
+                     <li>
+                        <strong>Important limitation</strong>:
                 <ul>
-                           <li>Azure, HTTP, WebDAV, SMB – <strong>no</strong>
-                           </li>
-                           <li>FTP/FTPS – <strong>yes</strong>
-                           </li>
-                           <li>LOCAL – <strong>yes</strong>
-                           </li>
-                           <li>SFTP – <strong>yes</strong>
+                           <li>
+                              <em>HTTP-based Fragments</em> (e.g. <em>AzureBlobStorageFragment</em>, <em>HTTP(S)Fragment</em>, <em>WebDAVFragment</em>):
+                        <ul>
+                                 <li>as <em>Target</em>:
+                                <ul>
+                                       <li>In this case, file retransfer always behaves as <strong>Resume = false</strong>, even if Resume is enabled.
+                                        <ul>
+                                             <li>
+                                                <strong>Note</strong>: If YADE overrides a configured parameter, the effective value and the reason for the override are logged.</li>
+                                          </ul>
+                                       </li>
+                                    </ul>
+                                 </li>
+                                 <li>as <em>Source</em>:
+                                <ul>
+                                       <li>The source file is always read from the beginning, but already successfully transferred bytes are skipped, so only the remaining part of the file is transferred.</li>
+                                    </ul>
+                                 </li>
+                              </ul>
                            </li>
                         </ul>
                      </li>
