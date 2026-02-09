@@ -24,4 +24,9 @@ public interface INote {
     @Path("preferences")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse setPreferences(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+    
+    @POST
+    @Path("users")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse getUsers(@HeaderParam("X-Access-Token") String accessToken);
 }
