@@ -2,6 +2,7 @@ package com.sos.joc.note.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -14,6 +15,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryNote;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
+import com.sos.joc.db.security.IamHistoryDbLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryNoteDeleteEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -37,6 +39,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
     private static final String API_CALL_READ = "./note";
     private static final String API_CALL_DELETE = "./note/delete";
     private static final String API_CALL_PREFS = "./note/preferences";
+    private static final String API_CALL_USERS = "./note/users";
 
     @Override
     public JOCDefaultResponse read(String accessToken, byte[] body) {
@@ -172,6 +175,27 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             note.setDeliveryDate(Date.from(Instant.now()));
             note.setNoteId(dbItem.getId());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(note));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getUsers(String accessToken) {
+        SOSHibernateSession session = null;
+        try {
+            initLogging(API_CALL_USERS, null, accessToken, CategoryType.IDENTITY);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            session = Globals.createSosHibernateStatelessConnection(API_CALL_USERS);
+            IamHistoryDbLayer dbLayer = new IamHistoryDbLayer(session);
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(Map.of("deliveryDate", Date.from(Instant.now()), "users", dbLayer
+                    .getLastLoggedInAccountNames().filter(u -> !u.equals(getAccount())).toList())));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
