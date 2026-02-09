@@ -301,7 +301,8 @@ public class ExportUtils {
         folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item, recursive)));
         allLatest = allLatest.stream().filter(item -> {
             DBItemInventoryConfiguration dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
+//                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
+                    .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null);
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
                 return true;
              } else {

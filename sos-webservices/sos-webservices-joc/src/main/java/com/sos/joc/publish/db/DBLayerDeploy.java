@@ -1220,10 +1220,15 @@ public class DBLayerDeploy {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :cid");
-        hql.append(" and controllerId = :controllerId").append(")");
+        if(controllerId != null) {
+            hql.append(" and controllerId = :controllerId");
+        }
+        hql.append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
-        query.setParameter("controllerId", controllerId);
+        if(controllerId != null) {
+            query.setParameter("controllerId", controllerId);
+        }
         return session.getSingleResult(query);
     }
 

@@ -178,14 +178,11 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     DBItemInventoryConfiguration existingItem = dbLayer.getConfigurationByName(configuration.getName(), configuration
                                             .getObjectType());
                                     if (existingItem != null) {
-                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration())) {
+                                        // only update inventory if content(item update) or path(move) has changed
+                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration()) 
+                                                || !existingItem.getPath().equals(configuration.getPath())) {
                                             storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
                                                     auditLogId, agentNames));
-                                        } else {
-                                            /*
-                                             * hash is equal, content did not differ, but overwrite is set to true - conflicting
-                                             * - currently overwrite is ignored
-                                             */
                                         }
                                     } else {
                                         storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
@@ -205,7 +202,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         for (ConfigurationType type : importOrder) {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
-                                for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                                for (ConfigurationObject configuration : configurationObjectsByType) {
                                     DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(),
                                             configuration.getObjectType());
                                     if (canAdd(configuration.getPath(), permittedFolders)) {
