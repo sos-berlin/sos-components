@@ -8,6 +8,10 @@ public class ProviderConnectException extends ProviderException {
         super(cause);
     }
 
+    public ProviderConnectException(String msg) {
+        super(msg);
+    }
+
     public ProviderConnectException(String msg, Throwable cause) {
         super(msg, cause);
     }
