@@ -24,7 +24,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
             providerArgs.setProxy(step.getIncludedArguments(ProxyConfigArguments.class));
         }
-        SSHProvider provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
+        SSHProvider<?, ?> provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
         step.addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);
         try {
             provider.connect();
@@ -58,7 +58,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             jobName = step.getJobName();
             Object o = step.getCancelableResources().get(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
             if (o != null) {
-                SSHProvider p = (SSHProvider) o;
+                SSHProvider<?, ?> p = (SSHProvider<?, ?>) o;
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
                 p.disconnect();
             }
@@ -67,7 +67,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         }
     }
 
-    private void executeCommand(SSHProvider provider, OrderProcessStep<SSHJobArguments> step) {
+    private void executeCommand(SSHProvider<?, ?> provider, OrderProcessStep<SSHJobArguments> step) {
         step.getLogger().info("[execute command]%s", step.getDeclaredArguments().getCommand().getDisplayValue());
         SOSCommandResult r = provider.executeCommand(step.getDeclaredArguments().getCommand().getValue());
 
