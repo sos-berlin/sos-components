@@ -68,8 +68,8 @@ public class YADERetryFileHelper {
         return targetFile;
     }
 
-    public Result onRetry(ISOSLogger logger, String fileTransferLogPrefix, YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, boolean useCumulativeTargetFile) throws Exception {
+    public Result onRetry(ISOSLogger logger, String fileTransferLogPrefix, int maxAttempts, YADEProviderFile sourceFile,
+            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile, boolean useCumulativeTargetFile) throws Exception {
 
         // 1) no retry defined - skip
         if (!retryEnabled) {
@@ -79,8 +79,8 @@ public class YADERetryFileHelper {
         // 2) "normal" transfer - without append, cumulate and resume
         // - Restart transfer from offset=0
         if (!appendEnabled && !resumeEnabled) {
-            logger.info(getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, null, targetFile.getBytesProcessed() + "",
-                    "restart from offset 0"));
+            logger.info(getRetryMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, null, targetFile
+                    .getBytesProcessed() + "", "restart from offset 0"));
 
             return Result.restart();
         }
@@ -92,16 +92,16 @@ public class YADERetryFileHelper {
         if (rereadTarget == null) {
             if (resumeEnabled) {
                 if (appendEnabled) {
-                    logger.info(getResumeAppendFilesMessage(useCumulativeTargetFile, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile,
-                            0L, "restart from offset 0 (Target not found) ..."));
+                    logger.info(getResumeAppendFilesMessage(useCumulativeTargetFile, fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator,
+                            targetFile, 0L, "restart from offset 0 (Target not found) ..."));
                 } else {
-                    logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, 0L,
+                    logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, 0L,
                             "restart from offset 0 (Target not found) ..."));
                 }
             } else {
                 if (appendEnabled) {
-                    logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, 0L,
-                            "restart from offset 0 (Target not found) ..."));
+                    logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator,
+                            targetFile, 0L, "restart from offset 0 (Target not found) ..."));
                 }
             }
             return Result.restart();
@@ -119,11 +119,11 @@ public class YADERetryFileHelper {
                         + " less than before Retry(Bytes=" + targetSizeBeforeTransfer + ")");
             }
             if (resumeEnabled) {
-                logger.info(getResumeAppendFilesMessage(useCumulativeTargetFile, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, diff,
-                        "resume at offset " + diff + " ..."));
+                logger.info(getResumeAppendFilesMessage(useCumulativeTargetFile, fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator,
+                        targetFile, diff, "resume at offset " + diff + " ..."));
             } else {
-                logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, diff,
-                        "resume at offset " + diff + " ..."));
+                logger.info(getAppendFilesRetryMsg(useCumulativeTargetFile, fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator,
+                        targetFile, diff, "resume at offset " + diff + " ..."));
             }
 
             if (diff != targetFile.getBytesProcessed()) {
@@ -138,59 +138,62 @@ public class YADERetryFileHelper {
             if (rereadTargetSize == sourceSize) {
                 // extra check targetFile.getBytesProcessed() - because it can be an old file, which should be overwritten by the current transfer
                 if (rereadTargetSize == targetFile.getBytesProcessed()) {
-                    logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, rereadTargetSize,
+                    logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, rereadTargetSize,
                             "no resume required (Source and Target sizes match: " + rereadTargetSize + " Bytes)"));
                     return Result.completed(rereadTargetSize);
                 } else {
-                    logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, 0L, "restart from offset 0"));
+                    logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, 0L,
+                            "restart from offset 0"));
                     return Result.restart();
                 }
             }
             // size mismatch
             else if (rereadTargetSize > sourceSize) {
-                logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, rereadTargetSize,
+                logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, rereadTargetSize,
                         "Target Bytes greater than Source Bytes (size mismatch), restart from offset 0"));
                 return Result.restart();
             } else if (rereadTargetSize < sourceSize) {
                 if (rereadTargetSize == 0) {
-                    logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, rereadTargetSize,
+                    logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, rereadTargetSize,
                             "restart from offset 0"));
                     return Result.restart();
                 }
                 // else resume at rereadTargetSize
             }
 
-            logger.info(getResumeMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, rereadTargetSize, "resume at offset "
-                    + rereadTargetSize + " ..."));
+            logger.info(getResumeMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, rereadTargetSize,
+                    "resume at offset " + rereadTargetSize + " ..."));
             return Result.resume(rereadTargetSize);
         }
 
         return Result.restart();
     }
 
-    private String getAppendFilesRetryMsg(boolean useCumulativeTargetFile, String fileTransferLogPrefix, YADEProviderFile sourceFile,
+    private String getAppendFilesRetryMsg(boolean useCumulativeTargetFile, String fileTransferLogPrefix, int maxAttempts, YADEProviderFile sourceFile,
             YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile, long bytesProcessed, String add) {
-        return getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, getAppendFilesArgName(useCumulativeTargetFile,
-                targetDelegator), bytesProcessed + "", add);
+        return getRetryMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, getAppendFilesArgName(
+                useCumulativeTargetFile, targetDelegator), bytesProcessed + "", add);
     }
 
-    private String getResumeAppendFilesMessage(boolean useCumulativeTargetFile, String fileTransferLogPrefix, YADEProviderFile sourceFile,
+    private String getResumeAppendFilesMessage(boolean useCumulativeTargetFile, String fileTransferLogPrefix, int maxAttempts,
+            YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile, long bytesProcessed,
+            String add) {
+        return getRetryMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, targetDelegator.getArgs().getResumeFiles()
+                .getName() + "][" + getAppendFilesArgName(useCumulativeTargetFile, targetDelegator), bytesProcessed + "", add);
+    }
+
+    private String getResumeMessage(String fileTransferLogPrefix, int maxAttempts, YADEProviderFile sourceFile,
             YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile, long bytesProcessed, String add) {
-        return getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, targetDelegator.getArgs().getResumeFiles().getName()
-                + "][" + getAppendFilesArgName(useCumulativeTargetFile, targetDelegator), bytesProcessed + "", add);
+        return getRetryMessage(fileTransferLogPrefix, maxAttempts, sourceFile, targetDelegator, targetFile, targetDelegator.getArgs().getResumeFiles()
+                .getName(), bytesProcessed + "", add);
     }
 
-    private String getResumeMessage(String fileTransferLogPrefix, YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, long bytesProcessed, String add) {
-        return getRetryMessage(fileTransferLogPrefix, sourceFile, targetDelegator, targetFile, targetDelegator.getArgs().getResumeFiles().getName(),
-                bytesProcessed + "", add);
-    }
-
-    public static String getRetryMessage(String fileTransferLogPrefix, YADEProviderFile sourceFile, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, String argName, String bytesProcessed, String add) {
+    public static String getRetryMessage(String fileTransferLogPrefix, int maxAttempts, YADEProviderFile sourceFile,
+            YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile, String argName, String bytesProcessed, String add) {
         String arg = argName == null ? "" : "[" + argName + "]";
-        return String.format("[%s][%s]%s[%s][%s][Bytes(processed)=%s/%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile
-                .getState()), arg, targetDelegator.getLabel(), targetFile.getFullPath(), bytesProcessed, sourceFile.getSize(), add);
+        return String.format("[%s][%s][Retry %s/%s]%s[%s][%s][Bytes(processed)=%s/%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(
+                targetFile.getState()), targetFile.getAttempt(), maxAttempts, arg, targetDelegator.getLabel(), targetFile.getFullPath(),
+                bytesProcessed, sourceFile.getSize(), add);
     }
 
     private String getAppendFilesArgName(boolean useCumulativeTargetFile, YADETargetProviderDelegator targetDelegator) {

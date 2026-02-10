@@ -199,7 +199,8 @@ public class YADECommandExecutor {
      * see
      * {{@link YADEFileCommandVariablesResolver#resolve(YADESourceProviderDelegator, YADETargetProviderDelegator, com.sos.commons.vfs.commons.file.ProviderFile, String)} */
     public static void executeBeforeRename(ISOSLogger logger, IYADEProviderDelegator delegator, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, boolean isSource) throws YADEEngineCommandException {
+            YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile, RetryOnConnectionError retry, boolean isSource)
+            throws YADEEngineCommandException {
 
         SOSArgument<List<String>> arg = delegator.getArgs().getCommands().getCommandsBeforeRename();
         if (!arg.isEmpty()) {

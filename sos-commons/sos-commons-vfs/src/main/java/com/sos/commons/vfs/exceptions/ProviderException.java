@@ -19,7 +19,7 @@ public class ProviderException extends SOSException {
     }
 
     public ProviderException(String msg, Throwable cause) {
-        super(getMethodName() + msg + cause, cause);
+        super(msg + getMethodName() + cause, cause);
     }
 
     private static String getMethodName() {

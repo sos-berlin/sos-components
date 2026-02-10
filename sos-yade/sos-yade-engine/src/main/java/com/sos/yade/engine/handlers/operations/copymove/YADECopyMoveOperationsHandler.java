@@ -21,6 +21,7 @@ import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileActionsExecuter;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADETargetCumulativeFileHelper;
 
@@ -207,10 +208,7 @@ public class YADECopyMoveOperationsHandler {
     /** @apiNote the Source files by rollback are not affected */
     private static void rollbackTransactional(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, boolean useCumulativeTargetFile) {
-        if (useCumulativeTargetFile) {
-            YADETargetCumulativeFileHelper.rollback(logger, config, targetDelegator);
-            return;
-        }
+
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
         logger.info("* Transactional rollback");
         logger.info(YADEClientBannerWriter.SEPARATOR_LINE);
@@ -220,6 +218,11 @@ public class YADECopyMoveOperationsHandler {
             YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, "rollback", config.getRetry());
         } catch (YADEEngineConnectionException e) {
             logger.error("[%s][rollback]%s", targetDelegator.getLabel(), e.toString());
+            return;
+        }
+
+        if (useCumulativeTargetFile) {
+            YADETargetCumulativeFileHelper.rollback(logger, config, targetDelegator);
             return;
         }
 
@@ -259,7 +262,6 @@ public class YADECopyMoveOperationsHandler {
         if (!targetFile.isTransferredOrTransferring()) {
             return;
         }
-
         // 4) a targetFile intergityHash file may have been created and needs to be deleted
         if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
             String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
@@ -284,7 +286,16 @@ public class YADECopyMoveOperationsHandler {
             targetFile.setSubState(TransferEntryState.ROLLED_BACK);
         } catch (Exception e) {
             logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
-            targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
+            if (targetFile.isTransferring()) {
+                YADETargetProviderFile t = (YADETargetProviderFile) targetFile;
+                if (t.getBytesProcessed() == 0) { // transfer (maybe) not started...
+                    targetFile.setSubState(TransferEntryState.ABORTED);
+                } else {
+                    targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
+                }
+            } else {
+                targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
+            }
         }
     }
 
