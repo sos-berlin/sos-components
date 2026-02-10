@@ -1306,7 +1306,7 @@ public class InventoryDBLayer extends DBLayer {
             if (result.size() == 1) {
                 return result.get(0);
             }
-            return result.stream().sorted(Comparator.comparingLong(DBItemSearchWorkflow::getId).reversed()).findFirst().get();
+            return result.stream().filter(item -> !item.getDeployed()).sorted(Comparator.comparingLong(DBItemSearchWorkflow::getId).reversed()).findFirst().get();
             
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
