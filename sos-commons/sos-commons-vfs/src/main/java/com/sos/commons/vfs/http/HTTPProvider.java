@@ -510,6 +510,17 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             if (!HttpUtils.isSuccessful(code)) {
                 throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
+
+            // additional call if the simulation of a connection error is enabled
+            // if the client's connection was interrupted in the meantime, an error occurs.
+            if (getArguments().isConnectivityFaultSimulationEnabled()) {
+                client = requireHTTPClient(); // update client state
+                result = client.executeHEADOrGETNoResponseBody(uri);
+                code = result.response().statusCode();
+                if (!HttpUtils.isSuccessful(code)) {
+                    throw new Exception(BaseHttpClient.formatExecutionResult(result));
+                }
+            }
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
         } catch (Exception e) {

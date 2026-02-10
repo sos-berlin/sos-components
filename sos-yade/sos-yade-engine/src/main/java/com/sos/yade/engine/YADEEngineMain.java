@@ -213,13 +213,14 @@ public class YADEEngineMain {
         printArgumentUsage(YADEArguments.STARTUP_ARG_PARALLELISM, "<integer>", "default: " + YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
 
         System.out.println("    Simulation Options (connectivity fault injection):");
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS, "<seconds>", "default: none" + "\n" + String.format("%-55s%s", "",
-                "e.g. \"5\" - inject one connectivity fault after 5s") + "\n" + String.format("%-60s%s", "",
-                        "\"5;2;3\" - inject connectivity faults 3 times (after 5s, then 2s, then 3s)"));
-        printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_SIM_CONN_FAULTS, "<seconds>", "default: none" + "\n" + String.format("%-55s%s", "",
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS, "<seconds>", "default: none" + "\n" + String.format("%-54s%s", "",
+                "<seconds> supports integer or float values, decimal separator: '.' or ',', e.g.:") + "\n" + String.format("%-60s%s", "",
+                        "\"1\" - inject one connectivity fault after 1s") + "\n" + String.format("%-60s%s", "",
+                                "\"0.5;2.5;3\" - inject connectivity faults 3 times (after 0.5s, then 2.5s, then 3s)"));
+        printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_SIM_CONN_FAULTS, "<seconds>", "default: none" + "\n" + String.format("%-60s%s", "",
                 "same format as source, applied to target provider"));
-        printArgumentUsage(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, "<seconds>", "shorthand for source AND target connectivity faults" + "\n"
-                + String.format("%-55s%s", "", "e.g. \"2;2\" - inject faults for both providers at the same intervals"));
+        printArgumentUsage(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, "<seconds>", "shorthand for source AND target connectivity faults, e.g.:" + "\n"
+                + String.format("%-60s%s", "", "\"0.2;2\" - inject faults for both providers at the same intervals"));
 
         System.out.println("    Switches:");
         printArgumentUsage("-" + STARTUP_SWITCH_HELP_1 + " | --" + STARTUP_SWITCH_HELP_2, null, "displays usage", false);

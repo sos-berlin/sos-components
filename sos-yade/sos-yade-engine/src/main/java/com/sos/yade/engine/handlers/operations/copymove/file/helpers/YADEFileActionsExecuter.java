@@ -4,9 +4,11 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
-import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
+import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileSizeException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
@@ -21,6 +23,8 @@ public class YADEFileActionsExecuter {
             boolean isAtomicallyEnabled, boolean useLastModified) throws Exception {
 
         boolean executeAfterFile = false;
+        RetryOnConnectionError retry = config.getRetry();
+
         // 1) Target - individual operations
         if (config.getTarget().needsFilePostProcessing()) {
             YADETargetProviderFile targetFile = sourceFile.getTarget();
@@ -40,7 +44,8 @@ public class YADEFileActionsExecuter {
                     // rename=false;
                     // }
                     // }
-                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, isAtomicallyEnabled, false);
+                    rename(logger, fileTransferLogPrefix, targetDelegator, sourceDelegator, targetDelegator, sourceFile, retry, isAtomicallyEnabled,
+                            false);
                 }
                 // 2) Target - KeepModificationDate
                 // useLastModified - extra due to cumilativeFile case - setting only one time from the last source file
@@ -49,16 +54,24 @@ public class YADEFileActionsExecuter {
                         logger.debug("[%s][%s][%s][setTargetFileModificationDate][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(),
                                 targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
                     }
-                    targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile.getLastModifiedMillis());
-                    logger.info("[%s][%s][%s][%s][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
-                            .getKeepModificationDate().getName(), targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
+                    YADEProviderDelegatorHelper.executeOperation(logger, targetDelegator, retry, () -> {
+                        targetDelegator.getProvider().setFileLastModifiedFromMillis(targetFile.getFinalFullPath(), sourceFile
+                                .getLastModifiedMillis());
+                        logger.info("[%s][%s][%s][%s][UTC]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                                .getKeepModificationDate().getName(), targetFile.getFinalFullPath(), sourceFile.getLastModifiedAsUTCString());
+                        return null;
+                    });
                 }
                 // 3) Target - CreateIntegrityHashFile
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
                     String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
-                    targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
-                    logger.info("[%s][%s][%s][%s]created", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
-                            .getCreateIntegrityHashFile().getName(), path);
+
+                    YADEProviderDelegatorHelper.executeOperation(logger, targetDelegator, retry, () -> {
+                        targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
+                        logger.info("[%s][%s][%s][%s]created", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                                .getCreateIntegrityHashFile().getName(), path);
+                        return null;
+                    });
                 }
             }
         }
@@ -68,7 +81,7 @@ public class YADEFileActionsExecuter {
 
             // 1) Source - Rename
             if (sourceFile.needsRename()) {
-                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, false, true);
+                rename(logger, fileTransferLogPrefix, sourceDelegator, sourceDelegator, targetDelegator, sourceFile, retry, false, true);
             }
         }
 
@@ -110,23 +123,26 @@ public class YADEFileActionsExecuter {
         }
     }
 
-    private static void rename(ISOSLogger logger, String fileTransferLogPrefix, IYADEProviderDelegator delegator,
+    private static void rename(ISOSLogger logger, String fileTransferLogPrefix, AYADEProviderDelegator delegator,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile,
-            boolean isAtomicallyEnabled, boolean isSource) throws Exception {
+            RetryOnConnectionError retry, boolean isAtomicallyEnabled, boolean isSource) throws Exception {
         YADEProviderFile sourceOrTargetFile = isSource ? sourceFile : sourceFile.getTarget();
         String oldPath = sourceOrTargetFile.getFullPath();
         String newPath = sourceOrTargetFile.getFinalFullPath();
 
-        YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, sourceFile, isSource);
+        YADECommandExecutor.executeBeforeRename(logger, delegator, sourceDelegator, targetDelegator, sourceFile, retry, isSource);
 
-        if (delegator.getProvider().moveFileIfExists(oldPath, newPath)) {
-            // for error tests
-            // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
+        YADEProviderDelegatorHelper.executeOperation(logger, delegator, retry, () -> {
+            if (delegator.getProvider().moveFileIfExists(oldPath, newPath)) {
+                // for error tests
+                // sourceDelegator.getProvider().renameFileIfSourceExists(oldPath, newPath);
 
-            sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
-            String renameCause = isAtomicallyEnabled ? "AtomicRename" : "Rename";
-            logger.info("[%s][%s][%s][%s]->[%s]renamed", fileTransferLogPrefix, delegator.getLabel(), renameCause, oldPath, newPath);
-        }
+                sourceOrTargetFile.setSubState(TransferEntryState.RENAMED);
+                String renameCause = isAtomicallyEnabled ? "AtomicRename" : "Rename";
+                logger.info("[%s][%s][%s][%s]->[%s]renamed", fileTransferLogPrefix, delegator.getLabel(), renameCause, oldPath, newPath);
+            }
+            return null;
+        });
     }
 
 }

@@ -25,6 +25,7 @@ public class YADEProviderConnectivityFaultSimulator {
 
     private ExecutorService executor;
     private final AtomicInteger activeSimulations = new AtomicInteger(0);
+    private static final String DELIMITER_LINE = "---------------------------------------------------------------------";
 
     private synchronized ExecutorService getExecutor() {
         if (executor == null || executor.isShutdown()) {
@@ -66,10 +67,12 @@ public class YADEProviderConnectivityFaultSimulator {
 
             Arrays.stream(times).forEachOrdered((t) -> {
                 try {
-                    int seconds = Integer.parseInt(t.trim());
-                    TimeUnit.SECONDS.sleep(seconds);
+                    long ms = toMillis(t.trim());
+                    TimeUnit.MILLISECONDS.sleep(ms);
+                    logger.info(DELIMITER_LINE);
                     logger.info("[%s][%s][%ss elapsed]inject connectivity fault now ...", delegator.getLabel(), CLASS_NAME, t);
                     delegator.getProvider().injectConnectivityFault();
+                    logger.info(DELIMITER_LINE);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     logger.info("[%s][%s]provider simulation interrupted", delegator.getLabel(), CLASS_NAME);
@@ -92,6 +95,8 @@ public class YADEProviderConnectivityFaultSimulator {
         if (executor == null) {
             return;
         }
+
+        logger.info(DELIMITER_LINE);
         try {
             executor.shutdown();
         } catch (Exception e) {
@@ -99,10 +104,22 @@ public class YADEProviderConnectivityFaultSimulator {
         } finally {
             executor = null;
             logger.info("[%s][shutdown]all simulations finished", CLASS_NAME);
+            logger.info(DELIMITER_LINE);
         }
     }
 
     private static String[] parseTimes(String timesArg) {
         return timesArg.trim().split("\\s*;\\s*");
+    }
+
+    private static long toMillis(String seconds) {
+        String normalized = seconds.trim().replace(',', '.');
+        double sec;
+        try {
+            sec = Double.parseDouble(normalized);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid seconds value: " + seconds, e);
+        }
+        return Math.round(sec * 1_000);
     }
 }

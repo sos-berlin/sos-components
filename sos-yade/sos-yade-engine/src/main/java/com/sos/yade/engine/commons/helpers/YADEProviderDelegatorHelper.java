@@ -1,5 +1,7 @@
 package com.sos.yade.engine.commons.helpers;
 
+import java.util.concurrent.Callable;
+
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -23,6 +25,10 @@ public class YADEProviderDelegatorHelper {
             return;
         }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("[%s][ensureConnected]retry.isEnabled=%s", delegator.getLabel(), retry.isEnabled());
+        }
+
         // without retry
         if (!retry.isEnabled()) {
             try {
@@ -32,7 +38,6 @@ public class YADEProviderDelegatorHelper {
             }
             return;
         }
-
         // with retry
         for (int retryCounter = 0; retryCounter <= retry.getMaxRetries(); retryCounter++) {
             try {
@@ -47,6 +52,20 @@ public class YADEProviderDelegatorHelper {
                         retry.getInterval(), e.toString());
                 YADEClientHelper.waitFor(retry.getInterval());
             }
+        }
+    }
+
+    public static void executeOperation(ISOSLogger logger, AYADEProviderDelegator delegator, RetryOnConnectionError retry, Callable<Void> operation)
+            throws Exception {
+        try {
+            operation.call();
+        } catch (Exception e) {
+            if (delegator.getProvider().isConnected()) {
+                throw e;
+            }
+            logger.info("  " + e.getMessage());
+            ensureConnected(logger, delegator, retry);
+            operation.call();
         }
     }
 

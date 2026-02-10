@@ -7,6 +7,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 public class YADETargetProviderFile extends YADEProviderFile {
 
     private long bytesProcessed;
+    private int attempt;
 
     public YADETargetProviderFile(YADETargetProviderDelegator targetDelegator, String fullPath) {
         super(targetDelegator, fullPath, 0L, 0L, null, false);
@@ -31,5 +32,13 @@ public class YADETargetProviderFile extends YADEProviderFile {
 
     public void resetBytesProcessed() {
         setBytesProcessed(0L);
+    }
+
+    public void addAttempt() {
+        attempt++;
+    }
+
+    public int getAttempt() {
+        return attempt;
     }
 }
