@@ -52,7 +52,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             providerArgs.setCredentialStore(step.getIncludedArguments(CredentialStoreArguments.class));
             providerArgs.setProxy(step.getIncludedArguments(ProxyConfigArguments.class));
         }
-        SSHProvider provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
+        SSHProvider<?, ?> provider = SSHProvider.createInstance(step.getLogger(), providerArgs);
         step.addCancelableResource(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER, provider);
 
         SSHJobArguments jobArgs = step.getDeclaredArguments();
@@ -211,7 +211,7 @@ public class SSHJob extends Job<SSHJobArguments> {
             jobName = step.getJobName();
             Object o = step.getCancelableResources().get(CANCELABLE_RESOURCE_NAME_SSH_PROVIDER);
             if (o != null) {
-                SSHProvider p = (SSHProvider) o;
+                SSHProvider<?, ?> p = (SSHProvider<?, ?>) o;
                 step.getLogger().info("[" + OPERATION_CANCEL_KILL + "][ssh]" + p.cancelCommands());
                 p.disconnect();
             }
@@ -225,7 +225,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         return jobArgs.getCommand().getValue().split(jobArgs.getCommandDelimiter().getValue());
     }
 
-    private String createRemoteCommandScript(SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
+    private String createRemoteCommandScript(SSHProvider<?, ?> provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
             List<Path> localTempFilesToDelete, boolean isWindowsShell, ISOSLogger logger) throws Exception {
         if (!jobArgs.getCommandScript().isEmpty()) {
             logger.info("[execute command script]%s", jobArgs.getCommandScript().getDisplayValue());
@@ -254,7 +254,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         step.getLogger().debug("CommitID of the workflow: %s", step.getWorkflowVersionId());
     }
 
-    private String putCommandScriptFile(String content, SSHProvider provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
+    private String putCommandScriptFile(String content, SSHProvider<?, ?> provider, SSHJobArguments jobArgs, List<String> tempFilesToDelete,
             List<Path> localTempFilesToDelete, boolean isWindowsShell, ISOSLogger logger) throws Exception {
         if (!isWindowsShell) {
             content = content.replaceAll("(?m)\r", "");
@@ -304,7 +304,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         return retVal;
     }
 
-    private Map<String, Object> executePostCommand(SSHJobArguments jobArgs, SSHProvider provider, String resolvedReturnValuesFileName,
+    private Map<String, Object> executePostCommand(SSHJobArguments jobArgs, SSHProvider<?, ?> provider, String resolvedReturnValuesFileName,
             boolean isWindowsShell, ISOSLogger logger) {
         Map<String, Object> outcomes = new HashMap<String, Object>();
         try {
@@ -352,7 +352,7 @@ public class SSHJob extends Job<SSHJobArguments> {
         }
     }
 
-    private void deleteTempFiles(SSHJobArguments jobArgs, SSHProvider provider, List<String> tempFilesToDelete, boolean isWindowsShell,
+    private void deleteTempFiles(SSHJobArguments jobArgs, SSHProvider<?, ?> provider, List<String> tempFilesToDelete, boolean isWindowsShell,
             ISOSLogger logger) {
         if (tempFilesToDelete != null && !tempFilesToDelete.isEmpty()) {
             for (String file : tempFilesToDelete) {

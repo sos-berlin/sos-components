@@ -1,10 +1,14 @@
 package com.sos.joc.db.security;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -164,6 +168,19 @@ public class IamHistoryDbLayer {
 
         List<DBItemIamHistoryDetails> iamHistoryDetailsList = sosHibernateSession.getResultList(query);
         return iamHistoryDetailsList == null ? Collections.emptyList() : iamHistoryDetailsList;
+    }
+    
+    public Stream<String> getLastLoggedInAccountNames() throws SOSHibernateException {
+        Query<String> query = sosHibernateSession.createQuery("select accountName from " + DBItemIamHistory
+                + " where loginSuccess=:success group by accountName");
+        query.setParameter("success", true);
+        List<String> iamHistoryList = sosHibernateSession.getResultList(query);
+        if (iamHistoryList == null) {
+            return Stream.empty();
+        }
+        Predicate<String> isNoneOrBlank = n -> n.equals(SOSAuthHelper.NONE) || n.isBlank();
+        return iamHistoryList.stream().filter(isNoneOrBlank.negate()).sorted(Comparator.comparing(Function.identity(),
+                String.CASE_INSENSITIVE_ORDER));
     }
 
 }

@@ -393,6 +393,9 @@ public class YADEClientBannerWriter {
         if (targetArgs.getAppendFiles().isTrue()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
         }
+        if (targetArgs.isCompressFilesEnabled()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getCompressedFileExtension()));
+        }
         if (targetArgs.getResumeFiles().isTrue()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getResumeFiles()));
         }

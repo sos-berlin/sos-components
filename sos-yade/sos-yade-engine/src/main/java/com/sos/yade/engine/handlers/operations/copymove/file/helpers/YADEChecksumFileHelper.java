@@ -1,9 +1,7 @@
 package com.sos.yade.engine.handlers.operations.copymove.file.helpers;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
-import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -11,52 +9,16 @@ import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileIntegrityHashViolationException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEMessageDigest;
 
 /** Single "transfer" file operations */
 public class YADEChecksumFileHelper {
 
-    /** Source/Target: IntegrityHash */
-    // NoSuchAlgorithmException is already checked on YADEEngine start
-    public static MessageDigest initializeMessageDigest(YADECopyMoveOperationsConfig config, boolean create) {
-        if (!create) {
-            return null;
-        }
-        try {
-            return MessageDigest.getInstance(config.getIntegrityHashAlgorithm());
-        } catch (NoSuchAlgorithmException e) {
-            return null;
-        }
-    }
-
-    public static void updateMessageDigest(MessageDigest digest, byte[] data, boolean compressed) throws Exception {
-        if (digest == null) {
-            return;
-        }
-        if (compressed) {
-            byte[] b = SOSGzip.compressBytes(data, data.length);
-            digest.update(b, 0, b.length);
-        } else {
-            digest.update(data);
-        }
-    }
-
-    public static void updateMessageDigest(MessageDigest digest, byte[] data, int len, boolean compressed) throws Exception {
-        if (digest == null) {
-            return;
-        }
-        if (compressed) {
-            byte[] b = SOSGzip.compressBytes(data, len);
-            digest.update(b, 0, b.length);
-        } else {
-            digest.update(data, 0, len);
-        }
-    }
-
     /** Checks a checksum file on the Source system and deletes the transferred Target file if the checksum does not match */
     public static void checkSourceIntegrityHash(ISOSLogger logger, String fileTransferLogPrefix, YADECopyMoveOperationsConfig config,
             YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEProviderFile sourceFile,
-            MessageDigest sourceMessageDigest) throws Exception {
-        if (sourceMessageDigest == null) {
+            YADEMessageDigest messageDigest) throws Exception {
+        if (!config.getSource().isCheckIntegrityHashEnabled() || !messageDigest.enabled()) {
             return;
         }
         String sourceIntegrityHashFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
@@ -68,24 +30,26 @@ public class YADEChecksumFileHelper {
             logger.info("[%s]file not found", msg);
             return;
         }
-        String checksum = toHexString(sourceMessageDigest);
-        if (sourceFile.getIntegrityHash().equals(checksum)) {
+        String currentTransferChecksum = toHexString(messageDigest.getUncompressed());
+        if (sourceFile.getIntegrityHash().equals(currentTransferChecksum)) {
             logger.info("[%s]matches", msg);
         } else {
             targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
-            logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(), checksum,
-                    sourceFile.getTarget().getFullPath());
+            logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(),
+                    currentTransferChecksum, sourceFile.getTarget().getFullPath());
             throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceFile
-                    .getIntegrityHash(), checksum));
+                    .getIntegrityHash(), currentTransferChecksum));
         }
     }
 
-    public static void setTargetIntegrityHash(YADEProviderFile sourceFile, MessageDigest targetMessageDigest) {
-        if (sourceFile.getTarget() == null || targetMessageDigest == null) {
+    public static void setTargetIntegrityHash(YADECopyMoveOperationsConfig config, YADEProviderFile sourceFile, YADEMessageDigest messageDigest) {
+        if (!config.getTarget().isCreateIntegrityHashFileEnabled() || !messageDigest.enabled()) {
             return;
         }
-        sourceFile.getTarget().setIntegrityHash(toHexString(targetMessageDigest));
+        if (sourceFile.getTarget() != null) {
+            sourceFile.getTarget().setIntegrityHash(toHexString(messageDigest.getTarget()));
+        }
     }
 
     private static String toHexString(MessageDigest digest) {
