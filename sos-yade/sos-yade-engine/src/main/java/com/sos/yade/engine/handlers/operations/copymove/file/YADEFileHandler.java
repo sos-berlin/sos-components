@@ -2,7 +2,6 @@ package com.sos.yade.engine.handlers.operations.copymove.file;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,6 +33,7 @@ import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.command.YADEFileCommandVariablesResolver;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
+import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEMessageDigest;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEChecksumFileHelper;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileActionsExecuter;
@@ -141,10 +141,7 @@ public class YADEFileHandler {
 
             // not compress if cumulative file
             boolean compressTarget = config.getTarget().getCompress() != null && !useCumulativeTargetFile;
-            MessageDigest sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
-                    .isCheckIntegrityHashEnabled());
-            MessageDigest targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
-                    .isCreateIntegrityHashFileEnabled());
+            YADEMessageDigest messageDigest = YADEMessageDigest.createInstance(logger, config, compressTarget);
 
             int attempts = 0;
             boolean isCumulateTargetWritten = false;
@@ -153,7 +150,8 @@ public class YADEFileHandler {
             Instant startTime = Instant.now();
             Instant startTimeAfterRetry = null;
             if (targetDelegator.isHTTP()) {
-                // TODO compressing, cumulative, messageDigest, offset ...
+                // TODO compressing, cumulative, offset ...
+                // - see YADEArgumentsCheckr.validateAndAdjustTargetArguments - WARN messages because not supported
                 long sourceFileReadOffset = 0L;
                 Instant start = startTime;
                 l: while (attempts <= config.getRetry().getMaxRetries()) {
@@ -163,9 +161,12 @@ public class YADEFileHandler {
                                     "unknown", "restart from offset 0"));
                             startTimeAfterRetry = Instant.now();
                             start = startTimeAfterRetry;
+                            messageDigest = YADEMessageDigest.createInstance(logger, config, compressTarget);
                         }
                         try (InputStream sourceStream = YADEFileStreamHelper.getSourceInputStream(config, sourceDelegator, sourceFile,
                                 sourceFileReadOffset)) {
+                            messageDigest.update(config, sourceStream);
+
                             if (targetDelegator.isAzure()) {
                                 ((AzureBlobStorageProvider) targetDelegator.getProvider()).upload(targetFile.getFullPath(), sourceStream, sourceFile
                                         .getSize());
@@ -216,11 +217,7 @@ public class YADEFileHandler {
 
                                 // reset - due to restart the whole transfer of the source file
                                 targetFile.resetBytesProcessed();// 0L
-
-                                sourceMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getSource()
-                                        .isCheckIntegrityHashEnabled());
-                                targetMessageDigest = YADEChecksumFileHelper.initializeMessageDigest(config, config.getTarget()
-                                        .isCreateIntegrityHashFileEnabled());
+                                messageDigest = YADEMessageDigest.createInstance(logger, config, compressTarget);
                                 break;
                             case RESUME: // append/cumulative or resume
                                 targetIsAppendEnabled = true;
@@ -256,8 +253,7 @@ public class YADEFileHandler {
                             // cumulativeFileSeperatorLength = bytes.length;
                             targetStream.write(bytes);
 
-                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
-                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
+                            messageDigest.update(bytes);
                             isCumulateTargetWritten = true;
                         }
 
@@ -265,8 +261,7 @@ public class YADEFileHandler {
                             byte[] bytes = new byte[0];
                             targetStream.write(bytes);
 
-                            YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, bytes, false);
-                            YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, bytes, compressTarget);
+                            messageDigest.update(bytes);
                         } else {
                             byte[] buffer = new byte[config.getBufferSize()];
                             int bytesRead;
@@ -274,8 +269,7 @@ public class YADEFileHandler {
                                 targetStream.write(buffer, 0, bytesRead);
                                 targetFile.updateBytesProcessed(bytesRead);
 
-                                YADEChecksumFileHelper.updateMessageDigest(sourceMessageDigest, buffer, bytesRead, false);
-                                YADEChecksumFileHelper.updateMessageDigest(targetMessageDigest, buffer, bytesRead, compressTarget);
+                                messageDigest.update(buffer, bytesRead);
                             }
                         }
                         YADEFileStreamHelper.finishTargetOutputStream(logger, targetFile, targetStream, compressTarget);
@@ -333,9 +327,10 @@ public class YADEFileHandler {
                             .getSize(), duration);
 
             YADEFileActionsExecuter.checkTargetFileSize(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile);
+
             YADEChecksumFileHelper.checkSourceIntegrityHash(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, sourceFile,
-                    sourceMessageDigest);
-            YADEChecksumFileHelper.setTargetIntegrityHash(sourceFile, targetMessageDigest);
+                    messageDigest);
+            YADEChecksumFileHelper.setTargetIntegrityHash(config, sourceFile, messageDigest);
 
             finalizeIfNonTransactional(isMoveOperation, useLastModified, fileTransferLogPrefix);
         } catch (YADEEngineTransferFileException e) {

@@ -119,12 +119,18 @@ public class YADEArgumentsChecker {
         }
         // adjust
         if (targetArgs.isCumulateFilesEnabled()) {
-            replaceExpressions(logger, YADETargetArguments.LABEL, targetArgs.getCumulativeFileName());
+            if (targetArgs.getProvider().isHTTP()) {
+                targetArgs.getCumulativeFileName().setValue(null);
+                logger.warn("[%s][%s]due to the target provider being an HTTP-based provider, appending to existing files is not supported",
+                        YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getCumulativeFileName()));
+            } else {
+                replaceExpressions(logger, YADETargetArguments.LABEL, targetArgs.getCumulativeFileName());
 
-            if (args.isParallelismEnabled()) {
-                args.getParallelism().setValue(Integer.valueOf(1));
-                logger.info("[%s][%s]due to %s", YADEArguments.LABEL, YADEArgumentsHelper.toString(args.getParallelism()), YADEArgumentsHelper
-                        .toString(targetArgs.getCumulativeFileName()));
+                if (args.isParallelismEnabled()) {
+                    args.getParallelism().setValue(Integer.valueOf(1));
+                    logger.info("[%s][%s]due to %s", YADEArguments.LABEL, YADEArgumentsHelper.toString(args.getParallelism()), YADEArgumentsHelper
+                            .toString(targetArgs.getCumulativeFileName()));
+                }
             }
         }
 
@@ -137,7 +143,7 @@ public class YADEArgumentsChecker {
         if (targetArgs.getAppendFiles().isTrue()) {
             if (targetArgs.getProvider().isHTTP()) {
                 targetArgs.getAppendFiles().setValue(Boolean.valueOf(false));
-                logger.info("[%s][%s]due to the target provider being an HTTP-based provider, appending to existing files is not supported",
+                logger.warn("[%s][%s]due to the target provider being an HTTP-based provider, appending to existing files is not supported",
                         YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
             } else {
                 if (args.getTransactional().isTrue() || targetArgs.isAtomicityEnabled()) {
@@ -162,6 +168,24 @@ public class YADEArgumentsChecker {
                     targetArgs.getOverwriteFiles().setValue(Boolean.valueOf(true));
                     logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toStringAsOppositeValue(targetArgs
                             .getOverwriteFiles()), YADEArgumentsHelper.toString(targetArgs.getAppendFiles()));
+                }
+            }
+        }
+        if (targetArgs.isCompressFilesEnabled()) {
+            if (targetArgs.getProvider().isHTTP()) {
+                targetArgs.getCompressedFileExtension().setValue(null);
+                logger.warn("[%s][%s]due to the target provider being an HTTP-based provider, compression is not supported",
+                        YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getCompressedFileExtension()));
+            } else {
+                if (targetArgs.getAppendFiles().isTrue()) {
+                    targetArgs.getAppendFiles().setValue(Boolean.valueOf(false));
+                    logger.info("[%s][%s]due to %s", YADEArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getAppendFiles()),
+                            YADEArgumentsHelper.toString(targetArgs.getCompressedFileExtension()));
+                }
+                if (targetArgs.getCheckSize().isTrue()) {
+                    targetArgs.getCheckSize().setValue(Boolean.valueOf(false));
+                    logger.info("[%s][%s]due to %s", YADEArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getCheckSize()), YADEArgumentsHelper
+                            .toString(targetArgs.getCompressedFileExtension()));
                 }
             }
         }

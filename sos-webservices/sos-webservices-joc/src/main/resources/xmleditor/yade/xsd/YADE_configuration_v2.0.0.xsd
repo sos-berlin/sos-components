@@ -9744,6 +9744,22 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+               <p/>
+               <p>
+                  <strong>Protocol-specific limitation</strong>:
+            <ul>
+                     <li>
+                        <em>HTTP-based Fragments</em> (e.g. <em>AzureBlobStorageFragment</em>, <em>HTTP(S)Fragment</em>, <em>WebDAVFragment</em>):
+                    <ul>
+                           <li>as <em>Target</em>:
+                            <ul>
+                                 <li>In this case, <em>AppendFiles</em> is ignored and will be internally set to <em>false</em>.</li>
+                              </ul>
+                           </li>
+                        </ul>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -9792,7 +9808,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                         </ul>
                      </li>
                      <li>
-                        <strong>Important limitation</strong>:
+                        <strong>Protocol-specific limitation</strong>:
                 <ul>
                            <li>
                               <em>HTTP-based Fragments</em> (e.g. <em>AzureBlobStorageFragment</em>, <em>HTTP(S)Fragment</em>, <em>WebDAVFragment</em>):
@@ -10078,13 +10094,34 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Setting this parameter to the value "true" will cause target files to be compressed.</li>
                   </ul>
 		             </p>
+               <p/>
                <p>
 			The following parameters are ignored should <em>CompressFiles</em> be used:
 			<ul>
-                     <li>AppendFiles</li>
-                     <li>CheckSize</li>
+                     <li>
+                        <em>AppendFiles</em>
+                     </li>
+                     <li>
+                        <em>CheckSize</em>
+                     </li>
                   </ul> 
 		             </p>
+               <p/>
+               <p>
+                  <strong>Protocol-specific limitation</strong>:
+            <ul>
+                     <li>
+                        <em>HTTP-based Fragments</em> (e.g. <em>AzureBlobStorageFragment</em>, <em>HTTP(S)Fragment</em>, <em>WebDAVFragment</em>):
+                    <ul>
+                           <li>as <em>Target</em>:
+                            <ul>
+                                 <li>In this case, file compression is ignored.</li>
+                              </ul>
+                           </li>
+                        </ul>
+                     </li>
+                  </ul>
+               </p>
             </div>
          </xs:documentation>
       </xs:annotation>
