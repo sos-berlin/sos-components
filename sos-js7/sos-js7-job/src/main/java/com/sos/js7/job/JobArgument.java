@@ -308,6 +308,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         if (getClazzType() != null) {
             sb.append(" ").append(getClazzType().getTypeName());
         }
+        sb.append(" type=").append(getType());
         // if (scope != null) {
         // sb.append(" scope=").append(scope.name());
         // }
