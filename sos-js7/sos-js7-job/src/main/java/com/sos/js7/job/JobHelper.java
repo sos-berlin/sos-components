@@ -115,6 +115,13 @@ public class JobHelper {
         return o;
     }
 
+    public static <T> T getFromEither(final Either<Problem, T> either) throws JobProblemException {
+        if (either.isLeft()) {
+            throw new JobProblemException(either.getLeft());
+        }
+        return either.get();
+    }
+
     public static Map<String, Value> asEngineValues(final Map<String, Object> map) {
         Map<String, Value> result = new HashMap<>();
         if (map == null || map.size() == 0) {
@@ -128,35 +135,19 @@ public class JobHelper {
         return result;
     }
 
-    private static Value asEngineValue(final Object o) {
-        if (o == null) {
-            return StringValue.of("");
+    public static Map<String, Object> asNameValueMap(List<JobArgument<?>> list) {
+        if (SOSCollection.isEmpty(list)) {
+            return Collections.emptyMap();
         }
-        if (o instanceof Value) {
-            return (Value) o;
-        } else if (o instanceof String) {
-            return StringValue.of((String) o);
-        } else if (o instanceof Boolean) {
-            return BooleanValue.of(((Boolean) o).booleanValue());
-        } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o);
-        } else if (o instanceof Long) {
-            return NumberValue.of(((Long) o).longValue());
-        } else if (o instanceof Double) {
-            return NumberValue.of(BigDecimal.valueOf((Double) o));
-        } else if (o instanceof BigDecimal) {
-            return NumberValue.of((BigDecimal) o);
-        } else if (o instanceof Date) {
-            return getDateAsStringValue((Date) o);
-        } else if (SOSReflection.isList(o.getClass())) {
-            // TODO use ListValue?
-            List<?> l = (List<?>) o;
-            String s = (String) l.stream().map(e -> {
-                return e.toString();
-            }).collect(Collectors.joining(SOSArgumentHelper.DEFAULT_LIST_VALUE_DELIMITER));
-            return StringValue.of(s);
+
+        Map<String, Object> result = new HashMap<>();
+        for (JobArgument<?> arg : list) {
+            if (arg.getName() == null) {
+                continue;
+            }
+            result.put(arg.getName(), arg.getValue());
         }
-        return StringValue.of(o.toString());
+        return result;
     }
 
     public static Map<String, Object> asNameValueMap(Map<String, JobArgument<?>> map) {
@@ -241,6 +232,42 @@ public class JobHelper {
         return result;
     }
 
+    private static Value asEngineValue(final Object o) {
+        if (o == null) {
+            return StringValue.of("");
+        }
+        if (o instanceof Value) {
+            return (Value) o;
+        } else if (o instanceof String) {
+            return StringValue.of((String) o);
+        } else if (o instanceof Boolean) {
+            return BooleanValue.of(((Boolean) o).booleanValue());
+        } else if (o instanceof Integer) {
+            return NumberValue.of((Integer) o);
+        } else if (o instanceof Long) {
+            return NumberValue.of(((Long) o).longValue());
+        } else if (o instanceof Double) {
+            return NumberValue.of(BigDecimal.valueOf((Double) o));
+        } else if (o instanceof BigDecimal) {
+            return NumberValue.of((BigDecimal) o);
+        } else if (o instanceof Date) {
+            return getDateAsStringValue((Date) o);
+        } else if (SOSReflection.isList(o.getClass())) {
+            // TODO use ListValue?
+            List<?> l = (List<?>) o;
+            String s = (String) l.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.joining(SOSArgumentHelper.DEFAULT_LIST_VALUE_DELIMITER));
+            return StringValue.of(s);
+        }
+        return StringValue.of(o.toString());
+    }
+
+    public static List<Field> getJobArgumentFields(JobArguments o) {
+        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
+                .toList());
+    }
+
     @SuppressWarnings("unused")
     private static Map<String, Object> asNameValueMap(JobArguments o) {
         List<Field> fields = getJobArgumentFields(o);
@@ -266,22 +293,10 @@ public class JobHelper {
         return map;
     }
 
-    public static List<Field> getJobArgumentFields(JobArguments o) {
-        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
-                .toList());
-    }
-
     @SuppressWarnings("unused")
     private static List<Field> getOrderProcessStepOutcomeVariableFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(OrderProcessStepOutcomeVariable.class))
                 .collect(Collectors.toList());
-    }
-
-    public static <T> T getFromEither(final Either<Problem, T> either) throws JobProblemException {
-        if (either.isLeft()) {
-            throw new JobProblemException(either.getLeft());
-        }
-        return either.get();
     }
 
     private static Path getPath(String val) {

@@ -506,18 +506,59 @@ public class OrderProcessStep<A extends JobArguments> {
         return JobHelper.asNameStringValueMapFromMapWithObjectValue(getJobArgumentsAsNameValueMap());
     }
 
+    /** Returns all "Order Variables" arguments that are assigned by the given order.
+     * <p>
+     * Only arguments explicitly assigned by the order are returned.
+     * </p>
+     *
+     * @return a list of job arguments assigned from the order, never {@code null}, returns an empty list if no arguments are assigned */
+    public List<JobArgument<?>> getAssignedArgumentsFromOrder() {
+        if (allArguments == null) {
+            return Collections.emptyList();
+        }
+        return allArguments.entrySet().stream().filter(e -> {
+            if (e.getValue().getValueSource().isTypeOrder()) {
+                return true;
+            }
+            return false;
+        }).map(e -> e.getValue()).collect(Collectors.toList());
+    }
+
+    /** Returns all "Order Variables" arguments assigned by the given order as a name-value map.
+     * <p>
+     * Each entry in the map corresponds to a job argument's name and its value. Only arguments explicitly assigned by the order are included.
+     * </p>
+     *
+     * @return a map of argument names to their values, never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, Object> getAssignedArgumentsFromOrderAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAssignedArgumentsFromOrder());
+    }
+
+    /** Returns all "Order Variables" arguments assigned by the given order as a map of name to string values.
+     * <p>
+     * Only arguments explicitly assigned by the order are included.
+     * </p>
+     * <p>
+     * Unlike {@link #getAssignedArgumentsFromOrderAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into
+     * {@link String}. The map contains order argument names as keys and their string values as values.
+     *
+     * @return a map of argument names to their string values; never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, String> getAssignedArgumentsFromOrderAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getAssignedArgumentsFromOrderAsNameValueMap());
+    }
+
     /** Returns all "Default Order Variables" arguments that are declared in the workflow's "orderPreparation" section and whose effective assignment originates
      * from that section during execution.
      * <p>
-     * This method returns only those arguments for which the assignment declared in the workflow order preparation is the effective one, i.e. it was not
-     * overridden by an assignment from a higher-precedence source (such as {@code order}) during the current execution.
+     * Only arguments for which the assignment from the workflow order preparation is effective are returned. Arguments overridden by a higher-precedence source
+     * (such as {@code order}) are excluded.
      * </p>
      *
-     * @return a list of job arguments declared in workflow order preparation and effectively assigned during execution, or {@code null} if no arguments are
-     *         available */
-    public List<JobArgument<?>> getAssignedOrderPreparationArguments() {
+     * @return a list of job arguments declared in workflow order preparation and effectively assigned during execution, never {@code null}, returns an empty
+     *         list if no arguments are assigned */
+    public List<JobArgument<?>> getAssignedArgumentsFromOrderPreparation() {
         if (allArguments == null) {
-            return null;
+            return Collections.emptyList();
         }
         return allArguments.entrySet().stream().filter(e -> {
             if (e.getValue().getValueSource().isTypeOrderPreparation()) {
@@ -527,9 +568,34 @@ public class OrderProcessStep<A extends JobArguments> {
         }).map(e -> e.getValue()).collect(Collectors.toList());
     }
 
-    private List<JobArgument<?>> getAssignedJobNodeArguments() {
+    /** Returns all "Default Order Variables" arguments assigned from the workflow's "orderPreparation" section as a name-value map.
+     * <p>
+     * Each entry in the map corresponds to a job argument's name and its value. Only arguments for which the assignment from the workflow order preparation is
+     * effective are included. Arguments overridden by a higher-precedence source (such as {@code order}) are excluded.
+     * </p>
+     *
+     * @return a map of argument names to their values, never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, Object> getAssignedArgumentsFromOrderPreparationAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAssignedArgumentsFromOrderPreparation());
+    }
+
+    /** Returns all "Default Order Variables" arguments assigned from the workflow's "orderPreparation" section as a map of name to string values.
+     * <p>
+     * Each entry in the map corresponds to a job argument's name and its value. Only arguments for which the assignment from the workflow order preparation is
+     * effective are included. Arguments overridden by a higher-precedence source (such as {@code order}) are excluded.
+     * </p>
+     * <p>
+     * Unlike {@link #getAssignedArgumentsFromOrderPreparationAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument
+     * values into {@link String}. The map contains order argument names as keys and their string values as values.
+     *
+     * @return a map of argument names to their string values; never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, String> getAssignedArgumentsFromOrderPreparationAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getAssignedArgumentsFromOrderPreparationAsNameValueMap());
+    }
+
+    private List<JobArgument<?>> getAssignedArgumentsFromJobNode() {
         if (allDeclaredArguments == null) {
-            return null;
+            return Collections.emptyList();
         }
         return allDeclaredArguments.stream().filter(a -> {
             if (a.getValueSource().isTypeJobNode()) {
@@ -539,18 +605,17 @@ public class OrderProcessStep<A extends JobArguments> {
         }).collect(Collectors.toList());
     }
 
-    /** Returns all arguments that are declared in the workflow's job "arguments" section and whose effective assignment originates from that section during
-     * execution.
+    /** Returns all arguments declared in the workflow's job "arguments" section whose effective assignment originates from that section during execution.
      * <p>
-     * This method returns only those arguments for which the assignment declared in the workflow job "arguments" section is the effective one, i.e. it was not
-     * overridden by an assignment from a higher-precedence source (such as {@code order}) during the current execution.
+     * Only arguments for which the assignment from the workflow job section is effective are returned. Arguments overridden by a higher-precedence source (such
+     * as {@code order}) are excluded.
      * </p>
      *
-     * @return a list of job arguments declared in the workflow job "arguments" section and effectively assigned during execution, or {@code null} if no
-     *         arguments are available */
-    public List<JobArgument<?>> getAssignedJobArguments() {
+     * @return a list of job arguments declared in the workflow job "arguments" section and effectively assigned during execution, never {@code null}, returns
+     *         an empty list if no arguments are assigned */
+    public List<JobArgument<?>> getAssignedArgumentsFromJob() {
         if (allArguments == null) {
-            return null;
+            return Collections.emptyList();
         }
         return allArguments.entrySet().stream().filter(e -> {
             if (e.getValue().getValueSource().isTypeJob()) {
@@ -558,6 +623,31 @@ public class OrderProcessStep<A extends JobArguments> {
             }
             return false;
         }).map(e -> e.getValue()).collect(Collectors.toList());
+    }
+
+    /** Returns all arguments assigned from the workflow's job "arguments" section as a name-value map.
+     * <p>
+     * Each entry in the map corresponds to a job argument's name and its value. Only arguments for which the assignment from the workflow job section is
+     * effective are included. Arguments overridden by a higher-precedence source (such as {@code order}) are excluded.
+     * </p>
+     *
+     * @return a map of argument names to their values, never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, Object> getAssignedArgumentsFromJobAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAssignedArgumentsFromJob());
+    }
+
+    /** Returns all arguments assigned from the workflow's job "arguments" section as a map of name to string values.
+     * <p>
+     * Each entry in the map corresponds to a job argument's name and its value. Only arguments for which the assignment from the workflow job section is
+     * effective are included. Arguments overridden by a higher-precedence source (such as {@code order}) are excluded.
+     * </p>
+     * <p>
+     * Unlike {@link #getAssignedArgumentsFromJobAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into
+     * {@link String}. The map contains order argument names as keys and their string values as values.
+     *
+     * @return a map of argument names to their string values; never {@code null}, returns an empty map if no arguments are assigned */
+    public Map<String, String> getAssignedArgumentsFromJobAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getAssignedArgumentsFromJobAsNameValueMap());
     }
 
     /** Returns the arguments of all used job resources as a map.
@@ -1437,7 +1527,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
         }
 
-        List<JobArgument<?>> orderPreparation = getAssignedOrderPreparationArguments();
+        List<JobArgument<?>> orderPreparation = getAssignedArgumentsFromOrderPreparation();
         if (orderPreparation != null && orderPreparation.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_PREPARATION.getHeader()));
             orderPreparation.stream().forEach(a -> {
@@ -1446,7 +1536,7 @@ public class OrderProcessStep<A extends JobArguments> {
         }
 
         // Declared Job Node arguments
-        List<JobArgument<?>> jobNode = getAssignedJobNodeArguments();
+        List<JobArgument<?>> jobNode = getAssignedArgumentsFromJobNode();
         if (jobNode != null && jobNode.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSourceType.JOB_NODE.getHeader()));
             jobNode.stream().forEach(a -> {
