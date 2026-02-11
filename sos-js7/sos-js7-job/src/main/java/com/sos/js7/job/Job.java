@@ -623,7 +623,15 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
         Value v = null;
         if (isNamedValue) {// order or node
             v = fromMap(step.getInternalStep().order().arguments(), allNames);
-            source = v == null ? new ValueSource(ValueSourceType.ORDER_OR_NODE) : new ValueSource(ValueSourceType.ORDER);
+            if (v == null) {
+                if (step.isOrderOrderPreparationParameter(arg.getName())) {
+                    source = new ValueSource(ValueSourceType.ORDER_PREPARATION);
+                } else {
+                    source = new ValueSource(ValueSourceType.JOB_NODE);
+                }
+            } else {
+                source = new ValueSource(ValueSourceType.ORDER);
+            }
         } else {
             if (jobEnvironment.getEngineArguments() != null) {
                 v = fromMap(jobEnvironment.getEngineArguments(), allNames);

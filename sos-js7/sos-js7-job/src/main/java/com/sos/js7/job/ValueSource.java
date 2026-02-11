@@ -4,11 +4,11 @@ public class ValueSource {
 
     public enum ValueSourceType {
 
-        JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
-                "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
-                        "Job Arguments", "Job Argument"), JOB_RESOURCE("Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME(
-                                "Last Succeeded Outcomes"), LAST_FAILED_OUTCOME("Last Failed Outcomes"), ORDER_PREPARATION(
-                                        "Default Order Variables"), EXECUTE_JOB("Execute Another Job Arguments", "Execute Another Job Argument");
+        JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), JOB_NODE("Default Node Arguments",
+                "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT("Job Arguments", "Job Argument"), JOB_RESOURCE(
+                        "Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME("Last Succeeded Outcomes"), LAST_FAILED_OUTCOME(
+                                "Last Failed Outcomes"), ORDER_PREPARATION("Default Order Variables"), EXECUTE_JOB("Execute Another Job Arguments",
+                                        "Execute Another Job Argument");
 
         private final String header;
         private final String title;
@@ -51,8 +51,8 @@ public class ValueSource {
         return type != null && type.equals(ValueSourceType.ORDER);
     }
 
-    public boolean isTypeOrderOrNode() {
-        return type != null && type.equals(ValueSourceType.ORDER_OR_NODE);
+    public boolean isTypeJobNode() {
+        return type != null && type.equals(ValueSourceType.JOB_NODE);
     }
 
     public boolean isTypeOrderPreparation() {

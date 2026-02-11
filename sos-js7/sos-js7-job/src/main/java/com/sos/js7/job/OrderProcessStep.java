@@ -106,8 +106,141 @@ public class OrderProcessStep<A extends JobArguments> {
         this.resolverPrefixes = step.resolverPrefixes;
     }
 
-    protected BlockingInternalJob.Step getInternalStep() {
-        return internalStep;
+    public String getControllerId() {
+        if (controllerId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            controllerId = internalStep.controllerId().string();
+        }
+        return controllerId;
+    }
+
+    public String getOrderId() {
+        if (orderId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            orderId = internalStep.order().id().string();
+        }
+        return orderId;
+    }
+
+    public String getAgentId() throws JobProblemException {
+        if (agentId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            agentId = JobHelper.getFromEither(internalStep.order().attached()).string();
+        }
+        return agentId;
+    }
+
+    public String getJobName() throws JobProblemException {
+        if (jobName == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            jobName = JobHelper.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
+        }
+        return jobName;
+    }
+
+    public String getJobInstructionLabel() {
+        if (jobInstructionLabel == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            try {
+                jobInstructionLabel = internalStep.instructionLabel().get().string();
+            } catch (Exception e) {
+                getLogger().error(String.format("[getJobInstructionLabel]%s", e.toString()));
+            }
+        }
+        return jobInstructionLabel;
+    }
+
+    public String getWorkflowPath() {
+        if (workflowPath == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            try {
+                workflowPath = (String) getNamedValue(INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH);
+            } catch (Exception e) {
+                getLogger().error(String.format("[getWorkflowPath][%s]%s", INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
+            }
+        }
+        return workflowPath;
+    }
+
+    public String getWorkflowName() {
+        if (workflowName == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowName = internalStep.order().workflowId().path().name();
+        }
+        return workflowName;
+    }
+
+    public String getWorkflowVersionId() {
+        if (workflowVersionId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowVersionId = internalStep.order().workflowId().versionId().string();
+        }
+        return workflowVersionId;
+    }
+
+    public String getWorkflowPosition() {
+        if (workflowPosition == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowPosition = internalStep.order().workflowPosition().position().toString();
+        }
+        return workflowPosition;
+    }
+
+    /** Returns the logger instance.
+     * 
+     * @return the {@link OrderProcessStepLogger} instance */
+    public OrderProcessStepLogger getLogger() {
+        return logger;
+    }
+
+    /** Returns the output writer used by this step.<br/>
+     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+     *
+     * @return the {@link PrintWriter} for this step */
+    public PrintWriter getOut() {
+        if (internalStep == null) {
+            return new PrintWriter(new StringWriter());
+        }
+        return internalStep.out();
+    }
+
+    /** Returns the error writer used by this step.<br/>
+     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+     *
+     * @return the {@link PrintWriter} for error output */
+    public PrintWriter getErr() {
+        if (internalStep == null) {
+            return new PrintWriter(new StringWriter());
+        }
+        return internalStep.err();
+    }
+
+    /** Returns the step outcome object used to define the result of this job step.
+     * <p>
+     * The returned {@link OrderProcessStepOutcome} can be used, for example, to set the return code and assign outcome variables.<br/>
+     * Both the return code and the outcome variables are automatically propagated to and available for subsequent jobs in the workflow.
+     *
+     * @return the {@link OrderProcessStepOutcome} for this job step */
+    public OrderProcessStepOutcome getOutcome() {
+        return outcome;
     }
 
     /** Executes another job of the specified job class.
@@ -178,158 +311,115 @@ public class OrderProcessStep<A extends JobArguments> {
         executeJob(clazz, map, true);
     }
 
-    // to overwrite by UnitTestJobHelper
-    protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step, List<JobArgumentException> exceptions)
-            throws Exception {
-        AJ args = job.beforeCreateJobArguments(exceptions, step);
-        return job.createDeclaredJobArguments(exceptions, step, args);
-    }
-
-    private <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Map<String, JobArgument<?>> executeJobArguments,
-            boolean updateDeclaredArgumentsDefinition) throws Exception {
-        Job<AJ> job = null;
-        try {
-            job = clazz.getDeclaredConstructor(JobContext.class).newInstance((JobContext) null);
-        } catch (Exception e) {
-            job = clazz.getDeclaredConstructor().newInstance();
-        }
-
-        JobEnvironment<AJ> je = new JobEnvironment<AJ>(clazz.getSimpleName(), jobEnvironment);
-        job.setJobEnvironment(je);
-
-        if (cancelableExecuteJobs == null) {
-            cancelableExecuteJobs = new ConcurrentHashMap<>();
-        }
-        try {
-            job.onStart();
-
-            OrderProcessStep<AJ> step = new OrderProcessStep<>(je, this);
-            step.executeJobBean = step.new ExecuteJobBean(job, executeJobArguments, updateDeclaredArgumentsDefinition);
-
-            List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
-            // AJ args = job.onCreateJobArguments(exceptions, step);
-            // args = job.createDeclaredJobArguments(exceptions, step, args);
-            AJ args = onExecuteJobCreateArguments(job, step, exceptions);
-            step.applyArguments(args);
-
-            if (step.getLogger().isDebugEnabled()) {
-                step.logJobKey();
-                // step.getLogger().debug(job.getClass().getSimpleName() + " Arguments:");
-                // logArgumentsBySource(LogLevel.DEBUG);
-                step.logAllArguments(LogLevel.DEBUG);
-            }
-
-            cancelableExecuteJobs.put(je.getJobKey(), step);
-            job.processOrder(step);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            job.onStop();
-            cancelableExecuteJobs.remove(je.getJobKey());
-        }
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected void cancelExecuteJobs() {
-        if (cancelableExecuteJobs != null && cancelableExecuteJobs.size() > 0) {
-            for (Map.Entry<String, OrderProcessStep> e : cancelableExecuteJobs.entrySet()) {
-                try {
-                    e.getValue().getExecuteJobBean().getJob().cancelProcessOrder(e.getValue());
-                } catch (Exception t) {
-                    logger.warn("[cancelExecuteJobs][" + e.getKey() + "]" + e.toString(), e);
-                }
-            }
-            cancelableExecuteJobs.clear();
-        }
-        cancelableExecuteJobs = null;
-    }
-
-    protected void applyArguments(A arguments) throws Exception {
-        this.declaredArguments = arguments;
-        this.logger.init(arguments);
-
-        setAllArguments();
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected void init4unittest(A arguments, Map<String, Object> unitTestUndeclaredArguments, UnitTestStepConfig stepConfig) throws Exception {
-        this.unitTestUndeclaredArguments = unitTestUndeclaredArguments;
-        if (stepConfig != null) {
-            this.controllerId = stepConfig.getControllerId();
-            this.orderId = stepConfig.getOrderId();
-            this.agentId = stepConfig.getAgentId();
-            this.jobInstructionLabel = stepConfig.getJobInstructionLabel();
-            this.jobName = stepConfig.getJobName();
-            this.workflowPath = stepConfig.getWorkflowPath();
-            this.workflowName = stepConfig.getWorkflowName();
-            this.workflowVersionId = stepConfig.getWorkflowVersionId();
-            this.workflowPosition = stepConfig.getWorkflowPosition();
-        }
-        applyArguments(arguments);
-    }
-
-    /** Single Cancelable Resource. Sets a resource object (e.g. a database {@code Connection}) that can be invoked when the current job step is canceled.
+    /** Returns an object containing all declared arguments of the specified class.
      * <p>
-     * The assigned resource will be returned via {@link #getCancelableResource()} and can react appropriately when the job step's {@code cancel} handling is
-     * triggered. <br/>
-     * Implementations of this job should override the corresponding cancellation callback method ({@link Job#onProcessOrderCanceled(OrderProcessStep)})<br/>
-     * and retrieve the resource via {@code getCancelableResource()} in order to perform cleanup or other cancellation-related actions.
-     * </p>
+     * These arguments are automatically populated as declared in the current job step instance.<br/>
+     * The returned object extends {@link ASOSArguments}.
+     * <p>
+     * Example:
      * 
-     * @param resource the resource object to be handled on job step cancellation */
-    public void setCancelableResource(Object cancelableResource) {
-        getCancelableResources().put(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER, cancelableResource);
-    }
-
-    /** Single Cancelable Resource.
+     * <pre>
      * 
-     * @return Cancelable Resource. */
-    public Object getCancelableResource() {
-        return getCancelableResources().get(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER);
-    }
-
-    /** Multiple Cancelable Resources
-     * 
-     * @param identifier Cancelable Resource identifier
-     * @param cancelableResource */
-    public void addCancelableResource(String identifier, Object cancelableResource) {
-        getCancelableResources().put(identifier, cancelableResource);
-    }
-
-    public synchronized Map<String, Object> getCancelableResources() {
-        if (cancelableResources == null) {
-            cancelableResources = new HashMap<>();
-        }
-        return cancelableResources;
-    }
-
-    /** Returns the logger instance.
-     * 
-     * @return the {@link OrderProcessStepLogger} instance */
-    public OrderProcessStepLogger getLogger() {
-        return logger;
-    }
-
-    /** Returns the output writer used by this step.<br/>
-     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+     * CredentialStoreArguments csArgs = js7Step.getIncludedArguments(CredentialStoreArguments.class);
+     * </pre>
      *
-     * @return the {@link PrintWriter} for this step */
-    public PrintWriter getOut() {
-        if (internalStep == null) {
-            return new PrintWriter(new StringWriter());
+     * @param clazz the class of the arguments to retrieve
+     * @return the object holding all declared arguments of the specified class
+     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
+    public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws JobArgumentException {
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            if (declaredArguments.getIncludedArguments() == null) {
+                return instance;
+            }
+            List<SOSArgument<?>> args = allDeclaredArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName()))
+                    .map(a -> (SOSArgument<?>) a).collect(Collectors.toList());
+            if (args != null) {
+                instance.setArguments(args);
+            }
+            return instance;
+        } catch (Exception e) {
+            throw new JobArgumentException(e.toString(), e);
         }
-        return internalStep.out();
     }
 
-    /** Returns the error writer used by this step.<br/>
-     * If no internal step is available (JUnit), a dummy {@link PrintWriter} backed by a {@link java.io.StringWriter} is returned.
+    /** Returns an object containing all declared arguments of the specified class, identified by its class key.
+     * <p>
+     * This method is intended for use in GraalVM jobs or scenarios where the class type is not directly available, allowing a simpler call using a string key
+     * instead of a Java {@code Class} object.
+     * <p>
+     * Internally, this method calls {@link #getIncludedArguments(Class)}.<br />
+     * The returned object extends {@link ASOSArguments}.
+     * <p>
+     * Example GraalVM JavaScript:
+     * 
+     * <pre>
+     * 
+     * var csArgs = js7Step.getIncludedArguments("CREDENTIAL_STORE");
+     * </pre>
      *
-     * @return the {@link PrintWriter} for error output */
-    public PrintWriter getErr() {
-        if (internalStep == null) {
-            return new PrintWriter(new StringWriter());
+     * @param clazzKey the class key of the arguments to retrieve
+     * @return the object holding all declared arguments of the specified class
+     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
+    public ASOSArguments getIncludedArguments(String clazzKey) throws JobArgumentException {
+        if (clazzKey == null) {
+            return null;
         }
-        return internalStep.err();
+        switch (clazzKey.toUpperCase()) {
+        case CredentialStoreArguments.CLASS_KEY:
+            return getIncludedArguments(new CredentialStoreArguments().getClass());
+        case SSHProviderArguments.CLASS_KEY:
+            return getIncludedArguments(SSHProviderArguments.class);
+        case KeyStoreArguments.CLASS_KEY:
+            return getIncludedArguments(KeyStoreArguments.class);
+        case ProxyConfigArguments.CLASS_KEY:
+            return getIncludedArguments(ProxyConfigArguments.class);
+        default:
+            return null;
+        }
+    }
+
+    /** Returns all available arguments as a map.
+     * <p>
+     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br/>
+     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of argument names to {@link JobArgument} objects */
+    public Map<String, JobArgument<?>> getAllArguments() {
+        return allArguments;
+    }
+
+    /** Returns all available arguments of the specified type as a map.
+     * <p>
+     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br />
+     * The {@code type} parameter filters which arguments to include,<br/>
+     * e.g., {@link JobArgument.Type#DECLARED} or {@link JobArgument.Type#UNDECLARED}.
+     *
+     * @param type the type of arguments to include in the returned map
+     * @return a {@link Map} of argument names to {@link JobArgument} objects of the specified type */
+    public Map<String, JobArgument<?>> getAllArguments(JobArgument.Type type) {
+        return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
+                Map.Entry::getValue));
+    }
+
+    /** Returns all available arguments as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of argument names to their values */
+    public Map<String, Object> getAllArgumentsAsNameValueMap() {
+        return JobHelper.asNameValueMap(allArguments);
+    }
+
+    /** Returns all available arguments as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getAllArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
+     * The map contains argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of argument names to their string values */
+    public Map<String, String> getAllArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMap(allArguments);
     }
 
     /** Returns an object containing all declared arguments for this job.
@@ -348,6 +438,126 @@ public class OrderProcessStep<A extends JobArguments> {
      * @return a {@link List} containing all {@link JobArgument} instances declared for this job */
     public List<JobArgument<?>> getAllDeclaredArguments() {
         return allDeclaredArguments;
+    }
+
+    /** Returns all undeclared arguments as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * This includes undeclared arguments as well as arguments from outcomes, job resources, or other sources.
+     *
+     * @return a {@link Map} of undeclared argument names to their values */
+    public Map<String, Object> getUndeclaredArgumentsAsNameValueMap() {
+        return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
+    }
+
+    /** Returns all undeclared arguments as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getUndeclaredArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into
+     * {@link String}. The map contains argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of undeclared argument names to their string values */
+    public Map<String, String> getUndeclaredArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMap(getAllArguments(Type.UNDECLARED));
+    }
+
+    /** Returns the arguments provided by the order as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * These arguments are sourced specifically from the order.
+     *
+     * @return a {@link Map} of order argument names to their values */
+    public Map<String, Object> getOrderArgumentsAsNameValueMap() {
+        if (internalStep == null) {
+            return Collections.emptyMap();
+        }
+        return JobHelper.asJavaValues(internalStep.order().arguments());
+    }
+
+    /** Returns the arguments provided by the order as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getOrderArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
+     * The map contains order argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of order argument names to their string values */
+    public Map<String, String> getOrderArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
+    }
+
+    /** Returns the arguments provided by the job as a simple name-value map.
+     * <p>
+     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
+     * These arguments are sourced specifically from the job.
+     *
+     * @return a {@link Map} of job argument names to their values */
+    public Map<String, Object> getJobArgumentsAsNameValueMap() {
+        if (internalStep == null) {
+            return Collections.emptyMap();
+        }
+        return JobHelper.asJavaValues(internalStep.arguments());
+    }
+
+    /** Returns the arguments provided by the job as a simple name-value map with string values.
+     * <p>
+     * Unlike {@link #getJobArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
+     * The map contains job argument names as keys and their string values as values.
+     *
+     * @return a {@link Map} of job argument names to their string values */
+    public Map<String, String> getJobArgumentsAsNameStringValueMap() {
+        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getJobArgumentsAsNameValueMap());
+    }
+
+    /** Returns all "Default Order Variables" arguments that are declared in the workflow's "orderPreparation" section and whose effective assignment originates
+     * from that section during execution.
+     * <p>
+     * This method returns only those arguments for which the assignment declared in the workflow order preparation is the effective one, i.e. it was not
+     * overridden by an assignment from a higher-precedence source (such as {@code order}) during the current execution.
+     * </p>
+     *
+     * @return a list of job arguments declared in workflow order preparation and effectively assigned during execution, or {@code null} if no arguments are
+     *         available */
+    public List<JobArgument<?>> getAssignedOrderPreparationArguments() {
+        if (allArguments == null) {
+            return null;
+        }
+        return allArguments.entrySet().stream().filter(e -> {
+            if (e.getValue().getValueSource().isTypeOrderPreparation()) {
+                return true;
+            }
+            return false;
+        }).map(e -> e.getValue()).collect(Collectors.toList());
+    }
+
+    private List<JobArgument<?>> getAssignedJobNodeArguments() {
+        if (allDeclaredArguments == null) {
+            return null;
+        }
+        return allDeclaredArguments.stream().filter(a -> {
+            if (a.getValueSource().isTypeJobNode()) {
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
+    }
+
+    /** Returns all arguments that are declared in the workflow's job "arguments" section and whose effective assignment originates from that section during
+     * execution.
+     * <p>
+     * This method returns only those arguments for which the assignment declared in the workflow job "arguments" section is the effective one, i.e. it was not
+     * overridden by an assignment from a higher-precedence source (such as {@code order}) during the current execution.
+     * </p>
+     *
+     * @return a list of job arguments declared in the workflow job "arguments" section and effectively assigned during execution, or {@code null} if no
+     *         arguments are available */
+    public List<JobArgument<?>> getAssignedJobArguments() {
+        if (allArguments == null) {
+            return null;
+        }
+        return allArguments.entrySet().stream().filter(e -> {
+            if (e.getValue().getValueSource().isTypeJob()) {
+                return true;
+            }
+            return false;
+        }).map(e -> e.getValue()).collect(Collectors.toList());
     }
 
     /** Returns the arguments of all used job resources as a map.
@@ -481,6 +691,32 @@ public class OrderProcessStep<A extends JobArguments> {
         return JobHelper.asNameStringValueMapFromMapWithDetailValue(getLastFailedOutcomes());
     }
 
+    /** Returns the value of the argument with the specified name, searching all available arguments.
+     * <p>
+     * Unlike {@link #getDeclaredArgumentValue(String)}, which only looks at declared arguments, this method searches through all arguments of the job,
+     * including declared, outcome, resource-provided arguments, etc.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the argument value as an {@link Object}, or {@code null} if no such argument exists */
+    public Object getArgumentValue(String name) {
+        if (allArguments == null) {
+            return null;
+        }
+        JobArgument<?> arg = allArguments.get(name);
+        return arg == null ? null : arg.getValue();
+    }
+
+    /** Returns the value of the declared argument with the specified name as a {@link String}, searching all available arguments.
+     * <p>
+     * Unlike {@link #getArgumentValue()}, which returns the value as an {@link Object}, this method converts the argument value into a {@link String}.
+     *
+     * @param name the name of the argument whose value is to be retrieved
+     * @return the argument value as a {@link String}, or {@code null} if no such argument exists */
+    public String getArgumentValueAsString(String name) {
+        Object obj = getArgumentValue(name);
+        return obj == null ? null : obj.toString();
+    }
+
     /** Returns the declared argument with the specified name.
      *
      * @param name the name of the argument to retrieve
@@ -511,32 +747,6 @@ public class OrderProcessStep<A extends JobArguments> {
      * @return the argument value as a {@link String}, or {@code null} if no such argument exists */
     public String getDeclaredArgumentValueAsString(String name) {
         Object obj = getDeclaredArgumentValue(name);
-        return obj == null ? null : obj.toString();
-    }
-
-    /** Returns the value of the argument with the specified name, searching all available arguments.
-     * <p>
-     * Unlike {@link #getDeclaredArgumentValue(String)}, which only looks at declared arguments, this method searches through all arguments of the job,
-     * including declared, outcome, resource-provided arguments, etc.
-     *
-     * @param name the name of the argument whose value is to be retrieved
-     * @return the argument value as an {@link Object}, or {@code null} if no such argument exists */
-    public Object getArgumentValue(String name) {
-        if (allArguments == null) {
-            return null;
-        }
-        JobArgument<?> arg = allArguments.get(name);
-        return arg == null ? null : arg.getValue();
-    }
-
-    /** Returns the value of the declared argument with the specified name as a {@link String}, searching all available arguments.
-     * <p>
-     * Unlike {@link #getArgumentValue()}, which returns the value as an {@link Object}, this method converts the argument value into a {@link String}.
-     *
-     * @param name the name of the argument whose value is to be retrieved
-     * @return the argument value as a {@link String}, or {@code null} if no such argument exists */
-    public String getArgumentValueAsString(String name) {
-        Object obj = getArgumentValue(name);
         return obj == null ? null : obj.toString();
     }
 
@@ -605,6 +815,289 @@ public class OrderProcessStep<A extends JobArguments> {
             }
         }
         return null;
+    }
+
+    /** Single Cancelable Resource. Sets a resource object (e.g. a database {@code Connection}) that can be invoked when the current job step is canceled.
+     * <p>
+     * The assigned resource will be returned via {@link #getCancelableResource()} and can react appropriately when the job step's {@code cancel} handling is
+     * triggered. <br/>
+     * Implementations of this job should override the corresponding cancellation callback method ({@link Job#onProcessOrderCanceled(OrderProcessStep)})<br/>
+     * and retrieve the resource via {@code getCancelableResource()} in order to perform cleanup or other cancellation-related actions.
+     * </p>
+     * 
+     * @param resource the resource object to be handled on job step cancellation */
+    public void setCancelableResource(Object cancelableResource) {
+        getCancelableResources().put(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER, cancelableResource);
+    }
+
+    /** Single Cancelable Resource.
+     * 
+     * @return Cancelable Resource. */
+    public Object getCancelableResource() {
+        return getCancelableResources().get(SINGLE_CANCELABLE_RESOURCE_IDENTIFIER);
+    }
+
+    /** Multiple Cancelable Resources
+     * 
+     * @param identifier Cancelable Resource identifier
+     * @param cancelableResource */
+    public void addCancelableResource(String identifier, Object cancelableResource) {
+        getCancelableResources().put(identifier, cancelableResource);
+    }
+
+    public synchronized Map<String, Object> getCancelableResources() {
+        if (cancelableResources == null) {
+            cancelableResources = new HashMap<>();
+        }
+        return cancelableResources;
+    }
+
+    protected BlockingInternalJob.Step getInternalStep() {
+        return internalStep;
+    }
+
+    protected Object getNamedValue(final JobArgument<?> arg) throws JobProblemException {
+        if (internalStep == null) {
+            return null;
+        }
+        Object val = getNamedValue(arg.getName());
+        if (val == null && arg.getNameAliases() != null) {
+            for (String name : arg.getNameAliases()) {
+                val = getNamedValue(name);
+                if (val != null) {
+                    break;
+                }
+            }
+        }
+        return val;
+    }
+
+    // to overwrite by UnitTestJobHelper
+    protected <AJ extends JobArguments> AJ onExecuteJobCreateArguments(Job<AJ> job, OrderProcessStep<AJ> step, List<JobArgumentException> exceptions)
+            throws Exception {
+        AJ args = job.beforeCreateJobArguments(exceptions, step);
+        return job.createDeclaredJobArguments(exceptions, step, args);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected void cancelExecuteJobs() {
+        if (cancelableExecuteJobs != null && cancelableExecuteJobs.size() > 0) {
+            for (Map.Entry<String, OrderProcessStep> e : cancelableExecuteJobs.entrySet()) {
+                try {
+                    e.getValue().getExecuteJobBean().getJob().cancelProcessOrder(e.getValue());
+                } catch (Exception t) {
+                    logger.warn("[cancelExecuteJobs][" + e.getKey() + "]" + e.toString(), e);
+                }
+            }
+            cancelableExecuteJobs.clear();
+        }
+        cancelableExecuteJobs = null;
+    }
+
+    protected void applyArguments(A arguments) throws Exception {
+        this.declaredArguments = arguments;
+        this.logger.init(arguments);
+
+        setAllArguments();
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected void init4unittest(A arguments, Map<String, Object> unitTestUndeclaredArguments, UnitTestStepConfig stepConfig) throws Exception {
+        this.unitTestUndeclaredArguments = unitTestUndeclaredArguments;
+        if (stepConfig != null) {
+            this.controllerId = stepConfig.getControllerId();
+            this.orderId = stepConfig.getOrderId();
+            this.agentId = stepConfig.getAgentId();
+            this.jobInstructionLabel = stepConfig.getJobInstructionLabel();
+            this.jobName = stepConfig.getJobName();
+            this.workflowPath = stepConfig.getWorkflowPath();
+            this.workflowName = stepConfig.getWorkflowName();
+            this.workflowVersionId = stepConfig.getWorkflowVersionId();
+            this.workflowPosition = stepConfig.getWorkflowPosition();
+        }
+        applyArguments(arguments);
+    }
+
+    protected JOutcome.Completed processed() {
+        return outcome.isFailed() ? failed() : success();
+    }
+
+    protected JOutcome.Completed success() {
+        return JOutcome.succeeded(mapProcessResult(getOutcomeVariables(), getReturnCodeSucceeded(outcome.getReturnCode())));
+    }
+
+    protected JOutcome.Completed failed(final String msg, Throwable e) {
+        String fm = SOSString.isEmpty(msg) ? "" : msg;
+        Throwable ex;
+        String eToString;
+        if (e == null) {
+            ex = null;
+            eToString = "";
+        } else {
+            ex = logger.handleException(e);
+            eToString = e.toString();
+        }
+
+        logger.failed2slf4j(getStepInfo(), eToString, ex);
+        logger.error(logger.throwable2String(fm, ex));
+        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
+                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+    }
+
+    protected void checkAndLogParameterization(List<JobArgumentException> exceptions, String mockMessage) throws Exception {
+        Exception ae = null;
+        try {
+            if (exceptions != null && exceptions.size() > 0) {
+                List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
+                    return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
+                }).collect(Collectors.toList());
+                if (l.size() > 0) {
+                    ae = new JobRequiredArgumentMissingException(String.join(", ", l));
+                } else {
+                    ae = exceptions.get(0);
+                }
+            }
+            LogLevel ll = LogLevel.DEBUG;
+            boolean logDetails = logger.isDebugEnabled();
+            if (ae != null) {
+                ll = LogLevel.INFO;
+                logDetails = true;
+            }
+
+            String header = "Job Parameterization";
+            logAllDirtyArguments(mockMessage == null ? header : mockMessage + " " + header, logDetails);
+
+            if (logDetails) {
+                logJobKey();
+                logArgumentsBySource(ll);
+                logAllArguments(ll);
+            }
+        } catch (Exception e) {
+            logger.error2allLoggers(getStepInfo(), e.toString(), e);
+        } finally {
+            if (ae != null) {
+                throw ae;
+            }
+        }
+    }
+
+    protected ExecuteJobBean getExecuteJobBean() {
+        return executeJobBean;
+    }
+
+    protected boolean hasExecuteJobArguments() {
+        return executeJobBean != null && executeJobBean.arguments != null && executeJobBean.arguments.size() > 0;
+    }
+
+    protected List<String> getResolverPrefixes() {
+        if (resolverPrefixes == null) {
+            resolverPrefixes = new ArrayList<>();
+        }
+        return resolverPrefixes;
+    }
+
+    private <AJ extends JobArguments> void executeJob(Class<? extends Job<AJ>> clazz, Map<String, JobArgument<?>> executeJobArguments,
+            boolean updateDeclaredArgumentsDefinition) throws Exception {
+        Job<AJ> job = null;
+        try {
+            job = clazz.getDeclaredConstructor(JobContext.class).newInstance((JobContext) null);
+        } catch (Exception e) {
+            job = clazz.getDeclaredConstructor().newInstance();
+        }
+
+        JobEnvironment<AJ> je = new JobEnvironment<AJ>(clazz.getSimpleName(), jobEnvironment);
+        job.setJobEnvironment(je);
+
+        if (cancelableExecuteJobs == null) {
+            cancelableExecuteJobs = new ConcurrentHashMap<>();
+        }
+        try {
+            job.onStart();
+
+            OrderProcessStep<AJ> step = new OrderProcessStep<>(je, this);
+            step.executeJobBean = step.new ExecuteJobBean(job, executeJobArguments, updateDeclaredArgumentsDefinition);
+
+            List<JobArgumentException> exceptions = new ArrayList<JobArgumentException>();
+            // AJ args = job.onCreateJobArguments(exceptions, step);
+            // args = job.createDeclaredJobArguments(exceptions, step, args);
+            AJ args = onExecuteJobCreateArguments(job, step, exceptions);
+            step.applyArguments(args);
+
+            if (step.getLogger().isDebugEnabled()) {
+                step.logJobKey();
+                // step.getLogger().debug(job.getClass().getSimpleName() + " Arguments:");
+                // logArgumentsBySource(LogLevel.DEBUG);
+                step.logAllArguments(LogLevel.DEBUG);
+            }
+
+            cancelableExecuteJobs.put(je.getJobKey(), step);
+            job.processOrder(step);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            job.onStop();
+            cancelableExecuteJobs.remove(je.getJobKey());
+        }
+    }
+
+    private String getStepInfo() {
+        if (stepInfo == null) {
+            try {
+                stepInfo = String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowPath(),
+                        getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), getClass().getName());
+            } catch (JobProblemException e) {
+                stepInfo = String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowPath(), getWorkflowVersionId(),
+                        getWorkflowPosition(), getClass().getName());
+            }
+        }
+        return stepInfo;
+    }
+
+    private Object getNamedValue(final String name) throws JobProblemException {
+        Optional<Either<Problem, Value>> opt = internalStep.namedValue(name);
+        if (opt.isPresent()) {
+            return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
+        }
+        return null;
+    }
+
+    private void setAllDeclaredArguments() {
+        if (declaredArguments == null) {
+            allDeclaredArguments = null;
+            return;
+        }
+        if (allDeclaredArguments == null) {
+            List<Field> fields = JobHelper.getJobArgumentFields(declaredArguments);
+            List<JobArgument<?>> l = new ArrayList<>();
+            for (Field field : fields) {
+                try {
+                    field.setAccessible(true);
+                    JobArgument<?> arg = (JobArgument<?>) field.get(declaredArguments);
+                    if (arg != null) {
+                        if (arg.getName() == null) {// internal usage
+                            continue;
+                        }
+                        l.add(arg);
+                    }
+                } catch (Exception e) {
+                    logger.warn2allLoggers(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
+                            .toString()), e);
+                }
+            }
+            if (declaredArguments.getIncludedArguments() != null && declaredArguments.getIncludedArguments().size() > 0) {
+                for (Map.Entry<String, List<JobArgument<?>>> e : declaredArguments.getIncludedArguments().entrySet()) {
+                    for (JobArgument<?> arg : e.getValue()) {
+                        l.add(arg);
+                    }
+                }
+            }
+            if (declaredArguments.hasDynamicArguments()) {
+                for (JobArgument<?> arg : declaredArguments.getDynamicArguments()) {
+                    l.add(arg);
+                }
+            }
+            allDeclaredArguments = l;
+        }
     }
 
     private void setAllArguments() throws Exception {
@@ -774,345 +1267,6 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
-    /** Returns all available arguments as a map.
-     * <p>
-     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br/>
-     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
-     *
-     * @return a {@link Map} of argument names to {@link JobArgument} objects */
-    public Map<String, JobArgument<?>> getAllArguments() {
-        return allArguments;
-    }
-
-    /** Returns all available arguments of the specified type as a map.
-     * <p>
-     * The map contains argument names as keys and their corresponding {@link JobArgument} objects as values.<br />
-     * The {@code type} parameter filters which arguments to include,<br/>
-     * e.g., {@link JobArgument.Type#DECLARED} or {@link JobArgument.Type#UNDECLARED}.
-     *
-     * @param type the type of arguments to include in the returned map
-     * @return a {@link Map} of argument names to {@link JobArgument} objects of the specified type */
-    public Map<String, JobArgument<?>> getAllArguments(JobArgument.Type type) {
-        return allArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
-                Map.Entry::getValue));
-    }
-
-    /** Returns all available arguments as a simple name-value map.
-     * <p>
-     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
-     * This includes declared arguments as well as arguments from outcomes, job resources, or other sources.
-     *
-     * @return a {@link Map} of argument names to their values */
-    public Map<String, Object> getAllArgumentsAsNameValueMap() {
-        return JobHelper.asNameValueMap(allArguments);
-    }
-
-    /** Returns all available arguments as a simple name-value map with string values.
-     * <p>
-     * Unlike {@link #getAllArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
-     * The map contains argument names as keys and their string values as values.
-     *
-     * @return a {@link Map} of argument names to their string values */
-    public Map<String, String> getAllArgumentsAsNameStringValueMap() {
-        return JobHelper.asNameStringValueMap(allArguments);
-    }
-
-    /** Returns all undeclared arguments as a simple name-value map.
-     * <p>
-     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
-     * This includes undeclared arguments as well as arguments from outcomes, job resources, or other sources.
-     *
-     * @return a {@link Map} of undeclared argument names to their values */
-    public Map<String, Object> getUndeclaredArgumentsAsNameValueMap() {
-        return JobHelper.asNameValueMap(getAllArguments(Type.UNDECLARED));
-    }
-
-    /** Returns all undeclared arguments as a simple name-value map with string values.
-     * <p>
-     * Unlike {@link #getUndeclaredArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into
-     * {@link String}. The map contains argument names as keys and their string values as values.
-     *
-     * @return a {@link Map} of undeclared argument names to their string values */
-    public Map<String, String> getUndeclaredArgumentsAsNameStringValueMap() {
-        return JobHelper.asNameStringValueMap(getAllArguments(Type.UNDECLARED));
-    }
-
-    /** Returns the arguments provided by the order as a simple name-value map.
-     * <p>
-     * The map contains argument names as keys and their corresponding values as {@link Object}.<br/>
-     * These arguments are sourced specifically from the order.
-     *
-     * @return a {@link Map} of order argument names to their values */
-    public Map<String, Object> getOrderArgumentsAsNameValueMap() {
-        if (internalStep == null) {
-            return Collections.emptyMap();
-        }
-        return JobHelper.asJavaValues(internalStep.order().arguments());
-    }
-
-    /** Returns the arguments provided by the order as a simple name-value map with string values.
-     * <p>
-     * Unlike {@link #getOrderArgumentsAsNameValueMap()}, which returns values as {@link Object}, this method converts all argument values into {@link String}.
-     * The map contains order argument names as keys and their string values as values.
-     *
-     * @return a {@link Map} of order argument names to their string values */
-    public Map<String, String> getOrderArgumentsAsNameStringValueMap() {
-        return JobHelper.asNameStringValueMapFromMapWithObjectValue(getOrderArgumentsAsNameValueMap());
-    }
-
-    /** Returns the step outcome object used to define the result of this job step.
-     * <p>
-     * The returned {@link OrderProcessStepOutcome} can be used, for example, to set the return code and assign outcome variables.<br/>
-     * Both the return code and the outcome variables are automatically propagated to and available for subsequent jobs in the workflow.
-     *
-     * @return the {@link OrderProcessStepOutcome} for this job step */
-    public OrderProcessStepOutcome getOutcome() {
-        return outcome;
-    }
-
-    protected Object getNamedValue(final JobArgument<?> arg) throws JobProblemException {
-        if (internalStep == null) {
-            return null;
-        }
-        Object val = getNamedValue(arg.getName());
-        if (val == null && arg.getNameAliases() != null) {
-            for (String name : arg.getNameAliases()) {
-                val = getNamedValue(name);
-                if (val != null) {
-                    break;
-                }
-            }
-        }
-        return val;
-    }
-
-    private Object getNamedValue(final String name) throws JobProblemException {
-        Optional<Either<Problem, Value>> opt = internalStep.namedValue(name);
-        if (opt.isPresent()) {
-            return JobHelper.asJavaValue(JobHelper.getFromEither(opt.get()));
-        }
-        return null;
-    }
-
-    private void setAllDeclaredArguments() {
-        if (declaredArguments == null) {
-            allDeclaredArguments = null;
-            return;
-        }
-        if (allDeclaredArguments == null) {
-            List<Field> fields = JobHelper.getJobArgumentFields(declaredArguments);
-            List<JobArgument<?>> l = new ArrayList<>();
-            for (Field field : fields) {
-                try {
-                    field.setAccessible(true);
-                    JobArgument<?> arg = (JobArgument<?>) field.get(declaredArguments);
-                    if (arg != null) {
-                        if (arg.getName() == null) {// internal usage
-                            continue;
-                        }
-                        l.add(arg);
-                    }
-                } catch (Exception e) {
-                    logger.warn2allLoggers(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
-                            .toString()), e);
-                }
-            }
-            if (declaredArguments.getIncludedArguments() != null && declaredArguments.getIncludedArguments().size() > 0) {
-                for (Map.Entry<String, List<JobArgument<?>>> e : declaredArguments.getIncludedArguments().entrySet()) {
-                    for (JobArgument<?> arg : e.getValue()) {
-                        l.add(arg);
-                    }
-                }
-            }
-            if (declaredArguments.hasDynamicArguments()) {
-                for (JobArgument<?> arg : declaredArguments.getDynamicArguments()) {
-                    l.add(arg);
-                }
-            }
-            allDeclaredArguments = l;
-        }
-    }
-
-    /** Returns an object containing all declared arguments of the specified class.
-     * <p>
-     * These arguments are automatically populated as declared in the current job step instance.<br/>
-     * The returned object extends {@link ASOSArguments}.
-     * <p>
-     * Example:
-     * 
-     * <pre>
-     * 
-     * CredentialStoreArguments csArgs = js7Step.getIncludedArguments(CredentialStoreArguments.class);
-     * </pre>
-     *
-     * @param clazz the class of the arguments to retrieve
-     * @return the object holding all declared arguments of the specified class
-     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
-    public <T extends ASOSArguments> T getIncludedArguments(Class<T> clazz) throws JobArgumentException {
-        try {
-            T instance = clazz.getDeclaredConstructor().newInstance();
-            if (declaredArguments.getIncludedArguments() == null) {
-                return instance;
-            }
-            List<SOSArgument<?>> args = allDeclaredArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName()))
-                    .map(a -> (SOSArgument<?>) a).collect(Collectors.toList());
-            if (args != null) {
-                instance.setArguments(args);
-            }
-            return instance;
-        } catch (Exception e) {
-            throw new JobArgumentException(e.toString(), e);
-        }
-    }
-
-    /** Returns an object containing all declared arguments of the specified class, identified by its class key.
-     * <p>
-     * This method is intended for use in GraalVM jobs or scenarios where the class type is not directly available, allowing a simpler call using a string key
-     * instead of a Java {@code Class} object.
-     * <p>
-     * Internally, this method calls {@link #getIncludedArguments(Class)}.<br />
-     * The returned object extends {@link ASOSArguments}.
-     * <p>
-     * Example GraalVM JavaScript:
-     * 
-     * <pre>
-     * 
-     * var csArgs = js7Step.getIncludedArguments("CREDENTIAL_STORE");
-     * </pre>
-     *
-     * @param clazzKey the class key of the arguments to retrieve
-     * @return the object holding all declared arguments of the specified class
-     * @throws JobArgumentException if the arguments cannot be retrieved or populated */
-    public ASOSArguments getIncludedArguments(String clazzKey) throws JobArgumentException {
-        if (clazzKey == null) {
-            return null;
-        }
-        switch (clazzKey.toUpperCase()) {
-        case CredentialStoreArguments.CLASS_KEY:
-            return getIncludedArguments(new CredentialStoreArguments().getClass());
-        case SSHProviderArguments.CLASS_KEY:
-            return getIncludedArguments(SSHProviderArguments.class);
-        case KeyStoreArguments.CLASS_KEY:
-            return getIncludedArguments(KeyStoreArguments.class);
-        case ProxyConfigArguments.CLASS_KEY:
-            return getIncludedArguments(ProxyConfigArguments.class);
-        default:
-            return null;
-        }
-
-    }
-
-    private String getStepInfo() {
-        if (stepInfo == null) {
-            try {
-                stepInfo = String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowPath(),
-                        getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), getClass().getName());
-            } catch (JobProblemException e) {
-                stepInfo = String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowPath(), getWorkflowVersionId(),
-                        getWorkflowPosition(), getClass().getName());
-            }
-        }
-        return stepInfo;
-    }
-
-    public String getControllerId() {
-        if (controllerId == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            controllerId = internalStep.controllerId().string();
-        }
-        return controllerId;
-    }
-
-    public String getOrderId() {
-        if (orderId == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            orderId = internalStep.order().id().string();
-        }
-        return orderId;
-    }
-
-    public String getAgentId() throws JobProblemException {
-        if (agentId == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            agentId = JobHelper.getFromEither(internalStep.order().attached()).string();
-        }
-        return agentId;
-    }
-
-    public String getJobName() throws JobProblemException {
-        if (jobName == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            jobName = JobHelper.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
-        }
-        return jobName;
-    }
-
-    public String getJobInstructionLabel() {
-        if (jobInstructionLabel == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            try {
-                jobInstructionLabel = internalStep.instructionLabel().get().string();
-            } catch (Exception e) {
-                getLogger().error(String.format("[getJobInstructionLabel]%s", e.toString()));
-            }
-        }
-        return jobInstructionLabel;
-    }
-
-    public String getWorkflowPath() {
-        if (workflowPath == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            try {
-                workflowPath = (String) getNamedValue(INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH);
-            } catch (Exception e) {
-                getLogger().error(String.format("[getWorkflowPath][%s]%s", INTERNAL_ORDER_PREPARATION_PARAMETER_JS7_WORKFLOW_PATH, e.toString()));
-            }
-        }
-        return workflowPath;
-    }
-
-    public String getWorkflowName() {
-        if (workflowName == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            workflowName = internalStep.order().workflowId().path().name();
-        }
-        return workflowName;
-    }
-
-    public String getWorkflowVersionId() {
-        if (workflowVersionId == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            workflowVersionId = internalStep.order().workflowId().versionId().string();
-        }
-        return workflowVersionId;
-    }
-
-    public String getWorkflowPosition() {
-        if (workflowPosition == null) {
-            if (internalStep == null) {
-                return null;
-            }
-            workflowPosition = internalStep.order().workflowPosition().position().toString();
-        }
-        return workflowPosition;
-    }
-
     private String getDisplayValue(String name) {
         JobArgument<?> ar = allArguments.get(name);
         if (ar == null) {
@@ -1153,36 +1307,15 @@ public class OrderProcessStep<A extends JobArguments> {
         }
     }
 
-    protected JOutcome.Completed processed() {
-        return outcome.isFailed() ? failed() : success();
-    }
-
-    protected JOutcome.Completed success() {
-        return JOutcome.succeeded(mapProcessResult(getOutcomeVariables(), getReturnCodeSucceeded(outcome.getReturnCode())));
+    protected boolean isOrderOrderPreparationParameter(String name) {
+        setOrderPreparationParameterNames();
+        return orderPreparationParameterNames != null && orderPreparationParameterNames.contains(name);
     }
 
     private JOutcome.Completed failed() {
         String fm = SOSString.isEmpty(outcome.getMessage()) ? "" : outcome.getMessage();
         logger.failed2slf4j(getStepInfo(), fm);
         return JOutcome.failed(fm, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
-    }
-
-    protected JOutcome.Completed failed(final String msg, Throwable e) {
-        String fm = SOSString.isEmpty(msg) ? "" : msg;
-        Throwable ex;
-        String eToString;
-        if (e == null) {
-            ex = null;
-            eToString = "";
-        } else {
-            ex = logger.handleException(e);
-            eToString = e.toString();
-        }
-
-        logger.failed2slf4j(getStepInfo(), eToString, ex);
-        logger.error(logger.throwable2String(fm, ex));
-        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
-                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
     }
 
     private String getJOutcomeFailed(final String msg, Throwable e) {
@@ -1283,43 +1416,6 @@ public class OrderProcessStep<A extends JobArguments> {
         return resultMap;
     }
 
-    protected void checkAndLogParameterization(List<JobArgumentException> exceptions, String mockMessage) throws Exception {
-        Exception ae = null;
-        try {
-            if (exceptions != null && exceptions.size() > 0) {
-                List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
-                    return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
-                }).collect(Collectors.toList());
-                if (l.size() > 0) {
-                    ae = new JobRequiredArgumentMissingException(String.join(", ", l));
-                } else {
-                    ae = exceptions.get(0);
-                }
-            }
-            LogLevel ll = LogLevel.DEBUG;
-            boolean logDetails = logger.isDebugEnabled();
-            if (ae != null) {
-                ll = LogLevel.INFO;
-                logDetails = true;
-            }
-
-            String header = "Job Parameterization";
-            logAllDirtyArguments(mockMessage == null ? header : mockMessage + " " + header, logDetails);
-
-            if (logDetails) {
-                logJobKey();
-                logArgumentsBySource(ll);
-                logAllArguments(ll);
-            }
-        } catch (Exception e) {
-            logger.error2allLoggers(getStepInfo(), e.toString(), e);
-        } finally {
-            if (ae != null) {
-                throw ae;
-            }
-        }
-    }
-
     private void logJobKey() {
         if (logger.isDebugEnabled()) {
             logger.debug("JobKEY=" + jobEnvironment.getJobKey());
@@ -1341,7 +1437,7 @@ public class OrderProcessStep<A extends JobArguments> {
             }
         }
 
-        List<JobArgument<?>> orderPreparation = getOrderPreparationArguments();
+        List<JobArgument<?>> orderPreparation = getAssignedOrderPreparationArguments();
         if (orderPreparation != null && orderPreparation.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_PREPARATION.getHeader()));
             orderPreparation.stream().forEach(a -> {
@@ -1349,11 +1445,11 @@ public class OrderProcessStep<A extends JobArguments> {
             });
         }
 
-        // Declared ORDER or Node arguments
-        List<JobArgument<?>> orderOrNode = getDeclaredOrderOrNodeArguments();
-        if (orderOrNode != null && orderOrNode.size() > 0) {
-            logger.log(logLevel, String.format(" %s:", ValueSourceType.ORDER_OR_NODE.getHeader()));
-            orderOrNode.stream().forEach(a -> {
+        // Declared Job Node arguments
+        List<JobArgument<?>> jobNode = getAssignedJobNodeArguments();
+        if (jobNode != null && jobNode.size() > 0) {
+            logger.log(logLevel, String.format(" %s:", ValueSourceType.JOB_NODE.getHeader()));
+            jobNode.stream().forEach(a -> {
                 logger.log(logLevel, "    " + a.toString(logger.isDebugEnabled()));
             });
         }
@@ -1380,30 +1476,6 @@ public class OrderProcessStep<A extends JobArguments> {
             });
         }
 
-    }
-
-    private List<JobArgument<?>> getOrderPreparationArguments() {
-        if (allArguments == null) {
-            return null;
-        }
-        return allArguments.entrySet().stream().filter(e -> {
-            if (e.getValue().getValueSource().isTypeOrderPreparation()) {
-                return true;
-            }
-            return false;
-        }).map(e -> e.getValue()).collect(Collectors.toList());
-    }
-
-    private List<JobArgument<?>> getDeclaredOrderOrNodeArguments() {
-        if (allDeclaredArguments == null) {
-            return null;
-        }
-        return allDeclaredArguments.stream().filter(a -> {
-            if (a.getValueSource().isTypeOrderOrNode()) {
-                return true;
-            }
-            return false;
-        }).collect(Collectors.toList());
     }
 
     private void logJobEnvironmentArguments(LogLevel logLevel) {
@@ -1501,21 +1573,6 @@ public class OrderProcessStep<A extends JobArguments> {
         allArguments.entrySet().stream().forEach(a -> {
             logger.log(logLevel, "    " + a.getValue().toString(logger.isDebugEnabled()));
         });
-    }
-
-    protected ExecuteJobBean getExecuteJobBean() {
-        return executeJobBean;
-    }
-
-    protected boolean hasExecuteJobArguments() {
-        return executeJobBean != null && executeJobBean.arguments != null && executeJobBean.arguments.size() > 0;
-    }
-
-    protected List<String> getResolverPrefixes() {
-        if (resolverPrefixes == null) {
-            resolverPrefixes = new ArrayList<>();
-        }
-        return resolverPrefixes;
     }
 
     protected class ExecuteJobBean {
