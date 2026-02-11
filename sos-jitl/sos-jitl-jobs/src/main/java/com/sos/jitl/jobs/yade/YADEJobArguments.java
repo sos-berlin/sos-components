@@ -2,7 +2,6 @@ package com.sos.jitl.jobs.yade;
 
 import java.nio.file.Path;
 
-import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -23,9 +22,9 @@ public class YADEJobArguments extends JobArguments {
     /** Connectivity fault simulation
      * 
      * @see {@link IProvider#injectConnectivityFault()} */
-    private SOSArgument<String> simConnFaults = new SOSArgument<>(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, false);
-    private SOSArgument<String> sourceSimConnFaults = new SOSArgument<>(YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS, false);
-    private SOSArgument<String> targetSimConnFaults = new SOSArgument<>(YADEArguments.STARTUP_ARG_TARGET_SIM_CONN_FAULTS, false);
+    private JobArgument<String> simConnFaults = new JobArgument<>(YADEArguments.STARTUP_ARG_SIM_CONN_FAULTS, false);
+    private JobArgument<String> sourceSimConnFaults = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS, false);
+    private JobArgument<String> targetSimConnFaults = new JobArgument<>(YADEArguments.STARTUP_ARG_TARGET_SIM_CONN_FAULTS, false);
 
     /** Settings - overrides settings arguments */
     // Source
@@ -63,15 +62,15 @@ public class YADEJobArguments extends JobArguments {
         return parallelism;
     }
 
-    public SOSArgument<String> getSimConnFaults() {
+    public JobArgument<String> getSimConnFaults() {
         return simConnFaults;
     }
 
-    public SOSArgument<String> getSourceSimConnFaults() {
+    public JobArgument<String> getSourceSimConnFaults() {
         return sourceSimConnFaults;
     }
 
-    public SOSArgument<String> getTargetSimConnFaults() {
+    public JobArgument<String> getTargetSimConnFaults() {
         return targetSimConnFaults;
     }
 
