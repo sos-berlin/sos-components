@@ -50,6 +50,9 @@ public class UnitTestJobHelper<A extends JobArguments> {
 
     /** Constructor that:
      * <ol>
+     * <li>Sets the default step configuration (controllerId, orderId, etc.).<br/>
+     * To apply custom values, use, for example:<br/>
+     * <code>h.getStepConfig().setControllerId("my_controller_id");</code></li>
      * <li>Sets the Agent Config Directory system property</li>
      * <li>Optionally resets SSL system properties</li>
      * </ol>
