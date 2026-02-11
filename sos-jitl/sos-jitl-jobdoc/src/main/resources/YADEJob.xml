@@ -214,6 +214,48 @@
 					</p>
 				</note>
 			</param>
+			<param name="source_sim_conn_faults" required="false" 
+                DataType="java.lang.String">
+                <note>
+                    <p>
+                        Simulation argument for testing connectivity fault injection.<br/>
+                        This simulates connectivity errors on the Source for testing and handling purposes.<br/>
+                        A connectivity fault occurs after the specified interval in &lt;seconds&gt;.<br/>
+                        &lt;seconds&gt; supports integer or float values, decimal separator: '.' or ',', e.g.:
+                        <ul>
+                            <li><em>1</em> - inject one connectivity fault after 1s</li>
+                            <li><em>0.5;2.5;3</em> - inject connectivity faults 3 times (after 0.5s, then 2.5s, then 3s)</li>
+                        </ul>
+                        <br />
+                        <br />                        
+                    </p>
+                </note>
+            </param>
+            <param name="target_sim_conn_faults" required="false" 
+                DataType="java.lang.String">
+                <note>
+                    <p>
+                        Simulation argument for testing connectivity fault injection.<br/>
+                        Same format as <em>source_sim_conn_faults</em>, applied to the Target provider.
+                        <br />
+                        <br />                        
+                    </p>
+                </note>
+            </param>
+            <param name="sim_conn_faults" required="false" 
+                DataType="java.lang.String">
+                <note>
+                    <p>
+                        Simulation argument for testing connectivity fault injection.<br/>
+                        Shorthand for Source AND Target connectivity faults, e.g.:
+                        <ul>
+                            <li><em>0.2;2</em> - inject faults for both providers at the same intervals</li>
+                        </ul>
+                        <br />
+                        <br />                        
+                    </p>
+                </note>
+            </param>
 		</params>
 		<params id="return_parameter">
 			<param name="yade_return_values" required="true"
