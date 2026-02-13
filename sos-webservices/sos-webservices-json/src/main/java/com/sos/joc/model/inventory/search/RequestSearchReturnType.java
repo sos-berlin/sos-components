@@ -17,6 +17,8 @@ public enum RequestSearchReturnType {
     SCHEDULE("SCHEDULE"),
     INCLUDESCRIPT("INCLUDESCRIPT"),
     CALENDAR("CALENDAR"),
+    WORKINGDAYSCALENDAR("WORKINGDAYSCALENDAR"),
+    NONWORKINGDAYSCALENDAR("NONWORKINGDAYSCALENDAR"),
     REPORT("REPORT");
     private final String value;
     private final static Map<String, RequestSearchReturnType> CONSTANTS = new HashMap<String, RequestSearchReturnType>();

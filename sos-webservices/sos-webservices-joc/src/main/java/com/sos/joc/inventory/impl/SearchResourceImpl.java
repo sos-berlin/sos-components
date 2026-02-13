@@ -55,13 +55,14 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             return responseStatusJSError(e);
         }
     }
-    
+
     public static List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
             throws Exception {
         return SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in, folderPermissions) : getAdvancedSearch(in, folderPermissions);
     }
 
-    private static List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions) throws Exception {
+    private static List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+            throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -91,7 +92,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private static List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions) throws Exception {
+    private static List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+            throws Exception {
         SOSHibernateSession session = null;
         try {
             adjustAdvanced(in);
@@ -244,6 +246,12 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         case CALENDAR:
             in.getAdvanced().setCalendar(null);
             break;
+        case WORKINGDAYSCALENDAR:
+            in.getAdvanced().setCalendar(null);
+            break;
+        case NONWORKINGDAYSCALENDAR:
+            in.getAdvanced().setCalendar(null);
+            break;
         case JOBTEMPLATE:
             in.getAdvanced().setJobTemplate(null);
             break;
@@ -283,7 +291,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setWorkflow(null);
         return item;
     }
-    
+
     private static RequestSearchAdvancedItem setAdvanced4JobResourceSearch(RequestSearchAdvancedItem wAdvanched, RequestSearchReturnType returnType) {
         if (wAdvanched == null) {
             return null;
@@ -317,7 +325,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
         return response;
     }
-    
+
     private static ResponseSearchItem toResponseSearchItem(InventorySearchItem item, SOSAuthFolderPermissions folderPermissions) {
         ResponseSearchItem ri = new ResponseSearchItem();
         ri.setId(item.getId());

@@ -65,6 +65,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (types == null) {
             return Collections.emptyList();
         }
+        // NOTE: CALENDAR — JOC-2172 added legacy/tolerate support for WORKINGDAYSCALENDAR and NONWORKINGDAYSCALENDAR
         boolean hasCalendar = types.contains(RequestSearchReturnType.CALENDAR);
         Stream<RequestSearchReturnType> typesStream = types.stream().distinct();
         if (hasCalendar) {
@@ -479,6 +480,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         boolean selectSchedule = !SOSString.isEmpty(advanced.getSchedule());
         boolean selectCalendar = !SOSString.isEmpty(advanced.getCalendar());
+        Integer selectCalendarOfSpecificType = getAdvancedSearchSpecificCalendarTypeValue(type, selectCalendar);
         boolean selectFileOrderSource = !SOSString.isEmpty(advanced.getFileOrderSource());
 
         switch (type) {
@@ -496,6 +498,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
                     }
                     if (selectFileOrderSource) {
                         hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subti ");
@@ -516,6 +521,11 @@ public class InventorySearchDBLayer extends DBLayer {
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        add = "and";
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
                         add = "and";
                     }
                 }
@@ -558,6 +568,8 @@ public class InventorySearchDBLayer extends DBLayer {
         case FILEORDERSOURCE:
         case SCHEDULE:
         case CALENDAR:
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
             if (!SOSString.isEmpty(advanced.getWorkflow()) && !advanced.getWorkflow().equals(FIND_ALL)) {
                 workflow = advanced.getWorkflow();
             }
@@ -569,6 +581,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
                     }
                     if (workflow != null) {
                         hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subti ");
@@ -595,6 +610,11 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
                         add = "and";
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
+                        add = "and";
+                    }
                     hql.append(") ");
                 } else {
                     if (workflow != null) {
@@ -612,6 +632,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
                     }
                     if (selectFileOrderSource) {
                         hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subti ");
@@ -635,6 +658,11 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
                         add = "and";
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
+                        add = "and";
+                    }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
                         hql.append(add).append(" lower(subti.name) like :fileOrderSource ");
@@ -644,6 +672,8 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 break;
             case CALENDAR:
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
                 if (workflow != null || selectSchedule || selectFileOrderSource) {
                     hql.append("and mt.name in (");
                     hql.append("select subtc.calendarName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
@@ -689,6 +719,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
+                    }
                     hql.append("where subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
                     hql.append("and mt.name=subti.name ");
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.jsonContent", "$.workflowName")).append(
@@ -701,6 +734,10 @@ public class InventorySearchDBLayer extends DBLayer {
                         if (calendar != null) {
                             hql.append(" and  lower(subtc.calendarName) like :calendar ");
                         }
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append(" and subtic.name=subtc.calendarName ");
                     }
                     hql.append(") ");
                     break;
@@ -720,6 +757,9 @@ public class InventorySearchDBLayer extends DBLayer {
                 if (selectCalendar) {
                     hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
                 }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
+                }
                 if (selectFileOrderSource) {
                     hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subti ");
                 }
@@ -738,17 +778,26 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(" and  lower(subtc.calendarName) like :calendar ");
                     }
                 }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                    hql.append(" and subtic.name=subtc.calendarName ");
+                }
                 if (workflow != null) {
                     hql.append(" and lower(subt.workflowName) like :workflow ");
                 }
                 hql.append(") ");
                 break;
             case CALENDAR:
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
                 hql.append("    where ic.name in(");
                 hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" subt ");
                 hql.append("         ,").append(DBLayer.DBITEM_INV_SCHEDULE2CALENDARS).append(" subtc ");
                 if (selectFileOrderSource) {
                     hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subti ");
+                }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(",").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subtic ");
                 }
                 hql.append(" where mt.name=subtc.calendarName ");
                 hql.append(" and subt.scheduleName=subtc.scheduleName ");
@@ -765,6 +814,10 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 if (schedule != null) {
                     hql.append(" and  lower(subt.scheduleName) like :schedule ");
+                }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                    hql.append(" and subtic.name=subtc.calendarName ");
                 }
                 hql.append(") ");
                 break;
@@ -1052,6 +1105,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         boolean selectSchedule = !SOSString.isEmpty(advanced.getSchedule());
         boolean selectCalendar = !SOSString.isEmpty(advanced.getCalendar());
+        Integer selectCalendarOfSpecificType = getAdvancedSearchSpecificCalendarTypeValue(type, selectCalendar);
         boolean selectFileOrderSource = !SOSString.isEmpty(advanced.getFileOrderSource());
 
         switch (type) {
@@ -1069,6 +1123,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
                     }
                     if (selectFileOrderSource) {
                         hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
@@ -1089,6 +1146,11 @@ public class InventorySearchDBLayer extends DBLayer {
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        add = "and";
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
                         add = "and";
                     }
                 }
@@ -1137,6 +1199,8 @@ public class InventorySearchDBLayer extends DBLayer {
         case FILEORDERSOURCE:
         case SCHEDULE:
         case CALENDAR:
+        case NONWORKINGDAYSCALENDAR:
+        case WORKINGDAYSCALENDAR:
             if (!SOSString.isEmpty(advanced.getWorkflow()) && !advanced.getWorkflow().equals(FIND_ALL)) {
                 workflow = advanced.getWorkflow();
             }
@@ -1148,6 +1212,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
                     }
                     if (workflow != null) {
                         hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
@@ -1177,6 +1244,11 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
                         add = "and";
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
+                        add = "and";
+                    }
                     hql.append(") ");
                 } else {
                     // controllerId already used
@@ -1195,6 +1267,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("select subt.scheduleName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
                     }
                     if (selectFileOrderSource) {
                         hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
@@ -1221,6 +1296,11 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
                         add = "and";
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(add).append(" subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append("and subtic.name=subtc.calendarName ");
+                        add = "and";
+                    }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
                         hql.append(add).append(" lower(subti.name) like :fileOrderSource ");
@@ -1230,6 +1310,8 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 break;
             case CALENDAR:
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
                 if (workflow != null || selectSchedule || selectFileOrderSource) {
                     hql.append("and mt.name in (");
                     hql.append("select subtc.calendarName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
@@ -1284,6 +1366,9 @@ public class InventorySearchDBLayer extends DBLayer {
                     if (selectCalendar) {
                         hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
                     }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
+                    }
                     hql.append("where subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
                     hql.append("and mt.name=subti.name ");
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
@@ -1296,6 +1381,10 @@ public class InventorySearchDBLayer extends DBLayer {
                         if (calendar != null) {
                             hql.append(" and  lower(subtc.calendarName) like :calendar ");
                         }
+                    }
+                    if (selectCalendarOfSpecificType != null) {
+                        hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                        hql.append(" and subtic.name=subtc.calendarName ");
                     }
                     if (controllerId != null) {
                         hql.append(" and subti.controllerId=:controllerId ");
@@ -1316,6 +1405,9 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 if (selectCalendar) {
                     hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
+                }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
                 }
                 if (selectFileOrderSource) {
                     hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
@@ -1338,17 +1430,26 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(" and  lower(subtc.calendarName) like :calendar ");
                     }
                 }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                    hql.append(" and subtic.name=subtc.calendarName ");
+                }
                 if (workflow != null) {
                     hql.append(" and lower(subt.workflowName) like :workflow ");
                 }
                 hql.append(") ");
                 break;
             case CALENDAR:
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
                 hql.append("    where ic.name in(");
                 hql.append("         select subt.workflowName from ").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2WORKFLOWS).append(" subt ");
                 hql.append("         ,").append(DBLayer.DBITEM_INV_RELEASED_SCHEDULE2CALENDARS).append(" subtc ");
                 if (selectFileOrderSource) {
                     hql.append(",").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" subti ");
+                }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(",").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" subtic ");
                 }
                 hql.append(" where mt.name=subtc.calendarName ");
                 hql.append(" and subt.scheduleName=subtc.scheduleName ");
@@ -1368,6 +1469,10 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 if (schedule != null) {
                     hql.append(" and  lower(subt.scheduleName) like :schedule ");
+                }
+                if (selectCalendarOfSpecificType != null) {
+                    hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
+                    hql.append(" and subtic.name=subtc.calendarName ");
                 }
                 hql.append(") ");
                 break;
@@ -1514,6 +1619,46 @@ public class InventorySearchDBLayer extends DBLayer {
             return checkJobNameExactMatch(getSession().getResultList(query), true, jobNameForExactMatch);
         } else {
             return getSession().getResultList(query);
+        }
+    }
+
+    /** Support for calendar scope (working / non-working) is implemented at the advanced search query level but is currently disabled because it is not
+     * supported by the GUI.
+     *
+     * <p>
+     * TODO:
+     * <ol>
+     * <li>Extend the views {@code INV_SCHEDULE2CALENDARS} and {@code INV_REL_SCHEDULE2CALENDARS} to expose {@code CALENDAR_TYPE} directly. Currently, the
+     * calendar type is resolved via joins with {@code INV_CONFIGURATION} and related tables.
+     * <p>
+     * Proposed approach:
+     * <ul>
+     * <li>Introduce a helper view based on the existing view definition.</li>
+     * <li>Create a new view joining {@code INV_CONFIGURATION -> INV_SCHEDULE2CALENDARS} and explicitly selecting {@code INV_CONFIGURATION.TYPE} as
+     * {@code CALENDAR_TYPE}.</li>
+     * </ul>
+     * </li>
+     * <li>Extend RAML and GUI to support calendar scope filtering (working / non-working), e.g. by introducing a new filter parameter(see above - someNewFilter
+     * in code).</li>
+     * </ol>
+     */
+    private static Integer getAdvancedSearchSpecificCalendarTypeValue(RequestSearchReturnType type, boolean selectCalendar) {
+        if (!selectCalendar) {
+            return null;
+        }
+        switch (type) {
+        case CALENDAR:
+            return null;
+        case WORKINGDAYSCALENDAR:
+            return ConfigurationType.WORKINGDAYSCALENDAR.intValue();
+        case NONWORKINGDAYSCALENDAR:
+            return ConfigurationType.NONWORKINGDAYSCALENDAR.intValue();
+        default:
+            // TODO
+            // if(someNewFilter) {
+
+            // }
+            return null;
         }
     }
 
@@ -1672,6 +1817,8 @@ public class InventorySearchDBLayer extends DBLayer {
         case SCHEDULE:
         case INCLUDESCRIPT:
         case CALENDAR:
+        case WORKINGDAYSCALENDAR:
+        case NONWORKINGDAYSCALENDAR:
         case REPORT:
         case JOBTEMPLATE:
             return true;
