@@ -44,16 +44,16 @@ public class SOSHibernateFileProcessor {
                 LOGGER.info(String.format("[%s][directory][%s]fileSpec=%s", method, inputFile.toString(), getFileSpec()));
                 hasDirectory = true;
                 final Pattern pattern = Pattern.compile(getFileSpec(), 0);
-                Set<Path> filelist = Files.list(inputFile).filter(p -> !Files.isDirectory(p) && 
-                		pattern.matcher(p.getFileName().toString()).find()).collect(Collectors.toSet());
+                Set<Path> filelist = Files.list(inputFile).filter(p -> !Files.isDirectory(p) && pattern.matcher(p.getFileName().toString()).find())
+                        .collect(Collectors.toSet());
                 Iterator<Path> iterator = filelist.iterator();
                 while (iterator.hasNext()) {
                     this.process(session, iterator.next());
                 }
                 isEnd = true;
 
-                LOGGER.info(String.format("[%s][%s][success=%s][error=%s][total=%s]", method, inputFile.toString(), successFiles.size(),
-                        errorFiles.size(), filelist.size()));
+                LOGGER.info(String.format("[%s][%s][success=%s][error=%s][total=%s]", method, inputFile.toString(), successFiles.size(), errorFiles
+                        .size(), filelist.size()));
                 if (!successFiles.isEmpty()) {
                     LOGGER.info(String.format("[%s][%s][success]:", method, inputFile.toString()));
                     for (int i = 0; i < successFiles.size(); i++) {
@@ -114,12 +114,12 @@ public class SOSHibernateFileProcessor {
     public void setCommitAtEnd(boolean commitAtEnd) {
         this.commitAtEnd = commitAtEnd;
     }
-    
+
     public void clearResult() {
         successFiles.clear();
         errorFiles.clear();
     }
-    
+
     public boolean hasError() {
         return !errorFiles.isEmpty();
     }
@@ -152,14 +152,14 @@ public class SOSHibernateFileProcessor {
             logToStdErr = Arrays.asList(args).contains("-execute-from-setup");
 
             Path inputFile = null;
-            for (int i = 0; i < args.length; i++) {
+            for (int i = 1; i < args.length; i++) {
                 String param = args[i].trim();
-                LOGGER.info(String.format("  %s) %s", i + 1, param));
+                LOGGER.info(String.format("  %s) %s", i, param));
                 if (i == 1) {
                     inputFile = Paths.get(param);
                 } else if (i == 2) {
                     processor.setFileSpec(param);
-                } else if (i > 3) {
+                } else if (i >= 3) {
                     if ("-commit-at-end".equalsIgnoreCase(param)) {
                         processor.setCommitAtEnd(true);
                     } else if ("-auto-commit".equalsIgnoreCase(param)) {
@@ -172,19 +172,19 @@ public class SOSHibernateFileProcessor {
             session = factory.openStatelessSession();
 
             processor.process(session, inputFile);
-            
+
             if (processor.errorFiles != null) {
                 exitCode = processor.errorFiles.size();
                 if (logToStdErr) {
                     for (Entry<String, String> entry : processor.errorFiles.entrySet()) {
-                    	System.err.println(String.format("%s: %s", entry.getKey(), entry.getValue()));
-                	}
+                        System.err.println(String.format("%s: %s", entry.getKey(), entry.getValue()));
+                    }
                 }
             }
             if (logToStdErr && processor.successFiles != null) {
-            	for (String str : processor.successFiles) {
-            		System.err.println(String.format("%s processed successfully", str));
-            	}
+                for (String str : processor.successFiles) {
+                    System.err.println(String.format("%s processed successfully", str));
+                }
             }
         } catch (Exception e) {
             exitCode = 1;
