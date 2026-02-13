@@ -10471,7 +10471,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="BufferSize" default="8192">
+	  <xs:element name="BufferSize" default="32768">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/TransferOptions/BufferSize"/>
          <xs:documentation>
@@ -10484,10 +10484,14 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>
-		This parameter specifies the maximum size, in bytes, of a data block that can be processed, read, or written at one time.<br/> 
-        A larger <em>BufferSize</em> can improve performance, especially with large amounts of data, by reducing the number of I/O operations.<br/> 
-        However, setting it too high may increase memory usage unnecessarily.
-		</p>
+        This parameter defines the maximum size, in bytes, of data that is processed at once during a file transfer.<br/>
+        Larger values may improve performance when transferring large files by reducing the number of I/O operations.
+        </p>
+               <p/>
+               <p>
+        Please note that increasing this value beyond what the remote system supports may cause the transfer to fail unexpectedly, for example due to the connection
+        being closed by the remote system.
+        </p>
             </div>
          </xs:documentation>
       </xs:annotation>

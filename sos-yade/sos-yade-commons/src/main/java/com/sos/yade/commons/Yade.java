@@ -17,6 +17,7 @@ public class Yade {
     public enum TransferOperation {
 
         // should be synchronized with com.sos.joc.model.yade.Operation
+        // JS7 YADE effectively uses only COPY, MOVE, GETLIST, and REMOVE operations
         UNKNOWN(0), COPY(1), MOVE(2), GETLIST(3), RENAME(4), COPYTOINTERNET(5), COPYFROMINTERNET(6), REMOVE(7);
 
         private final Integer intValue;

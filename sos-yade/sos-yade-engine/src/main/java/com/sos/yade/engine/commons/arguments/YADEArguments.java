@@ -16,10 +16,7 @@ public class YADEArguments extends ASOSArguments {
     /** Required */
     public static final String STARTUP_ARG_SETTINGS = "settings";
     public static final String STARTUP_ARG_PROFILE = "profile";
-    /** - Supported for transfers using:<br/>
-     * -- Local, SFTP, SMB, HTTP(S) as Source, WebDAV(S) as Source<br/>
-     * - Not supported (automatically set to 1) for transfers using:<br/>
-     * -- FTP(S), HTTP(S) as Target, WebDAV(S) as Target */
+    /** see {@link #parallelism} argument description */
     public static final String STARTUP_ARG_PARALLELISM = "parallelism";
     public static final int STARTUP_ARG_PARALLELISM_DEFAULT = 1;
     /** Settings - overrides settings arguments<br/>
@@ -36,7 +33,7 @@ public class YADEArguments extends ASOSArguments {
 
     // Connectivity fault simulation. e.g.:
     // - 1) 5 - inject one connectivity fault (disconnect etc.) after 5s
-    // - 2) 2;5;3 - inject connectivity faults sequentially after 2s, then 5s, then 3s
+    // - 2) 0.5;5;3 - inject connectivity faults sequentially after 0.5s, then 5s, then 3s
     /** Connectivity fault simulation - shorthand for "source_sim_conn_faults" AND "target_sim_conn_faults" fault - e.g. "2;2" - inject faults for both
      * providers at the same intervals */
     public static final String STARTUP_ARG_SIM_CONN_FAULTS = "sim_conn_faults";
@@ -62,19 +59,28 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> profile = new SOSArgument<>(STARTUP_ARG_PROFILE, false);
 
     /** - Meta info ------- */
-    /** COPY/MOVE/GETLIST/RENAME */
+    /** COPY/MOVE/GETLIST/REMOVE */
     private SOSArgument<TransferOperation> operation = new SOSArgument<>("Operation", true);
 
     /** - Transfer adjustments ------- */
 
-    /** COPY/MOVE operations: transfer files in parallel<br/>
-     * Note: only affects the file transfer - the file selection on the Source is not affected<br/>
-     * Note SSH: 5 threads - doesn't really bring much - ~16 seconds (individual file transfers needs longer as without threads) .. to check: because of
-     * occupied bandwidth? sshj?<br/>
-     * The value should be controlled, as using uncontrolled parallelStream() threads can exceed the number of concurrent clients configured by a server (e.g.
-     * for SSH transfers) <br/>
-     * - Number <=1 : non-parallel<br/>
-     * - Number > 1 : number of threads for parallel execution<br/>
+    /** COPY/MOVE/REMOVE operations: transfer/remove files in parallel.
+     *
+     * <p>
+     * <b>Providers:</b><br/>
+     * - See {@link com.sos.yade.engine.commons.helpers.YADEArgumentsChecker#validateAndAdjusteCommonArguments()}.<br/>
+     * -- Only the FTP provider (as source or target) does not support parallelism, because<br />
+     * --- Parallelism is only possible by using multiple client instances: 1 client = 1 TCP session<br />
+     * ---- More clients result in increased:<br/>
+     * ----- connection and login overhead<br/>
+     * ----- server session load<br/>
+     * ----- bandwidth contention<br/>
+     * </p>
+     *
+     * <p>
+     * <b>Report:</b><br/>
+     * - See {@code src/test/java/com/sos/yade/engine/YADEEngineTest-parallelism.txt}.
+     * </p>
      */
     private SOSArgument<Integer> parallelism = new SOSArgument<>(STARTUP_ARG_PARALLELISM, false, Integer.valueOf(1));
 
@@ -83,9 +89,6 @@ public class YADEArguments extends ASOSArguments {
 
     /** COPY/MOVE operations: the buffer size(bytes) for reading the Source file/writing the Target file */
     private SOSArgument<Integer> bufferSize = new SOSArgument<>("BufferSize", false, Integer.valueOf(32 * 1_024));
-
-    // YADE 1 used in code but not defined in schema...
-    // private SOSArgument<Boolean> skipTransfer = new SOSArgument<>("skip_transfer", false, Boolean.valueOf(false));
 
     // RetryOnConnectionError
     private RetryOnConnectionError retryOnConnectionError = null;
