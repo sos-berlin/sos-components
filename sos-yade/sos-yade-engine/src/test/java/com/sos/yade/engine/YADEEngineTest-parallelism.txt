@@ -1,0 +1,66 @@
+########################################################################################################################
+#   Test Setup
+#       Each test was executed three times
+#       Note: FTP was excluded - parallelism is not supported
+#       Measurements compare parallelism=1 vs parallelism=2(tests not completed), parallelism=4
+#       Timings shown as total duration. per-file duration is provided where relevant
+########################################################################################################################
+# Summary
+# 
+# Parallelism significantly improves performance for many small files 
+# For large files, parallel execution often increases per-file duration 
+#   Possible causes include:
+#       Network bandwidth saturation
+#       Server-side behavior (e.g. synchronization or throttling mechanisms)
+#       Synchronization or contention within the underlying transfer library
+#       ...
+# 
+# Protocol-dependent behavior is clearly visible (HTTP and WebDAV benefit most from parallelism)
+########################################################################################################################
+
+LOCAL -> AZURE
+    Files   File Size   Parallel=1              Parallel=2              Parallel=4
+------------------------------------------------------------------------------------------------------------------------
+    100     30KB        7.5s                    4.4s                    2s
+    2,500   30KB        2m56s                   1m43s                   50s
+    10      33MB        2m13s (~13 s/file)      2m.13 (~30 s/file)      2m13s (~57 s/file)
+
+    Observation:
+        Parallelism does not improve overall duration for large files 
+        Time per file increases with parallel execution
+
+------------------------------------------------------------------------------------------------------------------------
+LOCAL -> HTTP
+    Files   File Size   Parallel=1              Parallel=2              Parallel=4
+------------------------------------------------------------------------------------------------------------------------
+    100     30KB        0.78s                   0.4s                    0.35s
+    2,500   30KB        14s                     9.7s                    8s
+    10     144MB        11.8s (~1.35 s/file)    7.6s (~1.6 s/file)      5.7s (~1.6 s/file)
+
+------------------------------------------------------------------------------------------------------------------------
+LOCAL -> SMB
+    Files   File Size   Parallel=1              Parallel=2              Parallel=4
+------------------------------------------------------------------------------------------------------------------------
+    100     30KB        2s                                              0.5s
+    2,500   30KB        34s                                             16s
+    10     144MB        1m32s (~9.5 s/file)                             38s (~13 s/file)
+
+------------------------------------------------------------------------------------------------------------------------
+LOCAL -> SFTP
+    Files   File Size   Parallel=1              Parallel=2              Parallel=4
+------------------------------------------------------------------------------------------------------------------------
+    100     30KB        0.55s                   0.48s                   0.48s
+    2,500   30KB        9s                      6.3s                    5.5s
+    10     144MB        17s (~1.6 s/file)       18.5s (~4 s/file)       18.5s (~7 s/file)
+
+    Observation:
+        Parallelism provides no benefit for large files and slightly degrades per-file performance
+
+------------------------------------------------------------------------------------------------------------------------
+LOCAL -> WEBDAV
+    Files   File Size   Parallel=1              Parallel=2              Parallel=4
+------------------------------------------------------------------------------------------------------------------------
+    100     30KB        0.7s                                            0.26s
+    2,500   30KB        13s                                             4.5s
+    10     144MB        27s (~2.6 s/file)                               22s (~7 s/file)
+
