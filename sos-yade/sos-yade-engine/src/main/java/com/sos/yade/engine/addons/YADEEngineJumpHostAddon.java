@@ -559,18 +559,19 @@ public class YADEEngineJumpHostAddon {
             }
         }
 
+        // Do not set additional arguments such as parallelism or simulated connectivity faults automatically.
+        // If such arguments are required on the jump host, they must be defined explicitly via the YADEClientCommand.
         private String getYADEClientCommand(String settingsXML, String profileId) {
-            String parallelism = "";
-            if (argsLoader.getArgs().isParallelismEnabled()) {
-                SOSArgument<Integer> arg = argsLoader.getArgs().getParallelism();
-                // Jump Host command not contains 'parallelism='
-                if (!argsLoader.getJumpHostArgs().getYADEClientCommand().getValue().toLowerCase().contains(arg.getName() + "=")) {
-                    parallelism = " --" + arg.getName() + "=" + arg.getValue();
-                }
-            }
-
-            return String.format("%s -settings=\"%s\" -profile=\"%s\"%s", argsLoader.getJumpHostArgs().getYADEClientCommand().getValue(), settingsXML,
-                    profileId, parallelism);
+            // String parallelism = "";
+            // if (argsLoader.getArgs().isParallelismEnabled()) {
+            // SOSArgument<Integer> arg = argsLoader.getArgs().getParallelism();
+            // Jump Host command not contains 'parallelism='
+            // if (!argsLoader.getJumpHostArgs().getYADEClientCommand().getValue().toLowerCase().contains(arg.getName() + "=")) {
+            // parallelism = " --" + arg.getName() + "=" + arg.getValue();
+            // }
+            // }
+            return String.format("%s -settings=\"%s\" -profile=\"%s\"", argsLoader.getJumpHostArgs().getYADEClientCommand().getValue(), settingsXML,
+                    profileId);
         }
 
         public class SourceToJumpHost {
