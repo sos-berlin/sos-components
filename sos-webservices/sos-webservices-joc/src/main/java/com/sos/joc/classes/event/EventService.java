@@ -47,13 +47,13 @@ import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryGroupsEvent;
 import com.sos.joc.event.bean.inventory.InventoryJobTagsEvent;
-import com.sos.joc.event.bean.inventory.InventoryNoteEvent;
 import com.sos.joc.event.bean.inventory.InventoryObjectEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagsEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringGuiEvent;
 import com.sos.joc.event.bean.monitoring.NotificationCreated;
+import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
@@ -73,6 +73,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.IEventObject;
 import com.sos.joc.model.event.EventApprovalNotification;
 import com.sos.joc.model.event.EventMonitoring;
+import com.sos.joc.model.event.EventNoteNotification;
 import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
@@ -329,17 +330,32 @@ public class EventService {
         }
     }
     
-    @Subscribe({ InventoryNoteEvent.class })
-    public void createInventoryNoteEvent(InventoryNoteEvent evt) {
-        try {
-            EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId() / 1000);
-            eventSnapshot.setEventType(evt.getKey()); // InventoryNoteUpdated, InventoryNoteAdded, InventoryNoteDeleted
-            eventSnapshot.setObjectType(EventType.fromValue(evt.getObjectType()));
-            eventSnapshot.setPath(evt.getPath());
-            addEvent(eventSnapshot);
-        } catch (Exception e) {
-            //
+    @Subscribe({ NoteEvent.class })
+    public void createInventoryNoteEvent(NoteEvent evt) {
+        Long evtId = evt.getEventId() / 1000;
+        if (!evt.onlyNotification()) {
+            try {
+                EventSnapshot eventSnapshot = new EventSnapshot();
+                eventSnapshot.setEventId(evtId);
+                eventSnapshot.setEventType(evt.getKey()); // InventoryNoteUpdated, InventoryNoteAdded, InventoryNoteDeleted
+                eventSnapshot.setObjectType(EventType.fromValue(evt.getObjectType()));
+                eventSnapshot.setPath(evt.getPath());
+                addEvent(eventSnapshot);
+            } catch (Exception e) {
+                //
+            }
+        }
+        
+        if (evt.withNotification()) {
+            if (evt.getInvolvedAccounts() != null) {
+                evt.getInvolvedAccounts().entrySet().stream().map(entry -> {
+                    EventNoteNotification eventN = new EventNoteNotification();
+                    eventN.setEventId(evtId);
+                    eventN.setAccount(entry.getKey());
+                    eventN.setNumOfUnreadNotes(entry.getValue());
+                    return eventN;
+                }).forEach(this::addEventN);
+            }
         }
     }
     
@@ -994,6 +1010,17 @@ public class EventService {
         if (eventApprovalNotification != null && eventApprovalNotification.getEventId() != null && events.add(eventApprovalNotification)) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("add approval notification event: " + eventApprovalNotification.toString());
+            }
+            if (atLeastOneConditionIsHold()) {
+                signalAll();
+            }
+        }
+    }
+    
+    private void addEventN(EventNoteNotification eventNoteNotification) {
+        if (eventNoteNotification != null && eventNoteNotification.getEventId() != null && events.add(eventNoteNotification)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("add note notification event: " + eventNoteNotification.toString());
             }
             if (atLeastOneConditionIsHold()) {
                 signalAll();

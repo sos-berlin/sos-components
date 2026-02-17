@@ -1,5 +1,6 @@
 package com.sos.joc.db.inventory;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.items.InventorySearchItem;
+import com.sos.joc.db.inventory.items.InventoryNoteItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.note.common.NoteIdentifier;
@@ -25,7 +26,7 @@ public class InventoryNotesDBLayer extends DBLayer {
         super(session);
     }
     
-    public InventorySearchItem getInvItem(NoteIdentifier note) {
+    public InventoryNoteItem getInvItem(NoteIdentifier note) {
         return getInvItem(note.getName(), note.getObjectType().intValue());
     }
     
@@ -72,7 +73,7 @@ public class InventoryNotesDBLayer extends DBLayer {
         }
     }
     
-    private InventorySearchItem getInvItem(String name, Integer type) {
+    private InventoryNoteItem getInvItem(String name, Integer type) {
         try {
             boolean isCalendar = JocInventory.isCalendar(type);
             StringBuilder hql = new StringBuilder("select id as id, path as path, folder as folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -82,7 +83,7 @@ public class InventoryNotesDBLayer extends DBLayer {
             } else {
                 hql.append(" and type=:type");
             }
-            Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
+            Query<InventoryNoteItem> query = getSession().createQuery(hql.toString(), InventoryNoteItem.class);
             query.setParameter("name", name);
             if (isCalendar) {
                 query.setParameterList("types", JocInventory.getCalendarTypes());
@@ -99,13 +100,16 @@ public class InventoryNotesDBLayer extends DBLayer {
     }
 
     public void deleteNote(Long configurationId) throws SOSHibernateException {
-        DBItemInventoryNote note = null;
         if (getSession().isTransactionOpened()) {
             deleteNoteTransactional(configurationId);
         } else {
-            note = getNote(configurationId);
+            DBItemInventoryNote note = getNote(configurationId);
             if (note != null) {
                 getSession().delete(note);
+            }
+            List<DBItemInventoryNoteNotification> notifications = getNoteNotifications(configurationId);
+            for (DBItemInventoryNoteNotification notification : notifications) {
+                getSession().delete(notification);
             }
         }
     }
@@ -115,5 +119,113 @@ public class InventoryNotesDBLayer extends DBLayer {
         Query<Integer> query = getSession().createQuery(hql.toString());
         query.setParameter("cId", configurationId);
         getSession().executeUpdate(query);
+        
+        deleteNoteNotificationsTransactional(configurationId);
+    }
+    
+    public List<DBItemInventoryNoteNotification> getNoteNotifications(Long configurationId) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(" where cid=:cid");
+            Query<DBItemInventoryNoteNotification> query = getSession().createQuery(hql.toString());
+            query.setParameter("cid", configurationId);
+            List<DBItemInventoryNoteNotification> notifications = getSession().getResultList(query);
+            if (notifications == null) {
+                return Collections.emptyList();
+            }
+            return notifications;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    private void deleteNoteNotificationsTransactional(Long configurationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(" where cid=:cId");
+        Query<Integer> query = getSession().createQuery(hql.toString());
+        query.setParameter("cId", configurationId);
+        getSession().executeUpdate(query);
+    }
+    
+    public DBItemInventoryNoteNotification getNoteNotification(String accountName, Long configurationId) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(
+                    " where accountName=:accountName and cid=:cid");
+            Query<DBItemInventoryNoteNotification> query = getSession().createQuery(hql.toString());
+            query.setParameter("cid", configurationId);
+            query.setParameter("accountName", accountName);
+            return getSession().getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Map<String, Long> getNumOfNoteNotificationsPerAccount(Collection<String> accountNames) {
+        if (accountNames == null || accountNames.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            StringBuilder hql = new StringBuilder("select accountName, count(*) as numOf from ").append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(
+                    " where accountName in (:accountNames) group by accountName");
+            Query<Object[]> query = getSession().createQuery(hql.toString());
+            query.setParameterList("accountNames", accountNames);
+            List<Object[]> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            }
+            return result.stream().collect(Collectors.toMap(o -> (String) o[0], o -> (Long) o[1]));
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Long getNumOfNoteNotifications(String accountName) {
+        if (accountName == null || accountName.isEmpty()) {
+            return 0L;
+        }
+        try {
+            StringBuilder hql = new StringBuilder("select count(*) from ").append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(
+                    " where accountName=:accountName");
+            Query<Long> query = getSession().createQuery(hql.toString());
+            query.setParameter("accountName", accountName);
+            Long result = getSession().getSingleResult(query);
+            if (result == null) {
+                return 0L;
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<InventoryNoteItem> getNoteNotifications(String accountName) {
+        if (accountName == null || accountName.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            StringBuilder hql = new StringBuilder("select ic.path as path, ic.name as name, ic.type as type, n.severity as color from ");
+            hql.append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(" nn left join ");
+            hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on nn.cid=ic.id left join ");
+            hql.append(DBLayer.DBITEM_INV_NOTES).append(" n on nn.cid=n.cid");
+            hql.append(" order by n.modified");
+            
+            Query<InventoryNoteItem> query = getSession().createQuery(hql.toString(), InventoryNoteItem.class);
+            List<InventoryNoteItem> result =  getSession().getResultList(query);
+            
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 }

@@ -29,4 +29,9 @@ public interface INote {
     @Path("users")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse getUsers(@HeaderParam("X-Access-Token") String accessToken);
+    
+    @POST
+    @Path("notifications")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse getNotifications(@HeaderParam("X-Access-Token") String accessToken);
 }

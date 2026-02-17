@@ -29,6 +29,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "eventsFromSystemMonitoring",
     "eventsFromOrderMonitoring",
     "eventsFromApprovalRequests",
+    "eventsFromNotes",
     "deliveryDate"
 })
 public class Event {
@@ -71,6 +72,8 @@ public class Event {
     private List<EventOrderMonitoring> eventsFromOrderMonitoring = new ArrayList<EventOrderMonitoring>();
     @JsonProperty("eventsFromApprovalRequests")
     private List<EventApprovalNotification> eventsFromApprovalRequests = new ArrayList<EventApprovalNotification>();
+    @JsonProperty("eventsFromNotes")
+    private List<EventNoteNotification> eventsFromNotes = new ArrayList<EventNoteNotification>();
     /**
      * timestamp
      * <p>
@@ -200,6 +203,16 @@ public class Event {
         this.eventsFromApprovalRequests = eventsFromApprovalRequests;
     }
 
+    @JsonProperty("eventsFromNotes")
+    public List<EventNoteNotification> getEventsFromNotes() {
+        return eventsFromNotes;
+    }
+
+    @JsonProperty("eventsFromNotes")
+    public void setEventsFromNotes(List<EventNoteNotification> eventsFromNotes) {
+        this.eventsFromNotes = eventsFromNotes;
+    }
+
     /**
      * timestamp
      * <p>
@@ -226,12 +239,12 @@ public class Event {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("eventsFromSystemMonitoring", eventsFromSystemMonitoring).append("eventsFromOrderMonitoring", eventsFromOrderMonitoring).append("eventsFromApprovalRequests", eventsFromApprovalRequests).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("eventsFromSystemMonitoring", eventsFromSystemMonitoring).append("eventsFromOrderMonitoring", eventsFromOrderMonitoring).append("eventsFromApprovalRequests", eventsFromApprovalRequests).append("eventsFromNotes", eventsFromNotes).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(eventsFromApprovalRequests).append(controllerId).append(eventsFromSystemMonitoring).append(error).append(eventSnapshots).append(deliveryDate).append(eventsFromOrderMonitoring).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(eventsFromApprovalRequests).append(controllerId).append(eventsFromSystemMonitoring).append(error).append(eventSnapshots).append(deliveryDate).append(eventsFromOrderMonitoring).append(eventsFromNotes).toHashCode();
     }
 
     @Override
@@ -243,7 +256,7 @@ public class Event {
             return false;
         }
         Event rhs = ((Event) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(eventsFromApprovalRequests, rhs.eventsFromApprovalRequests).append(controllerId, rhs.controllerId).append(eventsFromSystemMonitoring, rhs.eventsFromSystemMonitoring).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).append(eventsFromOrderMonitoring, rhs.eventsFromOrderMonitoring).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(eventsFromApprovalRequests, rhs.eventsFromApprovalRequests).append(controllerId, rhs.controllerId).append(eventsFromSystemMonitoring, rhs.eventsFromSystemMonitoring).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).append(eventsFromOrderMonitoring, rhs.eventsFromOrderMonitoring).append(eventsFromNotes, rhs.eventsFromNotes).isEquals();
     }
 
 }

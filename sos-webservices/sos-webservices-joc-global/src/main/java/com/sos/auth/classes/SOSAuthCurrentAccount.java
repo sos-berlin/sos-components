@@ -20,7 +20,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.db.approval.ApprovalDBLayer;
+import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
+import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
@@ -274,6 +276,33 @@ public class SOSAuthCurrentAccount {
                 if (approverEvent != null || requestorEvent != null) {
                     return Optional.of(new ApprovalUpdatedEvent(requestorEvent, approverEvent, true));
                 }
+            }
+        } catch (Exception e) {
+            //
+        }
+        return Optional.empty();
+    }
+    
+    public Optional<NoteEvent> createNoteUpdatedEvent() {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection("createNoteUpdatedEvent");
+            return createNoteUpdatedEvent(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    public Optional<NoteEvent> createNoteUpdatedEvent(SOSHibernateSession session) {
+        try {
+            InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
+            Map<String, Long> noteEvent = null;
+            Long numOfNotes = dbLayer.getNumOfNoteNotifications(accountName);
+            if (numOfNotes > 0L) {
+                noteEvent = Collections.singletonMap(accountName, numOfNotes);
+            }
+            if (noteEvent != null) {
+                return Optional.of(new NoteEvent(null, null, noteEvent, true, true));
             }
         } catch (Exception e) {
             //

@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -26,11 +27,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
+import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
+import com.sos.joc.model.common.IEventObject;
 import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventApprovalNotification;
 import com.sos.joc.model.event.EventMonitoring;
+import com.sos.joc.model.event.EventNoteNotification;
 import com.sos.joc.model.event.EventOrderMonitoring;
 import com.sos.joc.model.event.EventSnapshot;
 
@@ -44,6 +48,7 @@ public class EventServiceFactory {
     private final static long maxResponsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
     private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
     private Optional<ApprovalUpdatedEvent> approvalUpdatedEvent = Optional.empty();
+    private Optional<NoteEvent> noteUpdatedEvent = Optional.empty();
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -153,17 +158,20 @@ public class EventServiceFactory {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
         setResponsePeriodInMillis();
-        setApprovalUpdatedEvent(evtIdIsEmpty, controllerId, user);
+        setApprovalUpdatedEvent(evtIdIsEmpty, user);
+        setNoteUpdatedEvent(evtIdIsEmpty, user);
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
             postApprovalUpdatedEvent();
+            postNoteUpdatedEvent();
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
             Set<EventSnapshot> agentEvt = new HashSet<>();
             Set<EventMonitoring> evtM = new HashSet<>();
             Set<EventOrderMonitoring> evtO = new HashSet<>();
             Set<EventApprovalNotification> evtA = new HashSet<>();
+            Set<EventNoteNotification> evtN = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (Mode.FALSE.equals(mode)) {
                 long delay = Math.min(responsePeriodInMillis - 1000, getSessionTimeout(session));
@@ -187,52 +195,16 @@ public class EventServiceFactory {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
-                service.getEvents().iterator().forEachRemaining(e -> {
-                    if (e.getEventId() != null && eventId < e.getEventId()) {
-                        e.setEventId(e.getEventId() - 1L);
-                        if (e instanceof EventSnapshot) {
-                            if (((EventSnapshot) e).getEventType().equals("AgentCoupling")) {
-                                agentEvt.add((EventSnapshot) e);
-                            } else {
-                                evt.add((EventSnapshot) e);
-                            }
-                        } else if (e instanceof EventMonitoring) {
-                            evtM.add((EventMonitoring) e);
-                        } else if (e instanceof EventOrderMonitoring) {
-                            evtO.add((EventOrderMonitoring) e);
-                        } else if (e instanceof EventApprovalNotification) {
-                            evtA.add((EventApprovalNotification) e);
-                        }
-                        evtIds.add(e.getEventId());
-                    }
-                });
+                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, user, evt, agentEvt, evtM, evtO, evtA, evtN));
             } else if (Mode.IMMEDIATLY.equals(mode)) {
-                service.getEvents().iterator().forEachRemaining(e -> {
-                    if (e.getEventId() != null && eventId < e.getEventId()) {
-                        e.setEventId(e.getEventId() - 1L);
-                        if (e instanceof EventSnapshot) {
-                            if (((EventSnapshot) e).getEventType().equals("AgentCoupling")) {
-                                agentEvt.add((EventSnapshot) e);
-                            } else {
-                                evt.add((EventSnapshot) e);
-                            }
-                        } else if (e instanceof EventMonitoring) {
-                            evtM.add((EventMonitoring) e);
-                        } else if (e instanceof EventOrderMonitoring) {
-                            evtO.add((EventOrderMonitoring) e);
-                        } else if (e instanceof EventApprovalNotification) {
-                            evtA.add((EventApprovalNotification) e);
-                        }
-                        evtIds.add(e.getEventId());
-                    }
-                });
+                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, user, evt, agentEvt, evtM, evtO, evtA, evtN));
             }
             agentEvt.stream().collect(Collectors.groupingBy(EventSnapshot::getPath)).forEach((a, e) -> {
                 if (e.size() == 1) {
                     evt.add(e.get(0));
                 }
             });
-            if (evt.isEmpty() && agentEvt.isEmpty() && evtM.isEmpty() && evtO.isEmpty() && evtA.isEmpty()) {
+            if (evt.isEmpty() && agentEvt.isEmpty() && evtM.isEmpty() && evtO.isEmpty() && evtA.isEmpty() && evtN.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 if (isDebugEnabled) {
@@ -248,12 +220,16 @@ public class EventServiceFactory {
                     if (!evtA.isEmpty()) {
                         LOGGER.debug("Approval notification events: " + evtA.toString());
                     }
+                    if (!evtN.isEmpty()) {
+                        LOGGER.debug("Notes notification events: " + evtN.toString());
+                    }
                 }
                 events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(EventServiceFactory::cloneEvent).distinct().collect(Collectors.toList()));
                 events.setEventsFromSystemMonitoring(evtM.stream().map(EventServiceFactory::cloneEventM).distinct().collect(Collectors.toList()));
                 events.setEventsFromOrderMonitoring(evtO.stream().map(EventServiceFactory::cloneEventO).distinct().collect(Collectors.toList()));
                 events.setEventsFromApprovalRequests(evtA.stream().map(EventServiceFactory::cloneEventA).distinct().collect(Collectors.toList()));
+                events.setEventsFromNotes(evtN.stream().map(EventServiceFactory::cloneEventN).distinct().collect(Collectors.toList()));
             }
         } catch (SessionNotExistException e1) {
             throw e1;
@@ -273,7 +249,40 @@ public class EventServiceFactory {
         return events;
     }
     
-    private void setApprovalUpdatedEvent(boolean evtIdIsEmpty, String controllerId, JobSchedulerUser user) {
+    private Consumer<IEventObject> shareEvents(Long eventId, SortedSet<Long> evtIds, JobSchedulerUser user, Set<EventSnapshot> evt,
+            Set<EventSnapshot> agentEvt, Set<EventMonitoring> evtM, Set<EventOrderMonitoring> evtO, Set<EventApprovalNotification> evtA,
+            Set<EventNoteNotification> evtN) {
+        return e -> {
+            if (e.getEventId() != null && eventId < e.getEventId()) {
+                e.setEventId(e.getEventId() - 1L);
+                if (e instanceof EventSnapshot) {
+                    if (((EventSnapshot) e).getEventType().equals("AgentCoupling")) {
+                        agentEvt.add((EventSnapshot) e);
+                    } else {
+                        evt.add((EventSnapshot) e);
+                    }
+                } else if (e instanceof EventMonitoring) {
+                    evtM.add((EventMonitoring) e);
+                } else if (e instanceof EventOrderMonitoring) {
+                    evtO.add((EventOrderMonitoring) e);
+                } else if (e instanceof EventApprovalNotification) {
+                    evtA.add((EventApprovalNotification) e);
+                } else if (e instanceof EventNoteNotification) {
+                    try {
+                        String account = ((EventNoteNotification) e).getAccount();
+                        if (account != null && account.equals(user.getSOSAuthCurrentAccount().getAccountname())) {
+                            evtN.add((EventNoteNotification) e);
+                        }
+                    } catch (Exception ex) {
+                        //
+                    }
+                }
+                evtIds.add(e.getEventId());
+            }
+        };
+    }
+    
+    private void setApprovalUpdatedEvent(boolean evtIdIsEmpty, JobSchedulerUser user) {
         // create events after login if EventService not started
         approvalUpdatedEvent = Optional.empty();
         if (eventServices.isEmpty() || evtIdIsEmpty) {
@@ -283,6 +292,18 @@ public class EventServiceFactory {
     
     private void postApprovalUpdatedEvent() {
         approvalUpdatedEvent.ifPresent(EventBus.getInstance()::post);
+    }
+    
+    private void setNoteUpdatedEvent(boolean evtIdIsEmpty, JobSchedulerUser user) {
+        // create events after login if EventService not started
+        noteUpdatedEvent = Optional.empty();
+        if (eventServices.isEmpty() || evtIdIsEmpty) {
+            noteUpdatedEvent = user.getSOSAuthCurrentAccount().createNoteUpdatedEvent();
+        }
+    }
+    
+    private void postNoteUpdatedEvent() {
+        noteUpdatedEvent.ifPresent(EventBus.getInstance()::post);
     }
     
     private static Mode waitingForEvents(EventCondition eventArrived, EventService service, long time) {
@@ -363,6 +384,15 @@ public class EventServiceFactory {
         es.setNumOfPendingApprovals(e.getNumOfPendingApprovals());
         es.setNumOfApprovedRequests(e.getNumOfApprovedRequests());
         es.setNumOfRejectedRequests(e.getNumOfRejectedRequests());
+        return es;
+    }
+    
+    private static EventNoteNotification cloneEventN(EventNoteNotification e) {
+        //LOGGER.info("Clone events for " + e.toString());
+        EventNoteNotification es = new EventNoteNotification();
+        es.setEventId(null);
+        es.setAccount(e.getAccount());
+        es.setNumOfUnreadNotes(e.getNumOfUnreadNotes());
         return es;
     }
     
