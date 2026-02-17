@@ -127,15 +127,17 @@ public class RunningOrderLogs {
         SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
         List<OrderLogEntry> logEvents = new ArrayList<>();
         r.setComplete(false);
-        events.get(r.getHistoryId()).iterator().forEachRemaining(e -> {
-            if (e.getEventId() != null && r.getEventId() < e.getEventId()) {
-                if (e.getComplete()) {
-                    r.setComplete(true);
+        if (events.containsKey(r.getHistoryId())) {
+            events.get(r.getHistoryId()).iterator().forEachRemaining(e -> {
+                if (e.getEventId() != null && r.getEventId() < e.getEventId()) {
+                    if (e.getComplete()) {
+                        r.setComplete(true);
+                    }
+                    logEvents.add(e.getLogEvent());
+                    evtIds.add(e.getEventId());
                 }
-                logEvents.add(e.getLogEvent());
-                evtIds.add(e.getEventId());
-            }
-        });
+            });
+        }
         if (!evtIds.isEmpty()) {
             r.setEventId(evtIds.last());
             r.setLogEvents(logEvents.stream().map(item -> LogOrderContent.getMappedLogItem(item)).collect(Collectors.toList()));
