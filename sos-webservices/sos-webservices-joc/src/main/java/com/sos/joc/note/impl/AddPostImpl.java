@@ -3,18 +3,29 @@ package com.sos.joc.note.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.text.StringEscapeUtils;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryNote;
+import com.sos.joc.db.inventory.DBItemInventoryNoteNotification;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
-import com.sos.joc.db.inventory.items.InventorySearchItem;
+import com.sos.joc.db.inventory.items.InventoryNoteItem;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.inventory.InventoryNoteAddEvent;
-import com.sos.joc.event.bean.inventory.InventoryNoteEvent;
+import com.sos.joc.event.bean.note.NoteAddEvent;
+import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.note.AddPost;
 import com.sos.joc.model.note.NoteResponse;
@@ -50,9 +61,9 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-            InventorySearchItem invItem = NoteImpl.getInvItem(dbLayer, in, folderPermissions);
+            InventoryNoteItem invItem = NoteImpl.getInvItem(dbLayer, in, folderPermissions);
             
-            String user = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
+            String user = getAccount();
             Date now = Date.from(Instant.now());
             Author author = NoteImpl.newAuthor(user);
             NoteResponse note = new NoteResponse();
@@ -68,9 +79,16 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 dbItem.setSeverity(in.getSeverity().intValue());
                 dbItem.setId(null);
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
-
+                
                 session.save(dbItem);
-                EventBus.getInstance().post(new InventoryNoteAddEvent(invItem.getPath(), note.getObjectType().value()));
+                
+                // set notifications
+                List<DBItemInventoryNoteNotification> newMentionedAccounts = getMentionedUsers(in.getContent()).filter(m -> !user.equals(m)).map(
+                        m -> newDBItemInventoryNoteNotification(m, invItem.getId())).toList();
+                Set<String> accountNames = insertMentionedUsers(newMentionedAccounts, session);
+
+                EventBus.getInstance().post(new NoteAddEvent(invItem.getPath(), note.getObjectType().value(), dbLayer
+                        .getNumOfNoteNotificationsPerAccount(accountNames), true, false));
 
             } else {
                 note = Globals.objectMapper.readValue(dbItem.getContent(), NoteResponse.class);
@@ -107,7 +125,35 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 dbItem.setSeverity(md.getSeverity().intValue());
 
                 session.update(dbItem);
-                EventBus.getInstance().post(new InventoryNoteEvent(invItem.getPath(), note.getObjectType().value()));
+                
+                // set notifications
+                List<DBItemInventoryNoteNotification> notifications = dbLayer.getNoteNotifications(invItem.getId());
+                Set<String> dbAccountNames = notifications.stream().map(
+                        DBItemInventoryNoteNotification::getAccountName).collect(Collectors.toSet());
+                Set<String> participantNames = note.getParticipants().stream().map(Participant::getUserName).collect(Collectors.toSet());
+                
+                if (dbAccountNames.contains(user)) {
+                    session.delete(notifications.stream().filter(n -> user.equals(n.getAccountName())).findAny().get());
+                }
+
+                for (String participant : participantNames) {
+                    if (!dbAccountNames.contains(participant) && !user.equals(participant)) {
+                        DBItemInventoryNoteNotification notification = new DBItemInventoryNoteNotification();
+                        notification.setAccountName(participant);
+                        notification.setCid(invItem.getId());
+                        session.save(notification);
+                    }
+                }
+                
+                List<DBItemInventoryNoteNotification> newMentionedAccounts = getMentionedUsers(in.getContent()).filter(m -> !participantNames
+                        .contains(m)).filter(m -> !user.equals(m)).filter(m -> !dbAccountNames.contains(m)).map(
+                                m -> newDBItemInventoryNoteNotification(m, invItem.getId())).toList();
+                Set<String> accountNames = insertMentionedUsers(newMentionedAccounts, session);
+                accountNames.addAll(participantNames);
+                accountNames.remove(user);
+                
+                EventBus.getInstance().post(new NoteEvent(invItem.getPath(), note.getObjectType().value(), dbLayer
+                        .getNumOfNoteNotificationsPerAccount(accountNames), true, false));
             }
             
             note.setDeliveryDate(now);
@@ -118,6 +164,28 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private static Stream<String> getMentionedUsers(String post) {
+        return Pattern.compile("\\s@\\[[^\\]]+\\]|\\s@[^\\s\"]+").matcher(" " + post).results().map(MatchResult::group).map(s -> s.replaceFirst(
+                "^\\s*@\\[?\\s*", "")).map(s -> s.replaceFirst("\\s*]?$", "")).map(StringEscapeUtils::unescapeHtml4).distinct();
+    }
+    
+    private static DBItemInventoryNoteNotification newDBItemInventoryNoteNotification(String accountName, Long confId) {
+        DBItemInventoryNoteNotification notification = new DBItemInventoryNoteNotification();
+        notification.setAccountName(accountName);
+        notification.setCid(confId);
+        return notification;
+    }
+    
+    private static Set<String> insertMentionedUsers(List<DBItemInventoryNoteNotification> newMentionedAccounts,
+            SOSHibernateSession session) throws SOSHibernateException {
+        Set<String> accountNames = new HashSet<>();
+        for (DBItemInventoryNoteNotification newMentionedAccount : newMentionedAccounts) {
+            accountNames.add(newMentionedAccount.getAccountName());
+            session.save(newMentionedAccount);
+        }
+        return accountNames;
     }
 
     private static Participant newParticipant(Integer postCount, Date modified, Author author) {
