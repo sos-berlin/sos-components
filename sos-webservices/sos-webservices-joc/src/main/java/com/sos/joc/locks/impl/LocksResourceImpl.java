@@ -34,6 +34,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
+import com.sos.joc.model.note.common.HasNote;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -103,7 +104,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             }
             JocError jocError = getJocError();
             if (contents != null) {
-                Map<String, Integer> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue());
+                Map<String, HasNote> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue(), getAccount());
                 
                 answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
                     try {

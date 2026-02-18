@@ -39,7 +39,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.note.common.Severity;
+import com.sos.joc.model.note.common.HasNote;
 
 public class JOCOrderResourceImpl extends JOCResourceImpl {
 
@@ -189,8 +189,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return result;
     }
 
-    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item, Map<String, Integer> workflowNotes,
-            Map<String, Integer> scheduleNotes) {
+    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item, Map<String, HasNote> workflowNotes,
+            Map<String, HasNote> scheduleNotes) {
 
         PlannedOrderItem p = new PlannedOrderItem();
         p.setLate(item.isLate());
@@ -208,10 +208,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         p.setStartMode(item.getStartMode());
 
         p.setWorkflowPath(item.getWorkflowPath());
-        p.setWorkflowHasNote(Severity.fromValueOrNull(workflowNotes.get(item.getWorkflowName())));
+        p.setWorkflowHasNote(workflowNotes.get(item.getWorkflowName()));
         p.setOrderId(item.getOrderId());
         p.setSchedulePath(item.getSchedulePath());
-        p.setScheduleHasNote(Severity.fromValueOrNull(scheduleNotes.get(item.getScheduleName())));
+        p.setScheduleHasNote(scheduleNotes.get(item.getScheduleName()));
         p.setOrderName(item.getOrderName());
 
         DailyPlanOrderState orderState = new DailyPlanOrderState();
@@ -247,12 +247,12 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         boolean withWorkflowTagsDisplayed = WorkflowsHelper.withWorkflowTagsDisplayed();
         Set<String> workflowNames = new HashSet<>();
         if (orders != null) {
-            Map<String, Integer> workflowNotes = Collections.emptyMap();
-            Map<String, Integer> scheduleNotes = Collections.emptyMap();
+            Map<String, HasNote> workflowNotes = Collections.emptyMap();
+            Map<String, HasNote> scheduleNotes = Collections.emptyMap();
             if (withNotes) {
                 InventoryNotesDBLayer dbNoteLayer = new InventoryNotesDBLayer(session);
-                workflowNotes = dbNoteLayer.hasNote(ConfigurationType.WORKFLOW.intValue());
-                scheduleNotes = dbNoteLayer.hasNote(ConfigurationType.SCHEDULE.intValue());
+                workflowNotes = dbNoteLayer.hasNote(ConfigurationType.WORKFLOW.intValue(), getAccount());
+                scheduleNotes = dbNoteLayer.hasNote(ConfigurationType.SCHEDULE.intValue(), getAccount());
             }
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (DBItemDailyPlanWithHistory item : orders) {

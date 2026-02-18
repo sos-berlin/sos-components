@@ -88,7 +88,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 String path = WorkflowPaths.getPath(content.getName());
                 checkFolderPermissions(path, folderPermissions.getListOfFolders());
                 workflow.setPath(path);
-                workflow.setHasNote(Severity.fromValueOrNull(new InventoryNotesDBLayer(connection).hasNote(content.getInvId())));
+                workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId(), getAccount()));
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);

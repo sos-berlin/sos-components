@@ -20,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "noteId",
     "path",
     "severity"
 })
@@ -27,6 +28,15 @@ public class Notification
     extends NoteIdentifier
 {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("noteId")
+    private Long noteId;
     /**
      * path
      * <p>
@@ -45,6 +55,30 @@ public class Notification
      */
     @JsonProperty("severity")
     private Severity severity = Severity.fromValue("NORMAL");
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("noteId")
+    public Long getNoteId() {
+        return noteId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("noteId")
+    public void setNoteId(Long noteId) {
+        this.noteId = noteId;
+    }
 
     /**
      * path
@@ -94,12 +128,12 @@ public class Notification
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("severity", severity).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("noteId", noteId).append("path", path).append("severity", severity).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(severity).append(path).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(severity).append(path).append(noteId).toHashCode();
     }
 
     @Override
@@ -111,7 +145,7 @@ public class Notification
             return false;
         }
         Notification rhs = ((Notification) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(severity, rhs.severity).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(severity, rhs.severity).append(path, rhs.path).append(noteId, rhs.noteId).isEquals();
     }
 
 }
