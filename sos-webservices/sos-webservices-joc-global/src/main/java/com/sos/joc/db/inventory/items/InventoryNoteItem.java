@@ -8,22 +8,11 @@ import com.sos.joc.model.note.common.Severity;
 public class InventoryNoteItem extends Notification {
     
     @JsonIgnore
-    private Long id;
-    @JsonIgnore
     private Integer type;
     @JsonIgnore
     private Integer color;
     @JsonIgnore
     private String folder;
-
-    @JsonIgnore
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long val) {
-        id = val;
-    }
 
     @JsonIgnore
     public Integer getType() {

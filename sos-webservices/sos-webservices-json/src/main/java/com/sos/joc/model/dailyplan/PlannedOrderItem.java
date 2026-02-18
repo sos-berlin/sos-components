@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.note.common.Severity;
+import com.sos.joc.model.note.common.HasNote;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -77,13 +77,13 @@ public class PlannedOrderItem {
     @JsonProperty("workflowPath")
     private String workflowPath;
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("workflowHasNote")
-    private Severity workflowHasNote;
+    private HasNote workflowHasNote;
     /**
      * string without < and >
      * <p>
@@ -93,13 +93,13 @@ public class PlannedOrderItem {
     @JsonProperty("schedulePath")
     private String schedulePath;
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("scheduleHasNote")
-    private Severity scheduleHasNote;
+    private HasNote scheduleHasNote;
     /**
      * string without < and >
      * <p>
@@ -296,24 +296,24 @@ public class PlannedOrderItem {
     }
 
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("workflowHasNote")
-    public Severity getWorkflowHasNote() {
+    public HasNote getWorkflowHasNote() {
         return workflowHasNote;
     }
 
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("workflowHasNote")
-    public void setWorkflowHasNote(Severity workflowHasNote) {
+    public void setWorkflowHasNote(HasNote workflowHasNote) {
         this.workflowHasNote = workflowHasNote;
     }
 
@@ -340,24 +340,24 @@ public class PlannedOrderItem {
     }
 
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("scheduleHasNote")
-    public Severity getScheduleHasNote() {
+    public HasNote getScheduleHasNote() {
         return scheduleHasNote;
     }
 
     /**
-     * note/post severity
+     * metadata
      * <p>
      * 
      * 
      */
     @JsonProperty("scheduleHasNote")
-    public void setScheduleHasNote(Severity scheduleHasNote) {
+    public void setScheduleHasNote(HasNote scheduleHasNote) {
         this.scheduleHasNote = scheduleHasNote;
     }
 

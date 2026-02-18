@@ -252,7 +252,7 @@ public class PlannedBoards {
         item.setPath(dc.getPath());
         item.setVersionDate(dc.getCreated());
         item.setVersion(null);
-        item.setHasNote(dc.hasNote());
+        item.setHasNote(dc.getHasNote());
         if (withSysncState) {
             item.setState(SyncStateHelper.getState(getSyncStateText(BoardPath.of(dc.getName()))));
         }

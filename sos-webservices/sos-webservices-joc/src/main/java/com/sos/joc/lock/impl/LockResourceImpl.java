@@ -71,7 +71,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
                     .getDailyPlanTimeZone(), session);
-            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId()));
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccount()));
             
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));

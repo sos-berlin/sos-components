@@ -36,7 +36,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.note.common.Severity;
+import com.sos.joc.model.note.common.HasNote;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.model.workflow.search.InstructionStateText;
@@ -76,7 +76,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             final Set<Folder> folders = folderPermissions.getPermittedFolders(workflowsFilter.getFolders());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
-                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders, getJocError());
+                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders, getJocError(),
+                        getAccount());
                 Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, ws.stream().map(Workflow::getPath).map(
                         JocInventory::pathToName));
                 if (!wTags.isEmpty()) {
@@ -87,7 +88,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 }
             } else {
                 workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
-                        getJocError()));
+                        getJocError(), getAccount()));
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
@@ -101,7 +102,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     }
 
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
-            Set<Folder> permittedFolders, JocError jocError) {
+            Set<Folder> permittedFolders, JocError jocError, String account) {
         boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
         String controllerId = workflowsFilter.getControllerId();
         
@@ -112,7 +113,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(DeployedContent::getPath).map(JocInventory::pathToName)
                         .collect(Collectors.toSet()), dbLayer);
         
-        Map<String, Integer> workflowNotes = new InventoryNotesDBLayer(dbLayer.getSession()).hasNote(ConfigurationType.WORKFLOW.intValue());
+        Map<String, HasNote> workflowNotes = new InventoryNotesDBLayer(dbLayer.getSession()).hasNote(ConfigurationType.WORKFLOW.intValue(), account);
         
         // TODO should be permantly stored and updated by events
         //Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
@@ -135,7 +136,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setVersionId(w.getCommitId());
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
-                workflow.setHasNote(Severity.fromValueOrNull(workflowNotes.get(w.getName())));
+                workflow.setHasNote(workflowNotes.get(w.getName()));
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);
                 if (withStatesFilter && !workflowsFilter.getStates().contains(workflow.getState().get_text())) {
                     return null;

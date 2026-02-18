@@ -68,14 +68,14 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             Author author = NoteImpl.newAuthor(user);
             NoteResponse note = new NoteResponse();
 
-            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             if (dbItem == null) { // new note
                 note = newNote(now, author, in, invItem.getPath());
 
                 dbItem = new DBItemInventoryNote();
                 dbItem.setCreated(now);
                 dbItem.setModified(now);
-                dbItem.setCid(invItem.getId());
+                dbItem.setCid(invItem.getNoteId());
                 dbItem.setSeverity(in.getSeverity().intValue());
                 dbItem.setId(null);
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
@@ -84,7 +84,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 
                 // set notifications
                 List<DBItemInventoryNoteNotification> newMentionedAccounts = getMentionedUsers(in.getContent()).filter(m -> !user.equals(m)).map(
-                        m -> newDBItemInventoryNoteNotification(m, invItem.getId())).toList();
+                        m -> newDBItemInventoryNoteNotification(m, invItem.getNoteId())).toList();
                 Set<String> accountNames = insertMentionedUsers(newMentionedAccounts, session);
 
                 EventBus.getInstance().post(new NoteAddEvent(invItem.getPath(), note.getObjectType().value(), dbLayer
@@ -127,7 +127,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 session.update(dbItem);
                 
                 // set notifications
-                List<DBItemInventoryNoteNotification> notifications = dbLayer.getNoteNotifications(invItem.getId());
+                List<DBItemInventoryNoteNotification> notifications = dbLayer.getNoteNotifications(invItem.getNoteId());
                 Set<String> dbAccountNames = notifications.stream().map(
                         DBItemInventoryNoteNotification::getAccountName).collect(Collectors.toSet());
                 Set<String> participantNames = note.getParticipants().stream().map(Participant::getUserName).collect(Collectors.toSet());
@@ -140,14 +140,14 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                     if (!dbAccountNames.contains(participant) && !user.equals(participant)) {
                         DBItemInventoryNoteNotification notification = new DBItemInventoryNoteNotification();
                         notification.setAccountName(participant);
-                        notification.setCid(invItem.getId());
+                        notification.setCid(invItem.getNoteId());
                         session.save(notification);
                     }
                 }
                 
                 List<DBItemInventoryNoteNotification> newMentionedAccounts = getMentionedUsers(in.getContent()).filter(m -> !participantNames
                         .contains(m)).filter(m -> !user.equals(m)).filter(m -> !dbAccountNames.contains(m)).map(
-                                m -> newDBItemInventoryNoteNotification(m, invItem.getId())).toList();
+                                m -> newDBItemInventoryNoteNotification(m, invItem.getNoteId())).toList();
                 Set<String> accountNames = insertMentionedUsers(newMentionedAccounts, session);
                 accountNames.addAll(participantNames);
                 accountNames.remove(user);

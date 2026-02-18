@@ -65,8 +65,8 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             session = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
-            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
-            DBItemInventoryNoteNotification notification = dbLayer.getNoteNotification(getAccount(), invItem.getId());
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
+            DBItemInventoryNoteNotification notification = dbLayer.getNoteNotification(getAccount(), invItem.getNoteId());
             if (notification != null) {
                 session.delete(notification);
                 Long numOfNotification = dbLayer.getNumOfNoteNotifications(getAccount());
@@ -141,11 +141,11 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
-            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             if (dbItem != null) {
                 session.delete(dbItem);
                 Set<String> accountNames = new HashSet<>();
-                for (DBItemInventoryNoteNotification notification : dbLayer.getNoteNotifications(invItem.getId())) {
+                for (DBItemInventoryNoteNotification notification : dbLayer.getNoteNotifications(invItem.getNoteId())) {
                     accountNames.add(notification.getAccountName());
                     session.delete(notification);
                 }
@@ -177,7 +177,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             session = Globals.createSosHibernateStatelessConnection(API_CALL_PREFS);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
-            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getId());
+            DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             NoteResponse note = getNoteResponse(dbItem, in, invItem.getPath());
             
             if (!in.getDisplayPreferences().equals(note.getMetadata().getDisplayPreferences())) {

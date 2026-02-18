@@ -130,7 +130,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             
             PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE, filter
                     .getLimit(), currentState);
-            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId()));
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccount()));
             
             answer.setNoticeBoard(plB.getPlannedBoard(dc));
             answer.setDeliveryDate(Date.from(Instant.now()));

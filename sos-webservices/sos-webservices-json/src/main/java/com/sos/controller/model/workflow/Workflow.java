@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
-import com.sos.joc.model.note.common.Severity;
-
+import com.sos.joc.model.note.common.HasNote;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -128,8 +128,14 @@ public class Workflow
     private Boolean valid;
     @JsonProperty("deployed")
     private Boolean deployed;
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    private Severity hasNote;
+    private HasNote hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -426,13 +432,25 @@ public class Workflow
         this.deployed = deployed;
     }
 
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    public Severity getHasNote() {
+    public HasNote getHasNote() {
         return hasNote;
     }
 
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    public void setHasNote(Severity hasNote) {
+    public void setHasNote(HasNote hasNote) {
         this.hasNote = hasNote;
     }
 

@@ -10,8 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.inventory.model.board.BoardType;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.model.note.common.Severity;
-
+import com.sos.joc.model.note.common.HasNote;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -108,8 +107,14 @@ public class Board
     private Integer numOfExpectingOrders;
     @JsonProperty("notices")
     private List<Notice> notices = null;
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    private Severity hasNote;
+    private HasNote hasNote;
 
     /**
      * No args constructor for use in serialization
@@ -138,7 +143,7 @@ public class Board
      * @param numOfAnnouncements
      */
     public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfAnnouncements, Integer numOfPostedNotices, Integer numOfExpectedNotices, Integer numOfExpectingOrders, List<Notice> notices, BoardType boardType, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
-        super( boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
+        super(boardType, postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
@@ -336,13 +341,25 @@ public class Board
         this.notices = notices;
     }
 
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    public Severity getHasNote() {
+    public HasNote getHasNote() {
         return hasNote;
     }
 
+    /**
+     * metadata
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("hasNote")
-    public void setHasNote(Severity hasNote) {
+    public void setHasNote(HasNote hasNote) {
         this.hasNote = hasNote;
     }
 

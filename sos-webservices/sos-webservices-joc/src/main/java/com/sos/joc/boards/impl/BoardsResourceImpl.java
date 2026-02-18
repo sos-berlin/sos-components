@@ -38,6 +38,7 @@ import com.sos.joc.model.board.Boards;
 import com.sos.joc.model.board.BoardsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.note.common.HasNote;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.plan.common.PlannedBoards;
 import com.sos.schema.JsonValidator;
@@ -146,7 +147,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 }
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, filter.getLimit(), controllerState);
-                Map<String, Integer> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue());
+                Map<String, HasNote> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccount());
                 
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
