@@ -49,6 +49,7 @@ public class EventServiceFactory {
     private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
     private Optional<ApprovalUpdatedEvent> approvalUpdatedEvent = Optional.empty();
     private Optional<NoteEvent> noteUpdatedEvent = Optional.empty();
+    private static final String CLEANUP_TIMER_THREAD_NAME = "Timer-CleanJOCEvents";
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -127,7 +128,9 @@ public class EventServiceFactory {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
                 // cleanup old event each 3 minutes
-                new Timer().scheduleAtFixedRate(new TimerTask() {
+                // isDaemon = true so the JVM can shut down without being blocked by this timer thread.
+                // Any task that is already running will finish, but no new tasks will be started once shutdown begins.
+                new Timer(CLEANUP_TIMER_THREAD_NAME, true).scheduleAtFixedRate(new TimerTask() {
 
                     @Override
                     public void run() {

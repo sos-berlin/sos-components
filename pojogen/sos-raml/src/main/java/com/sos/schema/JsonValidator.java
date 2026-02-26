@@ -72,6 +72,7 @@ public class JsonValidator {
             put("CockpitFilter", "controller/jocFilter-schema.json");
             put("CockpitURI", "joc/jocUri-schema.json");
             put("Controller", "event/controllerFilter-schema.json");
+            put("com.sos.joc.model.joc.RunningLogFilter", "joc/runningLogFilter-schema.json");
 
             put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-optional-schema.json");
             put("com.sos.joc.model.controller.ControllerIdReq", "controller/controllerId-required-schema.json");

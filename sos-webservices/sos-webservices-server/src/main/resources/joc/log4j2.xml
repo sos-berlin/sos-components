@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+    <!-- Don't delete Properties. Needful for running joc log test -->
+    <Properties>
+        <Property name="JocLogLevel">OFF</Property>
+        <Property name="ServiceClusterLogLevel">DEBUG</Property>
+        <Property name="ServiceHistoryLogLevel">OFF</Property>
+        <Property name="ServiceDailyPlanLogLevel">OFF</Property>
+        <Property name="ServiceCleanupLogLevel">OFF</Property>
+        <Property name="ServiceMonitorLogLevel">OFF</Property>
+        <Property name="ServiceLogNotificationLogLevel">OFF</Property>
+        <Property name="ServiceReportsLogLevel">OFF</Property>
+        <Property name="AuthLogLevel">OFF</Property>
+        <Property name="ConnectionPoolLogLevel">OFF</Property>
+        <!-- SQL statements: 'DEBUG' -->
+        <Property name="HibernateSQLLogLevel">OFF</Property>
+        <!-- SQL statements parameters: 'TRACE'  -->
+        <Property name="HibernateSQLParameterBindingLogLevel">OFF</Property>
+    </Properties>
 	<Appenders>
 		<!-- Appender for root logger -->
 		<Console name="stdout" target="SYSTEM_OUT">
@@ -10,7 +27,20 @@
 	<Loggers>
 		<!-- General Loggers - set the following loggers to 'debug' to debug the JOC Cockpit -->
 		<!--Logger name="com.sos" level="info"/-->
-		<Logger name="org.hibernate.SQL" level="info"/>
+		
+		<!-- Logger for audit objects log
+             deactivated with level OFF and activated with level INFO -->
+        <Logger name="JOCAuditObjectsLog" level="OFF"/>
+        <!-- Logger for audit trail log
+             deactivated with level OFF and activated with level INFO -->
+        <Logger name="JOCAuditTrailLog" level="OFF"/>
+        <!-- Logger for connection pool -->
+        <Logger name="ConnectionPool" level="${ConnectionPoolLogLevel}"/>
+        <!-- SQL statements -->
+        <Logger name="org.hibernate.SQL" level="${HibernateSQLLogLevel}"/>
+        <Logger name="org.hibernate.orm.jdbc.bind" level="${HibernateSQLParameterBindingLogLevel}"/>
+
+        
 
 		<!-- Apache and Apache Shiro Logs -->
 		<Logger name="org.apache.commons" level="error"/>
@@ -24,8 +54,24 @@
 		<Logger name="org.hibernate.cfg" level="error"/>
 		<Logger name="org.hibernate.type" level="error"/>
 		<Logger name="org.hibernate.id" level="error"/>
-		<Logger name="org.hibernate.orm.deprecation" level="error"/>
 		<Logger name="org.hibernate.engine.transaction.internal.TransactionImpl" level="info"/>
+		
+		<!-- JSON Validator -->
+        <Logger name="com.networknt.schema" level="INFO" />
+        
+        <!-- Very talkative loggers -->
+        <Logger name="org.hibernate" level="INFO"/>
+        <Logger name="org.hibernate.engine.internal" level="OFF"/>
+        <Logger name="org.hibernate.resource.jdbc.internal" level="OFF"/>
+        <Logger name="org.hibernate.loader.Loader" level="OFF"/>
+        <Logger name="org.hibernate.query.internal" level="OFF"/>
+        <Logger name="org.hibernate.engine.transaction.internal" level="OFF"/>
+        <Logger name="org.hibernate.hql.internal" level="OFF"/>
+        <Logger name="org.hibernate.persister.entity.AbstractEntityPersister" level="OFF"/>
+        <Logger name="org.hibernate.loader.entity.plan.EntityLoader" level="OFF"/>
+        <Logger name="org.hibernate.orm.deprecation" level="OFF" />
+         
+        <Logger name="java.util.prefs" level="OFF" />
 
 		<!-- root logger with console appender. All other loggers inherit from this logger. -->
 		<Root level="info">

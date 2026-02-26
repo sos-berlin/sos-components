@@ -1,5 +1,8 @@
 package com.sos.joc.joc.resource;
 
+import com.sos.joc.annotation.Compress;
+import com.sos.joc.classes.JOCDefaultResponse;
+
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -7,9 +10,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-
-import com.sos.joc.annotation.Compress;
-import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface ILogResource {
 
@@ -23,10 +23,17 @@ public interface ILogResource {
     @GET
     @Compress
     //@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse getLog(@HeaderParam("X-Access-Token") String accessToken, @QueryParam("accessToken") String queryAccessToken, @QueryParam("filename") String filename);
-    
+    public JOCDefaultResponse getLog(@HeaderParam("X-Access-Token") String accessToken, @QueryParam("accessToken") String queryAccessToken,
+            @QueryParam("filename") String filename);
+
     @Path("logs")
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postLogs(@HeaderParam("X-Access-Token") String accessToken);
+    
+    @Path("log/running")
+    @POST
+    public JOCDefaultResponse postRunningLog(@HeaderParam("X-Access-Token") String xAccessToken,
+            @HeaderParam("Accept-Encoding") String acceptEncoding, byte[] filterBytes);
+
 }
