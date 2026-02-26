@@ -154,6 +154,7 @@ import scala.Function1;
 import scala.Option;
 import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
+import scala.reflect.ClassTag;
 
 public class OrdersHelper {
 
@@ -1776,7 +1777,7 @@ public class OrdersHelper {
     }
 
     private static boolean orderIsInImplicitEnd(WorkflowPosition wPos, JControllerState controllerState) {
-        return controllerState.asScala().instruction(wPos) instanceof ImplicitEnd;
+        return controllerState.asScala().instructionIs(wPos, ClassTag.apply(ImplicitEnd.class));
     }
 
     public static Long getScheduledForMillis(String orderId, ZoneId zoneId, Long defaultMillis) {
