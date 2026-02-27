@@ -285,10 +285,11 @@ public class InventoryNotesDBLayer extends DBLayer {
             StringBuilder hql = new StringBuilder("select ic.path as path, ic.name as name, ic.type as type, n.id as noteId, n.severity as color from ");
             hql.append(DBLayer.DBITEM_INV_NOTE_NOTIFICATIONS).append(" nn left join ");
             hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic on nn.cid=ic.id left join ");
-            hql.append(DBLayer.DBITEM_INV_NOTES).append(" n on nn.cid=n.cid");
-            hql.append(" order by n.modified");
+            hql.append(DBLayer.DBITEM_INV_NOTES).append(" n on nn.cid=n.cid ");
+            hql.append("where nn.accountName=:accountName order by n.modified");
             
             Query<InventoryNoteItem> query = getSession().createQuery(hql.toString(), InventoryNoteItem.class);
+            query.setParameter("accountName", accountName);
             List<InventoryNoteItem> result =  getSession().getResultList(query);
             
             if (result == null) {
