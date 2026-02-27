@@ -18,6 +18,7 @@ import org.apache.logging.log4j.core.filter.CompositeFilter;
 import org.apache.logging.log4j.core.filter.LevelRangeFilter;
 import org.apache.logging.log4j.core.filter.MarkerFilter;
 import org.apache.logging.log4j.core.filter.NoMarkerFilter;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.sos.commons.xml.SOSXML;
@@ -47,27 +48,34 @@ public class SOSLog4j2Configuration extends XmlConfiguration {
         
         if (!getAppenders().containsKey(RunningLogAppender.APPENDER_NAME)) {
             LoggerConfig rootLogger = getRootLogger();
-            final Map<String, String> props = Optional.ofNullable(this.getConfigurationSource().getFile()).map(File::toPath).map(t -> {
-                try {
-                    return SOSXML.parse(t);
-                } catch (Exception e) {
-                    return null;
-                }
-            }).map(doc -> SOSXML.getChildNode(doc.getDocumentElement(), "Properties")).map(SOSXML::getChildElemens).map(List::stream).map(s -> s
-                    .collect(Collectors.toMap(e -> e.getAttribute("name"), Element::getTextContent, (e1, e2) -> e2))).orElse(Collections.emptyMap());
-
-            final Filter noMarkerfilter = NoMarkerFilter.newBuilder().setOnMatch(Filter.Result.ACCEPT).setOnMismatch(Filter.Result.DENY).build();
+            final Filter noMarkerfilter = NoMarkerFilter.newBuilder().setOnMatch(Filter.Result.ACCEPT).setOnMismatch(Filter.Result.NEUTRAL).build();
             final Filter markerfilter = MarkerFilter.createFilter(WebserviceConstants.NOT_NOTIFY_LOGGER.getName(), Filter.Result.DENY,
                     Filter.Result.ACCEPT);
 
             final Filter compositeFilter = CompositeFilter.createFilters(noMarkerfilter, markerfilter);
             final Appender appender = RunningLogAppender.createAppender(RunningLogAppender.APPENDER_NAME, compositeFilter, rootLogger.getLevel(),
-                    props);
+                    getProps());
             appender.start();
             addAppender(appender);
             if (!rootLogger.getAppenders().containsKey(RunningLogAppender.APPENDER_NAME)) {
                 rootLogger.addAppender(appender, Level.TRACE, compositeFilter);
             }
+        }
+    }
+    
+    private Map<String, String> getProps() {
+        try {
+            return Optional.ofNullable(this.getConfigurationSource().getFile()).map(File::toPath).map(t -> {
+                try {
+                    return SOSXML.parse(t);
+                } catch (Throwable e) {
+                    return null;
+                }
+            }).map(Document::getDocumentElement).flatMap(e -> Optional.ofNullable(SOSXML.getChildNode(e, "Properties")).or(() -> Optional.ofNullable(
+                    SOSXML.getChildNode(e, "properties")))).map(SOSXML::getChildElemens).map(List::stream).map(s -> s.collect(Collectors.toMap(e -> e
+                            .getAttribute("name"), Element::getTextContent, (e1, e2) -> e2))).orElse(Collections.emptyMap());
+        } catch (Throwable e) {
+            return Collections.emptyMap();
         }
     }
 
