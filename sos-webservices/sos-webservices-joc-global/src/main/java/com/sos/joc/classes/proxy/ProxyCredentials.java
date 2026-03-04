@@ -21,8 +21,8 @@ public class ProxyCredentials {
         this.url = url;
         if (user != null) {
             this.user = user;
-            this.account = user.value();
-        } else if (account != null) {
+        }
+        if (account != null) {
             this.account = account;
         }
         this.backupUrl = backupUrl;

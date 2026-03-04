@@ -19,9 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.model.joc.LogEntry;
@@ -30,8 +27,8 @@ import com.sos.joc.model.joc.RunningLogEvents;
 
 public class RunningJocLog {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RunningJocLog.class);
-    private static final Marker NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER;
+//    private static final Logger LOGGER = LoggerFactory.getLogger(RunningJocLog.class);
+//    private static final Marker NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER;
 
     // Thread name limited to 20 characters according to log4j settings
     private static final String CLEANUP_TIMER_THREAD_NAME = "Timer-CleanRunJocLog";
@@ -55,19 +52,19 @@ public class RunningJocLog {
 
             @Override
             public void run() {
-                boolean isDebugEnabled = LOGGER.isDebugEnabled();
-                if (isDebugEnabled) {
-                    LOGGER.debug(NOT_NOTIFY_LOGGER, "[RunningJocLog][cleanup][before]events=" + events.size());
-                }
-                
+//                boolean isDebugEnabled = LOGGER.isDebugEnabled();
                 int size = events.size();
                 if (size > 20) { // retain at least last 20 events
+//                    if (isDebugEnabled) {
+//                        LOGGER.debug(NOT_NOTIFY_LOGGER, "[RunningJocLog][cleanup][before]events=" + size);
+//                    }
+                    
                     Long eventId = Instant.now().toEpochMilli() - CLEANUP_PERIOD;
                     events.subList(0, size - 20).removeIf(e -> e.getInstant().getEpochMillisecond() < eventId);
                     
-                    if (isDebugEnabled) {
-                        LOGGER.debug(NOT_NOTIFY_LOGGER, "[RunningOrderLogs][cleanup][after]events=" + events.size());
-                    }
+//                    if (isDebugEnabled) {
+//                        LOGGER.debug(NOT_NOTIFY_LOGGER, "[RunningJocLogs][cleanup][after]events=" + events.size());
+//                    }
                 }
             }
 
