@@ -35,5 +35,12 @@ public interface IControllerLogResource {
 //    @Consumes("application/json")
 //    @Produces({ MediaType.APPLICATION_JSON })
 //    public JOCDefaultResponse getDebugLogInfo(@HeaderParam("X-Access-Token") String xAccessTokenn, UrlParameter urlParamSchema);
+    
+    @POST
+    @Path("log2")
+    //@CompressedAlready
+    @Consumes("application/json")
+    //@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse getLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
