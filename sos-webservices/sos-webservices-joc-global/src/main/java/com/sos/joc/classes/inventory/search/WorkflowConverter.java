@@ -27,8 +27,8 @@ import com.sos.inventory.model.instruction.LockDemand;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
-import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.job.JobTemplateRef;
 import com.sos.inventory.model.workflow.Workflow;
@@ -290,7 +290,9 @@ public class WorkflowConverter {
                     }
                 }
                 if (job.getExecutable() != null) {
-                    if (ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                    switch (job.getExecutable().getTYPE()) {
+                    case ShellScriptExecutable:
+                    case ScriptExecutable:
                         ExecutableScript es = job.getExecutable().cast();
                         if (!SOSString.isEmpty(es.getScript())) {
                             scripts.add(es.getScript());
@@ -305,6 +307,30 @@ public class WorkflowConverter {
                                 }
                             });
                         }
+                        break;
+                    case InternalExecutable:
+                        ExecutableJava ej = job.getExecutable().cast();
+                        if (ej.getArguments() != null && ej.getArguments().getAdditionalProperties() != null) {
+                            ej.getArguments().getAdditionalProperties().forEach((name, value) -> {
+                                if (!SOSString.isEmpty(name)) {
+                                    argNames.add(name);
+                                }
+                                if (value != null) {
+                                    argValues.add(value);
+                                }
+                            });
+                        }
+                        if (ej.getJobArguments() != null && ej.getJobArguments().getAdditionalProperties() != null) {
+                            ej.getJobArguments().getAdditionalProperties().forEach((name, value) -> {
+                                if (!SOSString.isEmpty(name)) {
+                                    argNames.add(name);
+                                }
+                                if (value != null) {
+                                    argValues.add(value.toString());
+                                }
+                            });
+                        }
+                        break;
                     }
                 }
 
