@@ -33,6 +33,7 @@ public class JobSchedulerDate {
     // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
     public static final Long NEVER_MILLIS =  253402300799000L;
     public static final Instant NEVER =  Instant.ofEpochMilli(NEVER_MILLIS);
+    private static final ZoneId UTC = ZoneId.of("UTC");
 
     
     public static Date nowInUtc() {
@@ -333,6 +334,26 @@ public class JobSchedulerDate {
         LocalDate localDate = LocalDateTime.ofInstant(Instant.parse(dateWithoutTime + "T00:00:00Z"), utcZoneId).toLocalDate();
         LocalTime localTime = LocalDateTime.ofInstant(utcDateTime, utcZoneId).atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalTime();
         return ZonedDateTime.of(LocalDateTime.of(localDate, localTime), zoneId).withZoneSameInstant(utcZoneId).toInstant();
+    }
+    
+    // timestamp in the form: yyyy-mm-dd[ T]hh:mm:ss[.,]SSS without offset 
+    public static Instant getInstantFromZoneId(String timestamp, ZoneId zoneId) {
+        // TODO check timestamp format
+        Instant instant = Instant.parse(timestamp.replace(" ", "T").replace(",", ".") + "Z");
+        if (zoneId.getId().equals("UTC") || zoneId.getId().equals("Etc/UTC") || zoneId.getId().equals("GMT")) {
+            return instant;
+        }
+        return ZonedDateTime.ofInstant(instant, zoneId).withZoneSameLocal(UTC).toInstant();
+    }
+    
+    // timestamp in the form: yyyy-mm-dd[ T]hh:mm:ss[.,]SSS without offset
+    public static Instant getInstantToZoneId(String timestamp, ZoneId zoneId) {
+        // TODO check timestamp format
+        Instant instant = Instant.parse(timestamp.replace(" ", "T").replace(",", ".") + "Z");
+        if (zoneId.getId().equals("UTC") || zoneId.getId().equals("Etc/UTC") || zoneId.getId().equals("GMT")) {
+            return instant;
+        }
+        return ZonedDateTime.ofInstant(instant, UTC).withZoneSameLocal(zoneId).toInstant();
     }
     
     public static Optional<Long> getSecondsOfRelativeCurDate(final String scheduledFor) {
