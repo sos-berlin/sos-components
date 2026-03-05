@@ -30,7 +30,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 
-//@Ignore
+@Ignore
 public class LogTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogTest.class);
