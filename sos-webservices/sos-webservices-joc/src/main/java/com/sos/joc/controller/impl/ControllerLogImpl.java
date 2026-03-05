@@ -31,7 +31,7 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
-import js7.base.log.KeyedLogLine;
+import js7.base.log.reader.KeyedLogLine;
 import js7.base.log.LogLevel;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;

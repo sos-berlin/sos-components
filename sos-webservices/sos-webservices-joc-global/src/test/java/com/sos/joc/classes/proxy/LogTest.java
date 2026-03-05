@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 
-import js7.base.log.KeyedLogLine;
 import js7.base.log.LogLevel;
-import js7.base.log.LogLineKey;
+import js7.base.log.reader.KeyedLogLine;
+import js7.base.log.reader.LogLineKey;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
@@ -98,7 +98,7 @@ public class LogTest {
             
 //            LOGGER.info("loglineKey instant: " + llk.instant().toString());
 //            LOGGER.info("loglineKey position: " + llk.position());
-            LOGGER.info("loglineKey instant: " + llk2.instant().toString());
+            LOGGER.info("loglineKey fileinstant: " + llk2.fileInstant().toString());
             LOGGER.info("loglineKey position: " + llk2.position());
             
             LogLineKey llkTest = llk2; //LogLineKey.parse("0/150041").toOption().get();
@@ -122,7 +122,7 @@ public class LogTest {
             //.reduce(llkTest, (a, lines) -> a = lines.get(lines.size() - 1).key()).toFuture().get();
             response.put("loglines", loglines);
             response.put("loglineKey", llk3.toString());
-            LOGGER.info("loglineKey instant: " + llk3.instant().toString());
+            LOGGER.info("loglineKey fileinstant: " + llk3.fileInstant().toString());
             LOGGER.info("loglineKey position: " + llk3.position());
             
             LOGGER.info(Globals.prettyPrintObjectMapper.writeValueAsString(response));
