@@ -100,9 +100,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     if (allDeploymentsPerObject != null) {
                         deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation()).filter(
                                 d -> DeploymentState.DEPLOYED.value() == d.getState()).collect(Collectors.groupingBy(
-                                        DBItemDeploymentHistory::getControllerId, Collectors.maxBy(Comparator.comparingLong(
-                                                DBItemDeploymentHistory::getId)))).values().stream().filter(Optional::isPresent).map(Optional::get)
-                                .collect(Collectors.toSet());
+                                        DBItemDeploymentHistory::getControllerId, Collectors.maxBy(Comparator.comparing(
+                                                DBItemDeploymentHistory::getDeploymentDate)))).values().stream().filter(Optional::isPresent).map(
+                                                        Optional::get).collect(Collectors.toSet());
                     }
                     if (deployments == null || deployments.isEmpty()) {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer, ConfigurationType.FOLDER);
