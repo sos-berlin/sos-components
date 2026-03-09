@@ -778,7 +778,7 @@ public class DBLayerDeploy {
         try {
             List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where path = : path and type = :type and commitId = :commitId )");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (Configuration cfg : deployConfigurations) {
@@ -809,7 +809,7 @@ public class DBLayerDeploy {
         try {
             List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where path = :path and type = :type )");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (Configuration cfg :deployConfigurations) {
@@ -1213,7 +1213,7 @@ public class DBLayerDeploy {
 
     public DBItemDeploymentHistory getLatestDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :cid");
         hql.append(" and controllerId = :controllerId").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
@@ -1233,7 +1233,7 @@ public class DBLayerDeploy {
     public DBItemDeploymentHistory getLatestDepHistoryItem(String path, ConfigurationType objectType) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where path = :path");
             hql.append(" and type = :type").append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
@@ -1245,25 +1245,9 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemDeploymentHistory getLatestDepHistoryItemByNameAndType(String name, ConfigurationType objectType) {
-        try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where name = :name");
-            hql.append(" and type = :type").append(")");
-            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            query.setParameter("name", name);
-            query.setParameter("type", objectType.intValue());
-            
-            return session.getSingleResult(query);
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :cid");
         hql.append(" and controllerId = :controllerId");
         hql.append(" and state = 0").append(")");
@@ -1282,30 +1266,6 @@ public class DBLayerDeploy {
         return inventoryDbLayer.getLatestActiveDepHistoryItem(configurationId);
     }
 
-//    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
-//        return getLatestActiveDepHistoryItem(invConfig.getPath(), invConfig.getTypeAsEnum());
-//    }
-//
-//    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(DBItemDeploymentHistory depHistory) throws SOSHibernateException {
-//        return getLatestActiveDepHistoryItem(depHistory.getPath(), ConfigurationType.fromValue(depHistory.getType()));
-//    }
-//
-//    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(String folder, ConfigurationType objectType) {
-//        try {
-//            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-//            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-//            hql.append(" where folder = :folder");
-//            hql.append(" and type = :type");
-//            hql.append(" and operation = 0").append(")");
-//            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-//            query.setParameter("type", objectType.intValue());
-//            query.setParameter("folder", folder);
-//            return session.getSingleResult(query);
-//        } catch (SOSHibernateException e) {
-//            throw new JocSosHibernateException(e);
-//        }
-//    }
-//
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId) {
         return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
     }
@@ -1313,7 +1273,8 @@ public class DBLayerDeploy {
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where dep.deploymentDate = (").append("select max(history.deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
+                    " as history");
             hql.append(" where history.state = 0");
             if (recursive) {
                 if (!"/".equals(folder)) {
@@ -1352,7 +1313,7 @@ public class DBLayerDeploy {
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where state = 0");
             if (recursive) {
                 if (!"/".equals(folder)) {
@@ -1465,71 +1426,6 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItemsFromFolder(String folder) {
-        return getLatestActiveDepHistoryItemsFromFolder(folder, false);
-    }
-
-    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItemsFromFolder(String folder, boolean recursive) {
-        try {
-            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-            hql.append(" where history.operation = 0");
-            if (recursive) {
-                if (!"/".equals(folder)) {
-                    hql.append(" and (history.folder = :folder or history.folder like :likefolder)");
-                }
-            } else {
-                hql.append(" and history.folder = :folder");
-            }
-            hql.append(" and history.state = 0").append(" and history.path = dep.path").append(")");
-            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            if (recursive) {
-                if (!"/".equals(folder)) {
-                    query.setParameter("folder", folder);
-                    query.setParameter("likefolder", folder + "/%");
-                }
-            } else {
-                query.setParameter("folder", folder);
-            }
-            List<DBItemDeploymentHistory> result = session.getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolderPerController(String folder, boolean recursive) {
-        try {
-            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY)
-                .append(" as history");
-            if (recursive) {
-                hql.append(" where (history.folder = :folder or history.folder like :likefolder)");
-            } else {
-                hql.append(" where history.folder = :folder");
-            }
-            hql.append(" and history.controllerId = dep.controllerId").append(" and history.state = 0")
-                .append(" and history.path = dep.path").append(")");
-            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            query.setParameter("folder", folder);
-            if (recursive) {
-                query.setParameter("likefolder", folder + "/%");
-            }
-            List<DBItemDeploymentHistory> result = session.getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-
     public List<DBItemDeploymentHistory> getActiveDepHistoryItemsFromFolder(String folder) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -1554,49 +1450,6 @@ public class DBLayerDeploy {
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
-    }
-
-    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItems(List<Config> depConfigsToDelete) {
-        try {
-            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-            hql.append(" where dep.state = 0");
-            for (Integer i = 0; i < depConfigsToDelete.size(); i++) {
-                hql.append(" and ((").append("dep.folder = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ")
-                        .append("dep.type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(")");
-                if (i < depConfigsToDelete.size() - 1) {
-                    hql.append(" or ");
-                } else if (i == depConfigsToDelete.size() - 1) {
-                    hql.append(")");
-                }
-            }
-            hql.append(")");
-            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-            for (Integer i = 0; i < depConfigsToDelete.size(); i++) {
-                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), depConfigsToDelete.get(i).getConfiguration()
-                        .getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), depConfigsToDelete.get(i).getConfiguration()
-                        .getObjectType().intValue());
-            }
-            List<DBItemDeploymentHistory> result = session.getResultList(query);
-            if (result == null) {
-                return Collections.emptyList();
-            }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-
-    public Long getLatestDeploymentFromConfigurationId(Long configurationId, Long controllerId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :configurationId");
-        hql.append(" and controllerId = :controllerId");
-        Query<Long> query = session.createQuery(hql.toString());
-        query.setParameter("configurationId", configurationId);
-        query.setParameter("controllerId", controllerId);
-        return session.getSingleResult(query);
     }
 
     public void createSubmissionForFailedDeployments(List<DBItemDeploymentHistory> failedDeployments) {
