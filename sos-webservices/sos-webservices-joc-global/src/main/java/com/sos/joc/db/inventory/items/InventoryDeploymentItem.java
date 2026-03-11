@@ -39,6 +39,16 @@ public class InventoryDeploymentItem {
         this.path = path;
         this.controllerId = controllerId;
     }
+    
+    public InventoryDeploymentItem(Integer deploymentOperation, Date deploymentDate, String content) {
+        this.operation = deploymentOperation;
+        this.deploymentDate = deploymentDate;
+        this.content = content;
+    }
+    
+    public InventoryDeploymentItem(Date deploymentDate) {
+        this.deploymentDate = deploymentDate;
+    }
 
     public Long getId() {
         return id;

@@ -70,7 +70,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
@@ -93,6 +93,7 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.audit.AuditParams;
+
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.IsReferencedBy;
@@ -425,18 +426,18 @@ public class JocInventory {
         cfg.setConfiguration(JocInventory.content2IJSObject(dbItem.getContent(), dbItem.getType()));
         if (JocInventory.isDeployable(type)) {
             cfg.setReleased(false);
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(dbItem.getId());
-            cfg.setHasDeployments(lastDeployment != null);
+            Optional<Date> lastDeploymentDate = dbLayer.getLastDeploymentDate(dbItem.getId());
+            cfg.setHasDeployments(lastDeploymentDate.isPresent());
             if (dbItem.getDeployed()) {
                 if (cfg.getConfiguration() != null) {
                     cfg.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 }
             } else {
                 if (cfg.getConfiguration() != null) {
-                    if (lastDeployment == null) {
+                    if (!lastDeploymentDate.isPresent()) {
                         cfg.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                     } else {
-                        if (lastDeployment.getDeploymentDate().after(dbItem.getModified())) {
+                        if (lastDeploymentDate.get().after(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -993,6 +994,7 @@ public class JocInventory {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, false);
             }
         } else {
+
             if (!hash.equals(item.getContentHash())) {
                 item.setContentHash(hash);
                 item.setModified(new Date());
@@ -1442,6 +1444,7 @@ public class JocInventory {
                                             for (int i = 0; i < scriptLines.length; i++) {
                                                 scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config
                                                         .getName(), newName);
+
                                             }
                                             es.setScript(String.join("\n", scriptLines));
                                             replacedJobs.put(jobName, job);
@@ -1461,6 +1464,7 @@ public class JocInventory {
                                     for (int i = 0; i < scriptLines.length; i++) {
                                         scriptLines[i] = JsonConverter.replaceNameOfIncludeScriptInScriptLine(scriptLines[i], config.getName(),
                                                 newName);
+
                                     }
                                     es.setScript(String.join("\n", scriptLines));
                                     workflowOrJobTemplate.setContent(Globals.objectMapper.writeValueAsString(jt));
