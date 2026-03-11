@@ -50,6 +50,7 @@ import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
@@ -1207,31 +1208,6 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public DBItemDeploymentHistory getLatestDepHistoryItem(DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
-            throws SOSHibernateException {
-        return getLatestDepHistoryItem(invConfig.getId(), controller.getControllerId());
-    }
-
-    public DBItemDeploymentHistory getLatestDepHistoryItem(DBItemInventoryConfiguration invConfig, String controllerId) throws SOSHibernateException {
-        return getLatestDepHistoryItem(invConfig.getId(), controllerId);
-    }
-
-    public DBItemDeploymentHistory getLatestDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :cid");
-        if(controllerId != null) {
-            hql.append(" and controllerId = :controllerId");
-        }
-        hql.append(")");
-        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-        query.setParameter("cid", configurationId);
-        if(controllerId != null) {
-            query.setParameter("controllerId", controllerId);
-        }
-        return session.getSingleResult(query);
-    }
-
     public DBItemDeploymentHistory getLatestDepHistoryItem(DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
         return getLatestDepHistoryItem(invConfig.getPath(), invConfig.getTypeAsEnum());
     }
@@ -1255,28 +1231,28 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
 
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :cid");
         hql.append(" and controllerId = :controllerId");
-        hql.append(" and state = 0").append(")");
+        hql.append(" and state = :state").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
-        DBItemDeploymentHistory result = session.getSingleResult(query);
-        if(result != null && !result.getOperation().equals(1)) {
-            return result;
+        query.setParameter("state", DeploymentState.DEPLOYED.value());
+        List<DBItemDeploymentHistory> result = session.getResultList(query);
+        if(result != null) {
+            return result.stream().filter(r -> r.getOperation().equals(OperationType.UPDATE.value())).toList();
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
         InventoryDBLayer inventoryDbLayer = new InventoryDBLayer(session);
         return inventoryDbLayer.getLatestActiveDepHistoryItem(configurationId);
     }
-
 
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId) {
         return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
