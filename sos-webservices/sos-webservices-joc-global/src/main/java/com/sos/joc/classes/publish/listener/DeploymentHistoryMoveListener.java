@@ -55,10 +55,11 @@ public class DeploymentHistoryMoveListener {
             List<DBItemDeploymentHistory> allDeploymentsPerObject = dbLayer.getDeployedConfigurations(inventoryId);
             Set<DBItemDeploymentHistory> deployments = null;
             if (allDeploymentsPerObject != null) {
-                deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation())
-                        .filter(d -> DeploymentState.DEPLOYED.value() == d.getState()).collect(
-                                Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, 
-                                        Collectors.maxBy(Comparator.comparingLong(DBItemDeploymentHistory::getId))))
+                deployments = allDeploymentsPerObject.stream().filter(d -> OperationType.UPDATE.value().equals(d.getOperation()))
+                        .filter(d -> DeploymentState.DEPLOYED.value().equals(d.getState())).collect(Collectors.groupingBy(
+                                DBItemDeploymentHistory::getControllerId,
+                                // TODO JOC-2174
+                                Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))))
                         .values().stream().filter(Optional::isPresent).map(Optional::get)
                         .map(toClone -> clone(folder, auditLogId, toClone)).collect(Collectors.toSet());
             }

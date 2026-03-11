@@ -289,7 +289,7 @@ public class ExportUtils {
         Map<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
                 folders.stream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item, controllerId, recursive)).flatMap(List::stream)
                 .collect(Collectors.groupingBy(item -> item.getType() + ":" + item.getName(), 
-                        Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getId))));
+                        Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))));
         return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
                 .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
     }

@@ -1149,7 +1149,7 @@ public abstract class RepositoryUtil {
                 folders.parallelStream().map(item -> dbLayer.getDepHistoryItemsFromFolderByType(item.getPath(), types, item.getRecursive()))
                     .flatMap(List::stream).collect(
                             Collectors.groupingByConcurrent(item -> item.getType() + ":" + item.getName(), 
-                            Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getId))));
+                            Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))));
         return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
                 .filter(item -> !OperationType.DELETE.value().equals(item.getOperation())).collect(Collectors.toSet());
     }
