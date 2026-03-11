@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -67,7 +68,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
@@ -422,18 +422,18 @@ public class JocInventory {
         cfg.setConfiguration(JocInventory.content2IJSObject(dbItem.getContent(), dbItem.getType()));
         if (JocInventory.isDeployable(type)) {
             cfg.setReleased(false);
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(dbItem.getId());
-            cfg.setHasDeployments(lastDeployment != null);
+            Optional<Date> lastDeploymentDate = dbLayer.getLastDeploymentDate(dbItem.getId());
+            cfg.setHasDeployments(lastDeploymentDate.isPresent());
             if (dbItem.getDeployed()) {
                 if (cfg.getConfiguration() != null) {
                     cfg.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 }
             } else {
                 if (cfg.getConfiguration() != null) {
-                    if (lastDeployment == null) {
+                    if (!lastDeploymentDate.isPresent()) {
                         cfg.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                     } else {
-                        if (lastDeployment.getDeploymentDate().after(dbItem.getModified())) {
+                        if (lastDeploymentDate.get().after(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);

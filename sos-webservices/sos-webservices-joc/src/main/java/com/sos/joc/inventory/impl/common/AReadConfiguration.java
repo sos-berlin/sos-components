@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl.common;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -22,7 +23,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.IsReferencedBy;
@@ -108,8 +108,8 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                 
                 item.setReleased(false);
                 
-                InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
-                item.setHasDeployments(lastDeployment != null);
+                Optional<Date> lastDeploymentDate = dbLayer.getLastDeploymentDate(config.getId());
+                item.setHasDeployments(lastDeploymentDate.isPresent());
                 
                 if (config.getDeployed()) {
                     if (item.getConfiguration() != null) {
@@ -118,10 +118,10 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                 } else {
 
                     if (item.getConfiguration() != null) {
-                        if (lastDeployment == null) {
+                        if (!lastDeploymentDate.isPresent()) {
                             item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                         } else {
-                            if (lastDeployment.getDeploymentDate().after(config.getModified())) {
+                            if (lastDeploymentDate.get().after(config.getModified())) {
                                 item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);

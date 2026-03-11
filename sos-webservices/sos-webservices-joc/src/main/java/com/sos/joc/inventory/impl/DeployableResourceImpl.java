@@ -110,8 +110,8 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
 //                }
                 treeItem.setDeployablesVersions(versions);
             } else {
-                InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());
-                if (depItem == null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                Optional<Date> lastDeploymentDate = dbLayer.getLastDeploymentDate(config.getId());
+                if (!lastDeploymentDate.isPresent() && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
                     throw new JocDeployException(String.format("%s is neither valid nor already deployed: %s", type.value().toLowerCase(), config
                             .getPath()));
                 }
