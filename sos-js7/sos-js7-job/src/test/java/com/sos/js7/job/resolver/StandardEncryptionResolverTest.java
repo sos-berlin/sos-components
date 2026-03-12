@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.js7.job.UnitTestJobHelper;

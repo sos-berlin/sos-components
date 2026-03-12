@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.job.Environment;

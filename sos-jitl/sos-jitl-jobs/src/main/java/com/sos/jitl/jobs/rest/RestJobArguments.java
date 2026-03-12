@@ -1,7 +1,7 @@
 package com.sos.jitl.jobs.rest;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.keystore.KeyStoreArguments;
 import com.sos.js7.job.JobArgument;

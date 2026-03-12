@@ -1,6 +1,6 @@
 package com.sos.jitl.jobs.rest;
 
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.keystore.KeyStoreContainer;
