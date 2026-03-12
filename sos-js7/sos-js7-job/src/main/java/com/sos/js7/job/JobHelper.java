@@ -259,6 +259,8 @@ public class JobHelper {
                 return e.toString();
             }).collect(Collectors.joining(SOSArgumentHelper.DEFAULT_LIST_VALUE_DELIMITER));
             return StringValue.of(s);
+        } else if (SOSReflection.isMap(o.getClass())) {
+            return ObjectValue.of(asEngineValues((Map<String, Object>) o));
         }
         return StringValue.of(o.toString());
     }
