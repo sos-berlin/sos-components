@@ -30,6 +30,7 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static final String FRAGMENT_NAME = "fragment";
     private static final String CS_FRAMENT_REF = "<CredentialStoreFragmentRef ref=\"cs\"/>";
+    private static final String ENCRYPTION_FRAMENT_REF = "<EncryptionFragmentRef ref=\"enc\"/>";
 
     // -------- SOURCE_TO_JUMP_HOST XML settings -------------------
     /** COPY/MOVE operations */
@@ -79,7 +80,7 @@ public class YADEXMLJumpHostSettingsWriter {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
         StringBuilder fragments = generateFragments(targetArgs.getProvider());
-        StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), targetArgs, config);
+        StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), argsLoader.getSourceArgs(), targetArgs, config);
         return generateConfiguration(fragments, profile).toString();
     }
 
@@ -97,37 +98,41 @@ public class YADEXMLJumpHostSettingsWriter {
     }
 
     private static StringBuilder generateFragments(AProviderArguments providerArgs) {
-        boolean generateCS = false;
+        boolean generateCSRef = false;
         if (providerArgs.getCredentialStore() != null && providerArgs.getCredentialStore().getFile().isDirty()) {
-            generateCS = true;
+            generateCSRef = true;
+        }
+        boolean generateEncryptionRef = false;
+        if (providerArgs.getEncryptionDecrypt() != null && providerArgs.getEncryptionDecrypt().getPrivateKeyPath().isDirty()) {
+            generateEncryptionRef = true;
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("<ProtocolFragments>");
         switch (providerArgs.getProtocol().getValue()) {
         case SFTP:
-            sb.append(generateProtocolFragmentSFTP((SSHProviderArguments) providerArgs, generateCS));
+            sb.append(generateProtocolFragmentSFTP((SSHProviderArguments) providerArgs, generateCSRef, generateEncryptionRef));
             break;
         case FTP:
-            sb.append(generateProtocolFragmentFTP((FTPProviderArguments) providerArgs, generateCS, false));
+            sb.append(generateProtocolFragmentFTP((FTPProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, false));
             break;
         case FTPS:
-            sb.append(generateProtocolFragmentFTP((FTPSProviderArguments) providerArgs, generateCS, true));
+            sb.append(generateProtocolFragmentFTP((FTPSProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, true));
             break;
         case HTTP:
-            sb.append(generateProtocolFragmentHTTP((HTTPProviderArguments) providerArgs, generateCS, false));
+            sb.append(generateProtocolFragmentHTTP((HTTPProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, false));
             break;
         case HTTPS:
-            sb.append(generateProtocolFragmentHTTP((HTTPSProviderArguments) providerArgs, generateCS, true));
+            sb.append(generateProtocolFragmentHTTP((HTTPSProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, true));
             break;
         case WEBDAV:
-            sb.append(generateProtocolFragmentWEBDAV((WebDAVProviderArguments) providerArgs, generateCS, false));
+            sb.append(generateProtocolFragmentWEBDAV((WebDAVProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, false));
             break;
         case WEBDAVS:
-            sb.append(generateProtocolFragmentWEBDAV((WebDAVProviderArguments) providerArgs, generateCS, true));
+            sb.append(generateProtocolFragmentWEBDAV((WebDAVProviderArguments) providerArgs, generateCSRef, generateEncryptionRef, true));
             break;
         case SMB:
-            sb.append(generateProtocolFragmentSMB((SMBProviderArguments) providerArgs, generateCS));
+            sb.append(generateProtocolFragmentSMB((SMBProviderArguments) providerArgs, generateCSRef, generateEncryptionRef));
             break;
         case LOCAL:
         case SSH:
@@ -139,7 +144,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         sb.append("</ProtocolFragments>");
 
-        if (generateCS) {
+        if (generateCSRef) {
             /** CredentialStore Fragment */
             sb.append("<CredentialStoreFragments>");
             sb.append("<CredentialStoreFragment name=\"cs\">");
@@ -161,10 +166,19 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("</CredentialStoreFragment>");
             sb.append("</CredentialStoreFragments>");
         }
+        if (generateEncryptionRef) {
+            /** Encryption Fragment */
+            sb.append("<EncryptionFragments>");
+            sb.append("<EncryptionFragment name=\"enc\">");
+            sb.append("<EnciphermentPrivateKeyPath>").append(cdata(providerArgs.getEncryptionDecrypt().getPrivateKeyPath().getValue())).append(
+                    "</EnciphermentPrivateKeyPath>");
+            sb.append("</EncryptionFragment>");
+            sb.append("</EncryptionFragments>");
+        }
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentSFTP(SSHProviderArguments args, boolean generateCSRef) {
+    private static StringBuilder generateProtocolFragmentSFTP(SSHProviderArguments args, boolean generateCSRef, boolean generateEncryptionRef) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SFTPFragment name=").append(attrValue(FRAGMENT_NAME)).append(">");
         sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
@@ -199,7 +213,9 @@ public class YADEXMLJumpHostSettingsWriter {
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
         }
-
+        if (generateEncryptionRef) {
+            sb.append(ENCRYPTION_FRAMENT_REF);
+        }
         // ProxyForSFTP
         sb.append(generateProtocolFragmentPartProxy(args.getProxy(), "ProxyForSFTP"));
         // Other
@@ -234,7 +250,8 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentFTP(FTPProviderArguments args, boolean generateCSRef, boolean isFTPS) {
+    private static StringBuilder generateProtocolFragmentFTP(FTPProviderArguments args, boolean generateCSRef, boolean generateEncryptionRef,
+            boolean isFTPS) {
         String fragmentElementName = isFTPS ? "FTPSFragment" : "FTPFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
@@ -242,6 +259,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
+        }
+        if (generateEncryptionRef) {
+            sb.append(ENCRYPTION_FRAMENT_REF);
         }
         if (isFTPS) {
             FTPSProviderArguments ftps = (FTPSProviderArguments) args;
@@ -270,7 +290,8 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentHTTP(HTTPProviderArguments args, boolean generateCSRef, boolean isHTTPS) {
+    private static StringBuilder generateProtocolFragmentHTTP(HTTPProviderArguments args, boolean generateCSRef, boolean generateEncryptionRef,
+            boolean isHTTPS) {
         String fragmentElementName = isHTTPS ? "HTTPSFragment" : "HTTPFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
@@ -278,6 +299,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
+        }
+        if (generateEncryptionRef) {
+            sb.append(ENCRYPTION_FRAMENT_REF);
         }
         if (isHTTPS) {
             SslArguments ssl = ((HTTPSProviderArguments) args).getSsl();
@@ -303,7 +327,8 @@ public class YADEXMLJumpHostSettingsWriter {
     }
 
     // TODO WebDAVSFragment ???
-    private static StringBuilder generateProtocolFragmentWEBDAV(HTTPProviderArguments args, boolean generateCSRef, boolean isWEBDAVS) {
+    private static StringBuilder generateProtocolFragmentWEBDAV(HTTPProviderArguments args, boolean generateCSRef, boolean generateEncryptionRef,
+            boolean isWEBDAVS) {
         String fragmentElementName = isWEBDAVS ? "WebDAVFragment" : "WebDAVFragment";
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(fragmentElementName).append(" name=").append(attrValue(FRAGMENT_NAME)).append(">");
@@ -311,6 +336,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
+        }
+        if (generateEncryptionRef) {
+            sb.append(ENCRYPTION_FRAMENT_REF);
         }
         if (isWEBDAVS) {
             SslArguments ssl = ((HTTPSProviderArguments) args).getSsl();
@@ -335,7 +363,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProtocolFragmentSMB(SMBProviderArguments args, boolean generateCSRef) {
+    private static StringBuilder generateProtocolFragmentSMB(SMBProviderArguments args, boolean generateCSRef, boolean generateEncryptionRef) {
         StringBuilder sb = new StringBuilder();
         sb.append("<SMBFragment name=").append(attrValue(FRAGMENT_NAME)).append(">");
         // YADE 1 - compatibility
@@ -385,6 +413,9 @@ public class YADEXMLJumpHostSettingsWriter {
 
         if (generateCSRef) {
             sb.append(CS_FRAMENT_REF);
+        }
+        if (generateEncryptionRef) {
+            sb.append(ENCRYPTION_FRAMENT_REF);
         }
 
         // Other
@@ -768,14 +799,15 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADETargetArguments targetArgs, JumpHostConfig config) {
+    private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADESourceArguments sourceArgs,
+            YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
         sb.append("<Operation>");
         sb.append("<Copy>");
 
         // Source (Jump)
-        sb.append(generateProfilePartJumpHostLocalCopySource(config));
+        sb.append(generateProfilePartJumpHostLocalCopySource(sourceArgs, config));
         // Target
         sb.append("<CopyTarget>");
         sb.append("<CopyTargetFragmentRef>");
@@ -795,7 +827,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfilePartJumpHostLocalCopySource(JumpHostConfig config) {
+    private static StringBuilder generateProfilePartJumpHostLocalCopySource(YADESourceArguments sourceArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopySource>");
 
@@ -811,6 +843,11 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Recursive>true</Recursive>");
         sb.append("</FileSpecSelection>");
         sb.append("</Selection>");
+        sb.append("<Directives>");
+        sb.append("<DisableErrorOnNoFilesFound>");
+        sb.append(sourceArgs.getErrorOnNoFilesFound().isTrue() ? "false" : "true"); // opposite value
+        sb.append("</DisableErrorOnNoFilesFound>");
+        sb.append("</Directives>");
         sb.append("</SourceFileOptions>");
 
         sb.append("</CopySource>");

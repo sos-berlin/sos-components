@@ -156,6 +156,7 @@ public class YADEEngineJumpHostAddon {
 
             newSourceArgs.getDirectory().setValue(config.dataDirectory);
             newSourceArgs.getRecursive().setValue(Boolean.valueOf(true));
+            newSourceArgs.getErrorOnNoFilesFound().setValue(argsLoader.getSourceArgs().getErrorOnNoFilesFound().getValue());
             newSourceArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
 
@@ -254,7 +255,6 @@ public class YADEEngineJumpHostAddon {
                         }
                     }
                 } else {
-                    // TODO test...
                     setFailed(files);
                 }
             } else {

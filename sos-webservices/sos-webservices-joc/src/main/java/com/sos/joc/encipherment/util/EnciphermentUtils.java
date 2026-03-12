@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.job.Environment;
@@ -30,28 +31,23 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 
 public class EnciphermentUtils {
 
-    public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
-    public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
-
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, ImportCertificateRequestFilter filter,
-            String certificate, Long auditLogId)
-                    throws SOSHibernateException, IOException {
-        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), certificate, filter.getPrivateKeyPath(),
-                filter.getJobResourceFolder(), auditLogId);
+            String certificate, Long auditLogId) throws SOSHibernateException, IOException {
+        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), certificate, filter.getPrivateKeyPath(), filter
+                .getJobResourceFolder(), auditLogId);
     }
-    
+
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, StoreCertificateRequestFilter filter,
             Long auditLogId) throws SOSHibernateException, IOException {
-        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), filter.getCertificate(), 
-                filter.getPrivateKeyPath(), filter.getJobResourceFolder(), auditLogId);
+        return createRelatedJobResource(hibernateSession, filter.getCertAlias(), filter.getCertificate(), filter.getPrivateKeyPath(), filter
+                .getJobResourceFolder(), auditLogId);
     }
 
     public static DBItemInventoryConfiguration createRelatedJobResource(SOSHibernateSession hibernateSession, String certAlias, String certificate,
-            String privateKeyPath, String jobResourceFolder, Long auditLogId)
-                    throws SOSHibernateException, IOException {
+            String privateKeyPath, String jobResourceFolder, Long auditLogId) throws SOSHibernateException, IOException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-        DBItemInventoryConfiguration dbExistingJobResource = dbLayer.getInventoryConfigurationByNameAndType(certAlias,
-                ConfigurationType.JOBRESOURCE.intValue());
+        DBItemInventoryConfiguration dbExistingJobResource = dbLayer.getInventoryConfigurationByNameAndType(certAlias, ConfigurationType.JOBRESOURCE
+                .intValue());
         Path path = null;
         DBItemInventoryConfiguration jr = null;
         if (dbExistingJobResource != null) {
@@ -61,18 +57,20 @@ public class EnciphermentUtils {
             if (args == null) {
                 args = new Environment();
             }
-            args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
-            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
-              args.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
+            args.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
+            if (privateKeyPath != null && !privateKeyPath.isEmpty()) {
+                args.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             }
             existingJobResource.setArguments(args);
             Environment env = existingJobResource.getEnv();
-            if(env == null) {
+            if (env == null) {
                 env = new Environment();
             }
-            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_CERTIFICATE));
-            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
-              env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            env.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(), "$".concat(
+                    EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE));
+            if (privateKeyPath != null && !privateKeyPath.isEmpty()) {
+                env.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(
+                        EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
             }
             existingJobResource.setEnv(env);
             dbExistingJobResource.setContent(JocInventory.toString(existingJobResource));
@@ -82,26 +80,28 @@ public class EnciphermentUtils {
             dbExistingJobResource.setAuditLogId(auditLogId);
             dbExistingJobResource.setModified(Date.from(Instant.now()));
             try {
-              Validator.validate(ConfigurationType.JOBRESOURCE, existingJobResource);
-              dbExistingJobResource.setValid(true);
-          } catch (Exception e) {
-            dbExistingJobResource.setValid(false);
-          }
+                Validator.validate(ConfigurationType.JOBRESOURCE, existingJobResource);
+                dbExistingJobResource.setValid(true);
+            } catch (Exception e) {
+                dbExistingJobResource.setValid(false);
+            }
             hibernateSession.update(dbExistingJobResource);
             jr = dbExistingJobResource;
         } else {
             DBItemInventoryConfiguration newDBJobResource = new DBItemInventoryConfiguration();
             JobResource newJobResource = new JobResource();
             Environment args = new Environment();
-            args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
-            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
-              args.setAdditionalProperty(EnciphermentUtils.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
+            args.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE, JsonConverter.quoteString(certificate));
+            if (privateKeyPath != null && !privateKeyPath.isEmpty()) {
+                args.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, JsonConverter.quoteString(privateKeyPath));
             }
             newJobResource.setArguments(args);
             Environment env = new Environment();
-            env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(),"$".concat(ARG_NAME_ENCIPHERMENT_CERTIFICATE));
-            if(privateKeyPath != null && !privateKeyPath.isEmpty()) {
-              env.setAdditionalProperty(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
+            env.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE.toUpperCase(), "$".concat(
+                    EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE));
+            if (privateKeyPath != null && !privateKeyPath.isEmpty()) {
+                env.setAdditionalProperty(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH.toUpperCase(), "$".concat(
+                        EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH));
             }
             newJobResource.setEnv(env);
             newJobResource.setVersion(Globals.getStrippedInventoryVersion());
@@ -133,7 +133,7 @@ public class EnciphermentUtils {
         JocInventory.postFolderEvent(jobResourceFolder);
         return jr;
     }
-    
+
     public static byte[] createDeployFilter(List<String> controllerIds, String jobResourcePath, AuditParams audit) throws JsonProcessingException {
         DeployFilter deployFilter = new DeployFilter();
         deployFilter.setControllerIds(controllerIds);
@@ -148,5 +148,5 @@ public class EnciphermentUtils {
         deployFilter.setStore(toStore);
         return Globals.objectMapper.writeValueAsBytes(deployFilter);
     }
-    
+
 }

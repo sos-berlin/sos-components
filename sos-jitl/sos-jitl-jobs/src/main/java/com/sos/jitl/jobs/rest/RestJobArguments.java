@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.rest;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.keystore.KeyStoreArguments;
 import com.sos.js7.job.JobArgument;
@@ -17,7 +18,7 @@ public class RestJobArguments extends JobArguments {
     private final JobArgument<String> LogItems = new JobArgument<>("log_items", false,"request:body");
     private final JobArgument<String> apiServerUsername = new JobArgument<>("username", false);
     private final JobArgument<String> apiServerPassword = new JobArgument<>("password", false, SOSArgument.DisplayMode.MASKED);
-    private final JobArgument<String> apiServerPrivateKeyPath = new JobArgument<>("encipherment_private_key_path", false);
+    private final JobArgument<String> apiServerPrivateKeyPath = new JobArgument<>(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH, false);
     private final JobArgument<String> editorUrl = new JobArgument<>("url", false);
 //  private final JobArgument<String> apiToken = new JobArgument<>("apiToken", false);// for bearer token
 

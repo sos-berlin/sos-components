@@ -62,7 +62,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     private String containerName;
 
     public AzureBlobStorageProvider(ISOSLogger logger, AzureBlobStorageProviderArguments args) throws ProviderInitializationException {
-        super(logger, args, args == null ? null : args.getAccountKey(), args == null ? null : args.getSASToken());
+        super(logger, args, args == null ? null : args.getContainerName(), args == null ? null : args.getAccountKey(), args == null ? null : args
+                .getSASToken());
         try {
             getArguments().getServiceEndpoint().setValue(getArguments().getHost().getValue());
             setAccessInfo(getArguments().getAccessInfo());

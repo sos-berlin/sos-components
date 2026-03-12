@@ -47,6 +47,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
                     break;
@@ -90,6 +93,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
@@ -147,6 +153,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
                     break;
@@ -190,6 +199,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
@@ -237,6 +249,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
@@ -290,6 +305,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
@@ -347,6 +365,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
                 case "SMBConnection": // JS7 - YADE-626
                     parseSMBConnection(argsLoader, args, n);
                     break;
@@ -402,6 +423,9 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
                     YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);

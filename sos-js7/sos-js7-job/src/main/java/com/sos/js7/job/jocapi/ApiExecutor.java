@@ -218,7 +218,7 @@ public class ApiExecutor implements AutoCloseable {
         Exception latestException = null;
         for (String uri : jocUris) {
             try {
-                createClient(uri, connectTimeout, (headers != null || !headers.isEmpty()));
+                createClient(uri, connectTimeout, (headers != null && !headers.isEmpty()));
                 this.jocUri = URI.create(uri);
                 loginUri = jocUri.resolve(WS_API_LOGIN);
                 HttpExecutionResult<String> result = client.executePOST(loginUri, client.mergeWithDefaultHeaders(loginRequestHeaders));

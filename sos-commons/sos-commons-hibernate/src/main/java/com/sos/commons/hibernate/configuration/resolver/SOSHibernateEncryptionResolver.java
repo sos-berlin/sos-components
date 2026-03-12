@@ -6,7 +6,7 @@ import java.security.PrivateKey;
 
 import org.hibernate.cfg.Configuration;
 
-import com.sos.commons.encryption.EncryptionUtils;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.encryption.exception.SOSEncryptionException;
@@ -17,19 +17,14 @@ import com.sos.commons.util.SOSString;
 
 public class SOSHibernateEncryptionResolver implements ISOSHibernateConfigurationResolver {
 
-
     private String keystorePath;
     private String keystoreType;
     private String keystorePassword;
     private String keystoreKeyPassword;
     private String keystoreKeyAlias;
 
-    /** The credentials can be configured in:
-     * - the hibernate configuration file
-     * - joc.properties
-     * - private.conf of an agent
-     * determined by the calling application
-     */
+    /** The credentials can be configured in: - the hibernate configuration file - joc.properties - private.conf of an agent determined by the calling
+     * application */
     @Override
     public Configuration resolve(Configuration configuration) throws SOSHibernateConfigurationException {
         if (configuration == null) {
@@ -38,19 +33,19 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
 
         EncryptedValue url = null;
         EncryptedValue username = null;
-        EncryptedValue password = null; 
+        EncryptedValue password = null;
         try {
-            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL))) {
-                url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, 
-                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+            if (EncryptionArguments.hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL))) {
+                url = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, configuration.getProperty(
+                        SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
             }
-            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME))) {
-                username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, 
-                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
+            if (EncryptionArguments.hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME))) {
+                username = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, configuration.getProperty(
+                        SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME));
             }
-            if(hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD))) {
-                password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, 
-                        configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
+            if (EncryptionArguments.hasEncryptedValue(configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD))) {
+                password = EncryptedValue.getInstance(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, configuration.getProperty(
+                        SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD));
             }
         } catch (SOSEncryptionException e) {
             throw new SOSHibernateConfigurationException(e.toString(), e);
@@ -91,7 +86,7 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
                     "key path and keystore path found. These configuration items are exclusive. Please do configure only one of them.");
         }
         try {
-            if(privateKeyPath != null) {
+            if (privateKeyPath != null) {
                 if (privateKeyPath != null && !Files.exists(Paths.get(privateKeyPath))) {
                     throw new SOSHibernateConfigurationException("File with path - " + privateKeyPath + " - does not exist.");
                 }
@@ -108,8 +103,10 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
                 // preferred configured in file, fallback configured by setters
                 String keystoreType = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_TYPE), getKeystoreType());
                 String keystorePwd = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_PWD), getKeystorePassword());
-                String keystoreKeyPwd = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD), getKeystoreKeyPassword());
-                String keystoreAlias = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS), getKeystoreKeyAlias());
+                String keystoreKeyPwd = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYPWD),
+                        getKeystoreKeyPassword());
+                String keystoreAlias = getValue(configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_KEYSTORE_KEYALIAS),
+                        getKeystoreKeyAlias());
 
                 return KeyUtil.getPrivateKey(keystorePath, keystoreType, keystorePwd, keystoreKeyPwd, keystoreAlias);
             }
@@ -161,9 +158,5 @@ public class SOSHibernateEncryptionResolver implements ISOSHibernateConfiguratio
 
     public void setKeystoreKeyAlias(String val) {
         keystoreKeyAlias = val;
-    }
-
-    private boolean hasEncryptedValue(String propertyValue) {
-        return (propertyValue != null && propertyValue.startsWith(EncryptionUtils.ENCRYPTION_IDENTIFIER));
     }
 }

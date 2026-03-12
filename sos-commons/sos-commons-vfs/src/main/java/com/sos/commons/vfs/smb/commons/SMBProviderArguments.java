@@ -44,10 +44,10 @@ public class SMBProviderArguments extends AProviderArguments {
             sb.append("(").append(getLoginContextName().getValue()).append(")");
         }
         sb.append("]");
-        sb.append(user).append("@").append(getHost().getValue()).append(":").append(getPort().getValue());
         if (!domain.isEmpty()) {
-            sb.append("(").append(domain.getValue()).append(")");
+            sb.append(domain.getValue()).append("\\");
         }
+        sb.append(user).append("@").append(getHost().getValue()).append(":").append(getPort().getValue());
         if (!shareName.isEmpty()) {
             sb.append("\\").append(shareName.getValue());
         }

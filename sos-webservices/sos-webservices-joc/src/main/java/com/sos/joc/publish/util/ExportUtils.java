@@ -299,16 +299,9 @@ public class ExportUtils {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, recursive, controllerId, dbLayer);
         List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>(); 
         folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item, recursive)));
-        allLatest = allLatest.stream().filter(item -> {
-            DBItemInventoryConfiguration dbItem = allCfgs.stream()
-//                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
-                    .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null);
-            if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
-                return true;
-             } else {
-                return false;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet());
+        allLatest = allLatest.stream().filter(item -> allCfgs.stream()
+                .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null) != null).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         allLatest = allLatest.stream().filter(item -> {
             if (item.getName() == null || item.getName().isEmpty()) {
                 LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
@@ -317,7 +310,7 @@ public class ExportUtils {
                 LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
             }
             DBItemInventoryConfiguration dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
+                    .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null);
             if(dbItem != null) {
                 return dbItem.getDeployed();
             } else {

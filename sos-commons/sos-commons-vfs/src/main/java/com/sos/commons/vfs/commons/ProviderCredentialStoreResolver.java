@@ -28,10 +28,10 @@ public class ProviderCredentialStoreResolver {
      * @return
      * @throws Exception */
     public static boolean resolve(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
-        if (args == null || args.getCredentialStore() == null) {
+        if (args == null || !args.isCredentialStoreEnabled()) {
             return false;
         }
-        if (args.getCredentialStore().getFile().getValue() != null && args.getCredentialStore().getKeepassDatabase() == null) {
+        if (args.getCredentialStore().getKeepassDatabase() == null) {
             setDatabase(args);
             keepass2Arguments(args, proxyArgs, additional2resolve);
             return true;

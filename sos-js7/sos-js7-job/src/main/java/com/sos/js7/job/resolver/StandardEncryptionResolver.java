@@ -4,6 +4,7 @@ import java.security.PrivateKey;
 import java.util.List;
 import java.util.Map;
 
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
@@ -17,9 +18,6 @@ import com.sos.js7.job.exception.JobArgumentException;
 
 public class StandardEncryptionResolver extends JobArgumentValueResolver {
 
-    public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
-    public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
-
     private static final String IDENTIFIER = StandardEncryptionResolver.class.getSimpleName();
 
     public static String getPrefix() {
@@ -31,7 +29,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
             throws Exception {
 
         PrivateKey privKey = getPrivateKey(allArguments);
-        if (!validate(allArguments.get(ARG_NAME_ENCIPHERMENT_CERTIFICATE), privKey)) {
+        if (!validate(allArguments.get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE), privKey)) {
             throw new SOSKeyException("Private key and certificate do not match");
         }
 
@@ -51,7 +49,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
     }
 
     private static PrivateKey getPrivateKey(Map<String, JobArgument<?>> allArguments) throws Exception {
-        JobArgument<?> arg = allArguments.get(ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
+        JobArgument<?> arg = allArguments.get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH);
         try {
             // Intentionally no support for private keys with password
             PrivateKey pk = KeyUtil.getPrivateKey(arg == null || arg.getValue() == null ? null : arg.getValue().toString());
@@ -59,7 +57,7 @@ public class StandardEncryptionResolver extends JobArgumentValueResolver {
             return pk;
         } catch (Exception e) {
             String m = arg == null || arg.getValue() == null ? " missing" : ("=" + arg.getValue().toString());
-            throw new SOSKeyException("[argument " + ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH + m + "]" + e.toString(), e);
+            throw new SOSKeyException("[argument " + EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH + m + "]" + e.toString(), e);
         }
     }
 

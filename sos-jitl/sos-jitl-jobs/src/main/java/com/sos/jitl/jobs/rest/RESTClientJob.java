@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;
@@ -214,12 +215,12 @@ public class RESTClientJob extends Job<RestJobArguments> {
 					if (!username.isBlank() && !password.isBlank()) {
 
 						String enc_path = Optional
-								.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+								.ofNullable(step.getAllArguments().get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH))
 								.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-						if (username.startsWith("enc:")) {
+						if (EncryptionArguments.hasEncryptedValue(username)) {
 							username = EnciphermentDecryptor.decryptValue(username, Paths.get(enc_path));
 						}
-						if (password.startsWith("enc:")) {
+						if (EncryptionArguments.hasEncryptedValue(password)) {
 							password = EnciphermentDecryptor.decryptValue(password, Paths.get(enc_path));
 						}
 
