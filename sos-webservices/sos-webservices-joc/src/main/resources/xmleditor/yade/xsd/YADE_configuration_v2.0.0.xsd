@@ -10592,9 +10592,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			Commands to be executed before the transfer of files starts.
-		</p>
+               <ul>
+                  <li>Commands to be executed before the transfer of files starts.</li>
+                  <li>If configured on the Target, these commands are executed only if the Source file selection returns at least one file.</li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -10618,7 +10619,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>Post transfer commands execution in case of the successful transfers.</p>
+               <ul>
+                  <li>Post-transfer commands execution in case of the successful transfers.</li>
+                  <li>If configured on the Target, these commands are executed only if the Source file selection returns at least one file.</li>
+               </ul>
                 <p/>
                <p>Built-in command functions:
             <ul>
@@ -10653,7 +10657,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>Post transfer commands execution on transfer error.</p>
+               <ul>
+                  <li>Post-transfer commands execution on transfer error.</li>
+                  <li>If configured on the Target, these commands are executed only if the Source file selection returns at least one file.</li>
+               </ul>
                 <p/>
                <p>Built-in command functions:
             <ul>
@@ -10688,7 +10695,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>Post transfer commands execution at transfer end independent of the transfer status.</p>
+               <ul>
+                  <li>Post-transfer commands are executed at the end of the transfer, independent of the transfer status.</li>
+                  <li>If configured on the Target, these commands are executed only if the Source file selection returns at least one file.</li>
+               </ul>
                 <p/>
                <p>Built-in command functions:
             <ul>

@@ -3,6 +3,7 @@ package com.sos.yade.engine.handlers.command;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
@@ -30,17 +31,25 @@ public class YADECommandExecutor {
     private static String AFTER_FILE_ENV_VAR_FILE_IS_TRANSFERRED = "YADE_FILE_IS_TRANSFERRED";
 
     // -- Operation related ------------------------------
-    public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator) throws YADEEngineCommandException {
-        executeBeforeOperation(logger, delegator, null);
+    public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator, RetryOnConnectionError retry)
+            throws YADEEngineCommandException {
+        executeBeforeOperation(logger, delegator, retry, null);
     }
 
-    public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator, YADEEngineJumpHostAddon jumpHostAddon)
-            throws YADEEngineCommandException {
+    public static void executeBeforeOperation(ISOSLogger logger, AYADEProviderDelegator delegator, RetryOnConnectionError retry,
+            YADEEngineJumpHostAddon jumpHostAddon) throws YADEEngineCommandException {
         if (delegator == null || delegator.getArgs().getCommands().getCommandsBeforeOperation().isEmpty()) {
             return;
         }
+
         SOSArgument<List<String>> arg = delegator.getArgs().getCommands().getCommandsBeforeOperation();
         logIfMultipleCommands(logger, delegator.getLabel(), arg, delegator.getArgs().getCommands().getCommandDelimiter());
+
+        try {
+            YADEProviderDelegatorHelper.ensureConnected(logger, delegator, arg.getName(), retry);
+        } catch (YADEEngineConnectionException e) {
+            throw new YADEEngineCommandException(e.toString(), e);
+        }
 
         String argumentName = arg.getName();
         boolean isJumpHostClientCommand = jumpHostAddon != null && jumpHostAddon.isConfiguredOnSource();
@@ -61,14 +70,16 @@ public class YADECommandExecutor {
         }
     }
 
-    public static void executeAfterOperationOnSuccess(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, RetryOnConnectionError retry) throws YADEEngineCommandException {
+    public static YADECommandResult executeAfterOperationOnSuccess(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, RetryOnConnectionError retry) {
 
+        YADECommandResult r = YADECommandResult.createInstance();
         SOSArgument<List<String>> arg = sourceDelegator.getArgs().getCommands().getCommandsAfterOperationOnSuccess();
         if (!arg.isEmpty()) {
             try {
                 executeAfterOperationCommands(logger, sourceDelegator, arg, retry);
-            } catch (Exception e) {
+            } catch (YADEEngineCommandException e) {
+                r.source = e;
             }
         }
         if (targetDelegator != null) {
@@ -76,10 +87,12 @@ public class YADECommandExecutor {
             if (!arg.isEmpty()) {
                 try {
                     executeAfterOperationCommands(logger, targetDelegator, arg, retry);
-                } catch (Exception e) {
+                } catch (YADEEngineCommandException e) {
+                    r.target = e;
                 }
             }
         }
+        return r;
     }
 
     public static YADECommandResult executeAfterOperationOnError(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
@@ -393,23 +406,30 @@ public class YADECommandExecutor {
             return new YADECommandExecutor().new YADECommandResult();
         }
 
-        public void logIfErrorOnInfoLevel(ISOSLogger logger) {
-            logIfErrorOnInfoLevel(logger, source);
-            logIfErrorOnInfoLevel(logger, target);
+        public void logExceptionIfPresentAsInfo(ISOSLogger logger) {
+            logExceptionIfPresentAsInfo(logger, source);
+            logExceptionIfPresentAsInfo(logger, target);
         }
 
-        public void logIfErrorOnErrorLevel(ISOSLogger logger) {
-            logIfErrorOnErrorLevel(logger, source);
-            logIfErrorOnErrorLevel(logger, target);
+        public void logExceptionIfPresentAsError(ISOSLogger logger) {
+            logExceptionIfPresentAsError(logger, source);
+            logExceptionIfPresentAsError(logger, target);
         }
 
-        private void logIfErrorOnInfoLevel(ISOSLogger logger, YADEEngineCommandException error) {
+        public void throwExceptionIfPresent() throws YADEEngineCommandException {
+            YADEEngineCommandException e = SOSException.mergeException(source, target);
+            if (e != null) {
+                throw e;
+            }
+        }
+
+        private void logExceptionIfPresentAsInfo(ISOSLogger logger, YADEEngineCommandException error) {
             if (error != null) {
                 logger.info(error);
             }
         }
 
-        private void logIfErrorOnErrorLevel(ISOSLogger logger, YADEEngineCommandException error) {
+        private void logExceptionIfPresentAsError(ISOSLogger logger, YADEEngineCommandException error) {
             if (error != null) {
                 logger.error(error);
             }
