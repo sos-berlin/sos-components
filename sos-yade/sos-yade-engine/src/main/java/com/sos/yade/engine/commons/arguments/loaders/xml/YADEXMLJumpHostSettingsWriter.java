@@ -79,7 +79,7 @@ public class YADEXMLJumpHostSettingsWriter {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
         StringBuilder fragments = generateFragments(targetArgs.getProvider());
-        StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), targetArgs, config);
+        StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), argsLoader.getSourceArgs(), targetArgs, config);
         return generateConfiguration(fragments, profile).toString();
     }
 
@@ -768,14 +768,15 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADETargetArguments targetArgs, JumpHostConfig config) {
+    private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADESourceArguments sourceArgs,
+            YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
         sb.append("<Operation>");
         sb.append("<Copy>");
 
         // Source (Jump)
-        sb.append(generateProfilePartJumpHostLocalCopySource(config));
+        sb.append(generateProfilePartJumpHostLocalCopySource(sourceArgs, config));
         // Target
         sb.append("<CopyTarget>");
         sb.append("<CopyTargetFragmentRef>");
@@ -795,7 +796,7 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfilePartJumpHostLocalCopySource(JumpHostConfig config) {
+    private static StringBuilder generateProfilePartJumpHostLocalCopySource(YADESourceArguments sourceArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
         sb.append("<CopySource>");
 
@@ -811,6 +812,11 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Recursive>true</Recursive>");
         sb.append("</FileSpecSelection>");
         sb.append("</Selection>");
+        sb.append("<Directives>");
+        sb.append("<DisableErrorOnNoFilesFound>");
+        sb.append(sourceArgs.getErrorOnNoFilesFound().isTrue() ? "false" : "true"); // opposite value
+        sb.append("</DisableErrorOnNoFilesFound>");
+        sb.append("</Directives>");
         sb.append("</SourceFileOptions>");
 
         sb.append("</CopySource>");

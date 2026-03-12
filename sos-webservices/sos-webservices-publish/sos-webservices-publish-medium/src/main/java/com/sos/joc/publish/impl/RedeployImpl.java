@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -158,13 +157,13 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         if(entry.getValue().getReferencedItem() != null) {
                             entry.getValue().getReferences().forEach( inv -> {
                                 try {
-                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                    dependencyHistorieItems.addAll(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
                                 } catch (SOSHibernateException e) {}
                             });
                             entry.getValue().getReferencedBy().stream().filter(inv -> ConfigurationType.WORKFLOW.equals(inv.getTypeAsEnum()))
                             .forEach( inv -> {
                                 try {
-                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                    dependencyHistorieItems.addAll(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
                                 } catch (SOSHibernateException e) {}
                             });
                         }

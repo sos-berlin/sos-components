@@ -360,6 +360,10 @@ public class YADEFileHandler {
                         if (sourceDelegator.getProvider().deleteFileIfExists(sourceFile.getFullPath())) {
                             logger.info("[%s][%s][%s/deleted]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), YADEClientBannerWriter
                                     .formatState(sourceFile.getState()), sourceFile.getFullPath());
+                        } else {
+                            // TODO warn?
+                            logger.info("[%s][%s][%s/not found]%s", fileTransferLogPrefix, sourceDelegator.getLabel(), YADEClientBannerWriter
+                                    .formatState(sourceFile.getState()), sourceFile.getFullPath());
                         }
                         return null;
                     });

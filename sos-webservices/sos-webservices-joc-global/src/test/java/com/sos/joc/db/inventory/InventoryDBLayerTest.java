@@ -3,8 +3,10 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.query.Query;
@@ -67,10 +69,10 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            Long configId = 100L;
+            Long configId = 100682L;
 
-            InventoryDeploymentItem item = dbLayer.getLastDeploymentHistory(configId);
-            LOGGER.info(SOSString.toString(item));
+            Optional<Date> d = dbLayer.getLastDeploymentDate(configId);
+            LOGGER.info(SOSString.toString(d));
 
             session.commit();
         } catch (Exception e) {
@@ -381,7 +383,7 @@ public class InventoryDBLayerTest {
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate/hibernate.cfg.mysql.xml"));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("C:/ProgramData/sos-berlin.com/js7/joc/jetty_base/resources/joc/centosdev_secondary.hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.build();
         return factory;
