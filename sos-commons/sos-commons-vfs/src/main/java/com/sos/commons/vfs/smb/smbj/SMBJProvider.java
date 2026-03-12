@@ -160,7 +160,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         final ProviderFileSelection finalSelection = selection;
         try {
-            return requireResourcePool().withResource(share -> {
+            return requireResourcePool(directory).withResource(share -> {
                 List<ProviderFile> result = new ArrayList<>();
                 SMBJProviderUtils.selectFiles(this, share, finalSelection, getSMBPath(directory), result, 0);
                 return result;

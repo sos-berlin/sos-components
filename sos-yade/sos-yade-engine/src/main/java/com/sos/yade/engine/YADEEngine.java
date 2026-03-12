@@ -18,6 +18,7 @@ import com.sos.yade.engine.commons.arguments.YADENotificationArguments;
 import com.sos.yade.engine.commons.arguments.YADENotificationMailArguments;
 import com.sos.yade.engine.commons.arguments.YADENotificationMailServerArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
+import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADEProviderDelegatorFactory;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
@@ -26,6 +27,7 @@ import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.commons.simulators.YADEProviderConnectivityFaultSimulator;
+import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
@@ -124,6 +126,8 @@ public class YADEEngine {
 
         boolean selectFiles = selectFiles(argsLoader, sourceDelegator, jumpHostAddon);
         String sourceExcludedFileExtension = YADESourceFilesSelector.getExcludedFileExtension(argsLoader.getArgs(), sourceDelegator, targetDelegator);
+        boolean hasSourceFiles = false;
+
         // All steps may trigger an exception
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
@@ -139,7 +143,7 @@ public class YADEEngine {
                 }
 
                 /** 10) Source: execute commands before operation */
-                YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator, jumpHostAddon);
+                onBeforeOperation(logger, argsLoader, sourceDelegator, jumpHostAddon);
 
                 if (selectFiles) {
                     /** 11) Source: select files */
@@ -152,6 +156,7 @@ public class YADEEngine {
                     YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
                 }
                 if (!SOSCollection.isEmpty(files)) {
+                    hasSourceFiles = true;
                     /** 14) Target: connect */
                     YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, argsLoader.getArgs().getRetryOnConnectionError());
 
@@ -164,25 +169,25 @@ public class YADEEngine {
                     }
 
                     /** 17) Target: execute commands before operation */
-                    YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
+                    onBeforeOperation(logger, argsLoader, targetDelegator);
 
                     /** 18) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                             targetDelegator, files, cancel);
                 }
 
-                /** 19) Source/Target: execute commands after operation on success */
-                YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator, argsLoader.getArgs()
-                        .getRetryOnConnectionError());
+                /** 19) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
+                onOperationSuccess(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles);
             } catch (Exception e) {
-                onError(logger, argsLoader, sourceDelegator, targetDelegator, exception);
+                onOperationError(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles, exception);
                 exception = e;
             } finally {
                 /** 20) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
                 simulator.shutdown(logger);
 
                 /** 21) Finalize */
-                onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files, exception, true);
+                onOperationFinal(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, hasSourceFiles, jumpHostAddon, files,
+                        exception, true);
             }
         } else {
             YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
@@ -191,6 +196,7 @@ public class YADEEngine {
             pl: while (true) {
                 exception = null;
                 operationDuration = null;
+                hasSourceFiles = false;
 
                 sourcePolling.incrementCycleCounter();
                 try {
@@ -207,7 +213,7 @@ public class YADEEngine {
                     }
 
                     /** 10) Source: execute commands before operation */
-                    YADECommandExecutor.executeBeforeOperation(logger, sourceDelegator, jumpHostAddon);
+                    onBeforeOperation(logger, argsLoader, sourceDelegator, jumpHostAddon);
 
                     if (selectFiles) {
                         /** 11) Source: select files */
@@ -220,6 +226,8 @@ public class YADEEngine {
                         YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
                     }
                     if (!SOSCollection.isEmpty(files)) {
+                        hasSourceFiles = true;
+
                         /** 14) Target: connect */
                         YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, argsLoader.getArgs().getRetryOnConnectionError());
 
@@ -233,18 +241,17 @@ public class YADEEngine {
                         }
 
                         /** 17) Target: execute commands before operation */
-                        YADECommandExecutor.executeBeforeOperation(logger, targetDelegator);
+                        onBeforeOperation(logger, argsLoader, targetDelegator);
 
                         /** 18) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                         operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                                 targetDelegator, files, cancel);
                     }
 
-                    /** 19) Source/Target: execute commands after operation on success */
-                    YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, targetDelegator, argsLoader.getArgs()
-                            .getRetryOnConnectionError());
+                    /** 19) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
+                    onOperationSuccess(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles);
                 } catch (Exception e) {
-                    onError(logger, argsLoader, sourceDelegator, targetDelegator, exception);
+                    onOperationError(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles, exception);
                     exception = e;
                 } finally {
                     /** 20) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
@@ -252,8 +259,8 @@ public class YADEEngine {
 
                     /** 21) Finalize */
                     boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
-                    onFinally(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files, exception,
-                            !startNextPollingCycle);
+                    onOperationFinal(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, hasSourceFiles, jumpHostAddon, files,
+                            exception, !startNextPollingCycle);
                     if (!startNextPollingCycle) {
                         break pl;
                     }
@@ -281,25 +288,84 @@ public class YADEEngine {
         return true;
     }
 
-    private void onError(ISOSLogger logger, AYADEArgumentsLoader argsLoader, YADESourceProviderDelegator sourceDelegator,
-            YADETargetProviderDelegator targetDelegator, Throwable exception) {
-        /** Source/Target: execute commands after operation on error */
-        YADECommandResult r = YADECommandExecutor.executeAfterOperationOnError(logger, sourceDelegator, targetDelegator, exception, argsLoader
-                .getArgs().getRetryOnConnectionError());
-        // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
-        r.logIfErrorOnErrorLevel(logger);
-        // r.logIfErrorOnInfoLevel(logger);
+    private void onBeforeOperation(ISOSLogger logger, AYADEArgumentsLoader argsLoader, AYADEProviderDelegator delegator)
+            throws YADEEngineCommandException {
+        onBeforeOperation(logger, argsLoader, delegator, null);
     }
 
-    private void onFinally(ISOSLogger logger, AYADEArgumentsLoader argsLoader, Duration operationDuration,
-            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADEEngineJumpHostAddon jumpHostAddon,
-            List<ProviderFile> files, Throwable exception, boolean disconnectSource) throws YADEEngineException {
-        /** Source/Target: execute commands after operation final */
-        YADECommandResult r = YADECommandExecutor.executeAfterOperationFinal(logger, sourceDelegator, targetDelegator, exception, argsLoader.getArgs()
-                .getRetryOnConnectionError());
+    private void onBeforeOperation(ISOSLogger logger, AYADEArgumentsLoader argsLoader, AYADEProviderDelegator delegator,
+            YADEEngineJumpHostAddon jumpHostAddon) throws YADEEngineCommandException {
+        YADECommandExecutor.executeBeforeOperation(logger, delegator, argsLoader.getArgs().getRetryOnConnectionError(), jumpHostAddon);
+    }
+
+    /** Executes the AfterOperationOnSuccess command on Source and Target, if configured.<br />
+     * Each provider (Source, Target) will be connected only if it is not already connected and the corresponding command is configured.<br />
+     * Note: The Post-Processing command AfterOperationOnSuccess can be a Jump client call (Source -> Jump -> Target).<br />
+     * Note: AfterOperationOnSuccess is only executed on the Target if the Source file selection returns more than 0 files.
+     * 
+     * @param logger
+     * @param argsLoader
+     * @param sourceDelegator
+     * @param targetDelegator
+     * @param hasSourceFiles
+     * @throws YADEEngineCommandException */
+    private void onOperationSuccess(ISOSLogger logger, AYADEArgumentsLoader argsLoader, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, boolean hasSourceFiles) throws YADEEngineCommandException {
+        YADECommandResult r = YADECommandExecutor.executeAfterOperationOnSuccess(logger, sourceDelegator, hasSourceFiles ? targetDelegator : null,
+                argsLoader.getArgs().getRetryOnConnectionError());
+        r.throwExceptionIfPresent();
+    }
+
+    /** Executes the AfterOperationOnError command on Source and Target, if configured.<br />
+     * Each provider (Source, Target) will be connected only if it is not already connected and the corresponding command is configured.<br />
+     * Note: AfterOperationOnError is only executed on the Target if the Source file selection returns more than 0 files.
+     * 
+     * @param logger
+     * @param argsLoader
+     * @param sourceDelegator
+     * @param targetDelegator
+     * @param hasSourceFiles
+     * @param exception */
+    private void onOperationError(ISOSLogger logger, AYADEArgumentsLoader argsLoader, YADESourceProviderDelegator sourceDelegator,
+            YADETargetProviderDelegator targetDelegator, boolean hasSourceFiles, Throwable exception) {
+        /** Source/Target: execute commands after operation on error */
+        YADECommandResult r = YADECommandExecutor.executeAfterOperationOnError(logger, sourceDelegator, hasSourceFiles ? targetDelegator : null,
+                exception, argsLoader.getArgs().getRetryOnConnectionError());
         // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
-        r.logIfErrorOnErrorLevel(logger);
-        // r.logIfErrorOnInfoLevel(logger);
+        r.logExceptionIfPresentAsError(logger);
+        // r.logExceptionIfPresentAsInfo(logger);
+    }
+
+    /** 1) Executes the AfterOperationFinal command on Source and Target, if configured.<br />
+     * - Each provider (Source, Target) will be connected only if it is not already connected and the corresponding command is configured.<br />
+     * - Note: AfterOperationFinal is only executed on the Target if the Source file selection returns more than 0 files.<br />
+     * 2) Performs cleanup operations on the Jump host, if used.<br />
+     * 3) Disconnects the Source(if polling is not enabled) and the Target.<br />
+     * 4) Writes the ResultSet file and the YADE summary.<br />
+     * 5) Sends Notification e-mails, if configured.<br />
+     * ...
+     * 
+     * @param logger
+     * @param argsLoader
+     * @param operationDuration
+     * @param sourceDelegator
+     * @param targetDelegator
+     * @param hasSourceFiles
+     * @param jumpHostAddon
+     * @param files
+     * @param exception
+     * @param disconnectSource
+     * @throws YADEEngineException */
+    private void onOperationFinal(ISOSLogger logger, AYADEArgumentsLoader argsLoader, Duration operationDuration,
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, boolean hasSourceFiles,
+            YADEEngineJumpHostAddon jumpHostAddon, List<ProviderFile> files, Throwable exception, boolean disconnectSource)
+            throws YADEEngineException {
+        /** Source/Target: execute commands after operation final */
+        YADECommandResult r = YADECommandExecutor.executeAfterOperationFinal(logger, sourceDelegator, hasSourceFiles ? targetDelegator : null,
+                exception, argsLoader.getArgs().getRetryOnConnectionError());
+        // YADE1 behavior - TODO or provide possible commands exceptions to printSummary?
+        r.logExceptionIfPresentAsError(logger);
+        // r.logExceptionIfPresentAsInfo(logger);
 
         List<Throwable> exceptions = new ArrayList<>();
         if (exception != null) {
