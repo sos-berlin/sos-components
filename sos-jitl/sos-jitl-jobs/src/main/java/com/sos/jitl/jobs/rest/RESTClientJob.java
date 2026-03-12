@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;

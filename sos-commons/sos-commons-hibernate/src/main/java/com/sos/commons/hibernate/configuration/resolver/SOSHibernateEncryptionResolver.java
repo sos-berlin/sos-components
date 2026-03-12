@@ -6,7 +6,7 @@ import java.security.PrivateKey;
 
 import org.hibernate.cfg.Configuration;
 
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.encryption.exception.SOSEncryptionException;

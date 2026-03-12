@@ -4,7 +4,7 @@ import java.security.PrivateKey;
 import java.util.List;
 import java.util.Map;
 
-import com.sos.commons.encryption.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.encryption.EncryptionUtils;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;

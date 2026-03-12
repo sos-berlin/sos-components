@@ -63,6 +63,9 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
                     break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
+                    break;
 
                 case "BasicConnection":
                     YADEXMLFragmentsProtocolFragmentHelper.parseBasicConnection(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);

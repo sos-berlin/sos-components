@@ -366,6 +366,9 @@ public class YADEXMLProfileHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
                     break;
+                case "EncryptionFragmentRef":
+                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    break;
                 }
             }
         }
