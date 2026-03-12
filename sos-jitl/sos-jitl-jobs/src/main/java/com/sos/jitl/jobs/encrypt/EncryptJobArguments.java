@@ -1,11 +1,12 @@
 package com.sos.jitl.jobs.encrypt;
 
+import com.sos.commons.encryption.EncryptionArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
 public class EncryptJobArguments extends JobArguments {
 
-    private JobArgument<String> enciphermentCertificate  = new JobArgument<>("encipherment_certificate", true);
+    private JobArgument<String> enciphermentCertificate = new JobArgument<>(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE, true);
     private JobArgument<String> in = new JobArgument<>("in", false);
     private JobArgument<String> inFile = new JobArgument<>("infile", false);
     private JobArgument<String> outFile = new JobArgument<>("outfile", false);

@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.rest;
 
+import com.sos.commons.encryption.EncryptionArguments;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.keystore.KeyStoreContainer;
@@ -23,7 +24,7 @@ public class JobSslConfigUtils {
 	private static <T extends JobArguments> List<KeyStoreContainer>  getTrustStoreContainersFromOrder (OrderProcessStep<T> step) throws Exception {
 	
 		String enc_path = Optional
-				.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+				.ofNullable(step.getAllArguments().get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH))
 				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
 		
 		String trustStores = Optional.ofNullable(step.getAllArguments().get("truststore_file"))
@@ -63,7 +64,7 @@ public class JobSslConfigUtils {
 	//extracting the keystore details
 	private static <T extends JobArguments> KeyStoreContainer getKeyStoreContainerFromOrder(OrderProcessStep<T> step) throws Exception {
 		String enc_path = Optional
-				.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+				.ofNullable(step.getAllArguments().get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH))
 				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
 		String path = Optional.ofNullable(step.getAllArguments().get("keystore_file"))
 				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
