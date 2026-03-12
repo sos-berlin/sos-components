@@ -74,12 +74,20 @@ public abstract class AProviderArguments extends ASOSArguments {
         return encryptionDecrypt;
     }
 
+    public boolean isEncryptionDecryptEnabled() {
+        return encryptionDecrypt != null && !encryptionDecrypt.getPrivateKeyPath().isEmpty();
+    }
+
     public void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
     }
 
     public CredentialStoreArguments getCredentialStore() {
         return credentialStore;
+    }
+
+    public boolean isCredentialStoreEnabled() {
+        return credentialStore != null && !credentialStore.getFile().isEmpty();
     }
 
     public ProxyConfigArguments getProxy() {

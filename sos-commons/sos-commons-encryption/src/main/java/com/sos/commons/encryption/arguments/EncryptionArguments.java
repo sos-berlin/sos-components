@@ -18,8 +18,8 @@ public abstract class EncryptionArguments extends ASOSArguments {
      *
      * @param arg the {@link SOSArgument} containing the string value to check; may be null
      * @return {@code true} if the argument is non-null and its value starts with the encryption identifier, {@code false} otherwise */
-    public static boolean hasEncryptedValue(SOSArgument<String> arg) {
-        return arg == null ? false : hasEncryptedValue(arg.getValue());
+    public static boolean hasEncryptedValue(SOSArgument<?> arg) {
+        return arg == null ? false : hasEncryptedValue(arg.getValue() + "");
     }
 
     /** Checks whether the given value is encrypted.

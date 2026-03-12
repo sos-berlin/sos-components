@@ -56,11 +56,11 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     private boolean doneLogIfHostnameVerificationDisabled;
 
-    public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
+    public AProvider(ISOSLogger logger, A arguments, SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {
         this.logger = logger;
         this.arguments = arguments;
         // before proxyProvider
-        resolveCredentialStore(additionalCredentialStoreArg);
+        resolveSecrets(additionalSecretArg);
         this.proxyConfig = this.arguments == null ? null : ProxyConfig.createInstance(this.arguments.getProxy());
     }
 
@@ -503,15 +503,16 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     }
 
-    private void resolveCredentialStore(SOSArgument<?>... additionalCredentialStoreArg) throws ProviderInitializationException {
+    private void resolveSecrets(SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {
         if (arguments == null) {
             return;
         }
 
         try {
-            if (ProviderCredentialStoreResolver.resolve(arguments, arguments.getProxy(), additionalCredentialStoreArg)) {
+            if (ProviderCredentialStoreResolver.resolve(arguments, arguments.getProxy(), additionalSecretArg)) {
                 onCredentialStoreResolved();
             }
+            ProviderEncryptionResolver.resolve(arguments, arguments.getProxy(), additionalSecretArg);
         } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }
