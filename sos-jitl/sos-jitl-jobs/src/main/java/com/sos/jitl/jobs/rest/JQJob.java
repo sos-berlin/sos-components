@@ -106,7 +106,7 @@ public class JQJob extends Job<JQJobArguments> {
 						}
 					}
 
-					if (jqQuery != null && !jqQuery.trim().isEmpty()) {						
+					if (jqQuery != null && !jqQuery.trim().isEmpty()) {
 						List<JsonNode> jqResult = null;
 						String jsonStr = myArgs.getInputVariable().getValue().trim();
 
@@ -118,15 +118,12 @@ public class JQJob extends Job<JQJobArguments> {
 						JsonNode fromJsonNode = objectMapper.readTree(jsonStr);
 						ObjectNode mergedInput = objectMapper.createObjectNode();
 						if (fromJsonNode.isObject()) {
-						    mergedInput.setAll((ObjectNode) fromJsonNode);
+							mergedInput.setAll((ObjectNode) fromJsonNode);
+						} else if (fromJsonNode.isArray()) {
+							mergedInput.set("root", fromJsonNode); // wrap the array
+						} else {
+							throw new JobException("Unsupported JSON type for input: " + fromJsonNode.getNodeType());
 						}
-						else if (fromJsonNode.isArray()) {
-						    mergedInput.set("root", fromJsonNode);  // wrap the array
-						}
-						else {
-						    throw new JobException("Unsupported JSON type for input: " + fromJsonNode.getNodeType());
-						}
-
 
 						jqResult = ReturnVariableUtils.runJqQuery(mergedInput, jqQuery, rootScope, name);
 
@@ -134,7 +131,7 @@ public class JQJob extends Job<JQJobArguments> {
 								objectMapper);
 					} else {
 						throw new JobArgumentException(
-								"Error in extracting return variable " + name + "In put json is empty or invalid");
+								"Error in extracting return variable " + name + " Input json is empty or invalid");
 					}
 				}
 			}

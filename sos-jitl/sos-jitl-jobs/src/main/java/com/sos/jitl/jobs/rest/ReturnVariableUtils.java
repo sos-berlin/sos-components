@@ -22,182 +22,199 @@ import java.util.Set;
 
 public class ReturnVariableUtils {
 
-	//check for duplicate return variable in list
-    public static void checkDuplicateReturnVariable(JsonNode returnVars) throws JobArgumentException {
-        Set<String> seenNames = new HashSet<>();
-        for (JsonNode node : returnVars) {
-            if (node.hasNonNull("name")) {
-                String varName = node.get("name").asText().trim();
-                if (!varName.isEmpty()) {
-                    if (!seenNames.add(varName)) {
-                        throw new JobArgumentException("Duplicate return_variable 'name' found: " + varName);
-                    }
-                }
-            }
-        }
-    }
+	// check for duplicate return variable in list
+	public static void checkDuplicateReturnVariable(JsonNode returnVars) throws JobArgumentException {
+		Set<String> seenNames = new HashSet<>();
+		for (JsonNode node : returnVars) {
+			if (node.hasNonNull("name")) {
+				String varName = node.get("name").asText().trim();
+				if (!varName.isEmpty()) {
+					if (!seenNames.add(varName)) {
+						throw new JobArgumentException("Duplicate return_variable 'name' found: " + varName);
+					}
+				}
+			}
+		}
+	}
 
-    //executs the jq query for return variable
-    public static List<JsonNode> runJqQuery(JsonNode mergedInput, String jqQuery, Scope rootScope, String name) throws JsonQueryException, JobArgumentException {
+	// executs the jq query for return variable
+	public static List<JsonNode> runJqQuery(JsonNode mergedInput, String jqQuery, Scope rootScope, String name)
+			throws JsonQueryException, JobArgumentException {
+		JsonQuery query = null;
+		try {
+		    query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
+		} catch (Exception e) {
+		    throw new JobArgumentException(
+		        "Error extracting return variable '" + name +
+		        "': the input JSON does not match the jq query or contains invalid structure.",
+		        e
+		    );
+		}
 
-        JsonQuery query = JsonQuery.compile(jqQuery, Versions.JQ_1_7);
-        List<JsonNode> out = new ArrayList<>();
-        query.apply(rootScope, mergedInput, out::add);
+		List<JsonNode> out = new ArrayList<>();
+		query.apply(rootScope, mergedInput, out::add);
 
-        if (out.isEmpty() || out.stream().allMatch(JsonNode::isNull)) {
-            return List.of(TextNode.valueOf(""));
-        }
-        else{
-            return out;
-        }
-    }
+		if (out.isEmpty() || out.stream().allMatch(JsonNode::isNull)) {
+			return List.of(TextNode.valueOf(""));
+		} else {
+			return out;
+		}
+	}
 
-    //writing the output of the jq query to the files using specified file path
-    public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, List<JsonNode> out, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
+	// writing the output of the jq query to the files using specified file path
+	public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger,
+			String name, String filePath, String pI, List<JsonNode> out, boolean rawOutput, ObjectMapper objectMapper)
+			throws IOException, JobArgumentException {
 
-        if (name.equals("returnCode")) {
-            JsonNode node = out.get(0);
-            if (node != null && !node.isNull()) {
-                String value = node.asText(); // Convert JsonNode to String
-                try {
-                    int returnCode = Integer.parseInt(value);
-                    step.getOutcome().setReturnCode(returnCode);
-                } catch (NumberFormatException e) {
-                    throw new JobArgumentException("Return variable 'returnCode' cannot be set as job return code: value '" + value + "' is not numeric.");
-                }
-            } else {
-                throw new JobArgumentException("Return variable 'returnCode' cannot be set as job's return code.");
-            }
-        }
+		if (name.equals("returnCode")) {
+			JsonNode node = out.get(0);
+			if (node != null && !node.isNull()) {
+				String value = node.asText(); // Convert JsonNode to String
+				try {
+					int returnCode = Integer.parseInt(value);
+					step.getOutcome().setReturnCode(returnCode);
+				} catch (NumberFormatException e) {
+					throw new JobArgumentException(
+							"Return variable 'returnCode' cannot be set as job return code: value '" + value
+									+ "' is not numeric.");
+				}
+			} else {
+				throw new JobArgumentException("Return variable 'returnCode' cannot be set as job's return code.");
+			}
+		}
 
-        if (filePath != null) {
-            File file = new File(filePath);
-            File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
+		if (filePath != null) {
+			File file = new File(filePath);
+			File parent = file.getParentFile();
+			if (parent != null && !parent.exists()) {
+				parent.mkdirs();
+			}
 
-            boolean append = ">>".equals(pI);
+			boolean append = ">>".equals(pI);
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
-                for (JsonNode outputNode : out) {
-                    if (rawOutput && outputNode.isTextual()) {
-                        writer.write(outputNode.asText());
-                    } else {
-                        writer.write(objectMapper.writeValueAsString(outputNode));
-                    }
-                    writer.newLine();
-                }
-            }
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
+				for (JsonNode outputNode : out) {
+					if (rawOutput && outputNode.isTextual()) {
+						writer.write(outputNode.asText());
+					} else {
+						writer.write(objectMapper.writeValueAsString(outputNode));
+					}
+					writer.newLine();
+				}
+			}
 
-            logger.info("Result written to file successfully.");
-            step.getOutcome().getVariables().put(name, filePath);
-            logger.info("Assigned return variable: " + name + " = " + filePath);
-        } else {
-            // If NOT writing to file, store result directly
-            if (rawOutput && out.size() == 1 && out.get(0).isTextual()) {
-                String raw = out.get(0).asText();
-                step.getOutcome().getVariables().put(name, raw);
-                logger.info("Assigned return variable: " + name + " = " + raw);
-            } else {
-                JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
-                String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode);
-                step.getOutcome().getVariables().put(name, resultPretty);
-                logger.info("Assigned return variable: " + name + " = " + resultPretty);
-            }
-        }
-    }
+			logger.info("Result written to file successfully.");
+			step.getOutcome().getVariables().put(name, filePath);
+			logger.info("Assigned return variable: " + name + " = " + filePath);
+		} else {
+			// If NOT writing to file, store result directly
+			if (rawOutput && out.size() == 1 && out.get(0).isTextual()) {
+				String raw = out.get(0).asText();
+				step.getOutcome().getVariables().put(name, raw);
+				logger.info("Assigned return variable: " + name + " = " + raw);
+			} else {
+				JsonNode resultNode = out.size() == 1 ? out.get(0) : objectMapper.valueToTree(out);
+				String resultPretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultNode);
+				step.getOutcome().getVariables().put(name, resultPretty);
+				logger.info("Assigned return variable: " + name + " = " + resultPretty);
+			}
+		}
+	}
 
-  //writing the output of the request directly to the files using specified file path( response is in plan text)
-    public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger, String name, String filePath, String pI, String result, boolean rawOutput, ObjectMapper objectMapper) throws IOException, JobArgumentException {
+	// writing the output of the request directly to the files using specified file
+	// path( response is in plan text)
+	public static <T extends JobArguments> void writeToFile(OrderProcessStep<T> step, OrderProcessStepLogger logger,
+			String name, String filePath, String pI, String result, boolean rawOutput, ObjectMapper objectMapper)
+			throws IOException, JobArgumentException {
 
-        if (name.equals("returnCode")) {
-            try {
-                int returnCode = Integer.parseInt(result);
-                step.getOutcome().setReturnCode(returnCode);
-            } catch (NumberFormatException e) {
-                throw new JobArgumentException("Return variable 'returnCode' cannot be set as job return code: value '" + result + "' is not numeric.");
-            }
-        }
+		if (name.equals("returnCode")) {
+			try {
+				int returnCode = Integer.parseInt(result);
+				step.getOutcome().setReturnCode(returnCode);
+			} catch (NumberFormatException e) {
+				throw new JobArgumentException("Return variable 'returnCode' cannot be set as job return code: value '"
+						+ result + "' is not numeric.");
+			}
+		}
 
-        if (filePath != null) {
-            File file = new File(filePath);
-            File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
+		if (filePath != null) {
+			File file = new File(filePath);
+			File parent = file.getParentFile();
+			if (parent != null && !parent.exists()) {
+				parent.mkdirs();
+			}
 
-            boolean append = ">>".equals(pI);
+			boolean append = ">>".equals(pI);
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
-                if (rawOutput && !result.isEmpty()) {
-                    writer.write(result);
-                } else {
-                    writer.write(objectMapper.writeValueAsString(result));
-                }
-                writer.newLine();
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, append))) {
+				if (rawOutput && !result.isEmpty()) {
+					writer.write(result);
+				} else {
+					writer.write(objectMapper.writeValueAsString(result));
+				}
+				writer.newLine();
 
-            }
+			}
 
-            logger.info("Result written to file successfully.");
-            step.getOutcome().getVariables().put(name, filePath);
-            logger.info("Assigned return variable: " + name + " = " + filePath);
-        } else {
-            // If NOT writing to file, store result directly
-            if (rawOutput && !result.isEmpty()) {
-                step.getOutcome().getVariables().put(name, result);
-                logger.info("Assigned return variable: " + name + " = " + result);
-            } else {
-                step.getOutcome().getVariables().put(name, result);
-                logger.info("Assigned return variable: " + name + " = " + result);
-            }
-        }
-    }
-    
-    //excrating the input option for the return vairable
-    public static List<String> parseInputOptions(String inputOption) {
-        List<String> options = new ArrayList<>();
-        if (inputOption == null || inputOption.trim().isEmpty()) {
-            return options;
-        }
+			logger.info("Result written to file successfully.");
+			step.getOutcome().getVariables().put(name, filePath);
+			logger.info("Assigned return variable: " + name + " = " + filePath);
+		} else {
+			// If NOT writing to file, store result directly
+			if (rawOutput && !result.isEmpty()) {
+				step.getOutcome().getVariables().put(name, result);
+				logger.info("Assigned return variable: " + name + " = " + result);
+			} else {
+				step.getOutcome().getVariables().put(name, result);
+				logger.info("Assigned return variable: " + name + " = " + result);
+			}
+		}
+	}
 
-        int i = 0;
-        String[] tokens = inputOption.trim().split("\\s+");
-        while (i < tokens.length) {
-            String token = tokens[i];
+	// excrating the input option for the return vairable
+	public static List<String> parseInputOptions(String inputOption) {
+		List<String> options = new ArrayList<>();
+		if (inputOption == null || inputOption.trim().isEmpty()) {
+			return options;
+		}
 
-            if (token.startsWith("--from-json=")) {
-                // Case 1: Quoted JSON: --from-json='{"key": "val with spaces"}';
-                if (token.contains("'")) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(token);
-                    i++;
+		int i = 0;
+		String[] tokens = inputOption.trim().split("\\s+");
+		while (i < tokens.length) {
+			String token = tokens[i];
 
-                    // keep appending until we find the closing quote
-                    while (i < tokens.length && !tokens[i].endsWith("'")) {
-                        sb.append(" ").append(tokens[i]);
-                        i++;
-                    }
+			if (token.startsWith("--from-json=")) {
+				// Case 1: Quoted JSON: --from-json='{"key": "val with spaces"}';
+				if (token.contains("'")) {
+					StringBuilder sb = new StringBuilder();
+					sb.append(token);
+					i++;
 
-                    if (i < tokens.length) {
-                        sb.append(" ").append(tokens[i]); // append the closing token
-                        i++;
-                    }
+					// keep appending until we find the closing quote
+					while (i < tokens.length && !tokens[i].endsWith("'")) {
+						sb.append(" ").append(tokens[i]);
+						i++;
+					}
 
-                    options.add(sb.toString());
-                } else {
-                    // Case 2: JSON without quotes (no spaces): just add it
-                    options.add(token);
-                    i++;
-                }
-            } else {
-                // Regular option: add and move on
-                options.add(token);
-                i++;
-            }
-        }
+					if (i < tokens.length) {
+						sb.append(" ").append(tokens[i]); // append the closing token
+						i++;
+					}
 
-        return options;
-    }
+					options.add(sb.toString());
+				} else {
+					// Case 2: JSON without quotes (no spaces): just add it
+					options.add(token);
+					i++;
+				}
+			} else {
+				// Regular option: add and move on
+				options.add(token);
+				i++;
+			}
+		}
+
+		return options;
+	}
 
 }

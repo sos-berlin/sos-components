@@ -25,6 +25,8 @@ import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Versions;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,14 +51,14 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 		boolean logResHeaders = false;
 		boolean logResBody = false;
 
-		//fetching logging details of info level
+		// fetching logging details of info level
 		String infoLogging = (String) myArgs.getLogItems().getValue();
 
 		if (infoLogging != null && !infoLogging.equalsIgnoreCase("none")) {
 			String[] parts = infoLogging.split(";");
 			for (String part : parts) {
 				String[] split = part.split(":");
-				String target = split[0].trim().toLowerCase(); //request or response
+				String target = split[0].trim().toLowerCase(); // request or response
 
 				// Default = log both headers and body
 				Set<String> items = new HashSet<>();
@@ -90,7 +92,8 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 			JsonNode requestNode;
 			try {
 				requestNode = objectMapper.readTree(requestJson);
-			} catch (Exception e) {
+			} 
+			catch (Exception e) {
 				throw new JobException("Invalid JSON in 'myRequest': " + e);
 			}
 
@@ -113,7 +116,8 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 					} catch (Exception e) {
 						throw new JobException("Failed to extract 'body' from request JSON: " + e);
 					}
-				} else if (requestNode.has("formData")) {
+				} 
+				else if (requestNode.has("formData")) {
 					JsonNode formDataNode = requestNode.get("formData");
 					if (formDataNode != null) {
 						if (logReqBody) {
@@ -127,9 +131,8 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 						throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
 					}
 
-					Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
-					while (fields.hasNext()) {
-						Map.Entry<String, JsonNode> field = fields.next();
+					for (Map.Entry<String, JsonNode> field : formDataNode.properties()) {
+
 						String key = field.getKey();
 						JsonNode valueNode = field.getValue();
 
@@ -151,6 +154,7 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 							} else {
 								// Detect content type from file extension
 								String fileName = filePath.getFileName().toString().toLowerCase();
+
 								if (fileName.endsWith(".xml")) {
 									contentType = "application/xml";
 								} else if (fileName.endsWith(".xlsx")) {
@@ -165,10 +169,10 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 									}
 								}
 							}
-
 							// Add the file part
 							formData.addPart(
-									new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType));
+									new FormDataFile(key, filePath.getFileName().toString(), filePath, contentType)
+							);
 						}
 						// For all other keys → treat as normal form string
 						else {
@@ -176,9 +180,56 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 							formData.addPart(new FormDataString(key, value));
 						}
 					}
+				} 
+				else if (requestNode.has("urlEncodedData")) {
+
+					JsonNode urlEncodedData = requestNode.get("urlEncodedData");
+
+					if (urlEncodedData == null || !urlEncodedData.isObject()) {
+						throw new IllegalArgumentException(
+								"Missing or invalid 'urlEncodedData' object in request JSON");
+					}
+
+					if (logReqBody) {
+						logger.info("Request Body as x-www-form-urlencoded (JSON): "
+								+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(urlEncodedData));
+					}
+					logger.debug("Request Body as x-www-form-urlencoded (JSON): "
+							+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(urlEncodedData));
+
+					StringBuilder encodedBody = new StringBuilder();
+
+					Iterator<Map.Entry<String, JsonNode>> it = urlEncodedData.properties().iterator();
+
+					while (it.hasNext()) {
+						Map.Entry<String, JsonNode> field = it.next();
+
+						String key = field.getKey();
+						JsonNode valueNode = field.getValue();
+
+						// x-www-form-urlencoded does NOT support files
+						if ("file".equalsIgnoreCase(key)) {
+							throw new JobException("'file' is not supported for application/x-www-form-urlencoded");
+						}
+
+						String value = valueNode.isNull() ? "" : valueNode.asText();
+
+						String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
+						String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
+
+						encodedBody.append(encodedKey).append("=").append(encodedValue);
+
+						if (it.hasNext()) {
+							encodedBody.append("&");
+						}
+					}
+
+					bodyStr = encodedBody.toString();
+					logger.debug("Encoded x-www-form-urlencoded body: " + encodedBody.toString());
+
 				}
-				
-				//maping request headers
+
+				// maping request headers
 				Map<String, String> headers = new HashMap<>();
 
 				if (requestNode.has("headers") && requestNode.get("headers").isArray()) {
@@ -202,24 +253,36 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 				ApiResponse response = null;
 
 				try (ApiExecutor apiExecutor = new ApiExecutor(step)) {
-					
+
 					// REST Call -Creating a new session by login method
-					response = apiExecutor.login();
+					Boolean useOIDCLogin = myArgs.getUseOidcLogin().getValue();
+					if (useOIDCLogin) {
+						response = apiExecutor.loginWithOIDC(myArgs.getIssuer().getValue(), myArgs.getClientId().getValue(),
+								myArgs.getClientSecret().getValue(), myArgs.getIdentityService().getValue(),
+								myArgs.getOidcTrustStorePath().getValue(), myArgs.getOidcTrustStorePasswd().getValue(),
+								myArgs.getOidcTrustStoreType().getValue());
+					} else {
+						response = apiExecutor.login();
+					}
+
 					if (response == null || response.getStatusCode() != 200) {
 						String body = response != null ? response.getResponseBody() : "No response";
 						throw new JobException("Login failed. " + body);
 					}
-					logger.info("Login successful.");
+					logger.debug("Login successful.");
 
 					accessToken = response.getAccessToken();
 
-					// Sending the REST request to the specified endpoint with body and access_token( generated by login in new session)
+					// Sending the REST request to the specified endpoint with body and
+					// access_token( generated by login in new session)
+
 					if (requestNode.has("formData")) {
 						headers.put(HttpUtils.HEADER_CONTENT_TYPE, formData.getContentType());
 						response = apiExecutor.post(accessToken, endpoint, formData, headers);
 					} else {
 						response = apiExecutor.post(accessToken, endpoint, bodyStr, headers);
 					}
+
 					int statusCode = response.getStatusCode();
 
 					if (statusCode < 200 || statusCode >= 300) {
@@ -388,7 +451,11 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 												throw new JobArgumentException(
 														"File path provided without Processing Instruction (>, >>): "
 																+ token);
+											} else {
+												throw new JobArgumentException("Could not create return variable: "
+														+ name + ". Unsupported processing instruction: " + token);
 											}
+
 										}
 									}
 
@@ -493,7 +560,8 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 																}
 															}
 
-															((ObjectNode) mergedInput).setAll((ObjectNode) fromJsonNode);
+															((ObjectNode) mergedInput)
+																	.setAll((ObjectNode) fromJsonNode);
 
 														} catch (JsonProcessingException e) {
 															logger.error("Invalid JSON for input option: " + jsonStr);
@@ -514,7 +582,8 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 													}
 												}
 
-											} else {
+											} 
+											else {
 												if (responseBody != null
 														&& !response.getResponseBody().trim().isEmpty()) {
 													if (contentType.contains("application/json")) {
@@ -565,7 +634,7 @@ public class JS7RESTClientJob extends Job<JS7RestJobArguments> {
 					}
 
 				} catch (SOSConnectionRefusedException | SOSBadRequestException e) {
-					logger.info("from SOSConnectionRefusedException | SOSBadRequestException e");
+					logger.debug("from SOSConnectionRefusedException | SOSBadRequestException e");
 					if (response != null) {
 						step.getOutcome().setReturnCode(response.getStatusCode());
 						logger.error(
