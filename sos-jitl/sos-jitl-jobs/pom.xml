@@ -44,6 +44,11 @@
 			<artifactId>sos-yade-engine</artifactId>
 			<version>${project.version}</version>
 		</dependency>		
+    <dependency>
+      <groupId>com.sos-berlin</groupId>
+      <artifactId>sos-js7-loganonymizer</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.typesafe</groupId>

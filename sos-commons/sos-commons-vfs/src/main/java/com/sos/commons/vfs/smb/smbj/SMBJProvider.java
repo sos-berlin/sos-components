@@ -61,7 +61,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
     private boolean accessMaskMaximumAllowed = false;
 
     public SMBJProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
-        super(logger, args);
+        super(logger, args, args == null ? null : args.getDomain(), args == null ? null : args.getShareName(), args == null ? null : args
+                .getLoginContextName());
         getArguments().tryRedefineHostPort();
     }
 

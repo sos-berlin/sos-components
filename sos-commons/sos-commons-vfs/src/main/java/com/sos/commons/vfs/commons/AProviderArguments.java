@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
@@ -40,6 +41,7 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public abstract String getAdvancedAccessInfo();
 
+    private EncryptionDecryptArguments encryptionDecrypt;
     private CredentialStoreArguments credentialStore;
     private ProxyConfigArguments proxy;
 
@@ -64,12 +66,28 @@ public abstract class AProviderArguments extends ASOSArguments {
     private Boolean isFTP = null;
     private boolean connectivityFaultSimulationEnabled;
 
+    public void setEncryptionDecrypt(EncryptionDecryptArguments val) {
+        encryptionDecrypt = val;
+    }
+
+    public EncryptionDecryptArguments getEncryptionDecrypt() {
+        return encryptionDecrypt;
+    }
+
+    public boolean isEncryptionDecryptEnabled() {
+        return encryptionDecrypt != null && !encryptionDecrypt.getPrivateKeyPath().isEmpty();
+    }
+
     public void setCredentialStore(CredentialStoreArguments val) {
         credentialStore = val;
     }
 
     public CredentialStoreArguments getCredentialStore() {
         return credentialStore;
+    }
+
+    public boolean isCredentialStoreEnabled() {
+        return credentialStore != null && !credentialStore.getFile().isEmpty();
     }
 
     public ProxyConfigArguments getProxy() {

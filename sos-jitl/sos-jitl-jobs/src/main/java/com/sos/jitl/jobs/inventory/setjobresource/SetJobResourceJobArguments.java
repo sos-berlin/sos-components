@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.inventory.setjobresource;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 
@@ -13,8 +14,8 @@ public class SetJobResourceJobArguments extends JobArguments {
     private JobArgument<String> file = new JobArgument<String>("file", false);
     private JobArgument<String> timeZone = new JobArgument<String>("time_zone", false);
     private JobArgument<String> environmentVariable = new JobArgument<String>("environment_variable", false);
-    private JobArgument<String> enciphermentCertificate = new JobArgument<String>("encipherment_certificate", false);
- 
+    private JobArgument<String> enciphermentCertificate = new JobArgument<String>(EncryptionArguments.ARG_NAME_ENCIPHERMENT_CERTIFICATE, false);
+
     public SetJobResourceJobArguments() {
         super(new CredentialStoreArguments());
     }
@@ -82,7 +83,5 @@ public class SetJobResourceJobArguments extends JobArguments {
     public void setEnciphermentCertificate(String encryptCert) {
         this.enciphermentCertificate.setValue(encryptCert);
     }
-
-
 
 }

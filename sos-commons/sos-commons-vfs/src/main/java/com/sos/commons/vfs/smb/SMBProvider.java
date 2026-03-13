@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderReusableResource;
@@ -15,12 +16,13 @@ public abstract class SMBProvider<R extends AProviderReusableResource<C>, C> ext
 
     private String shareName;
 
-    public static SMBProvider<?,?> createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
+    public static SMBProvider<?, ?> createInstance(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
         return new com.sos.commons.vfs.smb.smbj.SMBJProvider(logger, args);
     }
 
-    protected SMBProvider(ISOSLogger logger, SMBProviderArguments args) throws ProviderInitializationException {
-        super(logger, args);
+    protected SMBProvider(ISOSLogger logger, SMBProviderArguments args, SOSArgument<?>... additionalSecretArg)
+            throws ProviderInitializationException {
+        super(logger, args, additionalSecretArg);
         setAccessInfo(getArguments().getAccessInfo());
     }
 
