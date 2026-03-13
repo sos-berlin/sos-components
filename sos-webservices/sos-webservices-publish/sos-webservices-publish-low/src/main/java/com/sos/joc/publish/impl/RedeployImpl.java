@@ -153,13 +153,13 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         if(entry.getValue().getReferencedItem() != null) {
                             entry.getValue().getReferences().forEach( inv -> {
                                 try {
-                                    dependencyHistorieItems.addAll(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
                                 } catch (SOSHibernateException e) {}
                             });
                             entry.getValue().getReferencedBy().stream().filter(inv -> ConfigurationType.WORKFLOW.equals(inv.getTypeAsEnum()))
                             .forEach( inv -> {
                                 try {
-                                    dependencyHistorieItems.addAll(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
+                                    dependencyHistorieItems.add(dbLayer.getLatestActiveDepHistoryItem(inv.getId(), entry.getKey().getControllerId()));
                                 } catch (SOSHibernateException e) {}
                             });
                         }

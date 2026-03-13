@@ -195,7 +195,7 @@ public class UpdateItemUtils {
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         // check first if a deploymentHistory item related to the configuration item exist
         Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = new HashSet<DBItemDeploymentHistory>();
-        List<DBItemDeploymentHistory> latestDepHistoryItems = null;
+        DBItemDeploymentHistory latestDepHistory = null;
         DBItemDeploymentHistory depConf = null;
         DBItemInventoryConfiguration invConf = null;
         for (T object : verifiedObjects) {
@@ -204,23 +204,19 @@ public class UpdateItemUtils {
             }
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
-                latestDepHistoryItems = dbLayer.getLatestActiveDepHistoryItem(invConf.getId(), controllerId);
+                latestDepHistory = dbLayer.getLatestActiveDepHistoryItem(invConf.getId(), controllerId);
                 // check if the paths of both are the same
-                for (DBItemDeploymentHistory latestDepHistory : latestDepHistoryItems) {
-                    if (!invConf.getName().equals(latestDepHistory.getName())) {
-                        // if not, delete the old deployed item via updateRepo before deploy of the new configuration
-                        renamedOriginalHistoryEntries.add(latestDepHistory);
-                    }
+                if (latestDepHistory != null && !invConf.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    renamedOriginalHistoryEntries.add(latestDepHistory);
                 }
             } else {
                 depConf = (DBItemDeploymentHistory) object;
-                latestDepHistoryItems = dbLayer.getLatestActiveDepHistoryItem(depConf.getInventoryConfigurationId(), controllerId);
+                latestDepHistory = dbLayer.getLatestActiveDepHistoryItem(depConf.getInventoryConfigurationId(), controllerId);
                 // check if the paths of both are the same
-                for (DBItemDeploymentHistory latestDepHistory : latestDepHistoryItems) {
-                    if (!depConf.getName().equals(latestDepHistory.getName())) {
-                        // if not, delete the old deployed item via updateRepo before deploy of the new configuration
-                        renamedOriginalHistoryEntries.add(latestDepHistory);
-                    }
+                if (latestDepHistory != null && !depConf.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    renamedOriginalHistoryEntries.add(latestDepHistory);
                 }
             }
         }
