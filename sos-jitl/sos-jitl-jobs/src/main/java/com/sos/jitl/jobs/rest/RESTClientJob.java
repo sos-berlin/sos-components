@@ -1,4 +1,3 @@
-
 package com.sos.jitl.jobs.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -8,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.credentialstore.CredentialStoreArguments.CredentialStoreResolver;
-import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.mulitpart.HttpFormData;
@@ -16,7 +14,6 @@ import com.sos.commons.httpclient.commons.mulitpart.HttpFormDataCloseable;
 import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataFile;
 import com.sos.commons.httpclient.commons.mulitpart.formdata.FormDataString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.keystore.KeyStoreArguments;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.OrderProcessStep;
@@ -27,6 +24,7 @@ import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -54,8 +52,6 @@ public class RESTClientJob extends Job<RestJobArguments> {
 
 		CredentialStoreArguments csArgs = step.getIncludedArguments(CredentialStoreArguments.class);
 		CredentialStoreResolver resolver = csArgs.newResolver();
-		
-		KeyStoreArguments keystoreArgs = step.getIncludedArguments(KeyStoreArguments.class); 
 
 		RestJobArguments myArgs = (RestJobArguments) step.getDeclaredArguments();
 		OrderProcessStepLogger logger = step.getLogger();
@@ -99,8 +95,8 @@ public class RESTClientJob extends Job<RestJobArguments> {
 				}
 			}
 		}
-		
-		//analysing the request json to get the details for rest call
+
+		// analysing the request json to get the details for rest call
 		String requestJson = (String) myArgs.getMyRequest().getValue();
 		if (requestJson != null && !requestJson.isBlank()) {
 			JsonNode requestNode;
@@ -113,13 +109,13 @@ public class RESTClientJob extends Job<RestJobArguments> {
 			String endpoint = requestNode.has("endpoint") ? requestNode.get("endpoint").asText((String) null) : null;
 			String method = requestNode.has("method") ? requestNode.get("method").asText((String) null) : null;
 			URI uri = endpoint != null ? URI.create(endpoint) : null;
-			
+
 			if (uri == null) {
 				String jr_uri = Optional.ofNullable(step.getAllArguments().get("url")).map(JobArgument::getValue)
 						.map(Object::toString).orElse("").trim();
 				uri = jr_uri != null ? URI.create(endpoint) : null;
 			}
-			
+
 			if (uri == null) {
 				throw new JobRequiredArgumentMissingException("Missing or empty 'URL' in request JSON.");
 			} else {
@@ -151,9 +147,8 @@ public class RESTClientJob extends Job<RestJobArguments> {
 							throw new IllegalArgumentException("Missing or invalid 'formData' object in request JSON");
 						}
 
-						Iterator<Map.Entry<String, JsonNode>> fields = formDataNode.fields();
-						while (fields.hasNext()) {
-							Map.Entry<String, JsonNode> field = fields.next();
+						for (Map.Entry<String, JsonNode> field : formDataNode.properties()) {
+
 							String key = field.getKey();
 							JsonNode valueNode = field.getValue();
 
@@ -201,9 +196,55 @@ public class RESTClientJob extends Job<RestJobArguments> {
 								formData.addPart(new FormDataString(key, value));
 							}
 						}
+					} else if (requestNode.has("urlEncodedData")) {
+
+						JsonNode urlEncodedData = requestNode.get("urlEncodedData");
+
+						if (urlEncodedData == null || !urlEncodedData.isObject()) {
+							throw new IllegalArgumentException(
+									"Missing or invalid 'urlEncodedData' object in request JSON");
+						}
+
+						if (logReqBody) {
+							logger.info("Request Body as x-www-form-urlencoded (JSON): "
+									+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(urlEncodedData));
+						}
+						logger.debug("Request Body as x-www-form-urlencoded (JSON): "
+								+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(urlEncodedData));
+
+						StringBuilder encodedBody = new StringBuilder();
+
+						Iterator<Map.Entry<String, JsonNode>> it = urlEncodedData.properties().iterator();
+
+						while (it.hasNext()) {
+							Map.Entry<String, JsonNode> field = it.next();
+
+							String key = field.getKey();
+							JsonNode valueNode = field.getValue();
+
+							// x-www-form-urlencoded does NOT support files
+							if ("file".equalsIgnoreCase(key)) {
+								throw new JobException("'file' is not supported for application/x-www-form-urlencoded");
+							}
+
+							String value = valueNode.isNull() ? "" : valueNode.asText();
+
+							String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
+							String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
+
+							encodedBody.append(encodedKey).append("=").append(encodedValue);
+
+							if (it.hasNext()) {
+								encodedBody.append("&");
+							}
+						}
+
+						bodyStr = encodedBody.toString();
+						logger.debug("Encoded x-www-form-urlencoded body: " + encodedBody.toString());
+
 					}
-					
-					//maping all the request headers
+
+					// maping all the request headers
 					Map<String, String> headerMap = new HashMap<>();
 
 					String username = Optional.ofNullable(step.getAllArguments().get("username"))
@@ -211,16 +252,23 @@ public class RESTClientJob extends Job<RestJobArguments> {
 
 					String password = Optional.ofNullable(step.getAllArguments().get("password"))
 							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+					
+					String clientId = Optional.ofNullable(step.getAllArguments().get("client_id"))
+							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+
+					String clientSecret = Optional.ofNullable(step.getAllArguments().get("client_secret"))
+							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+					
+					String enc_path = Optional.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
+							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+					
 
 					if (!username.isBlank() && !password.isBlank()) {
-
-						String enc_path = Optional
-								.ofNullable(step.getAllArguments().get(EncryptionArguments.ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH))
-								.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-						if (EncryptionArguments.hasEncryptedValue(username)) {
+						
+						if (username.startsWith("enc:")) {
 							username = EnciphermentDecryptor.decryptValue(username, Paths.get(enc_path));
 						}
-						if (EncryptionArguments.hasEncryptedValue(password)) {
+						if (password.startsWith("enc:")) {
 							password = EnciphermentDecryptor.decryptValue(password, Paths.get(enc_path));
 						}
 
@@ -229,6 +277,27 @@ public class RESTClientJob extends Job<RestJobArguments> {
 						String resolvedPassword = resolver.resolve(password);
 
 						String credentials = resolvedUsername + ":" + resolvedPassword;
+						String encodedAuth = Base64.getEncoder()
+								.encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
+						headerMap.put("Authorization", "Basic " + encodedAuth);
+					}
+
+
+					if (!clientId.isBlank() && !clientSecret.isBlank()) {
+
+						if (clientId.startsWith("enc:")) {
+							clientId = EnciphermentDecryptor.decryptValue(clientId, Paths.get(enc_path));
+						}
+						if (clientSecret.startsWith("enc:")) {
+							clientSecret = EnciphermentDecryptor.decryptValue(clientSecret, Paths.get(enc_path));
+						}
+
+						logger.debug("Reading client_id and client_se cret from the Credential Store.");
+						String resolvedClientId = resolver.resolve(clientId);
+						String resolvedClientSecret = resolver.resolve(clientSecret);
+
+						String credentials = resolvedClientId + ":" + resolvedClientSecret;
 						String encodedAuth = Base64.getEncoder()
 								.encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
 
@@ -256,17 +325,23 @@ public class RESTClientJob extends Job<RestJobArguments> {
 					BaseHttpClient.Builder builder = BaseHttpClient.withBuilder().withLogger(logger)
 							.withConnectTimeout(Duration.ofSeconds(30L));
 
-					if (uri.toString().toLowerCase().startsWith("https:")) {
-						logger.info("calling getsslArguments");
-						builder.withSSL(JobSslConfigUtils.getSslArguments(step));
-						logger.info("got results!!!");
+					if (uri != null && "https".equalsIgnoreCase(uri.getScheme())) {
+						String path = uri.getPath();
+
+						if (path != null && path.startsWith("/joc/api")) {
+							logger.debug("calling getsslArguments");
+							builder.withSSL(JobSslConfigUtils.getSslArguments(step));
+							logger.debug("got results!!!");
+						}
+
 					}
 
 					this.client = builder.build();
 
 					try {
 						HttpExecutionResult<byte[]> result = null;
-						// this part will be updated when I've the idea what will happen when header=null is passed
+						// this part will be updated when I've the idea what will happen when
+						// header=null is passed
 						if (method != null && !method.trim().isEmpty()) {
 							if (method.equalsIgnoreCase("post")) {
 								if (requestNode.has("formData")) {
@@ -336,7 +411,7 @@ public class RESTClientJob extends Job<RestJobArguments> {
 
 						HttpResponse<byte[]> response = result.response();
 
-						//mapping response headers
+						// mapping response headers
 						Map<String, String> resHeaders = response.headers().map().entrySet().stream().collect(
 								Collectors.toMap(Map.Entry::getKey, (entryx) -> String.join(", ", entryx.getValue())));
 						String contentType = null;
@@ -354,8 +429,8 @@ public class RESTClientJob extends Job<RestJobArguments> {
 							if (logResHeaders)
 								logger.info(headerLog.toString().trim());
 						}
-						
-						//fetching response body
+
+						// fetching response body
 						String responseBody = null;
 						if (contentType != null && (contentType.contains("application/json")
 								|| contentType.toLowerCase().startsWith("text/"))) {
@@ -392,7 +467,7 @@ public class RESTClientJob extends Job<RestJobArguments> {
 							} catch (Exception e) {
 								throw new JobException("Invalid JSON in 'return_variable': " + e.getMessage(), e);
 							}
-							
+
 							if (returnVars.isArray()) {
 
 								ReturnVariableUtils.checkDuplicateReturnVariable(returnVars);
@@ -423,8 +498,10 @@ public class RESTClientJob extends Job<RestJobArguments> {
 											}
 
 											if (firstSeparator != -1) {
-												String inputSegment = path.substring(1, firstSeparator).trim(); // skip '<'
-												path = path.substring(firstSeparator + 2).trim(); // rest: jq or file ops or both
+												String inputSegment = path.substring(1, firstSeparator).trim(); // skip
+																												// '<'
+												path = path.substring(firstSeparator + 2).trim(); // rest: jq or file
+																									// ops or both
 
 												if (inputSegment.startsWith("plain:")) {
 													inputType = "plain";
@@ -491,6 +568,9 @@ public class RESTClientJob extends Job<RestJobArguments> {
 													throw new JobArgumentException(
 															"File path provided without Processing Instruction (>, >>): "
 																	+ token);
+												} else {
+													throw new JobArgumentException("Could not create return variable: "
+															+ name + ". Unsupported processing instruction: " + token);
 												}
 											}
 										}
