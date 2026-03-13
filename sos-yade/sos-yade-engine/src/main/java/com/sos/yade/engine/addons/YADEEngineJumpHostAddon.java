@@ -349,6 +349,7 @@ public class YADEEngineJumpHostAddon {
         String label = YADEClientArguments.LABEL;
         try {
             delegator.getProvider().createDirectoriesIfNotExists(config.configDirectory);
+            delegator.getProvider().createDirectoriesIfNotExists(config.dataDirectory);
             upload(delegator, config.settingsXMLContent, config.settingsXML);
             logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsXML);
         } catch (Exception e) {
