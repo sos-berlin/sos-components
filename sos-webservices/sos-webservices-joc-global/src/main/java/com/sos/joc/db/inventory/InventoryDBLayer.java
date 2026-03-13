@@ -124,10 +124,11 @@ public class InventoryDBLayer extends DBLayer {
     public String getDeployedInventoryContent(Long configId, String commitId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select invContent from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where inventoryConfigurationId = :configId");
-            hql.append(" and commitId = :commitId");
-            hql.append(" and state = :state )");
+            hql.append(" where inventoryConfigurationId=:configId and commitId = :commitId and state = :state order by deploymentDate desc");
+//            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//            hql.append(" where inventoryConfigurationId = :configId");
+//            hql.append(" and commitId = :commitId");
+//            hql.append(" and state = :state )");
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("configId", configId);
             query.setParameter("commitId", commitId);
@@ -2052,15 +2053,18 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public String getPathByNameFromLatestActiveDepHistoryItem(String name, ConfigurationType type) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select dep.path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-        hql.append(" where dep.deploymentDate = (select max(history.deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-        hql.append(" where history.name = :name");
-        hql.append(" and history.type = :type");
-        hql.append(" and history.operation = :operation").append(")");
+//        StringBuilder hql = new StringBuilder("select dep.path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where name=:name and type=:type and operation=:operation order by deploymentDate desc");
+//        hql.append(" where dep.deploymentDate = (select max(history.deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+//        hql.append(" where history.name = :name");
+//        hql.append(" and history.type = :type");
+//        hql.append(" and history.operation = :operation").append(")");
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("operation", OperationType.UPDATE.value());
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
+        query.setMaxResults(1);
         return getSession().getSingleResult(query);
     }
 
@@ -2157,11 +2161,13 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
         if (configurationId != null) {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where inventoryConfigurationId = :cid");
-            hql.append(" and state = 0").append(")");
+            hql.append(" where inventoryConfigurationId=:cid and state = 0 order by deploymentDate desc");
+//            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//            hql.append(" where inventoryConfigurationId = :cid");
+//            hql.append(" and state = 0").append(")");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             query.setParameter("cid", configurationId);
+            query.setMaxResults(1);
             return getSession().getSingleResult(query);
         }
         return null;
