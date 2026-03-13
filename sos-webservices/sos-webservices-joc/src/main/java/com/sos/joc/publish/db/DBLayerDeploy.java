@@ -779,8 +779,9 @@ public class DBLayerDeploy {
         try {
             List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where path = : path and type = :type and commitId = :commitId )");
+            hql.append(" where path = : path and type = :type and commitId = :commitId order by deploymentDate desc");
+//            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//            hql.append(" where path = : path and type = :type and commitId = :commitId )");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (Configuration cfg : deployConfigurations) {
                 query.setParameter("path", cfg.getPath());
@@ -810,8 +811,9 @@ public class DBLayerDeploy {
         try {
             List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where path = :path and type = :type )");
+            hql.append(" where path = :path and type = :type order by deploymentDate desc");
+//            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//            hql.append(" where path = :path and type = :type )");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (Configuration cfg :deployConfigurations) {
                 query.setParameter("path", cfg.getPath());
@@ -1219,34 +1221,38 @@ public class DBLayerDeploy {
     public DBItemDeploymentHistory getLatestDepHistoryItem(String path, ConfigurationType objectType) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where path = :path");
-            hql.append(" and type = :type").append(")");
+            hql.append(" where path=:path and type=:type order by deploymentDate desc");
+//            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//            hql.append(" where path = :path");
+//            hql.append(" and type = :type").append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             query.setParameter("path", path);
             query.setParameter("type", objectType.intValue());
+            query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
     }
 
-    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId, String controllerId) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :cid");
-        hql.append(" and controllerId = :controllerId");
-        hql.append(" and state = :state").append(")");
+        hql.append(" where inventoryConfigurationId=:cid and controllerId=:controllerId and state=:state order by deploymentDate desc");
+//        hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//        hql.append(" where inventoryConfigurationId = :cid");
+//        hql.append(" and controllerId = :controllerId");
+//        hql.append(" and state = :state").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
-        List<DBItemDeploymentHistory> result = session.getResultList(query);
-        if(result != null) {
-            return result.stream().filter(r -> r.getOperation().equals(OperationType.UPDATE.value())).toList();
+        query.setMaxResults(1);
+        DBItemDeploymentHistory result = session.getSingleResult(query);
+        if(result != null && result.getOperation().equals(OperationType.UPDATE.value())) {
+            return result;
         }
-        return Collections.emptyList();
+        return null;
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem(Long configurationId) throws SOSHibernateException {
@@ -1261,7 +1267,7 @@ public class DBLayerDeploy {
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.deploymentDate = (").append("select max(history.deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
+            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
                     " as history");
             hql.append(" where history.state = 0");
             if (recursive) {
@@ -1301,7 +1307,7 @@ public class DBLayerDeploy {
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate = (select max(deploymentDate) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where state = 0");
             if (recursive) {
                 if (!"/".equals(folder)) {
