@@ -176,11 +176,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 return false;
             }
             if (client.isConnected()) {
-                try {
-                    client.sendNoOp();// NOOP command
-                    return true;
-                } catch (IOException e) {
-                }
+                sendNoOp();
             }
             return false;
         }
@@ -816,7 +812,18 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                     .getTransferModeValue());
         }
 
-        client.sendNoOp();// NOOP command
+        sendNoOp();
+    }
+
+    // https://change.sos-berlin.com/browse/YADE-645
+    private void sendNoOp() {
+        try {
+            client.sendNoOp();// NOOP command
+        } catch (IOException e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[sendNoOp][exception]%s", getLogPrefix(), e);
+            }
+        }
     }
 
     // see notes: autodetectUTF8Enabled
