@@ -291,7 +291,7 @@ public class SOSKeePassDatabase {
         String val = null;
         String queryParamSetProperty = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_SET_PROPERTY);
         if (SOSString.isEmpty(queryParamSetProperty)) {
-            if (path.isAttachment() || path.getPropertyName().equals(STANDARD_PROPERTY_NAME_ATTACHMENT)) {
+            if (isAttachment(path)) {
                 val = new String(kpd.getAttachment(entry, path.getPropertyName()));
             } else {
                 val = entry.getProperty(path.getPropertyName());
@@ -300,7 +300,7 @@ public class SOSKeePassDatabase {
                 }
             }
         } else {
-            if (path.isAttachment() || path.getPropertyName().equals(STANDARD_PROPERTY_NAME_ATTACHMENT)) {
+            if (isAttachment(path)) {
                 Path attachment = Paths.get(queryParamSetProperty);
                 entry = kpd.getHandler().setBinaryProperty(path, entry, attachment);
                 if (path.isStdoutOnSetBinaryProperty()) {
@@ -318,6 +318,27 @@ public class SOSKeePassDatabase {
         }
 
         return val;
+    }
+
+    public static boolean isAttachment(SOSKeePassPath path) {
+        if (path == null) {
+            return false;
+        }
+        return path.isAttachment() || path.getPropertyName().equals(STANDARD_PROPERTY_NAME_ATTACHMENT);
+    }
+
+    public static String getAttachmentPropertyAsString(SOSKeePassDatabase kpd, Entry<?, ?, ?, ?> entry, SOSKeePassPath path) throws Exception {
+        if (kpd == null || entry == null || path == null) {
+            return null;
+        }
+        return new String(kpd.getAttachment(entry, path.getPropertyName()), "UTF-8");
+    }
+
+    public static String getProperty(Entry<?, ?, ?, ?> entry, SOSKeePassPath path) {
+        if (entry == null || path == null) {
+            return null;
+        }
+        return entry.getProperty(path.getPropertyName());
     }
 
     public static byte[] getBinaryProperty(String uri) throws Exception {

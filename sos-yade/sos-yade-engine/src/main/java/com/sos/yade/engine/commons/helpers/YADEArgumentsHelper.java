@@ -1,6 +1,8 @@
 package com.sos.yade.engine.commons.helpers;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSComparisonOperator;
@@ -60,18 +62,34 @@ public class YADEArgumentsHelper {
         return toString("Disable" + arg.getName(), String.valueOf((!arg.isTrue())));
     }
 
+    public static String toString(ISOSLogger logger, ASOSArguments args) {
+        return toString(logger, null, args);
+    }
+
     public static String toString(ISOSLogger logger, String label, ASOSArguments args) {
+        return toString(logger, label, args, new HashSet<>());
+    }
+
+    public static String toString(ISOSLogger logger, String label, ASOSArguments args, Set<String> excluded) {
         if (args == null) {
             return "[" + label + "]null";
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(label).append("]");
+        if (label != null) {
+            sb.append("[").append(label).append("]");
+        }
         sb.append("[").append(args.getClass().getSimpleName()).append("]");
         boolean add = false;
         try {
             for (SOSArgument<?> arg : args.getArguments()) {
                 if (add) {
                     sb.append(", ");
+                }
+                if (arg.getName() == null) {
+                    continue;
+                }
+                if (excluded.contains(arg.getName())) {
+                    continue;
                 }
                 sb.append(toString(arg));
                 add = true;
@@ -84,10 +102,10 @@ public class YADEArgumentsHelper {
             if (included != null) {
                 for (ASOSArguments include : included) {
                     String name = include.getClass().getSimpleName();
-                    // if (excluded.equals(name)) {
-                    // continue;
-                    // }
-                    sb.append(", ").append(toString(logger, name, include));
+                    if (excluded.contains(name)) {
+                        continue;
+                    }
+                    sb.append(", ").append(toString(logger, name, include, excluded));
                 }
             }
         } catch (Exception e) {

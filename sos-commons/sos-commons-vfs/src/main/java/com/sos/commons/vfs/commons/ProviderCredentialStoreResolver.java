@@ -7,9 +7,11 @@ import org.linguafranca.pwdb.Entry;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
+import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 
@@ -27,16 +29,38 @@ public class ProviderCredentialStoreResolver {
      *            e.g. passphrase, domain
      * @return
      * @throws Exception */
-    public static boolean resolve(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
+    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
+            throws Exception {
         if (args == null || !args.isCredentialStoreEnabled()) {
             return false;
         }
         if (args.getCredentialStore().getKeepassDatabase() == null) {
             setDatabase(args);
-            keepass2Arguments(args, proxyArgs, additional2resolve);
+            Entry<?, ?, ?, ?> entry = keepass2Arguments(args, proxyArgs, additional2resolve);
+            setDecryptionPrivateKey(logger, entry, args);
             return true;
         }
         return false;
+    }
+
+    /** YADECientBannerWriter - resolve the host IP address at the DEBUG log level */
+    public static String resoveHostNameQuietly(ISOSLogger logger, AProviderArguments args) {
+        try {
+            if (args.getHost().getValue() == null || !args.getHost().getValue().startsWith(SOSKeePassPath.PATH_PREFIX)) {
+                return args.getHost().getValue();
+            }
+
+            setDatabase(args);
+            SOSArgument<String> tmp = new SOSArgument<>(args.getHost().getName(), false);
+            tmp.setValue(args.getHost().getValue());
+            keepass2Argument(null, args, tmp, null, null);
+            return tmp.getValue();
+        } catch (Exception e) {
+            logger.debug("[resoveHostNameQuietly]" + e);
+            return null;
+        } finally {
+            args.getCredentialStore().setKeepassDatabase(null);
+        }
     }
 
     /**/
@@ -67,6 +91,10 @@ public class ProviderCredentialStoreResolver {
     }
 
     private static void setDatabase(AProviderArguments args) throws Exception {
+        args.getCredentialStore().setKeepassDatabase(load(args));
+    }
+
+    private static SOSKeePassDatabase load(AProviderArguments args) throws Exception {
         SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()), SOSKeePassDatabase
                 .getModule(args.getCredentialStore().getKeePassModule().getValue()));
         Path keyFile = null;
@@ -89,7 +117,7 @@ public class ProviderCredentialStoreResolver {
         } else {
             kpd.load(args.getCredentialStore().getPassword().getValue(), keyFile);
         }
-        args.getCredentialStore().setKeepassDatabase(kpd);
+        return kpd;
     }
 
     /** Note: each argument value can contain a different Keepass entry path */
@@ -142,7 +170,7 @@ public class ProviderCredentialStoreResolver {
             if (value == null) {
                 throw new Exception(String.format("[%s][%s][%s]value is null", fileName, argName, keePassPath.toString()));
             }
-            if (secondArg == null) {
+            if (secondArg == null || EncryptionArguments.hasEncryptedValue(value)) {
                 mainArg.applyValue(value);
             } else {
                 String[] arr = value.split(mainSecondSplitter);
@@ -170,6 +198,39 @@ public class ProviderCredentialStoreResolver {
                     .getExpiryTime()));
         }
         return entry;
+    }
+
+    private static void setDecryptionPrivateKey(ISOSLogger logger, Entry<?, ?, ?, ?> lastEntry, AProviderArguments args) throws Exception {
+        if (!args.isEncryptionDecryptEnabled()) {
+            return;
+        }
+
+        SOSKeePassPath keePassPath = new SOSKeePassPath(args.getCredentialStore().getKeepassDatabase().getHandler().isKdbx(), args
+                .getEncryptionDecrypt().getPrivateKeyPath().getValue().toString(), args.getCredentialStore().getEntryPath().getValue());
+        Entry<?, ?, ?, ?> entry = null;
+
+        if (keePassPath.isValid()) {
+            if (lastEntry == null || !keePassPath.getEntryPath().equals(lastEntry.getPath())) {
+                entry = getEntry(args, keePassPath.getEntry());
+            } else {
+                entry = lastEntry;
+            }
+            boolean readFromFile = false;
+            String privateKeyInput = SOSKeePassDatabase.getProperty(entry, keePassPath);
+            if (privateKeyInput == null) {
+                privateKeyInput = SOSKeePassDatabase.getAttachmentPropertyAsString(args.getCredentialStore().getKeepassDatabase(), entry,
+                        keePassPath);
+            } else {
+                readFromFile = true;
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s][setDecryptionPrivateKey][%s]isAttachment=%s", ProviderCredentialStoreResolver.class.getSimpleName(), args
+                        .getEncryptionDecrypt().getPrivateKeyPath().getValue(), !readFromFile);
+            }
+
+            ProviderEncryptionResolver.setPrivateKey(logger, args.getEncryptionDecrypt(), privateKeyInput, readFromFile);
+        }
     }
 
 }
