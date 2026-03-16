@@ -1257,62 +1257,27 @@ public class DBLayerDeploy {
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId) {
         return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
     }
-
+    
     public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         try {
-            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
-                    " as history");
-            hql.append(" where history.state = 0");
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh join ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS_JOIN).append(" dcj");
+            hql.append(" on (dh.deploymentDate=dcj.maxDate");
+            hql.append(" and dh.controllerId=dcj.controllerId");
+            hql.append(" and dh.name=dcj.name");
+            hql.append(" and dh.type=dcj.type)");
+            hql.append(" where dh.controllerId = :controllerId");
+            hql.append(" and dh.operation = :operation");
             if (recursive) {
                 if (!"/".equals(folder)) {
-                    hql.append(" and (history.folder = :folder or history.folder like :likefolder)");
+                    hql.append(" and (dh.folder = :folder or dh.folder like :likefolder)");
                 }
             } else {
-                hql.append(" and history.folder = :folder");
+                hql.append(" and dh.folder = :folder");
             }
-            hql.append(" and history.controllerId = :controllerId").append(" and history.name = dep.name")
-                .append(" and history.type = dep.type").append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            if (recursive) {
-                if (!"/".equals(folder)) {
-                    query.setParameter("folder", folder);
-                    query.setParameter("likefolder", folder + "/%");
-                }
-            } else {
-                query.setParameter("folder", folder);
-            }
             query.setParameter("controllerId", controllerId);
-            List<DBItemDeploymentHistory> result = session.getResultList(query);
-            if (result == null) {
-                return Stream.empty();
-            }
-            return result.stream().filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull);
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-    }
-    
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder) {
-        return getLatestDepHistoryItemsFromFolder(folder, false);
-    }
-
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, boolean recursive) {
-        try {
-            // TODO: improve performance
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where id = (select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where state = 0");
-            if (recursive) {
-                if (!"/".equals(folder)) {
-                    hql.append(" and (folder = :folder or folder like :likefolder)");
-                }
-            } else {
-                hql.append(" and folder = :folder");
-            }
-            hql.append(" and path = dep.path");
-            hql.append(" and type = dep.type").append(")");
-            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("operation", OperationType.UPDATE.value());
             if (recursive) {
                 if (!"/".equals(folder)) {
                     query.setParameter("likefolder",folder + "/%");
@@ -1323,15 +1288,49 @@ public class DBLayerDeploy {
             }
             List<DBItemDeploymentHistory> result = session.getResultList(query);
             if (result == null) {
-                return Collections.emptyList();
+                return Stream.empty();
             }
-            return result.stream()
-                    .filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull).collect(Collectors.toList());
+            return result.stream();
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
-        }
+        }    
     }
-
+    
+//    public Stream<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
+//        try {
+//            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+//            hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
+//                    " as history");
+//            hql.append(" where history.state = 0");
+//            if (recursive) {
+//                if (!"/".equals(folder)) {
+//                    hql.append(" and (history.folder = :folder or history.folder like :likefolder)");
+//                }
+//            } else {
+//                hql.append(" and history.folder = :folder");
+//            }
+//            hql.append(" and history.controllerId = :controllerId").append(" and history.name = dep.name")
+//                .append(" and history.type = dep.type").append(")");
+//            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+//            if (recursive) {
+//                if (!"/".equals(folder)) {
+//                    query.setParameter("folder", folder);
+//                    query.setParameter("likefolder", folder + "/%");
+//                }
+//            } else {
+//                query.setParameter("folder", folder);
+//            }
+//            query.setParameter("controllerId", controllerId);
+//            List<DBItemDeploymentHistory> result = session.getResultList(query);
+//            if (result == null) {
+//                return Stream.empty();
+//            }
+//            return result.stream().filter(item -> !item.getOperation().equals(1)).filter(Objects::nonNull);
+//        } catch (SOSHibernateException e) {
+//            throw new JocSosHibernateException(e);
+//        }
+//    }
+    
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder) {
         return getDepHistoryItemsFromFolder(folder, false);
     }

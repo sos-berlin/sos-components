@@ -23,6 +23,7 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
+import com.sos.joc.db.deployment.DBItemDepConfigurationJoin;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.deployment.DBItemDepNamePaths;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -332,7 +333,10 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
-
+    
+    public static final String DBITEM_DEP_CONFIGURATIONS_JOIN = DBItemDepConfigurationJoin.class.getSimpleName();
+    public static final String TABLE_DEP_CONFIGURATIONS_JOIN = "DEP_CONFIGURATIONS_JOIN";
+    
     public static final String DBITEM_DEP_NAMEPATHS = DBItemDepNamePaths.class.getSimpleName();
     public static final String TABLE_DEP_NAMEPATHS = "DEP_NAMEPATHS";
 
@@ -578,6 +582,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepSignatures.class);
         cl.add(DBItemDepVersions.class);
         cl.add(DBItemDepConfiguration.class);
+        cl.add(DBItemDepConfigurationJoin.class);
         cl.add(DBItemDeploymentSubmission.class);
         cl.add(DBItemDepCommitIds.class);
         cl.add(DBItemDepNamePaths.class);
