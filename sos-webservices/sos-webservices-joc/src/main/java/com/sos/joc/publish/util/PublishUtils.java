@@ -1234,28 +1234,9 @@ public abstract class PublishUtils {
         }
     }
 
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath()));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
-    }
-
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Configuration folder, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getPath()));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
-    }
-
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {
         return dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId).filter(item -> item.getOperation()
                 .equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
-    }
-
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
-                .getLatestDepHistoryItemsFromFolder(item)));
-        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, String controllerId,
