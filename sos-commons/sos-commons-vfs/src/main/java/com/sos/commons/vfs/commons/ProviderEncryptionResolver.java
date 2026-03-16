@@ -1,15 +1,15 @@
 package com.sos.commons.vfs.commons;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.PrivateKey;
 
 import com.sos.commons.encryption.arguments.EncryptionArguments;
+import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
 import com.sos.commons.encryption.common.EncryptedValue;
 import com.sos.commons.encryption.decrypt.Decrypt;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 
@@ -26,12 +26,47 @@ public class ProviderEncryptionResolver {
      *            e.g. passphrase, domain
      * @return
      * @throws Exception */
-    public static boolean resolve(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve) throws Exception {
+    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
+            throws Exception {
         if (args == null || !args.isEncryptionDecryptEnabled()) {
             return false;
         }
-        resolveArguments(args, proxyArgs, additional2resolve);
+        // The private key may already be set by the ProviderCredentialStoreResolver.
+        // If not, load it from the path specified in privateKeyPath and set it.
+        setPrivateKey(logger, args.getEncryptionDecrypt(), args.getEncryptionDecrypt().getPrivateKeyPath().getValue(), true);
+        try {
+            resolveArguments(args, proxyArgs, additional2resolve);
+        } finally {
+            cleanup(args.getEncryptionDecrypt());
+        }
         return true;
+    }
+
+    public static void setPrivateKey(ISOSLogger logger, EncryptionDecryptArguments decryptArgs, String privateKeyInput, boolean readFromFile)
+            throws Exception {
+        if (decryptArgs.getPrivateKey().getValue() != null) {
+            return;
+        }
+        if (privateKeyInput == null) {
+            throw new Exception("[EnciphermentPrivateKey=" + decryptArgs.getPrivateKeyPath().getValue() + "]The private key could not be resolved.");
+        }
+
+        String content = privateKeyInput;
+        if (readFromFile) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s][setPrivateKey]%s", ProviderEncryptionResolver.class.getSimpleName(), privateKeyInput);
+            }
+            try {
+                content = Files.readString(Paths.get(privateKeyInput));
+            } catch (Exception e) {
+                throw new Exception("[EnciphermentPrivateKey=" + decryptArgs.getPrivateKeyPath().getValue() + "]" + e, e);
+            }
+        }
+        decryptArgs.getPrivateKey().setValue(KeyUtil.getPrivateKeyFromString(content));
+    }
+
+    private static void cleanup(EncryptionDecryptArguments decryptArgs) {
+        decryptArgs.getPrivateKey().setValue(null);
     }
 
     private static void resolveArguments(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
@@ -68,7 +103,7 @@ public class ProviderEncryptionResolver {
         }
 
         try {
-            String value = decrypt(mainArg.getValue().toString(), args.getEncryptionDecrypt().getPrivateKeyPath().getValue());
+            String value = decrypt(mainArg.getValue().toString(), args.getEncryptionDecrypt());
             if (secondArg == null) {
                 mainArg.applyValue(value);
             } else {
@@ -88,10 +123,11 @@ public class ProviderEncryptionResolver {
         }
     }
 
-    private static String decrypt(String encryptedValue, String pathToPrivateKey) throws Exception {
-        Path privateKeyPath = Paths.get(pathToPrivateKey);
-        PrivateKey priv = KeyUtil.getPrivateKeyFromString(Files.readString(privateKeyPath));
-        EncryptedValue encVal = EncryptedValue.getInstance("decrypt", encryptedValue);
-        return Decrypt.decrypt(encVal, priv);
+    private static String decrypt(String encryptedValue, EncryptionDecryptArguments decryptArgs) throws Exception {
+        if (encryptedValue == null) {
+            return null;
+        }
+        EncryptedValue encrypted = EncryptedValue.getInstance("decrypt", encryptedValue);
+        return Decrypt.decrypt(encrypted, decryptArgs.getPrivateKey().getValue());
     }
 }

@@ -3,16 +3,24 @@ package com.sos.yade.engine.commons.helpers;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.SOSVersionInfo;
+import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.commons.ProviderCredentialStoreResolver;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -321,9 +329,14 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(getHostInfo(YADESourceArguments.LABEL, sourceArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs));
+            // Host Info
+            logger.debug(getHostInfo(logger, YADESourceArguments.LABEL, sourceArgs.getProvider()));
+            // Arguments
+            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs, Collections.singleton(sourceArgs.getProvider()
+                    .getClass().getSimpleName())));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs.getProvider(),
+                    getExcludedArgumentNamesForProvider()));
+            debugProviderDetails(logger, YADESourceArguments.LABEL, sourceArgs.getProvider());
         }
     }
 
@@ -353,9 +366,14 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(getHostInfo(YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs));
+            // Host Info
+            logger.debug(getHostInfo(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
+            // Arguments
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs, Collections.singleton(jumpHostArgs
+                    .getProvider().getClass().getSimpleName())));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider(),
+                    getExcludedArgumentNamesForProvider()));
+            debugProviderDetails(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider());
         }
     }
 
@@ -426,10 +444,39 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            logger.debug(getHostInfo(YADETargetArguments.LABEL, targetArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs.getProvider()));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs));
+            // Host Info
+            logger.debug(getHostInfo(logger, YADETargetArguments.LABEL, targetArgs.getProvider()));
+            // Arguments
+            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs, Collections.singleton(targetArgs.getProvider()
+                    .getClass().getSimpleName())));
+            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs.getProvider(),
+                    getExcludedArgumentNamesForProvider()));
+            debugProviderDetails(logger, YADETargetArguments.LABEL, targetArgs.getProvider());
         }
+    }
+
+    private static Set<String> getExcludedArgumentNamesForProvider() {
+        Set<String> set = new HashSet<>();
+        set.add(EncryptionDecryptArguments.class.getSimpleName());
+        set.add(CredentialStoreArguments.class.getSimpleName());
+        set.add(ProxyConfigArguments.class.getSimpleName());
+        return set;
+    }
+
+    private static void debugProviderDetails(ISOSLogger logger, String label, AProviderArguments args) {
+        if (args.getProxy() != null) {
+            debugProviderDetail(logger, label, args, args.getProxy());
+        }
+        if (args.isCredentialStoreEnabled()) {
+            debugProviderDetail(logger, label, args, args.getCredentialStore());
+        }
+        if (args.isEncryptionDecryptEnabled()) {
+            debugProviderDetail(logger, label, args, args.getEncryptionDecrypt());
+        }
+    }
+
+    private static void debugProviderDetail(ISOSLogger logger, String label, AProviderArguments args, ASOSArguments detailArgs) {
+        logger.debug("[%s][%s]%s", label, args.getClass().getSimpleName(), YADEArgumentsHelper.toString(logger, detailArgs));
     }
 
     private static String getLocalHostInfo() {
@@ -437,8 +484,24 @@ public class YADEClientBannerWriter {
         return getHostInfo(YADEClientArguments.LABEL, localhost, SOSShell.getHostAddressQuietly(localhost));
     }
 
-    private static String getHostInfo(String label, AProviderArguments args) {
-        return getHostInfo(label, args.getHost().getValue(), SOSShell.getHostAddressQuietly(args.getHost().getValue()));
+    private static String getHostInfo(ISOSLogger logger, String label, AProviderArguments args) {
+        String host = args.getHost().getValue();
+        String hostTitle = host;
+        if (args.isCredentialStoreEnabled() && host != null) {
+            try {
+                String tmp = ProviderCredentialStoreResolver.resoveHostNameQuietly(logger, args);
+                if (tmp != null && !tmp.equals(host)) {
+                    if (tmp.contains(":")) {// host:port
+                        tmp = tmp.split(":")[0];
+                    }
+                    hostTitle = "[" + host + "]" + tmp;
+                    host = tmp;
+                }
+            } catch (Exception e) {
+                logger.debug("[" + label + "][getHostInfo]" + e);
+            }
+        }
+        return getHostInfo(label, hostTitle, SOSShell.getHostAddressQuietly(host));
     }
 
     private static String getHostInfo(String label, String host, String ip) {

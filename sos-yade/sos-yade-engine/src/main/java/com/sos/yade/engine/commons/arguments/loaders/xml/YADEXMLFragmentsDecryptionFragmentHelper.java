@@ -8,14 +8,14 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.xml.SOSXML;
 
-public class YADEXMLFragmentsEncryptionFragmentHelper {
+public class YADEXMLFragmentsDecryptionFragmentHelper {
 
     protected static void parse(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, AProviderArguments providerArgs) throws Exception {
-        String exp = "Fragments/EncryptionFragments/EncryptionFragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
+        String exp = "Fragments/DecryptionFragments/DecryptionFragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
         Node fragment = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
         if (fragment == null) {
             throw new SOSMissingDataException("[Profile=" + argsLoader.getArgs().getProfile().getValue() + "][" + (isSource ? "Source" : "Target")
-                    + "][" + exp + "]referenced EncryptionFragment not found");
+                    + "][" + exp + "]referenced DecryptionFragment not found");
         }
 
         NodeList nl = fragment.getChildNodes();
@@ -27,10 +27,7 @@ public class YADEXMLFragmentsEncryptionFragmentHelper {
                 Node n = nl.item(i);
                 if (n.getNodeType() == Node.ELEMENT_NODE) {
                     switch (n.getNodeName()) {
-                    case "EnciphermentCertificate":
-                        // argsLoader.setStringArgumentValue(args.getCertificate(), n);
-                        break;
-                    case "EnciphermentPrivateKeyPath":
+                    case "EnciphermentPrivateKey":
                         argsLoader.setStringArgumentValue(args.getPrivateKeyPath(), n);
                         break;
                     }

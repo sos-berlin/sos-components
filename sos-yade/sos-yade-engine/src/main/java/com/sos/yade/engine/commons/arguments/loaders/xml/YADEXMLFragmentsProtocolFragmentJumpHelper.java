@@ -10,6 +10,7 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
 
         argsLoader.initializeJumpHostArgsIfNull();
         argsLoader.getJumpHostArgs().getConfiguredOnSource().setValue(isSource);
+        argsLoader.getSourceArgs().getLabel().setValue("Source (via Jump)");
 
         // YADE1 - compatibility
         // Parse before Pre/Post-Processing because this value is used to split commands
@@ -63,8 +64,8 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 case "CredentialStoreFragmentRef":
                     YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
                     break;
-                case "EncryptionFragmentRef":
-                    YADEXMLFragmentsEncryptionFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
+                case "DecryptionFragmentRef":
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
                     break;
 
                 case "BasicConnection":

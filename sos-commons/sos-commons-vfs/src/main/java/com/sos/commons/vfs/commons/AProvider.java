@@ -509,10 +509,10 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         }
 
         try {
-            if (ProviderCredentialStoreResolver.resolve(arguments, arguments.getProxy(), additionalSecretArg)) {
+            if (ProviderCredentialStoreResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArg)) {
                 onCredentialStoreResolved();
             }
-            ProviderEncryptionResolver.resolve(arguments, arguments.getProxy(), additionalSecretArg);
+            ProviderEncryptionResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArg);
         } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }

@@ -6,9 +6,11 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 
 public abstract class EncryptionArguments extends ASOSArguments {
 
-    /** The Certificate/Public Key is used to encrypt a secret */
+    /** The Certificate/Public Key is used to encrypt a secret<br/>
+     * String, because it can use syntax such as cs:// to reference values from a credential store */
     public static final String ARG_NAME_ENCIPHERMENT_CERTIFICATE = "encipherment_certificate";
-    /** The Private Key is used to decrypt an encrypted secret */
+    /** The Private Key is used to decrypt an encrypted secret.<br />
+     * String, because it can use syntax such as cs:// to reference values from a credential store */
     public static final String ARG_NAME_ENCIPHERMENT_PRIVATE_KEY_PATH = "encipherment_private_key_path";
 
     /** Checks whether the value of the given argument is encrypted.
