@@ -11,4 +11,8 @@ public class YADEEngineInitializationException extends YADEEngineException {
     public YADEEngineInitializationException(String msg) {
         super(msg);
     }
+
+    public YADEEngineInitializationException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 }

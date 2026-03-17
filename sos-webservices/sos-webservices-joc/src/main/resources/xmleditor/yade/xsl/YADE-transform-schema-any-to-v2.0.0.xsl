@@ -27,6 +27,7 @@
             <xsl:copy-of select="@name"/>
         
             <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="DecryptionFragmentRef"/>
             <xsl:copy-of select="JumpFragmentRef"/>
             
             <xsl:apply-templates select="BasicConnection"/>
@@ -56,6 +57,7 @@
                     <xsl:copy-of select="@name"/>
           
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
+                    <xsl:copy-of select="DecryptionFragmentRef"/>
                     <xsl:copy-of select="JumpFragmentRef"/>                    
           
                     <xsl:apply-templates select="BasicConnection"/>
@@ -101,6 +103,7 @@
             <xsl:copy-of select="@name"/>
         
             <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="DecryptionFragmentRef"/>
             <xsl:copy-of select="JumpFragmentRef"/>
 
             <xsl:apply-templates select="URLConnection"/>
@@ -127,6 +130,7 @@
                     <xsl:copy-of select="@name"/>
         
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
+                    <xsl:copy-of select="DecryptionFragmentRef"/>
                     <xsl:copy-of select="JumpFragmentRef"/>
 
                     <xsl:apply-templates select="URLConnection"/>
@@ -180,6 +184,7 @@
                     <xsl:copy-of select="@name"/>
           
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
+                    <xsl:copy-of select="DecryptionFragmentRef"/>
                     
                     <xsl:copy-of select="BasicConnection"/>
                     <xsl:copy-of select="SSHAuthentication"/>
@@ -258,6 +263,7 @@
             <xsl:copy-of select="@name"/>
         
             <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="DecryptionFragmentRef"/>
             <xsl:copy-of select="JumpFragmentRef"/>
             
             <xsl:apply-templates select="BasicConnection"/>
@@ -309,6 +315,7 @@
                     <xsl:copy-of select="@name"/>
           
                     <xsl:copy-of select="CredentialStoreFragmentRef"/>
+                    <xsl:copy-of select="DecryptionFragmentRef"/>
                     <xsl:copy-of select="JumpFragmentRef"/>
                     
                     <!-- Workaround: SMBConnection is v2, but was introduced before transformation, so it should be copied as is, or it is v1 -->
@@ -360,6 +367,7 @@
             <xsl:copy-of select="@name"/>
         
             <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="DecryptionFragmentRef"/>
             <xsl:copy-of select="JumpFragmentRef"/>
 
             <xsl:apply-templates select="URLConnection"/>

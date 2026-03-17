@@ -64,7 +64,8 @@ public class YADEProviderDelegatorFactory {
 
         SOSArgument<Protocol> protocol = providerArgs.getProtocol();
         if (protocol.getValue() == null) {
-            throw new YADEEngineInitializationException(new SOSMissingDataException(protocol.getName()));
+            Exception ex = new SOSMissingDataException(protocol.getName());
+            throw new YADEEngineInitializationException("[" + delegatorLabel + "]" + ex.toString(), ex);
         }
         // <XXX>Provider.createInstance - multiple provider implementations available/possible
         AProvider<?, ?> p = null;
@@ -122,10 +123,11 @@ public class YADEProviderDelegatorFactory {
                 break;
             case UNKNOWN:
             default:
-                throw new YADEEngineInitializationException(new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue()));
+                Exception ex = new SOSInvalidDataException(protocol.getName() + "=" + protocol.getValue());
+                throw new YADEEngineInitializationException("[" + delegatorLabel + "]" + ex.toString(), ex);
             }
         } catch (ProviderException e) {
-            throw new YADEEngineInitializationException(e);
+            throw new YADEEngineInitializationException("[" + delegatorLabel + "]" + e.toString(), e);
         }
         return p;
     }
