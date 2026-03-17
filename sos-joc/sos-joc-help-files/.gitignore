@@ -1,2 +1,3 @@
 /target/
-/src/main/resources/help-files/
+/src/main/resources/help-files/*
+/src/main/resources/*
