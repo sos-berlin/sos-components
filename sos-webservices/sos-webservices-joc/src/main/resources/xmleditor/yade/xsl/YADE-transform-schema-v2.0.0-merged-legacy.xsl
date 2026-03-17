@@ -221,6 +221,7 @@
             
             <!-- v2 -->
             <xsl:copy-of select="CredentialStoreFragmentRef"/>
+            <xsl:copy-of select="DecryptionFragmentRef"/>
             <xsl:copy-of select="SMBConnection"/>
             
             <SMBAuthentication>
