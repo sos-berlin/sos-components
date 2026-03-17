@@ -306,7 +306,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                                                 LOGGER.warn("Order delete failed due to missing permission.");
                                             }
                                         } catch (SOSHibernateException e) {
-                                            LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
+                                            LOGGER.warn("delete of planned orders in db failed.", e);
                                         }
                                     } else {
                                         JocError je = getJocError();

@@ -763,6 +763,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             throw new ControllerObjectNotExistException("No prompting orders found.");
         case SUSPEND:
             throw new ControllerObjectNotExistException("No suspendible orders found.");
+        case CONTINUE:
+            throw new ControllerObjectNotExistException("No continuable orders found.");
         default:
             throw new ControllerObjectNotExistException("No orders found.");
         }

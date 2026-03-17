@@ -783,7 +783,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 //                                        | DBInvalidDataException | JocConfigurationException | DBOpenSessionException
 //                                        | ControllerConnectionResetException | ControllerConnectionRefusedException | SOSInvalidDataException
 //                                        | SOSMissingDataException | IOException | ExecutionException e) {
-//                                    LOGGER.warn("generation of new  orders failed.", e.getMessage());
+//                                    LOGGER.warn("generation of new  orders failed.", e);
 //                                } finally {
 //                                    Globals.disconnect(session);
 //                                }
@@ -838,7 +838,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                             }
                                         } catch (SOSHibernateException e) {
                                             getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                            LOGGER.warn("Order delete failed due to: ", e.getMessage());
+                                            LOGGER.warn("Order delete failed due to: ", e);
                                         }
                                     } else {
                                         JocError je = getJocError();
@@ -907,7 +907,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                         LOGGER.warn("Order delete failed due to missing permission.");
                                     }
                                 } catch (SOSHibernateException e) {
-                                    LOGGER.warn("generation of new  orders failed.", e.getMessage());
+                                    LOGGER.warn("Deletion of orders failed.", e);
                                 }
                             } else {
                                 LOGGER.warn(either.getLeft().messageWithCause());
