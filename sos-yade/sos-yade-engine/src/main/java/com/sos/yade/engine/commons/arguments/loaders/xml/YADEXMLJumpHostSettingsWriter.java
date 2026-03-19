@@ -40,7 +40,7 @@ public class YADEXMLJumpHostSettingsWriter {
     public static String sourceToJumpHostCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
-        StringBuilder fragments = generateFragments(sourceArgs.getProvider());
+        StringBuilder fragments = generateFragments(sourceArgs);
         StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
                 .getTargetArgs(), config, "Copy", true);
         return generateConfiguration(fragments, profile).toString();
@@ -50,7 +50,7 @@ public class YADEXMLJumpHostSettingsWriter {
     public static String sourceToJumpHostGETLIST(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
-        StringBuilder fragments = generateFragments(sourceArgs.getProvider());
+        StringBuilder fragments = generateFragments(sourceArgs);
         StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
                 .getTargetArgs(), config, "GetList", false);
         return generateConfiguration(fragments, profile).toString();
@@ -60,7 +60,7 @@ public class YADEXMLJumpHostSettingsWriter {
     public static String sourceToJumpHostREMOVE(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
-        StringBuilder fragments = generateFragments(sourceArgs.getProvider());
+        StringBuilder fragments = generateFragments(sourceArgs);
         StringBuilder profile = generateProfileSourceToJumpHost(argsLoader.getArgs(), argsLoader.getClientArgs(), sourceArgs, argsLoader
                 .getTargetArgs(), config, "Remove", false);
         return generateConfiguration(fragments, profile).toString();
@@ -70,7 +70,7 @@ public class YADEXMLJumpHostSettingsWriter {
     public static String sourceToJumpHostMOVERemove(AYADEArgumentsLoader argsLoader, JumpHostConfig config, String profileId) {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
-        StringBuilder fragments = generateFragments(sourceArgs.getProvider());
+        StringBuilder fragments = generateFragments(sourceArgs);
         StringBuilder profile = generateProfileSourceToJumpHostMOVERemove(sourceArgs, config, profileId);
         return generateConfiguration(fragments, profile).toString();
     }
@@ -82,7 +82,7 @@ public class YADEXMLJumpHostSettingsWriter {
     public static String jumpHostToTargetCOPY(AYADEArgumentsLoader argsLoader, JumpHostConfig config) {
         YADETargetArguments targetArgs = argsLoader.getTargetArgs();
 
-        StringBuilder fragments = generateFragments(targetArgs.getProvider());
+        StringBuilder fragments = generateFragments(targetArgs);
         StringBuilder profile = generateProfileJumpHostToTargetCOPY(argsLoader.getArgs(), argsLoader.getSourceArgs(), targetArgs, config);
         return generateConfiguration(fragments, profile).toString();
     }
@@ -100,7 +100,9 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateFragments(AProviderArguments providerArgs) {
+    private static StringBuilder generateFragments(YADESourceTargetArguments args) {
+        AProviderArguments providerArgs = args.getProvider();
+
         boolean generateCSRef = false;
         if (providerArgs.getCredentialStore() != null && providerArgs.getCredentialStore().getFile().isDirty()) {
             generateCSRef = true;
@@ -329,7 +331,6 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    // TODO WebDAVSFragment ???
     private static StringBuilder generateProtocolFragmentWEBDAV(HTTPProviderArguments args, boolean generateCSRef, boolean generateDecryptionRef,
             boolean isWEBDAVS) {
         String fragmentElementName = isWEBDAVS ? "WebDAVFragment" : "WebDAVFragment";
@@ -781,8 +782,11 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<RemoveSource>");
 
         sb.append("<RemoveSourceFragmentRef>");
-        sb.append("<").append(getFragmentNamePrefix(sourceArgs.getProvider().getProtocol())).append("FragmentRef ref=");
-        sb.append(attrValue(PROTOCOL_FRAGMENT_NAME)).append(" />");
+        sb.append("<");
+        sb.append(getFragmentNamePrefix(sourceArgs.getProvider().getProtocol())).append("FragmentRef ref=");
+        sb.append(attrValue(PROTOCOL_FRAGMENT_NAME));
+        sb.append(" ").append(generateFragmentRefAttribute(sourceArgs.getLabel().getValue()));
+        sb.append(" />");
         sb.append("</RemoveSourceFragmentRef>");
 
         sb.append("<SourceFileOptions>");
@@ -790,9 +794,15 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<Selection>");
         sb.append("<FileListSelection>");
         sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</FileList>");
-        sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        // sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
+        sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
         sb.append("</FileListSelection>");
         sb.append("</Selection>");
+        sb.append("<Directives>");
+        sb.append("<DisableErrorOnNoFilesFound>");
+        sb.append(getOppositeValue(sourceArgs.getErrorOnNoFilesFound()));
+        sb.append("</DisableErrorOnNoFilesFound>");
+        sb.append("</Directives>");
         sb.append("</SourceFileOptions>");
 
         sb.append("</RemoveSource>");
@@ -879,7 +889,8 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProfilePartTargetFragmentRef(YADESourceTargetArguments args) {
         String fragmentPrefix = getFragmentNamePrefix(args.getProvider().getProtocol());
         StringBuilder sb = new StringBuilder();
-        sb.append("<").append(fragmentPrefix).append("FragmentRef ref=").append(attrValue(PROTOCOL_FRAGMENT_NAME)).append(">");
+        sb.append("<").append(fragmentPrefix).append("FragmentRef ref=").append(attrValue(PROTOCOL_FRAGMENT_NAME));
+        sb.append(" ").append(generateFragmentRefAttribute(args.getLabel().getValue())).append(" >");
         // Pre-Processing
         if (args.getCommands().isPreProcessingEnabled()) {
             sb.append("<").append(fragmentPrefix).append("PreProcessing>");
@@ -1026,6 +1037,10 @@ public class YADEXMLJumpHostSettingsWriter {
 
     private static String generateJumpAttribute() {
         return YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL + "=" + attrValue(YADEJumpHostArguments.LABEL);
+    }
+
+    private static String generateFragmentRefAttribute(String label) {
+        return YADEXMLArgumentsLoader.INTERNAL_ATTRIBUTE_LABEL + "=" + attrValue(label);
     }
 
     private static String attrValue(String val) {

@@ -3,14 +3,17 @@ package com.sos.yade.engine.commons.arguments.loaders.xml;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
+import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
+
 public class YADEXMLFragmentsProtocolFragmentJumpHelper {
 
     protected static void parse(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = YADEXMLFragmentsProtocolFragmentHelper.getProtocolFragment(argsLoader, ref, isSource, "Jump");
+        Node fragment = YADEXMLFragmentsProtocolFragmentHelper.getProtocolFragment(argsLoader, ref, isSource, YADEJumpHostArguments.LABEL);
 
         argsLoader.initializeJumpHostArgsIfNull();
         argsLoader.getJumpHostArgs().getConfiguredOnSource().setValue(isSource);
-        argsLoader.getSourceArgs().getLabel().setValue("Source (via Jump)");
+        setSourceOrTargetLabel(argsLoader, isSource);
 
         // YADE1 - compatibility
         // Parse before Pre/Post-Processing because this value is used to split commands
@@ -126,6 +129,13 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     break;
                 }
             }
+        }
+    }
+
+    private static void setSourceOrTargetLabel(YADEXMLArgumentsLoader argsLoader, boolean isSource) {
+        YADESourceTargetArguments args = isSource ? argsLoader.getSourceArgs() : argsLoader.getTargetArgs();
+        if (args != null) {
+            args.getLabel().setValue(args.getLabel().getValue() + " (via " + YADEJumpHostArguments.LABEL + ")");
         }
     }
 }
