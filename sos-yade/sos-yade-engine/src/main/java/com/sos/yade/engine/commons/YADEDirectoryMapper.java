@@ -258,12 +258,22 @@ public class YADEDirectoryMapper {
                 if (logger.isDebugEnabled()) {
                     logger.debug("[getTargetDirectory][1.1]targetPath=" + targetPath);
                 }
+
+                if (targetPath.isEmpty() && !targetDelegator.getArgs().getDirectory().isEmpty()) {
+                    // 2026-03-18 - handling targetDirectory=/ to avoid YADEProviderFile.needsRename()
+                    // - before this change: fullPath=file.txt finalFullPath=/file.txt <- not equals -> YADEProviderFile.needsRename ...
+                    String td = targetDelegator.getProvider().toPathStyle(targetDelegator.getArgs().getDirectory().getValue());
+                    if (td.equals(targetDelegator.getProvider().getPathSeparator())) {
+                        targetPath = targetDelegator.getProvider().getPathSeparator(); // /
+                        logger.debug("[getTargetDirectory][1.2]targetPath=" + targetPath);
+                    }
+                }
             } else {
                 // appendPath is OK because the getSourceDirectoryForMapping method should return a relative directory
                 targetPath = targetDelegator.appendPath(targetDelegator.getDirectory(), targetPath);
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("[getTargetDirectory][1.2]targetPath=" + targetPath);
+                    logger.debug("[getTargetDirectory][1.3]targetPath=" + targetPath);
                 }
             }
         }

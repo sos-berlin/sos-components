@@ -701,30 +701,47 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
         return true;
     }
 
-    /** @apiNote The second check part (... || hasConnectionException ...) is not really necessary after the "executeCommand" method has been modified to
-     *          disconnect the client connection on a ConnectionException.
-     * @return */
     private boolean needsReconnectAfterServerInfo() {
         if (getArguments().getDisableAutoDetectShell().isTrue()) {
             return false;
         }
 
+        // not reliable if TransportException occurs – see hasServerInfoException
         boolean isConnected = isConnected();
-        boolean hasConnectionException = hasConnectionException(getServerInfo().getCommandResult());
+        boolean hasServerInfoException = hasServerInfoException(getServerInfo().getCommandResult());
 
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug("%s[needsReconnectAfterServerInfo]isConnected=%s, hasConnectionException=%s", getLogPrefix(), isConnected,
-                    hasConnectionException);
+            getLogger().debug("%s[needsReconnectAfterServerInfo]isConnected=%s, hasServerInfoException=%s", getLogPrefix(), isConnected,
+                    hasServerInfoException);
         }
 
-        return !isConnected || hasConnectionException;
+        return !isConnected || hasServerInfoException;
     }
 
-    private boolean hasConnectionException(SOSCommandResult result) {
+    /**
+     * <p>
+     * Do not rely on exception type (ConnectionException / TransportException etc.).<br/>
+     * Treat any exception that occurs during execution of the 'uname' command as a cause for automatic reconnect.
+     * </p>
+     * Reasoning:<br/>
+     * - In SFTP-only mode:<br/>
+     * -- Observed behavior with CompleteFTP 25.0.6 (Windows):<br/>
+     * --- Checking the exception type ConnectionException works, because a ConnectionException is thrown immediately.<br/>
+     * -- Observed behavior with FileZillaProEnterpriseServer_1.9.2:<br/>
+     * --- Checking the exception type ConnectionException does NOT work, because a TransportException is thrown instead.<br/>
+     * - TransportException:<br/>
+     * -- Reconnect logic does NOT trigger immediately, because no ConnectionException is thrown.<br/>
+     * -- The sshClient is actually disconnected a few milliseconds later on an asynchronous sshj thread.<br/>
+     * -- The server may send an additional message to the already-closed channel.<br/>
+     * -- sshj rejects this message and only then marks the connection as disconnected.<br/>
+     *
+     * @param result the command result to check
+     * @return true if reconnect is needed */
+    private boolean hasServerInfoException(SOSCommandResult result) {
         if (result == null) {
             return false;
         }
-        return result.hasException() && result.getException() instanceof ConnectionException;
+        return result.hasException();// && result.getException() instanceof ConnectionException;
     }
 
     private synchronized String createCommandIdentifier() {

@@ -290,6 +290,9 @@ public class YADEXMLProfileHelper {
             throw new SOSMissingDataException("Profiles/Profile profile_id=" + argsLoader.getArgs().getProfile().getValue() + "/../" + ref
                     .getNodeName() + "/<Child Node>");
         }
+
+        parseInternalLabel(argsLoader, refRef, isSource, sourceTargetArgs);
+
         switch (refRef.getNodeName()) {
         case "LocalSource":
             providerArgs = parseFragmentRefLocal(argsLoader, refRef, isSource, sourceTargetArgs);
@@ -329,11 +332,8 @@ public class YADEXMLProfileHelper {
         }
     }
 
-    private static LocalProviderArguments parseFragmentRefLocal(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
-            YADESourceTargetArguments sourceTargetArgs) throws Exception {
-        LocalProviderArguments args = new LocalProviderArguments();
-        args.applyDefaultIfNullQuietly();
-
+    private static void parseInternalLabel(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
+            YADESourceTargetArguments sourceTargetArgs) {
         // Label example:
         // – A label has been set internally for a JumpHost YADE execution - see YADEXMLJumpHostSettingsWriter
         // – If set, the JumpHost YADE Client uses this label (e.g., Jump) for the Provider logging instead of Source/Target
@@ -345,6 +345,12 @@ public class YADEXMLProfileHelper {
                 argsLoader.getTargetArgs().getLabel().setValue(label);
             }
         }
+    }
+
+    private static LocalProviderArguments parseFragmentRefLocal(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource,
+            YADESourceTargetArguments sourceTargetArgs) throws Exception {
+        LocalProviderArguments args = new LocalProviderArguments();
+        args.applyDefaultIfNullQuietly();
 
         // Parse before Pre/Post-Processing because this value is used to split commands
         parseProcessingCommandDelimiter(argsLoader, ref, sourceTargetArgs.getCommands().getCommandDelimiter(), "ProcessingCommandDelimiter");

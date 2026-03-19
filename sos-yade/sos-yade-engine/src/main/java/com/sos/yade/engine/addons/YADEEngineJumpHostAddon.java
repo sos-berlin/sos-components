@@ -133,7 +133,7 @@ public class YADEEngineJumpHostAddon {
 
     private void init() throws YADEEngineInitializationException {
         if (argsLoader.getJumpHostArgs().isConfiguredOnSource()) {
-            // Source (Jump Host)
+            // Change current Source to Jump Host
             // Target (Any Provider) - the same as before
 
             String profileId;
@@ -156,7 +156,12 @@ public class YADEEngineJumpHostAddon {
 
             newSourceArgs.getDirectory().setValue(config.dataDirectory);
             newSourceArgs.getRecursive().setValue(Boolean.valueOf(true));
+
+            // Only set getErrorOnNoFilesFound (because YADESourceFilesSelector.checkFileListSize will be executed with this client).
+            // Client arguments, e.g., getExpectedResultSetCount, remain unchanged and must not be redefined.
+            // All other Source arguments (zero bytes, etc.) are generated in settings.xml.
             newSourceArgs.getErrorOnNoFilesFound().setValue(argsLoader.getSourceArgs().getErrorOnNoFilesFound().getValue());
+
             newSourceArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newSourceArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
 
