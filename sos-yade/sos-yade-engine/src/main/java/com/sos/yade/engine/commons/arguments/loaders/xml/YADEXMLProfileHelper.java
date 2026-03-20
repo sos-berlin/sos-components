@@ -739,7 +739,7 @@ public class YADEXMLProfileHelper {
                         argsLoader.setStringArgumentValue(pollingArgs.getPollInterval(), n);
                         break;
                     case "PollTimeout":
-                        argsLoader.setIntegerArgumentValue(pollingArgs.getPollTimeout(), n);
+                        argsLoader.setStringArgumentValue(pollingArgs.getPollTimeout(), n);
                         break;
                     case "MinFiles":
                         argsLoader.setIntegerArgumentValue(pollingArgs.getPollMinFiles(), n);

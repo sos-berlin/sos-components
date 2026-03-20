@@ -23,7 +23,7 @@ public class YADESourcePollingArguments extends ASOSArguments {
 
     private SOSArgument<Integer> pollMinFiles = new SOSArgument<>("MinFiles", false);
     // minutes
-    private SOSArgument<Integer> pollTimeout = new SOSArgument<>("PollTimeout", false);
+    private SOSArgument<String> pollTimeout = new SOSArgument<>("PollTimeout", false);
     // declared by not used with YADE 1: polling_end_at, pollKeepConnection
 
     public boolean isPollMinFilesEnabled() {
@@ -58,7 +58,7 @@ public class YADESourcePollingArguments extends ASOSArguments {
         return pollMinFiles;
     }
 
-    public SOSArgument<Integer> getPollTimeout() {
+    public SOSArgument<String> getPollTimeout() {
         return pollTimeout;
     }
 

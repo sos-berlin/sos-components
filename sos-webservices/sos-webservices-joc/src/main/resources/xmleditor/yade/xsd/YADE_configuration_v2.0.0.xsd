@@ -3,7 +3,7 @@
            elementFormDefault="qualified"
            version="1.0">
 	<!-- root element -->
-	  <xs:element name="Configurations">
+    <xs:element name="Configurations">
 		    <xs:annotation>
          <xs:appinfo source="Configurations"/>
          <xs:documentation>
@@ -877,7 +877,9 @@
 	  </xs:element>
 	  <xs:element name="CSKeePassModule" default="JAXB">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/CredentialStoreFragments/CSKeePassModule"/>
+         <xs:appinfo source="Fragments/CredentialStoreFragments/CSKeePassModule">
+                <XmlEditor type="combobox" options="DOM;JAXB"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -894,9 +896,9 @@
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			<!-- not as xs:enumeration (DOM,JAXB) to enable the usage of an environment variable instead of a fixed value -->
 			      <xs:restriction base="xs:string">
-				        <xs:minLength value="1"/>
+				<!-- DOM, JAXB or ${VAR} -->
+                <xs:pattern value="DOM|JAXB|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -1706,7 +1708,9 @@
                 
                 <xs:element name="SecurityMode" default="explicit">
                     <xs:annotation>
-                  <xs:appinfo source="Fragments/ProtocolFragments/FTP/SecurityMode"/>
+                  <xs:appinfo source="Fragments/ProtocolFragments/FTP/SecurityMode">
+                            <XmlEditor type="combobox" options="explicit;implicit"/>
+                        </xs:appinfo>
                   <xs:documentation>
                      <div xmlns="http://www.w3.org/1999/xhtml">
                         <strong>References</strong>
@@ -1729,8 +1733,8 @@
                </xs:annotation>
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
-                            <xs:enumeration value="explicit"/>
-                            <xs:enumeration value="implicit"/>
+                            <!-- explicit, implicit or ${VAR} -->
+                            <xs:pattern value="explicit|implicit|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
@@ -2955,15 +2959,17 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-				        <xs:maxInclusive value="65535"/>
-			      </xs:restriction>
+			      <xs:restriction base="xs:string">
+                <!-- number >= 0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-    <xs:element name="ConnectTimeout" default="0">
+    <xs:element name="ConnectTimeout" default="0" type="DurationTypeSeconds">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/ConnectTimeout"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/ConnectTimeout">
+                <Note include="Duration-Seconds-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -2975,9 +2981,15 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>This value is used as the socket timeout parameter, and also as the default connection timeout.</p>
                <p>A value of <em>0</em> (the default value) indicates <em>no timeout</em>.</p>
-               <p> </p>
-               <p>	Possible values:
+               <!---
+        includes/Duration-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats:
 			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                     </li>
                      <li>
                         <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
                      </li>
@@ -2994,12 +3006,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		             </p>
             </div>
          </xs:documentation>
-      </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:string">
-				        <xs:minLength value="1"/>
-			      </xs:restriction>
-		    </xs:simpleType>
+      </xs:annotation>		
 	  </xs:element>
 	  <xs:element name="Account">
 		    <xs:annotation>
@@ -4097,7 +4104,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
     <xs:element name="TrustStoreType" default="JKS">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/TrustStore/TrustStoreType"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/TrustStore/TrustStoreType">
+                 <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -4113,11 +4122,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="JKS"/>
-				        <xs:enumeration value="JCEKS"/>
-				        <xs:enumeration value="PKCS12"/>
-				        <xs:enumeration value="PKCS11"/>
-				        <xs:enumeration value="DKS"/>
+			    <!-- JKS, JCEKS, PKCS12, PKCS11, DKS or ${VAR} -->
+                <xs:pattern value="JKS|JCEKS|PKCS12|PKCS11|DKS|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -4197,7 +4203,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="KeyStoreType" default="JKS">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/KeyStore/KeyStoreType"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/KeyStore/KeyStoreType">
+                <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -4213,11 +4221,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="JKS"/>
-				        <xs:enumeration value="JCEKS"/>
-				        <xs:enumeration value="PKCS12"/>
-				        <xs:enumeration value="PKCS11"/>
-				        <xs:enumeration value="DKS"/>
+				<!-- JKS, JCEKS, PKCS12, PKCS11, DKS or ${VAR} -->
+                <xs:pattern value="JKS|JCEKS|PKCS12|PKCS11|DKS|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -4268,7 +4273,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:simpleType>
 	  </xs:element>
     <xs:element name="DisableCertificateHostnameVerification"
-               type="xs:boolean"
+               type="BooleanType"
                default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/UntrustedSSL/DisableCertificateHostnameVerification"/>
@@ -6680,7 +6685,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>
 	  <!-- FTP -->
-	  <xs:element name="PassiveMode" type="xs:boolean" default="false">
+	  <xs:element name="PassiveMode" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/PassiveMode"/>
          <xs:documentation>
@@ -6701,7 +6706,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="ProtocolCommandListener" type="xs:boolean" default="false">
+	  <xs:element name="ProtocolCommandListener" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/ProtocolCommandListener"/>
          <xs:documentation>
@@ -6768,7 +6773,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="TransferMode" default="binary">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/FTP/TransferMode"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/TransferMode">
+                <XmlEditor type="combobox" options="binary;ascii"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -6788,14 +6795,16 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="binary"/>
-				        <xs:enumeration value="ascii"/>
+			    <!-- binary, ascii or ${VAR} -->
+                <xs:pattern value="binary|ascii|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-    <xs:element name="KeepAliveTimeout" default="180s">
+    <xs:element name="KeepAliveTimeout" default="180s" type="DurationTypeSeconds">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/FTP/KeepAlive/KeepAliveTimeout"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/KeepAlive/KeepAliveTimeout">
+                <Note include="Duration-Millis-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -6807,11 +6816,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>Sets the duration to wait between sending control connection keepalive messages when processing file upload or download.</p>
                <p>If zero is specified, any keep-alive message must not be sent.</p>
-               <p> </p>
-               <p>	Possible values:
+                <p/>
+               <p>Allowed formats:
 			<ul>
                      <li>
-                        <em>&lt;n&gt;</em> - duration in milliseconds, e.g.: <em>60000</em>
+                        <em>&lt;n&gt;</em> - plain number (milliseconds), e.g.: <em>60000</em>
                      </li>
                      <li>
                         <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
@@ -6826,18 +6835,13 @@ A fragment is referenced via this attribute value by a transfer profile.
                </p>
                <p>Combined values (with blank as separator):
             <ul>
-                     <li>e.g.: <em>1h 30m</em>
+                     <li>e.g.: <em>1m 30s</em>
                      </li>
                   </ul>
 		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:string">
-				        <xs:minLength value="1"/>
-			      </xs:restriction>
-		    </xs:simpleType>
 	  </xs:element>
 	  <!-- HTTP(S) -->
 	  <xs:element name="HTTPHeaders">
@@ -7432,7 +7436,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="Platform" default="unix">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/JUMP/Platform"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/JUMP/Platform">
+                <XmlEditor type="combobox" options="unix;windows"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -7449,8 +7455,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="unix"/>
-				        <xs:enumeration value="windows"/>
+			    <!-- unix, windows or ${VAR} -->
+                <xs:pattern value="unix|windows|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -8455,9 +8461,11 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="PreferredAuthentications">
+	  <xs:element name="PreferredAuthentications" default="password,publickey">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/PreferredAuthentications"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/PreferredAuthentications">
+                <XmlEditor type="combobox" options="password,publickey;publickey,password"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -8474,8 +8482,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="password,publickey"/>
-				        <xs:enumeration value="publickey,password"/>
+			    <!-- 'password,publickey', 'publickey,password' or ${VAR} -->
+                <xs:pattern value="password,publickey|publickey,password|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -8502,9 +8510,11 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:choice>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="RequiredAuthentications">
+	  <xs:element name="RequiredAuthentications" default="password,publickey">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/RequiredAuthentications"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/RequiredAuthentications">
+                <XmlEditor type="combobox" options="password,publickey;publickey,password"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -8531,8 +8541,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="password,publickey"/>
-				        <xs:enumeration value="publickey,password"/>
+				<!-- 'password,publickey', 'publickey,password' or ${VAR} -->
+                <xs:pattern value="password,publickey|publickey,password|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -8601,10 +8611,10 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-				        <xs:maxInclusive value="100000000"/>
-			      </xs:restriction>
+            <xs:restriction base="xs:string">
+                <!-- number >=1 or ${VAR} -->
+                <xs:pattern value="([1-9][0-9]*)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="SSHAuthentication">
@@ -8682,7 +8692,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="StrictHostkeyChecking" type="xs:boolean" default="false">
+	  <xs:element name="StrictHostkeyChecking" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/StrictHostkeyChecking"/>
          <xs:documentation>
@@ -8707,7 +8717,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-    <xs:element name="DisableAutoDetectShell" type="xs:boolean" default="false">
+    <xs:element name="DisableAutoDetectShell" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/DisableAutoDetectShell">
                 <Release starting="2.8.2" issue="YADE-632"/>
@@ -8737,7 +8747,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="ZlibCompression" type="xs:boolean" default="false">
+	  <xs:element name="ZlibCompression" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/ZlibCompression"/>
          <xs:documentation>
@@ -10593,7 +10603,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="Encoding" default="7bit">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/NotificationFragments/MailFragment/Encoding"/>
+         <xs:appinfo source="Fragments/NotificationFragments/MailFragment/Encoding">
+                <XmlEditor type="combobox" options="7bit;Quoted-Printable;Base64"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -10611,10 +10623,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:minLength value="1"/>
-				        <xs:enumeration value="7bit"/>
-				        <xs:enumeration value="Quoted-Printable"/>
-				        <xs:enumeration value="Base64"/>
+		        <!-- 7bit, Quoted-Printable, Base64 or ${VAR} -->
+                <xs:pattern value="7bit|Quoted-Printable|Base64|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -10932,10 +10942,10 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-				        <xs:maxInclusive value="100000000"/>
-			      </xs:restriction>
+            <xs:restriction base="xs:string">
+                <!-- number >=0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="RetryInterval" default="1s">
@@ -12486,9 +12496,10 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="-1"/>
-			      </xs:restriction>
+            <xs:restriction base="xs:string">
+               <!-- number -1, >=0 or ${VAR} -->
+                <xs:pattern value="(-1)|([0-9]+)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
 	  <!-- SourceFileOptions - CheckSteadyState -->
@@ -12540,9 +12551,13 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="CheckSteadyStateInterval" default="1">
+	  <xs:element name="CheckSteadyStateInterval"
+               default="1"
+               type="DurationTypeSeconds">
 		    <xs:annotation>
-         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/CheckSteadyState/CheckSteadyStateInterval"/>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/CheckSteadyState/CheckSteadyStateInterval">
+                <Note include="Duration-Seconds-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -12553,19 +12568,34 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>
-		The interval in seconds for checking the <a target="_blank"
+		The interval for checking the <a target="_blank"
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+CheckSteadyState"
                      shape="rect">steady state</a>
 		of incoming files.
 		</p>
+                <p/>
+               <p>Allowed formats:
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;m</em> - duration in minutes, e.g.: <em>1m</em>
+                     </li>
+                  </ul>
+               </p>
+               <p>Combined values (with blank as separator):
+            <ul>
+                     <li>e.g.: <em>1m 30s</em>
+                     </li>
+                  </ul>
+		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="1"/>
-			      </xs:restriction>
-		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="CheckSteadyStateCount" default="30">
 		    <xs:annotation>
@@ -12589,9 +12619,10 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="1"/>
-			      </xs:restriction>
+			      <xs:restriction base="xs:string">
+                <!-- number >=0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
 	  <!-- SourceFileOptions - Directives -->
@@ -12626,7 +12657,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="DisableErrorOnNoFilesFound" type="xs:boolean" default="false">
+	  <xs:element name="DisableErrorOnNoFilesFound"
+               type="BooleanType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Directives/DisableErrorOnNoFilesFound"/>
          <xs:documentation>
@@ -12657,7 +12690,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="TransferZeroByteFiles">
 		    <xs:annotation>
-         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Directives/TransferZeroByteFiles"/>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Directives/TransferZeroByteFiles">
+                <XmlEditor type="combobox" options="true;false;strict;relaxed"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -12697,10 +12732,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:simpleType>
 			      <xs:restriction base="xs:string">
-				        <xs:enumeration value="true"/>
-				        <xs:enumeration value="false"/>
-				        <xs:enumeration value="strict"/>
-				        <xs:enumeration value="relaxed"/>
+				<!-- true, false, strict, relaxed or ${VAR} -->
+                <xs:pattern value="true|false|strict|relaxed|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
@@ -12742,9 +12775,11 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollInterval" default="60">
+	  <xs:element name="PollInterval" default="60" type="DurationTypeSeconds">
 		    <xs:annotation>
-         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollInterval"/>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollInterval">
+                <Note include="Duration-Seconds-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -12754,19 +12789,36 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>This parameter specifies the time in seconds that will be waited before a new poll for files is carried out. </p>
+               <p>This parameter specifies the wait time before a new poll for files is carried out. </p>
+                <p/>
+               <p>Allowed formats:
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;m</em> - duration in minutes, e.g.: <em>1m</em>
+                     </li>
+                  </ul>
+               </p>
+               <p>Combined values (with blank as separator):
+            <ul>
+                     <li>e.g.: <em>1m 30s</em>
+                     </li>
+                  </ul>
+		             </p>
             </div>
          </xs:documentation>
-      </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="1"/>
-			      </xs:restriction>
-		    </xs:simpleType>
+      </xs:annotation>		
 	  </xs:element>
-	  <xs:element name="PollTimeout" default="0">
+	  <xs:element name="PollTimeout" default="0" type="DurationTypeMinutes">
 		    <xs:annotation>
-         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollTimeout"/>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollTimeout">
+                <Note include="Duration-Minutes-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -12777,7 +12829,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                </ul>
                <strong>Notes</strong>
                <p>
-			This parameter specifies the total length of time in minutes that a file will be polled for.
+			This parameter specifies the total length of time that a file will be polled for.
 		</p>
                <p>
 			               <ul>
@@ -12787,14 +12839,29 @@ A fragment is referenced via this attribute value by a transfer profile.
                      <li>Polling will be stopped once one (or more) file(s) have been detected.</li>
                   </ul>
 		             </p>
+                <p/>
+               <p>Allowed formats:
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (minutes), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;m</em> - duration in minutes, e.g.: <em>30m</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;h</em> - duration in hours, e.g.: <em>1h</em>
+                     </li>
+                  </ul>
+               </p>
+               <p>Combined values (with blank as separator):
+            <ul>
+                     <li>e.g.: <em>1h 30m 30s</em>
+                     </li>
+                  </ul>
+		             </p>
             </div>
          </xs:documentation>
       </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-			      </xs:restriction>
-		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="MinFiles" default="1">
 		    <xs:annotation>
@@ -12817,12 +12884,13 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-			      </xs:restriction>
+			      <xs:restriction base="xs:string">
+                <!-- number >= 0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="WaitForSourceFolder" type="xs:boolean">
+	  <xs:element name="WaitForSourceFolder" type="BooleanType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/WaitForSourceFolder"/>
          <xs:documentation>
@@ -12843,7 +12911,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="PollingServer" type="xs:boolean" default="false">
+	  <xs:element name="PollingServer" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollingServer"/>
          <xs:documentation>
@@ -12915,7 +12983,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:simpleContent>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollForever" type="xs:boolean" default="false">
+	  <xs:element name="PollForever" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollForever"/>
          <xs:documentation>
@@ -13122,9 +13190,10 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-			      </xs:restriction>
+			      <xs:restriction base="xs:string">
+                <!-- number >=0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="RaiseErrorIfResultSetIs">
@@ -13715,7 +13784,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="Recursive" type="xs:boolean" default="false">
+	  <xs:element name="Recursive" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Selection/Recursive"/>
          <xs:documentation>
@@ -13981,7 +14050,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="AppendFiles" type="xs:boolean" default="false">
+	  <xs:element name="AppendFiles" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/AppendFiles"/>
          <xs:documentation>
@@ -14035,7 +14104,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-    <xs:element name="ResumeFiles" type="xs:boolean" default="false">
+    <xs:element name="ResumeFiles" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/ResumeFiles"/>
          <xs:documentation>
@@ -14109,7 +14178,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="CheckSize" type="xs:boolean" default="false">
+	  <xs:element name="CheckSize" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/CheckSize"/>
          <xs:documentation>
@@ -14163,7 +14232,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="DisableMakeDirectories" type="xs:boolean" default="false">
+	  <xs:element name="DisableMakeDirectories" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/DisableMakeDirectories"/>
          <xs:documentation>
@@ -14196,7 +14265,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="DisableOverwriteFiles" type="xs:boolean" default="false">
+	  <xs:element name="DisableOverwriteFiles" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/DisableOverwriteFiles"/>
          <xs:documentation>
@@ -14219,7 +14288,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="KeepModificationDate" type="xs:boolean" default="false">
+	  <xs:element name="KeepModificationDate" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/KeepModificationDate"/>
          <xs:documentation>
@@ -14695,7 +14764,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="CumulativeFileDelete" type="xs:boolean" default="false">
+	  <xs:element name="CumulativeFileDelete" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/CumulateFiles/CumulativeFileDelete"/>
          <xs:documentation>
@@ -14767,12 +14836,13 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 		    <xs:simpleType>
-			      <xs:restriction base="xs:int">
-				        <xs:minInclusive value="0"/>
-			      </xs:restriction>
+			      <xs:restriction base="xs:string">
+                <!-- number >=0 or ${VAR} -->
+                <xs:pattern value="[0-9]+|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+            </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="Transactional" type="xs:boolean" default="false">
+	  <xs:element name="Transactional" type="BooleanType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/TransferOptions/Transactional"/>
          <xs:documentation>
@@ -15128,7 +15198,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:simpleContent>
 				        <xs:extension base="NotEmptyType">
 					          <xs:attribute name="enable_for_skipped_transfer"
-                             type="xs:boolean"
+                             type="BooleanType"
                              default="false">
                   <xs:annotation>
                      <xs:documentation>
@@ -15295,7 +15365,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:simpleContent>
 				        <xs:extension base="NotEmptyType">
 					          <xs:attribute name="disable_for_skipped_transfer"
-                             type="xs:boolean"
+                             type="BooleanType"
                              default="false">
                   <xs:annotation>
                      <xs:documentation>
@@ -15903,4 +15973,28 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:minLength value="1"/>
 		    </xs:restriction>
 	  </xs:simpleType>
+    <xs:simpleType name="BooleanType">
+        <xs:restriction base="xs:string">
+            <!-- true, false or ${VAR} -->
+            <xs:pattern value="true|false|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="DurationTypeSeconds">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
+            <xs:pattern value="([0-9]+)|([0-9]+[smh](\s+[0-9]+[smh])*)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="DurationTypeMinutes">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (minutes)), duration formats (e.g., 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
+            <xs:pattern value="([0-9]+)|(([0-9]+[mh](\s+[0-9]+[smh])*))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- not used because GUI does not support showing values for union types(<xs:simpleType><xs:union memberTypes="VarType"><xs:simpleType><xs:restriction base="xs:int">...) or XSD 1.1 variables (<xs:variable ...) -->
+    <xs:simpleType name="VarType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\$\{[\p{L}_][\p{L}\p{N}_]*\}"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>
