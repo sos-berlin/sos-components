@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -206,7 +207,12 @@ public class YADESourceFilesPolling {
         if (args.getPolling().getPollTimeout().getValue() == null) {
             return 0L;
         } else {
-            return args.getPolling().getPollTimeout().getValue() * 60;
+            // capability with previous behaviour - if only 1 <- minutes
+            if (SOSString.isNumeric(args.getPolling().getPollTimeout().getValue())) {
+                return Integer.valueOf(args.getPolling().getPollTimeout().getValue()) * 60;
+            } else {
+                return SOSArgumentHelper.asSeconds(args.getPolling().getPollTimeout(), 0L);
+            }
         }
     }
 

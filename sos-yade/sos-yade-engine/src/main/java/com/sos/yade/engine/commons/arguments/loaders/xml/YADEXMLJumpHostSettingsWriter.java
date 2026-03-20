@@ -168,6 +168,13 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append("</PasswordAuthentication>");
             }
             sb.append("</CSAuthentication>");
+            if (providerArgs.getCredentialStore().getKeePassModule().isDirty()) {
+                sb.append("<CSKeePass>");
+                sb.append("<CSKeePassModule>");
+                sb.append(cdata(providerArgs.getCredentialStore().getKeePassModule().getValue()));
+                sb.append("</CSKeePassModule>");
+                sb.append("</CSKeePass>");
+            }
             sb.append("</CredentialStoreFragment>");
             sb.append("</CredentialStoreFragments>");
         }
