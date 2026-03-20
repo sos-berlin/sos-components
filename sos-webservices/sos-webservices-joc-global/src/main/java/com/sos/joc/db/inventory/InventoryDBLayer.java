@@ -1927,7 +1927,7 @@ public class InventoryDBLayer extends DBLayer {
         } else {
             StringBuilder hql = null;
             if (size > 0) {
-                hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c ");
+                hql = new StringBuilder("select c from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" c ");
                 hql.append(",").append(DBLayer.DBITEM_INV_SCHEDULE2WORKFLOWS).append(" sw ");
                 hql.append("where c.type = :type ");
                 hql.append("and sw.scheduleName = c.name ");
