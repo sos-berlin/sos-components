@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -126,7 +127,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         .getConfigurationGlobalsJoc()) : getAccount();
                 // JOC-2158: cancelOrder was missing here!
                 List<DBItemInventoryConfiguration> usedSchedules = dbLayer.getUsedSchedulesByWorkflowNames(
-                        allDeployments.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getTypeAsEnum()))
+                        allDeployments.stream().filter(item -> DeployType.WORKFLOW.equals(item.getTypeAsEnum()))
                         .map(workflow -> workflow.getName()).collect(Collectors.toList()));
                 if(!usedSchedules.isEmpty()) {
                     usedSchedules.stream().forEach(schedule -> {
