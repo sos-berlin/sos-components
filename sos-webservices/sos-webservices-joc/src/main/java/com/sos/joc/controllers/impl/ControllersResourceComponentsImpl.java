@@ -284,46 +284,46 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         return db;
     }
 
-    private static ClusterState getClusterState(List<ControllerAnswer> masters, String controllerId) {
+    private static ClusterState getClusterState(List<ControllerAnswer> controllers, String controllerId) {
         ClusterType clusterType = null;
         Optional<String> lossNode = Optional.empty();
-        if (!masters.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
-            int unreachables = masters.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
+        if (!controllers.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
+            int unreachables = controllers.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
                     .sum();
-            if (unreachables == masters.size()) {
+            if (unreachables == controllers.size()) {
                 //
             } else if (unreachables == 0) {
-                Optional<ControllerAnswer> j = masters.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active)
+                Optional<ControllerAnswer> j = controllers.stream().filter(m -> m.getClusterNodeState().get_text() == ClusterNodeStateText.active)
                         .findAny();
                 if (j.isPresent()) {
                     clusterType = j.get().getClusterState();
                 } else {
-                    clusterType = masters.get(0).getClusterState();
+                    clusterType = controllers.get(0).getClusterState();
                 }
                 
-                lossNode = masters.stream().map(m -> m.getLossNode()).filter(Objects::nonNull).findAny();
+                lossNode = controllers.stream().map(m -> m.getLossNode()).filter(Objects::nonNull).findAny();
                 
             } else {
-                ControllerAnswer j = masters.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny()
+                ControllerAnswer j = controllers.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny()
                         .get();
                 clusterType = j.getClusterState();
                 if (j.getLossNode() != null) {
                     lossNode = Optional.of(j.getLossNode());
                 }
                 if (j.isCoupledOrPreparedTobeCoupled()) {
-                    int index = masters.indexOf(j);
+                    int index = controllers.indexOf(j);
                     int otherIndex = (index + 1) % 2;
                     if (j.getClusterNodeState().get_text() == ClusterNodeStateText.active) {
-                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(false, true));
+                        controllers.get(otherIndex).setClusterNodeState(States.getClusterNodeState(false, true));
                     } else {
-                        masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(null, true));
+                        controllers.get(otherIndex).setClusterNodeState(States.getClusterNodeState(null, true));
                     }
-//                    if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
-//                        // masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
-//                    }
-                    if (j.getClusterState() == ClusterType.COUPLED) {
-                        masters.get(otherIndex).setIsCoupled(false);
-                    }
+                    //if (clusterType == ClusterType.COUPLED) {
+                        controllers.get(otherIndex).setIsCoupled(false);
+                        controllers.get(index).setIsCoupled(false);
+                        // ClusterType.COUPLED and ClusterType.PREPARED_TO_BE_COUPLED -> "ClusterUnknown"
+                        clusterType = null;
+                    //}
                 }
             }
         }
