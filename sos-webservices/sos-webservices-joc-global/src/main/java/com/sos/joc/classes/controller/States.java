@@ -89,7 +89,7 @@ public class States {
     public static ClusterState getClusterState(ClusterType state) {
         ClusterState clusterState = new ClusterState();
         if (state == null) {
-            clusterState.setSeverity(2);
+            clusterState.setSeverity(4);
             clusterState.set_text("ClusterUnknown");
             return clusterState;
         }
