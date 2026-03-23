@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 import js7.base.log.reader.KeyedLogLine;
+import js7.data.node.EngineServerId;
 import js7.base.log.LogLevel;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -102,22 +104,27 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
                 return jocDefaultResponse;
             }
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
+            DBItemInventoryJSInstance dbItem = null;
             if (controllerInstances.size() > 1) { // is cluster
                 checkRequiredParameter("url", urlParamSchema.getUrl());
                 if (!isUrl.test(urlParamSchema.getUrl())) {
                     throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
                 }
+                dbItem = controllerInstances.stream().filter(ci -> ci.getUri().equals(urlParamSchema.getUrl())).findAny().orElseThrow(
+                        () -> new JocBadRequestException("Unknown URL: " + urlParamSchema.getUrl()));
             } else {
-                urlParamSchema.setUrl(controllerInstances.get(0).getUri());
+                dbItem = controllerInstances.get(0);
             }
             
-            JControllerProxy proxy = Proxy.of(urlParamSchema.getControllerId());
+            JControllerProxy proxy = Proxy.of(dbItem.getControllerId());
+            EngineServerId serverId = dbItem.getIsPrimary() ? EngineServerId.primaryController : EngineServerId.backupController;
             ZoneId zoneId = getZoneId(proxy.currentState().asScala().controllerMetaState().timezone().string());
             //Instant instant = Instant.now().minusSeconds(3600);
             Instant instant = LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC);
-            //Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(LogLevel.debug(), instant, 100l);
+            //Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(LogLevel.debug(), instant, OptionalLong.of(100l));
             //LogLineKey.
-            Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(LogLevel.debug(), Instant.parse("2026-03-03T17:35:00Z"), Long.MAX_VALUE);
+            Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(serverId, LogLevel.debug(), Instant.parse(
+                    "2026-03-03T17:35:00Z"), OptionalLong.of(Long.MAX_VALUE));
             // Error handling and completion
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
