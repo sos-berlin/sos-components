@@ -553,24 +553,30 @@ public class DeleteDeployments {
     public static void checkIfWorkflowsHaveOrders(String controllerId, Set<String> workflowNames) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
-
         if (workflowNames != null && !workflowNames.isEmpty()) {
-            checkIfWorkflowsHaveOrders(controllerId, Proxy.of(controllerId).currentState(), workflowNames);
+            // JOC-2158
+            // wait approx. 3 times for 1 seconds to check for existing orders to make sure any previous order process has the chance to finish
+            // if orders are still present after 3 checks throw exception
+            for(int i = 0; i < 3; i++) {
+                try {Thread.sleep(1000L);} catch (InterruptedException e) {}
+                try {
+                    checkIfWorkflowsHaveOrders(controllerId, Proxy.of(controllerId).currentState(), workflowNames);
+                } catch (Exception e) {
+                    if(i < 2) {
+                        continue;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
         }
     }
 
     private static void checkIfWorkflowsHaveOrders(String controllerId, JControllerState currentState, Set<String> workflowNames) {
-        currentState.idToOrder().values().stream().map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).filter(
-                workflowNames::contains).findAny().map(w -> String.format(
-                        "Workflow '%s' on Controller '%s' still contains orders to process", w, controllerId)).map(JocBadRequestException::new)
-                .ifPresent(e -> {
-                    throw e;
-                });
-//        WorkflowsHelper.oldJWorkflowIds(currentState).map(JWorkflowId::path).map(WorkflowPath::string).filter(workflowNames::contains).findAny().map(
-//                w -> String.format("Workflow '%s' on Controller '%s' has older version(s) that still have orders to process", w, controllerId)).map(
-//                        JocBadRequestException::new).ifPresent(e -> {
-//                            throw e;
-//                        });
+        currentState.idToOrder().values().stream()
+            .map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).filter(workflowNames::contains).findAny()
+            .map(w -> String.format("Workflow '%s' on Controller '%s' still contains orders to process. Please check your agents.", w, controllerId))
+            .map(JocBadRequestException::new).ifPresent(e -> {throw e;});
     }
 
 }
