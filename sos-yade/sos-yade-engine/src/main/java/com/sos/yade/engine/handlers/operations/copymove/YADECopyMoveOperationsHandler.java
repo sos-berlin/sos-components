@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.sos.commons.util.concurrency.SOSParallelWorkerExecutor;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -62,6 +63,14 @@ public class YADECopyMoveOperationsHandler {
             onError(logger, config, sourceDelegator, targetDelegator, sourceFiles, useCumulativeTargetFile);
             throw e;
         }
+    }
+
+    /** Sets state on sourceFile for Summary
+     * 
+     * @param sourceFile */
+    public static void setSourceFileAborted(YADEProviderFile sourceFile) {
+        sourceFile.setState(TransferEntryState.SELECTED);
+        sourceFile.setSubState(TransferEntryState.ABORTED);
     }
 
     private static void processFiles(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
@@ -241,29 +250,52 @@ public class YADECopyMoveOperationsHandler {
     private static void rollbackFile(ISOSLogger logger, YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
             boolean isJumpHostRollback, ProviderFile pf) {
         YADEProviderFile sourceFile = (YADEProviderFile) pf;
-        YADEProviderFile targetFile = sourceFile.getTarget();
         String fileTransferLogPrefix = String.valueOf(sourceFile.getIndex());
 
         // 1) a targetFile was not initialized because the transfer was aborted in a previous file
-        if (targetFile == null) {
+        if (sourceFile.getTarget() == null) {
             // set state on sourceFile for Summary
-            sourceFile.setState(TransferEntryState.SELECTED);
-            sourceFile.setSubState(TransferEntryState.ABORTED);
+            setSourceFileAborted(sourceFile);
             return;
         }
 
+        YADETargetProviderFile targetFile = (YADETargetProviderFile) sourceFile.getTarget();
         // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
         if (isJumpHostRollback) {
             targetFile.setSubState(TransferEntryState.ROLLED_BACK);
             return;
         }
 
-        // 3) the targetFile was not created because it may have been skipped due to non-overwrite criteria
-        if (!targetFile.isTransferredOrTransferring()) {
+        // 3) the targetFile was not touched (created/overwritten) because it may have been skipped due to non-overwrite criteria or due to transfer errors
+        if (!targetFile.isTouched()) {
+            if (targetFile.isTransferring()) {
+                boolean logged = false;
+                if (targetDelegator.getProvider().isConnected()) {
+                    try {
+                        ProviderFile tpf = targetDelegator.getProvider().getFileIfExists(targetFile.getCurrentFullPath());
+                        logged = true;
+                        if (tpf != null) { // exists
+                            logger.info(
+                                    "[%s][%s][rollback][skipped][%s][ModificationDate(UTC)=%s]target file was not touched by the current operation",
+                                    fileTransferLogPrefix, targetDelegator.getLabel(), targetFile.getCurrentFullPath(), tpf
+                                            .getLastModifiedAsUTCString());
+                        }
+                    } catch (ProviderException e) {
+
+                    }
+                }
+                if (!logged) {
+                    logger.info("[%s][%s][rollback][skipped][%s]target file was not touched by the current operation", fileTransferLogPrefix,
+                            targetDelegator.getLabel(), targetFile.getCurrentFullPath());
+                }
+                if (targetFile.getSubState() == null) {
+                    targetFile.setSubState(TransferEntryState.FAILED);
+                }
+            }
             return;
         }
         // 4) a targetFile intergityHash file may have been created and needs to be deleted
-        if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
+        if (targetFile.isIntegrityHashFileWritten()) {
             String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
             try {
                 if (targetDelegator.getProvider().deleteFileIfExists(path)) {
@@ -286,16 +318,7 @@ public class YADECopyMoveOperationsHandler {
             targetFile.setSubState(TransferEntryState.ROLLED_BACK);
         } catch (Exception e) {
             logger.error("[%s][%s][rollback][%s]%s", fileTransferLogPrefix, targetDelegator.getLabel(), targetFilePath, e.toString());
-            if (targetFile.isTransferring()) {
-                YADETargetProviderFile t = (YADETargetProviderFile) targetFile;
-                if (t.getBytesProcessed() == 0) { // transfer (maybe) not started...
-                    targetFile.setSubState(TransferEntryState.ABORTED);
-                } else {
-                    targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
-                }
-            } else {
-                targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
-            }
+            targetFile.setSubState(TransferEntryState.ROLLBACK_FAILED);
         }
     }
 

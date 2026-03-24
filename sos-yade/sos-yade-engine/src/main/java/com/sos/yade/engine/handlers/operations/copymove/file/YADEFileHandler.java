@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
@@ -32,6 +33,7 @@ import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 import com.sos.yade.engine.handlers.command.YADEFileCommandVariablesResolver;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEMessageDigest;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
@@ -179,6 +181,7 @@ public class YADEFileHandler {
                                         .getSize());
                             }
                         }
+                        targetFile.setTouched();
                         targetFile.setSize(sourceFile.getSize());
                         break l;
                     } catch (Exception e) {
@@ -256,6 +259,7 @@ public class YADEFileHandler {
                             byte[] bytes = cumulativeTargetFileSeparator.getBytes();
                             // cumulativeFileSeperatorLength = bytes.length;
                             targetStream.write(bytes);
+                            targetFile.setTouched();
 
                             messageDigest.update(bytes);
                             isCumulateTargetWritten = true;
@@ -264,6 +268,7 @@ public class YADEFileHandler {
                         if (sourceFile.getSize() <= 0L) {
                             byte[] bytes = new byte[0];
                             targetStream.write(bytes);
+                            targetFile.setTouched();
 
                             messageDigest.update(bytes);
                         } else {
@@ -271,6 +276,7 @@ public class YADEFileHandler {
                             int bytesRead;
                             while ((bytesRead = sourceStream.read(buffer)) != -1) {
                                 targetStream.write(buffer, 0, bytesRead);
+                                targetFile.setTouched();
                                 targetFile.updateBytesProcessed(bytesRead);
 
                                 messageDigest.update(buffer, bytesRead);
@@ -556,14 +562,28 @@ public class YADEFileHandler {
     private void throwException(String fileTransferLogPrefix, YADETargetProviderFile targetFile, Throwable e, String throwExceptionAdd)
             throws YADEEngineTransferFileException {
         String target = "null";
+        String targetState = null;
         if (targetFile != null) {
             target = targetFile.getCurrentFullPath();
             if (targetFile.isTransferring()) {
                 target = target + "][Bytes(processed)=" + targetFile.getBytesProcessed() + "/" + sourceFile.getSize();
             }
+            targetState = YADEClientBannerWriter.formatState(targetFile.getState());
         }
-        String msg = String.format("[%s][%s][%s=%s][%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(targetFile.getState()),
-                sourceDelegator.getLabel(), sourceFile.getFullPath(), targetDelegator.getLabel(), target);
+        if (SOSString.isEmpty(targetState)) {
+            if (sourceFile.getState() == null) {
+                YADECopyMoveOperationsHandler.setSourceFileAborted(sourceFile);
+                targetState = YADEClientBannerWriter.formatState(sourceFile.getState()) + "/" + YADEClientBannerWriter.formatState(sourceFile
+                        .getSubState());
+            } else {
+                targetState = YADEClientBannerWriter.formatState(sourceFile.getState());
+                if (sourceFile.getSubState() != null) {
+                    targetState += "/" + YADEClientBannerWriter.formatState(sourceFile.getSubState());
+                }
+            }
+        }
+        String msg = String.format("[%s][%s][%s=%s][%s]%s", fileTransferLogPrefix, targetState, sourceDelegator.getLabel(), sourceFile.getFullPath(),
+                targetDelegator.getLabel(), target);
         logger.error(msg);
         logger.error("  " + throwExceptionAdd + e);
         if (logger.isTraceEnabled()) {
