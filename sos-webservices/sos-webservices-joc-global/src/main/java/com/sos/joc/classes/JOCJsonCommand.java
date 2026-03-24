@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,9 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
-import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
-import com.sos.commons.httpclient.exception.SOSConnectionResetException;
-import com.sos.commons.httpclient.exception.SOSNoResponseException;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.joc.Globals;
@@ -39,7 +35,6 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.ControllerServiceUnavailableException;
@@ -245,7 +240,7 @@ public class JOCJsonCommand {
         } catch (HttpTimeoutException e) {
             throw new ControllerNoResponseException(jocError, e);
         } catch (IOException e) {
-            if (e.getMessage().contains("no bytes")) {
+            if (e.getMessage() == null || e.getMessage().contains("no bytes")) {
                 throw new ControllerNoResponseException(jocError, e);
             } else {
                 throw new JocBadRequestException(jocError, e);
@@ -336,7 +331,7 @@ public class JOCJsonCommand {
         } catch (HttpTimeoutException e) {
             throw new ControllerNoResponseException(jocError, e);
         } catch (IOException e) {
-            if (e.getMessage().contains("no bytes")) {
+            if (e.getMessage() == null || e.getMessage().contains("no bytes")) {
                 throw new ControllerNoResponseException(jocError, e);
             } else {
                 throw new JocBadRequestException(jocError, e);
