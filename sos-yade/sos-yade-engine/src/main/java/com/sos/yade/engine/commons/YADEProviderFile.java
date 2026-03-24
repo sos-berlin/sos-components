@@ -59,10 +59,6 @@ public class YADEProviderFile extends ProviderFile {
         return TransferEntryState.TRANSFERRING.equals(state);
     }
 
-    public boolean isTransferredOrTransferring() {
-        return isTransferred() || isTransferring();
-    }
-
     // TODO TransferEntryState.SKIPPED - seems to be unused
     public boolean isSkipped() {
         return TransferEntryState.SKIPPED.equals(state) || TransferEntryState.NOT_OVERWRITTEN.equals(state);

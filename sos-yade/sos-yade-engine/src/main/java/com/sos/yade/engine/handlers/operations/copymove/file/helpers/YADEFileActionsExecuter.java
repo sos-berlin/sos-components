@@ -68,7 +68,8 @@ public class YADEFileActionsExecuter {
 
                     YADEProviderDelegatorHelper.executeOperation(logger, targetDelegator, retry, () -> {
                         targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
-                        logger.info("[%s][%s][%s][%s]created", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                        targetFile.setIntegrityHashFileWritten();
+                        logger.info("[%s][%s][%s][%s]written", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
                                 .getCreateIntegrityHashFile().getName(), path);
                         return null;
                     });

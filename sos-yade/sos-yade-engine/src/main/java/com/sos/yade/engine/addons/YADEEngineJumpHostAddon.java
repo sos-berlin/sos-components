@@ -32,6 +32,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
+import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 
 /** SOURCE_TO_JUMP_HOST_...: Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
  * - 1) Current YADE Client:<br/>
@@ -296,8 +297,7 @@ public class YADEEngineJumpHostAddon {
             // 1) a targetFile was not initialized because the transfer was aborted in a previous file
             if (targetFile == null) {
                 // set state on sourceFile for Summary
-                sourceFile.setState(TransferEntryState.SELECTED);
-                sourceFile.setSubState(TransferEntryState.ABORTED);
+                YADECopyMoveOperationsHandler.setSourceFileAborted(sourceFile);
                 continue l;
             }
             // 2) only set the status targetFile - the entire jump directory will be deleted anyway - no individual files need to be deleted
