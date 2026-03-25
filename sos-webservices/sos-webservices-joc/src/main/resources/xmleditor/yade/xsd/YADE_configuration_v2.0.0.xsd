@@ -2965,7 +2965,7 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-    <xs:element name="ConnectTimeout" default="0" type="DurationTypeSeconds">
+    <xs:element name="ConnectTimeout" default="0" type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/ConnectTimeout">
                 <Note include="Duration-Seconds-Values"/>
@@ -4273,7 +4273,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:simpleType>
 	  </xs:element>
     <xs:element name="DisableCertificateHostnameVerification"
-               type="BooleanType"
+               type="BooleanOrVarType"
                default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/UntrustedSSL/DisableCertificateHostnameVerification"/>
@@ -6685,7 +6685,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>
 	  <!-- FTP -->
-	  <xs:element name="PassiveMode" type="BooleanType" default="false">
+	  <xs:element name="PassiveMode" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/PassiveMode"/>
          <xs:documentation>
@@ -6706,7 +6706,9 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="ProtocolCommandListener" type="BooleanType" default="false">
+	  <xs:element name="ProtocolCommandListener"
+               type="BooleanOrVarType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/ProtocolCommandListener"/>
          <xs:documentation>
@@ -6800,7 +6802,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-    <xs:element name="KeepAliveTimeout" default="180s" type="DurationTypeSeconds">
+    <xs:element name="KeepAliveTimeout"
+               default="180s"
+               type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/KeepAlive/KeepAliveTimeout">
                 <Note include="Duration-Millis-Values"/>
@@ -8692,7 +8696,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="StrictHostkeyChecking" type="BooleanType" default="false">
+	  <xs:element name="StrictHostkeyChecking"
+               type="BooleanOrVarType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/StrictHostkeyChecking"/>
          <xs:documentation>
@@ -8717,7 +8723,9 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-    <xs:element name="DisableAutoDetectShell" type="BooleanType" default="false">
+    <xs:element name="DisableAutoDetectShell"
+               type="BooleanOrVarType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/DisableAutoDetectShell">
                 <Release starting="2.8.2" issue="YADE-632"/>
@@ -8747,7 +8755,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="ZlibCompression" type="BooleanType" default="false">
+	  <xs:element name="ZlibCompression" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/ZlibCompression"/>
          <xs:documentation>
@@ -12553,7 +12561,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="CheckSteadyStateInterval"
                default="1"
-               type="DurationTypeSeconds">
+               type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/CheckSteadyState/CheckSteadyStateInterval">
                 <Note include="Duration-Seconds-Values"/>
@@ -12658,7 +12666,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>
 	  <xs:element name="DisableErrorOnNoFilesFound"
-               type="BooleanType"
+               type="BooleanOrVarType"
                default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Directives/DisableErrorOnNoFilesFound"/>
@@ -12775,7 +12783,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollInterval" default="60" type="DurationTypeSeconds">
+	  <xs:element name="PollInterval" default="60" type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollInterval">
                 <Note include="Duration-Seconds-Values"/>
@@ -12814,7 +12822,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>		
 	  </xs:element>
-	  <xs:element name="PollTimeout" default="0" type="DurationTypeMinutes">
+	  <xs:element name="PollTimeout" default="0" type="DurationMinutesOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollTimeout">
                 <Note include="Duration-Minutes-Values"/>
@@ -12890,7 +12898,7 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="WaitForSourceFolder" type="BooleanType">
+	  <xs:element name="WaitForSourceFolder" type="BooleanOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/WaitForSourceFolder"/>
          <xs:documentation>
@@ -12911,7 +12919,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="PollingServer" type="BooleanType" default="false">
+	  <xs:element name="PollingServer" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollingServer"/>
          <xs:documentation>
@@ -12983,7 +12991,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:simpleContent>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollForever" type="BooleanType" default="false">
+	  <xs:element name="PollForever" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollForever"/>
          <xs:documentation>
@@ -13784,7 +13792,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="Recursive" type="BooleanType" default="false">
+	  <xs:element name="Recursive" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Selection/Recursive"/>
          <xs:documentation>
@@ -14050,7 +14058,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="AppendFiles" type="BooleanType" default="false">
+	  <xs:element name="AppendFiles" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/AppendFiles"/>
          <xs:documentation>
@@ -14104,7 +14112,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-    <xs:element name="ResumeFiles" type="BooleanType" default="false">
+    <xs:element name="ResumeFiles" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/ResumeFiles"/>
          <xs:documentation>
@@ -14178,7 +14186,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="CheckSize" type="BooleanType" default="false">
+	  <xs:element name="CheckSize" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/CheckSize"/>
          <xs:documentation>
@@ -14232,7 +14240,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="DisableMakeDirectories" type="BooleanType" default="false">
+	  <xs:element name="DisableMakeDirectories"
+               type="BooleanOrVarType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/DisableMakeDirectories"/>
          <xs:documentation>
@@ -14265,7 +14275,9 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="DisableOverwriteFiles" type="BooleanType" default="false">
+	  <xs:element name="DisableOverwriteFiles"
+               type="BooleanOrVarType"
+               default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/DisableOverwriteFiles"/>
          <xs:documentation>
@@ -14288,7 +14300,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="KeepModificationDate" type="BooleanType" default="false">
+	  <xs:element name="KeepModificationDate" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/KeepModificationDate"/>
          <xs:documentation>
@@ -14764,7 +14776,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="CumulativeFileDelete" type="BooleanType" default="false">
+	  <xs:element name="CumulativeFileDelete" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Target/TargetFileOptions/CumulateFiles/CumulativeFileDelete"/>
          <xs:documentation>
@@ -14842,7 +14854,7 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="Transactional" type="BooleanType" default="false">
+	  <xs:element name="Transactional" type="BooleanOrVarType" default="false">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/TransferOptions/Transactional"/>
          <xs:documentation>
@@ -15198,7 +15210,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:simpleContent>
 				        <xs:extension base="NotEmptyType">
 					          <xs:attribute name="enable_for_skipped_transfer"
-                             type="BooleanType"
+                             type="BooleanOrVarType"
                              default="false">
                   <xs:annotation>
                      <xs:documentation>
@@ -15365,7 +15377,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:simpleContent>
 				        <xs:extension base="NotEmptyType">
 					          <xs:attribute name="disable_for_skipped_transfer"
-                             type="BooleanType"
+                             type="BooleanOrVarType"
                              default="false">
                   <xs:annotation>
                      <xs:documentation>
@@ -15973,19 +15985,19 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:minLength value="1"/>
 		    </xs:restriction>
 	  </xs:simpleType>
-    <xs:simpleType name="BooleanType">
+    <xs:simpleType name="BooleanOrVarType">
         <xs:restriction base="xs:string">
             <!-- true, false or ${VAR} -->
             <xs:pattern value="true|false|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="DurationTypeSeconds">
+    <xs:simpleType name="DurationSecondsOrVarType">
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
             <xs:pattern value="([0-9]+)|([0-9]+[smh](\s+[0-9]+[smh])*)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="DurationTypeMinutes">
+    <xs:simpleType name="DurationMinutesOrVarType">
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (minutes)), duration formats (e.g., 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
             <xs:pattern value="([0-9]+)|(([0-9]+[mh](\s+[0-9]+[smh])*))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
