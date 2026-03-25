@@ -878,7 +878,7 @@
 	  <xs:element name="CSKeePassModule" default="JAXB">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/CredentialStoreFragments/CSKeePassModule">
-                <XmlEditor type="combobox" options="DOM;JAXB"/>
+                <XmlEditor type="combobox" options="DOM;JAXB;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -1709,7 +1709,7 @@
                 <xs:element name="SecurityMode" default="explicit">
                     <xs:annotation>
                   <xs:appinfo source="Fragments/ProtocolFragments/FTP/SecurityMode">
-                            <XmlEditor type="combobox" options="explicit;implicit"/>
+                            <XmlEditor type="combobox" options="explicit;implicit;${VAR}"/>
                         </xs:appinfo>
                   <xs:documentation>
                      <div xmlns="http://www.w3.org/1999/xhtml">
@@ -4105,7 +4105,7 @@ A fragment is referenced via this attribute value by a transfer profile.
     <xs:element name="TrustStoreType" default="JKS">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/TrustStore/TrustStoreType">
-                 <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS"/>
+                 <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -4204,7 +4204,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="KeyStoreType" default="JKS">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/SSL/TrustedSSL/KeyStore/KeyStoreType">
-                <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS"/>
+                <XmlEditor type="combobox" options="JKS;JCEKS;PKCS12;PKCS11;DKS;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -6776,7 +6776,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="TransferMode" default="binary">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/TransferMode">
-                <XmlEditor type="combobox" options="binary;ascii"/>
+                <XmlEditor type="combobox" options="binary;ascii;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -7441,7 +7441,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="Platform" default="unix">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/JUMP/Platform">
-                <XmlEditor type="combobox" options="unix;windows"/>
+                <XmlEditor type="combobox" options="unix;windows;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -8468,7 +8468,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="PreferredAuthentications" default="password,publickey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/PreferredAuthentications">
-                <XmlEditor type="combobox" options="password,publickey;publickey,password"/>
+                <XmlEditor type="combobox" options="password,publickey;publickey,password;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -8517,7 +8517,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="RequiredAuthentications" default="password,publickey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/RequiredAuthentications">
-                <XmlEditor type="combobox" options="password,publickey;publickey,password"/>
+                <XmlEditor type="combobox" options="password,publickey;publickey,password;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -10612,7 +10612,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="Encoding" default="7bit">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/NotificationFragments/MailFragment/Encoding">
-                <XmlEditor type="combobox" options="7bit;Quoted-Printable;Base64"/>
+                <XmlEditor type="combobox" options="7bit;Quoted-Printable;Base64;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -10956,7 +10956,7 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
-	  <xs:element name="RetryInterval" default="1s">
+	  <xs:element name="RetryInterval" default="1s" type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="General/RetryOnConnectionError/RetryInterval"/>
          <xs:documentation>
@@ -10992,11 +10992,6 @@ A fragment is referenced via this attribute value by a transfer profile.
             </div>
          </xs:documentation>
       </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:string">
-				        <xs:minLength value="1"/>
-			      </xs:restriction>
-		    </xs:simpleType>
 	  </xs:element>
 	  <xs:element name="SystemPropertyFiles">
 		    <xs:annotation>
@@ -12699,7 +12694,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  <xs:element name="TransferZeroByteFiles">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Directives/TransferZeroByteFiles">
-                <XmlEditor type="combobox" options="true;false;strict;relaxed"/>
+                <XmlEditor type="combobox" options="true;false;strict;relaxed;${VAR}"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
