@@ -15,6 +15,31 @@ import com.sos.commons.util.proxy.ProxyConfigArguments;
 
 public class ProviderEncryptionResolver {
 
+    /** resolves credential store password argument
+     * 
+     * @param logger
+     * @param args
+     * @return
+     * @throws Exception */
+    public static boolean resolveCredentialStorePass(ISOSLogger logger, AProviderArguments args) throws Exception {
+        if (args == null || !args.isEncryptionDecryptEnabled() || !args.isCredentialStoreEnabled()) {
+            return false;
+        }
+
+        SOSArgument<?> arg = args.getCredentialStore().getPassword();
+        if (!hasEncryptedValue(arg)) {
+            return false;
+        }
+
+        setPrivateKey(logger, args.getEncryptionDecrypt(), args.getEncryptionDecrypt().getPrivateKeyPath().getValue(), true);
+        try {
+            resolveArgument(args, arg);
+        } finally {
+            cleanup(args.getEncryptionDecrypt()); // cleanup, because the credential store might contain another private key
+        }
+        return true;
+    }
+
     /** @param args default arguments to resolve:<br/>
      *            args.host (args.port when host:port)<br/>
      *            args.user<br/>
@@ -98,7 +123,7 @@ public class ProviderEncryptionResolver {
 
     private static void resolveArgument(AProviderArguments args, final SOSArgument<?> mainArg, final SOSArgument<?> secondArg,
             String mainSecondSplitter) throws Exception {
-        if (!EncryptionArguments.hasEncryptedValue(mainArg) || mainArg.getName() == null) { // name=null - internal argument ...
+        if (!hasEncryptedValue(mainArg)) {
             return;
         }
 
@@ -129,5 +154,10 @@ public class ProviderEncryptionResolver {
         }
         EncryptedValue encrypted = EncryptedValue.getInstance("decrypt", encryptedValue);
         return Decrypt.decrypt(encrypted, decryptArgs.getPrivateKey().getValue());
+    }
+
+    // name=null - internal argument ...
+    private static boolean hasEncryptedValue(final SOSArgument<?> arg) {
+        return arg.getName() != null && EncryptionArguments.hasEncryptedValue(arg);
     }
 }

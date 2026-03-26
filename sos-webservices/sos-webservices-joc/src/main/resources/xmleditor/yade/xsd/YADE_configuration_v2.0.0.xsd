@@ -674,8 +674,9 @@
 	  <xs:element name="CSPassword">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/CredentialStoreFragments/CSPassword">
-				        <XmlEditor type="password"/>
-			      </xs:appinfo>
+		          <Note include="Decryption-Usage"/>
+                <XmlEditor type="password" enc="true" cs="false"/>
+          </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -688,6 +689,45 @@
                <p>
 			This parameter specifies the password that is used to authenticate with the Credential Store.
 		</p>
+		             <p/>
+               <p>
+                  <strong>Using encrypted values.</strong>
+               </p>
+               <p/>
+               <ul>
+                  <li>Encrypted values can be specified using the following syntax:
+                <ul>
+                        <li>
+                           <strong>
+                              <em>enc:&lt;encrypted value&gt;</em>
+                           </strong>
+                        </li>
+                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
+                     </ul>
+                  </li>
+                  <li>Interaction with <em>CredentialStore</em>:
+                <ul>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
+                
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -1013,7 +1053,23 @@
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -2519,7 +2575,8 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/Hostname">
 				        <Note include="Decryption-Usage"/>
-                <Note include="CredentialStore-Fields"/>                
+                <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>                
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -2549,7 +2606,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -2745,7 +2818,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -2922,7 +3011,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                         </ul>
                      </li>
                   </ul>
-               </p>                
+               </p>
+                                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -3013,6 +3103,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/Account">
 				        <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -3048,7 +3139,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -3244,7 +3351,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -3422,6 +3545,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -3436,7 +3560,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/common/Connection/Password">
 				        <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
-				        <XmlEditor type="password"/>
+				        <XmlEditor enc="true" cs="true" type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -3481,7 +3605,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -3677,7 +3817,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -4378,6 +4534,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Connection/ServiceEndpoint">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -4410,7 +4567,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -4606,7 +4779,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -4784,6 +4973,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -4832,6 +5022,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/AccountName">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -4864,7 +5055,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -5060,7 +5267,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -5238,6 +5461,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -5252,6 +5476,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/ContainerName">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -5283,7 +5508,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -5479,7 +5720,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -5657,6 +5914,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -5744,7 +6002,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/SASToken/Token">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
-				        <XmlEditor type="password"/>
+				        <XmlEditor enc="true" cs="true" type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -5854,7 +6112,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -6050,7 +6324,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -6244,7 +6534,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/AccountKey">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
-				        <XmlEditor type="password"/>
+				        <XmlEditor enc="true" cs="true" type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -6276,7 +6566,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -6472,7 +6778,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -6975,6 +7297,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/HTTP/URL">
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
             </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -7018,7 +7341,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -7214,7 +7553,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -7392,6 +7747,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -7470,6 +7826,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/SFTP/AuthenticationFile">
 				        <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -7516,7 +7873,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -7712,7 +8085,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -7890,6 +8279,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -8037,7 +8427,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo>
 				        <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
-				        <XmlEditor type="password"/>
+				        <XmlEditor enc="true" cs="true" type="password"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -8081,7 +8471,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -8277,7 +8683,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -8786,6 +9208,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          <xs:appinfo source="Fragments/ProtocolFragments/SMB/Domain">
 				        <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -8817,7 +9240,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -9013,7 +9452,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -9191,6 +9646,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -9206,6 +9662,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <Release starting="2.8.0" issue="YADE-626"/>
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -9245,7 +9702,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -9441,7 +9914,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -9619,6 +10108,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
@@ -9634,6 +10124,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <Release starting="2.8.0" issue="YADE-626"/>
                 <Note include="Decryption-Usage"/>
                 <Note include="CredentialStore-Fields"/>
+                <XmlEditor enc="true" cs="true"/>
 			      </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
@@ -9677,7 +10168,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -9873,7 +10380,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                   <li>Interaction with <em>CredentialStore</em>:
                 <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>. In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then this resolved value is decrypted automatically.</li>
+                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
+                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
+                        <ul>
+                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
+                                <ul>
+                                    <li>As a string field – this should contain the path to the private key.</li>
+                                    <li>As a file attachment.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>Special case - the <em>CredentialStore</em> 
+                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <ul>
+                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           </ul>
+                        </li>
                      </ul>
                   </li>
                </ul>
@@ -10051,6 +10574,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
+                
 			         </div>
          </xs:documentation>
       </xs:annotation>
