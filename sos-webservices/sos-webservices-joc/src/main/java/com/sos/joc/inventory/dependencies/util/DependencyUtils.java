@@ -34,13 +34,10 @@ public class DependencyUtils {
                     new HashSet<Dependency>()));
             dependencies.stream().filter(isNotSelfReferenced).forEach(item -> {
                 if(item.getDependency() != null) {
-                    if(resolved.get(item.getDependency()) != null) {
-                        resolved.get(item.getDependency()).add(item.getReferencedBy());
-                    } else {
-                        Set<Dependency> deps = new HashSet<Dependency>();
-                        deps.add(item.getReferencedBy());
-                        resolved.put(item.getDependency(), deps);
+                    if(resolved.get(item.getDependency()) == null && item.getReferencedBy() != null) {
+                        resolved.putIfAbsent(item.getDependency(), new HashSet<Dependency>());
                     }
+                    resolved.get(item.getDependency()).add(item.getReferencedBy());
                 }
             });
             return resolved;
@@ -57,13 +54,10 @@ public class DependencyUtils {
                     .forEach(dep -> resolved.putIfAbsent(dep, new HashSet<Dependency>()));
             dependencies.stream().filter(isNotSelfReferenced).forEach(item -> {
                 if(item.getReferencedBy() != null) {
-                    if(resolved.get(item.getReferencedBy()) != null) {
-                        resolved.get(item.getReferencedBy()).add(item.getDependency());
-                    } else {
-                        Set<Dependency> deps = new HashSet<Dependency>();
-                        deps.add(item.getDependency());
-                        resolved.put(item.getReferencedBy(), deps);
+                    if(resolved.get(item.getReferencedBy()) != null && item.getDependency() != null) {
+                        resolved.putIfAbsent(item.getReferencedBy(), new HashSet<Dependency>());
                     }
+                    resolved.get(item.getReferencedBy()).add(item.getDependency());
                 }
             });
             return resolved;
