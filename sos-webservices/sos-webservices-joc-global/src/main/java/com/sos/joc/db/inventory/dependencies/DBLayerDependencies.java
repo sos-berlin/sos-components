@@ -329,4 +329,9 @@ public class DBLayerDependencies extends DBLayer {
         }
     }
 
+    public int deleteAllDependencies() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder().append("delete from ").append(DBLayer.DBITEM_INV_DEPENDENCIES);
+        Query query = session.createQuery(hql.toString());
+        return session.executeUpdate(query);
+    }
 }

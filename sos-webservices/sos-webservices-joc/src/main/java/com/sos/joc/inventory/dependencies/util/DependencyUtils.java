@@ -32,7 +32,17 @@ public class DependencyUtils {
             Map<Dependency, Set<Dependency>> resolved = new HashMap<>();
             dependencies.stream().map(DBItemInventoryExtendedDependency::getDependency).forEach(dep -> resolved.putIfAbsent(dep,
                     new HashSet<Dependency>()));
-            dependencies.stream().filter(isNotSelfReferenced).forEach(item -> resolved.get(item.getDependency()).add(item.getReferencedBy()));
+            dependencies.stream().filter(isNotSelfReferenced).forEach(item -> {
+                if(item.getDependency() != null) {
+                    if(resolved.get(item.getDependency()) != null) {
+                        resolved.get(item.getDependency()).add(item.getReferencedBy());
+                    } else {
+                        Set<Dependency> deps = new HashSet<Dependency>();
+                        deps.add(item.getReferencedBy());
+                        resolved.put(item.getDependency(), deps);
+                    }
+                }
+            });
             return resolved;
         } else {
             return Collections.emptyMap();
@@ -45,7 +55,17 @@ public class DependencyUtils {
             Map<Dependency, Set<Dependency>> resolved = new HashMap<>();
             dependencies.stream().map(DBItemInventoryExtendedDependency::getReferencedBy).filter(Objects::nonNull)
                     .forEach(dep -> resolved.putIfAbsent(dep, new HashSet<Dependency>()));
-            dependencies.stream().filter(isNotSelfReferenced).forEach(item -> resolved.get(item.getReferencedBy()).add(item.getDependency()));
+            dependencies.stream().filter(isNotSelfReferenced).forEach(item -> {
+                if(item.getReferencedBy() != null) {
+                    if(resolved.get(item.getReferencedBy()) != null) {
+                        resolved.get(item.getReferencedBy()).add(item.getDependency());
+                    } else {
+                        Set<Dependency> deps = new HashSet<Dependency>();
+                        deps.add(item.getDependency());
+                        resolved.put(item.getReferencedBy(), deps);
+                    }
+                }
+            });
             return resolved;
         } else {
             return Collections.emptyMap();
