@@ -734,6 +734,11 @@
         <version>${jersey.glassfish.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.glassfish.jersey.containers</groupId>
+        <artifactId>jersey-container-grizzly2-servlet</artifactId>
+        <version>${jersey.glassfish.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.rjeschke</groupId>
         <artifactId>txtmark</artifactId>
         <version>${txtmark.version}</version>
