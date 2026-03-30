@@ -35,7 +35,8 @@ public class ProviderEncryptionResolver {
         try {
             resolveArgument(args, arg);
         } finally {
-            cleanup(args.getEncryptionDecrypt()); // cleanup, because the credential store might contain another private key
+            // not really necessary, since the credential store cannot contain another private key... ...
+            cleanup(args.getEncryptionDecrypt());
         }
         return true;
     }
