@@ -47,8 +47,10 @@ public class UpdateDependenciesImpl extends JOCResourceImpl implements IUpdateDe
             session.beginTransaction();
             DBLayerDependencies dbLayerDependencies = new DBLayerDependencies(session);
             int removedItemsCount = dbLayerDependencies.deleteAllDependencies();
-            LOGGER.debug(removedItemsCount + " item(s) have been removed from INV_DEPENDENCIES table. Recalculating dependencies ...");
             session.commit();
+            LOGGER.debug(removedItemsCount + " item(s) have been removed from INV_DEPENDENCIES table. Recalculating dependencies ...");
+            session.setAutoCommit(true);
+            // JOC-2183: truncate table first [END]
             
             DependencyResolver.updateDependencies(allConfigs);
             

@@ -975,8 +975,8 @@
 			using the value of the <a target="_blank"
                         href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+DecryptionFragmentRef"
                         shape="rect">DecryptionFragmentRef</a> <em>ref</em> attribute.
-            </li>&gt;   
-        </ul>
+            </li>
+               </ul>
                <p/>
                <p>
 			               <strong>Use by configuration items</strong>
@@ -1095,7 +1095,22 @@
                </xs:documentation>
             </xs:annotation>
                 
-            </xs:attribute>    
+            </xs:attribute>
+            <xs:attribute name="encryption_key" type="xs:NMTOKEN">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			The <em>Job Resource</em> name that contains the encryption keys (certificate and the private key path).
+		</p>
+                     <p>
+			If not set, encryption via GUI is not possible.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>            
 		    </xs:complexType>
 	  </xs:element>	
 	  <xs:element name="EnciphermentPrivateKey">
