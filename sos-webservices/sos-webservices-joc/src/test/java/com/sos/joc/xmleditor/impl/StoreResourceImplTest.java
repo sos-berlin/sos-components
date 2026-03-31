@@ -1,6 +1,8 @@
 package com.sos.joc.xmleditor.impl;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,9 +29,9 @@ public class StoreResourceImplTest {
 
             in.setObjectType(ObjectType.YADE);
             in.setSchemaIdentifier(StandardSchemaHandler.getYADESchemaIdentifier());
-            in.setName("test-sftp");
-            in.setId(4L);
-            in.setConfiguration(SOSPath.readFile(Path.of("D:/Downloads/test-sftp(1).xml")));
+            in.setName("onlyFtpProtocol");
+            in.setId(45L);
+            in.setConfiguration(SOSPath.readFile(Path.of("src/test/resources/xmleditor/yade/yade.xml")));
 
             h.init();
             h.post("process", in);
@@ -38,6 +40,12 @@ public class StoreResourceImplTest {
         } finally {
             h.destroy();
         }
+    }
+
+    @Ignore
+    @Test
+    public void testYADEXSLTransform() throws Exception {
+        LOGGER.info(StandardSchemaHandler.getXml(Files.readString(Paths.get("src/test/resources/xmleditor/yade/yade-encryption.xml")), true));
     }
 
 }
