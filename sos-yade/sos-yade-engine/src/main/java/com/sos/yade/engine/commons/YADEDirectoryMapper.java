@@ -54,13 +54,26 @@ public class YADEDirectoryMapper {
         boolean isDebugEnabled = logger.isDebugEnabled();
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
         if (targetDirs.size() > 0) {
-            if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
-                if (isDebugEnabled) {
-                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s]created", targetDirs);
+            if (config.getTarget().isCreateDirectoriesEnabled()) {
+                if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
+                    if (isDebugEnabled) {
+                        logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s]created", targetDirs);
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s][skip]already exist", targetDirs);
+                    }
                 }
             } else {
+                if (targetDirs.size() == 1) {
+                    String targetDir = targetDirs.iterator().next();
+                    if (!targetDelegator.getProvider().exists(targetDir)) {
+                        throw new ProviderException("[" + targetDelegator.getLabel() + "][DisableMakeDirectories=true][" + targetDir
+                                + "]directory does not exist and automatic creation is disabled");
+                    }
+                }
                 if (isDebugEnabled) {
-                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s][skip]already exist", targetDirs);
+                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s][skip]isCreateDirectoriesEnabled=false", targetDirs);
                 }
             }
         } else {
@@ -293,7 +306,7 @@ public class YADEDirectoryMapper {
 
     private Set<String> getTargetDirectoriesToCreate(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator)
             throws ProviderException {
-        if (target == null) {
+        if (target == null) { // not Target replacement available
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
             }
