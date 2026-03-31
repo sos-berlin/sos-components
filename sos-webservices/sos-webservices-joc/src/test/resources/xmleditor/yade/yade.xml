@@ -12,8 +12,8 @@
           <ConnectTimeout><![CDATA[0s]]></ConnectTimeout>
         </BasicConnection>
         <BasicAuthentication>
-          <Account><![CDATA[account]]></Account>
-          <Password><![CDATA[pass]]></Password>
+          <Account><![CDATA[enc:BHDLyOqasFl391UvTNpEyiY9eu//7v6oZ2qaVDRk3rZ/kBM4DtBh0gHqNZIrQ5kkBDeCRgMrytgxIlacp+WaFG5dZ6TG78SVaS/o44W4nan6l8Ak9hIJT7i0oBvMkD0uwQRJC8Q= k6OrzDtkeEePlQeIRbYRbA== pu6vyHW0Wr0snPeyJDPqlw==]]></Account>
+          <Password><![CDATA[enc:BHDLyOqasFl391UvTNpEyiY9eu//7v6oZ2qaVDRk3rZ/kBM4DtBh0gHqNZIrQ5kkBDeCRgMrytgxIlacp+WaFG5dZ6TG78SVaS/o44W4nan6l8Ak9hIJT7i0oBvMkD0uwQRJC8Q= k6OrzDtkeEePlQeIRbYRbA== pu6vyHW0Wr0snPeyJDPqlw==]]></Password>
         </BasicAuthentication>
         <ProxyForFTP>
           <SOCKSProxy>

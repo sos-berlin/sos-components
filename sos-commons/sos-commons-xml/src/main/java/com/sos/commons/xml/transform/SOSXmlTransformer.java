@@ -62,6 +62,11 @@ public class SOSXmlTransformer {
      * Use this method if your XSL stylesheet already handles any CDATA sections explicitly, or if CDATA wrapping is not needed.
      * </p>
      *
+     * <p>
+     * Limitation: the values of CDATA sections are trimmed, because the standard the standard JDK StAX parser can't distinguish original CDATA from normal
+     * text.
+     * </p>
+     * 
      * @param xmlContent The input XML as a String.
      * @param xslContent The XSLT stylesheet as a String.
      * @param omitXmlDeclaration If true, omits the XML declaration in output.
@@ -118,6 +123,9 @@ public class SOSXmlTransformer {
             transformThread.start();
 
             XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+            inputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.FALSE);
+            inputFactory.setProperty("http://java.sun.com/xml/stream/properties/report-cdata-event", Boolean.TRUE);
+
             XMLOutputFactory outputFactory = XMLOutputFactory.newInstance();
 
             XMLStreamReader reader = null;
@@ -127,6 +135,18 @@ public class SOSXmlTransformer {
                 reader = inputFactory.createXMLStreamReader(pipeIn);
                 rawWriter = outputFactory.createXMLStreamWriter(osWriter);
                 try (SOSXmlCDataIndentingStreamWriter cdataWriter = new SOSXmlCDataIndentingStreamWriter(rawWriter, indentAmount)) {
+
+                    StringBuilder textBuffer = new StringBuilder();
+                    Runnable flushText = () -> {
+                        if (textBuffer.length() > 0) {
+                            try {
+                                cdataWriter.writeCData(textBuffer.toString());
+                            } catch (XMLStreamException e) {
+                                throw new RuntimeException(e);
+                            }
+                            textBuffer.setLength(0);
+                        }
+                    };
 
                     if (!omitXmlDeclaration) {
                         // writes <?xml version='1.0' encoding='UTF-8'?> instead of <?xml version="1.0" encoding="UTF-8"?>
@@ -139,6 +159,8 @@ public class SOSXmlTransformer {
 
                         switch (event) {
                         case XMLStreamConstants.START_ELEMENT:
+                            flushText.run();
+
                             cdataWriter.writeStartElement(reader.getPrefix(), reader.getLocalName(), reader.getNamespaceURI());
                             for (int i = 0; i < reader.getAttributeCount(); i++) {
                                 String attrPrefix = reader.getAttributePrefix(i);
@@ -160,21 +182,46 @@ public class SOSXmlTransformer {
                             }
                             break;
 
+                        // --------------------
+                        // CHARACTERS Event
+                        // --------------------
+                        // Handles text nodes reported by the parser.
+                        // Note: In the standard JDK StAX parser, CDATA sections are usually delivered as CHARACTERS.
+                        // Therefore, this block may also receive text that was originally in a CDATA section.
+                        // The text is trimmed (for cdata too) to remove leading/trailing whitespace from formatting/indentation.
+                        // Only non-empty text is appended to the buffer.
                         case XMLStreamConstants.CHARACTERS:
                             if (!reader.isWhiteSpace()) {
-                                cdataWriter.writeCharacters(reader.getText());
+                                String text = reader.getText().trim();
+                                if (!text.isEmpty()) {
+                                    textBuffer.append(text);
+                                }
                             }
                             break;
 
+                        // --------------------
+                        // CDATA Event
+                        // --------------------
+                        // Intended to handle CDATA sections separately.
+                        // Problem: With the standard JDK StAX parser, CDATA events are usually not emitted.
+                        // Attempts to configure the XMLInputFactory to report CDATA separately have no effect:
+                        // -- inputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.FALSE);
+                        // -- inputFactory.setProperty("http://java.sun.com/xml/stream/properties/report-cdata-event", Boolean.TRUE);
+                        // As a result, this case may never be executed, and text originally in CDATA is delivered as CHARACTERS.
+                        // Any text received here should be appended as-is to preserve its literal content.
+                        case XMLStreamConstants.CDATA:
+                            textBuffer.append(reader.getText());
+                            break;
+
                         case XMLStreamConstants.END_ELEMENT:
+                            flushText.run();
+
                             cdataWriter.writeEndElement();
                             break;
 
-                        case XMLStreamConstants.CDATA:
-                            cdataWriter.writeCData(reader.getText());
-                            break;
-
                         case XMLStreamConstants.COMMENT:
+                            flushText.run();
+
                             cdataWriter.writeComment(reader.getText());
                             break;
 
@@ -182,6 +229,9 @@ public class SOSXmlTransformer {
                             // ignore other events
                         }
                     }
+
+                    flushText.run();
+
                     if (!omitXmlDeclaration) {
                         cdataWriter.writeEndDocument();
                     }
