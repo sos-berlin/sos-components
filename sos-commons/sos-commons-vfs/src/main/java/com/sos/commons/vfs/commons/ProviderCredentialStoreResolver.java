@@ -2,6 +2,7 @@ package com.sos.commons.vfs.commons;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.linguafranca.pwdb.Entry;
 
@@ -29,7 +30,7 @@ public class ProviderCredentialStoreResolver {
      *            e.g. passphrase, domain
      * @return
      * @throws Exception */
-    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
+    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, List<SOSArgument<?>> additional2resolve)
             throws Exception {
         if (args == null || !args.isCredentialStoreEnabled()) {
             return false;
@@ -121,8 +122,8 @@ public class ProviderCredentialStoreResolver {
     }
 
     /** Note: each argument value can contain a different Keepass entry path */
-    private static Entry<?, ?, ?, ?> keepass2Arguments(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
-            throws Exception {
+    private static Entry<?, ?, ?, ?> keepass2Arguments(AProviderArguments args, ProxyConfigArguments proxyArgs,
+            List<SOSArgument<?>> additional2resolve) throws Exception {
         // host(port),user,password
         Entry<?, ?, ?, ?> entry = keepass2Argument(null, args, args.getHost(), args.getPort(), ":");
         entry = keepass2Argument(entry, args, args.getUser());

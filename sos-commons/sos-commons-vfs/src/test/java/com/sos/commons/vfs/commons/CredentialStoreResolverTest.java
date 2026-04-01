@@ -1,5 +1,7 @@
 package com.sos.commons.vfs.commons;
 
+import java.util.Collections;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,7 +40,7 @@ public class CredentialStoreResolverTest {
         args.getPassphrase().setValue("cs://server/SFTP/ssh.sos@user");
         args.getAuthFile().setValue("cs://server/SFTP/ssh.sos@test.txt");
 
-        ProviderCredentialStoreResolver.resolve(new SLF4JLogger(), args, args.getProxy(), args.getPassphrase());
+        ProviderCredentialStoreResolver.resolve(new SLF4JLogger(), args, args.getProxy(), Collections.singletonList(args.getPassphrase()));
         ProviderCredentialStoreResolver.resolveAttachment(args, args.getAuthFile());
 
         LOGGER.info("HOST=" + args.getHost().getValue());
