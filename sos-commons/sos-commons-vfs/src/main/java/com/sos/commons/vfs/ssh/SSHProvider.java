@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderReusableResource;
@@ -53,6 +54,13 @@ public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> ext
     @Override
     public void onCredentialStoreResolved() throws Exception {
         ProviderCredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+    }
+
+    /** Overrides {@link AProvider#onBeforeEncryptionResolver(List)} */
+    @Override
+    public List<SOSArgument<?>> onBeforeEncryptionResolver(List<SOSArgument<?>> additionalSecretArgs) throws Exception {
+        additionalSecretArgs.add(getArguments().getAuthFile());
+        return additionalSecretArgs;
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */

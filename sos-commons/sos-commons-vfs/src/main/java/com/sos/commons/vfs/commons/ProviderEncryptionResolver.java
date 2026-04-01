@@ -2,6 +2,7 @@ package com.sos.commons.vfs.commons;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import com.sos.commons.encryption.arguments.EncryptionArguments;
 import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
@@ -52,7 +53,7 @@ public class ProviderEncryptionResolver {
      *            e.g. passphrase, domain
      * @return
      * @throws Exception */
-    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
+    public static boolean resolve(ISOSLogger logger, AProviderArguments args, ProxyConfigArguments proxyArgs, List<SOSArgument<?>> additional2resolve)
             throws Exception {
         if (args == null || !args.isEncryptionDecryptEnabled()) {
             return false;
@@ -95,7 +96,7 @@ public class ProviderEncryptionResolver {
         decryptArgs.getPrivateKey().setValue(null);
     }
 
-    private static void resolveArguments(AProviderArguments args, ProxyConfigArguments proxyArgs, SOSArgument<?>... additional2resolve)
+    private static void resolveArguments(AProviderArguments args, ProxyConfigArguments proxyArgs, List<SOSArgument<?>> additional2resolve)
             throws Exception {
         // host(port),user,password
         resolveArgument(args, args.getHost(), args.getPort(), ":");
