@@ -14788,23 +14788,34 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			This parameter specifies that YADE will try to create the directory on the target server that is specified with the
-			<a target="_blank"
+               <p>This parameter specifies whether YADE should attempt to create the target directory specified by the
+           <a target="_blank"
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+Directory"
-                     shape="rect">Directory</a> parameter
-			should this directory not exist. This parameter has no effect on the subfolders during a recursive transfer.
-			Subfolders of recursive transfer are always created if they do not exist.
-			<ul>
-                     <li>By default target server directories will be created which corresponds to the value "false".</li>
-                     <li>A value "true" would prevent directories from being created on target servers.</li>
-                  </ul>
-		             </p>
-               <p>
-			This functionality makes use of commands that are specific for the file transfer protocol, e.g. FTP, SFTP,
-			and is therefore not available for all protocols. Please consider that server side settings might restrict
-			the use of such commands.
-		</p>
+                     shape="rect">Directory</a> parameter if it does not already exist.
+        </p>
+               <p/>
+               <ul>
+                  <li>If set to <em>false</em> (default):
+                <ul>
+                        <li>The target <em>Directory</em> will be created if it does not exist.</li>
+                        <li>If the source <em>Selection</em> is <em>Recursive</em>:
+                        <ul>
+                              <li>Any subfolders will also be created if they do not exist.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>If set to <em>true</em>:
+                <ul>
+                        <li>The target <em>Directory</em> will <strong>not</strong> be created, and the transfer will fail if the directory does not exist.</li>
+                        <li>If the source <em>Selection</em> is <em>Recursive</em>:
+                        <ul>
+                              <li>Files in subfolders will still be transferred, potentially overwriting themselves into a single directory.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
