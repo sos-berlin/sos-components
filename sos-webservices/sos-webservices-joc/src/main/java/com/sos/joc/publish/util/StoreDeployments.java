@@ -184,12 +184,13 @@ public class StoreDeployments {
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 if (dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
-                    List<String> schedulePathsWithSubmit = new ArrayList<String>();
-                    List<String> schedulePathsWithoutSubmit = new ArrayList<String>();
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
                     // get the schedules referencing these workflows
+                    List<String> workflowsWithSubmit = new ArrayList<String>();
+                    List<String> workflowsWithoutSubmit = new ArrayList<String>();
+                    
                     for (String workflowName : workflowNames) {
                         List<DBItemInventoryReleasedConfiguration> scheduleDbItems = invDbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
                         for (DBItemInventoryReleasedConfiguration scheduleDbItem : scheduleDbItems) {
@@ -197,22 +198,22 @@ public class StoreDeployments {
                             // check planOrderAutomatically of the schedule first
                             if (schedule.getPlanOrderAutomatically()) {
                                 if (schedule.getSubmitOrderToControllerWhenPlanned()) {
-                                    schedulePathsWithSubmit.add(scheduleDbItem.getPath());
+                                    workflowsWithSubmit.add(workflowName);
                                 } else {
-                                    schedulePathsWithoutSubmit.add(scheduleDbItem.getPath());
+                                    workflowsWithoutSubmit.add(workflowName);
                                 }
                             }
                         }
                     }
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
-                    if (!schedulePathsWithSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithSubmit, controllerId,
+                    if (!workflowsWithSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithSubmit, null, controllerId,
                                 true, allowedDailyPlanDates));
                     }
-                    if (!schedulePathsWithoutSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithoutSubmit,
-                                controllerId, false, allowedDailyPlanDates));
+                    if (!workflowsWithoutSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
+                                false, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, ADeploy.API_CALL);
