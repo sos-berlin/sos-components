@@ -88,7 +88,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         if (PublishSemaphore.availablePermits(xAccessToken) == 1) {
             TimeUnit.MILLISECONDS.sleep(100);
         }
-        PublishSemaphore.tryAcquire(xAccessToken);
+        try {PublishSemaphore.tryAcquire(xAccessToken);} catch (InterruptedException e) {}
         
         Set<String> allowedControllerIds = Collections.emptySet();
         allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
@@ -313,8 +313,8 @@ public abstract class ADeploy extends JOCResourceImpl {
                                         if (je != null && je.printMetaInfo() != null) {
                                             LOGGER.info(je.printMetaInfo());
                                         }
-                                        LOGGER.warn("Order cancel failed due to missing permission.");
-                                        ProblemHelper.getErrorMessage(either.getLeft());
+//                                        LOGGER.warn("Order cancel failed due to missing permission.");
+                                        LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
                                     }
                                 });
                         } catch (Exception e) {

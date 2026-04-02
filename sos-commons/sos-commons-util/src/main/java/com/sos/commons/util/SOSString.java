@@ -30,7 +30,6 @@ public class SOSString {
     private static final String TO_STRING_NULL_VALUE = "<null>";
     private static final String TO_STRING_UNKNOWN_VALUE = "<unknown>";
     private static final String TO_STRING_TRUNCATED_VALUE_SUFFIX = "<truncated>";
-    private static final int TO_STRING_TRUNCATE_VALUE_IF_LONGER_THAN = 255;
 
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)?");
 
@@ -103,10 +102,11 @@ public class SOSString {
     }
 
     public static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues) {
-        return toString(o, excludeFieldNames, excludeNullValues, 0, 0);
+        return toString(o, excludeFieldNames, excludeNullValues, 0, 0, 0);
     }
 
-    private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues, int error, int recursion) {
+    private static String toString(Object o, Collection<String> excludeFieldNames, boolean excludeNullValues, int truncateValueIfLongerThan,
+            int error, int recursion) {
         if (o == null) {
             return TO_STRING_NULL_VALUE;
         }
@@ -131,7 +131,7 @@ public class SOSString {
                     List<String> r = new ArrayList<>();
                     int len = Array.getLength(o);
                     for (int i = 0; i < len; i++) {
-                        r.add(toString(Array.get(o, i), excludeFieldNames, excludeNullValues, error, recursion));
+                        r.add(toString(Array.get(o, i), excludeFieldNames, excludeNullValues, truncateValueIfLongerThan, error, recursion));
                     }
                     sb.append(String.join(", ", r));
                     sb.append(']');
@@ -148,7 +148,7 @@ public class SOSString {
                 Collection<?> coll = (Collection<?>) o;
                 Iterator<?> it = coll.iterator();
                 while ((it.hasNext())) {
-                    r.add(toString(it.next(), excludeFieldNames, excludeNullValues, error, recursion));
+                    r.add(toString(it.next(), excludeFieldNames, excludeNullValues, truncateValueIfLongerThan, error, recursion));
                 }
                 sb.append(String.join(", ", r));
                 sb.append(']');
@@ -159,7 +159,7 @@ public class SOSString {
                 Iterator<?> it = map.keySet().iterator();
                 while ((it.hasNext())) {
                     Object key = it.next();
-                    r.add(key + "=" + toString(map.get(key), excludeFieldNames, excludeNullValues, error, recursion));
+                    r.add(key + "=" + toString(map.get(key), excludeFieldNames, excludeNullValues, truncateValueIfLongerThan, error, recursion));
                 }
                 sb.append(String.join(", ", r));
                 sb.append('}');
@@ -168,8 +168,8 @@ public class SOSString {
                 if (val == null) {
                     sb.append(TO_STRING_NULL_VALUE);
                 } else {
-                    if (val.length() > TO_STRING_TRUNCATE_VALUE_IF_LONGER_THAN) {
-                        val = val.substring(0, TO_STRING_TRUNCATE_VALUE_IF_LONGER_THAN) + TO_STRING_TRUNCATED_VALUE_SUFFIX;
+                    if (truncateValueIfLongerThan > 0 && val.length() > truncateValueIfLongerThan) {
+                        val = val.substring(0, truncateValueIfLongerThan) + TO_STRING_TRUNCATED_VALUE_SUFFIX;
                     }
                     sb.append(val);
                 }
@@ -205,7 +205,7 @@ public class SOSString {
                             if (excludeNullValues && val == null) {
                                 continue;
                             }
-                            r.add(fn + "=" + toString(val, excludeFieldNames, excludeNullValues, error, recursion));
+                            r.add(fn + "=" + toString(val, excludeFieldNames, excludeNullValues, truncateValueIfLongerThan, error, recursion));
                             // r.add(fn + "=" + val);
                         } catch (Exception e) {
                             error++;

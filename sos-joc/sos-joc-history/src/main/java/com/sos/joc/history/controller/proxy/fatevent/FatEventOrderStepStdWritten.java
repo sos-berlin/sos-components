@@ -3,8 +3,9 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Date;
 
 import com.sos.joc.history.controller.proxy.HistoryEventType;
+import com.sos.joc.history.helper.IOriginalOrderIdProvider;
 
-public final class FatEventOrderStepStdWritten extends AFatEvent {
+public final class FatEventOrderStepStdWritten extends AFatEvent implements IOriginalOrderIdProvider {
 
     public enum StdType {
         STDOUT, STDERROR
@@ -33,6 +34,7 @@ public final class FatEventOrderStepStdWritten extends AFatEvent {
         return type;
     }
 
+    @Override
     public String getOrderId() {
         return orderId;
     }

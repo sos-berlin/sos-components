@@ -4,10 +4,11 @@ import java.util.Date;
 import java.util.Map;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
+import com.sos.joc.history.helper.IOriginalOrderIdProvider;
 
 import js7.data.value.Value;
 
-public abstract class AFatEventOrder extends AFatEvent {
+public abstract class AFatEventOrder extends AFatEvent implements IOriginalOrderIdProvider {
 
     private String orderId;
 
@@ -37,6 +38,7 @@ public abstract class AFatEventOrder extends AFatEvent {
         }
     }
 
+    @Override
     public String getOrderId() {
         return orderId;
     }

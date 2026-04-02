@@ -14,6 +14,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
@@ -47,25 +48,43 @@ public class YADEDirectoryMapper {
         sourceFilesDirectories.add(directoryPathWithoutTrailinSeparator);
     }
 
-    public void tryCreateAllTargetDirectoriesBeforeOperation(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
+    /** Prepares the target directory structure before file transfer.<br />
+     * Depending on configuration (DisableMakeDirectories), this may create missing directories.<br />
+     * All target directories are only evaluated if target replacement is not enabled, otherwise the target directories are evaluated/created on every file */
+    public void prepareTargetDirectories(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
             final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) throws ProviderException {
+
         tryMapSourceTarget(logger, config, sourceDelegator, targetDelegator);
 
         boolean isDebugEnabled = logger.isDebugEnabled();
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
         if (targetDirs.size() > 0) {
-            if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
-                if (isDebugEnabled) {
-                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s]created", targetDirs);
+            if (config.getTarget().isCreateDirectoriesEnabled()) {
+                if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
+                    if (isDebugEnabled) {
+                        logger.debug("[prepareTargetDirectories][targetDirs=%s]created", targetDirs);
+                    }
+                } else {
+                    if (isDebugEnabled) {
+                        logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]already exist", targetDirs);
+                    }
                 }
             } else {
+                if (targetDirs.size() == 1) {
+                    String targetDir = targetDirs.iterator().next();
+                    if (!targetDelegator.getProvider().exists(targetDir)) {
+                        throw new ProviderException("[" + targetDelegator.getLabel() + "][" + YADEArgumentsHelper.toStringAsOppositeValue(
+                                targetDelegator.getArgs().getCreateDirectories()) + "][" + targetDir
+                                + "]directory does not exist and automatic creation is disabled");
+                    }
+                }
                 if (isDebugEnabled) {
-                    logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][targetDirs=%s][skip]already exist", targetDirs);
+                    logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]isCreateDirectoriesEnabled=false", targetDirs);
                 }
             }
         } else {
             if (isDebugEnabled) {
-                logger.debug("[tryCreateAllTargetDirectoriesBeforeOperation][skip]targetDirs is empty");
+                logger.debug("[prepareTargetDirectories][skip]targetDirs is empty");
             }
         }
     }
@@ -293,7 +312,7 @@ public class YADEDirectoryMapper {
 
     private Set<String> getTargetDirectoriesToCreate(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator)
             throws ProviderException {
-        if (target == null) {
+        if (target == null) { // not Target replacement available
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
             }

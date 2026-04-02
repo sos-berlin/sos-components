@@ -3,9 +3,10 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Date;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
+import com.sos.joc.history.helper.IOriginalOrderIdProvider;
 
 // without outcome
-public abstract class AFatEventOrderBase extends AFatEvent {
+public abstract class AFatEventOrderBase extends AFatEvent implements IOriginalOrderIdProvider {
 
     private final String orderId;
     private final FatPosition position;
@@ -26,6 +27,7 @@ public abstract class AFatEventOrderBase extends AFatEvent {
 
     }
 
+    @Override
     public String getOrderId() {
         return orderId;
     }

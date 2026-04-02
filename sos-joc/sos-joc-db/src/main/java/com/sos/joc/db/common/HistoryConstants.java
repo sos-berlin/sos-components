@@ -10,6 +10,7 @@ public class HistoryConstants {
     public static final int MAX_LEN_STATE_CODE = 50;
     public static final int MAX_LEN_STATE_TEXT = 255;
 
+    public static final int MAX_LEN_ORDER_ID = 255;
     public static final int MAX_LEN_WORKFLOW_POSITION = 255;
     public static final int MAX_LEN_NOTIFICATION = 1_000;
 }

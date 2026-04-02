@@ -3,6 +3,8 @@ package com.sos.commons.vfs.commons;
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -503,17 +505,28 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     }
 
+    /** Called before encryption successfully resolved.
+     * 
+     * This method can be overridden by subclasses to set additional arguments before encryption have been resolved. */
+    public List<SOSArgument<?>> onBeforeEncryptionResolver(List<SOSArgument<?>> additionalSecretArgs) throws Exception {
+        return additionalSecretArgs;
+    }
+
     private void resolveSecrets(SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {
         if (arguments == null) {
             return;
         }
 
         try {
+            List<SOSArgument<?>> additionalSecretArgList = additionalSecretArg == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(
+                    additionalSecretArg));
+
             ProviderEncryptionResolver.resolveCredentialStorePass(logger, arguments);
-            if (ProviderCredentialStoreResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArg)) {
+            if (ProviderCredentialStoreResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArgList)) {
                 onCredentialStoreResolved();
             }
-            ProviderEncryptionResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArg);
+            additionalSecretArgList = onBeforeEncryptionResolver(additionalSecretArgList);
+            ProviderEncryptionResolver.resolve(logger, arguments, arguments.getProxy(), additionalSecretArgList);
         } catch (Exception e) {
             throw new ProviderInitializationException(e);
         }

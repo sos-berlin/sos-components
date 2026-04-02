@@ -10,7 +10,7 @@ import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderStateText;
 
-public class CachedOrder {
+public class CachedOrder implements IOriginalOrderIdProvider {
 
     private final Long id;
     private final String orderId;
@@ -30,9 +30,10 @@ public class CachedOrder {
     // minutes
     private long lastUsage;
 
-    public CachedOrder(DBItemHistoryOrder item) {
+    // original orderId as the item.orderId may be truncated in the database
+    public CachedOrder(DBItemHistoryOrder item, IOriginalOrderIdProvider orig) {
         id = item.getId();
-        orderId = item.getOrderId();
+        orderId = orig.getOrderId();
         mainParentId = item.getMainParentId();
         parentId = item.getParentId();
         workflowPath = item.getWorkflowPath();
@@ -72,6 +73,7 @@ public class CachedOrder {
         return id;
     }
 
+    @Override
     public String getOrderId() {
         return orderId;
     }

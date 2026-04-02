@@ -718,10 +718,17 @@
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
+                                <ul>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
@@ -1064,10 +1071,17 @@
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
+                                <ul>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
@@ -2632,228 +2646,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -3165,228 +2974,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -3631,228 +3235,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -4593,228 +3992,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -5081,228 +4275,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -5534,228 +4523,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -6138,228 +4922,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -6592,228 +5171,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -7367,228 +5741,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -7899,228 +6068,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -8497,228 +6461,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -9266,228 +7025,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -9728,228 +7282,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -10194,228 +7543,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                               </li>
                            </ul>
                         </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
+                        <li>Special cases:
                         <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>Referencing CredentialStore fields.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Referencing a field in the <em>CredentialStore</em> is effected by the following syntax:
-                <ul>
-                        <li>
-                           <strong>cs://[<em>entry_path</em>]@<em>entry_field</em>
-                           </strong>, 
-                        <p>where</p>
-                           <ul>
-                              <li>
-                                 <strong>
-                                    <em>cs://</em>
-                                 </strong>        is a constant prefix that is used by YADE to identify this setting to be a reference to a <em>CredentialStore</em>.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_path</em>
-                                 </strong>    
-                                specifies the path to an entry within the <em>CredentialStore</em> database.
-                                Folders (groups) within a path are separated by a slash "/".
-                                This setting is optional. If ommitted then the value of the <em>CSEntryPath</em> configuration item is used.</li>
-                              <li>
-                                 <strong>
-                                    <em>entry_field</em>
-                                 </strong>        
-                                is one of the standard fields available in a <em>CredentialStore</em>:
+                              <li>The <em>CredentialStore</em> 
+                                 <em>CSPassword</em> is itself protected with an encrypted value:
                                 <ul>
-                                    <li>
-                                       <em>title</em>
-                                    </li>
-                                    <li>
-                                       <em>user</em>
-                                    </li>
-                                    <li>
-                                       <em>password</em>
-                                    </li>
-                                    <li>
-                                       <em>url</em>
-                                    </li>
-                                    <li>
-                                       <em>notes</em>
-                                    </li>
-                                    <li>
-                                       <em>attachment</em>
-                                    </li>
-                                 </ul>
-                                or the <em>custom fields</em>.
-                            </li>
-                           </ul>
-                        </li>
-                     </ul>
-                  </li>
-               </ul>
-               <p/>
-               <p>
-                  <strong>
-                     <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>
-                  </strong> element:
-            <ul>
-                     <li>Usage like the examples below.</li>
-                     <li>If the entry field value is defined with <em>host:port</em>, YADE sets the <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em> and <em>&lt;Port&gt;</em> automatically.</li>
-                  </ul>
-     	         </p>
-               <p/>
-               <p>
-                  <strong>Examples</strong>
-                  <ul>
-                     <li>Examples for fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://sos/mft_server/srv001@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>Examples without fully specified entry path:
-                    <ul>
-                           <li>
-                              <em>&lt;Domain&gt;</em>, <em>&lt;Hostname|URL|ServiceEndpoint&gt;</em>, <em>&lt;Account|AccountName&gt;</em>, <em>&lt;Password|Passphrase|AccountKey|Token&gt;</em> elements:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@title</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@user</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@password</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@url</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@notes</em>
-                                    </strong>
-                                 </li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>&lt;AuthenticationFile&gt; element:
-                            <ul>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@attachment</em>
-                                    </strong> - the first attachment</li>
-                                 <li>
-                                    <strong>
-                                       <em>cs://@my_custom_field</em>
-                                    </strong> - a specified attachment</li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                  </ul>
-               </p>
-                <p/>
-               <p>
-                  <strong>Using encrypted values.</strong>
-               </p>
-               <p/>
-               <ul>
-                  <li>Encrypted values can be specified using the following syntax:
-                <ul>
-                        <li>
-                           <strong>
-                              <em>enc:&lt;encrypted value&gt;</em>
-                           </strong>
-                        </li>
-                        <li>Values specified in this form are automatically decrypted using the configured <em>DecryptionFragment</em>.</li>
-                     </ul>
-                  </li>
-                  <li>Interaction with <em>CredentialStore</em>:
-                <ul>
-                        <li>Encrypted values can be managed using a <em>CredentialStore</em>.</li>
-                        <li>In this case, the value of the corresponding <em>CredentialStore</em> entry is first resolved, and then the resolved value is automatically decrypted.
-                        <ul>
-                              <li>The <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em> can be stored in a <em>CredentialStore</em>:
-                                <ul>
-                                    <li>As a string field – this should contain the path to the private key.</li>
-                                    <li>As a file attachment.</li>
+                                    <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
                                  </ul>
                               </li>
                            </ul>
-                        </li>
-                        <li>Special case - the <em>CredentialStore</em> 
-                           <em>CSPassword</em> is itself protected with an encrypted value:
-                        <ul>
-                              <li>The value is decrypted using the <em>DecryptionFragment</em> / <em>EnciphermentPrivateKey</em>, which should be a path to the private key file.</li>
+                           <ul>
+                              <li>The <em>SSHAuthentication / AuthenticationFile</em> cannot reference a <em>CredentialStore</em> entry that contains an encrypted value (<em>enc:...</em>), because an attachment from the CredentialStore is expected.</li>
                            </ul>
                         </li>
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>
                   <strong>Referencing CredentialStore fields.</strong>
                </p>
@@ -14788,23 +11932,34 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			This parameter specifies that YADE will try to create the directory on the target server that is specified with the
-			<a target="_blank"
+               <p>This parameter specifies whether YADE should attempt to create the target directory specified by the
+           <a target="_blank"
                      href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+Directory"
-                     shape="rect">Directory</a> parameter
-			should this directory not exist. This parameter has no effect on the subfolders during a recursive transfer.
-			Subfolders of recursive transfer are always created if they do not exist.
-			<ul>
-                     <li>By default target server directories will be created which corresponds to the value "false".</li>
-                     <li>A value "true" would prevent directories from being created on target servers.</li>
-                  </ul>
-		             </p>
-               <p>
-			This functionality makes use of commands that are specific for the file transfer protocol, e.g. FTP, SFTP,
-			and is therefore not available for all protocols. Please consider that server side settings might restrict
-			the use of such commands.
-		</p>
+                     shape="rect">Directory</a> parameter if it does not already exist.
+        </p>
+               <p/>
+               <ul>
+                  <li>If set to <em>false</em> (default):
+                <ul>
+                        <li>The target <em>Directory</em> will be created if it does not exist.</li>
+                        <li>If the source <em>Selection</em> is <em>Recursive</em>:
+                        <ul>
+                              <li>Any subfolders will also be created if they do not exist.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>If set to <em>true</em>:
+                <ul>
+                        <li>The target <em>Directory</em> will <strong>not</strong> be created, and the transfer will fail if the directory does not exist.</li>
+                        <li>If the source <em>Selection</em> is <em>Recursive</em>:
+                        <ul>
+                              <li>Files in subfolders will still be transferred, potentially overwriting themselves into a single directory.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>

@@ -176,7 +176,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setOrderId(String val) {
-        orderId = val;
+        orderId = normalizeOrderId(val);
     }
 
     public String getWorkflowPath() {

@@ -52,10 +52,8 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
-import com.sos.joc.db.common.Dependency;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryExtendedDependency;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
@@ -65,7 +63,6 @@ import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocReleaseException;
-import com.sos.joc.inventory.dependencies.util.DependencyUtils;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
@@ -74,7 +71,6 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
-import com.sos.joc.model.inventory.dependencies.RequestItem;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
 import com.sos.schema.JsonValidator;
 
@@ -103,12 +99,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 response = getReleaseResponse(in, true, accessToken);
             }
             return response;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return responseStatusJSError(e);
         }
     }
 
-    private JOCDefaultResponse getReleaseResponse(ReleaseFilter in, boolean withDeletionOfEmptyFolders, String accessToken) throws Exception {
+    private JOCDefaultResponse getReleaseResponse(ReleaseFilter in, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
         List<Err419> errors = release(in, getJocError(), withDeletionOfEmptyFolders, accessToken);
         if (errors != null && !errors.isEmpty()) {
             return responseStatus419(errors);
@@ -116,7 +112,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return responseStatusJSOk(Date.from(Instant.now()));
     }
     
-    private List<Err419> release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Exception {
+    private List<Err419> release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
         /* 
          * - acquire semaphore 
          * - cancel orders of renamed schedules (orders related to old schedule name)
@@ -167,29 +163,39 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         withDeletionOfEmptyFolders, true));
             }
             Map<String, List<String>> schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
-            cancelOrders(in, schedulePathsWithWorkflowNames, accessToken);
-            try {
-                PublishSemaphore.release(accessToken);
-            } catch (Exception e) {
-                // DO NOTHING if semaphore release failed
-            }
-            if (PublishSemaphore.availablePermits(accessToken) == 1) {
-                TimeUnit.MILLISECONDS.sleep(100);
-            }
-            PublishSemaphore.tryAcquire(accessToken);
-            // call update for postDeploy 
-            if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                errors.addAll(update(in.getUpdate(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
-                        withDeletionOfEmptyFolders, false));
-            }
-            if (errors != null && !errors.isEmpty()) {
-                Globals.rollback(session);
-                return errors;
-            }
-            auditLogObjectsLogging.log();
-            recreateOrders(in, schedulePathsWithWorkflowNames, accessToken, session);
-
-            return Collections.emptyList();
+            // JOC-2173
+            List<CompletableFuture<Void>> futures = cancelOrders(in, schedulePathsWithWorkflowNames, accessToken);
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+                List<Err419> futureErrors = new ArrayList<Err419>();
+                SOSHibernateSession futureSession = null;
+                try {
+                    futureSession = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                    InventoryDBLayer layer = new InventoryDBLayer(futureSession);
+                    releaseAndReaquireSemaphore(accessToken);
+                    // call update for postDeploy 
+                    if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
+                        futureErrors.addAll(update(in.getUpdate(), layer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                                withDeletionOfEmptyFolders, false));
+                    }
+                    if (futureErrors != null && !futureErrors.isEmpty()) {
+                        Globals.rollback(layer.getSession());
+                        return;
+                    }
+                    auditLogObjectsLogging.log();
+                    recreateOrders(in, schedulePathsWithWorkflowNames, accessToken, layer.getSession());
+                } catch (InterruptedException e) {
+                    // releaseSemaphore
+                } finally {
+                    Globals.disconnect(futureSession);
+                    try {
+                        PublishSemaphore.release(accessToken);
+                        PublishSemaphore.remove(accessToken);
+                    } catch (Exception e) {
+                        // DO NOTHING if semaphore release failed
+                    }
+                }
+            });
+            return errors;
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -202,6 +208,20 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // DO NOTHING if semaphore release failed
             }
         }
+    }
+    
+    private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
+        try {
+            PublishSemaphore.release(accessToken);
+        } catch (Exception e) {
+            // DO NOTHING if semaphore release failed
+        }
+        if (PublishSemaphore.availablePermits(accessToken) == 1) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {}
+        }
+        PublishSemaphore.tryAcquire(accessToken);
     }
 
     private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
@@ -695,111 +715,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return schedulePathsWithWorkflowNames;
     }
 
-//    private void cancelAndRecreateOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken) {
-//        if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
-//            DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-//            DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-//            DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
-//            DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-//            if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
-//                SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
-//                orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
-//            } else {
-//                orderFilter.setDailyPlanDateFrom(filter.getAddOrdersDateFrom());
-//            }
-//            orderFilter.setSchedulePaths(new ArrayList<String>(schedulePathsWithWorkflowNames.keySet()));
-//            if (filter.getIncludeLate()) {
-//                orderFilter.setLate(true);
-//                orderFilter.setStates(getOrderStatesForFilter());
-//            }
-//            if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-//                try {
-//                    Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-//                            xAccessToken, false, false);
-//                    Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-//                            ordersPerController, xAccessToken, null, false, false);
-//                    for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-//                        if (!cancelOrderResponsePerController.containsKey(controllerId)) {
-//                            cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
-//                        }
-//                        cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
-//                            if (either.isRight()) {
-//                                DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
-//                                localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
-//                                localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-//                                localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-//                                SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-//                                try {
-//                                    session.setAutoCommit(false);
-//                                    boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
-//                                    if (!successful) {
-//                                        JocError je = getJocError();
-//                                        if (je != null && je.printMetaInfo() != null) {
-//                                            LOGGER.warn(je.printMetaInfo());
-//                                        }
-//                                        LOGGER.warn("Order delete failed due to missing permission.");
-//                                    }
-//                                    Function<DBItemInventoryConfiguration, Boolean> grouper = dbSchedule -> {
-//                                        try {
-//                                            Schedule schedule = Globals.objectMapper.readValue(dbSchedule.getContent(), Schedule.class);
-//                                            return schedule.getSubmitOrderToControllerWhenPlanned();
-//                                        } catch (JsonProcessingException e) {
-//                                            return null;
-//                                        }
-//                                    };
-//                                    InventoryDBLayer dbLayerForCompleteableFuture = new InventoryDBLayer(session);
-//                                    List<String> schedulePaths = Collections.emptyList();
-//                                    if (ordersPerController.isEmpty()) {
-//                                        schedulePaths = new ArrayList<String>(schedulePathsWithWorkflowNames.keySet());
-//                                    } else {
-//                                        schedulePaths = ordersPerController.get(controllerId).stream().map(order -> order.getSchedulePath()).collect(
-//                                                Collectors.toList());
-//                                    }
-//                                    // get all schedules from database
-//                                    List<DBItemInventoryConfiguration> allSchedules = dbLayerForCompleteableFuture.getConfigurationByNames(
-//                                            schedulePaths.stream().map(schedulePath -> Paths.get(schedulePath).getFileName().toString()).collect(
-//                                                    Collectors.toList()), ConfigurationType.SCHEDULE.intValue());
-//                                    // map all schedule path for submitWhenPlanned = true and submitWhenPlanned = false
-//                                    Map<Boolean, List<String>> schedules = allSchedules.stream().collect(Collectors.groupingBy(grouper, Collectors
-//                                            .mapping(DBItemInventoryConfiguration::getPath, Collectors.toList())));
-//                                    // create all GenerateRequest
-//                                    List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(session, controllerId);
-//                                    List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null).map(
-//                                            entry -> {
-//                                                try {
-//                                                    return ordersGenerate.getGenerateRequestsForReleaseDeploy(filter.getAddOrdersDateFrom(), null,
-//                                                            entry.getValue(), controllerId, entry.getKey(), allowedDailyPlanDates);
-//                                                } catch (Exception ex) {
-//                                                    return null;
-//                                                }
-//                                            }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toList());
-//                                    if (!requests.isEmpty()) {
-//                                        successful = ordersGenerate.generateOrders(requests, xAccessToken, false, filter.getIncludeLate(), IMPL_PATH);
-//                                    }
-//                                    if (!successful) {
-//                                        LOGGER.warn("generate orders failed due to missing permission.");
-//                                    }
-//                                } catch (SOSHibernateException | ParseException | DBMissingDataException | DBConnectionRefusedException
-//                                        | DBInvalidDataException | JocConfigurationException | DBOpenSessionException
-//                                        | ControllerConnectionResetException | ControllerConnectionRefusedException | SOSInvalidDataException
-//                                        | SOSMissingDataException | IOException | ExecutionException e) {
-//                                    LOGGER.warn("generation of new  orders failed.", e.getMessage());
-//                                } finally {
-//                                    Globals.disconnect(session);
-//                                }
-//                            } else {
-//                                LOGGER.warn(either.getLeft().messageWithCause());
-//                            }
-//                        });
-//                    }
-//
-//                } catch (Exception e) {
-//                    LOGGER.warn(e.getMessage());
-//                }
-//            }
-//        }
-//    }
-//
     private void cancelOrdersForRenamedSchedules(String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames,
             String xAccessToken) {
         if (addOrdersDateFrom != null && !addOrdersDateFrom.isEmpty()) {
@@ -864,7 +779,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return states;
     }
     
-    private void cancelOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken) {
+    private List<CompletableFuture<Void>> cancelOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken) {
+        List<CompletableFuture<Void>> futures = new ArrayList<CompletableFuture<Void>>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
             DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
@@ -891,7 +807,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         if (!cancelOrderResponsePerController.containsKey(controllerId)) {
                             cancelOrderResponsePerController.put(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
                         }
-                        cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
+                        futures.add(cancelOrderResponsePerController.get(controllerId).thenAccept(either -> {
                             if (either.isRight()) {
                                 DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
                                 localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
@@ -912,7 +828,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             } else {
                                 LOGGER.warn(either.getLeft().messageWithCause());
                             }
-                        });
+                        }));
                     }
 
                 } catch (Exception e) {
@@ -920,6 +836,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             }
         }
+        return futures;
     }
 
     private void recreateOrders(ReleaseFilter filter, Map<String, List<String>> schedulePathsWithWorkflowNames, String xAccessToken,
@@ -986,35 +903,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 } catch (Exception e) {
                     LOGGER.warn(e.getMessage());
                 }
-            }
-        }
-    }
-    
-    private void checkDependencies(SOSHibernateSession session, ReleaseFilter filter) throws SOSHibernateException {
-        Set<RequestItem> requestedItems = filter.getUpdate().stream().map(item -> {
-            RequestItem reqItem = new RequestItem();
-            reqItem.setName(Paths.get(item.getPath()).getFileName().toString());
-            reqItem.setType(item.getObjectType());
-            return reqItem;
-        }).collect(Collectors.toSet());
-        List<DBItemInventoryExtendedDependency> dependencies = DependencyUtils.getAllDependencies(session);
-        // remove all keys that are not present in the filter
-        Map<Dependency, Set<Dependency>> itemsWithReferences = DependencyUtils.resolveReferences(dependencies);
-        itemsWithReferences.keySet().removeIf(dep -> {
-            RequestItem req = new RequestItem();
-            req.setName(dep.getName());
-            req.setType(dep.getType());
-            return !requestedItems.contains(req);
-        });
-        Set<Dependency> invalidDependencies =  itemsWithReferences.values().stream().flatMap(Set::stream)
-                .filter(dependency -> !dependency.getValid()).collect(Collectors.toSet());
-        if(!invalidDependencies.isEmpty()) {
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List <DBItemInventoryReleasedConfiguration>  released = dbLayer.getReleasedConfigurations(invalidDependencies.stream().map(dep -> dep.getName()).collect(Collectors.toList()), invalidDependencies.stream().map(dep -> dep.getType()).collect(Collectors.toSet()));
-            if(released.isEmpty()) {
-                StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append(invalidDependencies.stream().map(invalid -> invalid.getType().name() +":" + invalid.getName()).collect(Collectors.joining(", ", "No valid current draft nor released configuration found for referenced items [", "]")));
-                throw new JocReleaseException(errorMessage.toString());
             }
         }
     }

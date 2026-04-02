@@ -1,8 +1,9 @@
 package com.sos.joc.history.controller.proxy.fatevent;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
+import com.sos.joc.history.helper.IOriginalOrderIdProvider;
 
-public class FatForkedChild {
+public class FatForkedChild implements IOriginalOrderIdProvider {
 
     private final String orderId;
     private final String branchIdOrName;
@@ -18,6 +19,7 @@ public class FatForkedChild {
         }
     }
 
+    @Override
     public String getOrderId() {
         return orderId;
     }
