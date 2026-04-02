@@ -121,25 +121,25 @@ public class HistoryCacheHandler {
         return null;
     }
 
-    public void addOrder(String orderId, CachedOrder co) {
+    public void addOrder(CachedOrder co) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][cache][addOrder][%s]%s", identifier, orderId, SOSString.toString(co)));
+            LOGGER.debug(String.format("[%s][cache][addOrder][%s]%s", identifier, co.getOrderId(), SOSString.toString(co)));
         }
-        orders.put(orderId, co);
+        orders.put(co.getOrderId(), co);
     }
 
-    public CachedOrder getOrderByConstraint(DBLayerHistory dbLayer, String constraintHash, String orderId, String constraintHashDetails)
-            throws Exception {
-        CachedOrder co = getOrder(orderId);
+    public CachedOrder getOrderByConstraint(DBLayerHistory dbLayer, IOriginalOrderIdProvider orig, String constraintHash,
+            String constraintHashDetails) throws Exception {
+        CachedOrder co = getOrder(orig.getOrderId());
         if (co == null) {
             DBItemHistoryOrder item = dbLayer.getOrderByConstraint(constraintHash);
             if (item == null) {
                 throw new HistoryModelOrderNotFoundException(controllerId, String.format("[%s][%s][%s]order not found", identifier, constraintHash,
                         constraintHashDetails));
             } else {
-                addOrder(orderId, new CachedOrder(item));
+                addOrder(new CachedOrder(item, orig));
             }
-            co = getOrder(orderId);
+            co = getOrder(orig.getOrderId());
         }
         if (co != null) {
             co.setLastUsage();
@@ -147,17 +147,19 @@ public class HistoryCacheHandler {
         return co;
     }
 
-    public CachedOrder getOrderByCurrentOrderId(DBLayerHistory dbLayer, String orderId, Long eventId) throws Exception {
-        CachedOrder co = getOrder(orderId);
+    public CachedOrder getOrderByCurrentOrderId(DBLayerHistory dbLayer, IOriginalOrderIdProvider orig, Long eventId) throws Exception {
+        CachedOrder co = getOrder(orig.getOrderId());
         if (co == null) {
-            DBItemHistoryOrder item = dbLayer.getLastOrderByCurrentOrderId(controllerId, orderId);
+            // DBItemHistoryOrder item = dbLayer.getLastOrderByCurrentOrderIdXXX(controllerId, orig.getOrderId());
+            String constraintHash = HistoryModel.hashOrderConstraint(controllerId, eventId, orig.getOrderId());
+            DBItemHistoryOrder item = dbLayer.getOrderByConstraint(constraintHash);
             if (item == null) {
-                throw new HistoryModelOrderNotFoundException(controllerId, String.format("[%s][%s][%s]order not found", identifier, orderId,
+                throw new HistoryModelOrderNotFoundException(controllerId, String.format("[%s][%s][%s]order not found", identifier, orig.getOrderId(),
                         eventId));
             } else {
-                addOrder(orderId, new CachedOrder(item));
+                addOrder(new CachedOrder(item, orig));
             }
-            co = getOrder(orderId);
+            co = getOrder(orig.getOrderId());
         }
         if (co != null) {
             co.setLastUsage();
@@ -165,11 +167,11 @@ public class HistoryCacheHandler {
         return co;
     }
 
-    public void addOrderStep(String orderId, CachedOrderStep cos) {
+    public void addOrderStep(CachedOrderStep cos) {
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][cache][addOrderStep][%s]%s", identifier, orderId, SOSString.toString(cos)));
+            LOGGER.debug(String.format("[%s][cache][addOrderStep][%s]%s", identifier, cos.getOrderId(), SOSString.toString(cos)));
         }
-        orderSteps.put(orderId, cos);
+        orderSteps.put(cos.getOrderId(), cos);
     }
 
     private CachedOrderStep getOrderStep(String orderId) {
@@ -183,22 +185,22 @@ public class HistoryCacheHandler {
         return null;
     }
 
-    public CachedOrderStep getOrderStepByConstraint(DBLayerHistory dbLayer, CachedAgent ca, String controllerTimezone, String constraintHash,
-            String orderId, Long startEventId, String constraintHashDetails) throws Exception {
+    public CachedOrderStep getOrderStepByConstraint(DBLayerHistory dbLayer, String controllerTimezone, CachedAgent ca, IOriginalOrderIdProvider orig,
+            Long startEventId, String constraintHash, String constraintHashDetails) throws Exception {
         DBItemHistoryOrderStep item = dbLayer.getOrderStepByConstraint(constraintHash);
         if (item == null) {
-            throw new HistoryModelOrderStepNotFoundException(controllerId, String.format("[%s][%s][%s]order step not found", identifier, orderId,
-                    constraintHashDetails));
+            throw new HistoryModelOrderStepNotFoundException(controllerId, String.format("[%s][%s][%s]order step not found", identifier, orig
+                    .getOrderId(), constraintHashDetails));
         } else {
             if (ca == null) {
                 LOGGER.info(String.format(
                         "[%s][agent not found]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
                                 .getAgentId()));
-                addOrderStep(orderId, new CachedOrderStep(item, controllerTimezone));
+                addOrderStep(new CachedOrderStep(item, orig, controllerTimezone));
             } else {
-                addOrderStep(orderId, new CachedOrderStep(item, ca.getTimezone()));
+                addOrderStep(new CachedOrderStep(item, orig, ca.getTimezone()));
             }
-            return getOrderStep(orderId);
+            return getOrderStep(orig.getOrderId());
         }
     }
 
@@ -234,8 +236,8 @@ public class HistoryCacheHandler {
                         .getOrderId(), co.getCurrentHistoryOrderStepId(), positionValue));
             } else {
                 CachedAgent ca = getAgent(dbLayer, item.getAgentId(), controllerTimezone);
-                cos = new CachedOrderStep(item, ca.getTimezone());
-                addOrderStep(co.getOrderId(), cos);
+                cos = new CachedOrderStep(item, co, ca.getTimezone());
+                addOrderStep(cos);
             }
         }
         return cos;
@@ -446,7 +448,11 @@ public class HistoryCacheHandler {
         return null;
     }
 
-    public void clear(CacheType cacheType, String orderId) {
+    public void clear(CacheType cacheType, IOriginalOrderIdProvider orig) {
+        clear(cacheType, orig.getOrderId());
+    }
+
+    private void clear(CacheType cacheType, String orderId) {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][cache][clear][%s]%s", identifier, cacheType, orderId));
         }

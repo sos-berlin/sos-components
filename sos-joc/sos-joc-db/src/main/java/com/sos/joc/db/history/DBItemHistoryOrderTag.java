@@ -21,7 +21,8 @@ import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
 @Entity
-@Table(name = DBLayer.TABLE_HISTORY_ORDER_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ORDER_ID]", "[TAG_NAME]" }) })
+@Table(name = DBLayer.TABLE_HISTORY_ORDER_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ORDER_ID]",
+        "[TAG_NAME]" }) })
 @Proxy(lazy = false)
 public class DBItemHistoryOrderTag extends DBItem {
 
@@ -43,7 +44,7 @@ public class DBItemHistoryOrderTag extends DBItem {
 
     @Column(name = "[TAG_NAME]", nullable = false)
     private String tagName;
-    
+
     @Column(name = "[GROUP_ID]", nullable = false)
     private Long groupId;
 
@@ -53,18 +54,18 @@ public class DBItemHistoryOrderTag extends DBItem {
     @Column(name = "[START_TIME]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date startTime;
-    
+
     @Column(name = "[DAILY_PLAN_DATE]", nullable = true)
     @Temporal(TemporalType.TIMESTAMP)
     private Date dailyPlanDate;
-    
+
     @Transient
     private String groupName;
-    
+
     public DBItemHistoryOrderTag() {
         //
     }
-    
+
     public DBItemHistoryOrderTag(String controllerId, String orderId, String tagName, Long groupId, Integer ordering, Date startTime) {
         setId(null);
         setControllerId(controllerId);
@@ -94,7 +95,7 @@ public class DBItemHistoryOrderTag extends DBItem {
         }
         historyId = val;
     }
-    
+
     public String getControllerId() {
         return controllerId;
     }
@@ -108,14 +109,18 @@ public class DBItemHistoryOrderTag extends DBItem {
     }
 
     public void setOrderId(String val) {
-        orderId = val;
-        if (orderId != null) {
-            try {
-                dailyPlanDate = SOSDate.getDate(orderId.substring(1, 11));
-            } catch (SOSInvalidDataException e) {
-                dailyPlanDate = null;
-            }
+        if (val == null) {
+            orderId = null;
+            return;
         }
+
+        try {
+            dailyPlanDate = SOSDate.getDate(val.substring(1, 11));
+        } catch (SOSInvalidDataException e) {
+            dailyPlanDate = null;
+        }
+        // set after dailyPlan - to ensure that if normalizeOrderId, f.e., truncates the left side instead of the right side, everything works
+        orderId = normalizeOrderId(val);
     }
 
     public String getTagName() {
@@ -125,7 +130,7 @@ public class DBItemHistoryOrderTag extends DBItem {
     public void setTagName(String val) {
         tagName = val;
     }
-    
+
     public Long getGroupId() {
         return groupId;
     }
@@ -136,7 +141,7 @@ public class DBItemHistoryOrderTag extends DBItem {
         }
         groupId = val;
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -155,11 +160,11 @@ public class DBItemHistoryOrderTag extends DBItem {
     public void setStartTime(Date val) {
         startTime = val;
     }
-    
+
     public Date getDailyPlanDate() {
         return dailyPlanDate;
     }
-    
+
     @Transient
     public String getGroupName() {
         return groupName;
@@ -169,7 +174,7 @@ public class DBItemHistoryOrderTag extends DBItem {
     public void setGroupName(String val) {
         groupName = val;
     }
-    
+
     @Transient
     public String getGroupedTag() {
         return groupName == null || groupName.isBlank() ? tagName : groupName + ":" + tagName;

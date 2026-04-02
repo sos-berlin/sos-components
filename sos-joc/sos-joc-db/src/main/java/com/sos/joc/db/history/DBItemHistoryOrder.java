@@ -189,7 +189,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setOrderId(String val) {
-        orderId = val;
+        orderId = normalizeOrderId(val);
     }
 
     public String getWorkflowPath() {
@@ -264,7 +264,7 @@ public class DBItemHistoryOrder extends DBItem {
         if (val == null) {
             val = DBLayer.DEFAULT_KEY;
         }
-        parentOrderId = val;
+        parentOrderId = normalizeOrderId(val);
     }
 
     public void setHasChildren(boolean val) {
@@ -287,8 +287,12 @@ public class DBItemHistoryOrder extends DBItem {
         return name;
     }
 
+    /** main oder - orderId<br />
+     * fork - branch name
+     * 
+     * @param val */
     public void setName(String val) {
-        name = val;
+        name = normalizeOrderId(val);
     }
 
     public String getStartCause() {

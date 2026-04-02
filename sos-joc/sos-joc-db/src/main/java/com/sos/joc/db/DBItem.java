@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
+import com.sos.joc.db.common.HistoryConstants;
 
 public abstract class DBItem implements Serializable {
 
@@ -32,6 +33,11 @@ public abstract class DBItem implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBItem.class);
 
     private List<String> uniqueConstraintFieldNames = null;
+
+    @Transient
+    public static String normalizeOrderId(String orderId) {
+        return normalizeValue(orderId, HistoryConstants.MAX_LEN_ORDER_ID, "...");
+    }
 
     /* return empty list (not null) when nothing found */
     public List<String> getUniqueConstraintFieldNames() throws SOSHibernateException {
