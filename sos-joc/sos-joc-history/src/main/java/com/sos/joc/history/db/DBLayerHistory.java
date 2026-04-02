@@ -1,5 +1,6 @@
 package com.sos.joc.history.db;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -237,6 +238,23 @@ public class DBLayerHistory extends DBLayer {
         List<DBItemHistoryOrder> result = executeQueryList("getLastOrderByCurrentOrderId", query);
         if (!result.isEmpty()) {
             return result.get(0);
+        }
+        return null;
+    }
+
+    public DBItemHistoryOrder getLastOrderByTruncatedCurrentOrderId(String controllerId, String orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o1 ");
+        hql.append("where o1.controllerId=:controllerId ");
+        hql.append("and o1.orderId=:orderId ");
+
+        Query<DBItemHistoryOrder> query = getSession().createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("orderId", orderId);
+        query.setReadOnly(true);
+
+        List<DBItemHistoryOrder> result = executeQueryList("getLastOrderByTruncatedCurrentOrderId", query);
+        if (!result.isEmpty()) {
+            return result.stream().filter(o -> o.getEndTime() == null).max(Comparator.comparing(DBItemHistoryOrder::getId)).orElse(null);
         }
         return null;
     }

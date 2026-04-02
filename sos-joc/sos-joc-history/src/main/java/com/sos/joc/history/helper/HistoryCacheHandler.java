@@ -22,6 +22,7 @@ import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.db.DBItem;
+import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
@@ -151,8 +152,16 @@ public class HistoryCacheHandler {
     public CachedOrder getOrderByCurrentOrderId(DBLayerHistory dbLayer, IOriginalOrderIdProvider orig, Long eventId) throws Exception {
         CachedOrder co = getOrder(orig.getOrderId());
         if (co == null) {
-            String orderId = DBItem.normalizeOrderId(orig.getOrderId());
-            DBItemHistoryOrder item = dbLayer.getLastOrderByCurrentOrderId(controllerId, orderId);
+
+            String orderId = null;
+            DBItemHistoryOrder item = null;
+            if (orig.getOrderId().length() > HistoryConstants.MAX_LEN_ORDER_ID) {
+                orderId = DBItem.normalizeOrderId(orig.getOrderId());
+                item = dbLayer.getLastOrderByTruncatedCurrentOrderId(controllerId, orderId);
+            } else {
+                orderId = orig.getOrderId();
+                item = dbLayer.getLastOrderByCurrentOrderId(controllerId, orderId);
+            }
             if (item == null) {
                 throw new HistoryModelOrderNotFoundException(controllerId, String.format("[%s][%s][%s]order not found", identifier, orderId,
                         eventId));
