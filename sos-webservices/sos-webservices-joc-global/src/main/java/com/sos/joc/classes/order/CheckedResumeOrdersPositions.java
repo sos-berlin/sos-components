@@ -63,6 +63,7 @@ import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+import js7.data_for_java.workflow.position.JWorkflowPosition;
 import scala.Function1;
 import scala.jdk.javaapi.OptionConverters;
 
@@ -154,7 +155,9 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
 
             setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toCollection(LinkedHashSet::new)));
             disableIfNoCommonAllowedPositionsExist();
-            setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
+            //setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("/cycle")));
+            boolean atLeastOneOrderOutsideCycle = jOrders.stream().map(JOrder::workflowPosition).map(JWorkflowPosition::position).map(JPosition::toString).anyMatch(s -> !s.contains("/cycle"));
+            setWithCyclePosition(!atLeastOneOrderOutsideCycle);
             
             Variables allConstants = new Variables();
             Set<String> argsNotUnique = new HashSet<>();
@@ -264,7 +267,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
                 }
             }
         });
-        
+
         setOrderIds(Collections.singleton(jOrder.id().string()));
         setPositions(pos);
 
@@ -286,7 +289,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
 //            }
             setVariablesNotSettable(false);
         }
-        setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("cycle")));
+        //setWithCyclePosition(getPositions().stream().anyMatch(p -> p.getPositionString().contains("/cycle")));
+        setWithCyclePosition(jOrder.workflowPosition().position().toString().contains("/cycle"));
         
         Variables constants = OrdersHelper.scalaValuedArgumentsToVariables(jOrder.arguments());
         if (orderPreparation != null && orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
