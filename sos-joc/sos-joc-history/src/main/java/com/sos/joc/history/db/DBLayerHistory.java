@@ -218,6 +218,29 @@ public class DBLayerHistory extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public DBItemHistoryOrder getLastOrderByCurrentOrderId(String controllerId, String orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o1 ");
+        hql.append("where o1.controllerId=:controllerId ");
+        hql.append("and o1.orderId=:orderId ");
+        hql.append("and o1.id=");
+        hql.append("(select max(o2.id) from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o2 ");
+        hql.append("where o2.controllerId=o1.controllerId ");
+        hql.append("and o2.orderId=o1.orderId ");
+        hql.append(")");
+
+        Query<DBItemHistoryOrder> query = getSession().createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("orderId", orderId);
+        query.setReadOnly(true);
+
+        List<DBItemHistoryOrder> result = executeQueryList("getLastOrderByCurrentOrderId", query);
+        if (!result.isEmpty()) {
+            return result.get(0);
+        }
+        return null;
+    }
+
     public DBItemHistoryOrder getOrderByConstraint(String constraintHash) throws SOSHibernateException {
         Query<DBItemHistoryOrder> query = getSession().createQuery(String.format("from %s where constraintHash=:constraintHash",
                 DBLayer.DBITEM_HISTORY_ORDERS));

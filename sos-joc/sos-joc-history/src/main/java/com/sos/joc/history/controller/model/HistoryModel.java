@@ -2498,17 +2498,17 @@ public class HistoryModel {
 
     /** Important – Generate the ConstraintHash using the original OrderId, as the OrderId may be truncated in the database. */
     private String hashOrderConstraint(FatEventOrderStarted eo) {
-        return hashOrderConstraint(controllerConfiguration.getCurrent().getId(), eo.getEventId(), eo.getOrderId());
+        return hashOrderConstraint(eo.getEventId(), eo.getOrderId());
     }
 
     /** Important – Generate the ConstraintHash using the original OrderId, as the OrderId may be truncated in the database. */
     private String hashOrderConstraint(FatEventOrderForked eo, FatForkedChild forkOrder) {
-        return hashOrderConstraint(controllerConfiguration.getCurrent().getId(), eo.getEventId(), forkOrder.getOrderId());
+        return hashOrderConstraint(eo.getEventId(), forkOrder.getOrderId());
     }
 
     /** Important – Generate the ConstraintHash using the original OrderId, as the OrderId may be truncated in the database. */
-    public static String hashOrderConstraint(String controllerId, Long eventId, String orderId) {
-        return SOSString.hash256(new StringBuilder(controllerId).append(eventId).append(orderId).toString());
+    private String hashOrderConstraint(Long eventId, String orderId) {
+        return SOSString.hash256(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).toString());
 
     }
 
