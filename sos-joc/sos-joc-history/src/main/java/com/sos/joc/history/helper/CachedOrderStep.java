@@ -30,11 +30,12 @@ public class CachedOrderStep {
     private Boolean warnOnStderr;
     private long logSize;
 
-    public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
+    // original orderId as the item.orderId may be truncated in the database
+    public CachedOrderStep(DBItemHistoryOrderStep item, IOriginalOrderIdProvider orig, String timezone) {
         this.id = item.getId();
         this.historyOrderMainParentId = item.getHistoryOrderMainParentId();
         this.historyOrderId = item.getHistoryOrderId();
-        this.orderId = item.getOrderId();
+        this.orderId = orig.getOrderId();
         this.jobName = item.getJobName();
         this.jobLabel = item.getJobLabel();
         this.agentTimezone = timezone;
