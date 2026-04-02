@@ -110,7 +110,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
 
-    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
+    public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
             String accessToken, AuditParams auditLog, boolean withAudit, boolean withEvent) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -233,7 +233,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                     LOGGER.debug(String.format("[updateUnknownOrders][jOrderIds=%s][orderIds(before remove jOrderIds=%s)=%s]", oIds.size(),
                             orderIdsSize, orderIds.size()));
                 }
-                updateDailyPlan("updateUnknownOrders", orderIds, withEvent);
+                updateDailyPlan("updateUnknownOrders", orderIds, withEvent);// scheint obsolet zu sein
             } finally {
                 Globals.disconnect(session);
             }
