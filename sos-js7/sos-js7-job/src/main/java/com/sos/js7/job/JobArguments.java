@@ -1,11 +1,14 @@
 package com.sos.js7.job;
 
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 
@@ -77,6 +80,22 @@ public class JobArguments {
      * @return {@code true} if there is at least one dynamic argument; {@code false} otherwise */
     public boolean hasDynamicArguments() {
         return dynamicArguments != null && dynamicArguments.size() > 0;
+    }
+
+    /** Decrypts the value of a {@link SOSArgument} if needed and updates the argument with the decrypted value.
+     * <p>
+     * This method checks the argument's current value.<br />
+     * If the value is encrypted (either starts with the standard encryption identifier or contains {@code decrypt(enc:...)} patterns), it will be decrypted
+     * using the provided private key.<br />
+     * The argument's value is updated only if decryption changes it.
+     * <p>
+     * This method internally calls {@link EncryptionDecryptArguments#decryptIfNeeded(SOSArgument, PrivateKey)} for the actual decryption logic.
+     *
+     * @param arg the {@link SOSArgument} whose value should be decrypted; if {@code null} or its value is {@code null}, nothing is done
+     * @param privKey the private key used for decryption; if {@code null}, no decryption occurs
+     * @throws Exception if decryption fails */
+    public static void decryptIfNeeded(SOSArgument<?> arg, String privKey) throws Exception {
+        EncryptionDecryptArguments.decryptIfNeeded(arg, KeyUtil.getPrivateKey(privKey));
     }
 
     protected Map<String, List<JobArgument<?>>> getIncludedArguments() {
