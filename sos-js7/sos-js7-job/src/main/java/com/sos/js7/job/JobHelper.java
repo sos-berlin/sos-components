@@ -232,6 +232,7 @@ public class JobHelper {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     private static Value asEngineValue(final Object o) {
         if (o == null) {
             return StringValue.of("");
