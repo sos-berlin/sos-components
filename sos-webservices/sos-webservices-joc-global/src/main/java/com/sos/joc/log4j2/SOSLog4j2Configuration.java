@@ -51,8 +51,8 @@ public class SOSLog4j2Configuration extends XmlConfiguration {
             final Filter noMarkerfilter = NoMarkerFilter.newBuilder().setOnMatch(Filter.Result.ACCEPT).setOnMismatch(Filter.Result.NEUTRAL).build();
             final Filter markerfilter = MarkerFilter.createFilter(WebserviceConstants.NOT_NOTIFY_LOGGER.getName(), Filter.Result.DENY,
                     Filter.Result.ACCEPT);
-
-            final Filter compositeFilter = CompositeFilter.createFilters(noMarkerfilter, markerfilter);
+            Filter[] filters = {noMarkerfilter, markerfilter};
+            final Filter compositeFilter = CompositeFilter.createFilters(filters);
             final Appender appender = RunningLogAppender.createAppender(RunningLogAppender.APPENDER_NAME, compositeFilter, rootLogger.getLevel(),
                     getProps());
             appender.start();
