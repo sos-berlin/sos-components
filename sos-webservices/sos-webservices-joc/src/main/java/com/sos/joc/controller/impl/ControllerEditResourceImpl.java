@@ -262,7 +262,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             } else {
                 return responseStatusJSOk(Date.from(Instant.now()));
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return responseStatusJSError(e);
         } finally {
             Globals.disconnect(connection);
@@ -328,7 +328,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             Globals.commit(connection);
             return responseStatusJSOk(Date.from(Instant.now()));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Globals.rollback(connection);
             return responseStatusJSError(e);
         } finally {
@@ -364,7 +364,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             entity.setController(jobScheduler);
             entity.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return responseStatusJSError(e);
         }
     }
