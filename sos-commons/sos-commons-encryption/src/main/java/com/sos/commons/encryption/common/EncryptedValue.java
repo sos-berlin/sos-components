@@ -40,6 +40,8 @@ public class EncryptedValue {
                 } else {
                     return new EncryptedValue(propertyName, propertyValue, splitted[0], splitted[1], splitted[2]);
                 }
+            } else {
+                throw new SOSEncryptionException(String.format("[%s][%s] does not contain the 3 required encryption values", propertyName, propertyValue));
             }
         }
         return null;
