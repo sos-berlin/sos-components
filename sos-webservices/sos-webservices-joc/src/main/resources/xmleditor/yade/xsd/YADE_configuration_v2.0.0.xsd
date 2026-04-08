@@ -2431,7 +2431,6 @@ A fragment is referenced via this attribute value by a transfer profile.
 			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
 			to the corresponding <em>name</em> attribute of the <em>CredentialStoreFragment</em> element.
 		</p>
-               <p/>
                 <p/>
                <p>
                   <strong>CredentialStore assignment in Jump Host transfers:</strong>
@@ -2518,10 +2517,6 @@ A fragment is referenced via this attribute value by a transfer profile.
 			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
 			to the corresponding <em>name</em> attribute of the <em>CredentialStoreFragment</em> element.
 		</p>
-               <p/>
-               <p>
-			               <strong>Support for a jump host.</strong>
-               </p>
                 <p/>
                <p>
                   <strong>Decryption assignment in Jump Host transfers:</strong>
