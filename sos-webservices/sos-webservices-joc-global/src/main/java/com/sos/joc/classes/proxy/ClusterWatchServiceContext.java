@@ -137,7 +137,7 @@ public class ClusterWatchServiceContext {
         }
         scala.util.Either<Problem, HasNodes> state = service.clusterState();
         if (state.isLeft()) {
-            LOGGER.info("[ClusterWatchService] " + state.left().toOption().get().toString());
+            LOGGER.info("[ClusterWatchService] " + ProblemHelper.getErrorMessage(state.left().toOption().get()));
         } else {
             LOGGER.info("[ClusterWatchService] " + state.toOption().get().toString());
         }
