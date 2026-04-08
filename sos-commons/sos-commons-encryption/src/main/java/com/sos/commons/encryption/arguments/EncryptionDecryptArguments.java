@@ -86,7 +86,7 @@ public class EncryptionDecryptArguments extends EncryptionArguments {
 
         // 2. Matcher for decrypt(enc:...)
         Matcher matcher = DECRYPT_PATTERN.matcher(propertyValue);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         boolean found = false;
 
         while (matcher.find()) {
