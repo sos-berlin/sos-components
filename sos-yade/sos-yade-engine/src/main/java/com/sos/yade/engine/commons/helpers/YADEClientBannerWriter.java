@@ -231,8 +231,11 @@ public class YADEClientBannerWriter {
     }
 
     private static void writeSourceHeader(ISOSLogger logger, YADESourceArguments sourceArgs) {
+        // 'Source' or 'Source (via Jump)'
+        String label = sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue();
+
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue()).append("]");
+        sb.append("[").append(label).append("]");
         if (sourceArgs.getProvider() == null) {
             sb.append("Missing Provider");
             logger.info(sb);
@@ -330,13 +333,12 @@ public class YADEClientBannerWriter {
         logger.info(sb);
         if (logger.isDebugEnabled()) {
             // Host Info
-            logger.debug(getHostInfo(logger, YADESourceArguments.LABEL, sourceArgs.getProvider()));
+            logger.debug(getHostInfo(logger, label, sourceArgs.getProvider()));
             // Arguments
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs, Collections.singleton(sourceArgs.getProvider()
-                    .getClass().getSimpleName())));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADESourceArguments.LABEL, sourceArgs.getProvider(),
-                    getExcludedArgumentNamesForProvider()));
-            debugProviderDetails(logger, YADESourceArguments.LABEL, sourceArgs.getProvider());
+            logger.debug(YADEArgumentsHelper.toString(logger, label, sourceArgs, Collections.singleton(sourceArgs.getProvider().getClass()
+                    .getSimpleName())));
+            logger.debug(YADEArgumentsHelper.toString(logger, label, sourceArgs.getProvider(), getExcludedArgumentNamesForProvider()));
+            debugProviderDetails(logger, label, sourceArgs.getProvider());
         }
     }
 
@@ -382,8 +384,11 @@ public class YADEClientBannerWriter {
             return;
         }
 
+        // 'Target' or 'Target (via Jump)'
+        String label = targetArgs.getLabel().isEmpty() ? YADETargetArguments.LABEL : targetArgs.getLabel().getValue();
+
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(targetArgs.getLabel().isEmpty() ? YADETargetArguments.LABEL : targetArgs.getLabel().getValue()).append("]");
+        sb.append("[").append(label).append("]");
         sb.append(YADEArgumentsHelper.toString("Protocol", targetArgs.getProvider().getProtocol()));
         try {
             sb.append("(");
@@ -445,13 +450,12 @@ public class YADEClientBannerWriter {
         logger.info(sb);
         if (logger.isDebugEnabled()) {
             // Host Info
-            logger.debug(getHostInfo(logger, YADETargetArguments.LABEL, targetArgs.getProvider()));
+            logger.debug(getHostInfo(logger, label, targetArgs.getProvider()));
             // Arguments
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs, Collections.singleton(targetArgs.getProvider()
-                    .getClass().getSimpleName())));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADETargetArguments.LABEL, targetArgs.getProvider(),
-                    getExcludedArgumentNamesForProvider()));
-            debugProviderDetails(logger, YADETargetArguments.LABEL, targetArgs.getProvider());
+            logger.debug(YADEArgumentsHelper.toString(logger, label, targetArgs, Collections.singleton(targetArgs.getProvider().getClass()
+                    .getSimpleName())));
+            logger.debug(YADEArgumentsHelper.toString(logger, label, targetArgs.getProvider(), getExcludedArgumentNamesForProvider()));
+            debugProviderDetails(logger, label, targetArgs.getProvider());
         }
     }
 

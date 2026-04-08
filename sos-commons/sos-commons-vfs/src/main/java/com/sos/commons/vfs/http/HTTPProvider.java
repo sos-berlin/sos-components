@@ -113,6 +113,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             } catch (Exception e) {
                 connected = false;
 
+                // log on INFO level because on ERROR the output is combined with the exception (via stderr) and not printed immediately after [connect] ...
+                getLogger().info(getConnectFailedMsg());
+
                 // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
                 // error in methods executed after connect() - e.g. if retry, roll back...
                 // Call disconnect() in the application's finally block.
