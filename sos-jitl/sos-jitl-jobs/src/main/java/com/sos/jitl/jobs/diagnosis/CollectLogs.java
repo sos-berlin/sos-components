@@ -32,16 +32,13 @@ public class CollectLogs extends Job<CollectLogsArguments> {
 
 		CollectLogsArguments args = step.getDeclaredArguments();
 		OrderProcessStepLogger logger = step.getLogger();
-		String agentLogPath = System.getenv("JS7_AGENT_LOGS");
-		if (agentLogPath == null) {
-			agentLogPath = System.getProperty("JS7_AGENT_LOGS");
+		String controllerId = step.getControllerId();
+
+		if (controllerId == null || controllerId.isBlank()) {
+			throw new IllegalArgumentException("Unable to get the Controller ID");
 		}
 
-		if (agentLogPath == null || agentLogPath.isBlank()) {
-			throw new IllegalArgumentException("Agent logs directory is not provided.");
-		}
-
-		Path logsDir = Paths.get(agentLogPath);
+		Path logsDir = Paths.get(controllerId);
 		if (!Files.exists(logsDir) || !Files.isDirectory(logsDir)) {
 			throw new IllegalArgumentException("Invalid agent logs directory: " + logsDir);
 		}
