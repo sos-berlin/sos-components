@@ -242,6 +242,10 @@ public class ClusterWatch {
         startedWatches.clear();
     }
     
+    protected ClusterWatchServiceContext clear(String controllerId) {
+        return startedWatches.remove(controllerId);
+    }
+    
     private String toStringWithId() {
         return "JOC (" + clusterId + ")";
     }
