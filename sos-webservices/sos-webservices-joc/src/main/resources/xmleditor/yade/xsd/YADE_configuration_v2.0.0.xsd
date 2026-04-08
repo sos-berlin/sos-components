@@ -602,7 +602,9 @@
 	  </xs:element>
 	  <xs:element name="CSFile">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/CredentialStoreFragments/CSFile"/>
+         <xs:appinfo source="Fragments/CredentialStoreFragments/CSFile">
+                 <Note include="CredentialStore-JumpHost"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -615,6 +617,43 @@
                <p>	
 		    This parameter specifies the path of the KeePass database file with the file extension .kdb or .kdbx that is used as a Credential Store database. 
 		</p>
+                 <p/>
+               <p>
+                  <strong>CredentialStore assignment in Jump Host transfers:</strong>
+               </p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>General rule</strong>
+                     <ul>
+                        <li>The path defined in a <em>CredentialStoreFragment / CSFile</em> must be accessible on the system where the YADE client is executed.</li>
+                     </ul>
+                  </li>
+                  <li>Configuration scenarios:
+                <ol>
+                        <li>
+                           <em>JumpFragment / CredentialStoreFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>CredentialStoreFragment</em> must specify a KeePass database file path that is accessible on the local file system (YADE client host).
+                                <ul>
+                                    <li>The connection to the jump host is established from the system where the current YADE client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <em>(SFTP)Fragment (as Source/Target using JumpFragmentRef) / CredentialStoreFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>CredentialStoreFragment</em> must specify a KeePass database file path that is accessible on the jump host.
+                                <ul>
+                                    <li>The connection to the Source/Target is established from the jump host where the YADE jump client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                     </ol>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -1130,6 +1169,7 @@
 	  <xs:element name="EnciphermentPrivateKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/DecryptionFragments/EnciphermentPrivateKey">
+                <Note include="Decryption-JumpHost"/>
                 <Note include="CredentialStore-Fields"/>
             </xs:appinfo>
          <xs:documentation>
@@ -1153,6 +1193,43 @@
                         <li>If the corresponding <em>CredentialStore</em> entry is an attachment, the attachment is used as the private key.</li>
                         <li>Otherwise, the path from the <em>CredentialStore</em> entry is used.</li>
                      </ul>
+                  </li>
+               </ul>
+                <p/>
+               <p>
+                  <strong>Decryption assignment in Jump Host transfers:</strong>
+               </p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>General rule</strong>
+                     <ul>
+                        <li>The path defined in a <em>DecryptionFragment / EnciphermentPrivateKey</em> must be accessible on the system where the YADE client is executed.</li>
+                     </ul>
+                  </li>
+                  <li>Configuration scenarios:
+                <ol>
+                        <li>
+                           <em>JumpFragment / DecryptionFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>DecryptionFragment</em> must specify a private key file path that is accessible on the local file system (YADE client host).
+                                <ul>
+                                    <li>The connection to the jump host is established from the system where the current YADE client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <em>(SFTP)Fragment (as Source/Target using JumpFragmentRef) / DecryptionFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>DecryptionFragment</em> must specify a private key file path that is accessible on the jump host.
+                                <ul>
+                                    <li>The connection to the Source/Target is established from the jump host where the YADE jump client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                     </ol>
                   </li>
                </ul>
                 <p/>
@@ -2325,7 +2402,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="CredentialStoreFragmentRef">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/CredentialStoreFragments/Ref/CredentialStoreFragmentRef"/>
+         <xs:appinfo source="Fragments/CredentialStoreFragments/Ref/CredentialStoreFragmentRef">
+                <Note include="CredentialStore-JumpHost"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -2353,9 +2432,43 @@ A fragment is referenced via this attribute value by a transfer profile.
 			to the corresponding <em>name</em> attribute of the <em>CredentialStoreFragment</em> element.
 		</p>
                <p/>
+                <p/>
                <p>
-			               <strong>Support for a jump host.</strong>
+                  <strong>CredentialStore assignment in Jump Host transfers:</strong>
                </p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>General rule</strong>
+                     <ul>
+                        <li>The path defined in a <em>CredentialStoreFragment / CSFile</em> must be accessible on the system where the YADE client is executed.</li>
+                     </ul>
+                  </li>
+                  <li>Configuration scenarios:
+                <ol>
+                        <li>
+                           <em>JumpFragment / CredentialStoreFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>CredentialStoreFragment</em> must specify a KeePass database file path that is accessible on the local file system (YADE client host).
+                                <ul>
+                                    <li>The connection to the jump host is established from the system where the current YADE client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <em>(SFTP)Fragment (as Source/Target using JumpFragmentRef) / CredentialStoreFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>CredentialStoreFragment</em> must specify a KeePass database file path that is accessible on the jump host.
+                                <ul>
+                                    <li>The connection to the Source/Target is established from the jump host where the YADE jump client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                     </ol>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -2376,7 +2489,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
     <xs:element name="DecryptionFragmentRef">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/DecryptionFragments/Ref/DecryptionFragmentRef"/>
+         <xs:appinfo source="Fragments/DecryptionFragments/Ref/DecryptionFragmentRef">
+                <Note include="Decryption-JumpHost"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -2407,6 +2522,43 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			               <strong>Support for a jump host.</strong>
                </p>
+                <p/>
+               <p>
+                  <strong>Decryption assignment in Jump Host transfers:</strong>
+               </p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>General rule</strong>
+                     <ul>
+                        <li>The path defined in a <em>DecryptionFragment / EnciphermentPrivateKey</em> must be accessible on the system where the YADE client is executed.</li>
+                     </ul>
+                  </li>
+                  <li>Configuration scenarios:
+                <ol>
+                        <li>
+                           <em>JumpFragment / DecryptionFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>DecryptionFragment</em> must specify a private key file path that is accessible on the local file system (YADE client host).
+                                <ul>
+                                    <li>The connection to the jump host is established from the system where the current YADE client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <em>(SFTP)Fragment (as Source/Target using JumpFragmentRef) / DecryptionFragmentRef</em>
+                           <ul>
+                              <li>The referenced <em>DecryptionFragment</em> must specify a private key file path that is accessible on the jump host.
+                                <ul>
+                                    <li>The connection to the Source/Target is established from the jump host where the YADE jump client is executed.</li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                     </ol>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
