@@ -9,7 +9,7 @@ import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.OrderProcessStep;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+//import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -21,9 +21,6 @@ public class JobSslConfigUtils {
 	private static <T extends JobArguments> List<KeyStoreContainer> getTrustStoreContainersFromOrder(
 			OrderProcessStep<T> step) throws Exception {
 
-		String enc_path = Optional.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
-				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-
 		String trustStores = Optional.ofNullable(step.getAllArguments().get("truststore_file"))
 				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
 
@@ -31,16 +28,9 @@ public class JobSslConfigUtils {
 			return null;
 		}
 
-		if (!trustStores.isBlank() && trustStores.startsWith("enc:")) {
-			trustStores = EnciphermentDecryptor.decryptValue(trustStores, Paths.get(enc_path));
-		}
 		String[] arr = trustStores.split("\\|");
 		String password = Optional.ofNullable(step.getAllArguments().get("truststore_password"))
 				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
-
-		if (!password.isBlank() && password.startsWith("enc:")) {
-			password = EnciphermentDecryptor.decryptValue(password, Paths.get(enc_path));
-		}
 
 		String pass = SOSString.isEmpty(password) ? null : password;
 		return Arrays.asList(arr).stream().peek(String::trim).map(path -> {
@@ -60,8 +50,6 @@ public class JobSslConfigUtils {
 	// extracting the keystore details
 	private static <T extends JobArguments> KeyStoreContainer getKeyStoreContainerFromOrder(OrderProcessStep<T> step)
 			throws Exception {
-		String enc_path = Optional.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
-				.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
 		String path = Optional.ofNullable(step.getAllArguments().get("keystore_file")).map(JobArgument::getValue)
 				.filter(Objects::nonNull).map(Object::toString).orElse("");
 
@@ -69,16 +57,8 @@ public class JobSslConfigUtils {
 			return null;
 		}
 
-		if (path.startsWith("enc:")) {
-			path = EnciphermentDecryptor.decryptValue(path, Paths.get(enc_path));
-		}
-
 		String alias = Optional.ofNullable(step.getAllArguments().get("keystore_alias")).map(JobArgument::getValue)
 				.filter(Objects::nonNull).map(Object::toString).orElse("");
-
-		if (!alias.isBlank() && alias.startsWith("enc:")) {
-			alias = EnciphermentDecryptor.decryptValue(alias, Paths.get(enc_path));
-		}
 
 		KeyStoreContainer c = new KeyStoreContainer(KeyStoreType.PKCS12, SOSPath.toAbsolutePath(path));
 		if (!Files.exists(c.getPath())) {
@@ -88,10 +68,6 @@ public class JobSslConfigUtils {
 
 		String key_pass = Optional.ofNullable(step.getAllArguments().get("keystore_password"))
 				.map(JobArgument::getValue).filter(Objects::nonNull).map(Object::toString).orElse("");
-
-		if (!key_pass.isBlank() && key_pass.startsWith("enc:")) {
-			key_pass = EnciphermentDecryptor.decryptValue(key_pass, Paths.get(enc_path));
-		}
 
 		c.setPassword(key_pass);
 		c.setKeyPassword(key_pass);

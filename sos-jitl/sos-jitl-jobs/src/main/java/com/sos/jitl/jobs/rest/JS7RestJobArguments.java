@@ -32,11 +32,11 @@ public class JS7RestJobArguments extends JobArguments {
 
 	//Client credential flow
 	private JobArgument<String> clientId = new JobArgument<String>("clientId", false);
-	private JobArgument<String> clientSecret = new JobArgument<String>("clientSecret", false, SOSArgument.DisplayMode.MASKED);
+	private JobArgument<String> clientSecret = new JobArgument<String>("clientSecret", false);
 	private JobArgument<String> identityService = new JobArgument<String>("identityService", false);
 	private JobArgument<String> issuer = new JobArgument<String>("issuer", false);
 	private JobArgument<String> oidcTrustStorePath = new JobArgument<String>("oidcTrustStorePath", false);
-	private JobArgument<String> oidcTrustStorePasswd = new JobArgument<String>("oidcTrustStorePasswd", false, SOSArgument.DisplayMode.MASKED);
+	private JobArgument<String> oidcTrustStorePasswd = new JobArgument<String>("oidcTrustStorePasswd", false);
 	private JobArgument<String> oidcTrustStoreType = new JobArgument<String>("oidcTrustStoreType", false);
 	private JobArgument<Boolean> useOidcLogin = new JobArgument<>("useOidcLogin", false, false);
 	

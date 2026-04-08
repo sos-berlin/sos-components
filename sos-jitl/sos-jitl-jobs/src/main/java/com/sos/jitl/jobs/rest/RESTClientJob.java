@@ -247,30 +247,15 @@ public class RESTClientJob extends Job<RestJobArguments> {
 					// maping all the request headers
 					Map<String, String> headerMap = new HashMap<>();
 
-					String username = Optional.ofNullable(step.getAllArguments().get("username"))
-							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+					String username = myArgs.getApiServerUsername().getValue();
 
-					String password = Optional.ofNullable(step.getAllArguments().get("password"))
-							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-					
-					String clientId = Optional.ofNullable(step.getAllArguments().get("client_id"))
-							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
+					String password = myArgs.getApiServerPassword().getValue();
 
-					String clientSecret = Optional.ofNullable(step.getAllArguments().get("client_secret"))
-							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-					
-					String enc_path = Optional.ofNullable(step.getAllArguments().get("encipherment_private_key_path"))
-							.map(JobArgument::getValue).map(Object::toString).orElse("").trim();
-					
+					String clientId = myArgs.getClientId().getValue();
 
-					if (!username.isBlank() && !password.isBlank()) {
-						
-						if (username.startsWith("enc:")) {
-							username = EnciphermentDecryptor.decryptValue(username, Paths.get(enc_path));
-						}
-						if (password.startsWith("enc:")) {
-							password = EnciphermentDecryptor.decryptValue(password, Paths.get(enc_path));
-						}
+					String clientSecret = myArgs.getClientSecret().getValue();
+
+					if (username != null && password != null && !username.isBlank() && !password.isBlank()) {
 
 						logger.debug("Reading username and password from the Credential Store.");
 						String resolvedUsername = resolver.resolve(username);
@@ -283,15 +268,7 @@ public class RESTClientJob extends Job<RestJobArguments> {
 						headerMap.put("Authorization", "Basic " + encodedAuth);
 					}
 
-
-					if (!clientId.isBlank() && !clientSecret.isBlank()) {
-
-						if (clientId.startsWith("enc:")) {
-							clientId = EnciphermentDecryptor.decryptValue(clientId, Paths.get(enc_path));
-						}
-						if (clientSecret.startsWith("enc:")) {
-							clientSecret = EnciphermentDecryptor.decryptValue(clientSecret, Paths.get(enc_path));
-						}
+					if (clientId != null && clientSecret != null && !clientId.isBlank() && !clientSecret.isBlank()) {
 
 						logger.debug("Reading client_id and client_se cret from the Credential Store.");
 						String resolvedClientId = resolver.resolve(clientId);
@@ -607,9 +584,10 @@ public class RESTClientJob extends Job<RestJobArguments> {
 												if (!inputOption.trim().isEmpty()) {
 													inputOptions = ReturnVariableUtils.parseInputOptions(inputOption);
 												}
-												if (!inputOptions.isEmpty()) {
+												if (inputOptions != null && !inputOptions.isEmpty()) {
 													if (responseBody != null && !responseBody.trim().isEmpty()) {
-														if (contentType.contains("application/json")) {
+														if (contentType != null
+																&& contentType.contains("application/json")) {
 															jqInput = objectMapper.readTree(responseBody);
 															if (jqInput.isObject()) {
 																mergedInput.setAll((ObjectNode) jqInput);

@@ -115,6 +115,33 @@
                     </p>
                 </note>
             </param>
+			<param name="client_id" required="false">
+                <note>
+                    <title>Client ID</title>
+                    <p>
+                        Specifies the client_id for OIDC Client Credential Authentication.  
+                        Supported formats:<br/>
+                        <ul style="margin-left:20px;">
+                            <li>Plain text</li>
+                            <li>Encrypted value</li>
+                            <li>Reference to a credential from a Credential Store</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
+            <param name="client_secret" required="false">
+                <note>
+                    <title>Client Secret</title>
+                    <p>
+                        Specifies the client_secret for authentication for OIDC Client Credential Authentication in one of the following formats:<br/>
+                        <ul style="margin-left:20px;">
+                            <li>Plain text</li>
+                            <li>Encrypted value</li>
+                            <li>Reference to a credential from a KeePass Credential Store</li>
+                        </ul>
+                    </p>
+                </note>
+            </param>
             <param name="encipherment_private_key_path" required="false">
                 <note>
                     <title>Path of the Encipherment Private Key</title>
@@ -255,11 +282,11 @@
                   xmlns:xhtml="http://www.w3.org/1999/xhtml">
        <p>
            The JITL RESTClientJob template can execute REST API requests for any third-party application that uses 
-           <b>Basic Authentication</b> (username and password encoded in Base64) and supports either 
+           <b>Basic Authentication</b> (username and password encoded in Base64) or <b>OIDC Client Credential Authentication </b> and supports either 
            <b>HTTP</b> or <b>HTTPS</b> protocols.
        </p>
 
-       <p>The username and password used for authentication can be provided in multiple ways:</p>
+       <p>The username and password used for basic authentication can be provided in multiple ways:</p>
        <ul style="margin-left:20px;">
 	   <li>Directly inside the request JSON — for example, as Base64-encoded credentials within the headers,
                or in the specific format required by the target web service API documentation.</li>
@@ -290,7 +317,7 @@
            
        </ul>
 
-       <p>When credentials are provided in the <b>job resources</b>, they may be stored as plain text, 
+       <p>Similarly for the Client Credential Authentication the client_id and client_secret can be used. When credentials are provided in the <b>job resources</b>, they may be stored as plain text, 
           though this is not secure. For a more secure setup, credentials can be:</p>
        <ul style="margin-left:20px;">
            <li>Encrypted and later decrypted at runtime using an encipherment private key. See:
