@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.ssh;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Joiner;
@@ -110,5 +111,18 @@ public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> ext
             msg += Joiner.on(", ").join(additionalInfos);
         }
         return getConnectedMsg(msg);
+    }
+
+    @Override
+    public String getConnectFailedMsg() {
+        List<String> l = new ArrayList<>();
+        l.add("SocketTimeout=" + getArguments().getSocketTimeout().getValue());
+        if (!getArguments().getServerAliveInterval().isEmpty()) {
+            l.add("KeepAliveInterval=" + getArguments().getServerAliveInterval().getValue());
+        }
+        if (!getArguments().getServerAliveCountMax().isEmpty()) {
+            l.add("MaxAliveCount=" + getArguments().getServerAliveCountMax().getValue());
+        }
+        return getConnectFailedMsg(l);
     }
 }

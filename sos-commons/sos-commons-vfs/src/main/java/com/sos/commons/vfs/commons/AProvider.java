@@ -14,6 +14,7 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
+import com.google.common.base.Joiner;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
@@ -411,6 +412,19 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     public String getConnectMsg() {
         return String.format("%s[connect]%s ...", getLogPrefix(), accessInfo);
+    }
+
+    public String getConnectFailedMsg() {
+        return getConnectedMsg(null);
+    }
+
+    public String getConnectFailedMsg(List<String> additionalInfos) {
+        List<String> msg = new ArrayList<>();
+        msg.add("ConnectTimeout=" + getArguments().getConnectTimeout().getValue());
+        if (!SOSCollection.isEmpty(additionalInfos)) {
+            msg.addAll(additionalInfos);
+        }
+        return String.format("%s[connect][%s][%s]failed", getLogPrefix(), accessInfo, Joiner.on(", ").join(msg));
     }
 
     public String getConnectedMsg() {

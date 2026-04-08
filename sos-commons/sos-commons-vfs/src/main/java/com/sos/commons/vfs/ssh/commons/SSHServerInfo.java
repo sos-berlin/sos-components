@@ -32,13 +32,13 @@ public class SSHServerInfo {
             this.commandResult = new SOSCommandResult(serverVersion);
             // exitCode=null
             if (provider.getLogger().isDebugEnabled()) {
-                provider.getLogger().debug("[SSHServerInfo][%s=true][skip exec=%s][identifying OS from server version]%s", provider.getArguments()
-                        .getDisableAutoDetectShell().getName(), COMMANDO, serverVersion);
+                provider.getLogger().debug("%s[SSHServerInfo][%s=true][skip exec=%s][identifying OS from server version]%s", provider.getLogPrefix(),
+                        provider.getArguments().getDisableAutoDetectShell().getName(), COMMANDO, serverVersion);
             }
         } else {
             this.commandResult = provider.executeCommand(COMMANDO);
             if (provider.getLogger().isDebugEnabled()) {
-                provider.getLogger().debug("[SSHServerInfo]%s", SOSString.replaceNewLines(commandResult.toString(), " "));
+                provider.getLogger().debug("%s[SSHServerInfo]%s", provider.getLogPrefix(), SOSString.replaceNewLines(commandResult.toString(), " "));
             }
         }
         analyze(provider);
