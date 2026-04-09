@@ -275,7 +275,7 @@ public class DBLayerDailyPlannedOrders {
         }
     }
     
-    public void executeDeleteVariables(Stream<String> orderIdsStream, String controllerId) {
+    public synchronized void executeDeleteVariables(Stream<String> orderIdsStream, String controllerId) {
         if (orderIdsStream != null) {
             List<String> orderIds = orderIdsStream.collect(Collectors.toList());
             int size = orderIds.size();

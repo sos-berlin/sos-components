@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import com.sos.commons.exception.SOSMissingDataException;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.inventory.model.job.Environment;
@@ -135,20 +134,8 @@ public class StandardYADEJobResourceHandler {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[deploy]" + Globals.objectMapper.writeValueAsString(filter));
         }
-
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("deploy");
-            session.beginTransaction();
-            DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
-            impl.deploy(accessToken, filter, session, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
-            session.commit();
-        } catch (Exception e) {
-            Globals.rollback(session);
-            throw e;
-        } finally {
-            Globals.disconnect(session);
-        }
+        DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
+        impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
     }
 
     private static void checkResponse(JOCDefaultResponse response) throws Exception {
