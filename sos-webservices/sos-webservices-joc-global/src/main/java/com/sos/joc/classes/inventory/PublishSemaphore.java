@@ -66,7 +66,7 @@ public class PublishSemaphore {
                 public void run() {
                     semaphores.remove(accessToken);
                 }
-            }, TimeUnit.MINUTES.toMillis(2));
+            }, TimeUnit.SECONDS.toMillis(2));
         }
     }
     

@@ -251,7 +251,7 @@ public class StoreDeployments {
                 if(PublishSemaphore.getInstance().getSemaphore(accessToken)
                         .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
                     PublishSemaphore.remove(accessToken);
-                    LOGGER.debug("final remove semaphore from release with AT " + accessToken);
+                    LOGGER.debug("final remove semaphore from deploy with AT " + accessToken);
                 }
             } catch (Exception e) {
                 // DO NOTHING if semaphore release failed
