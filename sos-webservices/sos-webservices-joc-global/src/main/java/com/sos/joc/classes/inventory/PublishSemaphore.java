@@ -2,22 +2,21 @@ package com.sos.joc.classes.inventory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 
 public class PublishSemaphore {
     
     private static PublishSemaphore instance;
-    private Semaphore semaphore;
-    private Map<String, Semaphore> semaphores;
+    private Map<String, ReleaseDeploySemaphore> semaphores;
     private static final long WAIT_TIMEOUT = 30; // in seconds
     
     private PublishSemaphore() {
         if(semaphores == null) {
-            semaphores = new HashMap<String, Semaphore>();
+            semaphores = new HashMap<String, ReleaseDeploySemaphore>();
         }
     }
     
@@ -28,8 +27,8 @@ public class PublishSemaphore {
         return instance;
     }
     
-    public static boolean tryAcquire(String accessToken) throws InterruptedException {
-        return getInstance()._tryAcquire(accessToken);
+    public static boolean tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
+        return getInstance()._tryAcquire(accessToken, initialCaller);
     }
     
     public static int getQueueLength(String accessToken) {
@@ -49,13 +48,15 @@ public class PublishSemaphore {
         return getInstance()._availablePermits(accessToken);
     }
     
-    private boolean _tryAcquire(String accessToken) throws InterruptedException {
-        semaphores.putIfAbsent(accessToken, new Semaphore(1));
+    private boolean _tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
+        semaphores.putIfAbsent(accessToken, new ReleaseDeploySemaphore(1, initialCaller));
         return semaphores.get(accessToken).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
     }
     
     private void _release(String accessToken) {
-        semaphores.get(accessToken).release();
+        if(semaphores.containsKey(accessToken)) {
+            semaphores.get(accessToken).release();
+        }
     }
     
     private void _remove(String accessToken) {
@@ -77,7 +78,7 @@ public class PublishSemaphore {
     }
     
     private int _getQueueLength(String accessToken) {
-        if(semaphores.get(accessToken) != null) {
+        if(semaphores.containsKey(accessToken)) {
             return semaphores.get(accessToken).getQueueLength();
         } else {
             return 0;
@@ -85,8 +86,12 @@ public class PublishSemaphore {
     }
 
     
-    public Map<String, Semaphore> getSemaphores() {
+    public Map<String, ReleaseDeploySemaphore> getSemaphores() {
         return semaphores;
+    }
+    
+    public Optional<ReleaseDeploySemaphore> getSemaphore(String accessToken) {
+        return Optional.ofNullable(semaphores.get(accessToken));
     }
     
 }

@@ -69,7 +69,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
     }
 
     
-    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
+    public synchronized boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
             throws SOSHibernateException {
 
         boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();

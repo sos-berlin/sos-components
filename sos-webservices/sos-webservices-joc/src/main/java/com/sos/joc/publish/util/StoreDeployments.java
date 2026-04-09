@@ -32,6 +32,7 @@ import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.PublishSemaphore;
+import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -82,6 +83,7 @@ public class StoreDeployments {
             });
     public static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
     public static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
+    private static final String SEMAPHORE_ID = "DEPLOY";
 
     public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec, String account, String commitId, String controllerId,
             String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
@@ -187,6 +189,8 @@ public class StoreDeployments {
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
+                    PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
+                    .ifPresent(set -> workflowNames.removeAll(set));
                     // get the schedules referencing these workflows
                     List<String> workflowsWithSubmit = new ArrayList<String>();
                     List<String> workflowsWithoutSubmit = new ArrayList<String>();
@@ -244,7 +248,11 @@ public class StoreDeployments {
             Globals.disconnect(newHibernateSession);
             try {
                 PublishSemaphore.release(accessToken);
-                PublishSemaphore.remove(accessToken);
+                if(PublishSemaphore.getInstance().getSemaphore(accessToken)
+                        .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                    PublishSemaphore.remove(accessToken);
+                    LOGGER.debug("final remove semaphore from release with AT " + accessToken);
+                }
             } catch (Exception e) {
                 // DO NOTHING if semaphore release failed
             }
@@ -284,7 +292,6 @@ public class StoreDeployments {
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String dailyPlanDate,
             boolean includeLate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically

@@ -3,7 +3,6 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -26,7 +25,6 @@ public class DeployImpl extends ADeploy implements IDeploy {
     }
 
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) {
-        SOSHibernateSession hibernateSession = null;
         try {
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validate(filter, DeployFilter.class);
@@ -37,14 +35,11 @@ public class DeployImpl extends ADeploy implements IDeploy {
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
             
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, SEC_LVL, API_CALL);
+            deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
     
