@@ -26,6 +26,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
@@ -442,11 +443,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                                         }
                                     } catch (SOSHibernateException e) {
                                         getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                        LOGGER.warn("Order delete failed due to: ", e.getMessage());
+                                        LOGGER.warn("Order delete failed due to: ", e);
                                     }
                                 } else {
                                     getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                    LOGGER.warn("Order cancel failed due to missing permission.");
+                                    LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
                                 }
                             });
                 }

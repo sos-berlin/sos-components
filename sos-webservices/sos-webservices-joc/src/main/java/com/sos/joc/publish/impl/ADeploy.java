@@ -405,20 +405,15 @@ public abstract class ADeploy extends JOCResourceImpl {
                         try {
                             boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
                             if (!successful) {
-                                JocError je = getJocError();
-                                if (je != null && je.printMetaInfo() != null) {
-                                    LOGGER.info(je.printMetaInfo());
-                                }
+                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                                 LOGGER.warn("Order delete failed due to missing permission.");
                             }
                         } catch (SOSHibernateException e) {
-                            LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
+                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                            LOGGER.warn("delete of planned orders in db failed.", e);
                         }
                     } else {
-                        JocError je = getJocError();
-                        if (je != null && je.printMetaInfo() != null) {
-                            LOGGER.info(je.printMetaInfo());
-                        }
+                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                         LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
                     }
                 });

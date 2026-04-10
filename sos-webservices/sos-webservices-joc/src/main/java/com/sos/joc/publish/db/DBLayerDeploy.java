@@ -2074,7 +2074,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public boolean recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released, Long AuditLogId) {
+    public synchronized boolean recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released, Long AuditLogId) {
         try {
             if (released != null) {
                 getSession().delete(released);
