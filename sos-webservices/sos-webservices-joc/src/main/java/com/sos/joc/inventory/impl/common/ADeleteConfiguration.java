@@ -186,17 +186,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
             List<Long> workflowInvIds = new ArrayList<Long>();
-            DBItemInventoryConfiguration folder = null;
-            if(forDescriptors) {
-                folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
-            } else {
-                folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
-            }
+            DBItemInventoryConfiguration folder = getFolder(dbLayer, in.getPath(), forDescriptors);
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             
             if (!forDescriptors) {
-                final DBItemInventoryConfiguration finalFolder = folder;
-                List<CompletableFuture<Void>> futures = cancelOrders(accessToken, finalFolder, in.getCancelOrdersDateFrom(),dbLayer);
+                List<CompletableFuture<Void>> futures = cancelOrders(accessToken, folder, in.getCancelOrdersDateFrom(),dbLayer);
                 CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
                     SOSHibernateSession futureSession = null;
                     try {
@@ -204,14 +198,14 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         futureSession.setAutoCommit(false);
                         InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
                         Globals.beginTransaction(futureSession);
-                        ReleaseResourceImpl.delete(finalFolder, futureDbLayer, dbAuditLog, false, auditLogObjectsLogging, false);
+                        ReleaseResourceImpl.delete(folder, futureDbLayer, dbAuditLog, false, auditLogObjectsLogging, false);
                         // TODO restrict to allowed Controllers
-                        List<DBItemInventoryConfiguration> deployables = futureDbLayer.getFolderContent(finalFolder.getPath(), true, 
+                        List<DBItemInventoryConfiguration> deployables = futureDbLayer.getFolderContent(folder.getPath(), true, 
                                 JocInventory.getDeployableTypes(), forDescriptors);
                         if (deployables != null && !deployables.isEmpty()) {
                             String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                                     .getConfigurationGlobalsJoc()) : getAccount();
-                            Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.deleteFolder(request, finalFolder.getPath(), true,
+                            Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.deleteFolder(request, folder.getPath(), true,
                                     Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(futureSession), account, accessToken, getJocError(),
                                     dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
                             
@@ -223,13 +217,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                             }
                         }
                         Globals.commit(futureSession);
-                        Globals.beginTransaction(futureSession);
-                        JocInventory.deleteEmptyFolders(dbLayer, finalFolder.getPath(), forDescriptors);
-                        Globals.commit(futureSession);
-                        Globals.beginTransaction(futureSession);
+                        futureSession.setAutoCommit(true);
+                        JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
                         auditLogObjectsLogging.log();
-                        postEvents(finalFolder, workflowInvIds, futureSession);
-                        Globals.commit(futureSession);
+                        postEvents(folder, workflowInvIds, futureSession);
                     } catch (Exception e) {
                         Globals.rollback(futureSession);
                         throw new JocException(e);
@@ -248,9 +239,6 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 postEvents(folder, workflowInvIds, session);
             }
             return responseStatusJSOk(Date.from(Instant.now()));
-        } catch (Throwable e) {
-            Globals.rollback(session);
-            throw e;
         } finally {
             Globals.disconnect(session);
         }
@@ -268,6 +256,13 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
     
+    private DBItemInventoryConfiguration getFolder (InventoryDBLayer dbLayer, String path, boolean forDescriptors) throws Exception {
+        if(forDescriptors) {
+            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
+        } else {
+            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.FOLDER, folderPermissions);
+        }
+    }
     public JOCDefaultResponse delete(String accessToken, RequestFilters in, String request) throws Exception {
         SOSHibernateSession session = null;
         try {
