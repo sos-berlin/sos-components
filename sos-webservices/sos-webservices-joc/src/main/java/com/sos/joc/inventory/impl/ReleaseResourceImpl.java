@@ -39,6 +39,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
@@ -152,6 +153,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 keys.stream().forEach(key -> renamedOldSchedulePathsWithWorkflowNames.remove(key));
                 // cancel based on the old name of renamed schedules
                 if (!renamedOldSchedulePathsWithWorkflowNames.isEmpty()) {
+                    // TODO: synchronization needed
                     cancelOrdersForRenamedSchedules(in.getAddOrdersDateFrom(), renamedOldSchedulePathsWithWorkflowNames, accessToken);
                 }
                 errors = new ArrayList<>();
@@ -765,10 +767,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                         try {
                                             boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false);
                                             if (!successful) {
-                                                JocError je = getJocError();
-                                                if (je != null && je.printMetaInfo() != null) {
-                                                    LOGGER.info(je.printMetaInfo());
-                                                }
+                                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                                                 LOGGER.warn("Order delete failed due to missing permission.");
                                             }
                                         } catch (SOSHibernateException e) {
@@ -776,11 +775,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                             LOGGER.warn("Order delete failed due to: ", e);
                                         }
                                     } else {
-                                        JocError je = getJocError();
-                                        if (je != null && je.printMetaInfo() != null) {
-                                            LOGGER.info(je.printMetaInfo());
-                                        }
-                                        LOGGER.warn(either.getLeft().messageWithCause());
+                                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                        LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
                                     }
                                 });
                     }
@@ -836,17 +832,16 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                 try {
                                     boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
                                     if (!successful) {
-                                        JocError je = getJocError();
-                                        if (je != null && je.printMetaInfo() != null) {
-                                            LOGGER.warn(je.printMetaInfo());
-                                        }
+                                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                                         LOGGER.warn("Order delete failed due to missing permission.");
                                     }
                                 } catch (SOSHibernateException e) {
-                                    LOGGER.warn("Deletion of orders failed.", e);
+                                    getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                    LOGGER.warn("generation of new orders failed.", e);
                                 }
                             } else {
-                                LOGGER.warn(either.getLeft().messageWithCause());
+                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
                         }));
                     }
