@@ -223,13 +223,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                             }
                         }
                         Globals.commit(futureSession);
-                        Globals.beginTransaction(futureSession);
+                        futureSession.setAutoCommit(true);
                         JocInventory.deleteEmptyFolders(dbLayer, finalFolder.getPath(), forDescriptors);
-                        Globals.commit(futureSession);
-                        Globals.beginTransaction(futureSession);
                         auditLogObjectsLogging.log();
                         postEvents(finalFolder, workflowInvIds, futureSession);
-                        Globals.commit(futureSession);
                     } catch (Exception e) {
                         Globals.rollback(futureSession);
                         throw new JocException(e);
@@ -248,9 +245,6 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 postEvents(folder, workflowInvIds, session);
             }
             return responseStatusJSOk(Date.from(Instant.now()));
-        } catch (Throwable e) {
-            Globals.rollback(session);
-            throw e;
         } finally {
             Globals.disconnect(session);
         }
