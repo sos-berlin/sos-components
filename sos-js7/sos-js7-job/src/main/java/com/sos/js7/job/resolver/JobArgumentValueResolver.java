@@ -19,9 +19,7 @@ public abstract class JobArgumentValueResolver implements IJobArgumentValueResol
      * @param arg JobArgument to be debugged. */
     public static void debugArgument(OrderProcessStepLogger logger, String resolverIdentifier, JobArgument<?> arg) {
         if (logger.isDebugEnabled()) {
-            logger.debug("[" + resolverIdentifier + "][resolve][argument][name=" + arg.getName() + ",clazzType=" + arg.getClazzType()
-                    + ",argumentType=" + arg.getArgumentType() + ",argumentFlatType=" + arg.getArgumentFlatType() + "]value=" + arg
-                            .getDisplayValue());
+            logger.debug("[" + resolverIdentifier + "][resolve][argument]"+arg.toString(true));
         }
     }
 }
