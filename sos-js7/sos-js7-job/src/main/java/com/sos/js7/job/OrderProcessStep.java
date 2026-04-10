@@ -37,6 +37,7 @@ import com.sos.js7.job.exception.JobArgumentException;
 import com.sos.js7.job.exception.JobProblemException;
 import com.sos.js7.job.exception.JobRequiredArgumentMissingException;
 import com.sos.js7.job.resolver.JobArgumentValueResolverCache;
+import com.sos.js7.job.resolver.reference.ArgumentReferenceResolver;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -1354,6 +1355,8 @@ public class OrderProcessStep<A extends JobArguments> {
                             .toString()), ex);
                 }
             }
+
+            ArgumentReferenceResolver.resolve(logger, allArguments);
         }
     }
 

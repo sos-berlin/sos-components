@@ -44,8 +44,8 @@ public class EncryptionDecryptArguments extends EncryptionArguments {
      * <p>
      * This method internally calls {@link #decryptIfNeeded(String, String, PrivateKey)} for the actual decryption logic.
      *
-     * @param arg the {@link SOSArgument} whose value should be decrypted; if {@code null} or its value is {@code null}, nothing is done
-     * @param privKey the private key used for decryption; if {@code null}, no decryption occurs
+     * @param arg the {@link SOSArgument} whose value should be decrypted: if {@code null} or its value is {@code null}, nothing is done
+     * @param privKey the private key used for decryption: if {@code null}, no decryption occurs
      * @throws Exception if decryption fails */
     public static void decryptIfNeeded(SOSArgument<?> arg, PrivateKey privKey) throws Exception {
         if (arg == null || arg.getValue() == null) {
@@ -71,8 +71,8 @@ public class EncryptionDecryptArguments extends EncryptionArguments {
      * If no encryption is detected, the original value is returned unchanged.
      *
      * @param propertyName the name of the property, used as context for decryption; if {@code null}, "decrypt" is used
-     * @param propertyValue the value to decrypt; can contain a single encrypted value or multiple decrypt(enc:...) patterns
-     * @param privKey the private key used for decryption; if {@code null}, the propertyValue is returned unchanged
+     * @param propertyValue the value to decrypt: can contain a single encrypted value or multiple decrypt(enc:...) patterns
+     * @param privKey the private key used for decryption: if {@code null}, the propertyValue is returned unchanged
      * @return the decrypted string if encryption patterns are detected, otherwise the original propertyValue
      * @throws Exception if decryption fails for any detected encrypted segment */
     public static String decryptIfNeeded(String propertyName, String propertyValue, PrivateKey privKey) throws Exception {

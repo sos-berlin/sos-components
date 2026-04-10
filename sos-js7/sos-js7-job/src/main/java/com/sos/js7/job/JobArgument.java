@@ -406,7 +406,7 @@ public class JobArgument<T> extends SOSArgument<T> {
         return scope != null && scope.equals(Scope.ORDER_PREPARATION);
     }
 
-    protected void setArgumentType() throws Exception {
+    public void setArgumentType() throws Exception {
         try {
             setArgumentType(getClazzType());
         } catch (Exception e) {

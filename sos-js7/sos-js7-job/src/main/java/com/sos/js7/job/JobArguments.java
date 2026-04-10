@@ -91,8 +91,8 @@ public class JobArguments {
      * <p>
      * This method internally calls {@link EncryptionDecryptArguments#decryptIfNeeded(SOSArgument, PrivateKey)} for the actual decryption logic.
      *
-     * @param arg the {@link SOSArgument} whose value should be decrypted; if {@code null} or its value is {@code null}, nothing is done
-     * @param privKey the private key used for decryption; if {@code null}, no decryption occurs
+     * @param arg the {@link SOSArgument} whose value should be decrypted: if {@code null} or its value is {@code null}, nothing is done
+     * @param privKey the private key used for decryption: if {@code null}, no decryption occurs
      * @throws Exception if decryption fails */
     public static void decryptIfNeeded(SOSArgument<?> arg, String privKey) throws Exception {
         EncryptionDecryptArguments.decryptIfNeeded(arg, KeyUtil.getPrivateKey(privKey));
