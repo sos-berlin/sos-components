@@ -8,6 +8,7 @@ import com.sos.js7.converter.commons.report.simple.SimpleReportWriter;
 
 public class ReportWriter extends SimpleReportWriter {
 
+    public static final String FILE_NAME_STATE_RECURSION = "Report[ERROR]-StateRecursion-Splitting.Into.Several.Workflows.txt";
     public static final String FILE_NAME_CALENDARS = "Report-Calendars.txt";
     public static final String FILE_NAME_CYCLIC_WORKFLOWS = "Report-CyclicWorkflows.txt";
 

@@ -356,7 +356,7 @@ public class JS12JS7Converter {
 
             c.convertYade(result);
             c.convertStandalone(result);
-            c.convertJobChains(result);
+            c.convertJobChains(result, reportDir);
             c.addJobResources(result);
             c.addLocks(result);
             c.addSchedules(result, reportDir);
@@ -1095,7 +1095,11 @@ public class JS12JS7Converter {
         ConverterObject<StandaloneJob> o = converterObjects.getStandalone();
         String workflowName;
         for (Map.Entry<String, StandaloneJob> entry : o.getUnique().entrySet()) {
-            workflowName = convertStandaloneWorkflow(result, entry.getKey(), entry.getValue());
+            try {
+                workflowName = convertStandaloneWorkflow(result, entry.getKey(), entry.getValue());
+            } catch (Throwable e) {
+                logException(entry.getKey(), entry.getValue(), e);
+            }
         }
 
         LOGGER.info("[convertStandalone]duplicates=" + o.getDuplicates().size());
@@ -1106,19 +1110,22 @@ public class JS12JS7Converter {
                 for (StandaloneJob jn : entry.getValue()) {
                     String js7Name = getDuplicateName(entry.getKey(), counter);
                     LOGGER.info("[convertStandalone][duplicate][" + entry.getKey() + "][js7Name=" + js7Name + "][path]" + jn.getPath());
-                    workflowName = convertStandaloneWorkflow(result, js7Name, jn);
-                    if (workflowName != null) {
+                    try {
+                        workflowName = convertStandaloneWorkflow(result, js7Name, jn);
+                        if (workflowName != null) {
+                            String fo = "";
+                            try {
+                                fo = " (first occurrence=" + o.getUnique().get(entry.getKey()).getPath().toString() + ")";
+                            } catch (Throwable e) {
 
-                        String fo = "";
-                        try {
-                            fo = " (first occurrence=" + o.getUnique().get(entry.getKey()).getPath().toString() + ")";
-                        } catch (Throwable e) {
+                            }
+                            ConverterReport.INSTANCE.addAnalyzerRecord(jn.getPath(), "[DUPLICATE JS1]StandaloneJob=" + entry.getKey(), "js7Name="
+                                    + js7Name + fo);
 
+                            counter++;
                         }
-                        ConverterReport.INSTANCE.addAnalyzerRecord(jn.getPath(), "[DUPLICATE JS1]StandaloneJob=" + entry.getKey(), "js7Name="
-                                + js7Name + fo);
-
-                        counter++;
+                    } catch (Throwable e) {
+                        logException(entry.getKey(), jn, e);
                     }
                 }
             }
@@ -2745,10 +2752,42 @@ public class JS12JS7Converter {
         }
     }
 
-    private void convertJobChains(JS7ConverterResult result) {
+    private void logException(String name, StandaloneJob st, Throwable e) {
+        try {
+            LOGGER.error("[standalone][" + st.getPath() + "]" + e, e);
+        } catch (Throwable ex) {
+            LOGGER.error("[standalone][" + name + "]" + e, e);
+        }
+        try {
+            ConverterReport.INSTANCE.addErrorRecord(st.getPath(), "[standalone " + st.getName() + "]", e);
+        } catch (Throwable ex) {
+            ConverterReport.INSTANCE.addErrorRecord(null, "[standalone " + name + "]", e);
+        }
+    }
+
+    private void logException(String name, JobChain jc, Throwable e) {
+        try {
+            LOGGER.error("[jobChain][" + jc.getPath() + "]" + e, e);
+        } catch (Throwable ex) {
+            LOGGER.error("[jobChain][" + name + "]" + e, e);
+        }
+        try {
+            ConverterReport.INSTANCE.addErrorRecord(jc.getPath(), "[jobChain " + jc.getName() + "]", e);
+        } catch (Throwable ex) {
+            ConverterReport.INSTANCE.addErrorRecord(null, "[jobChain " + name + "]", e);
+        }
+    }
+
+    private void convertJobChains(JS7ConverterResult result, Path reportDir) {
+        ReportWriter rw = new ReportWriter(LOGGER, "convertCalendars", reportDir.resolve(ReportWriter.FILE_NAME_STATE_RECURSION));
+        rw.cleanup();
         ConverterObject<JobChain> o = converterObjects.getJobChains();
         for (Map.Entry<String, JobChain> entry : o.getUnique().entrySet()) {
-            convertJobChainWorkflow(result, entry.getKey(), entry.getValue());
+            try {
+                convertJobChainWorkflow(result, entry.getKey(), entry.getValue(), rw);
+            } catch (Throwable e) {
+                logException(entry.getKey(), entry.getValue(), e);
+            }
         }
 
         LOGGER.info("[convertJobChains]duplicates=" + o.getDuplicates().size());
@@ -2766,7 +2805,11 @@ public class JS12JS7Converter {
 
                     }
                     ConverterReport.INSTANCE.addAnalyzerRecord(jn.getPath(), "[DUPLICATE JS1]JobChain=" + entry.getKey(), "js7Name=" + js7Name + fo);
-                    convertJobChainWorkflow(result, js7Name, jn);
+                    try {
+                        convertJobChainWorkflow(result, js7Name, jn, rw);
+                    } catch (Throwable e) {
+                        logException(entry.getKey(), jn, e);
+                    }
                     counter++;
                 }
             }
@@ -2857,7 +2900,7 @@ public class JS12JS7Converter {
         return name;
     }
 
-    private void convertJobChainWorkflow(JS7ConverterResult result, String js7Name, JobChain jobChain) {
+    private void convertJobChainWorkflow(JS7ConverterResult result, String js7Name, JobChain jobChain, ReportWriter rw) {
         String method = "convertJobChainWorkflow";
         LOGGER.info("[" + method + "][" + jobChain.getName() + "]" + jobChain.getPath());
 
@@ -2949,13 +2992,13 @@ public class JS12JS7Converter {
         String startState = getNodesStartState(allStates);
         Map<String, JobChainStateHelper> notUsedStates = new LinkedHashMap<>();
         convertJobChainWorkflow(result, js7Name, jobChain, startState, allStates, notUsedStates, uniqueJobs, fileOrderSinkStates, fileOrderSources,
-                true, null);
+                true, null, rw);
     }
 
     private void convertJobChainWorkflow(JS7ConverterResult result, String js7Name, JobChain jobChain, String startState,
             Map<String, JobChainStateHelper> allStates, Map<String, JobChainStateHelper> notUsedStates, Map<String, JobChainJobHelper> uniqueJobs,
-            Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates, List<JobChainNodeFileOrderSource> fileOrderSources, boolean isMailJobChain,
-            JobChainStateHelper currentNotUsedState) {
+            Map<String, JobChainNodeFileOrderSink> fileOrderSinkStates, List<JobChainNodeFileOrderSource> fileOrderSources, boolean isMainJobChain,
+            JobChainStateHelper currentNotUsedState, ReportWriter rw) {
         String method = "convertJobChainWorkflow";
         List<Instruction> in = new ArrayList<>();
         Map<String, List<Instruction>> workflowInstructions = new LinkedHashMap<>();
@@ -2986,7 +3029,7 @@ public class JS12JS7Converter {
             });
         }
 
-        if (isMailJobChain) {
+        if (isMainJobChain) {
             for (Map.Entry<String, JobChainStateHelper> e : allStates.entrySet()) {
                 if (e.getValue().getJS1JobName() == null) {
                     continue;
@@ -3117,7 +3160,7 @@ public class JS12JS7Converter {
         }
 
         if (workflowPath == null) {
-            if (isMailJobChain) {
+            if (isMainJobChain) {
                 workflowPath = getWorkflowPathFromJS1Path(jobChain.getPath(), js7Name);
             } else {
                 workflowPath = getWorkflowPathFromJS1Path(jobChain.getPath(), js7Name + NAME_CONCAT_CHARACTER + currentNotUsedState.getJS7State());
@@ -3133,11 +3176,12 @@ public class JS12JS7Converter {
         result.add(workflowPath, w, false);
 
         if (notUsedStates.size() > 0) {
-            if (isMailJobChain) {
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "Splitting into several workflows", "START");
-
+            if (isMainJobChain) {
+                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "Splitting into several workflows", "START");
+                rw.writeErrorLine(LOGGER, "convertJobChainWorkflow", "Splitting into several workflows (" + jobChain.getPath() + ")");
+                rw.writeErrorLine(LOGGER, "convertJobChainWorkflow", "    " + workflowPath);
             }
-            ConverterReport.INSTANCE.addAnalyzerRecord(null, workflowName);
+            ConverterReport.INSTANCE.addWarningRecord(null, workflowName);
 
             String nus = getNodesStartState(notUsedStates);
             if (nus == null) {
@@ -3146,10 +3190,11 @@ public class JS12JS7Converter {
             JobChainStateHelper h = notUsedStates.get(nus);
             notUsedStates.remove(nus);
 
-            LOGGER.info("----------------------------------NotUsedStates=" + nus);
+            // LOGGER.info("----------------------------------NotUsedStates=" + nus);
+            // rw.writeLine(LOGGER, "convertJobChainWorkflow", " " + nus);
 
             convertJobChainWorkflow(result, js7Name, jobChain, nus, allStates, notUsedStates, uniqueJobs, fileOrderSinkStates, fileOrderSources,
-                    false, h);
+                    false, h, rw);
 
             /*
              * Path mainWorkflowPath = getWorkflowPathFromJS1Path(result, jobChain.getPath(), js7Name);
@@ -3159,9 +3204,10 @@ public class JS12JS7Converter {
              * "Splitting into several workflows", "END");
              */
         } else {
-            if (!isMailJobChain) {
-                ConverterReport.INSTANCE.addAnalyzerRecord(null, workflowName);
-                ConverterReport.INSTANCE.addAnalyzerRecord(jobChain.getPath(), "Splitting into several workflows", "END");
+            if (!isMainJobChain) {
+                ConverterReport.INSTANCE.addWarningRecord(null, workflowName);
+                ConverterReport.INSTANCE.addWarningRecord(jobChain.getPath(), "Splitting into several workflows", "END");
+                rw.writeErrorLine(LOGGER, "convertJobChainWorkflow", "    " + workflowPath);
             }
         }
     }
@@ -3231,11 +3277,25 @@ public class JS12JS7Converter {
     private void convertJobChainFileOrderSources(JS7ConverterResult result, JobChain jobChain, List<JobChainNodeFileOrderSource> fileOrderSources,
             Path workflowPath, String workflowName, JS7Agent js7Agent) {
         if (fileOrderSources.size() > 0) {
-            boolean useNextState = fileOrderSources.size() > 1;
+            int size = fileOrderSources.size();
+            boolean useNextState = size > 1 && fileOrderSources.stream().map(e -> {
+                String ns = e.getNextState();
+                return ns == null ? "" : ns;
+            }).distinct().count() > 1;
+            int i = 0;
             for (JobChainNodeFileOrderSource n : fileOrderSources) {
+                if (n.isJS7Generated()) {
+                    continue;
+                }
+                n.setJS7Generated();
+
+                i++;
                 String name = workflowName;
                 if (useNextState) {
                     name = name + NAME_CONCAT_CHARACTER + n.getNextState();
+                }
+                if (size > 1) {
+                    name += NAME_CONCAT_CHARACTER + SOSString.zeroPad(i, String.valueOf(size).length());
                 }
                 name = JS7ConverterHelper.getJS7ObjectName(n.getJobChainPath(), name);
                 FileOrderSource fos = new FileOrderSource();
@@ -3413,7 +3473,16 @@ public class JS12JS7Converter {
         JobChainStateHelper h = allStates.get(js1StartState);
         boolean hasConfigOrderParams = jobChain.getConfig() != null && jobChain.getConfig().hasOrderParams();
         boolean hasConfigProcess = jobChain.getConfig() != null && jobChain.getConfig().hasProcess();
+
+        int counter = 0;
         while (h != null) {
+            if (counter > 10_000) {
+                LOGGER.error("[getNodesInstructions][improper conversion, recursion detected][" + jobChain.getPath() + "]js1StartState="
+                        + js1StartState + ", hasConfigOrderParams=" + hasConfigOrderParams + ", hasConfigProcess=" + hasConfigProcess);
+                return new ArrayList<>();
+            }
+            counter++;
+
             JobChainJobHelper jh = uniqueJobs.get(h.getJS1JobName());
             if (jh == null) {
                 return new ArrayList<>();
@@ -3548,6 +3617,7 @@ public class JS12JS7Converter {
                     if (fileOrderSinkStates.containsKey(h.getJS1ErrorState())) {
                         nj = getFileOrderSinkNamedJob(fileOrderSinkStates.get(h.getJS1ErrorState()), h.getJS1ErrorState(), fileOrderSinkJobs);
                     }
+
                     tryCatchHelper.add(h, workflowInstructions.get(h.getJS1State()), ph, nj);
 
                     if (isDebugEnabled) {

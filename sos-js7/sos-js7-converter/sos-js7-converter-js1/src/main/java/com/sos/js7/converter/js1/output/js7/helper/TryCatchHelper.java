@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.Finish;
 import com.sos.inventory.model.instruction.Instruction;
@@ -15,6 +18,8 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
 
 public class TryCatchHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TryCatchHelper.class);
 
     private final Map<String, JobChainStateHelper> allStates;
     // <error state,instruction>
@@ -78,8 +83,7 @@ public class TryCatchHelper {
             }
         }
         ph.tryCatch = tryCatch;
-        setStates(allStates, ph);
-
+        setStates(sh, allStates, ph);
         tryCatchParts.put(ph.startState.getJS1ErrorState(), ph);
     }
 
@@ -91,12 +95,24 @@ public class TryCatchHelper {
         }
     }
 
-    private void setStates(Map<String, JobChainStateHelper> allStates, TryCatchPartHelper ph) {
+    private void setStates(JobChainStateHelper sh, Map<String, JobChainStateHelper> allStates, TryCatchPartHelper ph) {
         JobChainStateHelper h = allStates.get(ph.startState.getJS1State());
         boolean checkErrorState = checkErrorState(allStates, h);
+
+        // Set<String> allNextStates = new HashSet<>();
+        int counter = 0;
         while (h != null) {
+            counter++;
+            String state = h.getJS1State();
             String nextState = h.getJS1NextState();
             String errorState = h.getJS1ErrorState();
+
+            // String key = nextState + errorState;
+            if (counter > 10_000) {
+                LOGGER.error("[TryCatchHelper][setStates][improper conversion, recursion detected][" + sh.getJS1JobChainPath()
+                        + "][already processed]state=" + state + ", nextState=" + nextState + ", errorState=" + errorState);
+                return;
+            }
 
             if (nextState.equals(ph.startState.getJS1ErrorState())) {
                 return;
@@ -112,6 +128,9 @@ public class TryCatchHelper {
                         ph.tryStates.add(h.getJS1State());
                     } else {
                         ph.catchStates.add(h.getJS1State());
+                    }
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("[TryCatchHelper][setStates]" + state + ", nextState=" + nextState + ", errorState=" + errorState);
                     }
                 }
             } else {
