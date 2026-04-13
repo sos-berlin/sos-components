@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
@@ -366,16 +367,24 @@ public class SOSHibernateTest {
     }
 
     public static SOSHibernateFactory createFactory() throws Exception {
-        return createFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"));
+        return createFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"), DBLayer.getJocClassMapping());
     }
 
     public static SOSHibernateFactory createFactory(Path hibernateFile) throws Exception {
+        return createFactory(hibernateFile, DBLayer.getJocClassMapping());
+    }
+
+    public static SOSHibernateFactory createFactory(SOSClassList mapping) throws Exception {
+        return createFactory(Paths.get("src/test/resources/hibernate.cfg.mysql.xml"), mapping);
+    }
+
+    public static SOSHibernateFactory createFactory(Path hibernateFile, SOSClassList mapping) throws Exception {
         // System.setProperty("java.util.logging.config.file", Paths.get("src/test/resources/mssql/logging.properties").toString());
         tryDoInsertIfH2(hibernateFile, false);
 
         SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);
         // factory.addClassMapping(DBItemInventoryTag.class);
-        factory.addClassMapping(DBLayer.getJocClassMapping());
+        factory.addClassMapping(mapping);
         // factory.setAutoCommit(true);
         factory.build(false);
         LOGGER.info("[CONFIGURATION][getProperties    ]" + filteredProperties(factory.getConfiguration().getProperties()));
