@@ -1,6 +1,5 @@
 package com.sos.js7.converter.js1.output.js7.helper;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +13,6 @@ import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Job;
 import com.sos.js7.converter.commons.JS7ConverterHelper;
 import com.sos.js7.converter.commons.config.json.JS7Agent;
-import com.sos.js7.converter.commons.report.ConverterReport;
 import com.sos.js7.converter.js1.common.Script;
 import com.sos.js7.converter.js1.common.job.ACommonJob;
 import com.sos.js7.converter.js1.common.job.StandaloneJob;
@@ -50,7 +48,9 @@ public class JobHelper {
     private final boolean standalone;
 
     private JavaJITLJobHelper javaJITLJob;
+    private JavaCustomJobHelper javaCustomJob;
     private ShellJobHelper shellJob;
+
     private Job js7Job;
     private JS7Agent js7Agent;
     private Variables js7OrderVariables;
@@ -143,9 +143,7 @@ public class JobHelper {
             case Script.JAVA_JITL_SYNCHRONIZER_JOB:
                 break;
             default:
-                shellJob = new ShellJobHelper(language, jc);
-                Path p = jobChain == null ? js1Job.getPath() : jobChain.getPath();
-                ConverterReport.INSTANCE.addWarningRecord(p, "[" + language + " job " + jc + "]", "not implemented yet, a shell job created");
+                javaCustomJob = new JavaCustomJobHelper(jc);
                 break;
             }
             break;
@@ -167,11 +165,19 @@ public class JobHelper {
     }
 
     public boolean createJS7Job() {
-        return javaJITLJob != null || shellJob != null;
+        return isJavaJob() || shellJob != null;
+    }
+
+    public boolean isJavaJob() {
+        return javaJITLJob != null || javaCustomJob != null;
     }
 
     public JavaJITLJobHelper getJavaJITLJob() {
         return javaJITLJob;
+    }
+
+    public JavaCustomJobHelper getJavaCustomJob() {
+        return javaCustomJob;
     }
 
     public ShellJobHelper getShellJob() {
@@ -472,6 +478,20 @@ public class JobHelper {
         public String getParamName() {
             return paramName;
         }
+    }
+
+    public class JavaCustomJobHelper {
+
+        private final String className;
+
+        private JavaCustomJobHelper(String className) {
+            this.className = className;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
     }
 
     public class ShellJobHelper {
