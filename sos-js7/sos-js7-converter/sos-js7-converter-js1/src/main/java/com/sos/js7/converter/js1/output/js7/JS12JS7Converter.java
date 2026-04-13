@@ -2139,12 +2139,16 @@ public class JS12JS7Converter {
     }
 
     private void setExecutable(Job j, JobHelper jh, JobChainJobHelper jcjh) {
-        j.setExecutable(jh.getJavaJITLJob() == null ? getExecutableScript(jh, jcjh) : getInternalExecutable(jh));
+        j.setExecutable(jh.isJavaJob() ? getInternalExecutable(jh) : getExecutableScript(jh, jcjh));
     }
 
     private ExecutableJava getInternalExecutable(JobHelper jh) {
         ExecutableJava ej = new ExecutableJava();
-        ej.setClassName(jh.getJavaJITLJob().getNewJavaClass());
+        if (jh.getJavaJITLJob() != null) {
+            ej.setClassName(jh.getJavaJITLJob().getNewJavaClass());
+        } else if (jh.getJavaCustomJob() != null) {
+            ej.setClassName(jh.getJavaCustomJob().getClassName());
+        }
         setJobArguments(jh, null);
         ej.setArguments(jh.getJS7JobEnvironment());
 
@@ -2233,6 +2237,7 @@ public class JS12JS7Converter {
                     }
                 }
             }
+
             for (Map.Entry<String, String> e : params.entrySet()) {
                 try {
                     String name = e.getKey();
