@@ -46,18 +46,18 @@ public class HibernateProxyTest {
         // LOGGER.info(r.getStdOut());
 
         List<String> l = new ArrayList<>();
-        Scanner s = new Scanner(r.getStdOut());
-        while (s.hasNext()) {
-            String line = s.next();
-            if (line.contains("com.sos.")) {
-                if (line.contains("$HibernateProxy")) {
-                    LOGGER.info("### com.sos...$HibernateProxy$... #########################");
-                    l.add(line);
+        try (Scanner s = new Scanner(r.getStdOut())) {
+            while (s.hasNext()) {
+                String line = s.next();
+                if (line.contains("com.sos.")) {
+                    if (line.contains("$HibernateProxy")) {
+                        LOGGER.info("### com.sos...$HibernateProxy$... #########################");
+                        l.add(line);
+                    }
+                    LOGGER.info(line);
                 }
-                LOGGER.info(line);
             }
         }
-
         LOGGER.info("### com.sos...$HibernateProxy$... #########################");
         if (l.size() == 0) {
             LOGGER.info("not found");
