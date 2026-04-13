@@ -614,7 +614,11 @@ public class JS7RunTimeConverter {
             if (SOSString.isEmpty(month.getMonth())) {
                 m.getMonths().addAll(toMonthNumbers(Arrays.asList(month.getMonthMonths())));
             } else {
-                m.getMonths().addAll(toMonthNumbers(List.of(month.getMonth())));
+                try {
+                    m.getMonths().addAll(toMonthNumbers(List.of(month.getMonth())));
+                } catch (Exception e) {
+                    LOGGER.error("[" + js7SchedulePath + "][" + month.getMonth() + "]" + e, e);
+                }
             }
 
             if (!SOSCollection.isEmpty(month.getPeriods())) {
@@ -675,7 +679,15 @@ public class JS7RunTimeConverter {
 
     private static List<Integer> toMonthNumbers(List<String> months) {
         // java.time.Month enum: // 1 = JANUARY, ..., 12 = DECEMBER
-        return months.stream().map(x -> java.time.Month.valueOf(x.toUpperCase()).getValue()).collect(Collectors.toList());
+        // return months.stream().map(x -> java.time.Month.valueOf(x.toUpperCase()).getValue()).collect(Collectors.toList());
+        return months.stream().map(x -> {
+            String m = x.trim();
+            try {
+                return java.time.Month.of(Integer.parseInt(m)).getValue();
+            } catch (NumberFormatException e) {
+                return java.time.Month.valueOf(m.toUpperCase()).getValue();
+            }
+        }).collect(Collectors.toList());
     }
 
     private static void convertUltimos(List<AssignedCalendars> working, String timeZone,

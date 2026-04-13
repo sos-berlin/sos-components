@@ -1,5 +1,6 @@
 package com.sos.js7.converter.js1.output.js7.helper;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class JobChainStateHelper {
     private final String js1NextState;
     private final String js1ErrorState;
     private final String js1JobName;
+    private final Path js1JobChainPath;
     private final boolean js1NextStateEqualsErrorState;
 
     private final String js7State;
@@ -41,6 +43,7 @@ public class JobChainStateHelper {
         } else {
             this.js1NextStateEqualsErrorState = false;
         }
+        this.js1JobChainPath = node.getJobChainPath();
 
         this.js7State = getJS7Name(node, this.js1State);
         this.onError = node.getOnError() == null ? "" : node.getOnError();
@@ -80,6 +83,10 @@ public class JobChainStateHelper {
 
     public String getJS1JobName() {
         return js1JobName;
+    }
+
+    public Path getJS1JobChainPath() {
+        return js1JobChainPath;
     }
 
     public String getJS7State() {

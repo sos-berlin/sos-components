@@ -54,6 +54,16 @@ public class SimpleReportWriter {
         writeLineToFile(msg);
     }
 
+    public void writeErrorLine(Logger logger, String caller, String msg) {
+        logger.error("[" + caller + "]" + msg);
+        writeLineToFile(msg);
+    }
+    
+    public void writeWarnLine(Logger logger, String caller, String msg) {
+        logger.warn("[" + caller + "]" + msg);
+        writeLineToFile(msg);
+    }
+    
     public void writeDelimiterLine() {
         try {
             SOSPath.appendLine(file, LINE_DELIMITER);

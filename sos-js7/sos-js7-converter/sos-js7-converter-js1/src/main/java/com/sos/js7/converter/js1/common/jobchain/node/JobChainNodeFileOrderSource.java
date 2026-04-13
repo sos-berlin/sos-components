@@ -26,6 +26,8 @@ public class JobChainNodeFileOrderSource extends AJobChainNode {
     private Boolean alertWhenDirectoryMissing;
     private String delayAfterError; // seconds
 
+    private boolean js7Generated;
+
     protected JobChainNodeFileOrderSource(Path jobChainPath, JobChainNodeType type, Node node) {
         super(jobChainPath, type, node);
         directory = JS7ConverterHelper.stringValue(getAttributes().get(ATTR_DIRECTORY));
@@ -65,4 +67,11 @@ public class JobChainNodeFileOrderSource extends AJobChainNode {
         return delayAfterError;
     }
 
+    public void setJS7Generated() {
+        js7Generated = true;
+    }
+
+    public boolean isJS7Generated() {
+        return js7Generated;
+    }
 }
