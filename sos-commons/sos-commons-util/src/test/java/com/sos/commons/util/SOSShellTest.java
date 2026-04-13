@@ -36,9 +36,14 @@ public class SOSShellTest {
     @Ignore
     @Test
     public void testSystemEncoding() {
+        System.setProperty("console.encoding", "UTF-16LE");
+        System.setProperty("sun.jnu.encoding", "UTF-16LE");
+
         String command = "dir D:";
-        command = "echo ÄÜ-ЩЪ-日本語";
+        // command = "chcp 65001 && echo ÄÜ-ЩЪ-日本語";
+        command = "@cmd /u /C java";
         Charset charset = Charset.forName("cp850");
+        charset = Charset.forName("UTF-16LE");
 
         LOGGER.info("1)Start...");
         SOSCommandResult result = SOSShell.executeCommand(command, charset);
@@ -59,10 +64,11 @@ public class SOSShellTest {
         LOGGER.info("[System-encoding]System.getProperty(\"sun.jnu.encoding\")=" + System.getProperty("sun.jnu.encoding"));
         // US-ASCII
         LOGGER.info("Charset.forName(\"default\")=" + Charset.forName("default"));
+        LOGGER.info("Charset.defaultCharset()=" + Charset.defaultCharset());
 
-        LOGGER.info("2) Start...");
-        LOGGER.info("[Console-charset]" + SOSShell.executeCommand("chcp", charset) + "");
-        LOGGER.info("[Console-charset]" + SOSShell.executeCommand("dir D:\\_Workspace\\Bilder", charset) + "");
+        // LOGGER.info("2) Start...");
+        // LOGGER.info("[Console-charset]" + SOSShell.executeCommand("chcp", charset) + "");
+        // LOGGER.info("[Console-charset]" + SOSShell.executeCommand("dir D:\\_Workspace\\Bilder", charset) + "");
 
     }
 
