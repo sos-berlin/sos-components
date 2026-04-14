@@ -57,6 +57,7 @@ import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.proxy.javaapi.JControllerProxy;
+import reactor.core.publisher.Flux;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements IDailyPlanCancelOrder {
@@ -113,7 +114,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
 
-    public Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
+    public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
             String accessToken, AuditParams auditLog, boolean withAudit, boolean withEvent) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -133,6 +134,15 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             final Set<String> orderIds = orders.stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(), permittedFolders)).map(
                     DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
 
+//            final Map<Boolean, Set<String>> plannedAndSubmittedOrderIds = orders.stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(), permittedFolders))
+//                    .collect(Collectors.groupingBy(DBItemDailyPlanOrder::getSubmitted, Collectors.mapping(DBItemDailyPlanOrder::getOrderId, Collectors
+//                            .toSet())));
+//            plannedAndSubmittedOrderIds.putIfAbsent(true, Collections.emptySet());
+//            plannedAndSubmittedOrderIds.putIfAbsent(false, Collections.emptySet());
+//            
+//            final Set<String> orderIds = Stream.concat(plannedAndSubmittedOrderIds.get(true).stream(), plannedAndSubmittedOrderIds.get(false)
+//                    .stream()).collect(Collectors.toSet());
+
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
 
@@ -143,22 +153,23 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 orderStream = Stream.concat(orderStream, OrdersResourceModifyImpl.cyclicFreshOrderIds(orderIds, currentState));
             }
             final Set<JOrder> jOrders = orderStream.filter(OrdersHelper::isPendingOrScheduledOrBlocked).collect(Collectors.toSet());
-            final Set<String> oIds = jOrders.stream().map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
-
-            updateUnknownOrders(controllerId, orderIds, oIds, getSettings(), withEvent);
+            final Set<OrderId> oIds = jOrders.stream().map(JOrder::id).collect(Collectors.toSet());
+            final Set<String> oIds2 = oIds.stream().map(OrderId::string).collect(Collectors.toSet());
+            
+            updateUnknownOrders(controllerId, orderIds, oIds2, getSettings(), withEvent);
 
             if (orderIds != null) {
-                oIds.forEach(o -> orderIds.remove(o));
+                oIds2.forEach(o -> orderIds.remove(o));
 
                 updateDailyPlan("command", orderIds, withEvent);
             }
-
+            
             if (!jOrders.isEmpty()) {
-                futures.put(controllerId, proxy.api().cancelOrders(jOrders.stream().map(JOrder::id).collect(Collectors.toSet()), JCancellationMode
-                        .freshOnly()).thenApply(either -> {
+                futures.put(controllerId, proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
+                        oIds, JCancellationMode.freshOnly()).thenApply(either -> {
                             if (either.isRight()) {
                                 try {
-                                    updateDailyPlan("cancelOrders", oIds, withEvent);
+                                    updateDailyPlan("cancelOrders", oIds2, withEvent);
                                     if (withAudit) {
                                         OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, auditLogId, controllerId).thenAccept(either2 -> {
                                             if (withEvent) {
@@ -166,11 +177,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                                             }
                                         });
                                     }
-                                } catch (Exception e) {
+                                } catch (Exception ex) {
                                     if (withEvent) {
-                                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), controllerId);
+                                        ProblemHelper.postExceptionEventIfExist(Either.left(ex), accessToken, getJocError(), controllerId);
                                     }
-                                    either = Either.left(Problem.pure(e.toString()));
+                                    either = Either.left(Problem.pure(ex.toString()));
                                 }
                             } else {
                                 if (withEvent) {
@@ -178,7 +189,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                                 }
                             }
                             return either;
-                        }));
+                        })));
             }
         }
 

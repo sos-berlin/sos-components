@@ -19,13 +19,14 @@ import jakarta.ws.rs.Path;
 @Path("inventory/deployment")
 public class DeployImpl extends ADeploy implements IDeploy {
     
+    public static final JocSecurityLevel SEC_LVL = JocSecurityLevel.MEDIUM; 
+    
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) {
         return postDeploy(xAccessToken, filter, false);
     }
 
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) {
-        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, DeployFilter.class);
@@ -35,19 +36,10 @@ public class DeployImpl extends ADeploy implements IDeploy {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
-            
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.MEDIUM, API_CALL);
-            
+            deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
     

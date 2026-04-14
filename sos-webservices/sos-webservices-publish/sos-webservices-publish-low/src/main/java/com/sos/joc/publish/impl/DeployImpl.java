@@ -20,13 +20,14 @@ import jakarta.ws.rs.Path;
 @Path("inventory/deployment")
 public class DeployImpl extends ADeploy implements IDeploy {
     
+    public static final JocSecurityLevel SEC_LVL = JocSecurityLevel.LOW; 
+    
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) {
         return postDeploy(xAccessToken, filter, false);
     }
 
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) {
-        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, DeployFilter.class);
@@ -36,20 +37,10 @@ public class DeployImpl extends ADeploy implements IDeploy {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
-            
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-
-            deploy(xAccessToken, deployFilter, hibernateSession, dbAuditlog, account, JocSecurityLevel.LOW, API_CALL);
-
+            deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
 

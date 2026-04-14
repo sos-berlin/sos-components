@@ -28,6 +28,7 @@ import com.sos.joc.inventory.resource.IReleasablesRecall;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
+import com.sos.joc.model.inventory.release.Releasable;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.schema.JsonValidator;
@@ -63,15 +64,14 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
             Long dbAuditLogId = dbAuditLog.getId();
 
-            List<DBItemInventoryReleasedConfiguration> dbItemReleasables = recallFilter.getReleasables().stream().map(released -> dbLayer
-                    .getReleasedConfiguration(JocInventory.pathToName(released.getPath()), released.getObjectType())).filter(Objects::nonNull).filter(
-                            dbItemReleased -> dbLayer.recallReleasedConfiguration(dbItemReleased, dbAuditLogId)).collect(Collectors.toList());
-
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
             Set<String> events = new HashSet<>();
-            for (DBItemInventoryReleasedConfiguration dbItemReleasable : dbItemReleasables) {
-                auditLogDetails.add(new AuditLogDetail(dbItemReleasable.getPath(), dbItemReleasable.getType()));
-                events.add(dbItemReleasable.getFolder());
+            for(Releasable r : recallFilter.getReleasables()) {
+                DBItemInventoryReleasedConfiguration released = dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType());
+                if(released != null && dbLayer.recallReleasedConfiguration(released, dbAuditLogId)) {
+                    auditLogDetails.add(new AuditLogDetail(released.getPath(), released.getType()));
+                    events.add(released.getFolder());
+                }
             }
             JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId, dbAuditLog.getCreated());
             events.stream().forEach(JocInventory::postEvent);
@@ -118,12 +118,12 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                     objectTypes.collect(Collectors.toSet()));
 
             if (releasables != null && !releasables.isEmpty()) {
-                List<AuditLogDetail> auditLogDetails = releasables.stream().filter(Objects::nonNull).map(releasable -> {
-                    if (dbDepLayer.recallReleasedConfiguration(releasable, dbAuditLogId)) {
-                        return new AuditLogDetail(releasable.getPath(), releasable.getType());
+                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+                for (DBItemInventoryReleasedConfiguration released : releasables) {
+                    if (released != null && dbDepLayer.recallReleasedConfiguration(released, dbAuditLogId)) {
+                        auditLogDetails.add(new AuditLogDetail(released.getPath(), released.getType()));
                     }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toList());
+                }
                 
                 JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId, dbAuditLog.getCreated());
                 JocInventory.postEvent(recallFilter.getPath());
