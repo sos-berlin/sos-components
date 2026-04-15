@@ -41,9 +41,9 @@ public class DBItemATest extends DBItem {
     @Column(name = "[DB_CURRENT_TIMESTAMP_AUTO]", nullable = false, updatable = true)
     private Date dbCurrentTimestampAuto;
 
-    @Column(name = "[DB_CURRENT_UTC_TIMESTAMP_AUTO]", nullable = false, updatable = true)
-    private Date dbCurrentUtcTimestampAuto;
-    
+    @Column(name = "[DB_CURRENT_TIMESTAMP_UTC_AUTO]", nullable = false, updatable = true)
+    private Date dbCurrentTimestampUtcAuto;
+
     public DBItemATest() {
     }
 
@@ -79,4 +79,7 @@ public class DBItemATest extends DBItem {
         return dbCurrentTimestampAuto;
     }
 
+    public Date getDbCurrentTimestampUtcAuto() {
+        return dbCurrentTimestampUtcAuto;
+    }
 }
