@@ -2,7 +2,7 @@ package com.sos.joc.db.authentication;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
@@ -17,7 +17,7 @@ public class DBItemIamPermission {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_IAM_PERMISSIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_ID]", nullable = false)

@@ -4,7 +4,7 @@ import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -26,7 +26,7 @@ public class DBItemJocInstance extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_INSTANCES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_JOC_INSTANCES_SEQUENCE)
     private Long id;
 
     @Column(name = "[CLUSTER_ID]", nullable = false)

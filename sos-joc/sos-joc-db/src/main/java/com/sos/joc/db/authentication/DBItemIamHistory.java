@@ -4,7 +4,7 @@ import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
@@ -19,7 +19,7 @@ public class DBItemIamHistory {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_HISTORY_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_IAM_HISTORY_SEQUENCE)
     private Long id;
 
     @Column(name = "[ACCOUNT_NAME]", nullable = false)

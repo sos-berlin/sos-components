@@ -4,7 +4,7 @@ import java.sql.Types;
 
 import org.hibernate.annotations.JdbcTypeCode;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -21,7 +21,7 @@ public class DBItemDocumentationImage extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE)
     private Long id;
 
     @Column(name = "[IMAGE]", nullable = false)

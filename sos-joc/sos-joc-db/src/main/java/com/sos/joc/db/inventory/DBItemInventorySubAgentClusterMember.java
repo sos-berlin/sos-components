@@ -2,7 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -21,7 +21,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

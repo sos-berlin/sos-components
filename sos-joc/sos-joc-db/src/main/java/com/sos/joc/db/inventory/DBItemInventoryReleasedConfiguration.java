@@ -5,7 +5,7 @@ import java.util.Date;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -26,7 +26,7 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[TYPE]", nullable = false)

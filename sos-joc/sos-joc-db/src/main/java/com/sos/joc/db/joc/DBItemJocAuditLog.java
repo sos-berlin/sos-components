@@ -2,7 +2,7 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.audit.CategoryType;
@@ -21,7 +21,7 @@ public class DBItemJocAuditLog extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_JOC_AUDIT_LOG_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

@@ -4,7 +4,7 @@ import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.history.JobWarning;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -27,7 +27,7 @@ public class DBItemNotification extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_MON_NOTIFICATIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_MON_NOTIFICATIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[TYPE]", nullable = false)

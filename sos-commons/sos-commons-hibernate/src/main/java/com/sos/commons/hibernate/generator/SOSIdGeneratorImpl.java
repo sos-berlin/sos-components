@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate.id;
+package com.sos.commons.hibernate.generator;
 
 import java.lang.reflect.Member;
 import java.util.EnumSet;
@@ -15,13 +15,15 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
-public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, OnExecutionGenerator {
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
+
+public class SOSIdGeneratorImpl implements BeforeExecutionGenerator, OnExecutionGenerator {
 
     private static final long serialVersionUID = 1L;
     private String sequenceName;
     private String sequenceCallSyntax;
 
-    public SOSHibernateIdGeneratorImpl(SOSHibernateIdGenerator config, Member member, org.hibernate.generator.GeneratorCreationContext context) {
+    public SOSIdGeneratorImpl(SOSIdGenerator config, Member member, org.hibernate.generator.GeneratorCreationContext context) {
         this.sequenceName = config.sequenceName();
 
         final Dialect dialect = context.getServiceRegistry().getService(JdbcEnvironment.class).getDialect();

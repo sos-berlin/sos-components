@@ -2,7 +2,7 @@ package com.sos.joc.db.reporting;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.inventory.model.report.ReportOrder;
 import com.sos.inventory.model.report.TemplateId;
 import com.sos.joc.db.DBItem;
@@ -24,7 +24,7 @@ public class DBItemReportRun extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_REPORT_RUNS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_REPORT_RUNS_SEQUENCE)
     private Long id;
 
     @Column(name = "[PATH]", nullable = false)

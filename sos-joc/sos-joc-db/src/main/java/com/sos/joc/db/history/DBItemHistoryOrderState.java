@@ -2,7 +2,7 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
@@ -22,7 +22,7 @@ public class DBItemHistoryOrderState extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_HISTORY_ORDER_STATES_SEQUENCE)
     private Long id;
 
     /** Foreign key - TABLE_HISTORY_ORDERS.MAIN_PARENT_ID */

@@ -2,7 +2,7 @@ package com.sos.joc.db.yade;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.YadeConstants;
@@ -22,7 +22,7 @@ public class DBItemYadeFile extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_YADE_FILES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_YADE_FILES_SEQUENCE)
     private Long id;
 
     /** Foreign key - TABLE YADE_TRANSFERS.ID, KEY */

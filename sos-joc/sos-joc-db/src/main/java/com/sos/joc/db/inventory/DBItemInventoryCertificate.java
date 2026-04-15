@@ -2,7 +2,7 @@ package com.sos.joc.db.inventory;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -21,7 +21,7 @@ public class DBItemInventoryCertificate extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_CERTS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_INV_CERTS_SEQUENCE)
     private Long id;
 
     /* 0=PRIVATE, 1=PUBLIC */

@@ -1,6 +1,6 @@
 package com.sos.joc.db.deployment;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -17,7 +17,7 @@ public class DBItemDepCommitIds extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DEP_COMMIT_IDS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DEP_COMMIT_IDS_SEQUENCE)
     private Long id;
 
     @Column(name = "[INV_CID]", nullable = false)

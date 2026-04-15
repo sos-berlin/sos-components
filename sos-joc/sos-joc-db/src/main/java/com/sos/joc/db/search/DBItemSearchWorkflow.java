@@ -6,7 +6,7 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
@@ -28,7 +28,7 @@ public class DBItemSearchWorkflow extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_SEARCH_WORKFLOWS_SEQUENCE)
     private Long id;
 
     @Column(name = "[INV_CID]", nullable = false) /* INV_CONFIGURATIONS.ID */

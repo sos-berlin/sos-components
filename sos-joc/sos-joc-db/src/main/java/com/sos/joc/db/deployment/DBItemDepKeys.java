@@ -1,6 +1,6 @@
 package com.sos.joc.db.deployment;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -18,7 +18,7 @@ public class DBItemDepKeys extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
     private Long id;
 
     /* 0=PRIVATE, 1=PUBLIC */

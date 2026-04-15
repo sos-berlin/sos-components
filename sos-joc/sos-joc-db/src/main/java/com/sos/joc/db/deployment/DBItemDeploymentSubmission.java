@@ -3,7 +3,7 @@ package com.sos.joc.db.deployment;
 import java.nio.file.Paths;
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -20,7 +20,7 @@ public class DBItemDeploymentSubmission extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DEP_SUBMISSIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DEP_SUBMISSIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[DEP_HID]", nullable = false)

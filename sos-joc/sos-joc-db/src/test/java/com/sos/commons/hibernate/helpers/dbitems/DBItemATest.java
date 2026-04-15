@@ -6,7 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 
 import jakarta.persistence.Column;
@@ -23,7 +23,7 @@ public class DBItemATest extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = "SEQ_A_TEST")
+    @SOSIdGenerator(sequenceName = "SEQ_A_TEST")
     private Long id;
 
     @Column(name = "[NAME]", nullable = false)

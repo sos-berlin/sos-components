@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -58,7 +58,7 @@ public class DBItemJocLock extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_LOCKS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_JOC_LOCKS_SEQUENCE)
     private Long id;
 
     @Column(name = "[RANGE]", nullable = false)

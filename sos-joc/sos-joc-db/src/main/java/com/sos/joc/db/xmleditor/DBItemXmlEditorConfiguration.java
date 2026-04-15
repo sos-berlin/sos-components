@@ -2,7 +2,7 @@ package com.sos.joc.db.xmleditor;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -20,7 +20,7 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     /** Primary Key */
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE)
     private Long id;
 
     /** Others */

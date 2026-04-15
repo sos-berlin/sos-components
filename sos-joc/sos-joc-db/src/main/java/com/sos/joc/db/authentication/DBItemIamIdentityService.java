@@ -2,7 +2,7 @@ package com.sos.joc.db.authentication;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
 
@@ -20,7 +20,7 @@ public class DBItemIamIdentityService {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_IAM_IDENTITY_SERVICES_SEQUENCE)
     private Long id;
 
     @Column(name = "[IDENTITY_SERVICE_TYPE]", nullable = false)

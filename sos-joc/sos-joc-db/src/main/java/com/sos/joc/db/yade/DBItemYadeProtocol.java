@@ -2,7 +2,7 @@ package com.sos.joc.db.yade;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -21,7 +21,7 @@ public class DBItemYadeProtocol extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_YADE_PROTOCOLS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_YADE_PROTOCOLS_SEQUENCE)
     private Long id;
 
     @Column(name = "[HOSTNAME]", nullable = false)

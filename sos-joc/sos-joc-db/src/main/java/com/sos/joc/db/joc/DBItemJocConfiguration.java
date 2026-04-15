@@ -4,7 +4,7 @@ import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -24,7 +24,7 @@ public class DBItemJocConfiguration extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE)
     private Long id;
 
     /** Foreign key INVENTORY_INSTANCES.ID */

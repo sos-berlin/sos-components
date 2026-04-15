@@ -2,7 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -22,7 +22,7 @@ public class DBItemInventoryTagging extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_INV_TAGGINGS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_INV_TAGGINGS_SEQUENCE)
     private Long id;
 
     @Column(name = "[CID]", nullable = false)

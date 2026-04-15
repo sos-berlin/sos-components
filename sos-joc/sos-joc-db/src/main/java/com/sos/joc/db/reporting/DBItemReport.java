@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.report.Frequency;
 import com.sos.joc.db.DBItem;
@@ -25,7 +25,7 @@ public class DBItemReport extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_REPORTS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_REPORTS_SEQUENCE)
     private Long id;
 
     // ID from REPORT_RUN_HISTORY

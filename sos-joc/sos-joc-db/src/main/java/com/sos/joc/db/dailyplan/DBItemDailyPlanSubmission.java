@@ -2,7 +2,7 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -19,7 +19,7 @@ public class DBItemDailyPlanSubmission extends DBItem {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DPL_SUBMISSIONS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DPL_SUBMISSIONS_SEQUENCE)
     private Long id;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)

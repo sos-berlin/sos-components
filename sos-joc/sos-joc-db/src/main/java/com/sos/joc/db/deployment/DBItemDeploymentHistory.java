@@ -6,7 +6,7 @@ import java.util.Date;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -26,7 +26,7 @@ public class DBItemDeploymentHistory extends DBItem {
 
     @Id
     @Column(name = "[ID]", nullable = false)
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DEP_HISTORY_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DEP_HISTORY_SEQUENCE)
     private Long id;
 
     @Column(name = "[ACCOUNT]", nullable = false)

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.type.NumericBooleanConverter;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -31,7 +31,7 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_DPL_ORDERS_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_DPL_ORDERS_SEQUENCE)
     private Long id;
 
     @Column(name = "[SUBMISSION_HISTORY_ID]", nullable = false)

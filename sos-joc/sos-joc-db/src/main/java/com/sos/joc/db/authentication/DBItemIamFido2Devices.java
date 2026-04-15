@@ -1,6 +1,6 @@
 package com.sos.joc.db.authentication;
 
-import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
+import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 
 import jakarta.persistence.Column;
@@ -14,7 +14,7 @@ public class DBItemIamFido2Devices {
 
     @Id
     @Column(name = "[ID]")
-    @SOSHibernateIdGenerator(sequenceName = DBLayer.TABLE_IAM_FIDO2_DEVICES_SEQUENCE)
+    @SOSIdGenerator(sequenceName = DBLayer.TABLE_IAM_FIDO2_DEVICES_SEQUENCE)
     private Long id;
 
     @Column(name = "[ACCOUNT_ID]", nullable = false)
