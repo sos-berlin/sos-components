@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.insert.GetGeneratedKeysDelegate;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -42,7 +42,7 @@ public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, On
     @SuppressWarnings("removal")
     @Override
     public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
-        return new GetGeneratedKeysDelegate(persister, false, EventType.INSERT);
+        return new IdentityGenerator().getGeneratedIdentifierDelegate(persister);
     }
 
     /** Sequence only */
@@ -70,4 +70,5 @@ public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, On
     public String[] getReferencedColumnValues(Dialect dialect) {
         return null;
     }
+
 }
