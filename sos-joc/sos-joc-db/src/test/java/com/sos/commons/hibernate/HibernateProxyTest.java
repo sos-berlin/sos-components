@@ -19,7 +19,7 @@ public class HibernateProxyTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HibernateProxyTest.class);
 
-    /** Expected result - not found (all DBItem classes are annotated with @Proxy(lazy=false)) */
+    /** Expected result - not found (all DBItem classes are annotated with @Proxy(lazy = false)) */
     @Ignore
     @Test
     public void testJocClassMapping() throws Exception {
@@ -27,24 +27,29 @@ public class HibernateProxyTest {
         executeJCMDCommand();
     }
 
-    /** Expected result - 1 found (the DBItem class is not annotated with) */
+    /** Expected result - 1 found (the DBItem class is not annotated with @Proxy(lazy = false)) */
     @Ignore
     @Test
     public void testSingleClassMapping() throws Exception {
         SOSClassList mapping = new SOSClassList();
         mapping.add(DBItemATest.class);
-        createCloseFactory(mapping, 3);
+        createCloseFactory(mapping, 30);
         executeJCMDCommand();
     }
 
     private void createCloseFactory(SOSClassList mapping, int counter) {
         for (int i = 0; i < counter; i++) {
             SOSHibernateFactory factory = null;
+            SOSHibernateSession session = null;
             try {
                 factory = SOSHibernateTest.createFactory(mapping);
+                session = factory.openStatelessSession();
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             } finally {
+                if (session != null) {
+                    session.close();
+                }
                 if (factory != null) {
                     factory.close();
                 }
