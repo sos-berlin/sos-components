@@ -57,7 +57,7 @@ public class SOSHibernateFactory implements Serializable {
     private String identifier;
     private String logIdentifier;
     private String currentTimestampSelectString;
-    private String currentUTCTimestampSelectString;
+    private String currentTimestampUtcSelectString;
     private boolean useDefaultConfigurationProperties = true;
     private boolean forceReadDatabaseMetaData;
 
@@ -241,30 +241,30 @@ public class SOSHibernateFactory implements Serializable {
         return currentTimestampSelectString;
     }
 
-    public String getCurrentUTCTimestampSelectString() {
-        if (currentUTCTimestampSelectString == null) {
+    public String getCurrentTimestampUtcSelectString() {
+        if (currentTimestampUtcSelectString == null) {
             switch (dbms) {
             case H2:
-                currentUTCTimestampSelectString = "select now()";// TODO UTC
+                currentTimestampUtcSelectString = "select now()";// TODO UTC
                 break;
             case MYSQL:
-                currentUTCTimestampSelectString = "select utc_timestamp()";
+                currentTimestampUtcSelectString = "select utc_timestamp()";
                 break;
             case ORACLE:
-                currentUTCTimestampSelectString = "select cast(sys_extract_utc(systimestamp) as date) from dual";
+                currentTimestampUtcSelectString = "select cast(sys_extract_utc(systimestamp) as date) from dual";
                 break;
             case MSSQL:
-                currentUTCTimestampSelectString = "select getutcdate()";
+                currentTimestampUtcSelectString = "select getutcdate()";
                 break;
             case PGSQL:
-                currentUTCTimestampSelectString = "select timezone('UTC', now())";
+                currentTimestampUtcSelectString = "select timezone('UTC', now())";
                 break;
             default:
-                currentUTCTimestampSelectString = getCurrentTimestampSelectString();
+                currentTimestampUtcSelectString = getCurrentTimestampSelectString();
                 break;
             }
         }
-        return currentUTCTimestampSelectString;
+        return currentTimestampUtcSelectString;
     }
 
     public int getTransactionIsolation() throws SOSHibernateConfigurationException {

@@ -1,6 +1,10 @@
 package com.sos.commons.hibernate.helpers.dbitems;
 
-import java.time.Instant;
+import java.util.Date;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.SourceType;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
@@ -25,12 +29,21 @@ public class DBItemATest extends DBItem {
     @Column(name = "[NAME]", nullable = false)
     private String name;
 
-    @Column(name = "[CREATED]", nullable = false, updatable = false, insertable = true)
-    private Instant created;
+    @Column(name = "[JAVA_DATE_MANUAL]", nullable = false, updatable = false, insertable = true)
+    private Date javaDateManual;
 
-    @Column(name = "[MODIFIED]", nullable = false, updatable = true)
-    private Instant modified;
+    /** @CreationTimestamp is a synonym for {@link CurrentTimestamp @CurrentTimestamp(timing=INSERT,source=VM)}. */
+    @CreationTimestamp
+    @Column(name = "[JAVA_DATE_AUTO]", nullable = false, updatable = false, insertable = true)
+    private Date javaDateAuto;
 
+    @CurrentTimestamp(source = SourceType.DB)
+    @Column(name = "[DB_CURRENT_TIMESTAMP_AUTO]", nullable = false, updatable = true)
+    private Date dbCurrentTimestampAuto;
+
+    @Column(name = "[DB_CURRENT_UTC_TIMESTAMP_AUTO]", nullable = false, updatable = true)
+    private Date dbCurrentUtcTimestampAuto;
+    
     public DBItemATest() {
     }
 
@@ -50,20 +63,20 @@ public class DBItemATest extends DBItem {
         name = val;
     }
 
-    public Instant getCreated() {
-        return created;
+    public Date getJavaDateManual() {
+        return javaDateManual;
     }
 
-    public void setCreated(Instant v) {
-        created = v;
+    public void setJavaDateManual(Date v) {
+        javaDateManual = v;
     }
 
-    public void setModified(Instant v) {
-        modified = v;
+    public Date getJavaDateAuto() {
+        return javaDateAuto;
     }
 
-    public Instant getModified() {
-        return modified;
+    public Date getDbCurrentTimestampAuto() {
+        return dbCurrentTimestampAuto;
     }
 
 }

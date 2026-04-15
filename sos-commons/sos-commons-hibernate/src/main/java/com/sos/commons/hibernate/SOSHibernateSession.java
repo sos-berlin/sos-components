@@ -7,6 +7,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -1366,17 +1367,110 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         return metaData;
     }
 
-    /** TODO <br/>
-     * PgSQL session.getCurrentDateTime():<br/>
-     * the returned current date time depends on TimeZone.set/getDefault.<br/>
-     * For all others, the returned current date time is independent of TimeZone.set/getDefault.<br/>
-     * see SOSHibernateSessionTest */
-    public Date getCurrentDateTime() throws SOSHibernateException {
-        return getSingleResultNativeQuery(factory.getCurrentTimestampSelectString(), Date.class);
+    /** Retrieves the current database timestamp as a {@link java.util.Date} object.
+     * <p>
+     * This is a convenience method that calls {@link #getCurrentTimestamp(Class)} with {@link Date} class.<br />
+     * The method executes a database-specific query (e.g., {@code SELECT NOW()}, {@code SELECT SYSDATE FROM DUAL}) to obtain the current timestamp directly
+     * from the database, ensuring that the timestamp is consistent with the database server's clock rather than the application server's clock.
+     *
+     * <b>Timezone Behavior - TODO (TOCHECK) see {@link SOSHibernateSessionTest#testDateTime}:</b>
+     * <ul>
+     * <li><b>PostgreSQL:</b> The returned timestamp depends on {@code TimeZone.setDefault()} / {@code TimeZone.getDefault()}.</li>
+     * <li><b>Other databases (Oracle, MySQL, H2, MSSQL, etc.):</b> The returned timestamp is independent of {@code TimeZone.setDefault()} /
+     * {@code TimeZone.getDefault()}.</li>
+     * </ul>
+     * 
+     * @return the current database timestamp as a {@link Date}
+     * @throws SOSHibernateException if a database access error occurs or the query fails */
+    public Date getCurrentTimestampAsDate() throws SOSHibernateException {
+        return getCurrentTimestamp(Date.class);
     }
 
-    public Date getCurrentUTCDateTime() throws SOSHibernateException {
-        return getSingleResultNativeQuery(factory.getCurrentUTCTimestampSelectString(), Date.class);
+    /** Retrieves the current database timestamp as a {@link java.time.Instant} object.
+     * <p>
+     * This is a convenience method that calls {@link #getCurrentTimestamp(Class)} with {@link Instant} class.<br/>
+     * The method executes a database-specific query (e.g., {@code SELECT NOW()}, {@code SELECT SYSDATE FROM DUAL}) to obtain the current timestamp directly
+     * from the database, ensuring that the timestamp is consistent with the database server's clock rather than the application server's clock.
+     *
+     * @return the current database timestamp as a {@link Instant}
+     * @throws SOSHibernateException if a database access error occurs or the query fails
+     * @see SOSHibernateSessionTest */
+    public Instant getCurrentTimestampAsInstant() throws SOSHibernateException {
+        return getCurrentTimestamp(Instant.class);
+    }
+
+    /** Retrieves the current database timestamp and returns it as the specified type.
+     * <p>
+     * This generic method executes a database-specific query (e.g., {@code SELECT NOW()}, {@code SELECT SYSDATE FROM DUAL}) to obtain the current timestamp
+     * directly from the database. The result is mapped to the requested return type.
+     * <p>
+     * <b>Supported return types typically include:</b>
+     * <ul>
+     * <li>{@link java.util.Date}</li>
+     * <li>{@link java.sql.Timestamp}</li>
+     * <li>{@link java.time.Instant}</li>
+     * <li>{@link java.time.LocalDateTime}</li>
+     * <li>{@link Long} (milliseconds since epoch)</li>
+     * <li>{@link String} (database-specific string representation)</li>
+     * </ul>
+     * 
+     * @param <T> the type of the returned timestamp object
+     * @param returnClazz the {@link Class} object representing the desired return type
+     * @return the current database timestamp as an object of type {@code T}
+     * @throws SOSHibernateException if a database access error occurs, the query fails, or the result cannot be converted to the requested type */
+    public <T> T getCurrentTimestamp(Class<T> returnClazz) throws SOSHibernateException {
+        return getSingleResultNativeQuery(factory.getCurrentTimestampSelectString(), returnClazz);
+    }
+
+    /** Retrieves the current UTC timestamp from the database as a {@link java.util.Date} object.
+     * <p>
+     * This is a convenience method that calls {@link #getCurrentTimestampUtc(Class)} with {@link Date} class.<br />
+     * The method executes a database-specific query to obtain the current UTC timestamp directly from the database, ensuring that the timestamp is independent
+     * of the application server's timezone and the database session timezone.
+     *
+     * @return the current database UTC timestamp as a {@link Date}
+     * @throws SOSHibernateException if a database access error occurs or the query fails */
+    public Date getCurrentTimestampUtcAsDate() throws SOSHibernateException {
+        return getCurrentTimestampUtc(Date.class);
+    }
+
+    /** Retrieves the current UTC timestamp from the database as an {@link Instant} object.
+     * <p>
+     * This is a convenience method that calls {@link #getCurrentTimestampUtc(Class)} with {@link Instant} class.<br />
+     * The method executes a database-specific query to obtain the current UTC timestamp directly from the database. {@link Instant} is the recommended type for
+     * UTC timestamps as it is timezone-agnostic by design.
+     *
+     * @return the current database UTC timestamp as an {@link Instant}
+     * @throws SOSHibernateException if a database access error occurs or the query fails */
+    public Instant getCurrentTimestampUtcAsInstant() throws SOSHibernateException {
+        return getCurrentTimestampUtc(Instant.class);
+    }
+
+    /** Retrieves the current UTC timestamp from the database and returns it as the specified type.
+     * <p>
+     * This generic method executes a database-specific UTC timestamp query (e.g., {@code SELECT UTC_TIMESTAMP()'} to obtain the current UTC timestamp directly
+     * from the database.<br/>
+     * The result is mapped to the requested return type.
+     * <p>
+     * <b>Supported return types typically include:</b>
+     * <ul>
+     * <li>{@link java.util.Date}</li>
+     * <li>{@link java.sql.Timestamp}</li>
+     * <li>{@link java.time.Instant}</li>
+     * <li>{@link java.time.LocalDateTime}</li>
+     * <li>{@link Long} (milliseconds since epoch)</li>
+     * <li>{@link String} (database-specific string representation)</li>
+     * </ul>
+     * <p>
+     * <b>Note:</b> This method returns the UTC timestamp directly from the database, ensuring that the result is independent of the application server's
+     * default timezone or the database session timezone settings.
+     *
+     * @param <T> the type of the returned timestamp object
+     * @param returnClazz the {@link Class} object representing the desired return type
+     * @return the current database UTC timestamp as an object of type {@code T}
+     * @throws SOSHibernateException if a database access error occurs, the query fails, or the result cannot be converted to the requested type */
+    public <T> T getCurrentTimestampUtc(Class<T> returnClazz) throws SOSHibernateException {
+        return getSingleResultNativeQuery(factory.getCurrentTimestampUtcSelectString(), returnClazz);
     }
 
     public void setCurrentStatement(Statement val) {

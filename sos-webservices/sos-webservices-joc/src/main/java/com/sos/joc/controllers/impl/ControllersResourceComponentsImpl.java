@@ -121,7 +121,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             Instant now = Instant.now();
             long nowSeconds = now.getEpochSecond();
             try {
-                nowSeconds = connection.getCurrentUTCDateTime().toInstant().getEpochSecond();
+                nowSeconds = connection.getCurrentTimestampUtcAsDate().toInstant().getEpochSecond();
             } catch (SOSHibernateException e1) {
                 nowSeconds = now.getEpochSecond();
             }

@@ -111,7 +111,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             return responseStatusJSError(e);
         }
     }
-    
+
     private void checkSwitchingControllerIds() {
         List<String> switchingControllerIds = getSwitchingControllerIds();
         if (!switchingControllerIds.isEmpty()) {
@@ -122,8 +122,8 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     }
 
     private List<String> getSwitchingControllerIds() {
-        return Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getValue).filter(
-                l -> States.isSwitchingControllerId(l, getAccessToken())).map(instances -> instances.get(0).getControllerId()).toList();
+        return Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getValue).filter(l -> States
+                .isSwitchingControllerId(l, getAccessToken())).map(instances -> instances.get(0).getControllerId()).toList();
     }
 
     @Override
@@ -144,7 +144,8 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                     throw new DBMissingDataException(String.format("Couldn't find cluster member: %s", in.getMemberId()));
                 }
                 if (member.getApiServer()) {
-                    if (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member.getHeartBeat())) {
+                    if (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentTimestampUtcAsDate(), member
+                            .getHeartBeat())) {
                         // Long osId = member.getOsId();
                         // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
                         session.delete(member);
@@ -156,7 +157,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 } else {
                     DBItemJocCluster activeMember = dbLayer.getCluster();
                     boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());
-                    if (isInactive && (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), member
+                    if (isInactive && (member.getHeartBeat() == null || JocCluster.isHeartBeatExceeded(session.getCurrentTimestampUtcAsDate(), member
                             .getHeartBeat()))) {
                         // Long osId = member.getOsId();
                         // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances

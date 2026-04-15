@@ -1,6 +1,6 @@
 package com.sos.commons.hibernate;
 
-import java.time.Instant;
+import java.util.Date;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,11 +29,14 @@ public class HibernateIdTest {
 
             DBItemATest item = new DBItemATest();
             item.setName("xxxx");
-            item.setCreated(Instant.now());
-            item.setModified(item.getCreated());
+            item.setJavaDateManual(new Date());
 
             session.beginTransaction();
             session.save(item);
+
+            item.setName("xxxx-updated");
+            session.update(item);
+
             session.commit();
 
         } catch (Throwable e) {

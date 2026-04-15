@@ -130,6 +130,6 @@ public class DBLayerJocCluster extends DBLayer {
     }
 
     public Date getNowUTC() throws Exception {
-        return getSession().getCurrentUTCDateTime();
+        return getSession().getCurrentTimestampUtcAsDate();
     }
 }

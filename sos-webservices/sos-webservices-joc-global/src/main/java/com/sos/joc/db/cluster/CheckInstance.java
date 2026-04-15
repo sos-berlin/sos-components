@@ -226,7 +226,7 @@ public class CheckInstance {
         if (dbItem != null && dbItem.getHeartBeat() != null) {
             // dbItem.getHeartBeat() - database UTC datetime
             try {
-                if (!JocCluster.isHeartBeatExceeded(session.getCurrentUTCDateTime(), dbItem.getHeartBeat())) {
+                if (!JocCluster.isHeartBeatExceeded(session.getCurrentTimestampUtcAsDate(), dbItem.getHeartBeat())) {
                     return true;
                 }
             } catch (SOSHibernateException e) {

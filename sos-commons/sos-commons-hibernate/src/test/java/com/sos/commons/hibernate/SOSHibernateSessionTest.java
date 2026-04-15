@@ -15,10 +15,6 @@ public class SOSHibernateSessionTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSessionTest.class);
 
-    /** TODO <br/>
-     * PgSQL session.getCurrentDateTime():<br/>
-     * the returned current date time depends on TimeZone.set/getDefault.<br/>
-     * For all others, the returned current date time is independent of TimeZone.set/getDefault. */
     @Ignore
     @Test
     public void testDateTime() throws Exception {
@@ -32,8 +28,8 @@ public class SOSHibernateSessionTest {
             LOGGER.info(String.format("----[SYSTEM][%s]%s", TimeZone.getDefault().getID(), SOSDate.getCurrentDateTimeAsString()));
 
             session = factory.openStatelessSession("test");
-            LOGGER.info(String.format("[DB][%s]%s", factory.getDbms(), session.getCurrentDateTime()));
-            LOGGER.info(String.format("[DB][UTC]%s", session.getCurrentUTCDateTime()));
+            LOGGER.info(String.format("[DB][%s]%s", factory.getDbms(), session.getCurrentTimestampAsDate()));
+            LOGGER.info(String.format("[DB][UTC]%s", session.getCurrentTimestampUtcAsDate()));
         } catch (Exception e) {
             throw e;
         } finally {

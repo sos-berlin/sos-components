@@ -3,10 +3,12 @@
 ######################################################################################################
 set SQL_MODE=ANSI_QUOTES;
 CREATE TABLE IF NOT EXISTS A_TEST(
-    "ID"                        BIGINT(20)      UNSIGNED    NOT NULL    AUTO_INCREMENT,
-    "NAME"                      VARCHAR(255)                NOT NULL, 
-    "CREATED"                   DATETIME                    NOT NULL,
-    "MODIFIED"                  DATETIME                    NOT NULL,
+    "ID"                        	BIGINT(20)      UNSIGNED    NOT NULL    AUTO_INCREMENT,
+    "NAME"                      	VARCHAR(255)                NOT NULL, 
+    "JAVA_DATE_MANUAL"          	DATETIME                    NOT NULL,
+    "JAVA_DATE_AUTO"            	DATETIME                    NOT NULL,
+    "DB_CURRENT_TIMESTAMP_AUTO" 	DATETIME                    NOT NULL,
+    "DB_CURRENT_UTC_TIMESTAMP_AUTO"	DATETIME                    NOT NULL,
     PRIMARY KEY ("ID")
 ) ENGINE=InnoDB;
 
@@ -20,10 +22,12 @@ BEGIN
 SELECT COUNT(*) INTO table_exist FROM USER_TABLES WHERE "TABLE_NAME"='A_TEST';
     IF (table_exist = 0) THEN
         EXECUTE IMMEDIATE   'CREATE TABLE A_TEST (
-                                "ID"                        NUMBER(19)          NOT NULL,
-                                "NAME"                      NVARCHAR2(255)      NOT NULL, 
-                                "CREATED"                   DATE                NOT NULL,
-                                "MODIFIED"                  DATE                NOT NULL,
+                                "ID"                        N	UMBER(19)       NOT NULL,
+                                "NAME"                      	NVARCHAR2(255)  NOT NULL, 
+                                "JAVA_DATE_MANUAL"          	DATE            NOT NULL,
+                                "JAVA_DATE_AUTO"            	DATE            NOT NULL,
+                                "DB_CURRENT_TIMESTAMP_AUTO" 	DATE            NOT NULL,
+								"DB_CURRENT_UTC_TIMESTAMP_AUTO"	DATE       		NOT NULL,
                                 PRIMARY KEY ("ID")
                             )';
         DECLARE sequence_exist number; 
