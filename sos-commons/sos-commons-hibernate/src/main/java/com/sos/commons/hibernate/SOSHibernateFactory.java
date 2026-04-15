@@ -87,7 +87,6 @@ public class SOSHibernateFactory implements Serializable {
 
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "false");
-        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET, "true");
 
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT, "true");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_DIALECT_RESOLVERS, SOSHibernateDefaultDialectResolver.class.getName());

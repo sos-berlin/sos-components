@@ -109,8 +109,6 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = JdbcSettings.AUTOCOMMIT;
     /** hibernate.connection.isolation - SOS default: Connection.TRANSACTION_READ_COMMITTED */
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = JdbcSettings.ISOLATION;
-    /** hibernate.jdbc.use_scrollable_resultset SOS default: true */
-    public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = JdbcSettings.USE_SCROLLABLE_RESULTSET;
 
     /** ---- AvailableSettings ------------------------------------------------------------------------------- */
     /** hibernate.current_session_context_class - SOS default: jta */
