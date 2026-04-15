@@ -9,25 +9,39 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.helpers.dbitems.DBItemATest;
+import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.beans.SOSCommandResult;
+import com.sos.joc.db.DBLayer;
 
 public class HibernateProxyTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HibernateProxyTest.class);
 
+    /** Expected result - not found (all DBItem classes are annotated with @Proxy(lazy=false)) */
     @Ignore
     @Test
-    public void testJCMDCommand() throws Exception {
-        createCloseFactory(3);
+    public void testJocClassMapping() throws Exception {
+        createCloseFactory(DBLayer.getJocClassMapping(), 3);
         executeJCMDCommand();
     }
 
-    private void createCloseFactory(int counter) {
+    /** Expected result - 1 found (the DBItem class is not annotated with) */
+    @Ignore
+    @Test
+    public void testSingleClassMapping() throws Exception {
+        SOSClassList mapping = new SOSClassList();
+        mapping.add(DBItemATest.class);
+        createCloseFactory(mapping, 3);
+        executeJCMDCommand();
+    }
+
+    private void createCloseFactory(SOSClassList mapping, int counter) {
         for (int i = 0; i < counter; i++) {
             SOSHibernateFactory factory = null;
             try {
-                factory = SOSHibernateTest.createFactory();
+                factory = SOSHibernateTest.createFactory(mapping);
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             } finally {
@@ -60,9 +74,9 @@ public class HibernateProxyTest {
         }
         LOGGER.info("### com.sos...$HibernateProxy$... #########################");
         if (l.size() == 0) {
-            LOGGER.info("not found");
+            LOGGER.info("not found"); // expected result
         } else {
-            l.stream().forEach(line -> LOGGER.info(line));
+            l.stream().sorted().forEach(line -> LOGGER.info(line));
         }
     }
 
