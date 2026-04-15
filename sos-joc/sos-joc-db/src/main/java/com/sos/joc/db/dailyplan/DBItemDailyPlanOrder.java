@@ -8,7 +8,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -22,14 +21,10 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DPL_ORDERS)
-@Proxy(lazy = false)
 public class DBItemDailyPlanOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -79,37 +74,30 @@ public class DBItemDailyPlanOrder extends DBItem {
     @Convert(converter = NumericBooleanConverter.class)
     private boolean submitted;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SUBMIT_TIME]", nullable = true)
     private Date submitTime;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[PERIOD_BEGIN]", nullable = true)
     private Date periodBegin;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[PERIOD_END]", nullable = true)
     private Date periodEnd;
 
     @Column(name = "[REPEAT_INTERVAL]", nullable = true)
     private Long repeatInterval;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[PLANNED_START]", nullable = false)
     private Date plannedStart;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[EXPECTED_END]", nullable = true)
     private Date expectedEnd;
 
     @Column(name = "[ORDER_PARAMETERISATION]", nullable = true)
     private String orderParameterisation;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
@@ -118,7 +106,7 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Transient
     private boolean isLastOfCycle = false;
-    
+
     @Transient
     private BigDecimal priority = null;
 
@@ -391,7 +379,7 @@ public class DBItemDailyPlanOrder extends DBItem {
         }
         return 0;
     }
-    
+
     @Transient
     public void setPriority(BigDecimal prio) {
         priority = prio;

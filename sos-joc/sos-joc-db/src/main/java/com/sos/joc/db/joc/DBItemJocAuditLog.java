@@ -2,8 +2,6 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -13,14 +11,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_AUDIT_LOG)
-@Proxy(lazy = false)
 public class DBItemJocAuditLog extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -49,7 +43,6 @@ public class DBItemJocAuditLog extends DBItem {
     private String comment;
 
     @Column(name = "[CREATED]", nullable = true)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
     @Column(name = "[TICKET_LINK]", nullable = true)

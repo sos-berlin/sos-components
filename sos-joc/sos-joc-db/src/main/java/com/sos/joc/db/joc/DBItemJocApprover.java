@@ -1,7 +1,5 @@
 package com.sos.joc.db.joc;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -14,10 +12,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_APPROVERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[ACCOUNT_NAME]" }) })
-@Proxy(lazy = false)
 public class DBItemJocApprover extends DBItem {
 
     private static final long serialVersionUID = 1L;

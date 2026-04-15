@@ -2,8 +2,6 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -12,13 +10,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DPL_SUBMISSIONS)
-@Proxy(lazy = false)
 public class DBItemDailyPlanSubmission extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -34,11 +28,9 @@ public class DBItemDailyPlanSubmission extends DBItem {
     @Column(name = "[USER_ACCOUNT]", nullable = false)
     private String userAccount;
 
-    @Temporal(TemporalType.DATE)
     @Column(name = "[SUBMISSION_FOR_DATE]", nullable = false)
     private Date submissionForDate;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 

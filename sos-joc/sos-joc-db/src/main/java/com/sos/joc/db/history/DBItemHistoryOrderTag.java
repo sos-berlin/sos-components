@@ -2,8 +2,6 @@ package com.sos.joc.db.history;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.commons.util.SOSDate;
@@ -14,16 +12,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ORDER_ID]",
         "[TAG_NAME]" }) })
-@Proxy(lazy = false)
 public class DBItemHistoryOrderTag extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -52,11 +46,9 @@ public class DBItemHistoryOrderTag extends DBItem {
     private Integer ordering;
 
     @Column(name = "[START_TIME]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date startTime;
 
     @Column(name = "[DAILY_PLAN_DATE]", nullable = true)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date dailyPlanDate;
 
     @Transient

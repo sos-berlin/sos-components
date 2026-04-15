@@ -3,7 +3,6 @@ package com.sos.joc.db.inventory;
 import java.util.Date;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Type;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -16,15 +15,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
-@Proxy(lazy = false)
 public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -64,11 +59,9 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     private Long auditLogId;
 
     @Column(name = "[CREATED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     public Long getId() {

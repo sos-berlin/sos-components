@@ -2,7 +2,6 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.inventory.model.job.JobCriticality;
@@ -17,10 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_MON_ORDER_STEPS)
-@Proxy(lazy = false)
 public class DBItemMonitoringOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;

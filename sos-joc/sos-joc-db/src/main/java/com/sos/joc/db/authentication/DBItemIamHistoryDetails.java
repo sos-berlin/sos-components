@@ -1,7 +1,5 @@
 package com.sos.joc.db.authentication;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -10,10 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_HISTORY_DETAILS)
-@Proxy(lazy = false)
 public class DBItemIamHistoryDetails {
 
     @Id

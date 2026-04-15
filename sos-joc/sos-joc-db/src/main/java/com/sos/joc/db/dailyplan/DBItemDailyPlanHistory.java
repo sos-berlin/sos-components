@@ -2,7 +2,6 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -14,13 +13,9 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DPL_HISTORY)
-@Proxy(lazy = false)
 public class DBItemDailyPlanHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -45,7 +40,6 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[WORKFLOW_FOLDER]", nullable = true)
     private String workflowFolder;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SCHEDULED_FOR]", nullable = true)
     private Date scheduledFor;
 
@@ -56,15 +50,12 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[MESSAGE]", nullable = false)
     private String message;
 
-    @Temporal(TemporalType.DATE)
     @Column(name = "[DAILY_PLAN_DATE]", nullable = false)
     private Date dailyPlanDate;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SUBMISSION_TIME]", nullable = false)
     private Date submissionTime;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 

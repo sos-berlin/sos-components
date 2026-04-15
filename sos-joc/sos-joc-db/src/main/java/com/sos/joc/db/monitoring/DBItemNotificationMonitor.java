@@ -2,7 +2,6 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -20,10 +19,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_MON_NOT_MONITORS)
-@Proxy(lazy = false)
 public class DBItemNotificationMonitor extends DBItem {
 
     private static final long serialVersionUID = 1L;

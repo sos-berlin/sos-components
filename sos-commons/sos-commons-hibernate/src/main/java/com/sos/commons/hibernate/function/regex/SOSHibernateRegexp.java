@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;

@@ -17,7 +17,7 @@ public class SOSHibernateSecondsDiffTest {
 
     @Ignore
     @Test
-    public void testSum() throws Exception {
+    public void testSum() {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -34,7 +34,7 @@ public class SOSHibernateSecondsDiffTest {
             LOGGER.info("---- SUM=" + result);
 
         } catch (Exception e) {
-            throw e;
+            LOGGER.error(e.toString(), e);
         } finally {
             if (factory != null) {
                 factory.close(session);
@@ -44,7 +44,7 @@ public class SOSHibernateSecondsDiffTest {
 
     @Ignore
     @Test
-    public void testAvg() throws Exception {
+    public void testAvg() {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -64,7 +64,7 @@ public class SOSHibernateSecondsDiffTest {
             LOGGER.info("---- AVG=" + result);
 
         } catch (Exception e) {
-            throw e;
+            LOGGER.error(e.toString(), e);
         } finally {
             if (factory != null) {
                 factory.close(session);

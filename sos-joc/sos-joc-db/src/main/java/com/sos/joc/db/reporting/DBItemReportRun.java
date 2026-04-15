@@ -2,8 +2,6 @@ package com.sos.joc.db.reporting;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.inventory.model.report.ReportOrder;
 import com.sos.inventory.model.report.TemplateId;
@@ -15,14 +13,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_REPORT_RUNS)
-@Proxy(lazy = false)
 public class DBItemReportRun extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -67,11 +61,9 @@ public class DBItemReportRun extends DBItem {
     private Integer reportCount;
 
     @Column(name = "[MONTH_FROM]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
 
     @Column(name = "[MONTH_TO]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date dateTo;
 
     @Column(name = "[CONTROLLER_ID]", nullable = true)
@@ -84,11 +76,9 @@ public class DBItemReportRun extends DBItem {
     private String errorText;
 
     @Column(name = "[CREATED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     public DBItemReportRun() {

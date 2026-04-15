@@ -2,21 +2,17 @@ package com.sos.joc.db.monitoring;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
+import com.sos.joc.db.DBItem;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.MonitoringConstants;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.MonitoringConstants;
-
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_MON_NOT_ACKNOWLEDGEMENTS)
-@Proxy(lazy = false)
 public class DBItemNotificationAcknowledgement extends DBItem {
 
     private static final long serialVersionUID = 1L;

@@ -566,7 +566,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
             if (isStatelessSession) {
                 item = (T) ((StatelessSession) currentSession).get(entityClass, id);
             } else {
-                item = ((Session) currentSession).get(entityClass, id);
+                item = ((Session) currentSession).find(entityClass, id);
             }
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateObjectOperationException(e, item));

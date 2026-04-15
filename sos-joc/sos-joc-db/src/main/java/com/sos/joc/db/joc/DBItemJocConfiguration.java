@@ -2,7 +2,6 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -14,15 +13,11 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ACCOUNT]",
         "[OBJECT_TYPE]", "[CONFIGURATION_TYPE]", "[NAME]" }) })
-@Proxy(lazy = false)
 public class DBItemJocConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -58,7 +53,6 @@ public class DBItemJocConfiguration extends DBItem {
     @Column(name = "[CONFIGURATION_ITEM]", nullable = false)
     private String configurationItem;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 

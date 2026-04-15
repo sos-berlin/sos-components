@@ -2,7 +2,6 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -14,14 +13,10 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SECURITY_LEVEL]", "[URI]" }) })
-@Proxy(lazy = false)
 public class DBItemInventoryJSInstance extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -73,7 +68,6 @@ public class DBItemInventoryJSInstance extends DBItem {
     private String certificate;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     public Long getId() {

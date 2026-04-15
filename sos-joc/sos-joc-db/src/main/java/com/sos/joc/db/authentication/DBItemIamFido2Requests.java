@@ -2,8 +2,6 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -11,13 +9,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_FIDO2_REQUESTS)
-@Proxy(lazy = false)
 public class DBItemIamFido2Requests {
 
     @Id
@@ -34,7 +28,6 @@ public class DBItemIamFido2Requests {
     @Column(name = "[REQUEST_ID]", nullable = false)
     private String requestId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 

@@ -1,6 +1,5 @@
 package com.sos.joc.db.inventory;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -17,18 +16,15 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_EXTENDED_DEPENDENCIES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[INV_ID]", "[DEP_ID]" }) })
-@Proxy(lazy = false)
 public class DBItemInventoryExtendedDependency extends DBItem {
-/*
- * inva.ID AS INV_ID, inva.NAME AS INV_NAME, inva.FOLDER AS INV_FOLDER, inva.TYPE AS INV_TYPE, 
- * inva.VALID AS INV_VALID, inva.DEPLOYED AS INV_DEPLOYED, inva.RELEASED AS INV_RELEASED,
- * 
- * invb.ID AS DEP_ID, invb.NAME AS DEP_NAME, invb.FOLDER AS DEP_FOLDER, invb.TYPE AS DEP_TYPE, 
- * invb.VALID AS DEP_VALID, invb.DEPLOYED AS DEP_DEPLOYED, invb.RELEASED AS DEP_RELEASED,
- * */
+
+    /*
+     * inva.ID AS INV_ID, inva.NAME AS INV_NAME, inva.FOLDER AS INV_FOLDER, inva.TYPE AS INV_TYPE, inva.VALID AS INV_VALID, inva.DEPLOYED AS INV_DEPLOYED,
+     * inva.RELEASED AS INV_RELEASED, invb.ID AS DEP_ID, invb.NAME AS DEP_NAME, invb.FOLDER AS DEP_FOLDER, invb.TYPE AS DEP_TYPE, invb.VALID AS DEP_VALID,
+     * invb.DEPLOYED AS DEP_DEPLOYED, invb.RELEASED AS DEP_RELEASED,
+     */
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -52,7 +48,7 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[INV_ENFORCE]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean invEnforce;
-    
+
     @Id
     @Column(name = "[DEP_ID]", nullable = true)
     private Long depId;
@@ -74,129 +70,145 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     @Column(name = "[DEP_ENFORCE]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private Boolean depEnforce;
-    
+
     public Long getInvId() {
         return invId;
     }
+
     public void setInvId(Long invId) {
         this.invId = invId;
     }
-    
+
     public String getInvName() {
         return invName;
     }
+
     public void setInvName(String invName) {
         this.invName = invName;
     }
-    
+
     public String getInvFolder() {
         return invFolder;
     }
+
     public void setInvFolder(String invFolder) {
         this.invFolder = invFolder;
     }
-    
+
     public Integer getInvType() {
         return invType;
     }
+
     public void setInvType(Integer invType) {
         this.invType = invType;
     }
-    
+
     public Boolean isInvValid() {
         return invValid;
     }
+
     public void setInvValid(Boolean invValid) {
         this.invValid = invValid;
     }
-    
+
     public Boolean isInvDeployed() {
         return invDeployed;
     }
+
     public void setInvDeployed(Boolean invDeployed) {
         this.invDeployed = invDeployed;
     }
-    
+
     public Boolean isInvReleased() {
         return invReleased;
     }
+
     public void setInvReleased(Boolean invReleased) {
         this.invReleased = invReleased;
     }
-    
+
     public Boolean getInvEnforce() {
         return invEnforce;
     }
+
     public void setInvEnforce(Boolean invEnforce) {
         this.invEnforce = invEnforce;
     }
-    
+
     public Long getDepId() {
         return depId;
     }
+
     public void setDepId(Long depId) {
         this.depId = depId;
     }
-    
+
     public String getDepName() {
         return depName;
     }
+
     public void setDepName(String depName) {
         this.depName = depName;
     }
-    
+
     public String getDepFolder() {
         return depFolder;
     }
+
     public void setDepFolder(String depFolder) {
         this.depFolder = depFolder;
     }
-    
+
     public Integer getDepType() {
         return depType;
     }
+
     public void setDepType(Integer depType) {
         this.depType = depType;
     }
-    
+
     public Boolean isDepValid() {
         return depValid;
     }
+
     public void setDepValid(Boolean depValid) {
         this.depValid = depValid;
     }
-    
+
     public Boolean isDepDeployed() {
         return depDeployed;
     }
+
     public void setDepDeployed(Boolean depDeployed) {
         this.depDeployed = depDeployed;
     }
-    
+
     public Boolean isDepReleased() {
         return depReleased;
     }
+
     public void setDepReleased(Boolean depReleased) {
         this.depReleased = depReleased;
     }
-    
+
     public Boolean getDepEnforce() {
         return depEnforce;
     }
+
     public void setDepEnforce(Boolean depEnforce) {
         this.depEnforce = depEnforce;
     }
-    
+
     @Transient
     public Dependency getDependency() {
         return new Dependency(invId, invName, getTypeAsEnum(invType), invFolder, invValid, invDeployed, invReleased, invEnforce);
     }
-    
+
     @Transient
     public Dependency getReferencedBy() {
         return new Dependency(depId, depName, getTypeAsEnum(depType), depFolder, depValid, depDeployed, depReleased, depEnforce);
     }
-    
+
     @Transient
     public RequestItem getInvRequestItem() {
         RequestItem req = new RequestItem();
@@ -204,7 +216,7 @@ public class DBItemInventoryExtendedDependency extends DBItem {
         req.setType(getTypeAsEnum(invType));
         return req;
     }
-    
+
     @Transient
     public RequestItem getDepRequestItem() {
         RequestItem req = new RequestItem();
@@ -212,10 +224,10 @@ public class DBItemInventoryExtendedDependency extends DBItem {
         req.setType(getTypeAsEnum(depType));
         return req;
     }
-    
+
     @Transient
     public ConfigurationType getTypeAsEnum(Integer type) {
-        if(type == null) {
+        if (type == null) {
             return null;
         }
         try {
@@ -229,10 +241,10 @@ public class DBItemInventoryExtendedDependency extends DBItem {
     public void setInvType(ConfigurationType val) {
         setInvType(val == null ? null : val.intValue());
     }
-    
+
     @Transient
     public void setDepType(ConfigurationType val) {
         setDepType(val == null ? null : val.intValue());
     }
-    
+
 }

@@ -2,8 +2,6 @@ package com.sos.joc.db.inventory;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -12,14 +10,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_ORDER_TAGS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
-@Proxy(lazy = false)
 public class DBItemInventoryOrderTag extends DBItem implements IDBItemTag {
 
     private static final long serialVersionUID = 1L;
@@ -39,7 +33,6 @@ public class DBItemInventoryOrderTag extends DBItem implements IDBItemTag {
     private Integer ordering;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     public Long getId() {
@@ -57,7 +50,7 @@ public class DBItemInventoryOrderTag extends DBItem implements IDBItemTag {
     public void setName(String val) {
         name = val;
     }
-    
+
     public Long getGroupId() {
         return groupId;
     }
@@ -84,5 +77,5 @@ public class DBItemInventoryOrderTag extends DBItem implements IDBItemTag {
     public void setModified(Date val) {
         modified = val;
     }
-    
+
 }

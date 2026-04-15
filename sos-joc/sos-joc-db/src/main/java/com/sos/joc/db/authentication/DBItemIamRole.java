@@ -1,7 +1,5 @@
 package com.sos.joc.db.authentication;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -11,10 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_ROLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[IDENTITY_SERVICE_ID]", "[ROLE_NAME]" }) })
-@Proxy(lazy = false)
 public class DBItemIamRole {
 
     @Id

@@ -2,8 +2,6 @@ package com.sos.joc.db.joc;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -15,14 +13,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_JOC_APPROVAL_REQUESTS)
-@Proxy(lazy = false)
 public class DBItemJocApprovalRequest extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -49,10 +43,10 @@ public class DBItemJocApprovalRequest extends DBItem {
 
     @Column(name = "[APPROVER_STATE]", nullable = false)
     private Integer approverState;
-    
+
     @Column(name = "[CATEGORY]", nullable = false)
     private Integer category;
-    
+
     @Column(name = "[TITLE]", nullable = false)
     private String title;
 
@@ -60,11 +54,9 @@ public class DBItemJocApprovalRequest extends DBItem {
     private String comment;
 
     @Column(name = "[REQUESTOR_STATE_DATE]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date requestorStateDate;
 
     @Column(name = "[APPROVER_STATE_DATE]", nullable = true)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date approverStateDate;
 
     public Long getId() {
@@ -123,7 +115,7 @@ public class DBItemJocApprovalRequest extends DBItem {
     public void setRequestorState(Integer val) {
         requestorState = val;
     }
-    
+
     public Integer getApproverState() {
         return approverState;
     }
@@ -140,7 +132,7 @@ public class DBItemJocApprovalRequest extends DBItem {
     public void setApproverState(Integer val) {
         approverState = val;
     }
-    
+
     public Integer getCategory() {
         return category;
     }
@@ -157,7 +149,7 @@ public class DBItemJocApprovalRequest extends DBItem {
     public void setCategory(Integer val) {
         category = val;
     }
-    
+
     public String getTitle() {
         return title;
     }
@@ -179,7 +171,7 @@ public class DBItemJocApprovalRequest extends DBItem {
         }
         comment = val;
     }
-    
+
     public Date getRequestorStateDate() {
         return requestorStateDate;
     }

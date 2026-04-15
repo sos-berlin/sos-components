@@ -1,7 +1,5 @@
 package com.sos.joc.db.encipherment;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -10,10 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_ENC_AGENT_CERTIFICATES)
-@Proxy(lazy = false)
 public class DBItemEncAgentCertificate extends DBItem {
     
     private static final long serialVersionUID = 1L;

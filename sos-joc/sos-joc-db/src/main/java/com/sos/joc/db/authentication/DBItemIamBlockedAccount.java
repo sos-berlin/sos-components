@@ -2,8 +2,6 @@ package com.sos.joc.db.authentication;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -11,13 +9,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_IAM_BLOCKLIST)
-@Proxy(lazy = false)
 public class DBItemIamBlockedAccount {
 
     @Id
@@ -31,7 +25,6 @@ public class DBItemIamBlockedAccount {
     @Column(name = "[COMMENT]", nullable = false)
     private String comment;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SINCE]", nullable = false)
     private Date since;
 

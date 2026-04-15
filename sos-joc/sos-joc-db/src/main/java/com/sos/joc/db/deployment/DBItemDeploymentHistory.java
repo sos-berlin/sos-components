@@ -5,7 +5,6 @@ import java.util.Date;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.Proxy;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.inventory.model.deploy.DeployType;
@@ -17,14 +16,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_DEP_HISTORY)
-@Proxy(lazy = false)
 public class DBItemDeploymentHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -91,11 +86,9 @@ public class DBItemDeploymentHistory extends DBItem {
     private String errorMessage;
 
     @Column(name = "[DEPLOYMENT_DATE]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date deploymentDate;
 
     @Column(name = "[DELETED_DATE]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date deleteDate;
 
     @Column(name = "[AUDITLOG_ID]", nullable = false)

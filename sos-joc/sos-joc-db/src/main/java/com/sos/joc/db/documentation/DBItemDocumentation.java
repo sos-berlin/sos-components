@@ -2,7 +2,6 @@ package com.sos.joc.db.documentation;
 
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
@@ -14,15 +13,11 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_DOCUMENTATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]" }) })
-@Proxy(lazy = false)
 public class DBItemDocumentation extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -57,11 +52,9 @@ public class DBItemDocumentation extends DBItem {
     @Column(name = "[IMAGE_ID]", nullable = true)
     private Long imageId;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 

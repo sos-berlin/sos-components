@@ -4,8 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Date;
 
-import org.hibernate.annotations.Proxy;
-
 import com.sos.commons.hibernate.id.SOSHibernateIdGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.report.Frequency;
@@ -16,15 +14,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_REPORTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
-@Proxy(lazy = false)
 public class DBItemReport extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -42,22 +36,18 @@ public class DBItemReport extends DBItem {
     private Integer frequency;
 
     @Column(name = "[DATE_FROM]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date dateFrom;
 
     @Column(name = "[DATE_TO]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date dateTo;
 
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
 
     @Column(name = "[CREATED]", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)

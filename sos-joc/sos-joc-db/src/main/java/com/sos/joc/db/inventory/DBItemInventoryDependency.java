@@ -1,6 +1,5 @@
 package com.sos.joc.db.inventory;
 
-import org.hibernate.annotations.Proxy;
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.joc.db.DBItem;
@@ -15,10 +14,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
-@SuppressWarnings("deprecation")
 @Entity
 @Table(name = DBLayer.TABLE_INV_DEPENDENCIES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[INV_ID]", "[INV_DEP_ID]" }) })
-@Proxy(lazy = false)
 public class DBItemInventoryDependency extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -54,7 +51,7 @@ public class DBItemInventoryDependency extends DBItem {
 
     @Transient
     private ConfigurationType invType;
-    
+
     @Transient
     public ConfigurationType getInvType() {
         return invType;
@@ -129,19 +126,19 @@ public class DBItemInventoryDependency extends DBItem {
         }
         this.published = published;
     }
-    
+
     public Boolean getInvEnforce() {
         return invEnforce;
     }
-    
+
     public void setInvEnforce(Boolean invEnforce) {
         this.invEnforce = invEnforce;
     }
-    
+
     public Boolean getDepEnforce() {
         return depEnforce;
     }
-    
+
     public void setDepEnforce(Boolean depEnforce) {
         this.depEnforce = depEnforce;
     }

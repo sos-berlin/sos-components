@@ -1,12 +1,8 @@
 package com.sos.commons.hibernate.id;
 
-import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
-
 import java.lang.reflect.Member;
 import java.util.EnumSet;
-import java.util.Properties;
 
-import org.hibernate.boot.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -15,42 +11,26 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.Configurable;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
-import org.hibernate.id.insert.InsertReturningDelegate;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
-public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, Configurable, OnExecutionGenerator {
+public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, OnExecutionGenerator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateIdGeneratorImpl.class);
     private static final long serialVersionUID = 1L;
-
-    private final String sequenceName;
+    private String sequenceName;
     private String sequenceCallSyntax;
 
-    public SOSHibernateIdGeneratorImpl(SOSHibernateIdGenerator config, Member member, CustomIdGeneratorCreationContext creationContext) {
-        sequenceName = config.sequenceName();
-    }
+    public SOSHibernateIdGeneratorImpl(SOSHibernateIdGenerator config, Member member, org.hibernate.generator.GeneratorCreationContext context) {
+        this.sequenceName = config.sequenceName();
 
-    /** dialect.getSequenceSupport().supportsSequences(); - returns true for MSSQL<br/>
-     * therefore, sequences are not supported dynamically but only for Oracle/PgSQL<br/>
-     */
-    @Override
-    public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-        final Dialect dialect = serviceRegistry.getService(JdbcEnvironment.class).getDialect();
+        final Dialect dialect = context.getServiceRegistry().getService(JdbcEnvironment.class).getDialect();
         if (dialect instanceof OracleDialect || dialect instanceof PostgreSQLDialect) {
             sequenceCallSyntax = dialect.getSequenceSupport().getSequenceNextValString(sequenceName);
         }
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("sequenceCallSyntax=" + sequenceCallSyntax);
-        }
     }
 
-    /** true - AutoIncrement/Identity - H2/MySQL/MSSQL<br />
+    /** true - Auto-Increment/Identity - H2/MySQL/MSSQL<br />
      * false - Sequence - Oracle/PgSQL<br/>
      */
     @Override
@@ -58,25 +38,22 @@ public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, Co
         return sequenceCallSyntax == null;
     }
 
-    /** AutoIncrement/Identity only<br/>
-     */
-    @SuppressWarnings({ "removal" })
+    /** Auto-Increment/Identity only */
+    @SuppressWarnings("removal")
     @Override
-    public org.hibernate.id.insert.InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(
-            org.hibernate.id.PostInsertIdentityPersister persister) {
-        if (persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled()) {
-            // this case is used
-            return new GetGeneratedKeysDelegate(persister, false, EventType.INSERT);
-        } else {
-            return new InsertReturningDelegate(persister, EventType.INSERT);
-        }
+    public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+        return new GetGeneratedKeysDelegate(persister, false, EventType.INSERT);
     }
 
-    /** Sequence only<br/>
-     */
+    /** Sequence only */
     @Override
     public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
         return session.createNativeQuery(sequenceCallSyntax, Long.class).uniqueResult();
+    }
+
+    @Override
+    public EnumSet<EventType> getEventTypes() {
+        return EnumSet.of(EventType.INSERT);
     }
 
     @Override
@@ -93,10 +70,4 @@ public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, Co
     public String[] getReferencedColumnValues(Dialect dialect) {
         return null;
     }
-
-    @Override
-    public EnumSet<EventType> getEventTypes() {
-        return INSERT_ONLY;
-    }
-
 }
