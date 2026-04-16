@@ -74,7 +74,6 @@ public class OrderNotificationImpl extends JOCResourceImpl implements IOrderNoti
         item.setConfiguration(entity.getConfiguration());
         item.setMessage(entity.getMessage());
         item.setError(entity.getErrorText());
-        item.setCreated(entity.getCreated());
         return item;
     }
 

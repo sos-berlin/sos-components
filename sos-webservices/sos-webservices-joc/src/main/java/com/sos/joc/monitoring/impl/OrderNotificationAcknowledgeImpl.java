@@ -3,6 +3,7 @@ package com.sos.joc.monitoring.impl;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,15 +34,15 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             JsonValidator.validateFailFast(inBytes, OrderNotificationAcknowledgeFilter.class);
             OrderNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, OrderNotificationAcknowledgeFilter.class);
 
-//            // 1) notification view changes permitted
-//            if (!getJocPermissions_(accessToken).getNotification().getManage()) {
-//                return initPermissions(in.getControllerId(), false);
-//            }
-//            // 2) controller permitted (because of controller related monitoring entries)
-//            if (!getBasicControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
-//                return initPermissions(in.getControllerId(), false);
-//            }
-            
+            // // 1) notification view changes permitted
+            // if (!getJocPermissions_(accessToken).getNotification().getManage()) {
+            // return initPermissions(in.getControllerId(), false);
+            // }
+            // // 2) controller permitted (because of controller related monitoring entries)
+            // if (!getBasicControllerPermissions(in.getControllerId(), accessToken).getOrders().getView()) {
+            // return initPermissions(in.getControllerId(), false);
+            // }
+
             boolean perm = getBasicJocPermissions(accessToken).getNotification().getManage() && getBasicControllerPermissions(in.getControllerId(),
                     accessToken).getOrders().getView();
             boolean fourEyesPerm = get4EyesJocPermissions().getNotification().getManage();
@@ -49,7 +50,7 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             if (response != null) {
                 return response;
             }
-            
+
             storeAuditLog(in.getAuditLog());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -59,7 +60,6 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             if (in.getNotificationIds() != null && in.getNotificationIds().size() > 0) {
                 session.beginTransaction();
 
-                Date created = new Date();
                 String account = getAccount();
                 for (Long notificationId : in.getNotificationIds()) {
                     // TODO check controllerId
@@ -73,8 +73,11 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
                                     .intValue()));
                             result.setAccount(account);
                             result.setComment(in.getComment());
-                            result.setCreated(created);
                             session.save(result);
+
+                            // result.getCreated() - db utc datetime automatically inserted
+                            // - remains null after save because StatelessSession has no persistence context and does not update the item
+                            session.refresh(result);
 
                             notification.setType(NotificationType.ACKNOWLEDGED);
                             session.update(notification);
@@ -82,7 +85,7 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
 
                         ac.setAccount(result.getAccount());
                         ac.setComment(result.getComment());
-                        ac.setCreated(result.getCreated());
+                        ac.setCreated(SOSDate.toDate(result.getCreated()));
                     }
                 }
                 session.commit();

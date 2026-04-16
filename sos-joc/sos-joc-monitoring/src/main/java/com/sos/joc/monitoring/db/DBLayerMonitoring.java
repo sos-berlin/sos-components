@@ -342,7 +342,6 @@ public class DBLayerMonitoring extends DBLayer {
         item.setHasMonitors(notification.getMonitors().size() > 0);
         item.setWarn(warn);
         item.setWarnText(warnText);
-        item.setCreated(new Date());
         getSession().save(item);
 
         DBItemNotificationWorkflow wItem = new DBItemNotificationWorkflow();
@@ -367,7 +366,6 @@ public class DBLayerMonitoring extends DBLayer {
         item.setMessage(event.getMessage());
         item.setException(exception);
         item.setHasMonitors(notification.getMonitors().size() > 0);
-        item.setCreated(new Date());
         return item;
     }
 
@@ -382,7 +380,6 @@ public class DBLayerMonitoring extends DBLayer {
             item.setError(true);
             item.setErrorText(notifyResult.getError().getMessage());
         }
-        item.setCreated(new Date());
         return item;
     }
 
@@ -399,7 +396,6 @@ public class DBLayerMonitoring extends DBLayer {
             item.setError(true);
             item.setErrorText(notifyResult.getError().getMessage());
         }
-        item.setCreated(new Date());
 
         getSession().save(item);
         return item;
@@ -418,7 +414,6 @@ public class DBLayerMonitoring extends DBLayer {
             item.setError(true);
             item.setErrorText(exception.getMessage());
         }
-        item.setCreated(new Date());
 
         getSession().save(item);
         return item;
@@ -486,9 +481,6 @@ public class DBLayerMonitoring extends DBLayer {
         item.setErrorText(history.getErrorText());
         item.setLogId(history.getLogId());
 
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
-
         return item;
     }
 
@@ -521,9 +513,6 @@ public class DBLayerMonitoring extends DBLayer {
         item.setErrorCode(history.getErrorCode());
         item.setErrorText(history.getErrorText());
         item.setLogId(history.getLogId());
-
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
 
         return item;
     }

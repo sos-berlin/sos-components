@@ -337,8 +337,6 @@ public class HistoryInsertMain {
 
         item.setLogId(history.getLogId());
 
-        item.setCreated(history.getCreated());
-        item.setModified(item.getCreated());
         return item;
     }
 
@@ -432,8 +430,6 @@ public class HistoryInsertMain {
 
         item.setLogId(history.getLogId());
 
-        item.setCreated(history.getCreated());
-        item.setModified(item.getCreated());
         return item;
     }
 

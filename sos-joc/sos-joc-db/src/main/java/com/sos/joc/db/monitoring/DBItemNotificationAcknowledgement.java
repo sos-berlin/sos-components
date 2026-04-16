@@ -1,7 +1,8 @@
 package com.sos.joc.db.monitoring;
 
-import java.util.Date;
+import java.time.Instant;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.MonitoringConstants;
@@ -27,7 +28,8 @@ public class DBItemNotificationAcknowledgement extends DBItem {
     private String comment;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public DBItemNotificationAcknowledgement() {
     }
@@ -59,11 +61,7 @@ public class DBItemNotificationAcknowledgement extends DBItem {
         comment = normalizeValue(val, MonitoringConstants.MAX_LEN_COMMENT);
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 

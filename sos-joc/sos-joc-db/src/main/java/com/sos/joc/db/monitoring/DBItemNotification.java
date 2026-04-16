@@ -1,9 +1,10 @@
 package com.sos.joc.db.monitoring;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.history.JobWarning;
 import com.sos.joc.db.DBItem;
@@ -53,7 +54,8 @@ public class DBItemNotification extends DBItem {
     private String warnText;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public DBItemNotification() {
     }
@@ -134,11 +136,7 @@ public class DBItemNotification extends DBItem {
         return warnText;
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 

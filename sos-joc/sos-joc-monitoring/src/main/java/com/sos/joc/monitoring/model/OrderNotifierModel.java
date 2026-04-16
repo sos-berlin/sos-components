@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.joc.cluster.JocCluster;
@@ -364,8 +365,8 @@ public class OrderNotifierModel {
             return;
         }
         String jobName = mos == null ? "" : mos.getJobName();
-        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), jobName, mn
-                .getCreated(), getPostEventMessage(mn, mo, mos)));
+        EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), jobName,
+                SOSDate.toDate(mn.getCreated()), getPostEventMessage(mn, mo, mos)));
     }
 
     // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage

@@ -500,9 +500,6 @@ public class HistoryMonitoringModel implements Serializable {
 
         item.setError(false);
 
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
-
         try {
             dbLayer.getSession().save(item);
         } catch (SOSHibernateObjectOperationException e) {
@@ -613,9 +610,6 @@ public class HistoryMonitoringModel implements Serializable {
         item.setStartVariables(hosb.getStartVariables());
 
         item.setError(false);
-
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
 
         try {
             dbLayer.getSession().save(item);

@@ -1,9 +1,12 @@
 package com.sos.joc.db.monitoring;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -134,10 +137,12 @@ public class DBItemMonitoringOrder extends DBItem {
     private Long logId;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public DBItemMonitoringOrder() {
     }
@@ -434,19 +439,11 @@ public class DBItemMonitoringOrder extends DBItem {
         logId = val;
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
     }
 
