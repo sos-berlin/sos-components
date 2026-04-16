@@ -9,11 +9,11 @@ import java.lang.annotation.Target;
 
 import org.hibernate.annotations.IdGeneratorType;
 
-import com.sos.commons.hibernate.generator.SOSIdGeneratorImpl;
+import com.sos.commons.hibernate.generator.SOSHibernateIdGeneratorImpl;
 
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD })
-@IdGeneratorType(SOSIdGeneratorImpl.class)
+@IdGeneratorType(SOSHibernateIdGeneratorImpl.class)
 public @interface SOSIdGenerator {
 
     String sequenceName();

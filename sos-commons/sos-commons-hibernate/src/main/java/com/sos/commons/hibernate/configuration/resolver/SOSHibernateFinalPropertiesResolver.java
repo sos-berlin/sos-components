@@ -32,6 +32,74 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         return configuration;
     }
 
+    public static Dbms getDbms(Dialect dialect) {
+        return getDbmsFromDialect(dialect == null ? null : dialect.getClass().getSimpleName());
+    }
+
+    public static Dbms finalCheckAndSetDbms(SessionFactory f, Dialect dialect, Dbms dbms) {
+        Dbms d = dbms;
+        if (d == null) {
+            d = Dbms.UNKNOWN;
+        }
+        if (f == null) {
+            return d;
+        }
+        if (Dbms.UNKNOWN.equals(d)) {
+            d = getDbms(dialect);
+        }
+        f.getProperties().put(SOSHibernate.SESSION_FACTORY_VAR_DBMS, d);
+        return d;
+    }
+
+    public static Dbms retrieveDbms(SessionFactory f) {
+        if (f == null) {
+            return Dbms.UNKNOWN;
+        }
+        Dbms dbms = null;
+        try {
+            dbms = (Dbms) f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DBMS);
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return dbms == null ? Dbms.UNKNOWN : dbms;
+    }
+
+    public static void populateDatabaseMetaData(DialectResolutionInfo info) {
+        Dbms dbms = retrieveDbms(info);
+        info.getConfigurationValues().put(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA, new SOSHibernateDatabaseMetaData(dbms, info
+                .getDatabaseMetadata()));
+    }
+
+    // one-time operation
+    public static SOSHibernateDatabaseMetaData retrieveDatabaseMetaData(SessionFactory f) {
+        Object o = f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA);
+        if (o == null) {
+            return null;
+        }
+        // remove from SessionFactory-Object properties
+        f.getProperties().remove(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA);
+        return (SOSHibernateDatabaseMetaData) o;
+    }
+
+    public Dbms getDbms() {
+        return dbms;
+    }
+
+    private boolean isAllowMetadataOnBoot(Configuration configuration) {
+        return configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true");
+    }
+
+    private boolean isMySQLURL(Configuration configuration) {
+        return isMySQLURL(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
+    }
+
+    private boolean isMySQLURL(String url) {
+        if (url == null) {
+            return false;
+        }
+        return url.contains("jdbc:mysql");
+    }
+
     private void updateConnectionUrlForMysqlWithMariaDriver(Properties properties) {
         String driver = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_DRIVERCLASS);
         String connectionUrl = properties.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
@@ -96,21 +164,6 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         }
     }
 
-    private boolean isMySQLURL(Configuration configuration) {
-        return isMySQLURL(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL));
-    }
-
-    private boolean isMySQLURL(String url) {
-        if (url == null) {
-            return false;
-        }
-        return url.contains("jdbc:mysql");
-    }
-
-    private boolean isAllowMetadataOnBoot(Configuration configuration) {
-        return configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_ALLOW_METADATA_ON_BOOT).equals("true");
-    }
-
     private String getConfiguredDialectOrDefault(Configuration configuration, String dialect, String defaultDialect) {
         if (dialect.startsWith(SOSHibernate.DEFAULT_DIALECT_PACKAGE)) {
             configuration.getProperties().setProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT, defaultDialect);
@@ -151,10 +204,6 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         return dbms;
     }
 
-    private void populateDbms(Configuration configuration) {
-        setProperty(configuration, SOSHibernate.SESSION_FACTORY_VAR_DBMS, this.dbms);
-    }
-
     private static Dbms getDbmsFromDialect(String dialect) {
         if (SOSString.isEmpty(dialect)) {
             return Dbms.UNKNOWN;
@@ -163,63 +212,13 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
                 Map.Entry::getValue).findFirst().orElse(Dbms.UNKNOWN);
     }
 
-    private static Dbms getDbms(Dialect dialect) {
-        return getDbmsFromDialect(dialect == null ? null : dialect.getClass().getSimpleName());
-    }
-
-    public static Dbms finalCheckAndSetDbms(SessionFactory f, Dialect dialect, Dbms dbms) {
-        Dbms d = dbms;
-        if (d == null) {
-            d = Dbms.UNKNOWN;
-        }
-        if (f == null) {
-            return d;
-        }
-        if (Dbms.UNKNOWN.equals(d)) {
-            d = getDbms(dialect);
-        }
-        f.getProperties().put(SOSHibernate.SESSION_FACTORY_VAR_DBMS, d);
-        return d;
-    }
-
-    public static Dbms retrieveDbms(SessionFactory f) {
-        if (f == null) {
-            return Dbms.UNKNOWN;
-        }
-        Dbms dbms = null;
-        try {
-            dbms = (Dbms) f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DBMS);
-        } catch (Exception e) {
-            LOGGER.warn(e.toString());
-        }
-        return dbms == null ? Dbms.UNKNOWN : dbms;
-    }
-
     private static Dbms retrieveDbms(DialectResolutionInfo info) {
         Object o = info.getConfigurationValues().get(SOSHibernate.SESSION_FACTORY_VAR_DBMS);
         return o == null ? Dbms.UNKNOWN : (Dbms) o;
     }
 
-    public static void populateDatabaseMetaData(DialectResolutionInfo info) {
-        Dbms dbms = retrieveDbms(info);
-        info.getConfigurationValues().put(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA, new SOSHibernateDatabaseMetaData(dbms, info
-                .getDatabaseMetadata()));
-    }
-
-    // one-time operation
-    public static SOSHibernateDatabaseMetaData retrieveDatabaseMetaData(SessionFactory f) {
-        Object o = f.getProperties().get(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA);
-        if (o == null) {
-            return null;
-        }
-        // remove from SessionFactory-Object properties
-        f.getProperties().remove(SOSHibernate.SESSION_FACTORY_VAR_DATABASE_METADATA);
-        return (SOSHibernateDatabaseMetaData) o;
-    }
-
-    private void removeProperty(Configuration configuration, String key) {
-        configuration.getProperties().remove(key);
-        configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
+    private void populateDbms(Configuration configuration) {
+        setProperty(configuration, SOSHibernate.SESSION_FACTORY_VAR_DBMS, this.dbms);
     }
 
     private void setProperty(Configuration configuration, String key, Object value) {
@@ -227,8 +226,9 @@ public class SOSHibernateFinalPropertiesResolver implements ISOSHibernateConfigu
         configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
     }
 
-    public Dbms getDbms() {
-        return dbms;
+    private void removeProperty(Configuration configuration, String key) {
+        configuration.getProperties().remove(key);
+        configuration.getStandardServiceRegistryBuilder().getSettings().remove(key);
     }
 
 }

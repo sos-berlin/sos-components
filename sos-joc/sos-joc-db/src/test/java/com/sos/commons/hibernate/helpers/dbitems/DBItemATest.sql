@@ -1,4 +1,22 @@
 ######################################################################################################
+# MSSQL
+######################################################################################################
+SET ANSI_DEFAULTS ON;
+IF NOT EXISTS (SELECT "ID" FROM sysobjects WHERE "ID" = OBJECT_ID(N''+DB_NAME()+'.'+SCHEMA_NAME()+'.A_TEST'))
+BEGIN
+    CREATE TABLE A_TEST (
+        "ID"                        	BIGINT	IDENTITY(1,1)	NOT NULL,
+        "NAME"                			NVARCHAR(255)    		NOT NULL,
+        "JAVA_DATE_MANUAL"          	DATETIME                NOT NULL,
+    	"JAVA_DATE_AUTO"            	DATETIME                NOT NULL,
+    	"DB_CURRENT_TIMESTAMP_AUTO" 	DATETIME                NOT NULL,
+    	"DB_CURRENT_TIMESTAMP_UTC_AUTO"	DATETIME                NOT NULL,
+        PRIMARY KEY ("ID")
+    );
+    COMMIT;
+END;
+
+######################################################################################################
 # MySQL
 ######################################################################################################
 set SQL_MODE=ANSI_QUOTES;
@@ -11,8 +29,6 @@ CREATE TABLE IF NOT EXISTS A_TEST(
     "DB_CURRENT_TIMESTAMP_UTC_AUTO"	DATETIME                    NOT NULL,
     PRIMARY KEY ("ID")
 ) ENGINE=InnoDB;
-
-
 
 ######################################################################################################
 # ORACLE

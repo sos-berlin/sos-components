@@ -243,28 +243,39 @@ public class SOSHibernateFactory implements Serializable {
 
     public String getCurrentTimestampUtcSelectString() {
         if (currentTimestampUtcSelectString == null) {
-            switch (dbms) {
-            case H2:
-                currentTimestampUtcSelectString = "select now()";// TODO UTC
-                break;
-            case MYSQL:
-                currentTimestampUtcSelectString = "select utc_timestamp()";
-                break;
-            case ORACLE:
-                currentTimestampUtcSelectString = "select cast(sys_extract_utc(systimestamp) as date) from dual";
-                break;
-            case MSSQL:
-                currentTimestampUtcSelectString = "select getutcdate()";
-                break;
-            case PGSQL:
-                currentTimestampUtcSelectString = "select timezone('UTC', now())";
-                break;
-            default:
-                currentTimestampUtcSelectString = getCurrentTimestampSelectString();
-                break;
-            }
+            currentTimestampUtcSelectString = getCurrentTimestampUtcSelectString(dbms);
         }
         return currentTimestampUtcSelectString;
+    }
+
+    public static String getCurrentTimestampUtcSelectString(Dbms dbms) {
+        String expression = getCurrentTimestampUtcExpression(dbms);
+        if (SOSString.isEmpty(expression)) {
+            return "";
+        }
+        if (dbms == Dbms.ORACLE) {
+            return "select " + expression + " from dual";
+        }
+        return "select " + expression;
+    }
+
+    public static String getCurrentTimestampUtcExpression(Dbms dbms) {
+        if (dbms == null) {
+            return "";
+        }
+        switch (dbms) {
+        case H2:
+        case MYSQL:
+            return "utc_timestamp()";
+        case ORACLE:
+            return "cast(sys_extract_utc(systimestamp) as date)";
+        case MSSQL:
+            return "getutcdate()";
+        case PGSQL:
+            return "timezone('UTC', now())";
+        default:
+            return "";
+        }
     }
 
     public int getTransactionIsolation() throws SOSHibernateConfigurationException {

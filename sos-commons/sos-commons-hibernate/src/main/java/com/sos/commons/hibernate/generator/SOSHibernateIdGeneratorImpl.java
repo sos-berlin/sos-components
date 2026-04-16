@@ -17,13 +17,13 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 
-public class SOSIdGeneratorImpl implements BeforeExecutionGenerator, OnExecutionGenerator {
+public class SOSHibernateIdGeneratorImpl implements BeforeExecutionGenerator, OnExecutionGenerator {
 
     private static final long serialVersionUID = 1L;
     private String sequenceName;
     private String sequenceCallSyntax;
 
-    public SOSIdGeneratorImpl(SOSIdGenerator config, Member member, org.hibernate.generator.GeneratorCreationContext context) {
+    public SOSHibernateIdGeneratorImpl(SOSIdGenerator config, Member member, org.hibernate.generator.GeneratorCreationContext context) {
         this.sequenceName = config.sequenceName();
 
         final Dialect dialect = context.getServiceRegistry().getService(JdbcEnvironment.class).getDialect();
