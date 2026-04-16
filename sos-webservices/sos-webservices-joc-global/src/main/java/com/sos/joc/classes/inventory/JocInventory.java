@@ -170,7 +170,7 @@ public class JocInventory {
                     put(InstructionType.ADMISSION_TIME, "classpath:/raml/inventory/schemas/instruction/admissionTime-schema.json");
                 }
             });
-    
+
     public static final String FORKLIST_SCHEMA_WITHOUT_LICENSE = "classpath:/raml/inventory/schemas/instruction/forkListWithoutLicense-schema.json";
 
     public static final Map<ConfigurationType, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<ConfigurationType, Class<?>>() {
@@ -226,10 +226,10 @@ public class JocInventory {
         return result;
     }
 
-    public static boolean isDescriptor (ConfigurationType type) {
+    public static boolean isDescriptor(ConfigurationType type) {
         return EnumSet.of(ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.DESCRIPTORFOLDER).contains(type);
     }
-    
+
     public static boolean isFolder(ConfigurationType type) {
         return ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type);
     }
@@ -257,7 +257,8 @@ public class JocInventory {
 
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
-                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.FOLDER.intValue());
+                .intValue(), ConfigurationType.JOBTEMPLATE.intValue(), ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.FOLDER
+                        .intValue());
     }
 
     public static List<Integer> getCalendarTypes() {
@@ -284,7 +285,8 @@ public class JocInventory {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getDeployableTypes();
         }
-        Set<Integer> deployables = objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+        Set<Integer> deployables = objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors
+                .toSet());
         if (deployables.isEmpty()) {
             return getDeployableTypes();
         }
@@ -304,7 +306,7 @@ public class JocInventory {
         }
         return releasables;
     }
-    
+
     public static Stream<ConfigurationType> getReleasableTypesStream(Collection<ConfigurationType> objectTypes) {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return Stream.empty();
@@ -317,7 +319,7 @@ public class JocInventory {
         releasables.add(ConfigurationType.FOLDER.intValue());
         return releasables;
     }
-    
+
     public static Workflow workflowContent2Workflow(String content) throws JsonProcessingException {
         if (SOSString.isEmpty(content)) {
             return null;
@@ -349,7 +351,7 @@ public class JocInventory {
         case NONWORKINGDAYSCALENDAR:
             return convertDefault(content, Calendar.class);
         default:
-//            return convertDefault(content, (Class) CLASS_MAPPING.get(type));
+            // return convertDefault(content, (Class) CLASS_MAPPING.get(type));
             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
             ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
             return obj;
@@ -360,7 +362,7 @@ public class JocInventory {
             IOException {
         return content2IJSObject(content, getType(typeNum));
     }
-    
+
     public static <T extends FileOrderSource> T convertFileOrderSource(String content, Class<T> clazz) throws JsonMappingException,
             JsonProcessingException {
         // for compatibility directory -> directoryExpr
@@ -372,7 +374,7 @@ public class JocInventory {
         fos.setVersion(Globals.getStrippedInventoryVersion());
         return fos;
     }
-    
+
     public static <T extends Schedule> T convertSchedule(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
         // JOC-1255 workflowName -> workflowNames
         T s = setWorkflowNames(Globals.objectMapper.readValue(content, clazz));
@@ -389,14 +391,15 @@ public class JocInventory {
         return jt;
     }
 
-    public static <T extends IConfigurationObject> T convertDefault(String content, Class<T> clazz) throws JsonMappingException, JsonProcessingException {
+    public static <T extends IConfigurationObject> T convertDefault(String content, Class<T> clazz) throws JsonMappingException,
+            JsonProcessingException {
         T obj = Globals.objectMapper.readValue(content, clazz);
         ((IInventoryObject) obj).setVersion(Globals.getStrippedInventoryVersion());
         return obj;
     }
-    
-    public static ConfigurationObject convert(DBItemInventoryConfiguration dbItem, SOSHibernateSession session)
-            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+
+    public static ConfigurationObject convert(DBItemInventoryConfiguration dbItem, SOSHibernateSession session) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, IOException {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         ConfigurationObject cfg = new ConfigurationObject();
         ConfigurationType type = dbItem.getTypeAsEnum();
@@ -419,8 +422,8 @@ public class JocInventory {
             if (lastDeployment != null && OperationType.UPDATE.value().equals(lastDeployment.getOperation())) {
                 dbItem.setContent(lastDeployment.getInvContent());
             } else {
-                throw new DBMissingDataException(
-                        String.format("Couldn't find deployed configuration: %1$s:%2$s ", type.value().toLowerCase(), dbItem.getPath()));
+                throw new DBMissingDataException(String.format("Couldn't find deployed configuration: %1$s:%2$s ", type.value().toLowerCase(), dbItem
+                        .getPath()));
             }
         }
         cfg.setConfiguration(JocInventory.content2IJSObject(dbItem.getContent(), dbItem.getType()));
@@ -443,7 +446,7 @@ public class JocInventory {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
                         }
                     }
-                } 
+                }
             }
             // JOC-1498 - IsReferencedBy
             if (ConfigurationType.WORKFLOW.equals(type)) {
@@ -481,8 +484,9 @@ public class JocInventory {
         }
         return cfg;
     }
-    
-    public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType) throws SOSHibernateException {
+
+    public static void makeParentDirs(InventoryDBLayer dbLayer, Path parentFolder, Long auditLogId, ConfigurationType folderType)
+            throws SOSHibernateException {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
             if (!ROOT_FOLDER.equals(newFolder)) {
@@ -490,7 +494,7 @@ public class JocInventory {
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfiguration();
                     newDbFolder.setPath(newFolder);
-                    if(parentFolder.getParent() != null) {
+                    if (parentFolder.getParent() != null) {
                         newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
                     } else {
                         newDbFolder.setFolder(newFolder);
@@ -508,7 +512,7 @@ public class JocInventory {
                     newDbFolder.setType(folderType);
                     newDbFolder.setValid(true);
                     dbLayer.getSession().save(newDbFolder);
-                    if(parentFolder.getParent() != null ) {
+                    if (parentFolder.getParent() != null) {
                         makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId, folderType);
                     }
                 }
@@ -564,8 +568,8 @@ public class JocInventory {
             throws SOSHibernateException {
         return deleteEmptyFolders(dbLayer, folder, false);
     }
-    
-    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder, 
+
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder,
             boolean forDescriptors) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null, forDescriptors);
         if (folderContent == null) {
@@ -580,7 +584,7 @@ public class JocInventory {
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder) throws SOSHibernateException {
         return deleteEmptyFolders(dbLayer, folder, false);
     }
-    
+
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder, boolean forDescriptors)
             throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null, forDescriptors);
@@ -589,7 +593,7 @@ public class JocInventory {
         }
         if (!ROOT_FOLDER.equals(folder)) {
             DBItemInventoryConfiguration dbFolder = null;
-            if(forDescriptors) {
+            if (forDescriptors) {
                 dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.DESCRIPTORFOLDER.intValue());
             } else {
                 dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
@@ -606,14 +610,12 @@ public class JocInventory {
         List<DBItemInventoryConfiguration> deletedFolders = new ArrayList<>();
         if (!folderContent.isEmpty()) {
             LinkedHashSet<DBItemInventoryConfiguration> folders = null;
-            if(forDescriptors) {
-                folders = folderContent.stream().filter(i -> ConfigurationType.DESCRIPTORFOLDER.intValue() == i
-                        .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (forDescriptors) {
+                folders = folderContent.stream().filter(i -> ConfigurationType.DESCRIPTORFOLDER.intValue() == i.getType()).sorted(Comparator
+                        .comparing(DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(LinkedHashSet::new));
             } else {
-                folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i
-                        .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed())
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
+                folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).sorted(Comparator.comparing(
+                        DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(LinkedHashSet::new));
             }
             for (DBItemInventoryConfiguration folder : folders) {
                 if (!folderContent.stream().parallel().anyMatch(i -> folder.getPath().equals(i.getFolder()))) {
@@ -658,7 +660,7 @@ public class JocInventory {
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
     }
-    
+
     public static void postFolderEvent(String folder) {
         EventBus.getInstance().post(new InventoryFolderEvent(folder));
     }
@@ -670,15 +672,15 @@ public class JocInventory {
     public static void postTrashFolderEvent(String folder) {
         EventBus.getInstance().post(new InventoryTrashFolderEvent(folder));
     }
-    
+
     public static void postObjectEvent(String path, ConfigurationType objectType) {
         EventBus.getInstance().post(new InventoryObjectEvent(path, objectType.value()));
     }
-    
+
     public static void postTaggingEvent(String tag) {
         EventBus.getInstance().post(new InventoryTagEvent(tag));
     }
-    
+
     public static void postJobTaggingEvent(String tag) {
         EventBus.getInstance().post(new InventoryJobTagEvent(tag));
     }
@@ -779,7 +781,7 @@ public class JocInventory {
                 } else {
                     Path p = normalizePath(path);
                     path = p.toString().replace('\\', '/');
-                    
+
                     if (isFolder(type)) {
                         boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(path);
                         if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, path, withIsNotPermittedParentFolder)) {
@@ -912,7 +914,7 @@ public class JocInventory {
             handleWorkflowSearch(dbLayer, (Workflow) config, item.getId());
         }
     }
-    
+
     private static void handleReleasedJobTemplate(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException {
         if (ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType())) {
@@ -928,7 +930,7 @@ public class JocInventory {
             }
         }
     }
-    
+
     private static void handleTags(SOSHibernateSession session, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws JsonMappingException, JsonProcessingException {
         if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
@@ -937,13 +939,13 @@ public class JocInventory {
             }
             JobTags.update(((Workflow) config).getJobs(), item, new InventoryJobTagDBLayer(session));
             OrderTags.updateTagsFromInstructions((Workflow) config, item);
-            
+
         } else if (ConfigurationType.FILEORDERSOURCE.intValue().equals(item.getType())) {
             if (config == null && !SOSString.isEmpty(item.getContent())) {
                 config = convertFileOrderSource(item.getContent(), FileOrderSource.class);
             }
             OrderTags.updateTagsFromFileOrderSource((FileOrderSource) config, item);
-            
+
         } else if (ConfigurationType.SCHEDULE.intValue().equals(item.getType())) {
             if (config == null && !SOSString.isEmpty(item.getContent())) {
                 config = convertSchedule(item.getContent(), Schedule.class);
@@ -983,21 +985,16 @@ public class JocInventory {
             item.setContentHash(hash);
             item = convert(item, workflow);
             if (item.getCreated() == null) {
-                item.setCreated(new Date());
-                item.setModified(item.getCreated());
                 dbLayer.getSession().save(item);
             } else {
-                item.setModified(new Date());
                 dbLayer.getSession().update(item);
             }
             if (deployed) {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, false);
             }
         } else {
-
             if (!hash.equals(item.getContentHash())) {
                 item.setContentHash(hash);
-                item.setModified(new Date());
                 item = convert(item, workflow);
                 dbLayer.getSession().update(item);
             }
@@ -1034,7 +1031,7 @@ public class JocInventory {
             dbLayer.deleteSearchWorkflowByInventoryId(item.getId(), false);
         }
         dbLayer.getSession().delete(item);
-        
+
         if (!JocInventory.isFolder(item.getType())) {
             InventoryNotesDBLayer noteDbLayer = new InventoryNotesDBLayer(dbLayer.getSession());
             noteDbLayer.deleteNote(item.getId());
@@ -1049,7 +1046,7 @@ public class JocInventory {
     public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         handleTags(dbLayer.getSession(), item, config);
-        
+
         dbLayer.getSession().update(item);
 
         handleWorkflowSearch(dbLayer, item, config);
@@ -1064,9 +1061,9 @@ public class JocInventory {
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         handleTags(dbLayer.getSession(), item, config);
-        
+
         dbLayer.getSession().save(item);
-        
+
         handleWorkflowSearch(dbLayer, item, config);
     }
 
@@ -1104,7 +1101,8 @@ public class JocInventory {
         }
     }
 
-    public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer, ConfigurationType folderType) {
+    public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer,
+            ConfigurationType folderType) {
         if (item != null) {
             try {
                 List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getTrashConfigurationByName(item.getName(), item.getType());
@@ -1157,8 +1155,7 @@ public class JocInventory {
     }
 
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
-            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException,
-                IOException {
+            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
         if (config.getName().equals(newName)) {
             return events;
@@ -1313,7 +1310,7 @@ public class JocInventory {
                     if (s.getWorkflowNames().size() > 0) {
                         s.setWorkflowName(s.getWorkflowNames().get(0));
                     }
-                    
+
                     if (changed) {
                         schedule.setContent(Globals.objectMapper.writeValueAsString(s));
                         schedule.setReleased(false);
@@ -1371,7 +1368,7 @@ public class JocInventory {
         case NONWORKINGDAYSCALENDAR:
             List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
             if (schedules1 != null && !schedules1.isEmpty()) {
-//                Predicate<String> calendarNamePredicate = Pattern.compile("\"calendarName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
+                // Predicate<String> calendarNamePredicate = Pattern.compile("\"calendarName\"\\s*:\\s*\"" + config.getName() + "\"").asPredicate();
                 for (DBItemInventoryConfiguration schedule : schedules1) {
                     Schedule s = convertSchedule(schedule.getContent(), Schedule.class);
                     Optional.ofNullable(s.getCalendars()).ifPresent(cs -> cs.forEach(ac -> {
@@ -1386,31 +1383,31 @@ public class JocInventory {
                             ac.setCalendarName(newName);
                         }
                     }));
-                    
-//                    boolean changed = calendarNamePredicate.test(schedule.getContent());
-//                    if (changed) {
-//                        schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
-//                                + "\""));
+
+                    // boolean changed = calendarNamePredicate.test(schedule.getContent());
+                    // if (changed) {
+                    // schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                    // + "\""));
                     schedule.setContent(Globals.objectMapper.writeValueAsString(s));
-                        schedule.setReleased(false);
-                        int i = items.indexOf(schedule);
-                        if (i != -1) {
-                            items.get(i).setContent(schedule.getContent());
-                            items.get(i).setReleased(false);
-                        } else {
-                            JocInventory.updateConfiguration(dbLayer, schedule);
-                            events.add(schedule.getFolder());
-                        }
-//                    }
+                    schedule.setReleased(false);
+                    int i = items.indexOf(schedule);
+                    if (i != -1) {
+                        items.get(i).setContent(schedule.getContent());
+                        items.get(i).setReleased(false);
+                    } else {
+                        JocInventory.updateConfiguration(dbLayer, schedule);
+                        events.add(schedule.getFolder());
+                    }
+                    // }
                 }
             }
-            
+
             List<DBItemInventoryConfiguration> calendars = dbLayer.getUsedCalendarsByCalendarName(config.getName());
             if (calendars != null && !calendars.isEmpty()) {
                 for (DBItemInventoryConfiguration calendar : calendars) {
                     Calendar cal = (Calendar) content2IJSObject(calendar.getContent(), calendar.getType());
-                    Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config
-                            .getName())).ifPresent(nwcs -> nwcs.add(newName));
+                    Optional.ofNullable(cal.getExcludes()).map(Frequencies::getNonWorkingDayCalendars).filter(nwcs -> nwcs.remove(config.getName()))
+                            .ifPresent(nwcs -> nwcs.add(newName));
                     calendar.setContent(Globals.objectMapper.writeValueAsString(cal));
                     calendar.setReleased(false);
                     int i = items.indexOf(calendar);
@@ -1423,7 +1420,7 @@ public class JocInventory {
                     }
                 }
             }
-            
+
             break;
         case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
             List<DBItemInventoryConfiguration> workflowsOrJobTemplates = dbLayer.getWorkflowsAndJobTemplatesWithIncludedScripts();
@@ -1488,7 +1485,7 @@ public class JocInventory {
                 }
             }
             break;
-            
+
         case JOBTEMPLATE:
             Set<DBItemInventoryConfiguration> workflows5 = dbLayer.getUsedWorkflowsByJobTemplateName(config.getName());
             if (workflows5 != null && !workflows5.isEmpty()) {
@@ -1507,11 +1504,11 @@ public class JocInventory {
                     }
                     if (changed) { // TODO is it really ok that setDeployed(false)? I think, NO
                         workflow.setContent(Globals.objectMapper.writeValueAsString(w));
-                        //workflow.setDeployed(false);
+                        // workflow.setDeployed(false);
                         int i = items.indexOf(workflow);
                         if (i != -1) {
                             items.get(i).setContent(workflow.getContent());
-                            //items.get(i).setDeployed(false);
+                            // items.get(i).setDeployed(false);
                         } else {
                             JocInventory.updateConfiguration(dbLayer, workflow);
                             events.add(workflow.getFolder());
@@ -1520,7 +1517,7 @@ public class JocInventory {
                 }
             }
             break;
-            
+
         default:
             break;
         }
@@ -1595,17 +1592,17 @@ public class JocInventory {
         return schedule;
     }
 
-    public static List<String> getWorkflowNamesFromScheduleJson (String json) {
+    public static List<String> getWorkflowNamesFromScheduleJson(String json) {
         // pattern: ^.*workflowNames\"\:\[(.*?)\].*$
         String regex = "^.*workflowNames\\\"\\:\\[(.*?)\\].*$";
         List<String> workflows = new ArrayList<String>();
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(json);
-        if(matcher.matches()) {
+        if (matcher.matches()) {
             String workflowNamesArray = matcher.group(1);
             String[] workflowNamesSplitted = workflowNamesArray.split(",");
-            for(int i=0; i < workflowNamesSplitted.length; i++) {
-                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() -1));
+            for (int i = 0; i < workflowNamesSplitted.length; i++) {
+                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() - 1));
             }
         }
         return workflows;
@@ -1643,7 +1640,7 @@ public class JocInventory {
             }
         }
     }
-    
+
     public static void postDeployHistoryEventWhenDeleted(Collection<DBItemDeploymentHistory> dbItems) {
         if (dbItems != null) {
             EnumSet<DeployType> eSet = EnumSet.of(DeployType.WORKFLOW, DeployType.FILEORDERSOURCE);
@@ -1658,20 +1655,16 @@ public class JocInventory {
                     .forEach(EventBus.getInstance()::post);
         }
     }
-    
+
     public static boolean isJsonHashEqual(String json1, String json2, ConfigurationType type) throws IOException {
         // TODO use isJsonHashEqual below!!!
-        return SOSString.hashMD5(
-                Globals.prettyPrintObjectMapper.writeValueAsString(
-                    Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
-            .equals(
-                SOSString.hashMD5(
-                    Globals.prettyPrintObjectMapper.writeValueAsString(
-                        Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(type)))));
+        return SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json1, CLASS_MAPPING.get(type))))
+                .equals(SOSString.hashMD5(Globals.prettyPrintObjectMapper.writeValueAsString(Globals.objectMapper.readValue(json2, CLASS_MAPPING.get(
+                        type)))));
     }
-    
+
     public static boolean isJsonHashEqual(String json1, IConfigurationObject json2) throws IOException {
         return SOSString.hashMD5(json1).equals(SOSString.hashMD5(Globals.objectMapper.writeValueAsString(json2)));
     }
-    
+
 }

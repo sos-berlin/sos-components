@@ -83,7 +83,7 @@ public class RunReport extends AReporting {
         }
         return null;
     }
-    
+
     // public because used in Validator
     public static LocalDate relativeDateToSpecificLocalDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
@@ -145,7 +145,7 @@ public class RunReport extends AReporting {
             }
             return ld;
         } else if (month.matches("\\d{4}-(0[1-9]|1[0-2])")) {
-            return LocalDate.of(Integer.valueOf(month.substring(0,4)), Integer.valueOf(month.substring(5)), 1);
+            return LocalDate.of(Integer.valueOf(month.substring(0, 4)), Integer.valueOf(month.substring(5)), 1);
         } else {
             throw new IllegalArgumentException("month" + (to ? "To" : "From") + " has to be in the form yyyy-mm or [0-9]+[mqy]");
         }
@@ -256,7 +256,7 @@ public class RunReport extends AReporting {
             throw e;
         }
     }
-    
+
     private static void skippedRun(Frequency f, String commonScript) {
         try {
             StringBuilder s = new StringBuilder(commonScript);
@@ -331,8 +331,6 @@ public class RunReport extends AReporting {
         dbItem.setState(state.intValue());
         dbItem.setControllerId(in.getControllerId());
         dbItem.setReportCount(0);
-        dbItem.setModified(now);
-        dbItem.setCreated(now);
         return dbItem;
     }
 
@@ -389,17 +387,15 @@ public class RunReport extends AReporting {
         try {
             session = Globals.createSosHibernateStatelessConnection("StoreReportRun");
 
-            runDbItem.setModified(Date.from(Instant.now()));
             session.save(runDbItem);
             EventBus.getInstance().post(new ReportRunsUpdated());
         } finally {
             Globals.disconnect(session);
         }
     }
-    
-    private static void updateRun(final DBItemReportRun runDbItem, Date now, SOSHibernateSession session) throws Exception {
+
+    private static void updateRun(final DBItemReportRun runDbItem, SOSHibernateSession session) throws Exception {
         runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
-        runDbItem.setModified(now);
         session.update(runDbItem);
     }
 
@@ -410,7 +406,6 @@ public class RunReport extends AReporting {
                 session = Globals.createSosHibernateStatelessConnection("UpdateReportRun");
                 runDbItem.setState(ReportRunStateText.FAILED.intValue());
                 runDbItem.setErrorText(e.getMessage());
-                runDbItem.setModified(Date.from(Instant.now()));
                 session.update(runDbItem);
             } catch (Exception e1) {
                 // TODO error handling?
@@ -447,8 +442,6 @@ public class RunReport extends AReporting {
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
 
-            Date now = Date.from(Instant.now());
-
             for (DBItemReport dbItem : dbItems) {
                 String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem
                         .getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
@@ -457,21 +450,18 @@ public class RunReport extends AReporting {
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
                 if (oldItem != null) {
                     oldItem.setRunId(runDbItem.getId());
-                    oldItem.setModified(now);
 
                     session.update(oldItem);
                 } else {
                     dbItem.setRunId(runDbItem.getId());
-                    dbItem.setCreated(now);
-                    dbItem.setModified(now);
                     dbItem.setContent(Files.readAllBytes(dbItem.getReportFile()));
 
                     session.save(dbItem);
                 }
 
             }
-            
-            updateRun(runDbItem, now, session);
+
+            updateRun(runDbItem, session);
 
             Globals.commit(session);
         } catch (Exception e) {
