@@ -11,6 +11,7 @@ BEGIN
     	"JAVA_DATE_AUTO"            	DATETIME                NOT NULL,
     	"DB_CURRENT_TIMESTAMP_AUTO" 	DATETIME                NOT NULL,
     	"DB_CURRENT_TIMESTAMP_UTC_AUTO"	DATETIME                NOT NULL,
+    	"DATE_NULLABLE"					DATETIME                NULL,
         PRIMARY KEY ("ID")
     );
     COMMIT;
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS A_TEST(
     "JAVA_DATE_AUTO"            	DATETIME                    NOT NULL,
     "DB_CURRENT_TIMESTAMP_AUTO" 	DATETIME                    NOT NULL,
     "DB_CURRENT_TIMESTAMP_UTC_AUTO"	DATETIME                    NOT NULL,
+    "DATE_NULLABLE"					DATETIME                	NULL,
     PRIMARY KEY ("ID")
 ) ENGINE=InnoDB;
 
@@ -44,6 +46,7 @@ SELECT COUNT(*) INTO table_exist FROM USER_TABLES WHERE "TABLE_NAME"='A_TEST';
                                 "JAVA_DATE_AUTO"            	DATE            NOT NULL,
                                 "DB_CURRENT_TIMESTAMP_AUTO" 	DATE            NOT NULL,
 								"DB_CURRENT_TIMESTAMP_UTC_AUTO"	DATE       		NOT NULL,
+								"DATE_NULLABLE"					DATE            NULL,
                                 PRIMARY KEY ("ID")
                             )';
         DECLARE sequence_exist number; 

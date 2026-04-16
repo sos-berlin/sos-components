@@ -1,7 +1,5 @@
 package com.sos.joc.xmleditor.impl;
 
-import java.util.Date;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
@@ -123,7 +121,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setId(item.getId());
         answer.setName(item.getName());
-        answer.setModified(item.getModified());
 
         if (JocXmlEditor.isStandardType(in.getObjectType())) {
             answer.setSchemaIdentifier(StandardSchemaHandler.getSchemaIdentifier(in.getObjectType()));
@@ -200,8 +197,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
         session.save(item);
         return item;
     }
@@ -214,7 +209,6 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
-        item.setModified(new Date());
         session.update(item);
         return item;
     }

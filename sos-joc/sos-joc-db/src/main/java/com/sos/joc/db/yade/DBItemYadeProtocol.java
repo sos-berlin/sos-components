@@ -1,7 +1,8 @@
 package com.sos.joc.db.yade;
 
-import java.util.Date;
+import java.time.Instant;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -37,7 +38,8 @@ public class DBItemYadeProtocol extends DBItem {
     private String account;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public DBItemYadeProtocol() {
     }
@@ -82,12 +84,8 @@ public class DBItemYadeProtocol extends DBItem {
         account = val;
     }
 
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
     }
 
 }

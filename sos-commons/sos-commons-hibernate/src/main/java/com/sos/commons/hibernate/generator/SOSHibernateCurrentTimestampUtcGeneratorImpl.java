@@ -9,14 +9,13 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.id.Configurable;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.configuration.resolver.SOSHibernateFinalPropertiesResolver;
 
-public class SOSHibernateCurrentTimestampUtcGeneratorImpl implements OnExecutionGenerator, Configurable {
+public class SOSHibernateCurrentTimestampUtcGeneratorImpl implements OnExecutionGenerator {
 
     private static final long serialVersionUID = 1L;
 

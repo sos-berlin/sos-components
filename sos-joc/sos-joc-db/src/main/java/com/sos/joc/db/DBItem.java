@@ -13,10 +13,6 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
@@ -26,6 +22,10 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.common.HistoryConstants;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 public abstract class DBItem implements Serializable {
 

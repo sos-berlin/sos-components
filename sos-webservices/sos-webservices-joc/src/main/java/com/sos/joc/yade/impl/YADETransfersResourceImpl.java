@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -193,7 +194,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
         transfer.setNumOfFiles(item.getNumOfFiles());
         transfer.setStart(item.getStart());
         transfer.setEnd(item.getEnd());
-        transfer.setSurveyDate(item.getCreated());
+        transfer.setSurveyDate(SOSDate.toDate(item.getCreated()));
         transfer.setWorkflowPath(item.getWorkflowPath());
         transfer.setOrderId(item.getOrderId());
         transfer.setJob(item.getJob());

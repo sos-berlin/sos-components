@@ -283,7 +283,6 @@ public class YADEHandler implements Closeable {
         item.setNumOfFiles(result.getEntries() == null ? 0L : result.getEntries().size());
         item.setState(SOSString.isEmpty(result.getErrorMessage()) ? Yade.TransferState.SUCCESSFUL.intValue() : Yade.TransferState.FAILED.intValue());
         item.setErrorMessage(result.getErrorMessage());
-        item.setCreated(new Date());
 
         // no error handling - if inserting metadata fails - inserting transfer "file" entries is not possible anyway
         session.save(item);
@@ -306,7 +305,6 @@ public class YADEHandler implements Closeable {
             item.setState(Yade.TransferEntryState.fromValue(entry.getState()).intValue());
             item.setIntegrityHash(entry.getIntegrityHash());
             item.setErrorMessage(entry.getErrorMessage());
-            item.setCreated(new Date());
 
             // error handling
             // - the error can occur, for example, with entry <n>.
@@ -349,7 +347,6 @@ public class YADEHandler implements Closeable {
                     item.setPort(protocol.getPort());
                     item.setProtocol(protocolIntVal);
                     item.setAccount(protocol.getAccount());
-                    item.setCreated(new Date());
 
                     session.save(item);
                     id = item.getId();

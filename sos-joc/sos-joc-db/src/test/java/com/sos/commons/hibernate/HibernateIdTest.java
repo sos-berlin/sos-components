@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.helpers.dbitems.DBItemATest;
 import com.sos.commons.util.SOSClassList;
+import com.sos.commons.util.SOSString;
 
 public class HibernateIdTest {
 
@@ -35,7 +36,19 @@ public class HibernateIdTest {
             session.save(item);
 
             item.setName("xxxx-updated");
+
+            // set DateNullable with current UTC timestamp
+            // see explanation below : ... item.setDateNullable(item.getDbCurrentTimestampUtcAuto());
+            item.setDateNullable(session.getCurrentTimestampAsInstant());
+
             session.update(item);
+
+            LOGGER.info("[AFTER_UPDATE]" + SOSString.toString(item));
+            // Does NOT work with StatelessSession - getDbCurrentTimestampUtcAuto remains null after save because StatelessSession has no persistence context
+            // and does not update the
+            // entity.
+            // item.setDateNullable(item.getDbCurrentTimestampUtcAuto());
+            // session.update(item);
 
             session.commit();
 

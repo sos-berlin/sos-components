@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -34,7 +35,6 @@ import jakarta.ws.rs.Path;
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
 
-  
     @Override
     public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
@@ -152,7 +152,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
         }
         answer.getConfiguration().setValidation(validation);
-        answer.getConfiguration().setModified(item.getModified());
+        answer.getConfiguration().setModified(SOSDate.toDate(item.getModified()));
 
         return answer;
     }

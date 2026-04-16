@@ -1,7 +1,5 @@
 package com.sos.joc.xmleditor.impl;
 
-import java.util.Date;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -100,8 +98,6 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
         session.save(item);
         return item;
     }
@@ -115,7 +111,6 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
-        item.setModified(new Date());
         session.update(item);
         return item;
     }
@@ -140,7 +135,6 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         StoreConfigurationAnswer answer = new StoreConfigurationAnswer();
         answer.setId(item.getId());
         answer.setName(item.getName());
-        answer.setModified(item.getModified());
 
         if (JocXmlEditor.isStandardType(type)) {
             if (isChanged) {

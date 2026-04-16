@@ -6,8 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Date;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +40,7 @@ public class JitlDocumentation {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection(JitlDocumentation.class.getSimpleName());
-            //updateVersion(connection);
+            // updateVersion(connection);
             updateNotification(connection);
             stream = JitlDocumentation.class.getClassLoader().getResourceAsStream(DOCUS);
             if (stream != null) {
@@ -72,7 +70,7 @@ public class JitlDocumentation {
             }
         }
     }
-    
+
     private static void updateNotification(SOSHibernateSession session) {
         try {
 
@@ -93,20 +91,18 @@ public class JitlDocumentation {
                     }
 
                     if (!resultMapByType.containsKey("NOTIFICATION")) {
-                        DBItemXmlEditorConfiguration item = getNotificationDbItem(null, "NOTIFICATION", notification, notificationFilename);
+                        setNotificationDbItem(session, null, "NOTIFICATION", notification, notificationFilename);
 
-                        session.save(item);
                         LOGGER.info(notificationPath.getFileName().toString() + " is inserted in database");
                     }
                     if (!resultMapByType.containsKey("NOTIFICATION_DEFAULT")) {
-                        DBItemXmlEditorConfiguration item = getNotificationDbItem(null, "NOTIFICATION_DEFAULT", notification, notificationFilename);
+                        setNotificationDbItem(session, null, "NOTIFICATION_DEFAULT", notification, notificationFilename);
 
-                        session.save(item);
                         LOGGER.info(notificationPath.getFileName().toString() + " as default is inserted in database");
                     } else {
                         DBItemXmlEditorConfiguration item = resultMapByType.get("NOTIFICATION_DEFAULT").get(0);
                         if (!notification.equals(item.getConfigurationReleased())) {
-                            item = getNotificationDbItem(item, "NOTIFICATION_DEFAULT", notification, notificationFilename);
+                            setNotificationDbItem(session, item, "NOTIFICATION_DEFAULT", notification, notificationFilename);
                             session.update(item);
                             LOGGER.info(notificationPath.getFileName().toString() + " as default is update in database");
                         }
@@ -117,13 +113,12 @@ public class JitlDocumentation {
             LOGGER.warn("Problem inserting notification.xml in database", e);
         }
     }
-    
-    private static DBItemXmlEditorConfiguration getNotificationDbItem(DBItemXmlEditorConfiguration item, String type, String notification,
-            String notificationFilename) {
-        if (item == null) {
+
+    private static void setNotificationDbItem(SOSHibernateSession session, DBItemXmlEditorConfiguration item, String type, String notification,
+            String notificationFilename) throws Exception {
+        boolean isNew = item == null;
+        if (isNew) {
             item = new DBItemXmlEditorConfiguration();
-            item.setId(null);
-            item.setCreated(Date.from(Instant.now()));
         }
         item.setType(type);
         item.setName(notificationFilename);
@@ -134,11 +129,15 @@ public class JitlDocumentation {
         item.setConfigurationReleasedJson(null);
         item.setAuditLogId(0L);
         item.setAccount("root");
-        item.setReleased(Date.from(Instant.now()));
-        item.setModified(item.getReleased());
-        return item;
+        // set released with current UTC timestamp
+        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        if (isNew) {
+            session.save(item);
+        } else {
+            session.update(item);
+        }
     }
-    
+
     private static boolean updateIsNecessary(DocumentationDBLayer dbLayer) {
         boolean update = true;
         try {
@@ -154,7 +153,7 @@ public class JitlDocumentation {
                             LOGGER.info("JITL-Job documentation version in database: " + version);
                             int compare = Globals.curVersionCompareWith(version);
                             if (compare < 0) {
-                                update = false; 
+                                update = false;
                             } else if (compare == 0 && !version.contains("-SNAPSHOT")) {
                                 update = false;
                             }

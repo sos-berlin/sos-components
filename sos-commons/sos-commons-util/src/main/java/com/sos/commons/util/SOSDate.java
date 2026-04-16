@@ -40,6 +40,14 @@ public class SOSDate {
      * (e.g. 2026-03-29 03:00:00). */
     public static final boolean DEFAULT_STRICT_PARSING = false;
 
+    public static Date toDate(Instant val) {
+        return val == null ? null : Date.from(val);
+    }
+
+    public static Instant toInstant(Date val) {
+        return val == null ? null : val.toInstant();
+    }
+
     // returns Date from String
     public static Date getDate(String date) throws SOSInvalidDataException {
         return getDate(date, null, DEFAULT_STRICT_PARSING);

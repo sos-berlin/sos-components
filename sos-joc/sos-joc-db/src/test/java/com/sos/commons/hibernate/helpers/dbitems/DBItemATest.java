@@ -1,7 +1,6 @@
 package com.sos.commons.hibernate.helpers.dbitems;
 
 import java.time.Instant;
-import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -44,9 +43,12 @@ public class DBItemATest extends DBItem {
     private Instant dbCurrentTimestampAuto;
 
     @SOSCurrentTimestampUtc // hover over annotation for details (default: INSERT + UPDATE)
-    // @SOSCurrentTimestampUtc(event = EventType.INSERT) - for inserts-only
+    // @SOSCreationTimestampUtc - for inserts-only - equivalent to: @SOSCurrentTimestampUtc(event = EventType.INSERT)
     @Column(name = "[DB_CURRENT_TIMESTAMP_UTC_AUTO]", nullable = false, updatable = true)
     private Instant dbCurrentTimestampUtcAuto;
+
+    @Column(name = "[DATE_NULLABLE]", nullable = true)
+    private Instant dateNullable;
 
     public DBItemATest() {
     }
@@ -85,5 +87,13 @@ public class DBItemATest extends DBItem {
 
     public Instant getDbCurrentTimestampUtcAuto() {
         return dbCurrentTimestampUtcAuto;
+    }
+
+    public Instant getDateNullable() {
+        return dateNullable;
+    }
+
+    public void setDateNullable(Instant val) {
+        dateNullable = val;
     }
 }

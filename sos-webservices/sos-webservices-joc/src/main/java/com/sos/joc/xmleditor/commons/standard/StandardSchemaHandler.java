@@ -1,10 +1,10 @@
 package com.sos.joc.xmleditor.commons.standard;
 
 import java.io.InputStream;
-import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLNotMatchSchemaException;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
@@ -108,7 +108,7 @@ public class StandardSchemaHandler {
                 String xml = getXml(item.getConfigurationReleased(), isYADE);
                 String json = item.getConfigurationReleasedJson();
 
-                answer.setConfigurationDate(item.getReleased());
+                answer.setConfigurationDate(SOSDate.toDate(item.getReleased()));
                 answer.setConfiguration(xml);
                 if (SOSString.isEmpty(json)) {
                     recreateJson(xml);
@@ -120,7 +120,7 @@ public class StandardSchemaHandler {
                     answer.setReleased(true);
                     answer.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 } else {
-                    if (item.getReleased() != null && item.getReleased().after(item.getModified())) {
+                    if (item.getReleased() != null && item.getReleased().isAfter(item.getModified())) {
                         answer.setState(ItemStateEnum.RELEASE_IS_NEWER);
                     } else {
                         answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -134,7 +134,7 @@ public class StandardSchemaHandler {
             String xml = getXml(item.getConfigurationDraft(), isYADE);
             String json = item.getConfigurationDraftJson();
 
-            answer.setConfigurationDate(item.getModified());
+            answer.setConfigurationDate(SOSDate.toDate(item.getModified()));
             answer.setConfiguration(xml);
             if (SOSString.isEmpty(json)) {
                 recreateJson(xml);
@@ -143,7 +143,7 @@ public class StandardSchemaHandler {
             }
 
             if (answer.getHasReleases()) {
-                if (item.getReleased() != null && item.getReleased().after(item.getModified())) {
+                if (item.getReleased() != null && item.getReleased().isAfter(item.getModified())) {
                     answer.setState(ItemStateEnum.RELEASE_IS_NEWER);
                 } else {
                     answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -168,9 +168,9 @@ public class StandardSchemaHandler {
                 String name = StandardSchemaHandler.getDefaultConfigurationName(type);
                 item = dbLayer.getObject(type.name(), name);
                 if (item == null) {
-                    session.save(createReleasedNotificationConfiguration(name, configuration, configurationJson, account, auditLogId));
+                    createReleasedNotificationConfiguration(session, name, configuration, configurationJson, account, auditLogId);
                 } else {
-                    session.update(updateReleasedOrDeployedConfiguration(item, configuration, configurationJson, account, auditLogId));
+                    updateReleasedOrDeployedConfiguration(session, item, configuration, configurationJson, account, auditLogId);
                 }
                 break;
             case YADE:
@@ -178,7 +178,7 @@ public class StandardSchemaHandler {
                 if (item == null) {
                     throw new Exception("[" + type + "][id=" + id + "]not found");
                 }
-                session.update(updateReleasedOrDeployedConfiguration(item, configuration, configurationJson, account, auditLogId));
+                updateReleasedOrDeployedConfiguration(session, item, configuration, configurationJson, account, auditLogId);
                 break;
             default:
                 throw new Exception("Unsupported type=" + type);
@@ -194,8 +194,8 @@ public class StandardSchemaHandler {
         }
     }
 
-    private static DBItemXmlEditorConfiguration createReleasedNotificationConfiguration(String name, String configuration, String configurationJson,
-            String account, Long auditLogId) throws Exception {
+    private static void createReleasedNotificationConfiguration(SOSHibernateSession session, String name, String configuration,
+            String configurationJson, String account, Long auditLogId) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setType(ObjectType.NOTIFICATION.name());
         item.setName(name);
@@ -206,13 +206,18 @@ public class StandardSchemaHandler {
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(ObjectType.NOTIFICATION, null));
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
-        item.setReleased(item.getCreated());
-        return item;
+        // set released with current UTC timestamp
+        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        session.save(item);
+
+        // Does NOT work with StatelessSession - created remains null after save
+        // because StatelessSession has no persistence context and does not update the entity.
+        // first save makes created(db utc) available - then set released
+        // item.setReleased(item.getCreated());
+        // session.update(item);
     }
 
-    private static DBItemXmlEditorConfiguration updateReleasedOrDeployedConfiguration(DBItemXmlEditorConfiguration item, String configuration,
+    private static void updateReleasedOrDeployedConfiguration(SOSHibernateSession session, DBItemXmlEditorConfiguration item, String configuration,
             String configurationJson, String account, Long auditLogId) throws Exception {
         item.setConfigurationDraft(null);
         item.setConfigurationDraftJson(null);
@@ -220,9 +225,9 @@ public class StandardSchemaHandler {
         item.setConfigurationReleasedJson(Utils.serialize(configurationJson));
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
-        item.setModified(new Date());
-        item.setReleased(item.getModified());
-        return item;
+        // set released with current UTC timestamp
+        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        session.update(item);
     }
 
     public ReadStandardConfigurationAnswer getAnswer() {

@@ -1,8 +1,9 @@
 package com.sos.joc.xmleditor.impl;
 
-import java.util.Date;
+import java.time.Instant;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -34,7 +35,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
                 throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
                         "[%s]unsupported object type for rename", in.getObjectType().name())));
             }
-            //checkRequiredParameters(in);
+            // checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
@@ -81,8 +82,6 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         item.setSchemaLocation(in.getSchemaIdentifier());
         item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
         session.save(item);
         return item;
     }
@@ -93,22 +92,21 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         item.setSchemaLocation(in.getSchemaIdentifier());
         // item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
-        item.setModified(new Date());
         session.update(item);
         return item;
     }
 
-//    private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
-//        JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-//        checkRequiredParameter("id", in.getId());
-//        checkRequiredParameter("name", in.getName());
-//        checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-//    }
+    // private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
+    // JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
+    // checkRequiredParameter("id", in.getId());
+    // checkRequiredParameter("name", in.getName());
+    // checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
+    // }
 
-    private RenameConfigurationAnswer getSuccess(Long id, Date modified) {
+    private RenameConfigurationAnswer getSuccess(Long id, Instant modified) {
         RenameConfigurationAnswer answer = new RenameConfigurationAnswer();
         answer.setId(id);
-        answer.setModified(modified);
+        answer.setModified(SOSDate.toDate(modified));
         return answer;
     }
 

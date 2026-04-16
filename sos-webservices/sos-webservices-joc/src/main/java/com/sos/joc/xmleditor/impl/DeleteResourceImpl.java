@@ -129,7 +129,6 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                 }
                 item.setAuditLogId(auditLogId);
                 item.setAccount(account);
-                item.setModified(new Date());
                 session.update(item);
 
                 if (LOGGER.isTraceEnabled()) {
