@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.configuration.resolver.dialect.SOSHibernateDefa
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
@@ -58,6 +59,7 @@ public class SOSHibernateFactory implements Serializable {
     private String logIdentifier;
     private String currentTimestampSelectString;
     private String currentTimestampUtcSelectString;
+    private String currentTimestampUtcExpression;
     private boolean useDefaultConfigurationProperties = true;
     private boolean forceReadDatabaseMetaData;
 
@@ -248,6 +250,13 @@ public class SOSHibernateFactory implements Serializable {
         return currentTimestampUtcSelectString;
     }
 
+    public String getCurrentTimestampUtcExpression() {
+        if (currentTimestampUtcExpression == null) {
+            currentTimestampUtcExpression = getCurrentTimestampUtcExpression(dbms);
+        }
+        return currentTimestampUtcExpression;
+    }
+
     public static String getCurrentTimestampUtcSelectString(Dbms dbms) {
         String expression = getCurrentTimestampUtcExpression(dbms);
         if (SOSString.isEmpty(expression)) {
@@ -369,6 +378,7 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonExists.NAME, new SOSHibernateJsonExists(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
+            configuration.addSqlFunction(SOSHibernateCurrentTimestampUtc.NAME, new SOSHibernateCurrentTimestampUtc(this));
         }
     }
 
