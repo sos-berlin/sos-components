@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.configuration.resolver.dialect.SOSHibernateDefa
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
@@ -58,6 +59,7 @@ public class SOSHibernateFactory implements Serializable {
     private String logIdentifier;
     private String currentTimestampSelectString;
     private String currentTimestampUtcSelectString;
+    private String currentTimestampUtcExpression;
     private boolean useDefaultConfigurationProperties = true;
     private boolean forceReadDatabaseMetaData;
 
@@ -243,28 +245,46 @@ public class SOSHibernateFactory implements Serializable {
 
     public String getCurrentTimestampUtcSelectString() {
         if (currentTimestampUtcSelectString == null) {
-            switch (dbms) {
-            case H2:
-                currentTimestampUtcSelectString = "select now()";// TODO UTC
-                break;
-            case MYSQL:
-                currentTimestampUtcSelectString = "select utc_timestamp()";
-                break;
-            case ORACLE:
-                currentTimestampUtcSelectString = "select cast(sys_extract_utc(systimestamp) as date) from dual";
-                break;
-            case MSSQL:
-                currentTimestampUtcSelectString = "select getutcdate()";
-                break;
-            case PGSQL:
-                currentTimestampUtcSelectString = "select timezone('UTC', now())";
-                break;
-            default:
-                currentTimestampUtcSelectString = getCurrentTimestampSelectString();
-                break;
-            }
+            currentTimestampUtcSelectString = getCurrentTimestampUtcSelectString(dbms);
         }
         return currentTimestampUtcSelectString;
+    }
+
+    public String getCurrentTimestampUtcExpression() {
+        if (currentTimestampUtcExpression == null) {
+            currentTimestampUtcExpression = getCurrentTimestampUtcExpression(dbms);
+        }
+        return currentTimestampUtcExpression;
+    }
+
+    public static String getCurrentTimestampUtcSelectString(Dbms dbms) {
+        String expression = getCurrentTimestampUtcExpression(dbms);
+        if (SOSString.isEmpty(expression)) {
+            return "";
+        }
+        if (dbms == Dbms.ORACLE) {
+            return "select " + expression + " from dual";
+        }
+        return "select " + expression;
+    }
+
+    public static String getCurrentTimestampUtcExpression(Dbms dbms) {
+        if (dbms == null) {
+            return "";
+        }
+        switch (dbms) {
+        case H2:
+        case MYSQL:
+            return "utc_timestamp()";
+        case ORACLE:
+            return "cast(sys_extract_utc(systimestamp) as date)";
+        case MSSQL:
+            return "getutcdate()";
+        case PGSQL:
+            return "timezone('UTC', now())";
+        default:
+            return "";
+        }
     }
 
     public int getTransactionIsolation() throws SOSHibernateConfigurationException {
@@ -358,6 +378,7 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonExists.NAME, new SOSHibernateJsonExists(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
+            configuration.addSqlFunction(SOSHibernateCurrentTimestampUtc.NAME, new SOSHibernateCurrentTimestampUtc(this));
         }
     }
 

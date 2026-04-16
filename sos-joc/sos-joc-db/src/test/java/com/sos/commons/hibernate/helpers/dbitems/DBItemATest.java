@@ -1,11 +1,13 @@
 package com.sos.commons.hibernate.helpers.dbitems;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 
@@ -30,19 +32,21 @@ public class DBItemATest extends DBItem {
     private String name;
 
     @Column(name = "[JAVA_DATE_MANUAL]", nullable = false, updatable = false, insertable = true)
-    private Date javaDateManual;
+    private Instant javaDateManual;
 
-    /** @CreationTimestamp is a synonym for {@link CurrentTimestamp @CurrentTimestamp(timing=INSERT,source=VM)}. */
+    /** @CreationTimestamp is a synonym for {@link CurrentTimestamp @CurrentTimestamp(event=INSERT, source=VM)}. */
     @CreationTimestamp
     @Column(name = "[JAVA_DATE_AUTO]", nullable = false, updatable = false, insertable = true)
-    private Date javaDateAuto;
+    private Instant javaDateAuto;
 
     @CurrentTimestamp(source = SourceType.DB)
     @Column(name = "[DB_CURRENT_TIMESTAMP_AUTO]", nullable = false, updatable = true)
-    private Date dbCurrentTimestampAuto;
+    private Instant dbCurrentTimestampAuto;
 
+    @SOSCurrentTimestampUtc // hover over annotation for details (default: INSERT + UPDATE)
+    // @SOSCurrentTimestampUtc(event = EventType.INSERT) - for inserts-only
     @Column(name = "[DB_CURRENT_TIMESTAMP_UTC_AUTO]", nullable = false, updatable = true)
-    private Date dbCurrentTimestampUtcAuto;
+    private Instant dbCurrentTimestampUtcAuto;
 
     public DBItemATest() {
     }
@@ -63,23 +67,23 @@ public class DBItemATest extends DBItem {
         name = val;
     }
 
-    public Date getJavaDateManual() {
+    public Instant getJavaDateManual() {
         return javaDateManual;
     }
 
-    public void setJavaDateManual(Date v) {
+    public void setJavaDateManual(Instant v) {
         javaDateManual = v;
     }
 
-    public Date getJavaDateAuto() {
+    public Instant getJavaDateAuto() {
         return javaDateAuto;
     }
 
-    public Date getDbCurrentTimestampAuto() {
+    public Instant getDbCurrentTimestampAuto() {
         return dbCurrentTimestampAuto;
     }
 
-    public Date getDbCurrentTimestampUtcAuto() {
+    public Instant getDbCurrentTimestampUtcAuto() {
         return dbCurrentTimestampUtcAuto;
     }
 }
