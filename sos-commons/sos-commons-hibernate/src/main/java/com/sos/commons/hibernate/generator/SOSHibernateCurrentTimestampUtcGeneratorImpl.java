@@ -36,7 +36,7 @@ public class SOSHibernateCurrentTimestampUtcGeneratorImpl implements OnExecution
 
     @Override
     public String[] getReferencedColumnValues(Dialect dialect) {
-        return new String[] { SOSHibernateFactory.getCurrentTimestampUtcExpression(SOSHibernateFinalPropertiesResolver.getDbms(dialect)) };
+        return new String[] { SOSHibernateFactory.getCurrentTimestampUtcSqlExpression(SOSHibernateFinalPropertiesResolver.getDbms(dialect)) };
     }
 
     @Override

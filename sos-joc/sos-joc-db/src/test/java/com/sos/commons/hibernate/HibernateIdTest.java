@@ -2,11 +2,13 @@ package com.sos.commons.hibernate;
 
 import java.time.Instant;
 
+import org.hibernate.query.Query;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.helpers.dbitems.DBItemATest;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSString;
@@ -42,8 +44,16 @@ public class HibernateIdTest {
             item.setDateNullable(session.getCurrentTimestampAsInstant());
 
             session.update(item);
-
             LOGGER.info("[AFTER_UPDATE]" + SOSString.toString(item));
+
+            StringBuilder hql = new StringBuilder();
+            hql.append("update ").append(DBItemATest.class.getSimpleName()).append(" ");
+            hql.append("set dbCurrentTimestampUtcAuto=").append(SOSHibernateCurrentTimestampUtc.getFunction());
+            hql.append("where id = (select min(id) from ").append(DBItemATest.class.getSimpleName()).append(")");
+            Query<?> query = session.createQuery(hql);
+
+            session.executeUpdate(query);
+
             // Does NOT work with StatelessSession - getDbCurrentTimestampUtcAuto remains null after save because StatelessSession has no persistence context
             // and does not update the
             // entity.

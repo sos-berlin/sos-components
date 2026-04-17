@@ -7,6 +7,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
@@ -78,14 +79,13 @@ public class DBLayerMonitoring extends DBLayer {
 
     public boolean updateOrderOnResumed(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
-        hql.append("set modified=:modified ");
+        hql.append("set modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append(",severity=:severity ");
         hql.append(",state=:state ");
         hql.append(",stateTime=:stateTime ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
         query.setParameter("severity", hob.getSeverity());
         query.setParameter("state", hob.getState());
         query.setParameter("stateTime", hob.getStateTime());
@@ -97,7 +97,7 @@ public class DBLayerMonitoring extends DBLayer {
 
     public boolean updateOrderOnForked(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
-        hql.append("set modified=:modified ");
+        hql.append("set modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append(",hasChildren=true ");
         hql.append(",severity=:severity ");
         hql.append(",state=:state ");
@@ -105,7 +105,6 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
         query.setParameter("severity", hob.getSeverity());
         query.setParameter("state", hob.getState());
         query.setParameter("stateTime", hob.getStateTime());
@@ -117,7 +116,7 @@ public class DBLayerMonitoring extends DBLayer {
 
     public boolean updateOrder(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
-        hql.append("set modified=:modified ");
+        hql.append("set modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
 
         if (hob.getEndTime() != null) {
             hql.append(",endTime=:endTime ");
@@ -142,7 +141,6 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
 
         if (hob.getEndTime() != null) {
             query.setParameter("endTime", hob.getEndTime());
@@ -172,12 +170,11 @@ public class DBLayerMonitoring extends DBLayer {
 
     public boolean updateOrderOnOrderStep(Long historyId, Long currentHistoryOrderStepId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
-        hql.append("set modified=:modified ");
+        hql.append("set modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append(",currentHistoryOrderStepId=:currentHistoryOrderStepId ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
         query.setParameter("currentHistoryOrderStepId", currentHistoryOrderStepId);
         query.setParameter("historyId", historyId);
 
@@ -196,7 +193,7 @@ public class DBLayerMonitoring extends DBLayer {
         hql.append(",errorReason=:errorReason ");
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
-        hql.append(",modified=:modified ");
+        hql.append(",modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
@@ -210,7 +207,6 @@ public class DBLayerMonitoring extends DBLayer {
         query.setParameter("errorReason", hosb.getErrorReason());
         query.setParameter("errorCode", DBItemHistoryOrderStep.normalizeErrorCode(hosb.getErrorCode()));
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(hosb.getErrorText()));
-        query.setParameter("modified", new Date());
         query.setParameter("historyId", hosb.getHistoryId());
         return getSession().executeUpdate(query);
     }

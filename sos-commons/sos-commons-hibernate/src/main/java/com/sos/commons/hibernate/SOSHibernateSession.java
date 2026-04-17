@@ -629,11 +629,33 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         return identifier;
     }
 
-    /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException,
-     *             SOSHibernateQueryNonUniqueResultException */
-    public String getLastSequenceValue(String sequenceName) throws SOSHibernateException {
-        String stmt = factory.getSequenceLastValString(sequenceName);
-        return stmt == null ? null : getSingleValueNativeQuery(stmt, String.class);
+    /** Retrieves the last generated ID as a {@link Long}.
+     * <p>
+     * Convenience method that calls {@link #getLastGeneratedId(String, Class)} with {@code Long.class}.
+     *
+     * @param sequenceName the name of the sequence (required for Oracle and PostgreSQL, ignored for others)
+     * @return the last generated ID as a {@code Long}, or {@code null} if the database is unsupported
+     * @throws SOSHibernateException if a database access error occurs */
+    public Long getLastGeneratedIdAsLong(String sequenceName) throws SOSHibernateException {
+        return getLastGeneratedId(sequenceName, Long.class);
+    }
+
+    /** Retrieves the last generated ID from the database and returns it as the specified type.
+     * <p>
+     * This method works for both:
+     * <ul>
+     * <li>Identity/AUTO_INCREMENT columns (MySQL, MSSQL, H2) - using {@code @@IDENTITY} or {@code LAST_INSERT_ID()}</li>
+     * <li>Database sequences (Oracle, PostgreSQL) - using {@code sequenceName.currval} or {@code currval('sequenceName')}</li>
+     * </ul>
+     *
+     * @param <T> the type of the returned ID object
+     * @param sequenceName the name of the sequence (required for Oracle and PostgreSQL, ignored for others)
+     * @param returnType the {@link Class} object representing the desired return type
+     * @return the last generated ID as an object of type {@code T}, or {@code null} if the database is unsupported
+     * @throws SOSHibernateException if a database access error occurs or the result cannot be converted */
+    public <T> T getLastGeneratedId(String sequenceName, Class<T> returnType) throws SOSHibernateException {
+        String stmt = factory.getLastGeneratedIdSqlSelectString(sequenceName);
+        return stmt == null ? null : getSingleValueNativeQuery(stmt, returnType);
     }
 
     /** execute a SELECT query(NativeQuery or Query)
@@ -1419,14 +1441,14 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
      * @return the current database timestamp as an object of type {@code T}
      * @throws SOSHibernateException if a database access error occurs, the query fails, or the result cannot be converted to the requested type */
     public <T> T getCurrentTimestamp(Class<T> returnClazz) throws SOSHibernateException {
-        return getSingleResultNativeQuery(factory.getCurrentTimestampSelectString(), returnClazz);
+        return getSingleResultNativeQuery(factory.getCurrentTimestampSqlSelectString(), returnClazz);
     }
 
-    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcExpression(Dbms)}
+    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcSqlExpression(Dbms)}
      * 
      * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
-    public String getCurrentTimestampUtcExpression() {
-        return factory.getCurrentTimestampUtcExpression();
+    public String getCurrentTimestampUtcSqlExpression() {
+        return factory.getCurrentTimestampUtcSqlExpression();
     }
 
     /** Retrieves the current UTC timestamp from the database as a {@link java.util.Date} object.
@@ -1477,7 +1499,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
      * @return the current database UTC timestamp as an object of type {@code T}
      * @throws SOSHibernateException if a database access error occurs, the query fails, or the result cannot be converted to the requested type */
     public <T> T getCurrentTimestampUtc(Class<T> returnClazz) throws SOSHibernateException {
-        return getSingleResultNativeQuery(factory.getCurrentTimestampUtcSelectString(), returnClazz);
+        return getSingleResultNativeQuery(factory.getCurrentTimestampUtcSqlSelectString(), returnClazz);
     }
 
     public void setCurrentStatement(Statement val) {

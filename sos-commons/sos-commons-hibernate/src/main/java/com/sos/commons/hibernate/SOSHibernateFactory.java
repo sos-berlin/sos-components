@@ -57,9 +57,9 @@ public class SOSHibernateFactory implements Serializable {
 
     private String identifier;
     private String logIdentifier;
-    private String currentTimestampSelectString;
-    private String currentTimestampUtcSelectString;
-    private String currentTimestampUtcExpression;
+    private String currentTimestampSqlSelectString;
+    private String currentTimestampUtcSqlSelectString;
+    private String currentTimestampUtcSqlExpression;
     private boolean useDefaultConfigurationProperties = true;
     private boolean forceReadDatabaseMetaData;
 
@@ -195,16 +195,17 @@ public class SOSHibernateFactory implements Serializable {
         return Boolean.parseBoolean(p);
     }
 
-    /** TODO check: dialect.getSequenceSupport().getSequencePreviousValString(sequenceName);
-     * 
-     * Hibernate Dialect does not provide the functions to identify the last inserted sequence value.
-     * 
-     * only for the next value:
-     * 
-     * e.g. dialiect.getSelectSequenceNextValString(sequenceName),
-     * 
-     * dialect.getSequenceNextValString(sequenceName) */
-    public String getSequenceLastValString(String sequenceName) {
+    /** Returns the database-specific SQL SELECT statement to retrieve the last generated ID.
+     * <p>
+     * Works for:
+     * <ul>
+     * <li>Identity/AUTO_INCREMENT columns (MySQL, MSSQL, H2)</li>
+     * <li>Database sequences (Oracle, PostgreSQL)</li>
+     * </ul>
+     *
+     * @param sequenceName the name of the sequence (required for Oracle and PostgreSQL, ignored for others)
+     * @return the SQL SELECT statement */
+    public String getLastGeneratedIdSqlSelectString(String sequenceName) {
         switch (dbms) {
         case MSSQL:
             return "SELECT @@IDENTITY";
@@ -223,45 +224,68 @@ public class SOSHibernateFactory implements Serializable {
         return null;
     }
 
-    public String getCurrentTimestampSelectString() {
-        if (currentTimestampSelectString == null) {
+    /** Returns the database-specific SQL SELECT statement to retrieve the current timestamp.
+     * <p>
+     * For most databases, this delegates to {@link Dialect#getCurrentTimestampSelectString()}.
+     * <p>
+     * Exceptions (due to JDBC type mapping issues):
+     * <ul>
+     * <li><b>H2:</b> Uses {@code select now()} instead of {@code current_timestamp()} (prevents
+     * {@code MappingException: No Dialect mapping for JDBC type: 2014})</li>
+     * <li><b>Oracle:</b> Uses {@code select sysdate from dual} instead of {@code select systimestamp from dual} (prevents
+     * {@code MappingException: No Dialect mapping for JDBC type: -101})</li>
+     * </ul>
+     *
+     * @return the SQL SELECT statement to get the current database timestamp */
+    public String getCurrentTimestampSqlSelectString() {
+        if (currentTimestampSqlSelectString == null) {
             switch (dbms) {
             case H2:
                 // extra because of org.hibernate.MappingException: No Dialect mapping for JDBC type: 2014 [call current_timestamp()]
-                currentTimestampSelectString = "select now()";
+                currentTimestampSqlSelectString = "select now()";
                 break;
             case ORACLE:
                 // extra because of Oracle10gDialect.getCurrentTimestampSelectString "select systimestamp from dual" statement
                 // and MappingException: "No Dialect mapping for JDBC type: -101"
-                currentTimestampSelectString = "select sysdate from dual";
+                currentTimestampSqlSelectString = "select sysdate from dual";
                 break;
             default:
-                currentTimestampSelectString = dialect.getCurrentTimestampSelectString();
+                currentTimestampSqlSelectString = dialect.getCurrentTimestampSelectString();
                 break;
             }
         }
-        return currentTimestampSelectString;
+        return currentTimestampSqlSelectString;
     }
 
-    public String getCurrentTimestampUtcSelectString() {
-        if (currentTimestampUtcSelectString == null) {
-            currentTimestampUtcSelectString = getCurrentTimestampUtcSelectString(dbms);
+    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcSqlSelectString(Dbms)}
+     * @return the SQL SELECT statement to get the current UTC timestamp, or empty string if unsupported */
+    public String getCurrentTimestampUtcSqlSelectString() {
+        if (currentTimestampUtcSqlSelectString == null) {
+            currentTimestampUtcSqlSelectString = getCurrentTimestampUtcSqlSelectString(dbms);
         }
-        return currentTimestampUtcSelectString;
+        return currentTimestampUtcSqlSelectString;
     }
 
-    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcExpression(Dbms)}
+    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcSqlExpression(Dbms)}
      * 
      * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
-    public String getCurrentTimestampUtcExpression() {
-        if (currentTimestampUtcExpression == null) {
-            currentTimestampUtcExpression = getCurrentTimestampUtcExpression(dbms);
+    public String getCurrentTimestampUtcSqlExpression() {
+        if (currentTimestampUtcSqlExpression == null) {
+            currentTimestampUtcSqlExpression = getCurrentTimestampUtcSqlExpression(dbms);
         }
-        return currentTimestampUtcExpression;
+        return currentTimestampUtcSqlExpression;
     }
 
-    public static String getCurrentTimestampUtcSelectString(Dbms dbms) {
-        String expression = getCurrentTimestampUtcExpression(dbms);
+    /** Returns the database-specific SQL SELECT statement to retrieve the current UTC timestamp.
+     * <p>
+     * This method builds a complete SELECT statement using the expression from {@link #getCurrentTimestampUtcSqlExpression(Dbms)}.
+     * <p>
+     * For Oracle, the {@code FROM DUAL} clause is added. For all other databases, a simple {@code SELECT expression} is returned.
+     *
+     * @param dbms the database type (H2, MYSQL, ORACLE, MSSQL, PGSQL), may be {@code null}
+     * @return the SQL SELECT statement to get the current UTC timestamp, or empty string if unsupported */
+    public static String getCurrentTimestampUtcSqlSelectString(Dbms dbms) {
+        String expression = getCurrentTimestampUtcSqlExpression(dbms);
         if (SOSString.isEmpty(expression)) {
             return "";
         }
@@ -288,7 +312,7 @@ public class SOSHibernateFactory implements Serializable {
      *
      * @param dbms the database type (H2, MYSQL, ORACLE, MSSQL, PGSQL), may be {@code null}
      * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
-    public static String getCurrentTimestampUtcExpression(Dbms dbms) {
+    public static String getCurrentTimestampUtcSqlExpression(Dbms dbms) {
         if (dbms == null) {
             return "";
         }

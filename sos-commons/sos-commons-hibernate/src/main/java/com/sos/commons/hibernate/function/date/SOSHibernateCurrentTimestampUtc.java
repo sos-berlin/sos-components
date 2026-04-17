@@ -30,6 +30,6 @@ public class SOSHibernateCurrentTimestampUtc extends StandardSQLFunction {
     @Override
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, ReturnableType<?> returnType, SqlAstTranslator<?> translator)
             throws QueryException {
-        sqlAppender.appendSql(factory.getCurrentTimestampUtcExpression());
+        sqlAppender.appendSql(factory.getCurrentTimestampUtcSqlExpression());
     }
 }

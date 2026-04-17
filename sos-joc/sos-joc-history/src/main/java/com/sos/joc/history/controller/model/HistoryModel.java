@@ -1750,7 +1750,7 @@ public class HistoryModel {
                 String endVariables = HistoryUtil.toJsonString(outcome);
                 String errorText = HistoryUtil.tryRemoveSpecialCharacters(le.getErrorText());
                 dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), eos.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
-                        .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText, new Date());
+                        .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText);
                 le.onOrderStep(cos, eos.getPosition());
                 le.setArguments(outcome);
 

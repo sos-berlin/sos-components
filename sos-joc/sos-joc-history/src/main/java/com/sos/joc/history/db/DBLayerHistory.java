@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
@@ -340,18 +341,17 @@ public class DBLayerHistory extends DBLayer {
     public int updateOrderOnOrderStep(Long id, Long currentHistoryOrderStepId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("set currentHistoryOrderStepId=:currentHistoryOrderStepId ");
-        hql.append(",modified=:modified ");
+        hql.append(",modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append("where id=:id");
 
         Query<DBItemHistoryOrder> query = getSession().createQuery(hql.toString());
         query.setParameter("currentHistoryOrderStepId", currentHistoryOrderStepId);
-        query.setParameter("modified", new Date());
         query.setParameter("id", id);
         return getSession().executeUpdate(query);
     }
 
     public int setOrderStepEnd(Long id, Date endTime, Long endEventId, String endVariables, Integer returnCode, Integer severity, boolean error,
-            String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
+            String errorState, String errorReason, String errorCode, String errorText) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
         hql.append("set endTime=:endTime ");
@@ -364,7 +364,7 @@ public class DBLayerHistory extends DBLayer {
         hql.append(",errorReason=:errorReason ");
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
-        hql.append(",modified=:modified ");
+        hql.append(",modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append("where id=:id");
 
         Query<DBItemHistoryOrderStep> query = getSession().createQuery(hql.toString());
@@ -378,7 +378,6 @@ public class DBLayerHistory extends DBLayer {
         query.setParameter("errorReason", errorReason);
         query.setParameter("errorCode", DBItemHistoryOrderStep.normalizeErrorCode(errorCode));
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(errorText));
-        query.setParameter("modified", modified);
         query.setParameter("id", id);
         return getSession().executeUpdate(query);
     }
@@ -387,7 +386,7 @@ public class DBLayerHistory extends DBLayer {
             Integer errorReturnCode, String errorCode, String errorText, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId,
             Long endEventId, Integer endReturnCode, String endMessage) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
-        hql.append("set modified=:modified ");
+        hql.append("set modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         if (endTime != null) {
             hql.append(",endTime=:endTime");
             hql.append(",endWorkflowPosition=:endWorkflowPosition ");
@@ -409,7 +408,6 @@ public class DBLayerHistory extends DBLayer {
         hql.append("where id=:id");
 
         Query<DBItemHistoryOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
         if (endTime != null) {
             query.setParameter("endTime", endTime);
             query.setParameter("endWorkflowPosition", DBItemHistoryOrder.normalizeWorkflowPosition(endWorkflowPosition));
