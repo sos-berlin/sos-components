@@ -1,8 +1,10 @@
 package com.sos.joc.db.deployment;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Date;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -63,11 +65,13 @@ public class DBItemDeploymentSubmission extends DBItem {
     @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
 
-    @Column(name = "[CREATED]", nullable = false)
-    private Date created;
-
     @Column(name = "[DELETED_DATE]", nullable = false)
     private Date deletedDate;
+
+    @Column(name = "[CREATED]", nullable = false)
+    // not a @SOSCreationTimestampUtc annotation - because this is more a MODIFIED column and not a CREATED - will be updated in both cases(Insert/Update)
+    @SOSCurrentTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -184,12 +188,8 @@ public class DBItemDeploymentSubmission extends DBItem {
         this.operation = operation;
     }
 
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
     }
 
     public Date getDeletedDate() {

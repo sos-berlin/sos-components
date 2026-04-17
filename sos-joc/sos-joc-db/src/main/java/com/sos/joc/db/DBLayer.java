@@ -348,13 +348,13 @@ public class DBLayer implements Serializable {
     public static final String TABLE_DEP_KEYS_SEQUENCE = "SEQ_DEP_K";
 
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
-    public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
+    public static final String VIEW_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
     
     public static final String DBITEM_DEP_CONFIGURATIONS_JOIN = DBItemDepConfigurationJoin.class.getSimpleName();
-    public static final String TABLE_DEP_CONFIGURATIONS_JOIN = "DEP_CONFIGURATIONS_JOIN";
+    public static final String VIEW_DEP_CONFIGURATIONS_JOIN = "DEP_CONFIGURATIONS_JOIN";
     
     public static final String DBITEM_DEP_NAMEPATHS = DBItemDepNamePaths.class.getSimpleName();
-    public static final String TABLE_DEP_NAMEPATHS = "DEP_NAMEPATHS";
+    public static final String VIEW_DEP_NAMEPATHS = "DEP_NAMEPATHS";
 
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();

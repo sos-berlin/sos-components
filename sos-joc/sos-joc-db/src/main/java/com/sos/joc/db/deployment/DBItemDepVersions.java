@@ -1,7 +1,8 @@
 package com.sos.joc.db.deployment;
 
-import java.util.Date;
+import java.time.Instant;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -32,7 +33,8 @@ public class DBItemDepVersions extends DBItem {
     private String version;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public Long getId() {
         return id;
@@ -66,12 +68,8 @@ public class DBItemDepVersions extends DBItem {
         this.version = version;
     }
 
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
-    }
-
-    public void setModified(Date modified) {
-        this.modified = modified;
     }
 
 }

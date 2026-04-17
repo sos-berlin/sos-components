@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_CONFIGURATIONS_JOIN)
+@Table(name = DBLayer.VIEW_DEP_CONFIGURATIONS_JOIN)
 public class DBItemDepConfigurationJoin extends DBItem {
 
     private static final long serialVersionUID = 1L;

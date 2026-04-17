@@ -63,7 +63,6 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             versionWithPaths.put(version.getVersion(), version.getConfiguration().getPath());
             newVersion.setDepHistoryId(item.getId());
             newVersion.setVersion(version.getVersion());
-            newVersion.setModified(Date.from(Instant.now()));
             try {
                 dbLayer.getSession().save(newVersion);
             } catch (SOSHibernateException e) {

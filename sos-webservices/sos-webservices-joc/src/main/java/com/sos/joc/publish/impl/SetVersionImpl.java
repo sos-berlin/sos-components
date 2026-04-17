@@ -55,7 +55,6 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             newVersion.setInvConfigurationId(item.getInventoryConfigurationId());
             newVersion.setDepHistoryId(item.getId());
             newVersion.setVersion(filter.getVersion());
-            newVersion.setModified(Date.from(Instant.now()));
             try {
                 dbLayer.getSession().save(newVersion);
             } catch (SOSHibernateException e) {
@@ -63,5 +62,5 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             }
         });
     }
-    
+
 }
