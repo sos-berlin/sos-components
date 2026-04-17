@@ -1,7 +1,9 @@
 package com.sos.joc.db.history;
 
+import java.time.Instant;
 import java.util.Date;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -51,7 +53,8 @@ public class DBItemHistoryOrderState extends DBItem {
     private String stateText;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public DBItemHistoryOrderState() {
     }
@@ -128,11 +131,7 @@ public class DBItemHistoryOrderState extends DBItem {
         stateText = normalizeValue(val, HistoryConstants.MAX_LEN_STATE_TEXT);
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 

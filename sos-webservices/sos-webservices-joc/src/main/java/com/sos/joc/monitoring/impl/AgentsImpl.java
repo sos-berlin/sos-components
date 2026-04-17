@@ -60,8 +60,9 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             boolean permitted = noControllerAvailable; // no access denied if no controllers are registered
             if (controllerId == null || controllerId.isEmpty()) {
                 if (!noControllerAvailable) {
-                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
-                            availableController, accessToken).getAgents().getView()).collect(Collectors.toSet());
+                    allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                            availableController -> getBasicControllerPermissions(availableController, accessToken).getAgents().getView()).collect(
+                                    Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -170,7 +171,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                     item.setAgentId(agentId);
                     item.setUri(inventoryAgentInfo.getKey());
                     item.setTimezone(defaultTimeZone);
-                    item.setCreated(null);// used to identify inventory item
+                    // item.getCreated() == null used to identify inventory item
 
                     List<DBItemHistoryAgent> l = ha.getOrDefault(item.getAgentId(), new ArrayList<>());
                     l.add(item);

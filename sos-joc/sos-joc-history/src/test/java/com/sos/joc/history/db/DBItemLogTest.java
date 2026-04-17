@@ -3,7 +3,6 @@ package com.sos.joc.history.db;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.Date;
 import java.util.TimeZone;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
@@ -53,7 +52,6 @@ public class DBItemLogTest {
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
             item.setFileContent(SOSGzip.compress(logFile, false).getCompressed());
-            item.setCreated(new Date());
 
             session.save(item);
         }

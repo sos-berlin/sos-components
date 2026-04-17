@@ -1,9 +1,12 @@
 package com.sos.joc.db.history;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
@@ -144,10 +147,12 @@ public class DBItemHistoryOrderStep extends DBItem {
     private String constraintHash; // hash from controllerId, startEventId for db unique constraint
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public DBItemHistoryOrderStep() {
     }
@@ -457,19 +462,11 @@ public class DBItemHistoryOrderStep extends DBItem {
         constraintHash = val;
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
     }
 

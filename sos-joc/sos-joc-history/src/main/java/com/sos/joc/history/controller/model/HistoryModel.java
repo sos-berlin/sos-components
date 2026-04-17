@@ -776,7 +776,6 @@ public class HistoryModel {
             item.setReadyTime(event.getEventDatetime());
             item.setLastKnownTime(item.getReadyTime());
             item.setTotalRunningTime(event.getTotalRunningTime());
-            item.setCreated(new Date());
             dbLayer.getSession().save(item);
 
             controllerTimezone = item.getTimezone();
@@ -840,7 +839,6 @@ public class HistoryModel {
             item.setCouplingFailedTime(null);
             // controller date time, because failed/coupled are controller date times
             item.setLastKnownTime(JocClusterUtil.getEventIdAsDate(item.getReadyEventId()));
-            item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
 
@@ -989,8 +987,6 @@ public class HistoryModel {
             item.setLogId(Long.valueOf(0));
 
             item.setConstraintHash(constraintHash);
-            item.setCreated(new Date());
-            item.setModified(item.getCreated());
 
             dbLayer.getSession().save(item);
 
@@ -1554,8 +1550,6 @@ public class HistoryModel {
             item.setLogId(Long.valueOf(0));
 
             item.setConstraintHash(constraintHash);
-            item.setCreated(new Date());
-            item.setModified(item.getCreated());
 
             dbLayer.getSession().save(item);
 
@@ -1670,8 +1664,6 @@ public class HistoryModel {
             item.setLogId(Long.valueOf(0));
 
             item.setConstraintHash(constraintHash);
-            item.setCreated(new Date());
-            item.setModified(item.getCreated());
 
             dbLayer.getSession().save(item);
 
@@ -1722,7 +1714,6 @@ public class HistoryModel {
         item.setStateEventId(String.valueOf(stateEventId));
         item.setStateCode(stateCode);
         item.setStateText(stateText);
-        item.setCreated(new Date());
         dbLayer.getSession().save(item);
     }
 
@@ -1991,7 +1982,6 @@ public class HistoryModel {
                     item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
                 }
                 if (item != null) {
-                    item.setCreated(new Date());
                     dbLayer.getSession().save(item);
 
                     if (isTask) {

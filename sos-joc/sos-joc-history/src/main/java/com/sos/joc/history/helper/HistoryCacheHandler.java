@@ -305,7 +305,6 @@ public class HistoryCacheHandler {
                     item.setUri(uri);
                     item.setTimezone(HistoryUtil.getTimeZone("getAgent " + item.getAgentId(), controllerTimezone));
                     item.setReadyTime(readyTime);
-                    item.setCreated(new Date());
                 } else {
                     Date readyTime = inst.getStartedAt();
                     if (readyTime == null) {
@@ -322,7 +321,6 @@ public class HistoryCacheHandler {
                     item.setUri(inst.getUri());
                     item.setTimezone(HistoryUtil.getTimeZone("getAgent " + item.getAgentId(), controllerTimezone));
                     item.setReadyTime(readyTime);
-                    item.setCreated(new Date());
                 }
                 dbLayer.getSession().save(item);
             }

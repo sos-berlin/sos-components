@@ -284,8 +284,6 @@ public class HistoryInsertMain {
         item.setLogId(Long.valueOf(0));
 
         item.setConstraintHash(hashOrderConstraint(item.getControllerId(), eventId, item.getOrderId()));
-        item.setCreated(date);
-        item.setModified(item.getCreated());
         return item;
     }
 
@@ -389,8 +387,6 @@ public class HistoryInsertMain {
         item.setLogId(Long.valueOf(0));
 
         item.setConstraintHash(hashOrderStepConstraint(item.getControllerId(), eventId, item.getOrderId(), item.getWorkflowPosition()));
-        item.setCreated(date);
-        item.setModified(item.getCreated());
         return item;
     }
 
@@ -464,7 +460,6 @@ public class HistoryInsertMain {
         item.setFileLinesUncomressed(template.getFileLinesUncomressed());
         item.setFileContent(template.getFileContent());
 
-        item.setCreated(order.getCreated());
         return item;
     }
 
@@ -481,7 +476,6 @@ public class HistoryInsertMain {
         item.setFileLinesUncomressed(template.getFileLinesUncomressed());
         item.setFileContent(template.getFileContent());
 
-        item.setCreated(orderStep.getCreated());
         return item;
     }
 

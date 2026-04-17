@@ -3,7 +3,6 @@ package com.sos.joc.monitoring.db;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -98,8 +97,6 @@ public class DBLayerMonitoringTest {
             i1.setWorkflowName("shell");
             i1.setOrderId("#2022-03-18#T61988048100-root");
             i1.setJobName("job");
-            i1.setCreated(new Date());
-            i1.setModified(i1.getCreated());
 
             HistoryOrderStepBean b1 = new HistoryOrderStepBean(EventType.OrderProcessingStarted, 1647619880839002L, i1, "200%", null, null, null);
             longerThan.put(b1.getHistoryId(), b1);

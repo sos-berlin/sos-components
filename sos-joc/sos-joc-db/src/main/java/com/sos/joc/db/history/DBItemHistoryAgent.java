@@ -1,7 +1,9 @@
 package com.sos.joc.db.history;
 
+import java.time.Instant;
 import java.util.Date;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
@@ -50,7 +52,8 @@ public class DBItemHistoryAgent extends DBItem {
     private Date lastKnownTime;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public DBItemHistoryAgent() {
     }
@@ -135,11 +138,7 @@ public class DBItemHistoryAgent extends DBItem {
         lastKnownTime = val;
     }
 
-    public void setCreated(Date val) {
-        created = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 }

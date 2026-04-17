@@ -2,6 +2,7 @@ package com.sos.joc.classes.history;
 
 import java.io.IOException;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
@@ -30,7 +31,7 @@ public class HistoryMapper {
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
         history.setOrderState(OrdersHelper.getHistoryState(item.getStateAsEnum()));
-        history.setSurveyDate(item.getModified());
+        history.setSurveyDate(SOSDate.toDate(item.getModified()));
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
         history.setSequence(getSequence(item));
@@ -53,7 +54,7 @@ public class HistoryMapper {
         history.setExitCode(item.getReturnCode());
         history.setState(getState(item.getSeverity()));
         history.setCriticality(item.getCriticalityAsEnum().value().toLowerCase());
-        history.setSurveyDate(item.getModified());
+        history.setSurveyDate(SOSDate.toDate(item.getModified()));
         history.setTaskId(item.getId());
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(item.getWorkflowPosition());

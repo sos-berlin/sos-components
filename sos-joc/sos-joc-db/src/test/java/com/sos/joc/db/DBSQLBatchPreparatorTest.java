@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.dialect.MySQLDialect;
@@ -74,10 +73,10 @@ public class DBSQLBatchPreparatorTest {
     private List<DBItemHistoryOrderStep> getTestItems() {
         DBItemHistoryOrderStep item1 = new DBItemHistoryOrderStep();
         item1.setControllerId("controllerId_1");
-        item1.setCreated(new Date());
+        // item1.setCreated(new Date());
         DBItemHistoryOrderStep item2 = new DBItemHistoryOrderStep();
         item2.setControllerId("controllerId_2");
-        item1.setCreated(new Date());
+        // item1.setCreated(new Date());
 
         List<DBItemHistoryOrderStep> items = new ArrayList<>();
         items.add(item1);
