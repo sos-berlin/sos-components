@@ -250,6 +250,9 @@ public class SOSHibernateFactory implements Serializable {
         return currentTimestampUtcSelectString;
     }
 
+    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcExpression(Dbms)}
+     * 
+     * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
     public String getCurrentTimestampUtcExpression() {
         if (currentTimestampUtcExpression == null) {
             currentTimestampUtcExpression = getCurrentTimestampUtcExpression(dbms);
@@ -268,12 +271,30 @@ public class SOSHibernateFactory implements Serializable {
         return "select " + expression;
     }
 
+    /** Returns the database-specific SQL expression for the current UTC timestamp.
+     * <p>
+     * This method provides the expression to be used in INSERT or UPDATE statements to generate the current UTC timestamp directly on the database
+     * server.<br />
+     * The returned expression is a database function call, not a complete SELECT statement.
+     * <p>
+     * Supported database expressions:
+     * <ul>
+     * <li><b>H2:</b> {@code now()}</li>
+     * <li><b>MySQL:</b> {@code utc_timestamp()}</li>
+     * <li><b>Oracle:</b> {@code cast(sys_extract_utc(systimestamp) as date)}</li>
+     * <li><b>MSSQL:</b> {@code getutcdate()}</li>
+     * <li><b>PostgreSQL:</b> {@code timezone('UTC', now())}</li>
+     * </ul>
+     *
+     * @param dbms the database type (H2, MYSQL, ORACLE, MSSQL, PGSQL), may be {@code null}
+     * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
     public static String getCurrentTimestampUtcExpression(Dbms dbms) {
         if (dbms == null) {
             return "";
         }
         switch (dbms) {
         case H2:
+            return "now()"; // TODO
         case MYSQL:
             return "utc_timestamp()";
         case ORACLE:

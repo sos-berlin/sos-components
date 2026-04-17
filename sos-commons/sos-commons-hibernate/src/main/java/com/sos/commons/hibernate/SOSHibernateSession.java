@@ -1422,6 +1422,13 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
         return getSingleResultNativeQuery(factory.getCurrentTimestampSelectString(), returnClazz);
     }
 
+    /** @see {@link SOSHibernateFactory#getCurrentTimestampUtcExpression(Dbms)}
+     * 
+     * @return the database-specific UTC timestamp expression, or empty string if dbms is null or unsupported */
+    public String getCurrentTimestampUtcExpression() {
+        return factory.getCurrentTimestampUtcExpression();
+    }
+
     /** Retrieves the current UTC timestamp from the database as a {@link java.util.Date} object.
      * <p>
      * This is a convenience method that calls {@link #getCurrentTimestampUtc(Class)} with {@link Date} class.<br />
