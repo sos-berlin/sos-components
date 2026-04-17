@@ -35,13 +35,13 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
             if (response != null) {
                 return response;
             }
-            
+
             JocConfigurationFilter filter = new JocConfigurationFilter();
             filter.setConfigurationType(ConfigurationType.APPROVAL.value());
-            
+
             DBItemJocConfiguration dbItem = new DBItemJocConfiguration();
             boolean isNew = false;
-            
+
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(session);
             List<DBItemJocConfiguration> jocConfs = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
@@ -51,7 +51,7 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
                 isNew = true;
                 dbItem.setId(null);
             }
-            
+
             dbItem.setAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(in));
             dbItem.setConfigurationType(ConfigurationType.APPROVAL.value());
@@ -60,17 +60,14 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
             dbItem.setObjectType(null);
             dbItem.setShared(false);
             dbItem.setInstanceId(0L);
-            
-            Date now = Date.from(Instant.now());
-            dbItem.setModified(now);
-            
+
             if (isNew) {
                 session.save(dbItem);
             } else {
                 session.update(dbItem);
             }
-            
-            return responseStatusJSOk(now);
+
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {

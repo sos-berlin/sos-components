@@ -43,24 +43,25 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             // obscure security relevant data
             AddCredentialsFilter filterForLogging = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
             Set<String> wrongServernames = new HashSet<String>();
-            for(GitCredentials cred : filterForLogging.getCredentials()) {
-                if(cred.getGitServer().contains("://")) {
+            for (GitCredentials cred : filterForLogging.getCredentials()) {
+                if (cred.getGitServer().contains("://")) {
                     wrongServernames.add(cred.getGitServer());
                 }
             }
-            if(!wrongServernames.isEmpty()) {
-                StringBuilder message = new StringBuilder("Credentials could not be stored! GitServer entries malformed! Allowed Format HOST(:PORT).\n");
+            if (!wrongServernames.isEmpty()) {
+                StringBuilder message = new StringBuilder(
+                        "Credentials could not be stored! GitServer entries malformed! Allowed Format HOST(:PORT).\n");
                 message.append("Malformed GitServers:\n");
                 wrongServernames.stream().forEach(servername -> message.append(servername).append(", "));
                 throw new JocGitException(message.toString());
             }
-            for(GitCredentials cred : filterForLogging.getCredentials()) {
-               if(cred.getPassword() != null && !cred.getPassword().isEmpty()) {
-                   cred.setPassword("********");
-               }
-               if(cred.getPersonalAccessToken() != null && !cred.getPersonalAccessToken().isEmpty()) {
-                   cred.setPersonalAccessToken("********");
-               }
+            for (GitCredentials cred : filterForLogging.getCredentials()) {
+                if (cred.getPassword() != null && !cred.getPassword().isEmpty()) {
+                    cred.setPassword("********");
+                }
+                if (cred.getPersonalAccessToken() != null && !cred.getPersonalAccessToken().isEmpty()) {
+                    cred.setPersonalAccessToken("********");
+                }
             }
             byte[] filterForLog = Globals.objectMapper.writeValueAsBytes(filterForLogging);
             initLogging(API_CALL, filterForLog, addCredentialsFilter, xAccessToken, CategoryType.INVENTORY);
@@ -73,8 +74,8 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             storeAuditLog(filter.getAuditLog());
             String account = null;
-            
-            if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
+
+            if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
                 account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
@@ -86,9 +87,9 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             List<DBItemJocConfiguration> existing = dbLayer.getJocConfigurations(dbFilter, 0);
             GitCredentialsList credList = null;
             DBItemJocConfiguration dbItem = null;
-            if(existing != null && !existing.isEmpty()) {
+            if (existing != null && !existing.isEmpty()) {
                 dbItem = existing.get(0);
-                credList =  Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
+                credList = Globals.objectMapper.readValue(dbItem.getConfigurationItem(), GitCredentialsList.class);
             } else {
                 dbItem = new DBItemJocConfiguration();
                 dbItem.setAccount(account);
@@ -96,13 +97,12 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                 dbItem.setShared(false);
                 dbItem.setInstanceId(0L);
                 dbItem.setControllerId(DBLayer.DEFAULT_KEY);
-                dbItem.setModified(Date.from(Instant.now()));
                 credList = new GitCredentialsList();
             }
-            if(filter.getCredentials() != null && !filter.getCredentials().isEmpty()) {
-                for(GitCredentials credentials : filter.getCredentials()) {
+            if (filter.getCredentials() != null && !filter.getCredentials().isEmpty()) {
+                for (GitCredentials credentials : filter.getCredentials()) {
                     boolean exists = checkExists(credentials, credList);
-                    if(!exists) {
+                    if (!exists) {
                         credList.getCredentials().add(credentials);
                     } else {
                         throw new JocGitException(String.format("credentials for server %1$s already exist.", credentials.getGitServer()));
@@ -128,7 +128,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
                 if (cred.getGitServer().equals(credentials.getGitServer())) {
                     return true;
                 }
-            } 
+            }
         }
         return false;
     }

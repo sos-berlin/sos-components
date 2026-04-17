@@ -1,9 +1,10 @@
 package com.sos.joc.db.joc;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -54,7 +55,8 @@ public class DBItemJocConfiguration extends DBItem {
     private String configurationItem;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public DBItemJocConfiguration() {
     }
@@ -131,11 +133,7 @@ public class DBItemJocConfiguration extends DBItem {
         return shared;
     }
 
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
     }
 

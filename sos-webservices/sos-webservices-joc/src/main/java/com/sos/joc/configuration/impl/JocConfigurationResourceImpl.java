@@ -119,7 +119,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
                 dbItem.setShared(ConfigurationGlobals.SHARED);
                 dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
-                
+
                 Optional<JsonObject> oldJsonObj = StoreSettingsImpl.getJsonObject(oldConfiguration);
                 Optional<JsonObject> newJsonObj = StoreSettingsImpl.getJsonObject(configuration.getConfigurationItem());
 
@@ -222,8 +222,6 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
             dbItem.setConfigurationType(configuration.getConfigurationType().name());
             dbItem.setConfigurationItem(configuration.getConfigurationItem());
-            Date now = Date.from(Instant.now());
-            dbItem.setModified(now);
 
             if (isNew) {
                 connection.save(dbItem);
@@ -247,7 +245,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
-            ok.setDeliveryDate(now);
+            ok.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(ok));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -271,7 +269,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
             DBItemJocConfiguration dbItem = null;
-            
+
             if (configuration.getId() == null || configuration.getId() == 0) {
                 JocConfigurationFilter filter = new JocConfigurationFilter();
                 filter.setConfigurationType(configuration.getConfigurationType().value());
@@ -402,12 +400,12 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 boolean owner = ".".equals(dbItem.getAccount()) || account.equals(dbItem.getAccount());
 
                 if (!owner) {
-//                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
-//                        return accessDeniedResponse();
-//                    }
-//                    if (!dbItem.getShared() || !getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
-//                        return accessDeniedResponse();
-//                    }
+                    // if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
+                    // return accessDeniedResponse();
+                    // }
+                    // if (!dbItem.getShared() || !getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                    // return accessDeniedResponse();
+                    // }
                     JOCDefaultResponse response1 = null;
                     if (!dbItem.getShared()) {
                         response1 = initPermissions(null, andPermissions(getJocPermissions(accessToken).map(p -> p.getAdministration()
@@ -555,7 +553,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         JsonValidator.validateFailFast(body, ConfigurationRead.class);
         return Globals.objectMapper.readValue(body, ConfigurationRead.class);
     }
-    
+
     private Configuration getConfiguration(String action, String accessToken, byte[] body) throws Exception {
         body = initLogging(action, body, accessToken, CategoryType.SETTINGS);
         JsonValidator.validateFailFast(body, Configuration.class);

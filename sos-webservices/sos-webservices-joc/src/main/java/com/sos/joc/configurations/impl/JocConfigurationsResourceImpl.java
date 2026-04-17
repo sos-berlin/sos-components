@@ -142,7 +142,6 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                                 copyOfDefaultProfile.setAccount(account);
                                 copyOfDefaultProfile.setId(null);
                                 copyOfDefaultProfile.setControllerId(configurationsFilter.getControllerId());
-                                copyOfDefaultProfile.setModified(now);
                                 connection.save(copyOfDefaultProfile);
                                 if (listOfJocConfigurationDbItem == null) {
                                     listOfJocConfigurationDbItem = Collections.singletonList(copyOfDefaultProfile);

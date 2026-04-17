@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -64,9 +65,6 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             dbItem.setAccount(profile.getAccountName());
 
             dbItem.setConfigurationItem(profile.getProfileItem());
-            Date now = Date.from(Instant.now());
-            dbItem.setModified(now);
-
             if (isNew) {
                 sosHibernateSession.save(dbItem);
             } else {
@@ -116,7 +114,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             Profile profile = new Profile();
             profile.setAccountName(dbItem.getAccount());
             profile.setControllerId(dbItem.getControllerId());
-            profile.setModified(dbItem.getModified());
+            profile.setModified(SOSDate.toDate(dbItem.getModified()));
             profile.setProfileItem(dbItem.getConfigurationItem());
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(profile));

@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +125,6 @@ public class SOSManageIdentityService {
         }
 
         dbItem.setConfigurationItem("{\"sessionTimeout\":" + timeoutValue + "}");
-        dbItem.setModified(new Date());
         if (dbItem.getId() == null) {
             sosHibernateSession.save(dbItem);
         } else {
@@ -218,7 +216,6 @@ public class SOSManageIdentityService {
         }
 
         dbItem.setConfigurationItem(json);
-        dbItem.setModified(new Date());
         try {
             sosHibernateSession.save(dbItem);
         } catch (Exception e) {

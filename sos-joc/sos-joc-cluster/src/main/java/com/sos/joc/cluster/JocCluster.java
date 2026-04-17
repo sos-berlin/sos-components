@@ -247,7 +247,6 @@ public class JocCluster {
                     item.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
                     item.setConfigurationType(ConfigurationType.GLOBALS.name());
                     item.setConfigurationItem(mapper.writeValueAsString(settings));
-                    item.setModified(new Date());
 
                     dbLayer.getSession().save(item);
                 } catch (Throwable e) {
@@ -270,7 +269,6 @@ public class JocCluster {
                             settings = configurations.getInitialSettings(jocTimeZone);
 
                             item.setConfigurationItem(mapper.writeValueAsString(settings));
-                            item.setModified(new Date());
                             dbLayer.getSession().update(item);
                         }
                     }
@@ -630,7 +628,7 @@ public class JocCluster {
                     } else {
                         LOGGER.info(String.format("[%s][switch][start][newMemberId=%s][db][UTC]heartBeat=%s ...", mode, newMemberId, SOSDate
                                 .getDateTimeAsString(ni.getHeartBeat())));
-                        
+
                         if (activeMemberHandler.isActive()) {
                             // update before perform is used in ControllerResourceModifyClusterImpl.isSwitchingJocInstances
                             item.setSwitchHeartBeat(now);
@@ -638,13 +636,13 @@ public class JocCluster {
                             dbLayer.beginTransaction();
                             dbLayer.getSession().update(item);
                             dbLayer.commit();
-                            
+
                             LOGGER.info(String.format("[%s][switch][start][stop][current]%s", mode, currentMemberId));
                             activeMemberHandler.perform(mode, PerformType.STOP, configurations);
 
                             now = dbLayer.getNowUTC();
                         }
-                        
+
                         item.setMemberId(newMemberId);
                         item.setHeartBeat(now);
 

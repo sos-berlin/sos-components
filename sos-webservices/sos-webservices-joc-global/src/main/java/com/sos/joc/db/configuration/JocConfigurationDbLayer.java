@@ -1,7 +1,5 @@
 package com.sos.joc.db.configuration;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +21,7 @@ public class JocConfigurationDbLayer {
     private SOSHibernateSession session;
     private static final String JOC_CONFIGURATION_DB_ITEM = DBItemJocConfiguration.class.getSimpleName();
     private static final String CONFIGURATION_PROFILE = ConfigurationProfile.class.getName();
- 
+
     public JocConfigurationDbLayer(SOSHibernateSession sosHibernateSession) {
         this.session = sosHibernateSession;
     }
@@ -163,7 +161,6 @@ public class JocConfigurationDbLayer {
         return profiles.stream().distinct().collect(Collectors.toList());
     }
 
-    
     public DBItemJocConfiguration getJocConfiguration(Long id) throws SOSHibernateException {
         return session.get(DBItemJocConfiguration.class, id);
     }
@@ -189,7 +186,6 @@ public class JocConfigurationDbLayer {
     }
 
     public Long saveOrUpdateConfiguration(DBItemJocConfiguration DBItemJocConfiguration) throws SOSHibernateException {
-        DBItemJocConfiguration.setModified(new Date());
         if (DBItemJocConfiguration.getId() == null) {
             this.session.save(DBItemJocConfiguration);
         } else {
@@ -247,25 +243,23 @@ public class JocConfigurationDbLayer {
         query.setMaxResults(1);
         return session.getSingleResult(query);
     }
-    
+
     public void saveOrUpdateGlobalSettingsConfiguration(DBItemJocConfiguration cfg) throws SOSHibernateException {
         saveOrUpdateGlobalSettingsConfiguration(cfg, null);
     }
-    
+
     public void saveOrUpdateGlobalSettingsConfiguration(DBItemJocConfiguration newCfg, DBItemJocConfiguration oldCfg) throws SOSHibernateException {
         if (oldCfg == null) {
             oldCfg = getGlobalSettingsConfiguration();
         }
-        if(oldCfg != null) {
+        if (oldCfg != null) {
             // update
             oldCfg.setConfigurationItem(newCfg.getConfigurationItem());
-            oldCfg.setModified(Date.from(Instant.now()));
             session.update(oldCfg);
         } else {
             // save
-            newCfg.setModified(Date.from(Instant.now()));
             session.save(newCfg);
         }
     }
-    
+
 }
