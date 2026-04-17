@@ -303,7 +303,7 @@ public class SOSHibernateFactory implements Serializable {
      * <p>
      * Supported database expressions:
      * <ul>
-     * <li><b>H2:</b> {@code now()}</li>
+     * <li><b>H2:</b> {@code current_timestamp at time zone 'UTC'}</li>
      * <li><b>MySQL:</b> {@code utc_timestamp()}</li>
      * <li><b>Oracle:</b> {@code cast(sys_extract_utc(systimestamp) as date)}</li>
      * <li><b>MSSQL:</b> {@code getutcdate()}</li>
@@ -318,7 +318,7 @@ public class SOSHibernateFactory implements Serializable {
         }
         switch (dbms) {
         case H2:
-            return "now()"; // TODO
+            return "current_timestamp at time zone 'UTC'";
         case MYSQL:
             return "utc_timestamp()";
         case ORACLE:
@@ -461,6 +461,7 @@ public class SOSHibernateFactory implements Serializable {
         setConfigurationProperties();
         configuration = configurationResolver.resolve(configuration);
         dbms = configurationResolver.getDbms();
+        setDbmsSpecificProperties();
     }
 
     private void buildSessionFactory() {
@@ -565,6 +566,22 @@ public class SOSHibernateFactory implements Serializable {
                 }
                 configuration.setProperty(key, value);
             }
+        }
+    }
+
+    private void setDbmsSpecificProperties() {
+        switch (dbms) {
+        case H2:
+            if (!configuration.getProperties().contains(SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE)) {
+                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE, "timestamp");
+                if (LOGGER.isTraceEnabled()) {
+                    String method = SOSHibernate.getMethodName(logIdentifier, "setDbmsSpecificProperties");
+                    LOGGER.trace(String.format("%s %s=%s", method, SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE, "timestamp"));
+                }
+            }
+            break;
+        default:
+            break;
         }
     }
 

@@ -165,6 +165,10 @@ public class SOSDate {
         return getDateTimeAsString(date, null);
     }
 
+    public static String getDateTimeAsString(Instant date) throws SOSInvalidDataException {
+        return getDateTimeAsString(toDate(date), null);
+    }
+
     public static String tryGetDateTimeAsString(Date date) {
         try {
             if (date == null) {

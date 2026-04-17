@@ -127,6 +127,14 @@ public class SOSHibernate {
     /** hibernate.id.db_structure_naming_strategy - SOS default: legacy */
     public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 
+    /** hibernate.type.preferred_instant_jdbc_type - SOS default: not used<br />
+     * <p>
+     * Required only for H2 with value = timestamp for entities using {@code Instant} field.<br />
+     * - Fixes {@code SemanticException} when assigning H2's {@code now()} or {@code current_timestamp} to an {@code Instant} field.
+     * <p>
+     * Other databases use default mapping. */
+    public static final String HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE;
+
     /** ---- ValidationSettings ------------------------------------------------------------------------------- */
     /** jakarta.persistence.validation.mode - SOS default: none */
     public static final String HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE = ValidationSettings.JAKARTA_VALIDATION_MODE;
