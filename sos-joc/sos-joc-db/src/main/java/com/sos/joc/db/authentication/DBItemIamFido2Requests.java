@@ -1,7 +1,8 @@
 package com.sos.joc.db.authentication;
 
-import java.util.Date;
+import java.time.Instant;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -29,7 +30,8 @@ public class DBItemIamFido2Requests {
     private String requestId;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -47,14 +49,6 @@ public class DBItemIamFido2Requests {
         this.identityServiceId = identityServiceId;
     }
 
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
     public String getChallenge() {
         return challenge;
     }
@@ -69,6 +63,10 @@ public class DBItemIamFido2Requests {
 
     public void setRequestId(String requestId) {
         this.requestId = requestId;
+    }
+
+    public Instant getCreated() {
+        return created;
     }
 
 }

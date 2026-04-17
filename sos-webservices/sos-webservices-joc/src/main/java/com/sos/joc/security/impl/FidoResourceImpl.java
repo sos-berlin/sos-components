@@ -203,7 +203,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             dbItemIamFido2Registration.setAlgorithm(SOSSecurityUtil.getAlgFromJwk(fidoRegistration.getJwk()));
             dbItemIamFido2Registration.setCredentialId(fidoRegistration.getCredentialId());
             dbItemIamFido2Registration.setToken(SOSAuthHelper.createAccessToken());
-            dbItemIamFido2Registration.setCreated(new Date());
 
             if (!isNew) {
                 String s = fidoRegistration.getClientDataJSON();
@@ -409,7 +408,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 }
             }
 
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fidoRegistration.getIdentityServiceName(),IdentityServiceTypes.FIDO);
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(fidoRegistration.getIdentityServiceName(),
+                    IdentityServiceTypes.FIDO);
             properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
             if (properties.getFido() == null) {
                 throw new JocAuthenticationException("FIDO Identity Service is not configured");
@@ -484,7 +484,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 dbItemIamFido2Registration.setIdentityServiceId(dbItemIamIdentityService.getId());
                 dbItemIamFido2Registration.setChallenge(fido2RegistrationStartResponse.getChallenge());
                 dbItemIamFido2Registration.setOrigin(fidoRegistration.getOrigin());
-                dbItemIamFido2Registration.setCreated(new Date());
                 sosHibernateSession.save(dbItemIamFido2Registration);
             } else {
                 throw new JocAuthenticationException("Registration request already exists");
@@ -531,7 +530,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
                 identityProvider.setIdentityServiceName(listOfIdentityServices.get(0).getIdentityServiceName());
                 com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(listOfIdentityServices.get(0)
-                        .getIdentityServiceName(),IdentityServiceTypes.FIDO);
+                        .getIdentityServiceName(), IdentityServiceTypes.FIDO);
 
                 if (properties != null) {
                     properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
@@ -623,7 +622,6 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
             DBItemIamFido2Requests dbItemIamFido2Requests = new DBItemIamFido2Requests();
             dbItemIamFido2Requests.setChallenge(fidoRequestAuthenticationResponse.getChallenge());
-            dbItemIamFido2Requests.setCreated(new Date());
             dbItemIamFido2Requests.setIdentityServiceId(dbItemIamIdentityService.getId());
             dbItemIamFido2Requests.setRequestId(SOSAuthHelper.createAccessToken());
             sosHibernateSession.save(dbItemIamFido2Requests);
@@ -844,10 +842,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
                 try {
 
                     com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(dbItemIamIdentityService
-                            .getIdentityServiceName(),IdentityServiceTypes.FIDO);
-                    
-                    properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
+                            .getIdentityServiceName(), IdentityServiceTypes.FIDO);
 
+                    properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
 
                     FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
                     fidoConfirmationMail.sendRegistrationApprovedMail(dbItemIamFido2Registration, dbItemIamAccount.getEmail(),
@@ -1062,9 +1059,9 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
     private void sendRegistrationMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration, String to) throws Exception {
         try {
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName,IdentityServiceTypes.FIDO);
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName,
+                    IdentityServiceTypes.FIDO);
             properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
-
 
             FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());
             fidoConfirmationMail.sendRegistrationMail(dbItemIamFido2Registration, to, identityServiceName);
@@ -1075,7 +1072,8 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
 
     private void sendConfirmedMail(String identityServiceName, DBItemIamFido2Registration dbItemIamFido2Registration) throws Exception {
         try {
-            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName,IdentityServiceTypes.FIDO);
+            com.sos.joc.model.security.properties.Properties properties = SOSAuthHelper.getIamProperties(identityServiceName,
+                    IdentityServiceTypes.FIDO);
             properties = SOSAuthHelper.setDefaultFIDO2Settings(properties);
 
             FidoConfirmationMail fidoConfirmationMail = new FidoConfirmationMail(properties.getFido());

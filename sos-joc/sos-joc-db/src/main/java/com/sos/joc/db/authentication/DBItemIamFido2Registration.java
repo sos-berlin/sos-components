@@ -1,9 +1,10 @@
 package com.sos.joc.db.authentication;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 
@@ -64,7 +65,8 @@ public class DBItemIamFido2Registration {
     private Boolean completed;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -130,14 +132,6 @@ public class DBItemIamFido2Registration {
         this.accountName = accountName;
     }
 
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
     public String getChallenge() {
         return challenge;
     }
@@ -188,6 +182,10 @@ public class DBItemIamFido2Registration {
 
     public void setOrigin(String origin) {
         this.origin = origin;
+    }
+
+    public Instant getCreated() {
+        return created;
     }
 
 }
