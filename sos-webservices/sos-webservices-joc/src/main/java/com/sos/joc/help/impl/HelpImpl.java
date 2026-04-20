@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -75,10 +76,11 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
     private InputStream getInputStream(String resource) throws FileNotFoundException {
         InputStream stream = JOCResourceImpl.class.getResourceAsStream(resource);
         if (stream == null) {
-//            stream = JOCResourceImpl.class.getResourceAsStream(resource.substring(1));
-//            if (stream == null) {
-                throw new FileNotFoundException(resource);
-//            }
+            // try once more in english as fallback
+            stream = JOCResourceImpl.class.getResourceAsStream(resource.replaceFirst(Pattern.quote(API_CALL) + "/[^/]+/", API_CALL + "/en/"));
+        }
+        if (stream == null) {
+            throw new FileNotFoundException(resource);
         }
         return stream;
     }
