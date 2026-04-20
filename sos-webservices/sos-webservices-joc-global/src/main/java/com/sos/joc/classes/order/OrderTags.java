@@ -64,6 +64,7 @@ import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -386,7 +387,7 @@ public class OrderTags {
                 }
 
                 Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-                query.setParameterList("orderIds", orderIds);
+                query.setParameterList("orderIds", orderIds.stream().map(DBItem::normalizeOrderId).toList());
                 if (!SOSString.isEmpty(controllerId)) {
                     query.setParameter("controllerId", controllerId);
                 }
@@ -412,7 +413,7 @@ public class OrderTags {
                 }
 
                 Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-                query.setParameterList("orderIds", orderIds);
+                query.setParameterList("orderIds", orderIds.stream().map(DBItem::normalizeOrderId).toList());
                 if (!SOSString.isEmpty(controllerId)) {
                     query.setParameter("controllerId", controllerId);
                 }
@@ -505,8 +506,8 @@ public class OrderTags {
         hql.append(" and orderId=:oldOrderId");
 
         Query<Integer> query = connection.createQuery(hql);
-        query.setParameter("newOrderId", newOrderId);
-        query.setParameter("oldOrderId", oldOrderId);
+        query.setParameter("newOrderId", DBItem.normalizeOrderId(newOrderId));
+        query.setParameter("oldOrderId", DBItem.normalizeOrderId(oldOrderId));
         query.setParameter("controllerId", controllerId);
         return connection.executeUpdate(query);
     }
@@ -546,7 +547,7 @@ public class OrderTags {
         if (startTime != null) {
             query.setParameter("startTime", startTime);
         }
-        query.setParameter("orderId", orderId);
+        query.setParameter("orderId", DBItem.normalizeOrderId(orderId));
         query.setParameter("controllerId", controllerId);
         return connection.executeUpdate(query);
     }
@@ -570,7 +571,7 @@ public class OrderTags {
         hql.append(" and orderId=:orderId");
 
         Query<DBItemHistoryOrderTag> query = connection.createQuery(hql);
-        query.setParameter("orderId", orderId);
+        query.setParameter("orderId", DBItem.normalizeOrderId(orderId));
         query.setParameter("controllerId", controllerId);
         return query.getResultList();
     }
@@ -718,12 +719,12 @@ public class OrderTags {
             }
             Map<String, Set<String>> m = result.stream().collect(Collectors.groupingBy(DBItemHistoryOrderTag::getOrderId, Collectors.mapping(
                     DBItemHistoryOrderTag::getGroupedTag, Collectors.toCollection(LinkedHashSet::new))));
-            m.keySet().retainAll(orderIds);
+            m.keySet().retainAll(orderIds.stream().map(DBItem::normalizeOrderId).toList());
             return m;
 
         } else {
 
-            Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds);
+            Collection<List<String>> chunkedOrderIds = getChunkedCollection(orderIds); 
 
             StringBuilder hql = new StringBuilder("select t.orderId as orderId, t.tagName as tagName, g.name as groupName from ");
             hql.append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ").append(DBLayer.DBITEM_INV_TAG_GROUPS);
@@ -747,7 +748,7 @@ public class OrderTags {
             }
             AtomicInteger counter = new AtomicInteger();
             for (List<String> chunk : chunkedOrderIds) {
-                query.setParameterList("orderIds" + counter.getAndIncrement(), chunk);
+                query.setParameterList("orderIds" + counter.getAndIncrement(), chunk.stream().map(DBItem::normalizeOrderId).toList());
             }
             List<DBItemHistoryOrderTag> result = connection.getResultList(query);
             if (result == null) {
@@ -849,7 +850,7 @@ public class OrderTags {
 
         Query<GroupedTag> query = connection.createQuery(hql);
         query.setParameter("controllerId", controllerId);
-        query.setParameter("orderId", orderId);
+        query.setParameter("orderId", DBItem.normalizeOrderId(orderId));
         List<GroupedTag> result = connection.getResultList(query);
         if (result == null) {
             return Collections.emptySet();
