@@ -61,7 +61,6 @@ import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerCommandResponse;
-import js7.data_for_java.controller.JControllerCommandResponse.BatchResponse;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JRepo;
 import js7.data_for_java.order.JFreshOrder;

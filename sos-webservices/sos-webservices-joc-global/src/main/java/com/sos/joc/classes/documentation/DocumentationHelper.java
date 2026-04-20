@@ -9,9 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +38,7 @@ import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.docu.DocumentationImport;
 
 public class DocumentationHelper {
-    
+
     public static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "svg", "javascript", "json", "css",
             "markdown", "gif", "jpeg", "png", "icon");
     public static final List<String> SUPPORTED_IMAGETYPES = Arrays.asList("pdf", "gif", "jpeg", "png", "icon");
@@ -68,7 +66,6 @@ public class DocumentationHelper {
             }
             docFromDB.setContent(doc.getContent());
             docFromDB.setType(doc.getType());
-            docFromDB.setModified(Date.from(Instant.now()));
             dbLayer.getSession().update(docFromDB);
         } else {
             if (doc.hasImage()) {
@@ -131,7 +128,7 @@ public class DocumentationHelper {
                 java.nio.file.Path targetFolder = Paths.get(folder);
                 java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
                 String filename = complete.getFileName().toString();
-                
+
                 ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
                 byte[] binBuffer = new byte[8192];
                 int binRead = 0;
@@ -139,7 +136,7 @@ public class DocumentationHelper {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
                 byte[] bytes = (ufs == null) ? outBuffer.toByteArray() : ufs.sanitize(filename, outBuffer);
-                
+
                 documentation.setPath(complete.toString().replace('\\', '/'));
                 documentation.setFolder(complete.getParent().toString().replace('\\', '/'));
                 documentation.setName(filename);
@@ -179,9 +176,6 @@ public class DocumentationHelper {
                     throw new JocUnsupportedFileTypeException(String.format("%1$s unsupported, supported types are %2$s", complete.toString().replace(
                             '\\', '/'), SUPPORTED_SUBTYPES.toString()));
                 }
-                documentation.setCreated(Date.from(Instant.now()));
-                documentation.setModified(documentation.getCreated());
-
                 documentations.add(documentation);
             }
             return documentations;
@@ -196,9 +190,9 @@ public class DocumentationHelper {
     }
 
     // used during JOC start-up to insert JOC-JITL-Docs
-    public static void readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
+    public static void readZipFileContent(InputStream inputStream, String folder, DocumentationDBLayer dbLayer) throws DBConnectionRefusedException,
+            DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
+            DBOpenSessionException {
         Set<DBItemDocumentation> docs = readZipFileContent(inputStream, folder, (UploadFileSanitizer) null);
         if (docs != null) {
             saveOrUpdate(docs, dbLayer);
@@ -226,7 +220,8 @@ public class DocumentationHelper {
         return saveOrUpdate(documentations, dbLayer, null);
     }
 
-    private static Set<String> saveOrUpdate(Set<DBItemDocumentation> documentations, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException {
+    private static Set<String> saveOrUpdate(Set<DBItemDocumentation> documentations, DocumentationDBLayer dbLayer, DBItemJocAuditLog dbAudit)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException {
         Set<String> folders = new HashSet<>();
         if (!documentations.isEmpty()) {
             if (dbAudit != null) {
@@ -251,8 +246,6 @@ public class DocumentationHelper {
         documentation.setFolder(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));
-        documentation.setCreated(Date.from(Instant.now()));
-        documentation.setModified(documentation.getCreated());
         documentation.setType(mediaSubType);
         documentation.setContent(new String(b, StandardCharsets.UTF_8));
         documentation.setHasImage(false);
@@ -265,8 +258,6 @@ public class DocumentationHelper {
         documentation.setFolder(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));
-        documentation.setCreated(Date.from(Instant.now()));
-        documentation.setModified(documentation.getCreated());
         documentation.setType(mediaSubType);
         documentation.setImage(b);
         documentation.setHasImage(true);
@@ -344,7 +335,7 @@ public class DocumentationHelper {
             return false;
         }
     }
-    
+
     public static void delete(DBItemDocumentation dbDoc, SOSHibernateSession session) throws SOSHibernateException {
         if (dbDoc.getImageId() != null) {
             DBItemDocumentationImage dbImage = session.get(DBItemDocumentationImage.class, dbDoc.getImageId());
@@ -352,7 +343,7 @@ public class DocumentationHelper {
                 session.delete(dbImage);
             }
         }
-        session.delete(dbDoc); 
+        session.delete(dbDoc);
     }
 
 }

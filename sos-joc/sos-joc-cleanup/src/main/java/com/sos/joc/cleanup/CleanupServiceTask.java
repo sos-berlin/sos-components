@@ -2,9 +2,9 @@ package com.sos.joc.cleanup;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
@@ -448,13 +449,13 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
         private final Age age;
         private ZonedDateTime zonedDatetime = null;
-        private Date datetime;
+        private Instant datetime;
 
         public TaskDateTime(Age age, ZonedDateTime start) {
             this.age = age;
             if (this.age.getMinutes() > 0) {
-                this.zonedDatetime = CleanupService.getZonedDateTimeUTCMinusMinutes(start, this.age.getMinutes());
-                this.datetime = CleanupService.toDate(zonedDatetime);
+                this.zonedDatetime = SOSDate.toUtcMinusMinutes(start, this.age.getMinutes());
+                this.datetime = SOSDate.toInstant(zonedDatetime);
             }
         }
 
@@ -466,7 +467,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             return zonedDatetime;
         }
 
-        public Date getDatetime() {
+        public Instant getDatetime() {
             return datetime;
         }
 

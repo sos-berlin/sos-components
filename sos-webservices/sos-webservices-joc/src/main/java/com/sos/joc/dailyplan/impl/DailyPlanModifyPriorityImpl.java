@@ -74,36 +74,34 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             if (response != null) {
                 return response;
             }
-            
+
             DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
 
             Map<Boolean, List<String>> orderIds = in.getOrderIds().stream().distinct().collect(Collectors.groupingBy(id -> id.matches(
                     "#[^#]+#[PC][0-9]+-.*")));
             orderIds.putIfAbsent(Boolean.TRUE, Collections.emptyList());
             orderIds.putIfAbsent(Boolean.FALSE, Collections.emptyList());
-            
+
             Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio = new HashSet<>();
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Stream<AuditLogDetail> auditLogDetails = Stream.empty();
             List<AuditLogDetail> auditLogDetails2 = Collections.emptyList();
-            
+
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
 
                 currentState = Proxy.of(controllerId).currentState();
-                
+
                 auditLogDetails2 = OrdersHelper.getPermittedJOrdersFromOrderIds(orderIds.get(Boolean.FALSE).stream().map(OrderId::of),
                         permittedFolders, currentState).map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
                                 .string(), controllerId)).toList();
             }
-            
-            Date now = Date.from(Instant.now());
-            
+
             if (!orderIds.get(Boolean.TRUE).isEmpty()) {
 
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 session.setAutoCommit(false);
                 Globals.beginTransaction(session);
-                
+
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 auditLogDetails = getDailyPlanOrders(controllerId, orderIds.get(Boolean.TRUE), dbLayer).stream().filter(item -> folderIsPermitted(item
                         .getWorkflowFolder(), permittedFolders)).map(setPriority(in.getPriority())).filter(Optional::isPresent).map(Optional::get)
@@ -111,7 +109,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                             if (item.getSubmitted()) {
                                 submittedOrdersWithChangedPrio.add(item);
                             } else {
-                                dbLayer.updateOrderParameterisation(item, now);
+                                dbLayer.updateOrderParameterisation(item);
                             }
                             return item;
                         }).map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), controllerId));
@@ -132,7 +130,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                             Globals.beginTransaction(session1);
                             DBLayerDailyPlannedOrders dbLayer1 = new DBLayerDailyPlannedOrders(session1);
                             for (DBItemDailyPlanOrder item : submittedOrdersWithChangedPrio) {
-                                dbLayer1.updateOrderParameterisation(item, now);
+                                dbLayer1.updateOrderParameterisation(item);
                             }
                             Globals.commit(session1);
                         } catch (Exception e) {
@@ -159,7 +157,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             Globals.disconnect(session);
         }
     }
-    
+
     public static Function<DBItemDailyPlanOrder, Optional<DBItemDailyPlanOrder>> setPriority(Integer priority) {
         return item -> {
             try {
@@ -187,14 +185,14 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             }
         };
     }
-    
+
     private CompletableFuture<Either<Problem, ControllerCommand.Response>> command(DailyPlanChangePriority in,
             Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio, List<AuditLogDetail> auditLogDetails2)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         Stream<OrderId> oIdsStream = auditLogDetails2.stream().map(AuditLogDetail::getOrderId).map(OrderId::of);
-        
+
         if (!submittedOrdersWithChangedPrio.isEmpty()) {
             if (currentState == null) {
                 currentState = Proxy.of(in.getControllerId()).currentState();

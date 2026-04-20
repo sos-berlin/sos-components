@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.classes.profiles.Profiles;
 import com.sos.joc.classes.profiles.ProfilesDeleteResult;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
@@ -97,7 +98,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append("having max(h.loginDate) < :loginDate ");
 
         Query<String> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", datetime.getDatetime());
+        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
         List<String> result = getDbLayer().getSession().getResultList(query);
         if (result != null && result.size() > 0) {
             ProfilesFilter f = new ProfilesFilter();
@@ -114,7 +115,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_IAM_HISTORY).append(" ");
         hql.append("where loginDate < :loginDate ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", datetime.getDatetime());
+        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
 
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);
@@ -126,7 +127,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append("where loginDate < :loginDate ");
         hql.append("and loginSuccess=false ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", datetime.getDatetime());
+        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
 
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);

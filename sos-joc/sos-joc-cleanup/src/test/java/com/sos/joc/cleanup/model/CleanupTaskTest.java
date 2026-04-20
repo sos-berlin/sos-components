@@ -71,7 +71,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Date d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
+            Instant d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
 
             JocClusterServiceTaskState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
             LOGGER.info("[STATE]" + state);
@@ -92,7 +92,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+            Instant readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
@@ -118,7 +118,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Date readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+            Instant readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
@@ -144,7 +144,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskMonitoring(factory, null, 1000, null);
 
-            Date d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
+            Instant d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
 
             JocClusterServiceTaskState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
             LOGGER.info("[STATE]" + state);

@@ -33,7 +33,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -84,7 +83,7 @@ public class OrderListSynchronizer {
         this.settings = settings;
         this.callerForLog = DailyPlanHelper.getCallerForLog(this.settings);
     }
-    
+
     public OrderListSynchronizer(DailyPlanSettings settings, boolean calculateAbsoluteMainPeriodsOnly) {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         this.settings = settings;
@@ -186,7 +185,6 @@ public class OrderListSynchronizer {
             DBItemDailyPlanHistory item = new DBItemDailyPlanHistory();
             item.setSubmitted(false);
             item.setControllerId(order.getControllerId());
-            item.setCreated(JobSchedulerDate.nowInUtc());
             item.setDailyPlanDate(dailyPlanDate);
             item.setOrderId(order.getFreshOrder().getId());
             item.setScheduledFor(new Date(order.getFreshOrder().getScheduledFor()));
@@ -385,11 +383,11 @@ public class OrderListSynchronizer {
                     dbLayer.deleteSubmission(controllerId, submission.getId());
                 }
             }
-            
+
         } finally {
             Globals.disconnect(session);
         }
-        
+
         Either<Exception, Void> e = OrderTags.addDailyPlanOrderTags(controllerId, orderTags);
         if (e.isLeft()) {
             LOGGER.warn("", e);
@@ -470,14 +468,14 @@ public class OrderListSynchronizer {
                                 }
                             }
                         }
-                        
+
                         // delete cyclic variables when all cyclic orders deleted
                         for (String cyclicMainPart : cyclicMainParts) {
-                            //if (dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart) == 0L) {
-                                dbLayer.deleteVariablesByCyclicMainPart(controllerId, cyclicMainPart);
-                            //}
+                            // if (dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart) == 0L) {
+                            dbLayer.deleteVariablesByCyclicMainPart(controllerId, cyclicMainPart);
+                            // }
                         }
-                        
+
                         // delete submissions with 0 orders
                         for (Long submissionId : oldSubmissionIds) {
                             Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);

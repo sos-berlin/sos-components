@@ -1,7 +1,5 @@
 package com.sos.joc.dailyplan.db;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -65,7 +63,7 @@ public class DBLayerOrderVariables extends DBLayer {
         }
         return null;
     }
-    
+
     public int update(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("set orderId=:newOrderId ");
@@ -86,26 +84,23 @@ public class DBLayerOrderVariables extends DBLayer {
         }
         query.setParameter("controllerId", controllerId);
         int i = getSession().executeUpdate(query);
-        
+
         OrderTags.updateOrderIdOfOrder(controllerId, oldOrderId, newOrderId, getSession());
-        
+
         return i;
     }
 
     public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
         return update(controllerId, oldOrderId, newOrderId, false);
     }
-    
-    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic)
-            throws SOSHibernateException {
+
+    public DBItemDailyPlanVariable copy(String controllerId, String oldOrderId, String newOrderId, boolean isCyclic) throws SOSHibernateException {
 
         DBItemDailyPlanVariable vars = getOrderVariable(controllerId, oldOrderId, isCyclic);
         if (vars != null) {
             DBItemDailyPlanVariable copiedVars = new DBItemDailyPlanVariable();
-            copiedVars.setControllerId(vars.getControllerId());
-            copiedVars.setCreated(Date.from(Instant.now()));
             copiedVars.setId(null);
-            copiedVars.setModified(copiedVars.getCreated());
+            copiedVars.setControllerId(vars.getControllerId());
             copiedVars.setOrderId(newOrderId);
             copiedVars.setVariableValue(vars.getVariableValue());
             getSession().save(copiedVars);

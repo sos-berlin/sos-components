@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -73,7 +74,8 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 }
             }
             Documentations documentations = new Documentations();
-            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), folderPermissions.getListOfFolders()));
+            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), folderPermissions
+                    .getListOfFolders()));
             documentations.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(documentations));
         } catch (Exception e) {
@@ -83,14 +85,15 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         }
     }
 
-    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Boolean onlyWithAssignReference, Set<Folder> permittedFolders) {
+    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Boolean onlyWithAssignReference,
+            Set<Folder> permittedFolders) {
         Stream<Documentation> docs = dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
             doc.setType(dbDoc.getType().toLowerCase());
-            doc.setModified(dbDoc.getModified());
+            doc.setModified(SOSDate.toDate(dbDoc.getModified()));
             doc.setAssignReference(dbDoc.getDocRef());
             return doc;
         });

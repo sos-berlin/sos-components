@@ -83,7 +83,7 @@ public class TestPeriodResolver {
     @Ignore
     @Test
     public void testDayIsInPlanPeriodSingleStart() throws Exception {
-        String dailyPlanDate = SOSDate.getDateAsString(SOSDate.add(new Date(), 1, ChronoUnit.DAYS));
+        String dailyPlanDate = SOSDate.getDateAsString(SOSDate.addToDate(new Date(), 1, ChronoUnit.DAYS));
 
         executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("00:00:00"));
         executeTestDayIsInPlanSinglestart(SOSDate.TIMEZONE_UTC, "00:00:00", dailyPlanDate, "America/Chicago", Arrays.asList("05:00:00"));
@@ -128,7 +128,7 @@ public class TestPeriodResolver {
     @Ignore
     @Test
     public void testDayIsInPlanPeriodRepeat() throws Exception {
-        String dailyPlanDate = SOSDate.getDateAsString(SOSDate.add(new Date(), 1, ChronoUnit.DAYS));
+        String dailyPlanDate = SOSDate.getDateAsString(SOSDate.addToDate(new Date(), 1, ChronoUnit.DAYS));
 
         executeTestDayIsInPlanRepeat(SOSDate.TIMEZONE_UTC, "03:00:00", dailyPlanDate, "America/Chicago", Arrays.asList(new TestPeriodRepeat(
                 "00:00:00", "24:00:00", "01:00:00"), new TestPeriodRepeat("00:30:00", "24:00:00", "01:00:00")));
@@ -173,7 +173,7 @@ public class TestPeriodResolver {
         Date frd = SOSDate.getDate(dailyPlanDate);
         List<String> frequencyResolverDates = new ArrayList<>();
         frequencyResolverDates.add(dailyPlanDate);
-        frequencyResolverDates.add(SOSDate.getDateAsString(SOSDate.add(frd, 1, ChronoUnit.DAYS)));
+        frequencyResolverDates.add(SOSDate.getDateAsString(SOSDate.addToDate(frd, 1, ChronoUnit.DAYS)));
 
         for (String frequencyResolverDate : frequencyResolverDates) {
             pr.getStartTimes(frequencyResolverDate, dailyPlanDate, scheduleTimeZone);

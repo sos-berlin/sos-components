@@ -510,7 +510,6 @@ public class DailyPlanProjections {
         DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
         item.setId(DBItemDailyPlanProjection.METADATEN_ID);
         item.setContent(Globals.objectMapper.writeValueAsBytes(o));
-        item.setCreated(new Date());
 
         try (SOSHibernateSession session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-dbInsertMeta")) {
             session.save(item);
@@ -530,7 +529,6 @@ public class DailyPlanProjections {
         }
 
         String lp = logPrefix + "[dbInsertMonthly]";
-        Date created = new Date();
         List<DBItemDailyPlanProjection> items = new ArrayList<>();
         // 1 - prepare items for quick insertion
         for (Map.Entry<String, MonthsItem> yearEntry : yearsItem.getAdditionalProperties().entrySet()) {
@@ -557,7 +555,6 @@ public class DailyPlanProjections {
                 DBItemDailyPlanProjection item = new DBItemDailyPlanProjection();
                 item.setId(yearMonth);
                 item.setContent(Globals.objectMapper.writeValueAsBytes(monthItem));
-                item.setCreated(created);
 
                 items.add(item);
             }

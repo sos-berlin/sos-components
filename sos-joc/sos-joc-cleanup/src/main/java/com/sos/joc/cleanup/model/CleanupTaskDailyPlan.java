@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -141,7 +142,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where submissionForDate < :submissionForDate ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("submissionForDate", datetime.getDatetime());
+        query.setParameter("submissionForDate", SOSDate.toDate(datetime.getDatetime()));
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 

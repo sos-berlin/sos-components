@@ -1,7 +1,6 @@
 package com.sos.joc.dailyplan.db;
 
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,6 +23,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
+import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -779,14 +779,9 @@ public class DBLayerDailyPlannedOrders {
 
     public int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation)
             throws SOSHibernateException {
-        return updateDailyPlanOrdersByCyclicMainPart(controllerId, mainPart, orderParameterisation, Date.from(Instant.now()));
-    }
-
-    private int updateDailyPlanOrdersByCyclicMainPart(String controllerId, String mainPart, String orderParameterisation, Date now)
-            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("set orderParameterisation=:orderParameterisation ");
-        hql.append(", modified=:modified ");
+        hql.append(", modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and orderId like :mainPart ");
 
@@ -794,17 +789,15 @@ public class DBLayerDailyPlannedOrders {
         query.setParameter("controllerId", controllerId);
         query.setParameter("mainPart", mainPart + "%");
         query.setParameter("orderParameterisation", orderParameterisation);
-        query.setParameter("modified", now);
         return executeUpdate("updateOrderParameterisation", query);
     }
 
-    public void updateOrderParameterisation(DBItemDailyPlanOrder item, Date now) {
+    public void updateOrderParameterisation(DBItemDailyPlanOrder item) {
         try {
             if (item.isCyclic()) {
                 updateDailyPlanOrdersByCyclicMainPart(item.getControllerId(), OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId()), item
-                        .getOrderParameterisation(), now);
+                        .getOrderParameterisation());
             } else {
-                item.setModified(now);
                 session.update(item);
             }
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -920,8 +913,6 @@ public class DBLayerDailyPlannedOrders {
             item.setControllerId(controllerId);
             item.setOrderId(orderId);
             item.setVariableValue(Globals.objectMapper.writeValueAsString(order.getFreshOrder().getArguments()));
-            item.setCreated(JobSchedulerDate.nowInUtc());
-            item.setModified(JobSchedulerDate.nowInUtc());
             session.save(item);
         }
     }
@@ -954,10 +945,8 @@ public class DBLayerDailyPlannedOrders {
         item.setSubmitted(false);
         item.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
         item.setCalendarId(plannedOrder.getCalendarId());
-        item.setCreated(JobSchedulerDate.nowInUtc());
         item.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
         item.setOrderParameterisation(getOrderParameterisation(plannedOrder.getFreshOrder()));
-        item.setModified(JobSchedulerDate.nowInUtc());
 
         if (nr != 0) {// cyclic
             String nrAsString = "00000" + String.valueOf(nr);
@@ -1044,14 +1033,13 @@ public class DBLayerDailyPlannedOrders {
     public int setSubmitted(String controllerId, String orderId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("set submitted=true");
-        hql.append(",modified=:modified ");
+        hql.append(",modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and orderId=:orderId");
 
         Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
         query.setParameter("controllerId", controllerId);
         query.setParameter("orderId", orderId);
-        query.setParameter("modified", new Date());
 
         return executeUpdate("setSubmitted", query);
     }

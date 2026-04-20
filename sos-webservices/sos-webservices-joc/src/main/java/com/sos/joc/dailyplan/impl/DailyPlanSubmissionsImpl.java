@@ -91,7 +91,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             if (response != null) {
                 return response;
             }
-            
+
             storeAuditLog(in.getAuditLog(), in.getControllerId());
 
             // log to service log file
@@ -101,8 +101,8 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int result = dbLayer.delete(StartupMode.webservice,IMPL_PATH_DELETE, controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in
-                    .getFilter().getDateTo());
+            int result = dbLayer.delete(StartupMode.webservice, IMPL_PATH_DELETE, controllerId, in.getFilter().getDateFor(), in.getFilter()
+                    .getDateFrom(), in.getFilter().getDateTo());
             Globals.commit(session);
             session.close();
             session = null;
@@ -133,7 +133,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         } catch (Throwable e) {
 
         }
-        p.setSubmissionTime(item.getCreated());
+        p.setSubmissionTime(SOSDate.toDate(item.getCreated()));
         return p;
     }
 

@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernate.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
@@ -128,7 +129,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         JocClusterServiceTaskState state = cleanupOrders(Scope.MAIN, Range.ALL, dateTime.getDatetime(), dateTime.getAge().getConfigured(),
                 deleteLogs);
         if (isCompleted(state)) {
-            Date remainingStartTime = getRemainingStartTime(dateTime);
+            Instant remainingStartTime = getRemainingStartTime(dateTime);
             String remainingAgeInfo = getRemainingAgeInfo(dateTime);
 
             state = cleanupOrders(Scope.REMAINING, Range.ALL, remainingStartTime, remainingAgeInfo, deleteLogs);
@@ -151,7 +152,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
     }
 
-    protected JocClusterServiceTaskState cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs)
+    protected JocClusterServiceTaskState cleanupOrders(Scope scope, Range range, Instant startTime, String ageInfo, boolean deleteLogs)
             throws SOSHibernateException {
 
         setQuotedColumns();
@@ -190,7 +191,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return JocClusterServiceTaskState.COMPLETED;
     }
 
-    private JocClusterServiceTaskState cleanupRemaining(Date startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
+    private JocClusterServiceTaskState cleanupRemaining(Instant startTime, String ageInfo, boolean deleteLogs) throws SOSHibernateException {
         if (isStopped()) {
             return JocClusterServiceTaskState.UNCOMPLETED;
         }
@@ -211,7 +212,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return state;
     }
 
-    private Long getOrderMaxMainParentId(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
+    private Long getOrderMaxMainParentId(Scope scope, Range range, Instant startTime, String ageInfo) throws SOSHibernateException {
         String table = DBLayer.TABLE_HISTORY_ORDERS;
         StringBuilder hql = null;
         switch (scope) {
@@ -237,7 +238,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             break;
         }
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", startTime);
+        query.setParameter("startTime", SOSDate.toDate(startTime));
         Long r = getDbLayer().getSession().getSingleValue(query);
 
         if (r == null || r.intValue() == 0) {
@@ -253,13 +254,13 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return r;
     }
 
-    private Long getOrderLogsMaxMainParentId(Scope scope, Range range, Date startTime, String ageInfo) throws SOSHibernateException {
+    private Long getOrderLogsMaxMainParentId(Scope scope, Range range, Instant startTime, String ageInfo) throws SOSHibernateException {
         String table = DBLayer.TABLE_HISTORY_LOGS;
         StringBuilder hql = new StringBuilder("select max(historyOrderMainParentId) from ").append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
-        hql.append("where created < :startTime ");
+        hql.append("where created < :created ");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", startTime);
+        query.setParameter("created", startTime);
         Long r = getDbLayer().getSession().getSingleValue(query);
 
         if (r == null || r.intValue() == 0) {
@@ -358,13 +359,13 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return r;
     }
 
-    private boolean cleanupOrderTags(Date startTime) throws SOSHibernateException {
+    private boolean cleanupOrderTags(Instant startTime) throws SOSHibernateException {
         CleanupPartialResult r = deleteOrderTags(startTime);
         totalOrderTags += r.getDeletedTotal();
         return JocClusterServiceTaskState.COMPLETED.equals(r.getState());
     }
 
-    private CleanupPartialResult deleteOrderTags(Date date) throws SOSHibernateException {
+    private CleanupPartialResult deleteOrderTags(Instant date) throws SOSHibernateException {
         CleanupPartialResult r = new CleanupPartialResult(DBLayer.TABLE_HISTORY_ORDER_TAGS);
         r.addParameter("date", date);
 
@@ -387,7 +388,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return r;
     }
 
-    private boolean cleanupOrders(Scope scope, Range range, Date startTime, String ageInfo, boolean deleteLogs, Long maxMainParentId)
+    private boolean cleanupOrders(Scope scope, Range range, Instant startTime, String ageInfo, boolean deleteLogs, Long maxMainParentId)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
         log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");
@@ -437,7 +438,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return true;
     }
 
-    private boolean deleteRemainingStates(Date startTime, String ageInfo) throws SOSHibernateException {
+    private boolean deleteRemainingStates(Instant startTime, String ageInfo) throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
         log.append(getScope(Scope.REMAINING)).append(" ").append(getRange(Range.STATES)).append("]");
         log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][deleted]");
@@ -445,9 +446,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER_STATES).append(" ");
-        hql.append("where created < :startTime ");
+        hql.append("where created < :created ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", startTime);
+        query.setParameter("created", startTime);
         int r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().commit();
         totalOrderStates += r;
@@ -457,7 +458,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return true;
     }
 
-    private boolean deleteRemainingLogs(Date startTime, String ageInfo) throws SOSHibernateException {
+    private boolean deleteRemainingLogs(Instant startTime, String ageInfo) throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][");
         log.append(getScope(Scope.REMAINING)).append(" ").append(getRange(Range.LOGS)).append("]");
         log.append("[").append(ageInfo).append(" ").append(getDateTime(startTime)).append("][deleted]");
@@ -465,9 +466,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
-        hql.append("where created < :startTime ");
+        hql.append("where created < :created ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", startTime);
+        query.setParameter("created", startTime);
         int r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().commit();
         totalOrderLogs += r;
@@ -477,7 +478,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         return true;
     }
 
-    private void deleteControllersAndAgents(Date startTime, String ageInfo) throws SOSHibernateException {
+    private void deleteControllersAndAgents(Instant startTime, String ageInfo) throws SOSHibernateException {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][").append(ageInfo).append("][deleted]");
 
@@ -489,7 +490,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         LOGGER.info(log.toString());
     }
 
-    protected StringBuilder deleteControllers(Date readyTime, StringBuilder log) throws SOSHibernateException {
+    protected StringBuilder deleteControllers(Instant readyTime, StringBuilder log) throws SOSHibernateException {
         // - delete all older than the readyTime
         // -- but leave 1 last row per controller
         // --- if this last controller exists in the inventory
@@ -531,14 +532,14 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             hql.append(")");
         }
         Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("readyTime", readyTime);
+        query.setParameter("readyTime", SOSDate.toDate(readyTime));
         int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
         return log;
     }
 
-    protected StringBuilder deleteAgents(Date readyTime, StringBuilder log) throws SOSHibernateException {
+    protected StringBuilder deleteAgents(Instant readyTime, StringBuilder log) throws SOSHibernateException {
         // - delete all older than the readyTime
         // -- but leave 1 last row per controller/agent
         // --- if this last agent exists in the inventory
@@ -603,7 +604,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         }
 
         Query<?> query = getDbLayer().getSession().createNativeQuery(hql.toString());
-        query.setParameter("readyTime", readyTime);
+        query.setParameter("readyTime", SOSDate.toDate(readyTime));
         int r = getDbLayer().getSession().executeUpdate(query);
 
         log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
@@ -629,7 +630,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 } else {
                     int i = 0;
                     BiPredicate<Path, BasicFileAttributes> predicate = (path, attributes) -> attributes.isRegularFile() && (datetime.getDatetime()
-                            .getTime() > attributes.lastModifiedTime().toMillis());
+                            .toEpochMilli() > attributes.lastModifiedTime().toMillis());
 
                     try (Stream<Path> stream = Files.find(dir, 1, predicate)) {
                         for (Path p : stream.collect(Collectors.toList())) {
@@ -709,7 +710,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         setQuotedColumns();
 
         String ageInfo = datetime.getAge().getConfigured();
-        Date startTime = datetime.getDatetime();
+        Instant startTime = datetime.getDatetime();
 
         tryOpenSession();
 

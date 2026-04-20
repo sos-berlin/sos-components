@@ -314,7 +314,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                         if (nextIndex < size) {
                             lastKnownTime = a.getValue().get(nextIndex).getReadyTime();
                             if (lastKnownTime.after(dateTo)) {
-                                lastKnownTime = SOSDate.add(dateTo, -1, ChronoUnit.SECONDS);
+                                lastKnownTime = SOSDate.addToDate(dateTo, -1, ChronoUnit.SECONDS);
                                 source.setTotalRunningTime(TotalRunningTimeSource.nextReadyTime);
 
                                 if (isDebugEnabled) {
@@ -401,7 +401,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             }
 
             Date dateDayMax = SOSDate.getDateTime(SOSDate.getDateAsString(date) + " " + SOSDate.getTimeAsString(dateTo));
-            Date datePlus = SOSDate.add(date, 1, ChronoUnit.HOURS);
+            Date datePlus = SOSDate.addToDate(date, 1, ChronoUnit.HOURS);
             if (datePlus.before(dateDayMax)) {
                 return datePlus;
             }

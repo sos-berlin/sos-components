@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -170,7 +171,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
             }
 
-            metaOpt.ifPresent(meta -> entity.setSurveyDate(meta.getCreated()));
+            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toDate(meta.getCreated())));
             entity.setDeliveryDate(Date.from(Instant.now()));
             // if (entity.getPlanned() == null || !entity.getPlanned()) {
             metaContentOpt.ifPresent(mc -> entity.setMeta(mc));

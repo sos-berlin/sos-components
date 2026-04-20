@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate.helpers.dbitems;
 
 import java.time.Instant;
+import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -36,7 +37,7 @@ public class DBItemATest extends DBItem {
     /** @CreationTimestamp is a synonym for {@link CurrentTimestamp @CurrentTimestamp(event=INSERT, source=VM)}. */
     @CreationTimestamp
     @Column(name = "[JAVA_DATE_AUTO]", nullable = false, updatable = false, insertable = true)
-    private Instant javaDateAuto;
+    private Date javaDateAuto;
 
     @CurrentTimestamp(source = SourceType.DB)
     @Column(name = "[DB_CURRENT_TIMESTAMP_AUTO]", nullable = false, updatable = true)
@@ -45,7 +46,7 @@ public class DBItemATest extends DBItem {
     @SOSCurrentTimestampUtc // hover over annotation for details (default: INSERT + UPDATE)
     // @SOSCreationTimestampUtc - for inserts-only - equivalent to: @SOSCurrentTimestampUtc(event = EventType.INSERT)
     @Column(name = "[DB_CURRENT_TIMESTAMP_UTC_AUTO]", nullable = false, updatable = true)
-    private Instant dbCurrentTimestampUtcAuto;
+    private Date dbCurrentTimestampUtcAuto;
 
     @Column(name = "[DATE_NULLABLE]", nullable = true)
     private Instant dateNullable;
@@ -77,7 +78,7 @@ public class DBItemATest extends DBItem {
         javaDateManual = v;
     }
 
-    public Instant getJavaDateAuto() {
+    public Date getJavaDateAuto() {
         return javaDateAuto;
     }
 
@@ -85,7 +86,7 @@ public class DBItemATest extends DBItem {
         return dbCurrentTimestampAuto;
     }
 
-    public Instant getDbCurrentTimestampUtcAuto() {
+    public Date getDbCurrentTimestampUtcAuto() {
         return dbCurrentTimestampUtcAuto;
     }
 

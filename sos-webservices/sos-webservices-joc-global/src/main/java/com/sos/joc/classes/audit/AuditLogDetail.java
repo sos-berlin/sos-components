@@ -17,35 +17,35 @@ public class AuditLogDetail {
     private Integer type;
     private String orderId;
     private String controllerId;
-    
+
     public AuditLogDetail(Path path, Integer type) {
         this.path = path;
         this.type = type;
         this.orderId = null;
         this.controllerId = null;
     }
-    
+
     public AuditLogDetail(String path, Integer type) {
         this.path = Paths.get(path);
         this.type = type;
         this.orderId = null;
         this.controllerId = null;
     }
-    
+
     public AuditLogDetail(Path path, Integer type, String controllerId) {
         this.path = path;
         this.type = type;
         this.orderId = null;
         this.controllerId = controllerId;
     }
-    
+
     public AuditLogDetail(String path, Integer type, String controllerId) {
         this.path = Paths.get(path);
         this.type = type;
         this.orderId = null;
         this.controllerId = controllerId;
     }
-    
+
     public AuditLogDetail(String workflowPath, String orderId, String controllerId) {
         this.path = Paths.get(workflowPath);
         this.type = ObjectType.ORDER.intValue();
@@ -60,27 +60,27 @@ public class AuditLogDetail {
     public Integer getConfigurationType() {
         return type;
     }
-    
+
     public String getControllerId() {
         return controllerId;
     }
-    
+
     public void setControllerId(String val) {
         controllerId = val;
     }
-    
+
     public boolean hasControllerId() {
         return controllerId != null && !controllerId.isEmpty();
     }
-    
+
     public String getOrderId() {
         return orderId;
     }
-    
+
     public void setOrderId(String val) {
         orderId = val;
     }
-    
+
     public DBItemJocAuditLogDetails getAuditLogDetail(Long auditlogId, Date now) {
         if (path == null || type == null || auditlogId == null || ObjectType.FOLDER.intValue() == type) {
             return null;
@@ -100,10 +100,9 @@ public class AuditLogDetail {
         dbItem.setOrderId(orderId);
         dbItem.setType(type);
         dbItem.setAuditLogId(auditlogId);
-        dbItem.setCreated(now);
         return dbItem;
     }
-    
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(controllerId).append(type).append(path.toString().replace('\\', '/')).toHashCode();

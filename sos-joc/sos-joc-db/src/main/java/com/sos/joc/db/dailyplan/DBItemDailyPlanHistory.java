@@ -1,9 +1,11 @@
 package com.sos.joc.db.dailyplan;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -57,7 +59,8 @@ public class DBItemDailyPlanHistory extends DBItem {
     private Date submissionTime;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -89,14 +92,6 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     public void setDailyPlanDate(Date val) {
         dailyPlanDate = val;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
     }
 
     public String getOrderId() {
@@ -157,6 +152,10 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     public void setWorkflowFolder(String val) {
         workflowFolder = val;
+    }
+
+    public Instant getCreated() {
+        return created;
     }
 
 }

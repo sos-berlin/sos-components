@@ -448,13 +448,11 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                 OrderTags.copyTagsOfOrder(item.getControllerId(), oldOrderId, newOrderId, item.getPlannedStart(), session);
 
                 DBItemDailyPlanOrder copiedItem = new DBItemDailyPlanOrder();
+                copiedItem.setId(null);
                 copiedItem.setCalendarId(item.getCalendarId());
                 copiedItem.setControllerId(item.getControllerId());
-                copiedItem.setCreated(Date.from(Instant.now()));
                 copiedItem.setDailyPlanDate(item.getDailyPlanDate());
                 copiedItem.setExpectedEnd(item.getExpectedEnd());
-                copiedItem.setId(null);
-                copiedItem.setModified(copiedItem.getCreated());
                 copiedItem.setOrderId(newOrderId);
                 copiedItem.setOrderName(item.getOrderName());
                 copiedItem.setOrderParameterisation(item.getOrderParameterisation());
@@ -861,11 +859,10 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
 
     private DBItemDailyPlanSubmission newSubmission(String controllerId, Date dailyPlanDate) throws SOSInvalidDataException {
         DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
+        item.setId(null);
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dailyPlanDate);
         item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
-        item.setCreated(new Date());
-        item.setId(null);
         return item;
     }
 

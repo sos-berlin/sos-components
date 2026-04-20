@@ -133,7 +133,7 @@ public class PeriodResolver {
             if (!settings.isPeriodBeginMidnight() && dailyPlanDate.equals(frequencyResolverDate)) {
                 frequencyResolverDates.add(getNextDateAsString(frequencyResolverDate));
 
-                startUTC = SOSDate.add(startUTC, 1, ChronoUnit.DAYS);
+                startUTC = SOSDate.addToDate(startUTC, 1, ChronoUnit.DAYS);
                 // Check
                 isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
 
@@ -150,7 +150,7 @@ public class PeriodResolver {
 
     private String getNextDateAsString(String date) {
         try {
-            return SOSDate.getDateAsString(SOSDate.add(SOSDate.getDate(date), 1, ChronoUnit.DAYS));
+            return SOSDate.getDateAsString(SOSDate.addToDate(SOSDate.getDate(date), 1, ChronoUnit.DAYS));
         } catch (SOSInvalidDataException e) {
             LOGGER.error(String.format("[getNextDateAsString][%s]%s", date, e.toString()), e);
             return "";

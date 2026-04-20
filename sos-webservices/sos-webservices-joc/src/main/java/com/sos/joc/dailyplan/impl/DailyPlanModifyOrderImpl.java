@@ -132,8 +132,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
                     .getManagePositions()).toList();
-            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty())
-                    || in.getBlockPosition() != null)) {
+            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) || in
+                    .getBlockPosition() != null)) {
                 if (!hasManagePositionsPermission.get(0)) {
                     return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
                 }
@@ -216,14 +216,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {
-                
+
                 dailyPlanOrderItems = dailyPlanOrderItems.stream().peek(i -> {
                     JOrder jOrder = currentState.idToOrder().get(OrderId.of(i.getOrderId()));
                     if (jOrder != null) {
                         i.setPriority(jOrder.priority());
                     }
                 }).collect(Collectors.toList());
-                
+
                 if (!onlyStarttimeModifications) {
                     dailyPlanResult = modifyOrderParameterisation(in, dailyPlanOrderItems, auditlog, zoneId, labelMap, blockPositions);
                 } else {
@@ -483,7 +483,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                             if (withNewPositions) {
                                 // modify now
-                                item.setModified(new Date());
                                 session.update(item);
                             }
                         }
@@ -550,8 +549,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                     variablesNew.setControllerId(in.getControllerId());
                                     variablesNew.setOrderId(newOrderId);
                                     variablesNew.setVariableValue(variables.getVariableValue());
-                                    variablesNew.setModified(new Date());
-                                    variablesNew.setCreated(new Date());
                                     sessionNew.save(variablesNew);
 
                                     variables = variablesNew;
@@ -562,7 +559,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             for (DBItemDailyPlanOrder cyclicItem : cyclic2Submit) {
                                 cyclicItem.setSubmitted(false);
                                 cyclicItem.setOrderId(OrdersHelper.getNewFromOldOrderId(cyclicItem.getOrderId(), newPart));
-                                cyclicItem.setModified(new Date());
                                 sessionNew.update(cyclicItem);
 
                                 toSubmit.add(cyclicItem);
@@ -573,7 +569,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                             item.setSubmitted(false);
                             item.setOrderId(newOrderId);
-                            item.setModified(new Date());
                             sessionNew.update(item);
 
                             toSubmit.add(item);
@@ -611,13 +606,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 variables.setControllerId(in.getControllerId());
                 variables.setOrderId(orderId);
                 variables.setVariableValue(modified);
-                variables.setModified(new Date());
-                variables.setCreated(new Date());
                 session.save(variables);
             } else {
                 variables.setOrderId(orderId);
                 variables.setVariableValue(modified);
-                variables.setModified(new Date());
                 session.update(variables);
             }
         }
@@ -990,7 +982,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         }
                     }
 
-                    item.setModified(new Date());
                     item.setOrderId(newOrderId);
 
                     if (toDelete.contains(item.getId())) {
@@ -1136,7 +1127,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 });
             } else {
                 // remove old submission
-                deleteNotUsedSubmission( dbLayer, in.getControllerId(), oldSubmissionId);
+                deleteNotUsedSubmission(dbLayer, in.getControllerId(), oldSubmissionId);
                 session.close();
                 session = null;
 
@@ -1420,7 +1411,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dailyPlanDate);
         item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
-        item.setCreated(new Date());
         return item;
     }
 

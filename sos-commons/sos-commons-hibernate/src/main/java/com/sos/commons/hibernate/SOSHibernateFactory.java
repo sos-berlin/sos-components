@@ -86,6 +86,7 @@ public class SOSHibernateFactory implements Serializable {
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JTA_PLATFORM, NoJtaPlatform.class.getName());
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PERSISTENCE_VALIDATION_MODE, "none");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY, "legacy");
+        defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE, "timestamp");
 
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT, "false");
         defaultConfigurationProperties.put(SOSHibernate.HIBERNATE_PROPERTY_JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, "false");
@@ -305,7 +306,7 @@ public class SOSHibernateFactory implements Serializable {
      * <ul>
      * <li><b>H2:</b> {@code current_timestamp at time zone 'UTC'}</li>
      * <li><b>MySQL:</b> {@code utc_timestamp()}</li>
-     * <li><b>Oracle:</b> {@code cast(sys_extract_utc(systimestamp) as date)}</li>
+     * <li><b>Oracle:</b> {@code sys_extract_utc(systimestamp)}</li>
      * <li><b>MSSQL:</b> {@code getutcdate()}</li>
      * <li><b>PostgreSQL:</b> {@code timezone('UTC', now())}</li>
      * </ul>
@@ -322,7 +323,7 @@ public class SOSHibernateFactory implements Serializable {
         case MYSQL:
             return "utc_timestamp()";
         case ORACLE:
-            return "cast(sys_extract_utc(systimestamp) as date)";
+            return "sys_extract_utc(systimestamp)";
         case MSSQL:
             return "getutcdate()";
         case PGSQL:
@@ -461,7 +462,6 @@ public class SOSHibernateFactory implements Serializable {
         setConfigurationProperties();
         configuration = configurationResolver.resolve(configuration);
         dbms = configurationResolver.getDbms();
-        setDbmsSpecificProperties();
     }
 
     private void buildSessionFactory() {
@@ -566,22 +566,6 @@ public class SOSHibernateFactory implements Serializable {
                 }
                 configuration.setProperty(key, value);
             }
-        }
-    }
-
-    private void setDbmsSpecificProperties() {
-        switch (dbms) {
-        case H2:
-            if (!configuration.getProperties().contains(SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE)) {
-                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE, "timestamp");
-                if (LOGGER.isTraceEnabled()) {
-                    String method = SOSHibernate.getMethodName(logIdentifier, "setDbmsSpecificProperties");
-                    LOGGER.trace(String.format("%s %s=%s", method, SOSHibernate.HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE, "timestamp"));
-                }
-            }
-            break;
-        default:
-            break;
         }
     }
 

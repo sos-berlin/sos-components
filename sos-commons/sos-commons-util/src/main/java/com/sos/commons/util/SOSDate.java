@@ -6,6 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalUnit;
@@ -44,8 +46,23 @@ public class SOSDate {
         return val == null ? null : Date.from(val);
     }
 
+    public static Date toDate(ZonedDateTime val) {
+        return val == null ? null : Date.from(val.toInstant());
+    }
+
     public static Instant toInstant(Date val) {
         return val == null ? null : val.toInstant();
+    }
+
+    public static Instant toInstant(ZonedDateTime val) {
+        return val == null ? null : val.toInstant();
+    }
+
+    public static ZonedDateTime toUtcMinusMinutes(ZonedDateTime datetime, long minutes) {
+        if (datetime == null) {
+            return null;
+        }
+        return datetime.toInstant().minus(Duration.ofMinutes(minutes)).atZone(ZoneOffset.UTC);
     }
 
     // returns Date from String
@@ -406,15 +423,25 @@ public class SOSDate {
      * @param amountToAdd
      * @param unit
      * @return */
-    public static Date add(Date input, long amountToAdd, TemporalUnit unit) {
-        return add(input.toInstant(), amountToAdd, unit);
-    }
-
-    public static Date add(Instant input, long amountToAdd, TemporalUnit unit) {
+    public static Instant add(Date input, long amountToAdd, TemporalUnit unit) {
         if (input == null) {
             return null;
         }
-        return Date.from(input.plus(amountToAdd, unit));
+        return add(input.toInstant(), amountToAdd, unit);
+    }
+
+    public static Date addToDate(Date input, long amountToAdd, TemporalUnit unit) {
+        if (input == null) {
+            return null;
+        }
+        return Date.from(add(input, amountToAdd, unit));
+    }
+
+    public static Instant add(Instant input, long amountToAdd, TemporalUnit unit) {
+        if (input == null) {
+            return null;
+        }
+        return input.plus(amountToAdd, unit);
     }
 
     /** @param range e.g.: m - minutes,s -seconds, ms - milliseconds

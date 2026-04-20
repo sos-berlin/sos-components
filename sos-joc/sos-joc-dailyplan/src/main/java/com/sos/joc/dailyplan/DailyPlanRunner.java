@@ -1518,7 +1518,6 @@ public class DailyPlanRunner extends TimerTask {
             item.setControllerId(controllerId);
             item.setSubmissionForDate(dailyPlanDate);
             item.setUserAccount(settings.getUserAccount());
-            item.setCreated(settings.getSubmissionTime());
 
             session = Globals.createSosHibernateStatelessConnection("addDailyPlanSubmission");
             session.setAutoCommit(false);

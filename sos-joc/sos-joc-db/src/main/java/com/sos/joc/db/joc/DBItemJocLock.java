@@ -1,9 +1,10 @@
 package com.sos.joc.db.joc;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -71,7 +72,8 @@ public class DBItemJocLock extends DBItem {
     private String account;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -115,12 +117,8 @@ public class DBItemJocLock extends DBItem {
         account = val;
     }
 
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
     }
 
 }

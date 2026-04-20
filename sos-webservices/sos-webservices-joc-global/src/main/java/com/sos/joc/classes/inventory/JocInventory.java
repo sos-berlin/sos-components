@@ -652,7 +652,6 @@ public class JocInventory {
         } else {
             DBItemJocAuditLog auditItem = new DBItemJocAuditLog();
             auditItem.setId(0L);
-            auditItem.setCreated(Date.from(Instant.now()));
             return auditItem;
         }
     }

@@ -1,9 +1,11 @@
 package com.sos.joc.db.documentation;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -53,10 +55,12 @@ public class DBItemDocumentation extends DBItem {
     private Long imageId;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     @Transient
     private byte[] image;
@@ -136,20 +140,12 @@ public class DBItemDocumentation extends DBItem {
         this.imageId = val;
     }
 
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
-    }
-
-    public void setModified(Date val) {
-        this.modified = val;
     }
 
     public byte[] getImage() {

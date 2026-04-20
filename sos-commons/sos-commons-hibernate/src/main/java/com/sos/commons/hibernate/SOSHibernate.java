@@ -127,12 +127,30 @@ public class SOSHibernate {
     /** hibernate.id.db_structure_naming_strategy - SOS default: legacy */
     public static final String HIBERNATE_PROPERTY_ID_STRUCTURE_NAMING_STRATEGY = MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 
-    /** hibernate.type.preferred_instant_jdbc_type - SOS default: not used<br />
+    /** hibernate.type.preferred_instant_jdbc_type - SOS default: timestamp<br />
      * <p>
-     * Required only for H2 with value = timestamp for entities using {@code Instant} field.<br />
-     * - Fixes {@code SemanticException} when assigning H2's {@code now()} or {@code current_timestamp} to an {@code Instant} field.
+     * Controls how Hibernate maps {@code Instant} to JDBC temporal types.
+     *
      * <p>
-     * Other databases use default mapping. */
+     * By default, Hibernate may use database-specific timestamp types, including timezone-aware variants (e.g. TIMESTAMP WITH TIME ZONE, datetimeoffset),
+     * depending on the JDBC dialect.
+     *
+     * <p>
+     * Setting this property forces a uniform mapping to JDBC {@code TIMESTAMP} without timezone information across all supported databases.
+     *
+     * <p>
+     * This avoids dialect-specific timezone handling and ensures {@code Instant} is stored as a raw UTC-based timestamp, with all timezone semantics handled in
+     * the application layer.
+     *
+     * <p>
+     * Without this mapping, certain databases/dialects may fail:
+     * <ul>
+     * <li>Oracle: timezone-related binding/interpretation errors (e.g. ORA-18716)</li>
+     * <li>H2: {@code SemanticException} when assigning functions like {@code CURRENT_TIMESTAMP} to {@code Instant} fields</li>
+     * </ul>
+     *
+     * <p>
+     * Recommended for heterogeneous database environments (Oracle, MySQL, PostgreSQL, MSSQL, H2) to ensure consistent temporal behavior. */
     public static final String HIBERNATE_PROPERTY_PREFERRED_INSTANT_JDBC_TYPE = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE;
 
     /** ---- ValidationSettings ------------------------------------------------------------------------------- */

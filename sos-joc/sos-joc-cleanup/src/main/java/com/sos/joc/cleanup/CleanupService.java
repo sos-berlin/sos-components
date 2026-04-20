@@ -1,9 +1,7 @@
 package com.sos.joc.cleanup;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSDate;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -226,22 +223,6 @@ public class CleanupService extends AJocActiveMemberService {
 
             closed.set(true);
             close(mode);
-        }
-    }
-
-    public static Date toDate(ZonedDateTime dateTime) {
-        return dateTime == null ? null : Date.from(dateTime.toInstant());
-    }
-
-    public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, long minutes) {
-        return datetime.withZoneSameInstant(ZoneId.of(SOSDate.TIMEZONE_UTC)).minusMinutes(minutes);
-    }
-
-    public static String toString(Date date) {
-        try {
-            return SOSDate.getDateTimeAsString(date);
-        } catch (Exception e) {
-            return date == null ? "null" : date.toString();
         }
     }
 

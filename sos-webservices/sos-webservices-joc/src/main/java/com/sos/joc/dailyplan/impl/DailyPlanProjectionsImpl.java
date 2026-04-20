@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -181,7 +182,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
             ProjectionsCalendarResponse entity = new ProjectionsCalendarResponse();
             entity.setDeliveryDate(Date.from(Instant.now()));
-            metaOpt.ifPresent(meta -> entity.setSurveyDate(meta.getCreated()));
+            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toDate(meta.getCreated())));
             entity.setYears(yearsItem);
 
             if (export) {

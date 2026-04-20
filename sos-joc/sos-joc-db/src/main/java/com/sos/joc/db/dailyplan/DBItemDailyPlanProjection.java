@@ -5,11 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Types;
-import java.util.Date;
+import java.time.Instant;
 import java.util.zip.GZIPOutputStream;
 
 import org.hibernate.annotations.JdbcTypeCode;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.util.SOSStreamUnzip;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -38,7 +39,8 @@ public class DBItemDailyPlanProjection extends DBItem {
     private byte[] content;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     public Long getId() {
         return id;
@@ -69,12 +71,8 @@ public class DBItemDailyPlanProjection extends DBItem {
         }
     }
 
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
     }
 
     @Transient
