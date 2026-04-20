@@ -1,6 +1,5 @@
 package com.sos.joc.help.impl;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,6 +8,7 @@ import java.util.regex.Pattern;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.help.resource.IHelpResource;
 import com.sos.joc.model.audit.CategoryType;
 
@@ -68,19 +68,21 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
             };
 
             return JOCDefaultResponse.responseStatus200(helpFileStream, getMediaType(path), null, getJocAuditTrail());
+        } catch (JocObjectNotExistException e) {
+            return responseStatus434JSError(e, false);
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
     
-    private InputStream getInputStream(String resource) throws FileNotFoundException {
+    private InputStream getInputStream(String resource) throws JocObjectNotExistException {
         InputStream stream = JOCResourceImpl.class.getResourceAsStream(resource);
         if (stream == null) {
             // try once more in english as fallback
             stream = JOCResourceImpl.class.getResourceAsStream(resource.replaceFirst(Pattern.quote(API_CALL) + "/[^/]+/", API_CALL + "/en/"));
         }
         if (stream == null) {
-            throw new FileNotFoundException(resource);
+            throw new JocObjectNotExistException(resource);
         }
         return stream;
     }
