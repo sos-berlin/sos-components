@@ -100,7 +100,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                 if (!treeItem.getReleased() && config.getValid() && !in.getWithoutDrafts()) {
                     ResponseReleasableVersion draft = new ResponseReleasableVersion();
                     draft.setId(config.getId());
-                    draft.setVersionDate(SOSDate.toDate(config.getModified()));
+                    draft.setVersionDate(SOSDate.toUtcDate(config.getModified()));
                     versions.add(draft);
                 }
                 versions.addAll(getVersion(config.getId(), releasedItem, in.getWithoutReleased()));
@@ -136,7 +136,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         }
         ResponseReleasableVersion rv = new ResponseReleasableVersion();
         rv.setId(confId);
-        rv.setVersionDate(SOSDate.toDate(release.getModified()));
+        rv.setVersionDate(SOSDate.toUtcDate(release.getModified()));
         rv.setReleaseId(release.getId());
         rv.setReleasePath(release.getPath());
 

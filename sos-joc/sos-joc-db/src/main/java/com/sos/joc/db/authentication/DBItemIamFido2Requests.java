@@ -1,6 +1,6 @@
 package com.sos.joc.db.authentication;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
@@ -31,7 +31,7 @@ public class DBItemIamFido2Requests {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -65,7 +65,7 @@ public class DBItemIamFido2Requests {
         this.requestId = requestId;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

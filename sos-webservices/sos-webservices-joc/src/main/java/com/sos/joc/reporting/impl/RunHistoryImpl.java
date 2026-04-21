@@ -91,7 +91,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                     item.setHits(dbItem.getHits());
                     item.setNumOfReports(Long.valueOf(dbItem.getReportCount()));
                     item.setTemplateName(dbItem.getTemplateIdAsEnum());
-                    item.setModified(SOSDate.toDate(dbItem.getModified()));
+                    item.setModified(SOSDate.toUtcDate(dbItem.getModified()));
                     item.setErrorText(dbItem.getErrorText());
                     item.setState(getState(dbItem.getStateAsEnum()));
                     item.setControllerId(dbItem.getControllerId());

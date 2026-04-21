@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Types;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.zip.GZIPOutputStream;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -40,7 +40,7 @@ public class DBItemDailyPlanProjection extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -71,7 +71,7 @@ public class DBItemDailyPlanProjection extends DBItem {
         }
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

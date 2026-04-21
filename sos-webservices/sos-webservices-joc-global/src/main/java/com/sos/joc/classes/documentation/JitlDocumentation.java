@@ -130,7 +130,7 @@ public class JitlDocumentation {
         item.setAuditLogId(0L);
         item.setAccount("root");
         // set released with current UTC timestamp
-        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        item.setReleased(session.getCurrentTimestampUtcAsLocalDateTime());
         if (isNew) {
             session.save(item);
         } else {

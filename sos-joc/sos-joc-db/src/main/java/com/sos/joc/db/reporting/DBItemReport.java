@@ -2,7 +2,7 @@ package com.sos.joc.db.reporting;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
@@ -49,11 +49,11 @@ public class DBItemReport extends DBItem {
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
     private String constraintHash; // hash from templateId, frequency, dateFrom, hits
@@ -134,11 +134,11 @@ public class DBItemReport extends DBItem {
         dateTo = val;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

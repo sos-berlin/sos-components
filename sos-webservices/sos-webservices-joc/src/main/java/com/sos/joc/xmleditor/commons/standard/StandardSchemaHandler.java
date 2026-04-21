@@ -108,7 +108,7 @@ public class StandardSchemaHandler {
                 String xml = getXml(item.getConfigurationReleased(), isYADE);
                 String json = item.getConfigurationReleasedJson();
 
-                answer.setConfigurationDate(SOSDate.toDate(item.getReleased()));
+                answer.setConfigurationDate(SOSDate.toUtcDate(item.getReleased()));
                 answer.setConfiguration(xml);
                 if (SOSString.isEmpty(json)) {
                     recreateJson(xml);
@@ -134,7 +134,7 @@ public class StandardSchemaHandler {
             String xml = getXml(item.getConfigurationDraft(), isYADE);
             String json = item.getConfigurationDraftJson();
 
-            answer.setConfigurationDate(SOSDate.toDate(item.getModified()));
+            answer.setConfigurationDate(SOSDate.toUtcDate(item.getModified()));
             answer.setConfiguration(xml);
             if (SOSString.isEmpty(json)) {
                 recreateJson(xml);
@@ -207,7 +207,7 @@ public class StandardSchemaHandler {
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
         // set released with current UTC timestamp
-        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        item.setReleased(session.getCurrentTimestampUtcAsLocalDateTime());
         session.save(item);
 
         // Does NOT work with StatelessSession - created remains null after save
@@ -226,7 +226,7 @@ public class StandardSchemaHandler {
         item.setAuditLogId(auditLogId);
         item.setAccount(account);
         // set released with current UTC timestamp
-        item.setReleased(session.getCurrentTimestampUtcAsInstant());
+        item.setReleased(session.getCurrentTimestampUtcAsLocalDateTime());
         session.update(item);
     }
 

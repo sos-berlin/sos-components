@@ -1,6 +1,6 @@
 package com.sos.joc.cleanup.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -73,7 +73,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 state = cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, monitoringDatetime.getDatetime(), monitoringDatetime.getAge()
                         .getConfigured());
                 if (isCompleted(state)) {
-                    Instant remainingStartTime = getRemainingStartTime(notificationDatetime);
+                    LocalDateTime remainingStartTime = getRemainingStartTime(notificationDatetime);
                     String remainingAgeInfo = getRemainingAgeInfo(notificationDatetime);
 
                     state = cleanupOrders(MontitoringScope.REMAINING, MontitoringRange.ALL, remainingStartTime, remainingAgeInfo);
@@ -161,7 +161,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
     }
 
-    protected JocClusterServiceTaskState cleanupOrders(MontitoringScope scope, MontitoringRange range, Instant startTime, String ageInfo)
+    protected JocClusterServiceTaskState cleanupOrders(MontitoringScope scope, MontitoringRange range, LocalDateTime startTime, String ageInfo)
             throws SOSHibernateException {
 
         setQuotedColumns();
@@ -186,7 +186,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return JocClusterServiceTaskState.COMPLETED;
     }
 
-    private Long getOrderMaxMainParentId(MontitoringScope scope, MontitoringRange range, Instant startTime, String ageInfo)
+    private Long getOrderMaxMainParentId(MontitoringScope scope, MontitoringRange range, LocalDateTime startTime, String ageInfo)
             throws SOSHibernateException {
         String table = DBLayer.TABLE_MON_ORDERS;
         StringBuilder hql = null;
@@ -212,7 +212,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", SOSDate.toDate(startTime));
+        query.setParameter("startTime", SOSDate.toUtcDate(startTime));
         Long r = getDbLayer().getSession().getSingleValue(query);
 
         if (r == null || r.intValue() == 0) {
@@ -270,7 +270,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         return r;
     }
 
-    private boolean cleanupOrders(MontitoringScope scope, MontitoringRange range, Instant startTime, String ageInfo, Long maxMainParentId)
+    private boolean cleanupOrders(MontitoringScope scope, MontitoringRange range, LocalDateTime startTime, String ageInfo, Long maxMainParentId)
             throws SOSHibernateException {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("][monitoring][");
         log.append(getScope(scope)).append(" ").append(getRange(range)).append("]");
@@ -415,7 +415,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         hql.append("where time < :time ");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("time", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("time", SOSDate.toUtcDate(datetime.getDatetime()));
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 

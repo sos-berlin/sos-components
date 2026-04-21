@@ -2,9 +2,11 @@ package com.sos.commons.util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -46,6 +48,10 @@ public class SOSDate {
         return val == null ? null : Date.from(val);
     }
 
+    public static Date toUtcDate(LocalDateTime val) {
+        return val == null ? null : Date.from(val.atZone(ZoneOffset.UTC).toInstant());
+    }
+
     public static Date toDate(ZonedDateTime val) {
         return val == null ? null : Date.from(val.toInstant());
     }
@@ -56,6 +62,29 @@ public class SOSDate {
 
     public static Instant toInstant(ZonedDateTime val) {
         return val == null ? null : val.toInstant();
+    }
+
+    public static LocalDateTime toUtcLocalDateTime(Instant val) {
+        return val == null ? null : LocalDateTime.ofInstant(val, ZoneOffset.UTC);
+    }
+
+    public static LocalDateTime toUtcLocalDateTime(Date val) {
+        return val == null ? null : toUtcLocalDateTime(val.toInstant());
+    }
+
+    public static LocalDateTime toUtcLocalDateTime(ZonedDateTime val) {
+        return val == null ? null : LocalDateTime.ofInstant(val.toInstant(), ZoneOffset.UTC);
+    }
+
+    public static LocalDateTime getUtcNowLocalDateTime() {
+        return LocalDateTime.now(Clock.systemUTC());
+    }
+
+    public static long toUtcEpochMilli(LocalDateTime val) {
+        if (val == null) {
+            return 0L;
+        }
+        return val.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
     public static ZonedDateTime toUtcMinusMinutes(ZonedDateTime datetime, long minutes) {
@@ -186,12 +215,27 @@ public class SOSDate {
         return getDateTimeAsString(toDate(date), null);
     }
 
+    public static String getDateTimeAsString(LocalDateTime date) throws SOSInvalidDataException {
+        return getDateTimeAsString(toUtcDate(date), null);
+    }
+
     public static String tryGetDateTimeAsString(Date date) {
         try {
             if (date == null) {
                 return null;
             }
             return getDateTimeAsString(date, null);
+        } catch (SOSInvalidDataException e) {
+            return e.toString();
+        }
+    }
+
+    public static String tryGetDateTimeAsString(LocalDateTime date) {
+        try {
+            if (date == null) {
+                return null;
+            }
+            return getDateTimeAsString(toUtcDate(date), null);
         } catch (SOSInvalidDataException e) {
             return e.toString();
         }
@@ -438,6 +482,13 @@ public class SOSDate {
     }
 
     public static Instant add(Instant input, long amountToAdd, TemporalUnit unit) {
+        if (input == null) {
+            return null;
+        }
+        return input.plus(amountToAdd, unit);
+    }
+
+    public static LocalDateTime add(LocalDateTime input, long amountToAdd, TemporalUnit unit) {
         if (input == null) {
             return null;
         }

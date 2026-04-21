@@ -194,7 +194,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
         transfer.setNumOfFiles(item.getNumOfFiles());
         transfer.setStart(item.getStart());
         transfer.setEnd(item.getEnd());
-        transfer.setSurveyDate(SOSDate.toDate(item.getCreated()));
+        transfer.setSurveyDate(SOSDate.toUtcDate(item.getCreated()));
         transfer.setWorkflowPath(item.getWorkflowPath());
         transfer.setOrderId(item.getOrderId());
         transfer.setJob(item.getJob());

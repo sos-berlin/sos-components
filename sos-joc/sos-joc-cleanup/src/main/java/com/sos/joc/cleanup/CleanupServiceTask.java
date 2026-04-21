@@ -2,7 +2,7 @@ package com.sos.joc.cleanup;
 
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -449,13 +449,13 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
         private final Age age;
         private ZonedDateTime zonedDatetime = null;
-        private Instant datetime;
+        private LocalDateTime datetime;
 
         public TaskDateTime(Age age, ZonedDateTime start) {
             this.age = age;
             if (this.age.getMinutes() > 0) {
                 this.zonedDatetime = SOSDate.toUtcMinusMinutes(start, this.age.getMinutes());
-                this.datetime = SOSDate.toInstant(zonedDatetime);
+                this.datetime = SOSDate.toUtcLocalDateTime(zonedDatetime);
             }
         }
 
@@ -467,7 +467,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             return zonedDatetime;
         }
 
-        public Instant getDatetime() {
+        public LocalDateTime getDatetime() {
             return datetime;
         }
 

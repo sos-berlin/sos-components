@@ -1,6 +1,6 @@
 package com.sos.joc.db.history;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
@@ -54,7 +54,7 @@ public class DBItemHistoryOrderState extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemHistoryOrderState() {
     }
@@ -131,7 +131,7 @@ public class DBItemHistoryOrderState extends DBItem {
         stateText = normalizeValue(val, HistoryConstants.MAX_LEN_STATE_TEXT);
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

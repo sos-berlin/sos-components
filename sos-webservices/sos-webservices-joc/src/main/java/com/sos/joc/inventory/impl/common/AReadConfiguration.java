@@ -25,7 +25,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
-
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.IsReferencedBy;
@@ -55,7 +54,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setValid(config.getValid());
             item.setDeleted(config.getDeleted());
             item.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
-            item.setConfigurationDate(SOSDate.toDate(config.getModified()));
+            item.setConfigurationDate(SOSDate.toUtcDate(config.getModified()));
             item.setDeployed(config.getDeployed());
             item.setReleased(config.getReleased());
             item.setDeployments(null);
@@ -125,7 +124,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                         if (!lastDeploymentDate.isPresent()) {
                             item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                         } else {
-                            if (SOSDate.toInstant(lastDeploymentDate.get()).isAfter(config.getModified())) {
+                            if (SOSDate.toUtcLocalDateTime(lastDeploymentDate.get()).isAfter(config.getModified())) {
                                 item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -165,7 +164,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                         if (releasedLastModified == null) {
                             item.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                         } else {
-                            if (SOSDate.toInstant(releasedLastModified).isAfter(config.getModified())) {
+                            if (SOSDate.toUtcLocalDateTime(releasedLastModified).isAfter(config.getModified())) {
                                 item.setState(ItemStateEnum.RELEASE_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -199,7 +198,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setObjectType(type);
             item.setValid(config.getValid());
             item.setState(null);
-            item.setConfigurationDate(SOSDate.toDate(config.getModified()));
+            item.setConfigurationDate(SOSDate.toUtcDate(config.getModified()));
             item.setDeployments(null);
             item.setHasDeployments(null);
             item.setHasReleases(null);

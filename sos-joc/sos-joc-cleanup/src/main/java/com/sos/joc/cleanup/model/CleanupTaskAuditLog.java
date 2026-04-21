@@ -78,7 +78,7 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
         hql.append("where created < :created ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("created", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("created", SOSDate.toUtcDate(datetime.getDatetime()));
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 

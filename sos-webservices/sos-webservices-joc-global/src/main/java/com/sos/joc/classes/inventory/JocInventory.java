@@ -71,7 +71,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
-
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
@@ -94,7 +93,6 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.audit.AuditParams;
-
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.IsReferencedBy;
@@ -411,7 +409,7 @@ public class JocInventory {
         cfg.setValid(dbItem.getValid());
         cfg.setDeleted(dbItem.getDeleted());
         cfg.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
-        cfg.setConfigurationDate(SOSDate.toDate(dbItem.getModified()));
+        cfg.setConfigurationDate(SOSDate.toUtcDate(dbItem.getModified()));
         cfg.setDeployed(dbItem.getDeployed());
         cfg.setReleased(dbItem.getReleased());
         cfg.setDeployments(null);
@@ -441,7 +439,7 @@ public class JocInventory {
                     if (!lastDeploymentDate.isPresent()) {
                         cfg.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                     } else {
-                        if (SOSDate.toInstant(lastDeploymentDate.get()).isAfter(dbItem.getModified())) {
+                        if (SOSDate.toUtcLocalDateTime(lastDeploymentDate.get()).isAfter(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -474,7 +472,7 @@ public class JocInventory {
                     if (releasedLastModified == null) {
                         cfg.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                     } else {
-                        if (SOSDate.toInstant(releasedLastModified).isAfter(dbItem.getModified())) {
+                        if (SOSDate.toUtcLocalDateTime(releasedLastModified).isAfter(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.RELEASE_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);

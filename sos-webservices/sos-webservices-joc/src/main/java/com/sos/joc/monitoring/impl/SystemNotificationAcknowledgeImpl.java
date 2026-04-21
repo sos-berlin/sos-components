@@ -73,7 +73,7 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
 
                         ac.setAccount(result.getAccount());
                         ac.setComment(result.getComment());
-                        ac.setCreated(SOSDate.toDate(result.getCreated()));
+                        ac.setCreated(SOSDate.toUtcDate(result.getCreated()));
                     }
                 }
 

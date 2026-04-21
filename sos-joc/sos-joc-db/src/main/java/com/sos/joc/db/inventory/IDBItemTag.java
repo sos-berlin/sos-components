@@ -1,6 +1,6 @@
 package com.sos.joc.db.inventory;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 public interface IDBItemTag {
 
@@ -20,5 +20,5 @@ public interface IDBItemTag {
 
     public void setOrdering(Integer val);
 
-    public Instant getModified();
+    public LocalDateTime getModified();
 }

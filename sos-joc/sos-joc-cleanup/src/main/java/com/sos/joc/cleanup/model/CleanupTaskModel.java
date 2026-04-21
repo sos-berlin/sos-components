@@ -1,6 +1,6 @@
 package com.sos.joc.cleanup.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -288,7 +288,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return forceCleanup;
     }
 
-    protected String getDateTime(Instant date) {
+    protected String getDateTime(LocalDateTime date) {
         if (date == null) {
             return "";
         }
@@ -336,7 +336,7 @@ public class CleanupTaskModel implements ICleanupTask {
         return state == null || state.equals(JocClusterServiceTaskState.COMPLETED);
     }
 
-    protected Instant getRemainingStartTime(TaskDateTime datetime) {
+    protected LocalDateTime getRemainingStartTime(TaskDateTime datetime) {
         return SOSDate.add(datetime.getDatetime(), -1 * REMAINING_AGE, ChronoUnit.DAYS);
     }
 

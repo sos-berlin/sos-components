@@ -1,6 +1,6 @@
 package com.sos.commons.hibernate.helpers.dbitems;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,7 +32,7 @@ public class DBItemATest extends DBItem {
     private String name;
 
     @Column(name = "[JAVA_DATE_MANUAL]", nullable = false, updatable = false, insertable = true)
-    private Instant javaDateManual;
+    private LocalDateTime javaDateManual;
 
     /** @CreationTimestamp is a synonym for {@link CurrentTimestamp @CurrentTimestamp(event=INSERT, source=VM)}. */
     @CreationTimestamp
@@ -41,7 +41,7 @@ public class DBItemATest extends DBItem {
 
     @CurrentTimestamp(source = SourceType.DB)
     @Column(name = "[DB_CURRENT_TIMESTAMP_AUTO]", nullable = false, updatable = true)
-    private Instant dbCurrentTimestampAuto;
+    private LocalDateTime dbCurrentTimestampAuto;
 
     @SOSCurrentTimestampUtc // hover over annotation for details (default: INSERT + UPDATE)
     // @SOSCreationTimestampUtc - for inserts-only - equivalent to: @SOSCurrentTimestampUtc(event = EventType.INSERT)
@@ -49,7 +49,7 @@ public class DBItemATest extends DBItem {
     private Date dbCurrentTimestampUtcAuto;
 
     @Column(name = "[DATE_NULLABLE]", nullable = true)
-    private Instant dateNullable;
+    private LocalDateTime dateNullable;
 
     public DBItemATest() {
     }
@@ -70,11 +70,11 @@ public class DBItemATest extends DBItem {
         name = val;
     }
 
-    public Instant getJavaDateManual() {
+    public LocalDateTime getJavaDateManual() {
         return javaDateManual;
     }
 
-    public void setJavaDateManual(Instant v) {
+    public void setJavaDateManual(LocalDateTime v) {
         javaDateManual = v;
     }
 
@@ -82,7 +82,7 @@ public class DBItemATest extends DBItem {
         return javaDateAuto;
     }
 
-    public Instant getDbCurrentTimestampAuto() {
+    public LocalDateTime getDbCurrentTimestampAuto() {
         return dbCurrentTimestampAuto;
     }
 
@@ -90,11 +90,11 @@ public class DBItemATest extends DBItem {
         return dbCurrentTimestampUtcAuto;
     }
 
-    public Instant getDateNullable() {
+    public LocalDateTime getDateNullable() {
         return dateNullable;
     }
 
-    public void setDateNullable(Instant val) {
+    public void setDateNullable(LocalDateTime val) {
         dateNullable = val;
     }
 }

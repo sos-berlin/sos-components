@@ -1,6 +1,6 @@
 package com.sos.joc.db.monitoring;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.joc.db.DBItem;
@@ -29,7 +29,7 @@ public class DBItemNotificationAcknowledgement extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemNotificationAcknowledgement() {
     }
@@ -61,7 +61,7 @@ public class DBItemNotificationAcknowledgement extends DBItem {
         comment = normalizeValue(val, MonitoringConstants.MAX_LEN_COMMENT);
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

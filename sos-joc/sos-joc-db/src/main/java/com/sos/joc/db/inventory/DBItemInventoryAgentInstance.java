@@ -1,6 +1,6 @@
 package com.sos.joc.db.inventory;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
@@ -87,7 +87,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     public Long getId() {
         return id;
@@ -226,7 +226,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
         deployed = val;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

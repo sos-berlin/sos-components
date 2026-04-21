@@ -253,7 +253,7 @@ public class ExportUtils {
             jsObject.setContent(JsonConverter.readAsConvertedDeployObject(null, item.getPath(), item.getContent(), StoreDeployments.CLASS_MAPPING.get(
                     item.getType()), commitId, releasedScripts));
             jsObject.setAccount(account);
-            jsObject.setModified(SOSDate.toDate(item.getModified()));
+            jsObject.setModified(SOSDate.toUtcDate(item.getModified()));
             return jsObject;
         } catch (IOException e) {
             throw new JocException(e);

@@ -1,6 +1,6 @@
 package com.sos.joc.db.history;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
@@ -47,7 +47,7 @@ public class DBItemHistoryController extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemHistoryController() {
     }
@@ -119,7 +119,7 @@ public class DBItemHistoryController extends DBItem {
         lastKnownTime = val;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 }

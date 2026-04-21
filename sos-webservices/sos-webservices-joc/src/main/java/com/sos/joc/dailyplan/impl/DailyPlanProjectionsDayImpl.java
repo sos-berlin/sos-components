@@ -171,7 +171,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
             }
 
-            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toDate(meta.getCreated())));
+            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toUtcDate(meta.getCreated())));
             entity.setDeliveryDate(Date.from(Instant.now()));
             // if (entity.getPlanned() == null || !entity.getPlanned()) {
             metaContentOpt.ifPresent(mc -> entity.setMeta(mc));

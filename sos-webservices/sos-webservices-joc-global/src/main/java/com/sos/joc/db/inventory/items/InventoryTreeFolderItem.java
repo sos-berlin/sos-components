@@ -1,6 +1,6 @@
 package com.sos.joc.db.inventory.items;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -30,7 +30,7 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
         return this;
     }
 
-    public void setModified(Instant val) {
-        super.setModified(SOSDate.toDate(val));
+    public void setModified(LocalDateTime val) {
+        super.setModified(SOSDate.toUtcDate(val));
     }
 }

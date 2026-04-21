@@ -1,7 +1,7 @@
 package com.sos.joc.db.deployment;
 
 import java.nio.file.Paths;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
@@ -71,7 +71,7 @@ public class DBItemDeploymentSubmission extends DBItem {
     @Column(name = "[CREATED]", nullable = false)
     // not a @SOSCreationTimestampUtc annotation - because this is more a MODIFIED column and not a CREATED - will be updated in both cases(Insert/Update)
     @SOSCurrentTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -188,7 +188,7 @@ public class DBItemDeploymentSubmission extends DBItem {
         this.operation = operation;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

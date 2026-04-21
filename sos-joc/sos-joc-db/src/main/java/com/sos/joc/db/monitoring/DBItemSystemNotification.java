@@ -1,6 +1,6 @@
 package com.sos.joc.db.monitoring;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
@@ -62,7 +62,7 @@ public class DBItemSystemNotification extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemSystemNotification() {
     }
@@ -156,7 +156,7 @@ public class DBItemSystemNotification extends DBItem {
         return hasMonitors;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

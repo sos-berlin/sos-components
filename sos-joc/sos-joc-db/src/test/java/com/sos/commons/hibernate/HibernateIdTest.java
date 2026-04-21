@@ -3,7 +3,7 @@ package com.sos.commons.hibernate;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.Clock;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.query.Query;
@@ -38,7 +38,7 @@ public class HibernateIdTest {
 
             DBItemATest item = new DBItemATest();
             item.setName("xxxx");
-            item.setJavaDateManual(Instant.now(Clock.systemUTC()));
+            item.setJavaDateManual(LocalDateTime.now(Clock.systemUTC()));
 
             session.beginTransaction();
             session.save(item);
@@ -47,7 +47,7 @@ public class HibernateIdTest {
 
             // set DateNullable with current UTC timestamp
             // see explanation below : ... item.setDateNullable(item.getDbCurrentTimestampUtcAuto());
-            item.setDateNullable(session.getCurrentTimestampAsInstant());
+            item.setDateNullable(session.getCurrentTimestampAsLocalDateTime());
 
             session.update(item);
             LOGGER.info("[AFTER_UPDATE]" + SOSString.toString(item));

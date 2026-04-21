@@ -1,6 +1,6 @@
 package com.sos.joc.db.xmleditor;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
@@ -54,15 +54,15 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     private String account;
 
     @Column(name = "[RELEASED]", nullable = false)
-    private Instant released;
+    private LocalDateTime released;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -144,19 +144,19 @@ public class DBItemXmlEditorConfiguration extends DBItem {
         account = val;
     }
 
-    public Instant getReleased() {
+    public LocalDateTime getReleased() {
         return released;
     }
 
-    public void setReleased(Instant val) {
+    public void setReleased(LocalDateTime val) {
         released = val;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

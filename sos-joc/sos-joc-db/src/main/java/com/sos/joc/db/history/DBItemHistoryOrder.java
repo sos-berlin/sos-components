@@ -1,6 +1,6 @@
 package com.sos.joc.db.history;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
@@ -161,11 +161,11 @@ public class DBItemHistoryOrder extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     public DBItemHistoryOrder() {
     }
@@ -511,11 +511,11 @@ public class DBItemHistoryOrder extends DBItem {
         constraintHash = val;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

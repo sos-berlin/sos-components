@@ -142,7 +142,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where submissionForDate < :submissionForDate ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("submissionForDate", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("submissionForDate", SOSDate.toUtcDate(datetime.getDatetime()));
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 

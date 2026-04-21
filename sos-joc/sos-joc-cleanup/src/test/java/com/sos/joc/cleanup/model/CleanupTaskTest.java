@@ -3,10 +3,10 @@ package com.sos.joc.cleanup.model;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
@@ -71,7 +71,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Instant d = SOSDate.add(new Date(), -9, ChronoUnit.DAYS);
+            LocalDateTime d = SOSDate.add(SOSDate.getUtcNowLocalDateTime(), -9, ChronoUnit.DAYS);
 
             JocClusterServiceTaskState state = t.cleanupOrders(Scope.MAIN, Range.ALL, d, "", true);
             LOGGER.info("[STATE]" + state);
@@ -92,7 +92,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Instant readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+            LocalDateTime readyTime = SOSDate.add(SOSDate.getUtcNowLocalDateTime(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
@@ -118,7 +118,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskHistory(factory, null, 1000, null);
 
-            Instant readyTime = SOSDate.add(new Date(), -365, ChronoUnit.DAYS);
+            LocalDateTime readyTime = SOSDate.add(SOSDate.getUtcNowLocalDateTime(), -365, ChronoUnit.DAYS);
 
             StringBuilder log = new StringBuilder();
 
@@ -144,7 +144,7 @@ public class CleanupTaskTest {
             factory = createFactory();
             t = new CleanupTaskMonitoring(factory, null, 1000, null);
 
-            Instant d = SOSDate.add(new Date(), -2, ChronoUnit.DAYS);
+            LocalDateTime d = SOSDate.add(SOSDate.getUtcNowLocalDateTime(), -2, ChronoUnit.DAYS);
 
             JocClusterServiceTaskState state = t.cleanupOrders(MontitoringScope.MAIN, MontitoringRange.ALL, d, "");
             LOGGER.info("[STATE]" + state);

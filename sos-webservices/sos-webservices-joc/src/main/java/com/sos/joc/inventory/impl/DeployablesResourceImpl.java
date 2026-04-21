@@ -272,7 +272,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                 if (!treeItem.getDeployed() && conf.getValid() && !withoutDrafts) {
                                     ResponseDeployableVersion draft = new ResponseDeployableVersion();
                                     draft.setId(conf.getId());
-                                    draft.setVersionDate(SOSDate.toDate(conf.getModified()));
+                                    draft.setVersionDate(SOSDate.toUtcDate(conf.getModified()));
                                     draft.setVersions(null);
                                     versions.add(draft);
                                 }

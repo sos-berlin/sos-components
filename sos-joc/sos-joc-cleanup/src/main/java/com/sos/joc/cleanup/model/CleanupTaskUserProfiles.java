@@ -98,7 +98,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append("having max(h.loginDate) < :loginDate ");
 
         Query<String> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("loginDate", SOSDate.toUtcDate(datetime.getDatetime()));
         List<String> result = getDbLayer().getSession().getResultList(query);
         if (result != null && result.size() > 0) {
             ProfilesFilter f = new ProfilesFilter();
@@ -115,7 +115,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_IAM_HISTORY).append(" ");
         hql.append("where loginDate < :loginDate ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("loginDate", SOSDate.toUtcDate(datetime.getDatetime()));
 
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);
@@ -127,7 +127,7 @@ public class CleanupTaskUserProfiles extends CleanupTaskModel {
         hql.append("where loginDate < :loginDate ");
         hql.append("and loginSuccess=false ");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("loginDate", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("loginDate", SOSDate.toUtcDate(datetime.getDatetime()));
 
         int r = getDbLayer().getSession().executeUpdate(query);
         return getDeleted(DBLayer.TABLE_IAM_HISTORY, r, r);

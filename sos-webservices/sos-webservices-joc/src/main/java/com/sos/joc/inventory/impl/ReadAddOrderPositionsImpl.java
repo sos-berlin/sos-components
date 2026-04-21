@@ -56,7 +56,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
                     folderPermissions);
 
             OrdersPositions entry = new OrdersPositions();
-            entry.setSurveyDate(SOSDate.toDate(config.getModified()));
+            entry.setSurveyDate(SOSDate.toUtcDate(config.getModified()));
             WorkflowId wId = new WorkflowId();
             wId.setPath(config.getPath());
             entry.setWorkflowId(wId);

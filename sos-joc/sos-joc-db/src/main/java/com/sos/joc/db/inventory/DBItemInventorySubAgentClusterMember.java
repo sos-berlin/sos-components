@@ -1,6 +1,6 @@
 package com.sos.joc.db.inventory;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
@@ -39,7 +39,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     public Long getId() {
         return id;
@@ -81,7 +81,7 @@ public class DBItemInventorySubAgentClusterMember extends DBItem {
         priority = val;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

@@ -1,6 +1,6 @@
 package com.sos.joc.xmleditor.impl;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
@@ -103,10 +103,10 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
     // checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
     // }
 
-    private RenameConfigurationAnswer getSuccess(Long id, Instant modified) {
+    private RenameConfigurationAnswer getSuccess(Long id, LocalDateTime modified) {
         RenameConfigurationAnswer answer = new RenameConfigurationAnswer();
         answer.setId(id);
-        answer.setModified(SOSDate.toDate(modified));
+        answer.setModified(SOSDate.toUtcDate(modified));
         return answer;
     }
 

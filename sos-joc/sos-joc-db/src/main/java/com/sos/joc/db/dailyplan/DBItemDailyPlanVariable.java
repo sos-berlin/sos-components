@@ -1,6 +1,6 @@
 package com.sos.joc.db.dailyplan;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
@@ -35,11 +35,11 @@ public class DBItemDailyPlanVariable extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     @Column(name = "[MODIFIED]", nullable = true)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     public Long getId() {
         return id;
@@ -73,11 +73,11 @@ public class DBItemDailyPlanVariable extends DBItem {
         variableValue = val;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

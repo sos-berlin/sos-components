@@ -152,7 +152,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
         }
         answer.getConfiguration().setValidation(validation);
-        answer.getConfiguration().setModified(SOSDate.toDate(item.getModified()));
+        answer.getConfiguration().setModified(SOSDate.toUtcDate(item.getModified()));
 
         return answer;
     }

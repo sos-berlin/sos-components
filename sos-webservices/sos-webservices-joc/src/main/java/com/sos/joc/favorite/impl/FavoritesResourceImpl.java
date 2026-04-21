@@ -122,7 +122,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
     private Favorite mapDbItem(DBItemInventoryFavorite dbItem, Integer position) {
         Favorite fav = new Favorite();
         fav.setAccount(dbItem.getAccount());
-        fav.setConfigurationDate(SOSDate.toDate(dbItem.getModified()));
+        fav.setConfigurationDate(SOSDate.toUtcDate(dbItem.getModified()));
         fav.setContent(dbItem.getFavorite());
         fav.setName(dbItem.getName());
         fav.setOrdering(position);

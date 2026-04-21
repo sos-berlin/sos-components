@@ -182,7 +182,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
             ProjectionsCalendarResponse entity = new ProjectionsCalendarResponse();
             entity.setDeliveryDate(Date.from(Instant.now()));
-            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toDate(meta.getCreated())));
+            metaOpt.ifPresent(meta -> entity.setSurveyDate(SOSDate.toUtcDate(meta.getCreated())));
             entity.setYears(yearsItem);
 
             if (export) {

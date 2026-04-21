@@ -3,7 +3,7 @@ package com.sos.joc.db.dailyplan;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -100,11 +100,11 @@ public class DBItemDailyPlanOrder extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     @Column(name = "[MODIFIED]", nullable = true)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     @Transient
     private String dailyPlanDate;
@@ -290,11 +290,11 @@ public class DBItemDailyPlanOrder extends DBItem {
         return orderParameterisation;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

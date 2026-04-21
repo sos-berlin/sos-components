@@ -366,7 +366,7 @@ public class OrderNotifierModel {
         }
         String jobName = mos == null ? "" : mos.getJobName();
         EventBus.getInstance().post(new NotificationCreated(controllerId, mn.getId(), mn.getType(), mo.getWorkflowName(), mo.getOrderId(), jobName,
-                SOSDate.toDate(mn.getCreated()), getPostEventMessage(mn, mo, mos)));
+                SOSDate.toUtcDate(mn.getCreated()), getPostEventMessage(mn, mo, mos)));
     }
 
     // see com.sos.joc.monitoring.impl.OrderNotificationsImpl.getMessage

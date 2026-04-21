@@ -1,6 +1,6 @@
 package com.sos.joc.db.authentication;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.hibernate.type.NumericBooleanConverter;
 
@@ -66,7 +66,7 @@ public class DBItemIamFido2Registration {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -184,7 +184,7 @@ public class DBItemIamFido2Registration {
         this.origin = origin;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

@@ -114,7 +114,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             Profile profile = new Profile();
             profile.setAccountName(dbItem.getAccount());
             profile.setControllerId(dbItem.getControllerId());
-            profile.setModified(SOSDate.toDate(dbItem.getModified()));
+            profile.setModified(SOSDate.toUtcDate(dbItem.getModified()));
             profile.setProfileItem(dbItem.getConfigurationItem());
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(profile));

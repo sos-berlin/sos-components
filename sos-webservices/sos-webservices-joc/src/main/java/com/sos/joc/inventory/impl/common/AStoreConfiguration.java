@@ -131,7 +131,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             answer.setId(item.getId());
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setPath(item.getPath());
-            answer.setConfigurationDate(SOSDate.toDate(item.getModified()));
+            answer.setConfigurationDate(SOSDate.toUtcDate(item.getModified()));
             answer.setObjectType(JocInventory.getType(item.getType()));
             answer.setValid(item.getValid());
             answer.setInvalidMsg(in.getInvalidMsg());

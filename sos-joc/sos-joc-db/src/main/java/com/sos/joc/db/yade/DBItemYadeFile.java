@@ -1,6 +1,6 @@
 package com.sos.joc.db.yade;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
@@ -54,7 +54,7 @@ public class DBItemYadeFile extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemYadeFile() {
     }
@@ -148,7 +148,7 @@ public class DBItemYadeFile extends DBItem {
         return "..." + val.substring(val.length() - (YadeConstants.MAX_LEN_PATH - 3));
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

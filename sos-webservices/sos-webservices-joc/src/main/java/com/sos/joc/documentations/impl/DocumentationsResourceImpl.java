@@ -93,7 +93,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
             doc.setType(dbDoc.getType().toLowerCase());
-            doc.setModified(SOSDate.toDate(dbDoc.getModified()));
+            doc.setModified(SOSDate.toUtcDate(dbDoc.getModified()));
             doc.setAssignReference(dbDoc.getDocRef());
             return doc;
         });

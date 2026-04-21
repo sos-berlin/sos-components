@@ -1,6 +1,6 @@
 package com.sos.joc.db.dailyplan;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.hibernate.type.NumericBooleanConverter;
@@ -60,7 +60,7 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -154,7 +154,7 @@ public class DBItemDailyPlanHistory extends DBItem {
         workflowFolder = val;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

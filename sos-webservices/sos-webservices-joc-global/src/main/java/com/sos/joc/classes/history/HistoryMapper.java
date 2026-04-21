@@ -31,7 +31,7 @@ public class HistoryMapper {
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
         history.setOrderState(OrdersHelper.getHistoryState(item.getStateAsEnum()));
-        history.setSurveyDate(SOSDate.toDate(item.getModified()));
+        history.setSurveyDate(SOSDate.toUtcDate(item.getModified()));
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
         history.setSequence(getSequence(item));
@@ -54,7 +54,7 @@ public class HistoryMapper {
         history.setExitCode(item.getReturnCode());
         history.setState(getState(item.getSeverity()));
         history.setCriticality(item.getCriticalityAsEnum().value().toLowerCase());
-        history.setSurveyDate(SOSDate.toDate(item.getModified()));
+        history.setSurveyDate(SOSDate.toUtcDate(item.getModified()));
         history.setTaskId(item.getId());
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(item.getWorkflowPosition());

@@ -133,7 +133,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         } catch (Throwable e) {
 
         }
-        p.setSubmissionTime(SOSDate.toDate(item.getCreated()));
+        p.setSubmissionTime(SOSDate.toUtcDate(item.getCreated()));
         return p;
     }
 

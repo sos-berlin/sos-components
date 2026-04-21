@@ -396,7 +396,7 @@ public class TreePermanent {
                     Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
                     if (jocLock.isPresent()) {
                         folder.setLockedBy(jocLock.get().getAccount());
-                        folder.setLockedSince(SOSDate.toDate(jocLock.get().getCreated()));
+                        folder.setLockedSince(SOSDate.toUtcDate(jocLock.get().getCreated()));
                     }
                     return folder;
                 }).collect(Collectors.toCollection(supplier));
@@ -501,7 +501,7 @@ public class TreePermanent {
                     Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
                     if (jocLock.isPresent()) {
                         folder.setLockedBy(jocLock.get().getAccount());
-                        folder.setLockedSince(SOSDate.toDate(jocLock.get().getCreated()));
+                        folder.setLockedSince(SOSDate.toUtcDate(jocLock.get().getCreated()));
                     }
                     return folder;
                 }).collect(Collectors.toCollection(supplier));

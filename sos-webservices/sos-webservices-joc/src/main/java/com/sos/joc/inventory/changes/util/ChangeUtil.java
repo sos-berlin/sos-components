@@ -25,8 +25,8 @@ public class ChangeUtil {
         change.setTitle(dbItem.getTitle());
         change.setOwner(dbItem.getOwner());
         change.setLastPublishedBy(dbItem.getPublishedBy());
-        change.setCreated(SOSDate.toDate(dbItem.getCreated()));
-        change.setModified(SOSDate.toDate(dbItem.getModified()));
+        change.setCreated(SOSDate.toUtcDate(dbItem.getCreated()));
+        change.setModified(SOSDate.toUtcDate(dbItem.getModified()));
         change.setClosed(dbItem.getClosed());
         if (withDetails) {
             // get mappings and set configurations

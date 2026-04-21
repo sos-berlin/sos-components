@@ -1,7 +1,7 @@
 package com.sos.joc.db.history;
 
 import java.sql.Types;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.NumericBooleanConverter;
@@ -62,7 +62,7 @@ public class DBItemHistoryLog extends DBItem {
 
     @Column(name = "[CREATED]", nullable = false)
     @SOSCreationTimestampUtc
-    private Instant created;
+    private LocalDateTime created;
 
     public DBItemHistoryLog() {
     }
@@ -147,7 +147,7 @@ public class DBItemHistoryLog extends DBItem {
         fileContent = val;
     }
 
-    public Instant getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 

@@ -236,7 +236,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                             if (!treeItem.getReleased() && item.getValid() && !withoutDrafts) {
                                 ResponseReleasableVersion draft = new ResponseReleasableVersion();
                                 draft.setId(item.getId());
-                                draft.setVersionDate(SOSDate.toDate(item.getModified()));
+                                draft.setVersionDate(SOSDate.toUtcDate(item.getModified()));
                                 versions.add(draft);
                             }
                             versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()), withoutReleased));

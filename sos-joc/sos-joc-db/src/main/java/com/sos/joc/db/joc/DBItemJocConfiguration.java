@@ -1,6 +1,6 @@
 package com.sos.joc.db.joc;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.hibernate.type.NumericBooleanConverter;
 
@@ -56,7 +56,7 @@ public class DBItemJocConfiguration extends DBItem {
 
     @Column(name = "[MODIFIED]", nullable = false)
     @SOSCurrentTimestampUtc
-    private Instant modified;
+    private LocalDateTime modified;
 
     public DBItemJocConfiguration() {
     }
@@ -133,7 +133,7 @@ public class DBItemJocConfiguration extends DBItem {
         return shared;
     }
 
-    public Instant getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 

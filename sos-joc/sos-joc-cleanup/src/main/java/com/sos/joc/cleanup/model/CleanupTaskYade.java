@@ -83,7 +83,7 @@ public class CleanupTaskYade extends CleanupTaskModel {
         hql.append("where start < :start ");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("start", SOSDate.toDate(datetime.getDatetime()));
+        query.setParameter("start", SOSDate.toUtcDate(datetime.getDatetime()));
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 
