@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernate;
@@ -282,10 +280,10 @@ public class JocDBLayerYade {
             query.setParameter("numOfFilesTo", filter.getNumOfFilesTo());
         }
         if (filter.getDateFrom() != null) {
-            query.setParameter("dateFrom", filter.getDateFrom(), TemporalType.TIMESTAMP);
+            query.setParameter("dateFrom", filter.getDateFrom());
         }
         if (filter.getDateTo() != null) {
-            query.setParameter("dateTo", filter.getDateTo(), TemporalType.TIMESTAMP);
+            query.setParameter("dateTo", filter.getDateTo());
         }
         if (!onlyTransferIds && filter.getLimit() != null && filter.getLimit() > 0) {
             query.setMaxResults(filter.getLimit());
@@ -431,10 +429,10 @@ public class JocDBLayerYade {
             query.setParameter("state", TransferState.FAILED.intValue());
         }
         if (from != null) {
-            query.setParameter("from", from, TemporalType.TIMESTAMP);
+            query.setParameter("from", from);
         }
         if (to != null) {
-            query.setParameter("to", to, TemporalType.TIMESTAMP);
+            query.setParameter("to", to);
         }
         if (controllerIds != null && !controllerIds.isEmpty()) {
             query.setParameterList("controllerIds", controllerIds);
@@ -469,10 +467,10 @@ public class JocDBLayerYade {
             query.setParameter("state", TransferState.FAILED.intValue());
         }
         if (from != null) {
-            query.setParameter("from", from, TemporalType.TIMESTAMP);
+            query.setParameter("from", from);
         }
         if (to != null) {
-            query.setParameter("to", to, TemporalType.TIMESTAMP);
+            query.setParameter("to", to);
         }
         if (controllerIds != null && !controllerIds.isEmpty()) {
             query.setParameterList("controllerIds", controllerIds);

@@ -284,8 +284,6 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
         item.setName(newItem.getFileName().toString());
         item.setDeployed(false);
         item.setReleased(false);
-        item.setModified(Date.from(Instant.now()));
-        item.setCreated(item.getModified());
         item.setDeleted(false);
         item.setAuditLogId(auditLogId);
         item.setTitle(oldItem.getTitle());

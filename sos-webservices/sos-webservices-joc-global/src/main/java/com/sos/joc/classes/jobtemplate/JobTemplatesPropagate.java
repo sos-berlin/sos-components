@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,7 +60,7 @@ import com.sos.joc.model.jobtemplate.propagate.JobTemplatesPropagateBaseFilter;
 import com.sos.joc.model.jobtemplate.propagate.WorkflowReport;
 
 public class JobTemplatesPropagate {
-    
+
     private static final Map<ExecutableType, String> EXECUTABLE_STRING = Collections.unmodifiableMap(new HashMap<ExecutableType, String>() {
 
         private static final long serialVersionUID = 1L;
@@ -72,7 +71,7 @@ public class JobTemplatesPropagate {
             put(ExecutableType.ShellScriptExecutable, "Shell");
         }
     });
-    
+
     private static final Map<JobReportStateText, Integer> PROPAGATE_STATES = Collections.unmodifiableMap(new HashMap<JobReportStateText, Integer>() {
 
         private static final long serialVersionUID = 1L;
@@ -86,7 +85,7 @@ public class JobTemplatesPropagate {
             put(JobReportStateText.PERMISSION_DENIED, 2);
         }
     });
-    
+
     private static List<JobReportStateText> changedStates = Arrays.asList(JobReportStateText.CHANGED, JobReportStateText.TEMPLATE_REFERENCE_DELETED);
     public static Predicate<JobReport> jobIsChanged = jr -> changedStates.contains(jr.getState().get_text());
     public static Predicate<WorkflowReport> workflowIsChanged = wr -> wr.getJobs() != null && wr.getJobs().getAdditionalProperties() != null && !wr
@@ -99,11 +98,11 @@ public class JobTemplatesPropagate {
     private boolean deleteUnknownNodeProps = false;
     private Set<Folder> permittedFolders = null;
     private Set<DBItemInventoryConfiguration> changedWorkflowDbItems = new HashSet<>();
-    
+
     public JobTemplatesPropagate() {
         //
     }
-    
+
     public JobTemplatesPropagate(JobTemplatesPropagateBaseFilter filter, Set<Folder> permittedFolders) {
         this.withAdmissionTime = filter.getOverwriteAdmissionTime() == Boolean.TRUE;
         this.withNotification = filter.getOverwriteNotification() == Boolean.TRUE;
@@ -112,22 +111,21 @@ public class JobTemplatesPropagate {
         this.deleteUnknownNodeProps = filter.getDeleteUnknownNodeProperties() == Boolean.TRUE;
         this.permittedFolders = permittedFolders;
     }
-    
+
     public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Workflow workflow, Map<String, JobTemplate> jobTemplates,
-            InventoryDBLayer dbLayer, Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException,
+            InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException,
             SOSHibernateException {
-        return template2Job(dbWorkflow, workflow, jobTemplates, null, dbLayer, now, dbAuditLog);
+        return template2Job(dbWorkflow, workflow, jobTemplates, null, dbLayer, dbAuditLog);
     }
-    
+
     public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Workflow workflow, Map<String, JobTemplate> jobTemplates,
-            Set<String> jobNames, InventoryDBLayer dbLayer, Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException,
+            Set<String> jobNames, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException,
             IOException, SOSHibernateException {
         WorkflowReport report = template2Job(dbWorkflow.getPath(), workflow, jobTemplates, jobNames);
         if (workflowIsChanged.test(report)) {
             changedWorkflowDbItems.add(dbWorkflow);
             validate(dbWorkflow, workflow, dbLayer);
             dbWorkflow.setDeployed(false);
-            dbWorkflow.setModified(now);
             dbWorkflow.setAuditLogId(dbAuditLog.getId());
             JocInventory.updateConfiguration(dbLayer, dbWorkflow, workflow);
             // TODO JOC-1645
@@ -137,33 +135,33 @@ public class JobTemplatesPropagate {
     }
 
     public WorkflowReport template2Job(DBItemInventoryConfiguration dbWorkflow, Map<String, JobTemplate> jobTemplates, InventoryDBLayer dbLayer,
-            Date now, DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+            DBItemJocAuditLog dbAuditLog) throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
         Workflow workflow = JocInventory.workflowContent2Workflow(dbWorkflow.getContent());
-        return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog);
+        return template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, dbAuditLog);
     }
-    
+
     public Set<DBItemInventoryConfiguration> getChangedWorkflows() {
         return changedWorkflowDbItems;
     }
-    
+
     private boolean forceUpdating() {
         return withAdmissionTime || withNotification || overwriteValues || withOptionalArgs;
     }
-    
+
     private WorkflowReport template2Job(String workflowPath, Workflow w, Map<String, JobTemplate> jobTemplates, Set<String> jobNames)
             throws JsonParseException, JsonMappingException, IOException {
         WorkflowReport wReport = new WorkflowReport();
         wReport.setPath(workflowPath);
         wReport.setState(getState(JobReportStateText.SKIPPED));
         wReport.setJobs(new JobReports());
-        
+
         if (w.getJobs() == null || w.getJobs().getAdditionalProperties() == null || w.getJobs().getAdditionalProperties().isEmpty()) {
             return wReport;
         }
         Set<JobReportStateText> jobStates = new HashSet<>();
         for (Map.Entry<String, Job> job : w.getJobs().getAdditionalProperties().entrySet()) {
             JobReport jReport = new JobReport();
-            
+
             if (checkTemplateReference(jobTemplates, jobNames, job.getKey(), job.getValue(), jReport)) {
                 JobTemplate jt = jobTemplates.get(job.getValue().getJobTemplate().getName());
                 if (jt == null) {
@@ -175,11 +173,11 @@ public class JobTemplatesPropagate {
                     template2Job(jReport, jt, job.getKey(), job.getValue(), w);
                 }
             }
-            
+
             jobStates.add(jReport.getState().get_text());
             wReport.getJobs().setAdditionalProperty(job.getKey(), jReport);
         }
-        
+
         if (jobStates.contains(JobReportStateText.CONFLICT)) {
             wReport.setState(getState(JobReportStateText.CONFLICT));
         } else if (jobStates.contains(JobReportStateText.CHANGED) || jobStates.contains(JobReportStateText.TEMPLATE_REFERENCE_DELETED)) {
@@ -189,11 +187,11 @@ public class JobTemplatesPropagate {
         }
         return wReport;
     }
-    
+
     private void template2Job(JobReport jReport, JobTemplate jt, String jobName, Job job, Workflow w) {
         Environment env = getArguments(jReport, jt, jobName, job, w);
         // env == null except confict
-        
+
         jReport.setState(getState(JobReportStateText.CHANGED));
         jReport.setJobTemplatePath(jt.getPath());
         jReport.setActions(new Actions());
@@ -218,11 +216,11 @@ public class JobTemplatesPropagate {
             jReport.setActions(null);
         }
     }
-    
+
     private static <T> boolean isNotEqual(T o1, T o2) {
         return !Optional.ofNullable(o1).equals(Optional.ofNullable(o2));
     }
-    
+
     private void template2Job(JobTemplate jt, Job j, JobReport jReport, Environment arguments) {
         Actions actions = jReport.getActions();
         if (actions.getChanges() == null) {
@@ -233,16 +231,16 @@ public class JobTemplatesPropagate {
                 actions.getChanges().add("admissionTimeScheme");
             }
             j.setAdmissionTimeScheme(jt.getAdmissionTimeScheme());
-            
-//            if (isNotEqual(j.getSkipIfNoAdmissionForOrderDay(), jt.getSkipIfNoAdmissionForOrderDay())) {
-//                actions.getChanges().add("skipIfNoAdmissionForOrderDay");
-//            }
-//            //never updated j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
-//            
-//            if (isNotEqual(j.getKillAtEndOfAdmissionPeriod(), jt.getKillAtEndOfAdmissionPeriod())) {
-//                actions.getChanges().add("killAtEndOfAdmissionPeriod");
-//            }
-//            //never updated j.setKillAtEndOfAdmissionPeriod(jt.getKillAtEndOfAdmissionPeriod());
+
+            // if (isNotEqual(j.getSkipIfNoAdmissionForOrderDay(), jt.getSkipIfNoAdmissionForOrderDay())) {
+            // actions.getChanges().add("skipIfNoAdmissionForOrderDay");
+            // }
+            // //never updated j.setSkipIfNoAdmissionForOrderDay(jt.getSkipIfNoAdmissionForOrderDay());
+            //
+            // if (isNotEqual(j.getKillAtEndOfAdmissionPeriod(), jt.getKillAtEndOfAdmissionPeriod())) {
+            // actions.getChanges().add("killAtEndOfAdmissionPeriod");
+            // }
+            // //never updated j.setKillAtEndOfAdmissionPeriod(jt.getKillAtEndOfAdmissionPeriod());
         }
         if (withNotification) {
             if (isNotEqual(j.getNotification(), jt.getNotification())) {
@@ -250,73 +248,73 @@ public class JobTemplatesPropagate {
             }
             j.setNotification(jt.getNotification());
         }
-        
+
         if (isNotEqual(j.getCriticality(), jt.getCriticality())) {
             actions.getChanges().add("criticality");
         }
         j.setCriticality(jt.getCriticality());
-        //j.setDefaultArguments(jt.getDefaultArguments());
-        
+        // j.setDefaultArguments(jt.getDefaultArguments());
+
         if (isNotEqual(j.getDocumentationName(), jt.getDocumentationName())) {
             actions.getChanges().add("documentationName");
         }
         j.setDocumentationName(jt.getDocumentationName());
-        
+
         if (isNotEqual(j.getFailOnErrWritten(), jt.getFailOnErrWritten())) {
             actions.getChanges().add("failOnErrWritten");
         }
         j.setFailOnErrWritten(jt.getFailOnErrWritten());
-        
+
         if (isNotEqual(j.getWarnOnErrWritten(), jt.getWarnOnErrWritten())) {
             actions.getChanges().add("warnOnErrWritten");
         }
         j.setWarnOnErrWritten(jt.getWarnOnErrWritten());
-        
+
         if (isNotEqual(j.getGraceTimeout(), jt.getGraceTimeout())) {
             actions.getChanges().add("graceTimeout");
         }
         j.setGraceTimeout(jt.getGraceTimeout());
-        
+
         if (isNotEqual(j.getJobResourceNames(), jt.getJobResourceNames())) {
             actions.getChanges().add("jobResourceNames");
         }
         j.setJobResourceNames(jt.getJobResourceNames());
-        
+
         j.getJobTemplate().setHash(jt.getHash());
-        
+
         if (isNotEqual(j.getParallelism(), jt.getParallelism())) {
             actions.getChanges().add("parallelism");
         }
         j.setParallelism(jt.getParallelism());
-        
+
         if (isNotEqual(j.getTimeout(), jt.getTimeout())) {
             actions.getChanges().add("timeout");
         }
         j.setTimeout(jt.getTimeout());
-        
+
         if (isNotEqual(j.getTitle(), jt.getTitle())) {
             actions.getChanges().add("title");
         }
         j.setTitle(jt.getTitle());
-        
+
         if (isNotEqual(j.getWarnIfLonger(), jt.getWarnIfLonger())) {
             actions.getChanges().add("warnIfLonger");
         }
         j.setWarnIfLonger(jt.getWarnIfLonger());
-        
+
         if (isNotEqual(j.getWarnIfShorter(), jt.getWarnIfShorter())) {
             actions.getChanges().add("warnIfShorter");
         }
         j.setWarnIfShorter(jt.getWarnIfShorter());
-        
+
         if (isNotEqual(j.getIsNotRestartable(), jt.getIsNotRestartable())) {
             actions.getChanges().add("isNotRestartable");
         }
         j.setIsNotRestartable(jt.getIsNotRestartable());
-        
+
         setExecutable(jReport, j, jt, arguments);
     }
-    
+
     private boolean checkTemplateReference(Map<String, JobTemplate> jobTemplates, Set<String> jobNames, String jobName, Job job, JobReport jReport) {
         if (jobNames != null && !jobNames.contains(jobName)) {
             jReport.setState(getState(JobReportStateText.SKIPPED, String.format("Updating Job '%s' is not requested", jobName)));
@@ -367,23 +365,23 @@ public class JobTemplatesPropagate {
         }
         return true;
     }
-    
+
     private void setExecutable(JobReport jReport, Job j, JobTemplate jt, Environment arguments) {
         Actions actions = jReport.getActions();
         if (actions.getChanges() == null) {
             actions.setChanges(new ArrayList<String>());
         }
-        
+
         switch (jt.getExecutable().getTYPE()) {
         case InternalExecutable:
-            
+
             ExecutableJava e = new ExecutableJava();
             e.setTYPE(ExecutableType.InternalExecutable);
             if (ExecutableType.InternalExecutable.equals(j.getExecutable().getTYPE())) {
                 e = j.getExecutable().cast();
             }
             ExecutableJava jtE = jt.getExecutable().cast();
-            
+
             if (isNotEqual(e.getClassName(), jtE.getClassName()) || isNotEqual(e.getScript(), jtE.getScript()) || isNotEqual(e.getJobArguments(), jtE
                     .getJobArguments()) || isNotEqual(e.getReturnCodeMeaning(), jtE.getReturnCodeMeaning())) {
                 actions.getChanges().add("executable");
@@ -393,16 +391,16 @@ public class JobTemplatesPropagate {
             e.setScript(jtE.getScript());
             e.setJobArguments(jtE.getJobArguments());
             e.setReturnCodeMeaning(jtE.getReturnCodeMeaning());
-            
+
             if (arguments != null && arguments.getAdditionalProperties() != null) {
                 e.setArguments(arguments);
             }
             e.setArguments(setArguments(jReport, e.getArguments(), jt.getArguments(), true));
-            
+
             if (!ExecutableType.InternalExecutable.equals(j.getExecutable().getTYPE())) {
                 j.setExecutable(e);
             }
-            
+
             break;
         case ScriptExecutable:
         case ShellScriptExecutable:
@@ -413,7 +411,7 @@ public class JobTemplatesPropagate {
             break;
         }
     }
-    
+
     private static Environment getArguments(JobReport jReport, JobTemplate jt, String jobName, Job job, Workflow w) {
         if (jReport.getState() == null || jReport.getState().get_text() == null) {
             return null;
@@ -433,12 +431,12 @@ public class JobTemplatesPropagate {
         }
         return env;
     }
-    
+
     private static Environment getExecutableArguments(Job j) {
         Environment env = new Environment();
         switch (j.getExecutable().getTYPE()) {
         case InternalExecutable:
-            
+
             ExecutableJava e = j.getExecutable().cast();
             // copy NodeArgument
             if (e.getArguments() != null && e.getArguments().getAdditionalProperties() != null) {
@@ -446,7 +444,7 @@ public class JobTemplatesPropagate {
             }
             // delete NodeArgument
             e.setArguments(null);
-            
+
             break;
         case ScriptExecutable:
         case ShellScriptExecutable:
@@ -454,7 +452,7 @@ public class JobTemplatesPropagate {
         }
         return env;
     }
-    
+
     private void setNodeArguments(JobReport jReport, NamedJob j, Parameters jobTemplateArguments, Environment defaultArgs,
             boolean deleteUnknownNodeProps, boolean withAddParams) {
         if (defaultArgs != null && defaultArgs.getAdditionalProperties() != null) {
@@ -462,9 +460,9 @@ public class JobTemplatesPropagate {
         }
         j.setDefaultArguments(setArguments(jReport, j.getDefaultArguments(), jobTemplateArguments, deleteUnknownNodeProps, withAddParams));
     }
-    
+
     private static Environment readNodeArguments(NamedJob j, Environment env) {
-        
+
         // copy NodeArgument
         if (j.getDefaultArguments() != null && j.getDefaultArguments().getAdditionalProperties() != null) {
             j.getDefaultArguments().getAdditionalProperties().forEach((k, v) -> env.setAdditionalProperty(k, v));
@@ -473,24 +471,23 @@ public class JobTemplatesPropagate {
         j.setDefaultArguments(null);
         return env;
     }
-    
+
     private Environment setArguments(JobReport jReport, Environment env, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps) {
         return setArguments(jReport, env, jobTemplateArguments, deleteUnknownNodeProps, true);
     }
-    
-    private Environment setArguments(JobReport jReport, Environment jobNodeproperties, Parameters jobTemplateArguments, boolean deleteUnknownNodeProps,
-            boolean withAddParams) {
+
+    private Environment setArguments(JobReport jReport, Environment jobNodeproperties, Parameters jobTemplateArguments,
+            boolean deleteUnknownNodeProps, boolean withAddParams) {
         Actions actions = jReport.getActions();
 
         if (jobNodeproperties == null || jobNodeproperties.getAdditionalProperties() == null) {
-            jobNodeproperties = new Environment(); 
+            jobNodeproperties = new Environment();
         }
         if (jobTemplateArguments == null || jobTemplateArguments.getAdditionalProperties() == null) {
             jobTemplateArguments = new Parameters();
         }
         Set<String> envKeys = jobNodeproperties.getAdditionalProperties().keySet();
-        
-        
+
         // JOC-1490
         if (deleteUnknownNodeProps) {
             // delete unknown keys from node properties
@@ -511,7 +508,7 @@ public class JobTemplatesPropagate {
                 jobNodeproperties.getAdditionalProperties().remove(key);
             }
         }
-        
+
         // add required new keys with default value
         if (actions.getAddRequiredArguments() == null) {
             actions.setAddRequiredArguments(new Environment());
@@ -532,13 +529,13 @@ public class JobTemplatesPropagate {
                         addEnv.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
                     }
                     jobNodeproperties.setAdditionalProperty(entry.getKey(), JsonConverter.quoteString(_default));
-                    
+
                 } else if (!withAddParams && entry.getValue().getRequired() && keyExists) {
                     foundRequiredParams.add(entry.getKey());
                 }
             }
         }
-        
+
         if (!foundRequiredParams.isEmpty()) {
             for (String key : foundRequiredParams) {
                 jobTemplateArguments.getAdditionalProperties().get(key).setRequired(false);
@@ -552,12 +549,12 @@ public class JobTemplatesPropagate {
         if (jobNodeproperties.getAdditionalProperties().isEmpty()) {
             jobNodeproperties = null;
         }
-            
+
         return jobNodeproperties;
     }
-    
-    private void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters jobTemplateArguments, Environment defaultArgs,
-            boolean deleteUnknownNodeProps, boolean withAddParams) {
+
+    private void setNodeArguments(List<Instruction> insts, String jobName, JobReport jReport, Parameters jobTemplateArguments,
+            Environment defaultArgs, boolean deleteUnknownNodeProps, boolean withAddParams) {
         if (insts != null) {
             for (Instruction inst : insts) {
                 switch (inst.getTYPE()) {
@@ -565,16 +562,16 @@ public class JobTemplatesPropagate {
                     ForkJoin f = inst.cast();
                     if (f.getBranches() != null) {
                         for (Branch b : f.getBranches()) {
-                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                    withAddParams);
+                            setNodeArguments(b.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                    deleteUnknownNodeProps, withAddParams);
                         }
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
-                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs, deleteUnknownNodeProps,
-                                withAddParams);
+                        setNodeArguments(fl.getWorkflow().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddParams);
                     }
                     break;
                 case IF:
@@ -661,13 +658,13 @@ public class JobTemplatesPropagate {
             }
         }
     }
-    
+
     private static Environment getNodeArguments(List<Instruction> insts, String jobName) {
         Environment args = new Environment();
         readNodeArguments(insts, jobName, args);
         return args;
     }
-    
+
     private static void readNodeArguments(List<Instruction> insts, String jobName, Environment args) {
         if (insts != null) {
             for (Instruction inst : insts) {
@@ -765,11 +762,11 @@ public class JobTemplatesPropagate {
             }
         }
     }
-    
+
     public static JobReportState getState(JobReportStateText state) {
         return getState(state, null);
     }
-    
+
     public static JobReportState getState(JobReportStateText state, String message) {
         JobReportState s = new JobReportState();
         s.setMessage(message);
@@ -777,7 +774,7 @@ public class JobTemplatesPropagate {
         s.setSeverity(PROPAGATE_STATES.get(state));
         return s;
     }
-    
+
     private static void validate(DBItemInventoryConfiguration item, Workflow workflow, InventoryDBLayer dbLayer) {
         if (workflow == null) {
             item.setValid(false);
@@ -791,5 +788,5 @@ public class JobTemplatesPropagate {
             }
         }
     }
-    
+
 }

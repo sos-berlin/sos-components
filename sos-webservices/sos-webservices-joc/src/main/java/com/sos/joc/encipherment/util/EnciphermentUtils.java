@@ -3,8 +3,6 @@ package com.sos.joc.encipherment.util;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -78,7 +76,6 @@ public class EnciphermentUtils {
             path = Paths.get(dbExistingJobResource.getFolder()).resolve(certAlias);
             dbExistingJobResource.setPath(path.toString().replace('\\', '/'));
             dbExistingJobResource.setAuditLogId(auditLogId);
-            dbExistingJobResource.setModified(Date.from(Instant.now()));
             try {
                 Validator.validate(ConfigurationType.JOBRESOURCE, existingJobResource);
                 dbExistingJobResource.setValid(true);
@@ -109,7 +106,6 @@ public class EnciphermentUtils {
             newDBJobResource.setFolder(jobResourceFolder);
             path = Paths.get(jobResourceFolder).resolve(certAlias);
             newDBJobResource.setPath(path.toString().replace('\\', '/'));
-            Date now = Date.from(Instant.now());
             newDBJobResource.setType(ConfigurationType.JOBRESOURCE);
             newDBJobResource.setContent(JocInventory.toString(newJobResource));
             newDBJobResource.setAuditLogId(auditLogId);
@@ -117,8 +113,6 @@ public class EnciphermentUtils {
             newDBJobResource.setDeployed(false);
             newDBJobResource.setReleased(false);
             newDBJobResource.setRepoControlled(false);
-            newDBJobResource.setCreated(now);
-            newDBJobResource.setModified(now);
             try {
                 Validator.validate(ConfigurationType.JOBRESOURCE, newJobResource);
                 newDBJobResource.setValid(true);

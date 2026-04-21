@@ -68,26 +68,21 @@ import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
 
-import jakarta.persistence.TemporalType;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MappingTest {
 
-    private static final String IF_ELSE_JSON =
-            "{\"TYPE\":\"Workflow\",\"path\":\"/test/IfElseWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
+    private static final String IF_ELSE_JSON = "{\"TYPE\":\"Workflow\",\"path\":\"/test/IfElseWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
             + "\"instructions\":[{\"TYPE\":\"If\",\"then\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\"},"
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job2\"}]},\"else\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job3\"},"
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"job4\"}]}}]}";
-    private static final String FORK_JOIN_JSON =
-            "{\"TYPE\":\"Workflow\",\"path\":\"/test/ForkJoinWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
+    private static final String FORK_JOIN_JSON = "{\"TYPE\":\"Workflow\",\"path\":\"/test/ForkJoinWorkflow\",\"versionId\":\"2.0.0-SNAPSHOT\","
             + "\"instructions\":[{\"TYPE\":\"Fork\",\"branches\":[{\"id\":\"BRANCH1\",\"workflow\":{\"instructions\":["
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch1\"}]}},{\"id\":\"BRANCH2\",\"workflow\":{\"instructions\":["
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch2\"}]}},{\"id\":\"BRANCH3\",\"workflow\":{\"instructions\":["
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch3\"}]}}]},{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobAfterJoin\"}]}";
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingTest.class);
-    final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
-    final String TO_DEP_DATE = "deploymentDate < :toDate"; 
-
+    final String FROM_DEP_DATE = "deploymentDate >= :fromDate";
+    final String TO_DEP_DATE = "deploymentDate < :toDate";
 
     @Test
     public void test01WorkflowToJsonString() {
@@ -157,65 +152,63 @@ public class MappingTest {
     }
 
     @Test
-    public void test05MapDepHistoryCompactFilter () throws JsonProcessingException {
+    public void test05MapDepHistoryCompactFilter() throws JsonProcessingException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryCompactFilter();
         LOGGER.trace("ALL properties:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
 
-  @Test
-  public void test06MapDepHistoryDetailFilter () throws JsonProcessingException {
-      ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryDetailFilter();
-      LOGGER.trace("ALL properties:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-      filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
-      LOGGER.trace("EXAMPLE 1:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
-      LOGGER.trace("EXAMPLE 2:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
-      LOGGER.trace("EXAMPLE 3:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
-      LOGGER.trace("EXAMPLE 4:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-      filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
-      LOGGER.trace("EXAMPLE 5:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-  }
+    @Test
+    public void test06MapDepHistoryDetailFilter() throws JsonProcessingException {
+        ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryDetailFilter();
+        LOGGER.trace("ALL properties:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
+        LOGGER.trace("EXAMPLE 1:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
+        LOGGER.trace("EXAMPLE 2:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
+        LOGGER.trace("EXAMPLE 3:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
+        LOGGER.trace("EXAMPLE 4:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
+        LOGGER.trace("EXAMPLE 5:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
+    }
 
-//  @Test
-    public void test07MapRedeployFilter () throws JsonProcessingException {
+    // @Test
+    public void test07MapRedeployFilter() throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
-  
+
     /*
      * No Unit test. DB connection needed to test query parameters
-     * */
-//    @Test
-    public void test08GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
+     */
+    // @Test
+    public void test08GetDeploymentHistoryDBLayerDeployTest() throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
 
         Set<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(
-                presentFilterAttributes.stream()
-                .map(item -> new String (item + " = :" + item))
-                .collect(Collectors.joining(" and ", " where ", "")));
- 
+        hql.append(presentFilterAttributes.stream().map(item -> new String(item + " = :" + item)).collect(Collectors.joining(" and ", " where ",
+                "")));
+
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
         factory.setAutoCommit(true);
         factory.addClassMapping(DBLayer.getJocClassMapping());
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
         factory.build();
         SOSHibernateSession session = factory.openStatelessSession();
-         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item)));
+        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter
+                .getDetailFilter(), item)));
 
         LOGGER.trace("Create hql via StringBuilder using streams");
         LOGGER.trace(hql.toString());
         LOGGER.trace("Get property and value from query.getParameters().stream(): ");
         query.getParameters().stream().forEach(item -> LOGGER.trace(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
         LOGGER.trace("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
-        query.getParameters().stream().forEach(item ->  
-        hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
-                query.getParameterValue(item.getName()).toString()));
+        query.getParameters().stream().forEach(item -> hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item
+                .getName().length() + 1, query.getParameterValue(item.getName()).toString()));
         LOGGER.trace("Replaced hql:\n" + hql.toString());
         StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
         LOGGER.trace("Original : " + hql2.toString());
@@ -227,11 +220,11 @@ public class MappingTest {
         LOGGER.trace("Replace 2: " + hql2.toString());
         session.close();
     }
-    
+
     /*
      * No Unit test. DB connection needed to test query parameters
-     * */
-//    @Test
+     */
+    // @Test
     public void test09GetDeploymentHistoryFromToDBLayerDeployTest() throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
@@ -259,13 +252,11 @@ public class MappingTest {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
-                        TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
-                        TemporalType.TIMESTAMP);
+                query.setParameter(item, (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
                 break;
             default:
                 query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
@@ -291,90 +282,87 @@ public class MappingTest {
         LOGGER.trace("Replace 2: " + hql2.toString());
         session.close();
     }
-    
+
     @Test
-    public void test10MapRedeployFilter () throws JsonProcessingException {
+    public void test10MapRedeployFilter() throws JsonProcessingException {
         RedeploySyncFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
-//        ExcludeConfiguration exclude = new ExcludeConfiguration();
-//        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
-//        exclude.setDeployType(DeployType.WORKFLOW);
-//        filter.getExcludes().add(exclude);
+        // ExcludeConfiguration exclude = new ExcludeConfiguration();
+        // exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
+        // exclude.setDeployType(DeployType.WORKFLOW);
+        // filter.getExcludes().add(exclude);
         LOGGER.trace("RedeployFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
-        
+
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(
-                presentFilterAttributes.stream()
-                .map(item -> {
-                    if("folder".equals(item)) {
-                        return "folder = :folder or folder like :likeFolder";
-                    } else if ("likeFolder".equals(item)) {
-                        return null;
-                    } else {
-                        return item + " = :" + item;
-                    }
-                }).filter(item -> item != null)
-                .collect(Collectors.joining(" and ", " where ", "")));
+        hql.append(presentFilterAttributes.stream().map(item -> {
+            if ("folder".equals(item)) {
+                return "folder = :folder or folder like :likeFolder";
+            } else if ("likeFolder".equals(item)) {
+                return null;
+            } else {
+                return item + " = :" + item;
+            }
+        }).filter(item -> item != null).collect(Collectors.joining(" and ", " where ", "")));
         LOGGER.trace(hql.toString());
     }
 
     @Test
-    public void test11MapDeployFilter () throws JsonProcessingException {
+    public void test11MapDeployFilter() throws JsonProcessingException {
         LOGGER.trace("DeployFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 
     @Test
-    public void test12MapExportFilterForSigning () throws JsonProcessingException {
+    public void test12MapExportFilterForSigning() throws JsonProcessingException {
         LOGGER.trace("ExportFilter forSigning=true Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
     }
 
     @Test
-    public void test13MapExportForBackupFilter () throws JsonProcessingException {
+    public void test13MapExportForBackupFilter() throws JsonProcessingException {
         LOGGER.trace("ExportFilter forSigning=false Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
     }
 
     @Test
-    public void test14MapSetVersionFilter () throws JsonProcessingException {
+    public void test14MapSetVersionFilter() throws JsonProcessingException {
         LOGGER.trace("SetVersionFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
     }
 
     @Test
-    public void test15MapSetVersionsFilter () throws JsonProcessingException {
+    public void test15MapSetVersionsFilter() throws JsonProcessingException {
         LOGGER.trace("SetVersionsFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
     }
 
     @Test
-    public void test16MapPathFilter () throws JsonProcessingException {
+    public void test16MapPathFilter() throws JsonProcessingException {
         LOGGER.trace("PathFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
     }
 
     @Test
-    public void test17MapPathResponse () throws JsonProcessingException {
+    public void test17MapPathResponse() throws JsonProcessingException {
         LOGGER.trace("PathResponse Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
     }
 
     @Test
-    public void test18GenerateRootCAFilter () throws JsonProcessingException {
+    public void test18GenerateRootCAFilter() throws JsonProcessingException {
         LOGGER.trace("GenerateRootCaFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createGenerateCaFilter()));
     }
 
     @Test
-    public void test19SetRootCAFilter () throws JsonProcessingException {
+    public void test19SetRootCAFilter() throws JsonProcessingException {
         LOGGER.trace("SetRootCaFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createSetRootCaFilter()));
     }
 
     @Test
-    public void test20RepositoryCopyToFilter () throws JsonProcessingException {
+    public void test20RepositoryCopyToFilter() throws JsonProcessingException {
         LOGGER.trace("Repository - CopyToFilter Folder Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryCopyToFilterFolderExample()));
         LOGGER.trace("Repository - CopyToFilter Files Example");
@@ -382,40 +370,44 @@ public class MappingTest {
     }
 
     @Test
-    public void test21RepositoryDeleteFromFilter () throws JsonProcessingException {
+    public void test21RepositoryDeleteFromFilter() throws JsonProcessingException {
         LOGGER.trace("Repository - DeleteFromFilter Folder Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFolderExample()));
         LOGGER.trace("Repository - DeleteFromFilter Files rollout env Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesRolloutExample()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils
+                .createRepositoryDeleteFromFilterFilesRolloutExample()));
         LOGGER.trace("Repository - DeleteFromFilter Files local env Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryDeleteFromFilterFilesLocalExample()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils
+                .createRepositoryDeleteFromFilterFilesLocalExample()));
     }
 
     @Test
-    public void test22RepositoryReadFromFilter () throws JsonProcessingException {
+    public void test22RepositoryReadFromFilter() throws JsonProcessingException {
         LOGGER.trace("Repository - ReadFromFilter Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryReadFromRolloutFilter(true)));
     }
 
     @Ignore
     @Test
-    public void test23RepositoryResponseFolder () throws Exception {
+    public void test23RepositoryResponseFolder() throws Exception {
         LOGGER.trace("Repository - ResponseFolder Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass() ,true)));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createResponseFolder(getClass(), true)));
     }
 
     @Test
-    public void test24RepositoryUpdateFromFilter () throws JsonProcessingException {
+    public void test24RepositoryUpdateFromFilter() throws JsonProcessingException {
         LOGGER.trace("Repository - UpdateFromFilter Folder rollout Example");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFolderExample()));
         LOGGER.trace("Repository - UpdateFromFilter Files rollout Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesRolloutExample()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils
+                .createRepositoryUpdateFromFilterFilesRolloutExample()));
         LOGGER.trace("Repository - UpdateFromFilter Files local Example");
-        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createRepositoryUpdateFromFilterFilesLocalExample()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils
+                .createRepositoryUpdateFromFilterFilesLocalExample()));
     }
-    
+
     @Test
-    public void test25GitCredentials () throws JsonProcessingException {
+    public void test25GitCredentials() throws JsonProcessingException {
         LOGGER.trace("GitCredentials - with password");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleGitCredentialsPassword()));
         LOGGER.trace("GitCredentials - with personal access token (pat)");
@@ -427,9 +419,9 @@ public class MappingTest {
         LOGGER.trace("RemoveCredentialsFilter");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleRemoveGitCredentialsFilter()));
     }
-    
+
     @Test
-    public void test26GitCommandsFilter () throws JsonProcessingException {
+    public void test26GitCommandsFilter() throws JsonProcessingException {
         LOGGER.trace("Git Commands - Add all");
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleAddAllFilter()));
         LOGGER.trace("Git Commands - commit");
@@ -459,10 +451,10 @@ public class MappingTest {
     }
 
     @Test
-    public void test27LicenseInfoFilter () throws JsonProcessingException {
+    public void test27LicenseInfoFilter() throws JsonProcessingException {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createLicenseInfo()));
     }
-    
+
     @Test
     public void test27ValidateWithRegex() {
         CloneFilter cloneFilter = DeploymentTestUtils.createExampleCloneFilter();
@@ -487,7 +479,7 @@ public class MappingTest {
         }
         assertTrue(validatedSuccessfully);
     }
-    
+
     @Test
     public void test28ExportFolder() throws JsonProcessingException {
         ExportFolderFilter filter = DeploymentTestUtils.createExportFolderShallowCopyFilter();
@@ -497,14 +489,14 @@ public class MappingTest {
         LOGGER.trace("for signing");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
-    
+
     @Test
     public void test29ReleasableRecallFilter() throws JsonProcessingException {
         ReleasableRecallFilter filter = DeploymentTestUtils.createReleasableRecallFilter();
         LOGGER.trace("ReleasableRecallFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
-    
+
     @Test
     public void test30NotificationFilters() throws JsonProcessingException {
         ReadNotificationFilter readFilter = DeploymentTestUtils.createReadNotificationFilter();
@@ -517,67 +509,72 @@ public class MappingTest {
         LOGGER.trace("DeleteNotificationFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(deleteFilter));
     }
-    
+
     @Test
     public void test31SettingsFilter() throws JsonProcessingException {
         StoreSettingsFilter storeFilter = DeploymentTestUtils.createStoreSettingsFilter();
         LOGGER.trace("StoreSettingsFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(storeFilter));
     }
-    
+
     @Test
     public void test32AgentExportFilter() throws JsonProcessingException {
         AgentExportFilter agentExportFilter = DeploymentTestUtils.createAgentExportFilter();
         LOGGER.trace("AgentExportFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(agentExportFilter));
     }
-    
+
     @Test
     public void test33AgentImportFilter() throws JsonProcessingException {
         AgentImportFilter agentImportFilter = DeploymentTestUtils.createAgentImportFilter();
         LOGGER.trace("AgentImportFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(agentImportFilter));
     }
-    
+
     @Test
     public void test34VersionsFilter() throws JsonProcessingException {
         VersionsFilter versionsFilter = DeploymentTestUtils.createVersionsFilter();
         LOGGER.trace("VersionsFilter");
         LOGGER.trace(Globals.prettyPrintObjectMapper.writeValueAsString(versionsFilter));
     }
-    
+
     @Test
     public void test35CloneAlias() throws JsonMappingException, JsonProcessingException {
         boolean validated = false;
         try {
-            JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUri\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
+            JsonValidator.validate(
+                    "{\"folder\":\"/Github-Test\",\"remoteUri\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(),
+                    CloneFilter.class);
             validated = true;
         } catch (Exception e) {
             validated = false;
         }
         assertTrue(validated);
         try {
-            JsonValidator.validate("{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(), CloneFilter.class);
+            JsonValidator.validate(
+                    "{\"folder\":\"/Github-Test\",\"remoteUrl\":\"https://github.com/ztak0120/JS7-GITHUB.git\",\"category\":\"ROLLOUT\"}".getBytes(),
+                    CloneFilter.class);
             validated = true;
         } catch (Exception e) {
             validated = false;
         }
         assertTrue(validated);
     }
-    
+
     @Test
-    public void test36ParseWorkflowNames () {
+    public void test36ParseWorkflowNames() {
         // pattern: ^.*workflowNames\"\:\[(.*?)\].*$
         String regex = "^.*workflowNames\\\"\\:\\[(.*?)\\].*$";
-        String json = "{\"version\":\"1.4.0\",\"workflowNames\":[\"scheduled\", \"scheduled2\"],\"title\":\"blah\",\"submitOrderToControllerWhenPlanned\":true,\"planOrderAutomatically\":true,\"calendars\":[{\"calendarName\":\"My_Working_days\",\"timeZone\":\"Europe/Berlin\",\"periods\":[{\"singleStart\":\"14:00:00\",\"whenHoliday\":\"SUPPRESS\"}]}],\"orderParameterisations\":[]}";
+        String json =
+                "{\"version\":\"1.4.0\",\"workflowNames\":[\"scheduled\", \"scheduled2\"],\"title\":\"blah\",\"submitOrderToControllerWhenPlanned\":true,\"planOrderAutomatically\":true,\"calendars\":[{\"calendarName\":\"My_Working_days\",\"timeZone\":\"Europe/Berlin\",\"periods\":[{\"singleStart\":\"14:00:00\",\"whenHoliday\":\"SUPPRESS\"}]}],\"orderParameterisations\":[]}";
         List<String> workflows = new ArrayList<String>();
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(json);
-        if(matcher.matches()) {
+        if (matcher.matches()) {
             String workflowNamesArray = matcher.group(1);
             String[] workflowNamesSplitted = workflowNamesArray.split(",");
-            for(int i=0; i < workflowNamesSplitted.length; i++) {
-                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() -1));
+            for (int i = 0; i < workflowNamesSplitted.length; i++) {
+                workflows.add(workflowNamesSplitted[i].trim().substring(1, workflowNamesSplitted[i].trim().length() - 1));
             }
         }
         assertTrue(workflows.size() == 2);
@@ -585,12 +582,13 @@ public class MappingTest {
 
     @Test
     public void test37DeploymentDescriptorExample() throws JsonProcessingException {
-//        DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
-//        LOGGER.info("DeploymentDescriptor");
-//        String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
-//        LOGGER.info( "\n" + json);
+        // DeploymentDescriptor descriptor = DeploymentTestUtils.createDeploymentDescriptorSchemaExample();
+        // LOGGER.info("DeploymentDescriptor");
+        // String json = Globals.prettyPrintObjectMapper.writeValueAsString(descriptor);
+        // LOGGER.info( "\n" + json);
         boolean valid = false;
-        String test ="{\"descriptor\" : {\"descriptorId\" : \"example_05\",\"title\" : \"Example of the current schema of a deployment descriptor\",\"account\" : \"sp\",\"scheduled\" : \"2023-03-06T13:46:26.643+00:00\",\"created\" : \"2023-02-20T13:46:26.643+00:00\"},\"license\" : {\"licenseKeyFile\" : \"licenses/sos.pem\",\"licenseBinFile\" : \"licenses/js7-license.jar\"},\"agents\" : {\"controllerRefs\" : [ {\"controllerId\" : \"testsuite\",\"members\" : [ {\"agentId\" : \"agent_001\",\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_agent_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/agent-primary\",\"data\" : \"/var/sos-berlin.com/js7/agent-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:31445\",\"httpsPort\" : \"centostest-primary.sos:31443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx125m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"keyStore\" : \"agents/instances/agent_001/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"agents/instances/agent_001/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"agents/templates/https/config\" ]}}, {\"agentId\" : \"agent_002\",\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_agent_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/agent-secondary\",\"data\" : \"/var/sos-berlin.com/js7/agent-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:32445\",\"httpsPort\" : \"centostest-secondary.sos:32443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"keyStore\" : \"agents/instances/agent_002/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"agents/instances/agent_002/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"agents/templates/https/config\" ]}} ]} ]},\"controllers\" : [ {\"jocRef\" : \"cluster\",\"controllerId\" : \"testsuite\",\"primary\" : {\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_controller_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/controller-primary\",\"data\" : \"/var/sos-berlin.com/js7/controller-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:21444\",\"httpsPort\" : \"centostest-primary.sos:21443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"cert\" : \"controllers/instances/cluster.primary/config/private/centostest-primary.crt\",\"keyStore\" : \"controllers/instances/cluster.primary/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"controllers/instances/cluster.primary/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"controllers/templates/https.primary/config\" ]}},\"secondary\" : {\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_controller_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/controller-secondary\",\"data\" : \"/var/sos-berlin.com/js7/controller-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:22444\",\"httpsPort\" : \"centostest-secondary.sos:22443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"cert\" : \"controllers/instances/cluster.secondary/config/private/centostest-secondary.crt\",\"keyStore\" : \"controllers/instances/cluster.secondary/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-secondary\",\"trustStore\" : \"controllers/instances/cluster.secondary/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"controllers/templates/https.secondary/config\" ]}}} ],\"joc\" : [ {\"members\" : {\"clusterId\" : \"cluster\",\"instances\" : [ {\"instanceId\" : 1,\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_joc_linux.2.5.1.tar.gz\"},\"installation\" : {\"setupDir\" : \"/opt/sos-berlin.com/js7/joc-primary.setup\",\"title\" : \"PRIMARY JOC COCKPIT\",\"securityLevel\" : \"medium\",\"dbmsConfig\" : \"joc/templates/dbms/h2/response/hibernate.cfg.xml\",\"dbmsDriver\" : \"joc/templates/dbms/h2/response/h2-1.4.200.jar\",\"dbmsInit\" : \"byJoc\",\"isUser\" : true,\"isPreserveEnv\" : true,\"home\" : \"/opt/sos-berlin.com/js7/joc-primary\",\"data\" : \"/var/sos-berlin.com/js7/joc-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:11446\",\"httpsPort\" : \"centostest-primary.sos:11443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"responseDir\" : \"joc/templates/dbms/h2/response\",\"certificates\" : {\"cert\" : \"joc/instances/cluster.primary/resources/centostest-primary.crt\",\"keyStore\" : \"joc/instances/cluster.primary/resources/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"joc/instances/cluster.primary/resources/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"joc/templates/https/resources\" ],\"startFiles\" : {\"httpIni\" : \"joc/templates/https/start.d/http.ini\",\"httpsIni\" : \"joc/templates/https/start.d/https.ini\",\"sslIni\" : \"joc/templates/https/start.d/ssl.ini\"}}}, {\"instanceId\" : 2,\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_joc_linux.2.5.1.tar.gz\"},\"installation\" : {\"setupDir\" : \"/sos-berlin.com/js7/opt/joc-secondary.setup\",\"title\" : \"SECONDARY JOC COCKPIT\",\"securityLevel\" : \"medium\",\"dbmsConfig\" : \"joc/templates/dbms/h2/response/hibernate.cfg.xml\",\"dbmsDriver\" : \"joc/templates/dbms/h2/response/h2-1.4.200.jar\",\"dbmsInit\" : \"byJoc\",\"isUser\" : true,\"isPreserveEnv\" : true,\"home\" : \"/opt/sos-berlin.com/js7/joc-secondary\",\"data\" : \"/var/sos-berlin.com/js7/joc-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:12446\",\"httpsPort\" : \"centostest-secondary.sos:12443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"responseDir\" : \"joc/templates/dbms/h2/response\",\"certificates\" : {\"cert\" : \"joc/instances/cluster.secondary/resources/centostest-secondary.crt\",\"keyStore\" : \"joc/instances/cluster.secondary/resources/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-secondary\",\"trustStore\" : \"joc/instances/cluster.secondary/resources/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"joc/templates/https/resources\" ],\"startFiles\" : {\"httpIni\" : \"joc/templates/https/start.d/http.ini\",\"httpsIni\" : \"joc/templates/https/start.d/https.ini\",\"sslIni\" : \"joc/templates/https/start.d/ssl.ini\"}}} ]}} ]}";
+        String test =
+                "{\"descriptor\" : {\"descriptorId\" : \"example_05\",\"title\" : \"Example of the current schema of a deployment descriptor\",\"account\" : \"sp\",\"scheduled\" : \"2023-03-06T13:46:26.643+00:00\",\"created\" : \"2023-02-20T13:46:26.643+00:00\"},\"license\" : {\"licenseKeyFile\" : \"licenses/sos.pem\",\"licenseBinFile\" : \"licenses/js7-license.jar\"},\"agents\" : {\"controllerRefs\" : [ {\"controllerId\" : \"testsuite\",\"members\" : [ {\"agentId\" : \"agent_001\",\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_agent_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/agent-primary\",\"data\" : \"/var/sos-berlin.com/js7/agent-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:31445\",\"httpsPort\" : \"centostest-primary.sos:31443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx125m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"keyStore\" : \"agents/instances/agent_001/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"agents/instances/agent_001/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"agents/templates/https/config\" ]}}, {\"agentId\" : \"agent_002\",\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_agent_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/agent-secondary\",\"data\" : \"/var/sos-berlin.com/js7/agent-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:32445\",\"httpsPort\" : \"centostest-secondary.sos:32443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"keyStore\" : \"agents/instances/agent_002/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"agents/instances/agent_002/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"agents/templates/https/config\" ]}} ]} ]},\"controllers\" : [ {\"jocRef\" : \"cluster\",\"controllerId\" : \"testsuite\",\"primary\" : {\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_controller_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/controller-primary\",\"data\" : \"/var/sos-berlin.com/js7/controller-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:21444\",\"httpsPort\" : \"centostest-primary.sos:21443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"cert\" : \"controllers/instances/cluster.primary/config/private/centostest-primary.crt\",\"keyStore\" : \"controllers/instances/cluster.primary/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"controllers/instances/cluster.primary/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"controllers/templates/https.primary/config\" ]}},\"secondary\" : {\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_controller_unix.2.5.1.tar.gz\"},\"installation\" : {\"home\" : \"/opt/sos-berlin.com/js7/controller-secondary\",\"data\" : \"/var/sos-berlin.com/js7/controller-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:22444\",\"httpsPort\" : \"centostest-secondary.sos:22443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"certificates\" : {\"cert\" : \"controllers/instances/cluster.secondary/config/private/centostest-secondary.crt\",\"keyStore\" : \"controllers/instances/cluster.secondary/config/private/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-secondary\",\"trustStore\" : \"controllers/instances/cluster.secondary/config/private/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"controllers/templates/https.secondary/config\" ]}}} ],\"joc\" : [ {\"members\" : {\"clusterId\" : \"cluster\",\"instances\" : [ {\"instanceId\" : 1,\"target\" : {\"connection\" : {\"host\" : \"centostest-primary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_joc_linux.2.5.1.tar.gz\"},\"installation\" : {\"setupDir\" : \"/opt/sos-berlin.com/js7/joc-primary.setup\",\"title\" : \"PRIMARY JOC COCKPIT\",\"securityLevel\" : \"medium\",\"dbmsConfig\" : \"joc/templates/dbms/h2/response/hibernate.cfg.xml\",\"dbmsDriver\" : \"joc/templates/dbms/h2/response/h2-1.4.200.jar\",\"dbmsInit\" : \"byJoc\",\"isUser\" : true,\"isPreserveEnv\" : true,\"home\" : \"/opt/sos-berlin.com/js7/joc-primary\",\"data\" : \"/var/sos-berlin.com/js7/joc-primary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:11446\",\"httpsPort\" : \"centostest-primary.sos:11443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"responseDir\" : \"joc/templates/dbms/h2/response\",\"certificates\" : {\"cert\" : \"joc/instances/cluster.primary/resources/centostest-primary.crt\",\"keyStore\" : \"joc/instances/cluster.primary/resources/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-primary\",\"trustStore\" : \"joc/instances/cluster.primary/resources/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"joc/templates/https/resources\" ],\"startFiles\" : {\"httpIni\" : \"joc/templates/https/start.d/http.ini\",\"httpsIni\" : \"joc/templates/https/start.d/https.ini\",\"sslIni\" : \"joc/templates/https/start.d/ssl.ini\"}}}, {\"instanceId\" : 2,\"target\" : {\"connection\" : {\"host\" : \"centostest-secondary\",\"port\" : 22},\"authentication\" : {\"method\" : \"publickey\",\"user\" : \"sos\",\"keyFile\" : \"/home/sos/.ssh/sos_rsa\"},\"packageLocation\" : \"/tmp\",\"execPre\" : \"StopService\",\"execPost\" : \"StartService\",\"makeService\" : true,\"forceSudo\" : true},\"media\" : {\"release\" : \"2.5.1\",\"tarball\" : \"2.5.1/js7_joc_linux.2.5.1.tar.gz\"},\"installation\" : {\"setupDir\" : \"/sos-berlin.com/js7/opt/joc-secondary.setup\",\"title\" : \"SECONDARY JOC COCKPIT\",\"securityLevel\" : \"medium\",\"dbmsConfig\" : \"joc/templates/dbms/h2/response/hibernate.cfg.xml\",\"dbmsDriver\" : \"joc/templates/dbms/h2/response/h2-1.4.200.jar\",\"dbmsInit\" : \"byJoc\",\"isUser\" : true,\"isPreserveEnv\" : true,\"home\" : \"/opt/sos-berlin.com/js7/joc-secondary\",\"data\" : \"/var/sos-berlin.com/js7/joc-secondary\",\"homeOwner\" : \"sos1:sos1\",\"dataOwner\" : \"sos2:sos2\",\"runUser\" : \"sos2\",\"httpPort\" : \"localhost:12446\",\"httpsPort\" : \"centostest-secondary.sos:12443\",\"javaHome\" : \"/opt/jdk-11.0.2\",\"javaOptions\" : \"-Xmx256m -Djava.security.egd=file:///dev/urandom\"},\"configuration\" : {\"responseDir\" : \"joc/templates/dbms/h2/response\",\"certificates\" : {\"cert\" : \"joc/instances/cluster.secondary/resources/centostest-secondary.crt\",\"keyStore\" : \"joc/instances/cluster.secondary/resources/https-keystore.p12\",\"keyStorePassword\" : \"jobscheduler\",\"keyPassword\" : \"jobscheduler\",\"keyAlias\" : \"centostest-secondary\",\"trustStore\" : \"joc/instances/cluster.secondary/resources/https-truststore.p12\",\"trustStorePassword\" : \"jobscheduler\"},\"templates\" : [ \"joc/templates/https/resources\" ],\"startFiles\" : {\"httpIni\" : \"joc/templates/https/start.d/http.ini\",\"httpsIni\" : \"joc/templates/https/start.d/https.ini\",\"sslIni\" : \"joc/templates/https/start.d/ssl.ini\"}}} ]}} ]}";
         try {
             Validator.validate(ConfigurationType.DEPLOYMENTDESCRIPTOR, test.getBytes());
             valid = true;
@@ -598,23 +596,25 @@ public class MappingTest {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        LOGGER.info( "json valid: " + valid);
+        LOGGER.info("json valid: " + valid);
         assertTrue(valid);
     }
-    
+
     @Test
-    public void testTarOutputStream () throws IOException {
+    public void testTarOutputStream() throws IOException {
         // file path of the archive file to write
         String targetFilePath = "target/created_test_files/targetArchive.tar.gz";
         // create parent folder if not exists
-        if(!Files.exists(Paths.get("target/created_test_files"))) {
+        if (!Files.exists(Paths.get("target/created_test_files"))) {
             Files.createDirectory(Paths.get("target/created_test_files"));
         }
         File targetFile = new File(targetFilePath);
         // file path of the source file to put into the archive
-        String sourceFilePath = "src/test/resources/12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
+        String sourceFilePath =
+                "src/test/resources/12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
         // file path of the target file in the archive
-        String pathInArchive = "12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
+        String pathInArchive =
+                "12345678901234567890123456789012345678901234567890/1234567890123456789012345678901234567890/shortFilenameWithLongPath.txt";
         File source = Paths.get(sourceFilePath).toFile();
         InputStream in = Files.newInputStream(Paths.get(sourceFilePath));
         long fileLength = source.length();
@@ -642,19 +642,22 @@ public class MappingTest {
                 try {
                     tarArchiveOut.finish();
                     tarArchiveOut.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
             if (gzipOut != null) {
                 try {
                     gzipOut.flush();
                     gzipOut.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
             if (bOut != null) {
                 try {
                     bOut.flush();
                     bOut.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         }
         // read the newly created tar file
@@ -675,33 +678,31 @@ public class MappingTest {
             if (tarIn != null) {
                 try {
                     tarIn.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
             if (tarArchiveIn != null) {
                 try {
                     tarArchiveIn.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
             if (gzipInputStream != null) {
                 try {
                     gzipInputStream.close();
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         }
     }
-    
+
     @Test
-    public void testShortenedPath () throws IOException {
+    public void testShortenedPath() throws IOException {
         String startPath = "/a/b/c";
-        List<String> childPaths = Arrays.asList(
-                "/a/b/c/d/myWorkflow1", 
-                "/a/b/c/d/e/myWorkflow2",
-                "/a/b/c/d/e/myWorkflow3",
-                "/a/b/c/d/e/f/myWorkflow4",
-                "/a/b/c/d/myWorkflow5",
-                "/a/b/c/d/e/f/myWorkflow6");
+        List<String> childPaths = Arrays.asList("/a/b/c/d/myWorkflow1", "/a/b/c/d/e/myWorkflow2", "/a/b/c/d/e/myWorkflow3",
+                "/a/b/c/d/e/f/myWorkflow4", "/a/b/c/d/myWorkflow5", "/a/b/c/d/e/f/myWorkflow6");
         childPaths.stream().map(path -> {
-            if(path.startsWith(startPath)) {
+            if (path.startsWith(startPath)) {
                 String startFolder = Paths.get(startPath).getFileName().toString();
                 String shortenedPath = Paths.get(startPath).relativize(Paths.get(path)).toString().replace('\\', '/');
                 return startFolder.concat("/").concat(shortenedPath);
@@ -709,5 +710,5 @@ public class MappingTest {
             return path;
         }).forEach(item -> LOGGER.trace(item));
     }
-    
+
 }

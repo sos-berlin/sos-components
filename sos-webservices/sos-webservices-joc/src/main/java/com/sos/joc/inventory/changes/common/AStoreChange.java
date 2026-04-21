@@ -21,9 +21,9 @@ public abstract class AStoreChange extends JOCResourceImpl {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(apiCall);
-            
+
             store(request, session);
-            
+
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -32,7 +32,7 @@ public abstract class AStoreChange extends JOCResourceImpl {
             Globals.disconnect(session);
         }
     }
-    
+
     public void store(StoreChangeRequest request, SOSHibernateSession session) throws SOSHibernateException {
         DBLayerChanges dbLayer = new DBLayerChanges(session);
         DBItemInventoryChange existingChange = dbLayer.getChange(request.getStore().getName());
@@ -42,10 +42,8 @@ public abstract class AStoreChange extends JOCResourceImpl {
                 existingChange.setPublishedBy(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
             }
             existingChange.setTitle(request.getStore().getTitle());
-            Date now = Date.from(Instant.now());
-            existingChange.setModified(now);
             if (ChangeState.CLOSED.equals(request.getStore().getState())) {
-                existingChange.setClosed(now);
+                existingChange.setClosed(Date.from(Instant.now()));
             }
             session.update(existingChange);
         } else {
@@ -54,9 +52,6 @@ public abstract class AStoreChange extends JOCResourceImpl {
             newChange.setState(ChangeState.OPEN.intValue());
             newChange.setOwner(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
             newChange.setTitle(request.getStore().getTitle());
-            Date now = Date.from(Instant.now());
-            newChange.setCreated(now);
-            newChange.setModified(now);
             session.save(newChange);
         }
     }

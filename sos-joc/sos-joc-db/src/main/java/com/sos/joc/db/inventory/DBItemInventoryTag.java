@@ -1,7 +1,8 @@
 package com.sos.joc.db.inventory;
 
-import java.util.Date;
+import java.time.Instant;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -33,7 +34,8 @@ public class DBItemInventoryTag extends DBItem implements IDBItemTag {
     private Integer ordering;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public Long getId() {
         return id;
@@ -70,12 +72,8 @@ public class DBItemInventoryTag extends DBItem implements IDBItemTag {
         ordering = val;
     }
 
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
-    }
-
-    public void setModified(Date val) {
-        modified = val;
     }
 
 }

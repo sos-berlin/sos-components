@@ -37,27 +37,26 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
-            
+
             Map<FavoriteType, Set<FavoriteSharedIdentifier>> favoritesMap = favorites.getSharedFavoriteIds().stream().collect(Collectors.groupingBy(
                     FavoriteSharedIdentifier::getType, Collectors.toSet()));
-            Date now = Date.from(Instant.now());
             for (Map.Entry<FavoriteType, Set<FavoriteSharedIdentifier>> entry : favoritesMap.entrySet()) {
                 int position = dbLayer.maxOrdering(entry.getKey());
                 position++;
                 for (FavoriteSharedIdentifier f : entry.getValue()) {
-                    position = dbLayer.takeOverFavorite(f, now, position);
+                    position = dbLayer.takeOverFavorite(f, position);
                 }
             }
-            
+
             Globals.commit(connection);
-            
-            return responseStatusJSOk(now);
+
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
             return responseStatusJSError(e);

@@ -37,8 +37,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderStateText;
 
-import jakarta.persistence.TemporalType;
-
 public class JobHistoryDBLayer {
 
     /** result rerun interval in seconds */
@@ -372,20 +370,20 @@ public class JobHistoryDBLayer {
     private String getOrderStepsWhere() {
         return getWhere("", "historyOrderId", false);
     }
-    
-//    private String getOrdersWhere(String tableAlias) {
-//        return getWhere(tableAlias, true);
-//    }
-//
-//    private String getOrderStepsWhere(String tableAlias) {
-//        return getWhere(tableAlias, false);
-//    }
 
-    private String getWhere(String tableAlias, String historyOrderColumnName,  boolean orderLogs) {
+    // private String getOrdersWhere(String tableAlias) {
+    // return getWhere(tableAlias, true);
+    // }
+    //
+    // private String getOrderStepsWhere(String tableAlias) {
+    // return getWhere(tableAlias, false);
+    // }
+
+    private String getWhere(String tableAlias, String historyOrderColumnName, boolean orderLogs) {
         String clause = "";
         String alias = (tableAlias != null && !tableAlias.isBlank()) ? tableAlias + "." : "";
-        
-        List<String> clauses = new ArrayList<>(); 
+
+        List<String> clauses = new ArrayList<>();
 
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
             if (filter.getControllerIds().size() == 1) {
@@ -408,10 +406,10 @@ public class JobHistoryDBLayer {
             // where += and + " state > " + OrderStateText.PENDING.intValue();
             // and = " and";
         }
-        
+
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
-            clause = IntStream.range(0, filter.getHistoryIds().size()).mapToObj(i -> alias + "id in (:historyIds" + i + ")")
-                    .collect(Collectors.joining(" or "));
+            clause = IntStream.range(0, filter.getHistoryIds().size()).mapToObj(i -> alias + "id in (:historyIds" + i + ")").collect(Collectors
+                    .joining(" or "));
             if (filter.getHistoryIds().size() > 1) {
                 clause = "(" + clause + ")";
             }
@@ -465,7 +463,6 @@ public class JobHistoryDBLayer {
                     clauses.add(alias + "orderId = :orderId");
                 }
             }
-
 
             if (filter.getJobs() != null && !filter.getJobs().isEmpty()) {
                 List<String> l = new ArrayList<String>();
@@ -606,14 +603,14 @@ public class JobHistoryDBLayer {
                     }
                     clauses.add(clause);
                 }
-                
+
             }
         }
-        
+
         if (clauses.isEmpty()) {
             return "";
         }
-        
+
         return clauses.stream().collect(Collectors.joining(" and ", " where ", ""));
     }
 
@@ -642,31 +639,33 @@ public class JobHistoryDBLayer {
             AtomicInteger counter = new AtomicInteger();
             for (List<Long> chunk : filter.getHistoryIds()) {
                 query.setParameterList("historyIds" + counter.getAndIncrement(), chunk);
-            };
+            }
+            ;
         }
         if (filter.getNonExclusiveHistoryIds() != null && !filter.getNonExclusiveHistoryIds().isEmpty()) {
             AtomicInteger counter = new AtomicInteger();
             for (List<Long> chunk : filter.getNonExclusiveHistoryIds()) {
                 query.setParameterList("hoIds" + counter.getAndIncrement(), chunk);
-            };
+            }
+            ;
         }
         if (filter.getExecutedFrom() != null) {
-            query.setParameter("startTimeFrom", filter.getExecutedFrom(), TemporalType.TIMESTAMP);
+            query.setParameter("startTimeFrom", filter.getExecutedFrom());
         }
         if (filter.getExecutedTo() != null) {
-            query.setParameter("startTimeTo", filter.getExecutedTo(), TemporalType.TIMESTAMP);
+            query.setParameter("startTimeTo", filter.getExecutedTo());
         }
         if (filter.getEndFrom() != null) {
-            query.setParameter("endTimeFrom", filter.getEndFrom(), TemporalType.TIMESTAMP);
+            query.setParameter("endTimeFrom", filter.getEndFrom());
         }
         if (filter.getEndTo() != null) {
-            query.setParameter("endTimeTo", filter.getEndTo(), TemporalType.TIMESTAMP);
+            query.setParameter("endTimeTo", filter.getEndTo());
         }
         if (filter.getStateFrom() != null) {
-            query.setParameter("stateTimeFrom", filter.getStateFrom(), TemporalType.TIMESTAMP);
+            query.setParameter("stateTimeFrom", filter.getStateFrom());
         }
         if (filter.getStateTo() != null) {
-            query.setParameter("stateTimeTo", filter.getStateTo(), TemporalType.TIMESTAMP);
+            query.setParameter("stateTimeTo", filter.getStateTo());
         }
         if (filter.getOrderStates() != null && !filter.getOrderStates().isEmpty()) {
             query.setParameterList("orderStates", filter.getOrderStates().stream().map(OrderStateText::intValue).collect(Collectors.toSet()));

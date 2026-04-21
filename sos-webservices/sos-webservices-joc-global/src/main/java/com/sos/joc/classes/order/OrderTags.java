@@ -89,7 +89,6 @@ import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;
 import com.sos.joc.model.order.OrderV;
 
 import io.vavr.control.Either;
-import jakarta.persistence.TemporalType;
 import js7.data.order.OrderId;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
@@ -709,7 +708,7 @@ public class OrderTags {
                 query.setParameter("controllerId", controllerId);
             }
             if (dailyPlanDates.size() == 1) {
-                query.setParameter("dailyPlanDate", dailyPlanDates.iterator().next(), TemporalType.TIMESTAMP);
+                query.setParameter("dailyPlanDate", dailyPlanDates.iterator().next());
             } else {
                 query.setParameterList("dailyPlanDates", dailyPlanDates);
             }
@@ -986,10 +985,10 @@ public class OrderTags {
                         query.setParameter("controllerId", controllerId);
                     }
                     if (startFrom != null) {
-                        query.setParameter("startTimeFrom", startFrom, TemporalType.TIMESTAMP);
+                        query.setParameter("startTimeFrom", startFrom);
                     }
                     if (startTo != null) {
-                        query.setParameter("startTimeTo", startTo, TemporalType.TIMESTAMP);
+                        query.setParameter("startTimeTo", startTo);
                     }
                     List<Object[]> result = connection.getResultList(query);
                     if (result == null) {
@@ -1037,10 +1036,10 @@ public class OrderTags {
                         query.setParameter("controllerId", controllerId);
                     }
                     if (startFrom != null) {
-                        query.setParameter("startTimeFrom", startFrom, TemporalType.TIMESTAMP);
+                        query.setParameter("startTimeFrom", startFrom);
                     }
                     if (startTo != null) {
-                        query.setParameter("startTimeTo", startTo, TemporalType.TIMESTAMP);
+                        query.setParameter("startTimeTo", startTo);
                     }
                     AtomicInteger counter = new AtomicInteger();
                     for (List<String> chunk : chunkedOTags) {
@@ -1501,14 +1500,12 @@ public class OrderTags {
                             DBItemInventoryTagGroup::getId));
 
                     groups.removeAll(dbGroupsMap.keySet()); // groups contains only new groups
-                    Date date = Date.from(Instant.now());
-
+                  
                     if (!groups.isEmpty()) {
                         int maxGroupsOrdering = dbTagLayer.getMaxGroupsOrdering();
                         for (String group : groups) {
                             DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
                             item.setName(group);
-                            item.setModified(date);
                             item.setOrdering(++maxGroupsOrdering);
                             dbTagLayer.getSession().save(item);
                             dbGroupsMap.put(group, item.getId());
@@ -1520,7 +1517,6 @@ public class OrderTags {
                     for (GroupedTag groupedTag : groupedTags.values()) {
                         DBItemInventoryOrderTag item = new DBItemInventoryOrderTag();
                         item.setId(null);
-                        item.setModified(date);
                         item.setName(groupedTag.getTag());
                         item.setOrdering(++maxOrdering);
                         if (groupedTag.getGroup().isPresent()) {

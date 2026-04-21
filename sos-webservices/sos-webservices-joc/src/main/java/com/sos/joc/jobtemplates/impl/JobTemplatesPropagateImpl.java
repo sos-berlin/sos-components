@@ -43,20 +43,21 @@ import jakarta.ws.rs.Path;
 public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTemplatesPropagate {
 
     private static final String API_CALL = "./job_templates/propagate";
+
     private class PropagateFilter {
-        
+
         private String jobTemplate;
         private String workflow;
-        
+
         public PropagateFilter(String jobTemplate, String workflow) {
             this.jobTemplate = JocInventory.pathToName(jobTemplate);
             this.workflow = JocInventory.pathToName(workflow);
         }
-        
+
         public String getJobTemplate() {
             return jobTemplate;
         }
-        
+
         public String getWorkflow() {
             return workflow;
         }
@@ -80,7 +81,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            
+
             List<String> jobTemplateNames = jobTemplatesFilter.getJobTemplates().stream().map(JobTemplatePropagateFilter::getPath).map(
                     JocInventory::pathToName).distinct().collect(Collectors.toList());
             List<DBItemInventoryReleasedConfiguration> dbJobTemplates = dbLayer.getReleasedJobTemplatesByNames(jobTemplateNames);
@@ -100,12 +101,12 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                                 Collectors.groupingBy(PropagateFilter::getWorkflow, Collectors.mapping(PropagateFilter::getJobTemplate, Collectors
                                         .toSet())));
             }
-            
+
             Report report = new Report();
             Date now = Date.from(Instant.now());
             report.setDeliveryDate(now);
             JobTemplatesPropagate propagate = new JobTemplatesPropagate(jobTemplatesFilter, permittedFolders);
-            
+
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
 
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), jobTemplatesFilter.getAuditLog());
@@ -126,12 +127,12 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
                     }
                     Map<String, JobTemplate> jobTemplates = entry.getValue().stream().map(jobTemplateName -> jobTemplatesMap.get(jobTemplateName))
                             .filter(Objects::nonNull).collect(Collectors.toMap(JobTemplate::getName, Function.identity()));
-                    report.getWorkflows().add(propagate.template2Job(dbWorkflow, jobTemplates, dbLayer, now, dbAuditLog));
+                    report.getWorkflows().add(propagate.template2Job(dbWorkflow, jobTemplates, dbLayer, dbAuditLog));
                 }
             }
             Globals.commit(session);
             DependencyResolver.updateDependencies(propagate.getChangedWorkflows());
-            
+
             if (!jobTemplateNamesPerWorkflowName.isEmpty()) {
                 // post events
                 if (!report.getWorkflows().isEmpty()) {
@@ -151,7 +152,7 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             Globals.disconnect(session);
         }
     }
-    
+
     public static List<DBItemInventoryReleasedConfiguration> getDbJobTemplates(JobTemplatesFilter jobTemplatesFilter, Set<Folder> folders,
             InventoryDBLayer dbLayer) throws SOSHibernateException {
 

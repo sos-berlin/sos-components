@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
@@ -55,7 +56,7 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
                     folderPermissions);
 
             OrdersPositions entry = new OrdersPositions();
-            entry.setSurveyDate(config.getModified());
+            entry.setSurveyDate(SOSDate.toDate(config.getModified()));
             WorkflowId wId = new WorkflowId();
             wId.setPath(config.getPath());
             entry.setWorkflowId(wId);
@@ -74,5 +75,5 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
             Globals.disconnect(session);
         }
     }
-    
+
 }

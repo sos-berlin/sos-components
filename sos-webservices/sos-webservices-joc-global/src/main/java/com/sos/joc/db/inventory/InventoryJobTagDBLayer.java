@@ -1,11 +1,9 @@
 package com.sos.joc.db.inventory;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -275,18 +273,13 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
     }
 
     public void renameWorkflow(Long cid, String newWorkflowName) {
-        renameWorkflow(cid, newWorkflowName, Date.from(Instant.now()));
-    }
-
-    public void renameWorkflow(Long cid, String newWorkflowName, Date now) {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("update " + getTaggingTable() + " set workflowName=:newWorkflowName, modified=:now");
+            hql.append("update " + getTaggingTable() + " set workflowName=:newWorkflowName");
             hql.append(" where cid=:cid");
             Query<?> query = getSession().createQuery(hql);
             query.setParameter("cid", cid);
             query.setParameter("newWorkflowName", newWorkflowName);
-            query.setParameter("now", now);
 
             getSession().executeUpdate(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -297,19 +290,14 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
     }
 
     public void renameJob(String workflowName, String oldJobName, String newJobName) {
-        renameJob(workflowName, oldJobName, newJobName, Date.from(Instant.now()));
-    }
-
-    public void renameJob(String workflowName, String oldJobName, String newJobName, Date now) {
         try {
             StringBuilder hql = new StringBuilder();
-            hql.append("update " + getTaggingTable() + " set jobName=:newJobName, modified=:now");
+            hql.append("update " + getTaggingTable() + " set jobName=:newJobName");
             hql.append(" where workflowName=:workflowName and jobName=:oldJobName");
             Query<?> query = getSession().createQuery(hql);
             query.setParameter("workflowName", workflowName);
             query.setParameter("oldJobName", oldJobName);
             query.setParameter("newJobName", newJobName);
-            query.setParameter("now", now);
 
             getSession().executeUpdate(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -343,7 +331,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<InventoryJobTagItem> getAllJobTags() {
         try {
             StringBuilder sql = new StringBuilder(

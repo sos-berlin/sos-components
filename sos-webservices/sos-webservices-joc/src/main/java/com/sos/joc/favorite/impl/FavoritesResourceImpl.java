@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -121,7 +122,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
     private Favorite mapDbItem(DBItemInventoryFavorite dbItem, Integer position) {
         Favorite fav = new Favorite();
         fav.setAccount(dbItem.getAccount());
-        fav.setConfigurationDate(dbItem.getModified());
+        fav.setConfigurationDate(SOSDate.toDate(dbItem.getModified()));
         fav.setContent(dbItem.getFavorite());
         fav.setName(dbItem.getName());
         fav.setOrdering(position);

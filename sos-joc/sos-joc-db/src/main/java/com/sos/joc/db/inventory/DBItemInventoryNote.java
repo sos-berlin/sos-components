@@ -1,12 +1,14 @@
 package com.sos.joc.db.inventory;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.StringEscapeUtils;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -40,10 +42,12 @@ public class DBItemInventoryNote extends DBItem {
     private Integer severity;
 
     @Column(name = "[CREATED]", nullable = false)
-    private Date created;
+    @SOSCreationTimestampUtc
+    private Instant created;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     public Long getId() {
         return id;
@@ -86,20 +90,12 @@ public class DBItemInventoryNote extends DBItem {
         severity = val;
     }
 
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
     }
 
-    public void setModified(Date val) {
-        modified = val;
-    }
-
-    public Date getCreated() {
+    public Instant getCreated() {
         return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
     }
 
     @Transient

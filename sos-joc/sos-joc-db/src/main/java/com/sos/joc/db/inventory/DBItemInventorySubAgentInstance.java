@@ -1,9 +1,10 @@
 package com.sos.joc.db.inventory;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.hibernate.type.NumericBooleanConverter;
 
+import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -76,7 +77,8 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     private String certificate;
 
     @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
+    @SOSCurrentTimestampUtc
+    private Instant modified;
 
     @Transient
     private String transaction = "none";
@@ -181,10 +183,6 @@ public class DBItemInventorySubAgentInstance extends DBItem {
         javaVersion = val;
     }
 
-    public void setModified(Date val) {
-        modified = val;
-    }
-
     public boolean getIsWatcher() {
         return isWatcher;
     }
@@ -209,7 +207,7 @@ public class DBItemInventorySubAgentInstance extends DBItem {
         deployed = val;
     }
 
-    public Date getModified() {
+    public Instant getModified() {
         return modified;
     }
 

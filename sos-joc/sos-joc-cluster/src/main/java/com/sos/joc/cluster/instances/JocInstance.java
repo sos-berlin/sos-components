@@ -90,7 +90,6 @@ public class JocInstance {
             item.setName(SOSShell.OS_NAME);
             item.setArchitecture(SOSShell.OS_ARCHITECTURE);
             item.setDistribution(SOSShell.OS_VERSION);
-            item.setModified(new Date());
             dbLayer.getSession().save(item);
         }
         return item;

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -66,17 +67,17 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-            
+
             if (ConfigurationType.FOLDER.equals(type)) {
                 throw new JocNotImplementedException("use ./inventory/deployables for folders!");
             }
             if (!JocInventory.isDeployable(type)) {
                 throw new ControllerInvalidResponseDataException("Object is not a 'Controller Object': " + type.value());
             }
-            
+
             // get deleted folders
             List<String> deletedFolders = dbLayer.getDeletedFolders();
             // if inside deletedFolders -> setDeleted(true);
@@ -84,9 +85,9 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             if (deletedFolders != null && !deletedFolders.isEmpty() && deletedFolders.stream().parallel().anyMatch(filter)) {
                 config.setDeleted(true);
             }
-            
+
             ResponseDeployableTreeItem treeItem = getResponseDeployableTreeItem(config);
-            
+
             if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
                 List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
                 if ((deployments == null || deployments.isEmpty()) && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
@@ -97,18 +98,17 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                 if (!treeItem.getDeployed() && config.getValid() && !in.getWithoutDrafts()) {
                     ResponseDeployableVersion draft = new ResponseDeployableVersion();
                     draft.setId(config.getId());
-                    draft.setVersionDate(config.getModified());
+                    draft.setVersionDate(SOSDate.toDate(config.getModified()));
                     draft.setVersions(null);
                     versions.add(draft);
                 }
                 versions.addAll(getVersions(config.getId(), deployments, in.getWithoutDeployed(), in.getLatest()));
-                if(!versions.isEmpty()) {
+                if (!versions.isEmpty()) {
                     treeItem.setDeployablesVersions(versions);
-                    // add forceDependencies flag for renamed treeItems 
-                    if(treeItem.getDeployablesVersions().stream()
-                            .max(Comparator.comparing(ResponseDeployableVersion::getVersionDate))
-                            .map(ResponseDeployableVersion::getDeploymentPath)
-                            .map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals).isEmpty()) {
+                    // add forceDependencies flag for renamed treeItems
+                    if (treeItem.getDeployablesVersions().stream().max(Comparator.comparing(ResponseDeployableVersion::getVersionDate)).map(
+                            ResponseDeployableVersion::getDeploymentPath).map(JocInventory::pathToName).filter(treeItem.getObjectName()::equals)
+                            .isEmpty()) {
                         treeItem.setForceDependencies(true);
                     }
                 }
@@ -131,7 +131,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             Globals.disconnect(session);
         }
     }
-    
+
     public static Set<ResponseDeployableVersion> getVersions(Long confId, Collection<InventoryDeploymentItem> deployments, boolean withoutDeployed,
             boolean onlyLatest) {
         if (deployments == null || withoutDeployed) {
@@ -158,7 +158,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                     dv.setDeploymentPath(deployment.getPath());
                     return dv;
                 });
-        
+
         if (onlyLatest) {
             Optional<ResponseDeployableVersion> opt = versionsStream.findFirst();
             if (opt.isPresent()) {
@@ -170,7 +170,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             return versionsStream.collect(Collectors.toCollection(LinkedHashSet::new));
         }
     }
-    
+
     public static ResponseDeployableTreeItem getResponseDeployableTreeItem(DBItemInventoryConfiguration item) {
         ResponseDeployableTreeItem treeItem = new ResponseDeployableTreeItem();
         treeItem.setId(item.getId());

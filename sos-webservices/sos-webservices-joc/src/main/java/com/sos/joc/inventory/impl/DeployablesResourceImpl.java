@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.common.SyncStateText;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -272,7 +272,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                 if (!treeItem.getDeployed() && conf.getValid() && !withoutDrafts) {
                                     ResponseDeployableVersion draft = new ResponseDeployableVersion();
                                     draft.setId(conf.getId());
-                                    draft.setVersionDate(conf.getModified());
+                                    draft.setVersionDate(SOSDate.toDate(conf.getModified()));
                                     draft.setVersions(null);
                                     versions.add(draft);
                                 }

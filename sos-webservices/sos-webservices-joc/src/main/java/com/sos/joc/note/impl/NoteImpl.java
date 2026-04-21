@@ -188,8 +188,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
                 note.getMetadata().setModifiedBy(newAuthor(getAccount()));
                 
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
-                dbItem.setModified(now);
-                
+               
                 session.update(dbItem);
             }
             

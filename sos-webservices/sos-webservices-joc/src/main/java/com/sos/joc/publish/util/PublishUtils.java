@@ -164,17 +164,17 @@ public abstract class PublishUtils {
             throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if(JocKeyType.CA.name().equals(keyPair.getKeyType())) {
+            if (JocKeyType.CA.name().equals(keyPair.getKeyType())) {
                 if (keyPair.getPrivateKey() != null) {
                     dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
                             .getKeyAlgorithm());
                 } else if (keyPair.getCertificate() != null) {
                     dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
-                }   
+                }
             } else {
                 if (keyPair.getPrivateKey() != null) {
-                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
-                            .getKeyAlgorithm());
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl,
+                            keyPair.getKeyAlgorithm());
                 } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
                     dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair
                             .getKeyAlgorithm());
@@ -447,12 +447,13 @@ public abstract class PublishUtils {
             draft.setCommitId(commitId);
         }
     }
-    
+
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(
             Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, DBItemDeploymentHistory item, String controllerId) {
-        return getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item.getPath(), item.readUpdateableContent(), item.getType(), controllerId);
+        return getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item.getPath(), item.readUpdateableContent(), item.getType(),
+                controllerId);
     }
-    
+
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(
             Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String path, IDeployObject deployObject, Integer type,
             String controllerId) {
@@ -466,8 +467,8 @@ public abstract class PublishUtils {
                         Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                         String agentNameOrAlias = job.getAgentPath();
 
-                        Optional<String> agentId = agentIdAliasesMap.entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias)).filter(
-                                Objects::nonNull).map(item -> item.getKey()).findFirst();
+                        Optional<String> agentId = agentIdAliasesMap.entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
+                                .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
                         if (agentId.isPresent()) {
                             update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
                         }
@@ -485,9 +486,9 @@ public abstract class PublishUtils {
         }
         return update;
     }
-    
-    private static void setAgentNamesInInstructions(List<Instruction> insts, String path, String controllerId, Map<String, Set<String>> agentIdAliasesMap,
-            Set<UpdateableWorkflowJobAgentName> jobAgentNames) {
+
+    private static void setAgentNamesInInstructions(List<Instruction> insts, String path, String controllerId,
+            Map<String, Set<String>> agentIdAliasesMap, Set<UpdateableWorkflowJobAgentName> jobAgentNames) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Instruction inst = insts.get(i);
@@ -603,22 +604,21 @@ public abstract class PublishUtils {
     }
 
     public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(
-            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String fileOrderSourceId, IDeployObject deployObject, 
+            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String fileOrderSourceId, IDeployObject deployObject,
             String controllerId) {
         UpdateableFileOrderSourceAgentName update = null;
         FileOrderSource fileOrderSource = (FileOrderSource) deployObject;
         String agentNameOrAlias = fileOrderSource.getAgentPath();
-        
-        Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
-                .filter(item -> controllerId.equals(item.getKey()))
-                .map(item -> item.getValue()).findFirst();
-            if (opt.isPresent()) {
-                Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
-                        .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
-                if (agentId.isPresent()) {
-                    update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId.get(), controllerId);
-                }
+
+        Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream().filter(item -> controllerId.equals(item
+                .getKey())).map(item -> item.getValue()).findFirst();
+        if (opt.isPresent()) {
+            Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias)).filter(
+                    Objects::nonNull).map(item -> item.getKey()).findFirst();
+            if (agentId.isPresent()) {
+                update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId.get(), controllerId);
             }
+        }
         return update;
     }
 
@@ -644,7 +644,7 @@ public abstract class PublishUtils {
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (Map.Entry<ControllerObject,DBItemDepSignatures> entry : draftsWithSignature.entrySet()) {
+            for (Map.Entry<ControllerObject, DBItemDepSignatures> entry : draftsWithSignature.entrySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
@@ -660,7 +660,7 @@ public abstract class PublishUtils {
                     if (entry.getKey().getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.WORKFLOW.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish) entry.getKey()).getContent().getPath(), 
+                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish) entry.getKey()).getContent().getPath(),
                                 ConfigurationType.WORKFLOW.intValue());
                     }
                     if (original.getPath() != null && !original.getPath().isEmpty()) {
@@ -749,7 +749,7 @@ public abstract class PublishUtils {
                     if (entry.getKey().getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.JOBCLASS.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish) entry.getKey()).getContent().getPath(), 
+                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish) entry.getKey()).getContent().getPath(),
                                 ConfigurationType.JOBCLASS.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
@@ -763,7 +763,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 }
-                if(entry.getValue() != null) {
+                if (entry.getValue() != null) {
                     newDeployedObject.setSignedContent(entry.getValue().getSignature());
                 }
                 if (newDeployedObject.getSignedContent() == null || newDeployedObject.getSignedContent().isEmpty()) {
@@ -787,9 +787,9 @@ public abstract class PublishUtils {
         }
         return deployedObjects;
     }
-    
-    private static void prepareDepHistoryItem(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+
+    private static void prepareDepHistoryItem(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem, String account,
+            DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
         try {
             if (depHistoryItem.getId() != null) {
                 depHistoryItem.setId(null);
@@ -810,7 +810,7 @@ public abstract class PublishUtils {
             depHistoryItem.setOperation(OperationType.UPDATE.value());
             depHistoryItem.setState(DeploymentState.DEPLOYED.value());
             depHistoryItem.setAuditlogId(auditlogId);
-            if(depHistoryItem.getSignedContent() == null || depHistoryItem.getSignedContent().isEmpty()) {
+            if (depHistoryItem.getSignedContent() == null || depHistoryItem.getSignedContent().isEmpty()) {
                 depHistoryItem.setSignedContent(".");
             }
         } catch (JsonProcessingException e1) {
@@ -828,37 +828,36 @@ public abstract class PublishUtils {
             // Step 1 store deployments in batch
             dbLayerDeploy.insertNewHistoryEntriesInBatch(deployedWithSignature.keySet().stream().collect(Collectors.toList()));
             // Step 2 update ids of newly stored items
-            List<DBItemDeploymentHistory> storedDepHistoryfromCommit = 
-                    dbLayerDeploy.getDepHistory(deployedWithSignature.keySet().iterator().next().getCommitId());
+            List<DBItemDeploymentHistory> storedDepHistoryfromCommit = dbLayerDeploy.getDepHistory(deployedWithSignature.keySet().iterator().next()
+                    .getCommitId());
             deployedWithSignature.keySet().stream().forEach(item -> {
-                Optional<DBItemDeploymentHistory> opt = storedDepHistoryfromCommit.stream()
-                    .filter(fromCommit -> fromCommit.getPath().equals(item.getPath()) && fromCommit.getType() == item.getType()).findFirst();
+                Optional<DBItemDeploymentHistory> opt = storedDepHistoryfromCommit.stream().filter(fromCommit -> fromCommit.getPath().equals(item
+                        .getPath()) && fromCommit.getType() == item.getType()).findFirst();
                 if (opt.isPresent()) {
                     item.setId(opt.get().getId());
                 }
             });
             // Step 3 update already stored signatures with new historyId
-            deployedWithSignature.keySet().stream().filter(item -> deployedWithSignature.get(item) != null).forEach(item -> deployedWithSignature.get(item).setDepHistoryId(item.getId()));
+            deployedWithSignature.keySet().stream().filter(item -> deployedWithSignature.get(item) != null).forEach(item -> deployedWithSignature.get(
+                    item).setDepHistoryId(item.getId()));
             dbLayerDeploy.insertSignaturesInBatch(deployedWithSignature.values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
             deployedWithSignature.values().forEach(item -> dbLayerDeploy.updateIdForDBItemDepSignature(item));
-//                postDeployHistoryEvent(depHistoryItem);
+            // postDeployHistoryEvent(depHistoryItem);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
     }
 
-    public static void cloneDepHistoryItemsToNewEntriesB(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-            String controllerId, Date deploymentDate, Long auditlogId) {
-            deployedWithSignature.entrySet().stream()
-            .filter(item -> item.getKey().getId() != null)
-            .forEach(deployed -> prepareDepHistoryItem(deployed.getKey(), deployed.getValue(), account, dbLayerDeploy, commitId, controllerId,
-                deploymentDate, auditlogId));
-            cloneDepHistoryItemsToNewEntries(deployedWithSignature, dbLayerDeploy);
+    public static void cloneDepHistoryItemsToNewEntriesB(Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account,
+            DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+        deployedWithSignature.entrySet().stream().filter(item -> item.getKey().getId() != null).forEach(deployed -> prepareDepHistoryItem(deployed
+                .getKey(), deployed.getValue(), account, dbLayerDeploy, commitId, controllerId, deploymentDate, auditlogId));
+        cloneDepHistoryItemsToNewEntries(deployedWithSignature, dbLayerDeploy);
     }
-    
-    protected static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+
+    protected static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem,
+            DBItemDepSignatures depSignatureItem, String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId,
+            Date deploymentDate, Long auditlogId) {
         DBItemDeploymentHistory clone = new DBItemDeploymentHistory();
         try {
             if (depSignatureItem != null) {
@@ -877,7 +876,7 @@ public abstract class PublishUtils {
             clone.setOperation(OperationType.UPDATE.value());
             clone.setState(DeploymentState.DEPLOYED.value());
             clone.setAuditlogId(auditlogId);
-            if(clone.getSignedContent() == null || clone.getSignedContent().isEmpty()) {
+            if (clone.getSignedContent() == null || clone.getSignedContent().isEmpty()) {
                 clone.setSignedContent(".");
             }
             dbLayerDeploy.getSession().save(clone);
@@ -893,57 +892,57 @@ public abstract class PublishUtils {
         return clone;
     }
 
-//    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
-//            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-//            String controllerId, Date deploymentDate, Long auditlogId) {
-//        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-//        for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
-//            if (deployed.getId() != null) {
-//                DBItemDepSignatures signature = deployedWithSignature.get(deployed);
-//                deployedObjects.add(cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId,
-//                        deploymentDate, auditlogId));
-//                JocInventory.postDeployHistoryEvent(deployed);
-//            }
-//        }
-//        return deployedObjects;
-//    }
+    // public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
+    // Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+    // String controllerId, Date deploymentDate, Long auditlogId) {
+    // Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+    // for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
+    // if (deployed.getId() != null) {
+    // DBItemDepSignatures signature = deployedWithSignature.get(deployed);
+    // deployedObjects.add(cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId,
+    // deploymentDate, auditlogId));
+    // JocInventory.postDeployHistoryEvent(deployed);
+    // }
+    // }
+    // return deployedObjects;
+    // }
 
-//    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(List<DBItemDeploymentHistory> redeployedItems, String account,
-//            DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
-//        Set<DBItemDeploymentHistory> deployedObjects;
-//        try {
-//            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
-//            deployedObjects = new HashSet<DBItemDeploymentHistory>();
-//            for (DBItemDeploymentHistory redeployed : redeployedItems) {
-//                redeployed.setId(null);
-//                redeployed.setAccount(account);
-//                redeployed.setControllerId(controllerId);
-//                redeployed.setControllerInstanceId(controllerInstance.getId());
-//                redeployed.setDeploymentDate(deploymentDate);
-//                redeployed.setOperation(OperationType.UPDATE.value());
-//                redeployed.setState(DeploymentState.DEPLOYED.value());
-//                if (redeployed.getSignedContent() == null || redeployed.getSignedContent().isEmpty()) {
-//                    redeployed.setSignedContent(".");
-//                }
-//                dbLayerDeploy.getSession().save(redeployed);
-//                JocInventory.postDeployHistoryEvent(redeployed);
-//                deployedObjects.add(redeployed);
-//            }
-//        } catch (SOSHibernateException e) {
-//            throw new JocSosHibernateException(e);
-//        }
-//        return deployedObjects;
-//    }
+    // public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(List<DBItemDeploymentHistory> redeployedItems, String account,
+    // DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
+    // Set<DBItemDeploymentHistory> deployedObjects;
+    // try {
+    // DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+    // deployedObjects = new HashSet<DBItemDeploymentHistory>();
+    // for (DBItemDeploymentHistory redeployed : redeployedItems) {
+    // redeployed.setId(null);
+    // redeployed.setAccount(account);
+    // redeployed.setControllerId(controllerId);
+    // redeployed.setControllerInstanceId(controllerInstance.getId());
+    // redeployed.setDeploymentDate(deploymentDate);
+    // redeployed.setOperation(OperationType.UPDATE.value());
+    // redeployed.setState(DeploymentState.DEPLOYED.value());
+    // if (redeployed.getSignedContent() == null || redeployed.getSignedContent().isEmpty()) {
+    // redeployed.setSignedContent(".");
+    // }
+    // dbLayerDeploy.getSession().save(redeployed);
+    // JocInventory.postDeployHistoryEvent(redeployed);
+    // deployedObjects.add(redeployed);
+    // }
+    // } catch (SOSHibernateException e) {
+    // throw new JocSosHibernateException(e);
+    // }
+    // return deployedObjects;
+    // }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(Collection<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
-            String commitIdforFileOrderSource, boolean withTrash, String account, Long auditLogId) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(Collection<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer,
+            String commitId, String commitIdforFileOrderSource, boolean withTrash, String account, Long auditLogId) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
             if (toDelete != null && !toDelete.isEmpty()) {
                 for (DBItemDeploymentHistory delete : toDelete) {
                     DBItemDeploymentHistory newEntry = new DBItemDeploymentHistory();
-//                    delete.setId(null);
+                    // delete.setId(null);
                     if (DeployType.FILEORDERSOURCE.equals(delete.getTypeAsEnum()) && commitIdforFileOrderSource != null) {
                         newEntry.setCommitId(commitIdforFileOrderSource);
                     } else {
@@ -953,7 +952,7 @@ public abstract class PublishUtils {
                     newEntry.setState(DeploymentState.DEPLOYED.value());
                     newEntry.setDeleteDate(Date.from(Instant.now()));
                     newEntry.setDeploymentDate(Date.from(Instant.now()));
-                    
+
                     newEntry.setAccount(account);
                     newEntry.setAuditlogId(auditLogId);
                     newEntry.setContent(delete.getContent());
@@ -1000,7 +999,6 @@ public abstract class PublishUtils {
             for (DBItemInventoryConfiguration draft : drafts) {
                 DBItemInventoryConfiguration toUpdate = hibernateSession.get(DBItemInventoryConfiguration.class, draft.getId());
                 toUpdate.setDeployed(true);
-                toUpdate.setModified(Date.from(Instant.now()));
                 hibernateSession.update(toUpdate);
                 JocInventory.postEvent(draft.getFolder());
                 // TODO post event: InventoryTaggingUpdated ??
@@ -1017,7 +1015,6 @@ public abstract class PublishUtils {
                 DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), ConfigurationType.fromValue(draft
                         .getObjectType().intValue()));
                 configuration.setDeployed(true);
-                configuration.setModified(Date.from(Instant.now()));
                 dbLayer.getSession().update(configuration);
                 foldersForEvent.add(configuration.getFolder());
             }
@@ -1088,26 +1085,27 @@ public abstract class PublishUtils {
 
     public static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> controllerId.equals(item.getControllerId()))
-                .filter(item -> JocInventory.pathToName(item.getWorkflowPath()).equals(JocInventory.pathToName(workflow.getPath()))).collect(Collectors.toSet());
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> controllerId.equals(item
+                .getControllerId())).filter(item -> JocInventory.pathToName(item.getWorkflowPath()).equals(JocInventory.pathToName(workflow
+                        .getPath()))).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
             if (workflow.getJobs() != null) {
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream()
-                            .filter(item -> jobname.equals(item.getJobName()))
-                            .map(UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
+                    job.setAgentPath(checkAgentIdPresent(filteredUpdateables.stream().filter(item -> jobname.equals(item.getJobName())).map(
+                            UpdateableWorkflowJobAgentName::getAgentId).findAny(), controllerId));
                 });
             }
         }
-        
+
         // agentName -> agentId mapping for instructions has no jobname
         Map<String, String> agentNameToIdMap = filteredUpdateables.stream().filter(item -> item.getJobName() == null).collect(Collectors.toMap(
                 UpdateableWorkflowJobAgentName::getAgentName, UpdateableWorkflowJobAgentName::getAgentId, (k, v) -> v));
         replaceAgentNameWithAgentIdInInstructions(workflow.getInstructions(), controllerId, agentNameToIdMap);
     }
-    
-    private static void replaceAgentNameWithAgentIdInInstructions(List<Instruction> insts, String controllerId, Map<String, String> agentNameToIdMap) {
+
+    private static void replaceAgentNameWithAgentIdInInstructions(List<Instruction> insts, String controllerId,
+            Map<String, String> agentNameToIdMap) {
         if (insts != null && !agentNameToIdMap.isEmpty()) {
             for (int i = 0; i < insts.size(); i++) {
                 Instruction inst = insts.get(i);
@@ -1125,7 +1123,8 @@ public abstract class PublishUtils {
                     if (fl.getAgentPath() != null) {
                         String agentId = agentNameToIdMap.get(fl.getAgentPath());
                         if (agentId == null) {
-                            throw new JocObjectNotExistException("the agent name in ForkList instruction is not known for the controller " + controllerId); 
+                            throw new JocObjectNotExistException("the agent name in ForkList instruction is not known for the controller "
+                                    + controllerId);
                         } else {
                             fl.setAgentPath(agentId);
                         }
@@ -1209,15 +1208,15 @@ public abstract class PublishUtils {
                         UpdateableFileOrderSourceAgentName::getAgentId).findAny();
         fileOrderSource.setAgentPath(checkAgentIdPresent(filteredUpdateables, controllerId));
     }
-    
+
     private static String checkAgentIdPresent(Optional<String> opt, String controllerId) {
-        if(opt.isPresent()) {
+        if (opt.isPresent()) {
             return opt.get();
         } else {
             throw new JocObjectNotExistException("the agent name is not known for the controller " + controllerId);
         }
     }
-    
+
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
         if (i.toString().length() >= length) {
             return i.toString();
@@ -1246,14 +1245,14 @@ public abstract class PublishUtils {
 
     public static Set<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        return folders.stream().flatMap(item -> dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item
-                .getRecursive()).stream()).collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())
+                .stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsfromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
-        return folders.stream().flatMap(item -> dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item
-                .getRecursive()).stream()).collect(Collectors.toSet());
+        return folders.stream().flatMap(item -> dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())
+                .stream()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsWithoutReleasedfromFolders(List<Configuration> folders,
@@ -1302,21 +1301,21 @@ public abstract class PublishUtils {
         Map<String, Optional<DBItemDeploymentHistory>> groupedEntries = folders.stream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item
                 .getPath(), item.getRecursive())).flatMap(List::stream).collect(Collectors.groupingBy(item -> item.getType() + ":" + item.getName(),
                         Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))));
-        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
-                .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
+        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get).filter(item -> OperationType.DELETE.value() != item
+                .getOperation()).collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, dbLayer);
-        List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>(); 
+        List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>();
         folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
         allLatest = allLatest.stream().filter(item -> {
-            DBItemInventoryConfiguration dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
+            DBItemInventoryConfiguration dbItem = allCfgs.stream().filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item
+                    .getType())).findFirst().orElse(null);
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
                 return true;
-             } else {
+            } else {
                 return false;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -1327,9 +1326,9 @@ public abstract class PublishUtils {
                 item.setName(name);
                 LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
             }
-            DBItemInventoryConfiguration dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().orElse(null);
-            if(dbItem != null) {
+            DBItemInventoryConfiguration dbItem = allCfgs.stream().filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item
+                    .getType())).findFirst().orElse(null);
+            if (dbItem != null) {
                 return dbItem.getDeployed();
             } else {
                 // history items source does not exist in current configuration
@@ -1416,7 +1415,7 @@ public abstract class PublishUtils {
                                 ConfigurationObject fromDB = getConfigurationObjectFromDBItem(item, commitId);
                                 boolean found = false;
                                 for (ConfigurationObject c : configurations) {
-                                    if(c.getPath().equals(fromDB.getPath()) && c.getObjectType().equals(fromDB.getObjectType())) {
+                                    if (c.getPath().equals(fromDB.getPath()) && c.getObjectType().equals(fromDB.getObjectType())) {
                                         found = true;
                                     }
                                 }
@@ -1447,14 +1446,13 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> {
+                                ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
                                 if (!allObjects.contains(cfg)) {
                                     allObjects.add(cfg);
                                 }
-                            }
-                        );
+                            });
                 }
             }
             if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
@@ -1469,14 +1467,13 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> {
+                                ConfigurationObject cfg = getConfigurationObjectFromDBItem(item);
                                 if (!allObjects.contains(cfg)) {
                                     allObjects.add(cfg);
                                 }
-                            }
-                        );
+                            });
                 }
             }
         }
@@ -1505,7 +1502,7 @@ public abstract class PublishUtils {
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());
             configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
-            
+
             return configuration;
         } catch (IOException e) {
             throw new JocException(e);
@@ -1520,7 +1517,7 @@ public abstract class PublishUtils {
             configuration.setPath(item.getPath());
             configuration.setObjectType(item.getTypeAsEnum());
             configuration.setConfiguration(JocInventory.content2IJSObject(item.getContent(), item.getType()));
-            
+
             return configuration;
         } catch (IOException e) {
             throw new JocException(e);
@@ -1604,7 +1601,7 @@ public abstract class PublishUtils {
         }
         return false;
     }
-    
+
     public static boolean checkCertificateIsSelfIssued(X509Certificate cert) {
         return cert.getIssuerX500Principal().equals(cert.getSubjectX500Principal());
     }
@@ -1613,26 +1610,21 @@ public abstract class PublishUtils {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
         String directory = fileOrderSource.getDirectoryExpr() == null ? JExpression.quoteString(fileOrderSource.getDirectory()) : fileOrderSource
                 .getDirectoryExpr();
-        
-//        return getOrThrowEither(JFileWatch.legacyWithoutPlan (
-//                OrderWatchPath.of(fileOrderSource.getPath()),
-//                WorkflowPath.of(fileOrderSource.getWorkflowPath()),
-//                AgentPath.of(fileOrderSource.getAgentPath()),
-//                getOrThrowEither(JExpression.parse(directory)), 
-//                getFileOrderSourcePattern(fileOrderSource), 
-//                Optional.of(getFileOrderIdPattern(fileOrderSource)), 
-//                Duration.ofSeconds(delay)));
-        
-        return getOrThrowEither(JFileWatch.checked (
-                OrderWatchPath.of(fileOrderSource.getPath()),
-                WorkflowPath.of(fileOrderSource.getWorkflowPath()),
-                AgentPath.of(fileOrderSource.getAgentPath()),
-                getOrThrowEither(JExpression.parse(directory)), 
-                getFileOrderSourcePattern(fileOrderSource),  
-                Optional.of(getFileOrderPattern(fileOrderSource)),
-                Duration.ofSeconds(delay)));
+
+        // return getOrThrowEither(JFileWatch.legacyWithoutPlan (
+        // OrderWatchPath.of(fileOrderSource.getPath()),
+        // WorkflowPath.of(fileOrderSource.getWorkflowPath()),
+        // AgentPath.of(fileOrderSource.getAgentPath()),
+        // getOrThrowEither(JExpression.parse(directory)),
+        // getFileOrderSourcePattern(fileOrderSource),
+        // Optional.of(getFileOrderIdPattern(fileOrderSource)),
+        // Duration.ofSeconds(delay)));
+
+        return getOrThrowEither(JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource.getWorkflowPath()),
+                AgentPath.of(fileOrderSource.getAgentPath()), getOrThrowEither(JExpression.parse(directory)), getFileOrderSourcePattern(
+                        fileOrderSource), Optional.of(getFileOrderPattern(fileOrderSource)), Duration.ofSeconds(delay)));
     }
-    
+
     private static <T> T getOrThrowEither(Either<Problem, T> e) {
         if (e.isLeft()) {
             throw new JocDeployException(e.getLeft().toString());
@@ -1650,7 +1642,7 @@ public abstract class PublishUtils {
         }
         return Optional.of(fileOrderSource.getPattern());
     }
-    
+
     private static JExpression getFileOrderPattern(FileOrderSource fileOrderSource) {
         String expression = String.format("{orderId: %s, planId: %s, priority: %s}", getFileOrderIdPattern(fileOrderSource),
                 getFileOrderDailyPlanPlanIdPattern(fileOrderSource), getFileOrderPriority(fileOrderSource.getPriority()));
@@ -1667,7 +1659,7 @@ public abstract class PublishUtils {
         fileOrderSource.setTimeZone(null);
         return String.format(idPattern, timeZone);
     }
-    
+
     private static String getFileOrderDailyPlanPlanIdPattern(FileOrderSource fileOrderSource) {
         String planIdPattern = "['%s', now(format='yyyy-MM-dd', timezone='%s')]";
         String timeZone = fileOrderSource.getTimeZone();
@@ -1675,11 +1667,11 @@ public abstract class PublishUtils {
             timeZone = OrdersHelper.getDailyPlanTimeZone().getId();
         }
         fileOrderSource.setTimeZone(null);
-        return String.format(planIdPattern, PlanSchemas.DailyPlanPlanSchemaId,  timeZone);
+        return String.format(planIdPattern, PlanSchemas.DailyPlanPlanSchemaId, timeZone);
     }
-    
+
     private static String getFileOrderPriority(Integer prio) {
-        return prio < 0 ? Math.abs(prio)  + " * -1": prio.toString();
+        return prio < 0 ? Math.abs(prio) + " * -1" : prio.toString();
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
@@ -1707,37 +1699,40 @@ public abstract class PublishUtils {
     }
 
     private static void updatePath(DBItemDeploymentHistory deployed) {
-//        try {
-            if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                ((Workflow) deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
-            } else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
-                ((JobResource) deployed.readUpdateableContent()).setPath(deployed.getName());
-            } else if (deployed.getType() == DeployType.LOCK.intValue()) {
-                ((Lock) deployed.readUpdateableContent()).setPath(deployed.getName());
-            } else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
-                ((FileOrderSource) deployed.readUpdateableContent()).setPath(deployed.getName());
-            } else if (deployed.getType() == DeployType.NOTICEBOARD.intValue()) {
-                ((Board) deployed.readUpdateableContent()).setPath(deployed.getName());
-            } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
-                ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
-            }
-            //deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-//        } catch (JsonProcessingException e) {
-//        }
+        // try {
+        if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
+            ((Workflow) deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
+        } else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
+            ((JobResource) deployed.readUpdateableContent()).setPath(deployed.getName());
+        } else if (deployed.getType() == DeployType.LOCK.intValue()) {
+            ((Lock) deployed.readUpdateableContent()).setPath(deployed.getName());
+        } else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
+            ((FileOrderSource) deployed.readUpdateableContent()).setPath(deployed.getName());
+        } else if (deployed.getType() == DeployType.NOTICEBOARD.intValue()) {
+            ((Board) deployed.readUpdateableContent()).setPath(deployed.getName());
+        } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
+            ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
+        }
+        // deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
+        // } catch (JsonProcessingException e) {
+        // }
     }
-    
+
     public static String readFileContent(InputStream inputStream) throws IOException {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         try {
             inputStream2OutputStream(inputStream, outStream);
         } finally {
             if (inputStream != null) {
-                try { inputStream.close(); } catch (IOException e) {}
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                }
             }
         }
         return outStream.toString();
     }
-    
+
     public static String getImportFilename(FormDataBodyPart body) {
         return Optional.ofNullable(body).map(FormDataBodyPart::getContentDisposition).map(ContentDisposition::getFileName).map(s -> {
             try {
@@ -1747,7 +1742,7 @@ public abstract class PublishUtils {
             }
         }).orElse(null);
     }
-    
+
     public static final void resetDependenciesEnforcementAfterPublish(Set<Long> invIds, SOSHibernateSession session) {
         DBLayerDependencies dbLayer = new DBLayerDependencies(session);
         List<DBItemInventoryDependency> dependencies = dbLayer.getReferencesDependencies(new ArrayList<Long>(invIds));
@@ -1755,7 +1750,8 @@ public abstract class PublishUtils {
             dependency.setInvEnforce(false);
             dependency.setDepEnforce(false);
             dependency.setPublished(true);
-            try {session.update(dependency);
+            try {
+                session.update(dependency);
             } catch (SOSHibernateException e) {
                 LOGGER.error(e.getMessage());
             }

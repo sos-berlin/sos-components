@@ -188,7 +188,6 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         item = new DBItemInventoryConfiguration();
         item.setType(in.getObjectType());
         item = setProperties(in, item, dbLayer, true);
-        item.setCreated(Date.from(Instant.now()));
         item.setAuditLogId(dbAuditLog.getId());
         item.setContent(Globals.objectMapper.writeValueAsString(in.getConfiguration()));
         JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
@@ -251,7 +250,6 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
 
         item.setDeployed(false);
         item.setReleased(false);
-        item.setModified(Date.from(Instant.now()));
         return item;
     }
 

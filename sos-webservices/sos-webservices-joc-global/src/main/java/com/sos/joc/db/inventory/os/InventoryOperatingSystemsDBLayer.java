@@ -1,7 +1,5 @@
 package com.sos.joc.db.inventory.os;
 
-import java.sql.Date;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
@@ -93,7 +91,6 @@ public class InventoryOperatingSystemsDBLayer {
                 newItem.setDistribution(osItem.getDistribution());
                 newItem.setHostname(osItem.getHostname());
                 newItem.setName(osItem.getName());
-                newItem.setModified(Date.from(Instant.now()));
                 session.save(newItem);
                 if (isAutoCommit) {
                     Globals.commit(session);
@@ -107,7 +104,6 @@ public class InventoryOperatingSystemsDBLayer {
                     oldOsItem.setArchitecture(osItem.getArchitecture());
                     oldOsItem.setDistribution(osItem.getDistribution());
                     oldOsItem.setName(osItem.getName());
-                    oldOsItem.setModified(Date.from(Instant.now()));
                     session.update(oldOsItem);
                 }
                 if (isAutoCommit) {

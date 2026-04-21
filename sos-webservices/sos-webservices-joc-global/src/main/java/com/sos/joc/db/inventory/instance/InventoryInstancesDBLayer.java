@@ -1,9 +1,7 @@
 package com.sos.joc.db.inventory.instance;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -300,7 +298,6 @@ public class InventoryInstancesDBLayer {
 
     public void updateInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            dbInstance.setModified(Date.from(Instant.now()));
             dbInstance.setSecurityLevel(level.intValue());
             session.update(dbInstance);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -312,7 +309,6 @@ public class InventoryInstancesDBLayer {
 
     public Long saveInstance(DBItemInventoryJSInstance dbInstance) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            dbInstance.setModified(Date.from(Instant.now()));
             dbInstance.setSecurityLevel(level.intValue());
             session.save(dbInstance);
             return dbInstance.getId();

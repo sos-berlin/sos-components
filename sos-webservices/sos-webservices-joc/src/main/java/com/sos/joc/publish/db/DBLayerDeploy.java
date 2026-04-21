@@ -1015,9 +1015,6 @@ public class DBLayerDeploy {
                 valid = false;
             }
             DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-            Date now = Date.from(Instant.now());
-            newConfiguration.setModified(now);
-            newConfiguration.setCreated(now);
             newConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
             newConfiguration.setPath(configuration.getPath());
             newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
@@ -1050,7 +1047,6 @@ public class DBLayerDeploy {
                 valid = false;
             }
             if (existingConfiguration != null) {
-                existingConfiguration.setModified(Date.from(Instant.now()));
                 existingConfiguration.setContent(JocInventory.toString(configuration.getConfiguration()));
                 if (configuration.getConfiguration().getTitle() != null) {
                     existingConfiguration.setTitle(configuration.getConfiguration().getTitle());
@@ -1630,12 +1626,10 @@ public class DBLayerDeploy {
         folder.setDeleted(false);
         folder.setReleased(false);
         folder.setAuditLogId(auditLogId);
-        Instant now = Instant.now();
-        folder.setCreated(Date.from(now));
-        folder.setModified(Date.from(now));
         return folder;
     }
 
+    @SuppressWarnings("deprecation")
     public List<DBItemDeploymentHistory> getDeploymentHistoryCommits(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
             throws SOSHibernateException {
         if (allowedControllers == null) {
@@ -1687,6 +1681,7 @@ public class DBLayerDeploy {
         return getSession().getResultList(query);
     }
 
+    @SuppressWarnings("deprecation")
     public List<DBItemDeploymentHistory> getDeploymentHistoryDetails(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
             throws SOSHibernateException {
         if (allowedControllers == null) {

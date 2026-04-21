@@ -43,25 +43,24 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
-            
+
             Map<FavoriteType, Set<StoreFavorite>> favoritesMap = favorites.getFavorites().stream().collect(Collectors.groupingBy(
                     StoreFavorite::getType, Collectors.toSet()));
-            Date now = Date.from(Instant.now());
             for (Map.Entry<FavoriteType, Set<StoreFavorite>> entry : favoritesMap.entrySet()) {
                 int position = dbLayer.maxOrdering(entry.getKey());
                 position++;
                 for (StoreFavorite f : entry.getValue()) {
-                    position = dbLayer.storeFavorite(f, now, position);
+                    position = dbLayer.storeFavorite(f, position);
                 }
             }
             Globals.commit(connection);
-            
+
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
@@ -70,7 +69,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             Globals.disconnect(connection);
         }
     }
-    
+
     @Override
     public JOCDefaultResponse renameFavorites(String accessToken, byte[] filterBytes) {
 
@@ -83,13 +82,13 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_RENAME);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
-            
+
             for (RenameFavorite favorite : favorites.getFavoriteIds()) {
                 DBItemInventoryFavorite dbOldItem = dbLayer.getFavorite(favorite.getOldName(), favorite.getType());
                 if (dbOldItem == null) {
@@ -103,9 +102,9 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
                 dbOldItem.setName(favorite.getName());
                 connection.update(dbOldItem);
             }
-            
+
             Globals.commit(connection);
-            
+
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);

@@ -56,13 +56,13 @@ import com.sos.joc.model.tag.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceImpl {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ATagsModifyImpl.class);
 
     protected enum Action {
         ADD, DELETE, ORDERING
     }
-    
+
     protected enum ResponseObject {
         GROUPS, INVTAGS, JOBTAGS, ORDERTAGS
     }
@@ -94,7 +94,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 GroupedTag::new).distinct().collect(Collectors.toMap(GroupedTag::getTag, Function.identity()));
         List<T> dbTags = Collections.emptyList();
         Stream<JOCEvent> events = Stream.empty();
-        
+
         switch (action) {
         case ADD:
             dbTags = modifyTags.getTags().isEmpty() ? Collections.emptyList() : dbLayer.getTags(groupedTags.keySet());
@@ -108,9 +108,9 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(dbLayer.getSession()), "order");
                 break;
             default:
-                break;    
+                break;
             }
-            
+
             Set<T> result = insert(groupedTags.values(), dbTags, Date.from(Instant.now()), dbLayer);
             switch (responseObject) {
             case INVTAGS:
@@ -120,7 +120,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 events = result.stream().map(T::getName).map(InventoryJobTagAddEvent::new);
                 break;
             default:
-                break;    
+                break;
             }
             break;
 
@@ -138,7 +138,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 events = groupedTags.keySet().stream().map(InventoryJobTagDeleteEvent::new);
                 break;
             default:
-                break;    
+                break;
             }
             break;
 
@@ -175,19 +175,18 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                     events = Stream.of(new InventoryJobTagsEvent());
                     break;
                 default:
-                    break;    
+                    break;
                 }
             }
             break;
         }
         return events;
     }
-    
-    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Date date, ATagDBLayer<T> dbLayer)
-            throws SOSHibernateException {
+
+    public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Date date, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
         return insert(groupedTags, oldDBTags, null, date, dbLayer);
     }
-    
+
     public Set<T> insert(Collection<GroupedTag> groupedTags, List<T> oldDBTags, Map<String, Long> dbGroupsMap, Date date, ATagDBLayer<T> dbLayer)
             throws SOSHibernateException {
         if (groupedTags == null || groupedTags.isEmpty()) {
@@ -204,8 +203,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                     .toSet());
             if (dbGroupsMap == null) {
                 List<DBItemInventoryTagGroup> dbGroups = groups.isEmpty() ? Collections.emptyList() : dbLayer.getGroups(groups);
-                dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName,
-                        DBItemInventoryTagGroup::getId));
+                dbGroupsMap = dbGroups.stream().collect(Collectors.toMap(DBItemInventoryTagGroup::getName, DBItemInventoryTagGroup::getId));
             }
             groups.removeAll(dbGroupsMap.keySet()); // groups contains only new groups
 
@@ -214,7 +212,6 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 for (String group : groups) {
                     DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
                     item.setName(group);
-                    item.setModified(date);
                     item.setOrdering(++maxGroupsOrdering);
                     dbLayer.getSession().save(item);
                     dbGroupsMap.put(group, item.getId());
@@ -228,7 +225,6 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 groupedTag.checkJavaNameRules();
                 T item = createTypedDBItem(typedDbItemClazz);
                 item.setId(null);
-                item.setModified(date);
                 item.setName(groupedTag.getTag());
                 item.setOrdering(++maxOrdering);
                 if (groupedTag.getGroup().isPresent()) {
@@ -256,7 +252,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Globals.disconnect(session);
         }
     }
-    
+
     private Groups postGroups(String apiCall, ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
@@ -282,7 +278,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             case GROUPS:
                 Groups groups = postGroups(apiCall, dbLayer);
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(groups));
-            default: //case all tags
+            default: // case all tags
                 Tags tags = postTags(apiCall, dbLayer);
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(tags));
             }
@@ -290,25 +286,25 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             return responseStatusJSError(e);
         }
     }
-    
+
     protected JOCDefaultResponse postUsedBy(String apiCall, String accessToken, byte[] filterBytes, ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
         try {
             filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
             JsonValidator.validateFailFast(filterBytes, RequestFolder.class);
-            RequestFolder in =  Globals.objectMapper.readValue(filterBytes, RequestFolder.class);
+            RequestFolder in = Globals.objectMapper.readValue(filterBytes, RequestFolder.class);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             session = Globals.createSosHibernateStatelessConnection(apiCall);
             dbLayer.setSession(session);
-            
+
             TagsUsedBy entity = new TagsUsedBy();
             entity.setAdditionalProperties(getUsedBy(in.getFolders(), folderPermissions.getListOfFolders(), dbLayer));
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
+
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -316,7 +312,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Globals.disconnect(session);
         }
     }
-    
+
     protected JOCDefaultResponse postTagsModify(ResponseObject responseObject, String apiCall, Action action, String accessToken, byte[] filterBytes,
             ATagDBLayer<T> dbLayer) {
         try {
@@ -335,7 +331,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             return responseStatusJSError(e);
         }
     }
-    
+
     protected JOCDefaultResponse postTagRename(ResponseObject responseObject, String apiCall, String accessToken, byte[] filterBytes,
             ATagDBLayer<T> dbLayer) {
         SOSHibernateSession session = null;
@@ -343,44 +339,44 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter modifyTag = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             storeAuditLog(modifyTag.getAuditLog());
-            
+
             GroupedTag groupedName = new GroupedTag(modifyTag.getName());
             GroupedTag groupedNewName = new GroupedTag(modifyTag.getNewName());
-            
+
             if (groupedName.toString().equals(groupedNewName.toString())) {
                 // nothing to do
                 return responseStatusJSOk(Date.from(Instant.now()));
             }
-            
+
             String objectName = ResponseObject.GROUPS.equals(responseObject) ? "group" : "tag";
-            
+
             if (ResponseObject.GROUPS.equals(responseObject)) {
                 SOSCheckJavaVariableName.test(objectName + " name: ", modifyTag.getNewName());
             } else {
                 groupedNewName.checkJavaNameRules();
             }
-            
+
             session = Globals.createSosHibernateStatelessConnection(apiCall);
             session.setAutoCommit(false);
             session.beginTransaction();
-            
+
             dbLayer.setSession(session);
             T tag = dbLayer.getTag(groupedName.getTag());
             if (tag == null) {
-               throw new DBMissingDataException("Couldn't find " + objectName + " with name '" + groupedName.getTag() + "'");
+                throw new DBMissingDataException("Couldn't find " + objectName + " with name '" + groupedName.getTag() + "'");
             }
             T newTag = dbLayer.getTag(groupedNewName.getTag());
             if (newTag != null) {
                 throw new DBMissingDataException(objectName + " with name '" + groupedName.getTag() + "' already exists.");
-             }
-            
+            }
+
             Date now = Date.from(Instant.now());
             DBItemInventoryTagGroup dbGroupItem = null;
             Map<String, GroupedTag> groupedTags = new HashMap<>(1);
@@ -392,13 +388,13 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 checkAndAssignGroup(groupedTags, new InventoryJobTagDBLayer(session), "job");
                 checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
                 groupedNewName = groupedTags.get(groupedNewName.getTag());
-                dbGroupItem = getDbGroup(groupedNewName, now, dbLayer);
+                dbGroupItem = getDbGroup(groupedNewName, dbLayer);
                 break;
             case JOBTAGS:
                 checkAndAssignGroup(groupedTags, new InventoryTagDBLayer(session), "workflow");
                 checkAndAssignGroup(groupedTags, new InventoryOrderTagDBLayer(session), "order");
                 groupedNewName = groupedTags.get(groupedNewName.getTag());
-                dbGroupItem = getDbGroup(groupedNewName, now, dbLayer);
+                dbGroupItem = getDbGroup(groupedNewName, dbLayer);
                 break;
             case ORDERTAGS:
             case GROUPS:
@@ -406,15 +402,14 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             }
 
             tag.setName(groupedNewName.getTag());
-            tag.setModified(now);
             if (dbGroupItem != null) {
-                tag.setGroupId(dbGroupItem.getId()); 
+                tag.setGroupId(dbGroupItem.getId());
             } else {
-                tag.setGroupId(0L); 
+                tag.setGroupId(0L);
             }
             dbLayer.getSession().update(tag);
             Globals.commit(session);
-            
+
             switch (responseObject) {
             case INVTAGS:
                 EventBus.getInstance().post(new InventoryTagAddEvent(modifyTag.getNewName()));
@@ -431,8 +426,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 EventBus.getInstance().post(new InventoryGroupDeleteEvent(modifyTag.getName()));
                 break;
             }
-            
-            
+
             return responseStatusJSOk(now);
         } catch (Exception e) {
             Globals.rollback(session);
@@ -441,8 +435,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             Globals.disconnect(session);
         }
     }
-    
-    private DBItemInventoryTagGroup getDbGroup(GroupedTag groupedNewName, Date now, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
+
+    private DBItemInventoryTagGroup getDbGroup(GroupedTag groupedNewName, ATagDBLayer<T> dbLayer) throws SOSHibernateException {
         if (groupedNewName.hasGroup()) {
             List<DBItemInventoryTagGroup> dbGroups = dbLayer.getGroups(Collections.singleton(groupedNewName.getGroup().get()));
             if (dbGroups.isEmpty()) {
@@ -450,7 +444,6 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 int maxGroupsOrdering = dbLayer.getMaxGroupsOrdering();
                 DBItemInventoryTagGroup dbGroupItem = new DBItemInventoryTagGroup();
                 dbGroupItem.setName(groupedNewName.getGroup().get());
-                dbGroupItem.setModified(now);
                 dbGroupItem.setOrdering(++maxGroupsOrdering);
                 dbLayer.getSession().save(dbGroupItem);
                 return dbGroupItem;
@@ -484,21 +477,21 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         JsonValidator.validateFailFast(filterBytes, RequestFilters.class);
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }
-    
+
     private Map<String, Set<String>> getUsedBy(Collection<Folder> folders, Set<Folder> permittedFolders, ATagDBLayer<T> dbLayer)
             throws SOSHibernateException {
         return dbLayer.getTagsByFolders(folders, true).stream().filter(i -> folderIsPermitted(i.getFolder(), permittedFolders)).collect(Collectors
                 .groupingBy(InventoryTagItem::getNullableName, Collectors.mapping(InventoryTagItem::getPath, Collectors.toSet())));
     }
-    
+
     public static <T extends IDBItemTag> void checkAndAssignGroup(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type) {
         checkAndAssignGroup(groupedTags, dbLayer, type, false);
     }
-    
+
     public static <T extends IDBItemTag> void checkAndAssignGroupModerate(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type) {
         checkAndAssignGroup(groupedTags, dbLayer, type, true);
     }
-    
+
     public static <T extends IDBItemTag> void checkAndAssignGroup(Map<String, GroupedTag> groupedTags, ATagDBLayer<T> dbLayer, String type,
             boolean withoutJocBadRequestException) {
 
@@ -525,7 +518,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
                 } else if (gt.getValue().hasGroup()) {
                     if (withoutJocBadRequestException) {
                         gt.getValue().setGroup(null);
-                        LOGGER.info(String.format("The tag '%s' is already used as %s tag without a group. The group won't be used.", gt.getKey(), type));
+                        LOGGER.info(String.format("The tag '%s' is already used as %s tag without a group. The group won't be used.", gt.getKey(),
+                                type));
                     } else {
                         throw new JocBadRequestException(String.format("The tag '%s' is already used as %s tag without a group", gt.getKey(), type));
                     }

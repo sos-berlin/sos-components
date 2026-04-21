@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.workflow.Workflow;
@@ -42,10 +43,10 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-            
+
             ConfigurationObject item = new ConfigurationObject();
             item.setId(config.getId());
             item.setDeliveryDate(Date.from(Instant.now()));
@@ -54,7 +55,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setValid(config.getValid());
             item.setDeleted(config.getDeleted());
             item.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
-            item.setConfigurationDate(config.getModified());
+            item.setConfigurationDate(SOSDate.toDate(config.getModified()));
             item.setDeployed(config.getDeployed());
             item.setReleased(config.getReleased());
             item.setDeployments(null);
@@ -62,17 +63,17 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setHasReleases(false);
             item.setIsReferencedBy(null);
             item.setHasNote(new InventoryNotesDBLayer(session).hasNote(config.getId(), getAccount()));
-            
+
             if (in.getCommitId() != null && !in.getCommitId().isEmpty() && JocInventory.isDeployable(type)) {
                 String invContentFromDepHistory = dbLayer.getDeployedInventoryContent(config.getId(), in.getCommitId());
                 if (invContentFromDepHistory != null) {
                     config.setContent(invContentFromDepHistory);
                 } else {
-                    throw new DBMissingDataException(String.format("Couldn't find deployed configuration: %s:%s (%s)", type.value().toLowerCase(), config
-                            .getPath(), in.getCommitId()));
+                    throw new DBMissingDataException(String.format("Couldn't find deployed configuration: %s:%s (%s)", type.value().toLowerCase(),
+                            config.getPath(), in.getCommitId()));
                 }
             }
-            
+
             if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
                 Workflow w = WorkflowConverter.convertInventoryWorkflow(config.getContent());
                 if (in.getWithPositions() == Boolean.TRUE) {
@@ -80,23 +81,23 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                 }
                 w = OrderTags.addGroupsToInstructions(w, session);
                 item.setConfiguration(w);
-                
+
             } else if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
                 FileOrderSource fos = JocInventory.convertFileOrderSource(config.getContent(), FileOrderSource.class);
                 fos = OrderTags.addGroupsToFileOrderSource(fos, session);
                 item.setConfiguration(fos);
-                
+
             } else if (config.getType().equals(ConfigurationType.SCHEDULE.intValue())) {
                 Schedule schedule = JocInventory.convertSchedule(config.getContent(), Schedule.class);
                 schedule = OrderTags.addGroupsToOrderPreparation(schedule, session);
                 item.setConfiguration(schedule);
-                
+
             } else {
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             }
-            
+
             if (JocInventory.isDeployable(type)) {
-                
+
                 if (in.getControllerId() != null && !in.getControllerId().isEmpty()) {
                     DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
                     JControllerState currentstate = null;
@@ -108,12 +109,12 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                     item.setSyncState(SyncStateHelper.getState(currentstate, config.getId(), type, deployedDbLayer.getDeployedName(in
                             .getControllerId(), config.getId(), config.getType())));
                 }
-                
+
                 item.setReleased(false);
-                
+
                 Optional<Date> lastDeploymentDate = dbLayer.getLastDeploymentDate(config.getId());
                 item.setHasDeployments(lastDeploymentDate.isPresent());
-                
+
                 if (config.getDeployed()) {
                     if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
@@ -124,15 +125,15 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                         if (!lastDeploymentDate.isPresent()) {
                             item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                         } else {
-                            if (lastDeploymentDate.get().after(config.getModified())) {
+                            if (SOSDate.toInstant(lastDeploymentDate.get()).isAfter(config.getModified())) {
                                 item.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);
                             }
                         }
-                    } 
+                    }
                 }
-                
+
                 // JOC-1498 - IsReferencedBy
                 if (ConfigurationType.WORKFLOW.equals(type)) {
                     IsReferencedBy isRef = new IsReferencedBy();
@@ -141,30 +142,30 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                     isRef.setAdditionalProperty("workflows", dbLayer.getNumOfAddOrderWorkflowsByWorkflowName(config.getName()).intValue());
                     item.setIsReferencedBy(isRef);
                 }
-                
+
             } else if (JocInventory.isReleasable(type)) {
-                
+
                 item.setDeployed(false);
-                
+
                 List<Date> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(config.getId(), "modified");
                 Date releasedLastModified = null;
                 if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
                     releasedLastModified = releasedModifieds.get(0);
                     item.setHasReleases(true);
                 }
-                
+
                 if (config.getReleased()) {
                     if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                     }
-                    
+
                 } else {
 
                     if (item.getConfiguration() != null) {
                         if (releasedLastModified == null) {
                             item.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                         } else {
-                            if (releasedLastModified.after(config.getModified())) {
+                            if (SOSDate.toInstant(releasedLastModified).isAfter(config.getModified())) {
                                 item.setState(ItemStateEnum.RELEASE_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -181,16 +182,16 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             Globals.disconnect(session);
         }
     }
-    
+
     public JOCDefaultResponse readTrash(RequestFilter in, String request) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-            
+
             ConfigurationObject item = new ConfigurationObject();
             item.setId(config.getId());
             item.setDeliveryDate(Date.from(Instant.now()));
@@ -198,14 +199,14 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setObjectType(type);
             item.setValid(config.getValid());
             item.setState(null);
-            item.setConfigurationDate(config.getModified());
+            item.setConfigurationDate(SOSDate.toDate(config.getModified()));
             item.setDeployments(null);
             item.setHasDeployments(null);
             item.setHasReleases(null);
             item.setHasNote(null);
             item.setIsReferencedBy(null);
             item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
-            
+
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
             throw e;

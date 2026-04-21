@@ -1,8 +1,6 @@
 package com.sos.joc.inventory.impl;
 
-import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,8 +70,6 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
 
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
-            Date now = Date.from(Instant.now());
-
             JocError jocError = getJocError();
             WorkflowReport report = new WorkflowReport();
             report.setPath(config.getPath());
@@ -100,10 +96,10 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
                     if (jobTemplateName != null) {
                         jobTemplates.putIfAbsent(jobTemplateName, null);
                     }
-                    report = propagate.template2Job(config, workflow, jobTemplates, Collections.singleton(in.getJobName()), dbLayer, now, dbAuditLog);
+                    report = propagate.template2Job(config, workflow, jobTemplates, Collections.singleton(in.getJobName()), dbLayer, dbAuditLog);
                 }
             }
-            
+
             Globals.commit(session);
             DependencyResolver.updateDependencies(propagate.getChangedWorkflows());
             // post events

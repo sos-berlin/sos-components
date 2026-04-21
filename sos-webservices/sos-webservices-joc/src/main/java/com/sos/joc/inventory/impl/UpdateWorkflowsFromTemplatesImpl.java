@@ -70,10 +70,11 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             Collection<DBItemInventoryConfiguration> dbWorkflows = null;
             if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
-                List<String> workflowNames = in.getWorkflowPaths().stream().map(p -> JocInventory.pathToName(p)).distinct().collect(Collectors.toList());
+                List<String> workflowNames = in.getWorkflowPaths().stream().map(p -> JocInventory.pathToName(p)).distinct().collect(Collectors
+                        .toList());
                 dbWorkflows = dbLayer.getConfigurationByNames(workflowNames, ConfigurationType.WORKFLOW.intValue());
             } else {
                 dbWorkflows = dbLayer.getUsedWorkflowsByJobTemplateNames(in.getFolder(), in.getRecursive() == Boolean.TRUE, null);
@@ -85,8 +86,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             Report report = new Report();
-            Date now = Date.from(Instant.now());
-            report.setDeliveryDate(now);
+            report.setDeliveryDate(Date.from(Instant.now()));
 
             JocError jocError = getJocError();
             if (dbWorkflows != null && !dbWorkflows.isEmpty()) {
@@ -118,7 +118,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                                 jobTemplates.putIfAbsent(name, null);
                             }
                         }
-                        report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, now, dbAuditLog));
+                        report.getWorkflows().add(propagate.template2Job(dbWorkflow, workflow, jobTemplates, dbLayer, dbAuditLog));
                     }
                 }
             }
@@ -134,7 +134,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                             });
                 }
             }
-            
+
             return report;
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -144,7 +144,8 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission) throws Exception {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission)
+            throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null && in.getFolder() != null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later

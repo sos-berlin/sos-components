@@ -34,11 +34,13 @@ public class DBLayerChanges extends DBLayer {
     private static final String MODIFIED_TO_DATE = "modified < :modifiedTo";
     private static final String CLOSED_FROM_DATE = "closed >= :closedFrom";
     private static final String CLOSED_TO_DATE = "closed < :closedTo";
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerChanges.class);
-    private static final Set<ChangeState> ALL_CHANGE_STATES = Collections.unmodifiableSet(new HashSet<>(
-            Arrays.asList(ChangeState.OPEN, ChangeState.PUBLISHED, ChangeState.CLOSED)));
-    private static final Set<Integer> ALL_CHANGE_STATE_INT_VALUES = Collections.unmodifiableSet(new HashSet<>(
-            Arrays.asList(ChangeState.OPEN.intValue(), ChangeState.PUBLISHED.intValue(), ChangeState.CLOSED.intValue())));
+    @SuppressWarnings("unused")
+    private static final Set<ChangeState> ALL_CHANGE_STATES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ChangeState.OPEN,
+            ChangeState.PUBLISHED, ChangeState.CLOSED)));
+    private static final Set<Integer> ALL_CHANGE_STATE_INT_VALUES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ChangeState.OPEN
+            .intValue(), ChangeState.PUBLISHED.intValue(), ChangeState.CLOSED.intValue())));
 
     public DBLayerChanges(SOSHibernateSession session) {
         this.session = session;
@@ -48,20 +50,20 @@ public class DBLayerChanges extends DBLayer {
         return session;
     }
 
-
     public void storeChange(DBItemInventoryChange change) {
-        storeChanges(Arrays.asList(new DBItemInventoryChange[] {change}));
+        storeChanges(Arrays.asList(new DBItemInventoryChange[] { change }));
     }
-    
+
     public void storeChanges(Collection<DBItemInventoryChange> changes) {
         changes.stream().forEach(item -> {
             try {
-                if(item.getId() != null) {
+                if (item.getId() != null) {
                     DBItemInventoryChange change = null;
                     try {
                         change = getChange(item.getId());
-                    } catch (SOSHibernateException e) {}
-                    if(change != null) {
+                    } catch (SOSHibernateException e) {
+                    }
+                    if (change != null) {
                         getSession().update(item);
                     } else {
                         getSession().save(item);
@@ -74,7 +76,7 @@ public class DBLayerChanges extends DBLayer {
             }
         });
     }
-    
+
     public DBItemInventoryChange getChange(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryChange.class, id);
     }
@@ -89,84 +91,84 @@ public class DBLayerChanges extends DBLayer {
 
     public List<DBItemInventoryChange> getChanges(ShowChangesFilter filter) throws SOSHibernateException {
         List<String> clause = new ArrayList<>();
-        if(!filter.getNames().isEmpty()) {
-            if(filter.getNames().size() == 1) {
+        if (!filter.getNames().isEmpty()) {
+            if (filter.getNames().size() == 1) {
                 clause.add("name = :name");
             } else {
                 clause.add("name in (:names)");
             }
         }
-        if(filter.getStates() != null) {
+        if (filter.getStates() != null) {
             clause.add("state in (:states)");
         }
-        if(filter.getOwner() != null) {
+        if (filter.getOwner() != null) {
             clause.add("owner = :owner");
         }
-        if(filter.getLastPublishedBy() != null) {
+        if (filter.getLastPublishedBy() != null) {
             clause.add("publishedBy = :publishedBy");
         }
-        if(filter.getCreated() != null) {
+        if (filter.getCreated() != null) {
             clause.add(CREATED_FROM_DATE);
-            if(filter.getCreated().getTo() != null) {
+            if (filter.getCreated().getTo() != null) {
                 clause.add(CREATED_TO_DATE);
             }
         }
-        if(filter.getModified() != null) {
+        if (filter.getModified() != null) {
             clause.add(MODIFIED_FROM_DATE);
-            if(filter.getModified().getTo() != null) {
+            if (filter.getModified().getTo() != null) {
                 clause.add(MODIFIED_TO_DATE);
             }
         }
-        if(filter.getClosed() != null) {
+        if (filter.getClosed() != null) {
             clause.add(CLOSED_FROM_DATE);
-            if(filter.getClosed().getTo() != null) {
+            if (filter.getClosed().getTo() != null) {
                 clause.add(CLOSED_TO_DATE);
             }
         }
-        StringBuilder hql = new StringBuilder(" from ").append(DBItemInventoryChange.class.getName())
-                .append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
+        StringBuilder hql = new StringBuilder(" from ").append(DBItemInventoryChange.class.getName()).append(clause.stream().collect(Collectors
+                .joining(" and ", " where ", "")));
         Query<DBItemInventoryChange> query = getSession().createQuery(hql.toString());
-        if(!filter.getNames().isEmpty()) {
-            if(filter.getNames().size() == 1) {
+        if (!filter.getNames().isEmpty()) {
+            if (filter.getNames().size() == 1) {
                 query.setParameter("name", filter.getNames().iterator().next());
             } else {
                 query.setParameterList("names", filter.getNames());
             }
         }
-        if(filter.getStates() != null) {
-            if(!filter.getStates().isEmpty()) {
+        if (filter.getStates() != null) {
+            if (!filter.getStates().isEmpty()) {
                 query.setParameterList("states", filter.getStates().stream().map(item -> item.intValue()).collect(Collectors.toList()));
             } else {
                 // if not set use all ChangeStates
                 query.setParameterList("states", ALL_CHANGE_STATE_INT_VALUES);
             }
         }
-        if(filter.getOwner() != null) {
+        if (filter.getOwner() != null) {
             query.setParameter("owner", filter.getOwner());
         }
-        if(filter.getLastPublishedBy() != null) {
+        if (filter.getLastPublishedBy() != null) {
             query.setParameter("publishedBy", filter.getLastPublishedBy());
         }
-        if(filter.getCreated() != null) {
+        if (filter.getCreated() != null) {
             query.setParameter("createdFrom", filter.getCreated().getFrom());
-            if(filter.getCreated().getTo() != null) {
+            if (filter.getCreated().getTo() != null) {
                 query.setParameter("createdTo", filter.getCreated().getTo());
             }
         }
-        if(filter.getModified() != null) {
+        if (filter.getModified() != null) {
             query.setParameter("modifiedFrom", filter.getModified().getFrom());
-            if(filter.getModified().getTo() != null) {
+            if (filter.getModified().getTo() != null) {
                 query.setParameter("modifiedTo", filter.getModified().getTo());
             }
         }
-        if(filter.getClosed() != null) {
+        if (filter.getClosed() != null) {
             query.setParameter("closedFrom", filter.getClosed().getFrom());
-            if(filter.getClosed().getTo() != null) {
+            if (filter.getClosed().getTo() != null) {
                 query.setParameter("closedTo", filter.getClosed().getTo());
             }
         }
         List<DBItemInventoryChange> results = getSession().getResultList(query);
-        if(results == null) {
+        if (results == null) {
             results = Collections.emptyList();
         }
         return results;
@@ -183,24 +185,24 @@ public class DBLayerChanges extends DBLayer {
         Query<ChangeItem> query = getSession().createQuery(hql.toString());
         query.setParameter("changeId", changeId);
         List<ChangeItem> results = getSession().getResultList(query);
-        if(results == null) {
+        if (results == null) {
             results = Collections.emptyList();
         }
         return results;
     }
-    
+
     public List<DBItemInventoryChangesMapping> getMappings(Long changeId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS);
         hql.append(" where changeId = :changeId");
         Query<DBItemInventoryChangesMapping> query = getSession().createQuery(hql.toString());
         query.setParameter("changeId", changeId);
         List<DBItemInventoryChangesMapping> results = getSession().getResultList(query);
-        if(results == null) {
+        if (results == null) {
             results = Collections.emptyList();
         }
         return results;
     }
-    
+
     public DBItemInventoryChangesMapping getMapping(Long changeId, ChangeItem changeItem) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(" from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS).append(" as mapping ");
         hql.append(" where mapping.changeId = :changeId ");
@@ -212,7 +214,7 @@ public class DBLayerChanges extends DBLayer {
         query.setParameter("type", changeItem.getObjectType().intValue());
         return getSession().getSingleResult(query);
     }
-    
+
     public DBItemInventoryChangesMapping getMapping(Long changeId, Long inventoryId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CHANGES_MAPPINGS);
         hql.append(" where changeId = :changeId and invId = : inventoryId");

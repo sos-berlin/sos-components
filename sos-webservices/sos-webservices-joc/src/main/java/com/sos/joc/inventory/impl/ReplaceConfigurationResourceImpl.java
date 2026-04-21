@@ -59,7 +59,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse replaceFolder(final String accessToken,  byte[] inBytes) {
+    public JOCDefaultResponse replaceFolder(final String accessToken, byte[] inBytes) {
         try {
             inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
@@ -86,7 +86,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            
+
             String search = in.getSearch().replaceAll("%", ".*");
             Predicate<String> regex = Pattern.compile(search, Pattern.CASE_INSENSITIVE).asPredicate();
             Predicate<DBItemInventoryConfiguration> regexFilter = item -> regex.test(item.getName());
@@ -94,13 +94,13 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             String replace = in.getReplace() == null ? "" : in.getReplace();
 
             Set<String> events = new HashSet<>();
-            
+
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
-            
+
             Map<String, String> oldNewNameMap = new HashMap<>();
-            
+
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, replace);
                 SOSCheckJavaVariableName.test("name", newName);
@@ -122,7 +122,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             DependencyResolver.updateDependencies(dBFolderContent);
             session.commit();
             auditLogObjectsLogging.log();
-            
+
             events.forEach(JocInventory::postEvent);
             if (!events.isEmpty()) {
                 JocInventory.postFolderEvent(config.getPath());
@@ -141,7 +141,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replace(RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -158,7 +158,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             String replace = in.getReplace() == null ? "" : in.getReplace();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
-            
+
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 
@@ -166,7 +166,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(newName);
 
                 if (config.getName().equals(newName)) { // Nothing to do
-                    //return responseStatusJSOk(Date.from(Instant.now()));
+                    // return responseStatusJSOk(Date.from(Instant.now()));
                     continue;
                 }
 
@@ -227,7 +227,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
         oldItem.setDeployed(false);
         oldItem.setReleased(false);
         oldItem.setAuditLogId(auditLogId);
-        oldItem.setModified(Date.from(Instant.now()));
     }
 
 }

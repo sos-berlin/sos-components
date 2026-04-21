@@ -73,11 +73,9 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 note = newNote(now, author, in, invItem.getPath());
 
                 dbItem = new DBItemInventoryNote();
-                dbItem.setCreated(now);
-                dbItem.setModified(now);
+                dbItem.setId(null);
                 dbItem.setCid(invItem.getNoteId());
                 dbItem.setSeverity(in.getSeverity().intValue());
-                dbItem.setId(null);
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
                 
                 session.save(dbItem);
@@ -121,7 +119,6 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
                 setNoteIdentifier(note, author, in, invItem.getPath());
 
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
-                dbItem.setModified(now);
                 dbItem.setSeverity(md.getSeverity().intValue());
 
                 session.update(dbItem);

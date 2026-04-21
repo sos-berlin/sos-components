@@ -70,7 +70,7 @@ import com.sos.joc.publish.util.PublishUtils;
 
 public abstract class RepositoryUtil {
 
-     private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUtil.class);
 
     public static String getExtension(ConfigurationType type) {
         switch (type) {
@@ -240,8 +240,8 @@ public abstract class RepositoryUtil {
             if (recursive != null && recursive) {
                 folders.addAll(results);
             } else {
-                folders.addAll(results.stream()
-                        .filter(item -> Paths.get(item.getPath()).getNameCount() <= parentDepth + 1).collect(Collectors.toSet()));
+                folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() <= parentDepth + 1).collect(Collectors
+                        .toSet()));
             }
         }
         return folders;
@@ -256,8 +256,8 @@ public abstract class RepositoryUtil {
                 tree = treeMap.get(pFolder);
                 tree.setItems(folder.getItems());
                 if (recursive != null && recursive) {
-                    tree.getFolders().removeIf(child -> (child.getFolders() == null || child.getFolders().isEmpty()) 
-                            && (child.getItems() == null || child.getItems().isEmpty()));
+                    tree.getFolders().removeIf(child -> (child.getFolders() == null || child.getFolders().isEmpty()) && (child.getItems() == null
+                            || child.getItems().isEmpty()));
                 }
             } else {
                 tree = folder;
@@ -304,17 +304,20 @@ public abstract class RepositoryUtil {
     public static TreeSet<Path> readRepositoryAsTreeSet(Path repository) throws IOException {
         TreeSet<Path> paths = new TreeSet<>();
         Files.walkFileTree(repository, new FileVisitor<Path>() {
+
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
+                if (!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                     paths.add(dir);
                 }
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
                 if (filePath.getFileName().toString().endsWith(".json")) {
@@ -322,6 +325,7 @@ public abstract class RepositoryUtil {
                 }
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
@@ -334,17 +338,20 @@ public abstract class RepositoryUtil {
         TreeSet<Path> paths = new TreeSet<>();
         if (recursive) {
             Files.walkFileTree(repository, new FileVisitor<Path>() {
+
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
+                    if (!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                         paths.add(dir);
                     }
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
                     if (filePath.getFileName().toString().endsWith(".json")) {
@@ -352,6 +359,7 @@ public abstract class RepositoryUtil {
                     }
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                     return FileVisitResult.CONTINUE;
@@ -359,17 +367,20 @@ public abstract class RepositoryUtil {
             });
         } else {
             Files.walkFileTree(repository, EnumSet.noneOf(FileVisitOption.class), 2, new FileVisitor<Path>() {
+
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if(!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
+                    if (!".git".equals(dir.getFileName().toString()) && !dir.toString().contains(".git")) {
                         paths.add(dir);
                     }
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
                     if (filePath.getFileName().toString().endsWith(".json")) {
@@ -377,6 +388,7 @@ public abstract class RepositoryUtil {
                     }
                     return FileVisitResult.CONTINUE;
                 }
+
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                     return FileVisitResult.CONTINUE;
@@ -389,14 +401,17 @@ public abstract class RepositoryUtil {
     public static TreeSet<Path> readItemsFromRepositoryFolderAsTreeSet(Path repository) throws IOException {
         TreeSet<Path> paths = new TreeSet<>();
         Files.walkFileTree(repository, new FileVisitor<Path>() {
+
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
                 if (filePath.getFileName().toString().endsWith(".json")) {
@@ -404,6 +419,7 @@ public abstract class RepositoryUtil {
                 }
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
@@ -419,65 +435,58 @@ public abstract class RepositoryUtil {
             return Date.from(Instant.now());
         }
     }
-    
-    public static Set<ConfigurationObject> getDeployableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer,
-            String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
-        DBMissingDataException, IOException, SOSHibernateException {
+
+    public static Set<ConfigurationObject> getDeployableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
-        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, rolloutTypes.stream()
-                .map(type -> type.intValue()).collect(Collectors.toSet()));
+        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, rolloutTypes.stream().map(type -> type.intValue()).collect(Collectors
+                .toSet()));
     }
 
-    public static Set<ConfigurationObject> getDeployableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, 
-            String commitId) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
-        DBMissingDataException, IOException, SOSHibernateException {
+    public static Set<ConfigurationObject> getDeployableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         List<ConfigurationType> localTypes = getLocalConfigurationTypes();
-        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, localTypes.stream()
-                .map(type -> type.intValue()).collect(Collectors.toSet()));
-    }
-    
-    public static Set<ConfigurationObject> getReleasableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
-        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
-        return getReleasableConfigurationsFromDB(filter, dbLayer, rolloutTypes.stream()
-                .map(type -> type.intValue()).collect(Collectors.toSet()));
+        return getDeployableConfigurationsFromDB(filter, dbLayer, commitId, localTypes.stream().map(type -> type.intValue()).collect(Collectors
+                .toSet()));
     }
 
-    public static Set<ConfigurationObject> getReleasableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+    public static Set<ConfigurationObject> getReleasableRolloutConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        return getReleasableConfigurationsFromDB(filter, dbLayer, rolloutTypes.stream().map(type -> type.intValue()).collect(Collectors.toSet()));
+    }
+
+    public static Set<ConfigurationObject> getReleasableLocalConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         List<ConfigurationType> localTypes = getLocalConfigurationTypes();
-        return getReleasableConfigurationsFromDB(filter, dbLayer, localTypes.stream()
-                .map(type -> type.intValue()).collect(Collectors.toSet()));
+        return getReleasableConfigurationsFromDB(filter, dbLayer, localTypes.stream().map(type -> type.intValue()).collect(Collectors.toSet()));
     }
 
     public static Set<Path> getPathsToDeleteFromFS(DeleteFromFilter filter, Path repositoryBase) {
         Set<Path> entries = new TreeSet<Path>();
         if (filter != null && !filter.getConfigurations().isEmpty()) {
-            filter.getConfigurations().stream()
-                .filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                .map(config -> config.getConfiguration())
-                .forEach(folder -> {
-                    try {
-                        entries.addAll(RepositoryUtil.readRepositoryAsTreeSet(
-                                repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder.getPath())))));
-                    } catch (IOException e) {
-                        LOGGER.error("Could not read from repository: " + 
-                                repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder.getPath()))).toString());
-                    }
-                });
-            filter.getConfigurations().stream()
-                .filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType()))
-                .map(config -> config.getConfiguration())
-                .forEach(cfg -> entries.add(repositoryBase.resolve(
-                        Paths.get("/").relativize(Paths.get(cfg.getPath() + RepositoryUtil.getExtension(cfg.getObjectType())))))
-                );
-            
+            filter.getConfigurations().stream().filter(cfg -> ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType())).map(
+                    config -> config.getConfiguration()).forEach(folder -> {
+                        try {
+                            entries.addAll(RepositoryUtil.readRepositoryAsTreeSet(repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder
+                                    .getPath())))));
+                        } catch (IOException e) {
+                            LOGGER.error("Could not read from repository: " + repositoryBase.resolve(Paths.get("/").relativize(Paths.get(folder
+                                    .getPath()))).toString());
+                        }
+                    });
+            filter.getConfigurations().stream().filter(cfg -> !ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType())).map(
+                    config -> config.getConfiguration()).forEach(cfg -> entries.add(repositoryBase.resolve(Paths.get("/").relativize(Paths.get(cfg
+                            .getPath() + RepositoryUtil.getExtension(cfg.getObjectType()))))));
+
         }
         return entries;
     }
-    
+
     public static Set<Path> getPathsToDeleteFromFS(UnlinkFolderFilter filter, Path repositoryBase) {
         if (filter != null && !filter.getFolder().isEmpty()) {
             try {
@@ -489,7 +498,7 @@ public abstract class RepositoryUtil {
         }
         return null;
     }
-    
+
     public static void writeToRepository(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, Path repositoryBase,
             StoreItemsCategory category) throws IOException {
         String content = null;
@@ -557,7 +566,7 @@ public abstract class RepositoryUtil {
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
-                    case ROLLOUT: 
+                    case ROLLOUT:
                         if (rolloutTypes.contains(deployable.getObjectType())) {
                             Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
@@ -630,7 +639,7 @@ public abstract class RepositoryUtil {
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
                         }
                         break;
-                    case ROLLOUT: 
+                    case ROLLOUT:
                         if (rolloutTypes.contains(releasable.getObjectType())) {
                             Files.createDirectories(repository.resolve(Paths.get(filename)).getParent());
                             Files.write(repository.resolve(Paths.get(filename)), contentBytes);
@@ -642,8 +651,7 @@ public abstract class RepositoryUtil {
         }
     }
 
-    public static void deleteFromRepository(Set<ConfigurationObject> toDelete, Path repositories)
-            throws IOException {
+    public static void deleteFromRepository(Set<ConfigurationObject> toDelete, Path repositories) throws IOException {
         Set<String> foldersToDelete = new HashSet<String>();
         if (toDelete != null && !toDelete.isEmpty()) {
             for (ConfigurationObject cfg : toDelete) {
@@ -691,7 +699,7 @@ public abstract class RepositoryUtil {
                 if (extension != null) {
                     String filename = cfg.getPath().substring(1).concat(extension);
                     Files.deleteIfExists(repositories.resolve(Paths.get(filename)));
-                } else if (ConfigurationType.FOLDER.equals(cfg.getObjectType())){
+                } else if (ConfigurationType.FOLDER.equals(cfg.getObjectType())) {
                     String filename = cfg.getPath().substring(1);
                     foldersToDelete.add(filename);
                 }
@@ -704,125 +712,123 @@ public abstract class RepositoryUtil {
                         LOGGER.debug("Could not delete folder : " + folder);
                     }
                 });
-                
+
             }
         }
     }
 
     public static Set<DBItemInventoryConfiguration> getUpdatedDbItems(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
-        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
-        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
-        
+        List<ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+
         Set<DBItemInventoryConfiguration> dbItemsToUpdate = new HashSet<DBItemInventoryConfiguration>();
-        Set<Config> folders = filter.getConfigurations().stream()
-                .filter(item -> ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
-        Set<Config> items = filter.getConfigurations().stream()
-                .filter(item -> !ConfigurationType.FOLDER.equals(item.getConfiguration().getObjectType())).collect(Collectors.toSet());
-        
-        dbItemsToUpdate.addAll(folders.stream().map(folder -> dbLayer.getAllInventoryConfigurationsByFolder(
-                    folder.getConfiguration().getPath(), folder.getConfiguration().getRecursive()))
-                .flatMap(Collection::stream).filter(item -> {
-                    if(filter.getCategory().equals(Category.LOCAL)) {
-                        if(localTypes.contains(item.getTypeAsEnum())) {
+        Set<Config> folders = filter.getConfigurations().stream().filter(item -> ConfigurationType.FOLDER.equals(item.getConfiguration()
+                .getObjectType())).collect(Collectors.toSet());
+        Set<Config> items = filter.getConfigurations().stream().filter(item -> !ConfigurationType.FOLDER.equals(item.getConfiguration()
+                .getObjectType())).collect(Collectors.toSet());
+
+        dbItemsToUpdate.addAll(folders.stream().map(folder -> dbLayer.getAllInventoryConfigurationsByFolder(folder.getConfiguration().getPath(),
+                folder.getConfiguration().getRecursive())).flatMap(Collection::stream).filter(item -> {
+                    if (filter.getCategory().equals(Category.LOCAL)) {
+                        if (localTypes.contains(item.getTypeAsEnum())) {
                             return true;
                         } else {
                             return false;
                         }
                     } else {
-                        if(rolloutTypes.contains(item.getTypeAsEnum())) {
+                        if (rolloutTypes.contains(item.getTypeAsEnum())) {
                             return true;
                         } else {
                             return false;
                         }
                     }
                 }).collect(Collectors.toSet()));
-        dbItemsToUpdate.addAll(items.stream().map(item -> dbLayer.getInventoryConfigurationByNameAndType(
-                Paths.get(stripFileExtension(Paths.get(item.getConfiguration().getPath()))).getFileName().toString(),
-                item.getConfiguration().getObjectType().intValue())).filter(Objects::nonNull).filter(item -> {
-                    if(filter.getCategory().equals(Category.LOCAL)) {
-                        if(localTypes.contains(item.getTypeAsEnum())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        if(rolloutTypes.contains(item.getTypeAsEnum())) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                }).collect(Collectors.toSet()));
+        dbItemsToUpdate.addAll(items.stream().map(item -> dbLayer.getInventoryConfigurationByNameAndType(Paths.get(stripFileExtension(Paths.get(item
+                .getConfiguration().getPath()))).getFileName().toString(), item.getConfiguration().getObjectType().intValue())).filter(
+                        Objects::nonNull).filter(item -> {
+                            if (filter.getCategory().equals(Category.LOCAL)) {
+                                if (localTypes.contains(item.getTypeAsEnum())) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            } else {
+                                if (rolloutTypes.contains(item.getTypeAsEnum())) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            }
+                        }).collect(Collectors.toSet()));
 
         if (!dbItemsToUpdate.isEmpty()) {
             Map<ConfigurationType, Set<String>> notUpdated = new HashMap<ConfigurationType, Set<String>>();
             InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-            dbItemsToUpdate = dbItemsToUpdate.stream()
-                .filter(item -> (Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(item.getTypeAsEnum())) ||
-                    (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(item.getTypeAsEnum())))
-                .map(dbItem -> {
-                    boolean updated = false;
-                    ConfigurationType objType = dbItem.getTypeAsEnum();
-                    byte[] content = null;
-                    try {
-                        Path repository = repositoryBase;
-                        if (Category.LOCAL.equals(filter.getCategory())) {
-                            repository = repositoryBase.resolve("local");
-                        } else if (Category.ROLLOUT.equals(filter.getCategory())) {
-                            repository = repositoryBase.resolve("rollout");
-                        }
-                        if (dbItem.getPath().startsWith("/")) {
-                            content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(objType))));
-                        } else {
-                            content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath() + getExtension(objType))));
-    
-                        }
-                        String updatedContent = null;
-                        if (!ConfigurationType.FOLDER.equals(objType)) {
-                            updatedContent = getConfiguration(content, objType);
-                        }
-                        if (updatedContent != null) {
-                            if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
-                                updated = true;
-                            } else {
-                                if(!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
-                                    notUpdated.put(dbItem.getTypeAsEnum(), new HashSet<String>());
+            dbItemsToUpdate = dbItemsToUpdate.stream().filter(item -> (Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(item
+                    .getTypeAsEnum())) || (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(item.getTypeAsEnum()))).map(
+                            dbItem -> {
+                                boolean updated = false;
+                                ConfigurationType objType = dbItem.getTypeAsEnum();
+                                byte[] content = null;
+                                try {
+                                    Path repository = repositoryBase;
+                                    if (Category.LOCAL.equals(filter.getCategory())) {
+                                        repository = repositoryBase.resolve("local");
+                                    } else if (Category.ROLLOUT.equals(filter.getCategory())) {
+                                        repository = repositoryBase.resolve("rollout");
+                                    }
+                                    if (dbItem.getPath().startsWith("/")) {
+                                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath().substring(1) + getExtension(
+                                                objType))));
+                                    } else {
+                                        content = Files.readAllBytes(repository.resolve(Paths.get(dbItem.getPath() + getExtension(objType))));
+
+                                    }
+                                    String updatedContent = null;
+                                    if (!ConfigurationType.FOLDER.equals(objType)) {
+                                        updatedContent = getConfiguration(content, objType);
+                                    }
+                                    if (updatedContent != null) {
+                                        if (!JocInventory.isJsonHashEqual(dbItem.getContent(), updatedContent, dbItem.getTypeAsEnum())) {
+                                            updated = true;
+                                        } else {
+                                            if (!notUpdated.containsKey(dbItem.getTypeAsEnum())) {
+                                                notUpdated.put(dbItem.getTypeAsEnum(), new HashSet<String>());
+                                            }
+                                            notUpdated.get(dbItem.getTypeAsEnum()).add(dbItem.getName());
+                                        }
+                                        boolean valid = true;
+                                        try {
+                                            Validator.validate(objType, content, invDbLayer, null);
+                                        } catch (Exception e) {
+                                            valid = false;
+                                        }
+                                        dbItem.setContent(updatedContent);
+                                        dbItem.setDeployed(false);
+                                        dbItem.setReleased(false);
+                                        dbItem.setValid(valid);
+                                    }
+                                } catch (IOException e) {
+                                    LOGGER.error("", e);
                                 }
-                                notUpdated.get(dbItem.getTypeAsEnum()).add(dbItem.getName());
-                            }
-                            boolean valid = true;
-                            try {
-                                Validator.validate(objType, content, invDbLayer, null);
-                            } catch (Exception e) {
-                                valid = false;
-                            }
-                            dbItem.setContent(updatedContent);
-                            dbItem.setDeployed(false);
-                            dbItem.setReleased(false);
-                            dbItem.setValid(valid);
-                            dbItem.setModified(Date.from(Instant.now()));
-                        }
-                    } catch (IOException e) {
-                        LOGGER.error("", e);
-                    }
-                    if(updated) {
-                        return dbItem;
-                    } else {
-                        return null;
-                    }
-            }).filter(Objects::nonNull).collect(Collectors.toSet()); 
-            if(!notUpdated.isEmpty() && LOGGER.isDebugEnabled()) {
+                                if (updated) {
+                                    return dbItem;
+                                } else {
+                                    return null;
+                                }
+                            }).filter(Objects::nonNull).collect(Collectors.toSet());
+            if (!notUpdated.isEmpty() && LOGGER.isDebugEnabled()) {
                 LOGGER.debug(notUpdated.entrySet().stream().map(entry -> {
-                    return entry.getValue().size()  + " " + entry.getKey().value().toLowerCase();
+                    return entry.getValue().size() + " " + entry.getKey().value().toLowerCase();
                 }).collect(Collectors.joining(", ", "[HASH COMPARE]:", " not updated, because json content is equal.")));
             }
         }
         return dbItemsToUpdate;
     }
-    
+
     public static Set<DBItemInventoryConfiguration> getNewItemsToUpdate(UpdateFromFilter filter, Path repositoryBase, DBLayerDeploy dbLayer) {
-        List <ConfigurationType> localTypes = getLocalConfigurationTypes();
-        List <ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
+        List<ConfigurationType> localTypes = getLocalConfigurationTypes();
+        List<ConfigurationType> rolloutTypes = getRolloutConfigurationTypes();
         Set<Config> newItems = new HashSet<Config>();
         Set<DBItemInventoryConfiguration> dbItems = new HashSet<DBItemInventoryConfiguration>();
         Path repository = repositoryBase.resolve("rollout");
@@ -833,23 +839,22 @@ public abstract class RepositoryUtil {
         }
         for (Config cfg : filter.getConfigurations()) {
             if (!ConfigurationType.FOLDER.equals(cfg.getConfiguration().getObjectType())) {
-                DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
-                        Paths.get(cfg.getConfiguration().getPath()).getFileName().toString(), 
-                        cfg.getConfiguration().getObjectType());
+                DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(Paths.get(cfg.getConfiguration().getPath()).getFileName()
+                        .toString(), cfg.getConfiguration().getObjectType());
                 if (cfgDbItem == null) {
-                    if((Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(cfg.getConfiguration().getObjectType())) ||
-                            (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(cfg.getConfiguration().getObjectType()))) {
+                    if ((Category.LOCAL.equals(filter.getCategory()) && localTypes.contains(cfg.getConfiguration().getObjectType()))
+                            || (Category.ROLLOUT.equals(filter.getCategory()) && rolloutTypes.contains(cfg.getConfiguration().getObjectType()))) {
                         newItems.add(cfg);
                     }
                 }
             } else {
                 try {
-                    TreeSet<Path> paths = readRepositoryAsTreeSet(repository.resolve(cfg.getConfiguration().getPath().substring(1)), cfg.getConfiguration().getRecursive());
+                    TreeSet<Path> paths = readRepositoryAsTreeSet(repository.resolve(cfg.getConfiguration().getPath().substring(1)), cfg
+                            .getConfiguration().getRecursive());
                     for (Path path : paths) {
                         if (!ConfigurationType.FOLDER.equals(getConfigurationTypeFromFileExtension(path))) {
                             String newPath = path.toString().replace('\\', '/').replace(repository.toString().replace('\\', '/'), "");
-                            DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(
-                                    stripFileExtension(path.getFileName()), 
+                            DBItemInventoryConfiguration cfgDbItem = dbLayer.getConfigurationByName(stripFileExtension(path.getFileName()),
                                     getConfigurationTypeFromFileExtension(path));
                             if (cfgDbItem == null) {
                                 Config newCfg = new Config();
@@ -862,13 +867,13 @@ public abstract class RepositoryUtil {
                         }
                     }
                 } catch (IOException e) {
-                    LOGGER.error("could not read from path " + 
-                            repository.resolve(cfg.getConfiguration().getPath().substring(1)).toString().replace('\\', '/'), e.getCause());
+                    LOGGER.error("could not read from path " + repository.resolve(cfg.getConfiguration().getPath().substring(1)).toString().replace(
+                            '\\', '/'), e.getCause());
                 }
             }
         }
         final Path repo = repository;
-        InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession()); 
+        InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
         newItems.stream().forEach(newItem -> {
             ConfigurationType objType = newItem.getConfiguration().getObjectType();
             byte[] content = null;
@@ -936,23 +941,20 @@ public abstract class RepositoryUtil {
         }
         return Globals.objectMapper.writeValueAsString(Globals.prettyPrintObjectMapper.readValue(content, JocInventory.CLASS_MAPPING.get(type)));
     }
-    
-    private static Set<ConfigurationObject> getDeployableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId, 
-            Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, 
+
+    private static Set<ConfigurationObject> getDeployableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, String commitId,
+            Set<Integer> types) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException,
             DBMissingDataException, IOException, SOSHibernateException {
         Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
         if (filter != null) {
             if (filter.getRollout() != null) {
                 if (!filter.getRollout().getDeployConfigurations().isEmpty()) {
-                    Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toSet());
+                    Set<Configuration> depFolders = filter.getRollout().getDeployConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toSet());
                     Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                     if (depFolders != null && !depFolders.isEmpty()) {
-                        allItems.addAll(
-                                getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream()
-                                    .filter(Objects::nonNull).collect(Collectors.toSet())
-                                );
+                        allItems.addAll(getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream().filter(
+                                Objects::nonNull).collect(Collectors.toSet()));
                     }
                     List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
                     if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
@@ -960,15 +962,14 @@ public abstract class RepositoryUtil {
                     }
                     if (!allItems.isEmpty()) {
                         allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
-                            .forEach(item -> {
-                                configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
-                            });
+                                .forEach(item -> {
+                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
+                                });
                     }
                 }
                 if (!filter.getRollout().getDraftConfigurations().isEmpty()) {
-                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                     Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                     if (draftFolders != null && !draftFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
@@ -978,33 +979,30 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> {
-                                boolean alreadyExists = false;
-                                for (ConfigurationObject config : configurations) {
-                                    if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
-                                        alreadyExists = true;
-                                        break;
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> {
+                                    boolean alreadyExists = false;
+                                    for (ConfigurationObject config : configurations) {
+                                        if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                                            alreadyExists = true;
+                                            break;
+                                        }
                                     }
-                                }
-                                if (!alreadyExists) {
-                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
-                                }
-                            });
+                                    if (!alreadyExists) {
+                                        configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
+                                    }
+                                });
                     }
                 }
             }
             if (filter.getLocal() != null) {
                 if (!filter.getLocal().getDeployConfigurations().isEmpty()) {
-                    Set<Configuration> depFolders = filter.getLocal().getDeployConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toSet());
+                    Set<Configuration> depFolders = filter.getLocal().getDeployConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toSet());
                     Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                     if (depFolders != null && !depFolders.isEmpty()) {
-                        allItems.addAll(
-                                getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream()
-                                    .filter(Objects::nonNull).collect(Collectors.toSet())
-                                );
+                        allItems.addAll(getLatestActiveDepHistoryEntriesFromFoldersByType(depFolders, types, dbLayer).stream().filter(
+                                Objects::nonNull).collect(Collectors.toSet()));
                     }
                     List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
                     if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
@@ -1012,15 +1010,14 @@ public abstract class RepositoryUtil {
                     }
                     if (!allItems.isEmpty()) {
                         allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
-                            .forEach(item -> {
-                                configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
-                            });
+                                .forEach(item -> {
+                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item, commitId));
+                                });
                     }
                 }
                 if (!filter.getLocal().getDraftConfigurations().isEmpty()) {
-                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                     Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                     if (draftFolders != null && !draftFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
@@ -1030,36 +1027,36 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> {
-                                boolean alreadyExists = false;
-                                for (ConfigurationObject config : configurations) {
-                                    if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
-                                        alreadyExists = true;
-                                        break;
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> {
+                                    boolean alreadyExists = false;
+                                    for (ConfigurationObject config : configurations) {
+                                        if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                                            alreadyExists = true;
+                                            break;
+                                        }
                                     }
-                                }
-                                if (!alreadyExists) {
-                                    configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
-                                }
-                            });
+                                    if (!alreadyExists) {
+                                        configurations.add(PublishUtils.getConfigurationObjectFromDBItem(item));
+                                    }
+                                });
                     }
-                }                
+                }
             }
         }
         return configurations;
     }
 
-    private static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, Set<Integer> types) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+    private static Set<ConfigurationObject> getReleasableConfigurationsFromDB(CopyToFilter filter, DBLayerDeploy dbLayer, Set<Integer> types)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         if (filter != null) {
-            if(filter.getLocal() != null) {
+            if (filter.getLocal() != null) {
                 if (filter.getLocal().getReleasedConfigurations() != null && !filter.getLocal().getReleasedConfigurations().isEmpty()) {
-                    List<Configuration> releasedFolders = filter.getLocal().getReleasedConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> releasedFolders = filter.getLocal().getReleasedConfigurations().stream().filter(item -> item
+                            .getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(
+                                    Collectors.toList());
                     Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
                     if (releasedFolders != null && !releasedFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
@@ -1069,14 +1066,13 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
                     }
                 }
                 if (filter.getLocal().getDraftConfigurations() != null && !filter.getLocal().getDraftConfigurations().isEmpty()) {
-                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> draftFolders = filter.getLocal().getDraftConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                     Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                     if (draftFolders != null && !draftFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
@@ -1086,20 +1082,20 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> {
-                                if (!allObjectsMap.containsKey(item.getName())) {
-                                    allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
-                                }
-                            });
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> {
+                                    if (!allObjectsMap.containsKey(item.getName())) {
+                                        allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
+                                    }
+                                });
                     }
                 }
             }
             if (filter.getRollout() != null) {
                 if (filter.getRollout().getReleasedConfigurations() != null && !filter.getRollout().getReleasedConfigurations().isEmpty()) {
-                    List<Configuration> releasedFolders = filter.getRollout().getReleasedConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> releasedFolders = filter.getRollout().getReleasedConfigurations().stream().filter(item -> item
+                            .getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(
+                                    Collectors.toList());
                     Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
                     if (releasedFolders != null && !releasedFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
@@ -1109,14 +1105,13 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item)));
                     }
                 }
                 if (filter.getRollout().getDraftConfigurations() != null && !filter.getRollout().getDraftConfigurations().isEmpty()) {
-                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream()
-                            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                            .map(item -> item.getConfiguration()).collect(Collectors.toList());
+                    List<Configuration> draftFolders = filter.getRollout().getDraftConfigurations().stream().filter(item -> item.getConfiguration()
+                            .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                     Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                     if (draftFolders != null && !draftFolders.isEmpty()) {
                         allItems.addAll(PublishUtils.getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
@@ -1126,15 +1121,15 @@ public abstract class RepositoryUtil {
                         allItems.addAll(configurationDbItems);
                     }
                     if (!allItems.isEmpty()) {
-                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                            .forEach(item -> {
-                                if (!allObjectsMap.containsKey(item.getName())) {
-                                    allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
-                                }
-                            });
+                        allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                                item -> {
+                                    if (!allObjectsMap.containsKey(item.getName())) {
+                                        allObjectsMap.put(item.getName(), PublishUtils.getConfigurationObjectFromDBItem(item));
+                                    }
+                                });
                     }
                 }
-                
+
             }
         }
         if (filter != null && filter.getLocal() != null) {
@@ -1143,33 +1138,36 @@ public abstract class RepositoryUtil {
         return withoutDuplicates;
     }
 
-    private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFoldersByType(Set<Configuration> folders,
-            Set<Integer> types, DBLayerDeploy dbLayer) {
-        ConcurrentMap<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
-                folders.parallelStream().map(item -> dbLayer.getDepHistoryItemsFromFolderByType(item.getPath(), types, item.getRecursive()))
-                    .flatMap(List::stream).collect(
-                            Collectors.groupingByConcurrent(item -> item.getType() + ":" + item.getName(), 
-                            Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))));
-        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
-                .filter(item -> !OperationType.DELETE.value().equals(item.getOperation())).collect(Collectors.toSet());
+    private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFoldersByType(Set<Configuration> folders, Set<Integer> types,
+            DBLayerDeploy dbLayer) {
+        ConcurrentMap<String, Optional<DBItemDeploymentHistory>> groupedEntries = folders.parallelStream().map(item -> dbLayer
+                .getDepHistoryItemsFromFolderByType(item.getPath(), types, item.getRecursive())).flatMap(List::stream).collect(Collectors
+                        .groupingByConcurrent(item -> item.getType() + ":" + item.getName(), Collectors.maxBy(Comparator.comparing(
+                                DBItemDeploymentHistory::getDeploymentDate))));
+        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get).filter(item -> !OperationType.DELETE.value().equals(
+                item.getOperation())).collect(Collectors.toSet());
     }
 
     private static Set<Path> readFolders(Path repository) throws IOException {
         Set<Path> paths = new HashSet<Path>();
         Files.walkFileTree(repository, new FileVisitor<Path>() {
+
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                 paths.add(dir);
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
                 return FileVisitResult.CONTINUE;
             }
+
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
                 return FileVisitResult.CONTINUE;
@@ -1218,8 +1216,8 @@ public abstract class RepositoryUtil {
 
     private static List<ConfigurationType> getLocalConfigurationTypes() {
         List<ConfigurationType> types = new ArrayList<ConfigurationType>();
-        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldWorkflows()
+                .getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
                 types.add(ConfigurationType.WORKFLOW);
             }
@@ -1228,8 +1226,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.WORKFLOW);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue()
+                .isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
                 types.add(ConfigurationType.LOCK);
             }
@@ -1238,8 +1236,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.LOCK);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldNoticeBoards().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
                 types.add(ConfigurationType.NOTICEBOARD);
             }
@@ -1248,8 +1246,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.NOTICEBOARD);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldFileOrderSources().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
                 types.add(ConfigurationType.FILEORDERSOURCE);
             }
@@ -1258,8 +1256,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.FILEORDERSOURCE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldScriptIncludes().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
                 types.add(ConfigurationType.INCLUDESCRIPT);
             }
@@ -1268,8 +1266,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.INCLUDESCRIPT);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue()
+                .isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
                 types.add(ConfigurationType.JOBTEMPLATE);
             }
@@ -1278,8 +1276,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.JOBTEMPLATE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldJobResources().getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
                 types.add(ConfigurationType.JOBRESOURCE);
             }
@@ -1288,8 +1286,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.JOBRESOURCE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldSchedules()
+                .getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
                 types.add(ConfigurationType.SCHEDULE);
             }
@@ -1298,8 +1296,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.SCHEDULE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldCalendars()
+                .getValue().isEmpty()) {
             if (Category.LOCAL.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
                 types.add(ConfigurationType.WORKINGDAYSCALENDAR);
                 types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
@@ -1316,8 +1314,8 @@ public abstract class RepositoryUtil {
 
     private static List<ConfigurationType> getRolloutConfigurationTypes() {
         List<ConfigurationType> types = new ArrayList<ConfigurationType>();
-        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldWorkflows()
+                .getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldWorkflows().getValue())) {
                 types.add(ConfigurationType.WORKFLOW);
             }
@@ -1326,8 +1324,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.WORKFLOW);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldLocks().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldLocks().getValue()
+                .isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldLocks().getValue())) {
                 types.add(ConfigurationType.LOCK);
             }
@@ -1336,8 +1334,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.LOCK);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldNoticeBoards().getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldNoticeBoards().getValue())) {
                 types.add(ConfigurationType.NOTICEBOARD);
             }
@@ -1346,8 +1344,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.NOTICEBOARD);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldFileOrderSources().getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldFileOrderSources().getValue())) {
                 types.add(ConfigurationType.FILEORDERSOURCE);
             }
@@ -1356,8 +1354,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.FILEORDERSOURCE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldScriptIncludes().getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldScriptIncludes().getValue())) {
                 types.add(ConfigurationType.INCLUDESCRIPT);
             }
@@ -1366,8 +1364,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.INCLUDESCRIPT);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldJobs().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldJobs().getValue()
+                .isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobs().getValue())) {
                 types.add(ConfigurationType.JOBTEMPLATE);
             }
@@ -1376,8 +1374,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.JOBTEMPLATE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue() != null && !Globals.getConfigurationGlobalsGit()
+                .getHoldJobResources().getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldJobResources().getValue())) {
                 types.add(ConfigurationType.JOBRESOURCE);
             }
@@ -1386,8 +1384,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.JOBRESOURCE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldSchedules()
+                .getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldSchedules().getValue())) {
                 types.add(ConfigurationType.SCHEDULE);
             }
@@ -1396,8 +1394,8 @@ public abstract class RepositoryUtil {
                 types.add(ConfigurationType.SCHEDULE);
             }
         }
-        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null 
-                && !Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue().isEmpty()) {
+        if (Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue() != null && !Globals.getConfigurationGlobalsGit().getHoldCalendars()
+                .getValue().isEmpty()) {
             if (Category.ROLLOUT.value().toLowerCase().equals(Globals.getConfigurationGlobalsGit().getHoldCalendars().getValue())) {
                 types.add(ConfigurationType.WORKINGDAYSCALENDAR);
                 types.add(ConfigurationType.NONWORKINGDAYSCALENDAR);
@@ -1411,24 +1409,21 @@ public abstract class RepositoryUtil {
         return types;
     }
 
-
     private static DBItemInventoryConfiguration createItem(Config newItem, String content, boolean valid) {
         Path newItemPath = Paths.get(newItem.getConfiguration().getPath());
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.getConfiguration().getPath());
-        if(!item.getPath().startsWith("/")) {
+        if (!item.getPath().startsWith("/")) {
             item.setPath("/" + item.getPath());
         }
         item.setFolder(newItemPath.getParent().toString().replace('\\', '/'));
-        if(!item.getFolder().startsWith("/")) {
+        if (!item.getFolder().startsWith("/")) {
             item.setFolder("/" + item.getFolder());
         }
         item.setName(newItemPath.getFileName().toString());
         item.setDeployed(false);
         item.setReleased(false);
-        item.setModified(Date.from(Instant.now()));
-        item.setCreated(item.getModified());
         item.setDeleted(false);
         item.setAuditLogId(0L);
         item.setType(newItem.getConfiguration().getObjectType());
@@ -1437,8 +1432,8 @@ public abstract class RepositoryUtil {
         return item;
     }
 
-    public static void updateRepoControlledFlagForConfigurations(Set<Configuration> deletedFolders, Path repositoriesBase, 
-            InventoryDBLayer dbLayer) throws SOSHibernateException {
+    public static void updateRepoControlledFlagForConfigurations(Set<Configuration> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer)
+            throws SOSHibernateException {
         updateRepoControlledFlag(deletedFolders.stream().map(Configuration::getPath).collect(Collectors.toSet()), repositoriesBase, dbLayer);
     }
 
@@ -1447,29 +1442,27 @@ public abstract class RepositoryUtil {
         updateRepoControlledFlag(deletedFolders, repositoriesBase, dbLayer, false);
     }
 
-    public static void updateRepoControlledFlag(Set<String> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer, 
-            boolean controlled) throws SOSHibernateException {
+    public static void updateRepoControlledFlag(Set<String> deletedFolders, Path repositoriesBase, InventoryDBLayer dbLayer, boolean controlled)
+            throws SOSHibernateException {
         for (String path : deletedFolders) {
-            if(!"/".equals(path)) {
-                Path folderPath = Paths.get(path); 
+            if (!"/".equals(path)) {
+                Path folderPath = Paths.get(path);
                 if (folderPath.getParent() != null && folderPath.getParent().equals(Paths.get("/"))) {
                     // top level folder
-//                    Path relFolder = Paths.get("/").relativize(folderPath);
-//                    Path pathToCheck = repositoriesBase.resolve(relFolder);
-//                    if(!Files.exists(pathToCheck)) {
-                        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(path, ConfigurationType.FOLDER.intValue());
-                        if(dbFolder != null) {
-                            if((!controlled && dbFolder.getRepoControlled()) || 
-                                    (controlled && !dbFolder.getRepoControlled())) {
-                                dbFolder.setRepoControlled(controlled);
-                                dbFolder.setModified(Date.from(Instant.now()));
-                                dbLayer.getSession().update(dbFolder);
-                            }
+                    // Path relFolder = Paths.get("/").relativize(folderPath);
+                    // Path pathToCheck = repositoriesBase.resolve(relFolder);
+                    // if(!Files.exists(pathToCheck)) {
+                    DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(path, ConfigurationType.FOLDER.intValue());
+                    if (dbFolder != null) {
+                        if ((!controlled && dbFolder.getRepoControlled()) || (controlled && !dbFolder.getRepoControlled())) {
+                            dbFolder.setRepoControlled(controlled);
+                            dbLayer.getSession().update(dbFolder);
                         }
-//                    }
+                    }
+                    // }
                 }
             }
         }
     }
-    
+
 }

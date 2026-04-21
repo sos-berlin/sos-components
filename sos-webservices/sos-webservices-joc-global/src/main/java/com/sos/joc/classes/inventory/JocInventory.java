@@ -35,6 +35,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
@@ -410,7 +411,7 @@ public class JocInventory {
         cfg.setValid(dbItem.getValid());
         cfg.setDeleted(dbItem.getDeleted());
         cfg.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
-        cfg.setConfigurationDate(dbItem.getModified());
+        cfg.setConfigurationDate(SOSDate.toDate(dbItem.getModified()));
         cfg.setDeployed(dbItem.getDeployed());
         cfg.setReleased(dbItem.getReleased());
         cfg.setDeployments(null);
@@ -440,7 +441,7 @@ public class JocInventory {
                     if (!lastDeploymentDate.isPresent()) {
                         cfg.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                     } else {
-                        if (lastDeploymentDate.get().after(dbItem.getModified())) {
+                        if (SOSDate.toInstant(lastDeploymentDate.get()).isAfter(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.DEPLOYMENT_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -473,7 +474,7 @@ public class JocInventory {
                     if (releasedLastModified == null) {
                         cfg.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                     } else {
-                        if (releasedLastModified.after(dbItem.getModified())) {
+                        if (SOSDate.toInstant(releasedLastModified).isAfter(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.RELEASE_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -502,10 +503,8 @@ public class JocInventory {
                     newDbFolder.setName(parentFolder.getFileName().toString());
                     newDbFolder.setDeployed(false);
                     newDbFolder.setReleased(false);
-                    newDbFolder.setModified(Date.from(Instant.now()));
                     newDbFolder.setAuditLogId(auditLogId == null ? 0L : auditLogId);
                     newDbFolder.setContent(null);
-                    newDbFolder.setCreated(newDbFolder.getModified());
                     newDbFolder.setDeleted(false);
                     newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
@@ -536,14 +535,12 @@ public class JocInventory {
                 DBItemInventoryConfigurationTrash newDbFolder = dbLayer.getTrashConfiguration(newFolder, folderType.intValue());
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfigurationTrash();
+                    newDbFolder.setId(null);
                     newDbFolder.setPath(newFolder);
                     newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
                     newDbFolder.setName(parentFolder.getFileName().toString());
-                    newDbFolder.setModified(Date.from(Instant.now()));
                     newDbFolder.setAuditLogId(auditLogId == null ? 0L : auditLogId);
                     newDbFolder.setContent(null);
-                    newDbFolder.setCreated(newDbFolder.getModified());
-                    newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
                     newDbFolder.setType(folderType);
                     newDbFolder.setValid(true);
@@ -1086,7 +1083,6 @@ public class JocInventory {
         if (configs.size() > 0) {
             for (DBItemInventoryConfiguration config : configs) {
                 config.setDeployed(true);
-                config.setModified(Date.from(Instant.now()));
                 session.update(config);
             }
 
@@ -1106,13 +1102,11 @@ public class JocInventory {
             try {
                 List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getTrashConfigurationByName(item.getName(), item.getType());
                 deleteConfiguration(dbLayer, item);
-                Date now = Date.from(Instant.now());
                 boolean createParentFolder = true;
                 DBItemInventoryConfigurationTrash trashItem = null;
                 if (trashItems.isEmpty()) {
                     trashItem = new DBItemInventoryConfigurationTrash();
                     trashItem.setId(null);
-                    trashItem.setCreated(now);
                     trashItem.setType(item.getType());
                     trashItem.setName(item.getName());
                 } else {
@@ -1130,7 +1124,6 @@ public class JocInventory {
                 trashItem.setContent(item.getContent());
                 trashItem.setTitle(item.getTitle());
                 trashItem.setValid(item.getValid());
-                trashItem.setModified(now);
                 if (trashItem.getId() == null) {
                     dbLayer.getSession().save(trashItem);
                     makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId(), folderType);

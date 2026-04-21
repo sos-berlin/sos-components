@@ -103,7 +103,6 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
             
             for (IDBItemTag dbTagItem : dbTagItems) {
                 dbTagItem.setGroupId(groupId);
-                dbTagItem.setModified(now);
                 session.update(dbTagItem);
             }
             

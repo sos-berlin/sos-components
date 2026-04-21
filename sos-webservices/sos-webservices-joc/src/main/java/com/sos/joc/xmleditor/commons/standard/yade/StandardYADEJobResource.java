@@ -8,7 +8,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXmlHashComparator;
@@ -184,7 +183,7 @@ public class StandardYADEJobResource {
             item.setConfigurationReleased(inventoryXml);
             item.setConfigurationReleasedJson(null);
 
-            item.setReleased(SOSDate.toInstant(inventoryItem.getModified()));
+            item.setReleased(inventoryItem.getModified());
 
             if (draftXml == null) {
                 item.setAuditLogId(inventoryItem.getAuditLogId());

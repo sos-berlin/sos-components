@@ -33,8 +33,9 @@ import jakarta.ws.rs.Path;
 
 @Path("tags/groups")
 public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
-    
+
     private static final String API_CALL = "./tags/groups";
+
     private enum Action {
         ADD, DELETE, ORDERING
     }
@@ -53,7 +54,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
     public JOCDefaultResponse postTagsOrdering(String accessToken, byte[] filterBytes) {
         return postTagsModify(Action.ORDERING, accessToken, filterBytes);
     }
-    
+
     private JOCDefaultResponse postTagsModify(Action action, String accessToken, byte[] filterBytes) {
         try {
             RequestFilters modifyTags = initModifyRequest(action, accessToken, filterBytes);
@@ -81,7 +82,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
     private JOCDefaultResponse initPermissions(String accessToken) {
         return initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
     }
-    
+
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -100,24 +101,22 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
             Globals.disconnect(session);
         }
     }
-    
+
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags, SOSHibernateSession session) throws Exception {
         InventoryTagGroupDBLayer dbLayer = new InventoryTagGroupDBLayer(session);
         Stream<JOCEvent> events = Stream.empty();
-        
+
         switch (action) {
         case ADD:
             List<DBItemInventoryTagGroup> dbGroups = dbLayer.getGroups(modifyTags.getGroups());
             modifyTags.getGroups().removeAll(dbGroups.stream().map(DBItemInventoryTagGroup::getName).collect(Collectors.toSet()));
-            Date date = Date.from(Instant.now());
-            
+
             if (!modifyTags.getGroups().isEmpty()) {
                 int maxGroupsOrdering = dbLayer.getMaxGroupsOrdering();
                 for (String group : modifyTags.getGroups()) {
                     SOSCheckJavaVariableName.test("group name: ", group);
                     DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
                     item.setName(group);
-                    item.setModified(date);
                     item.setOrdering(++maxGroupsOrdering);
                     dbLayer.getSession().save(item);
                 }
@@ -127,7 +126,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
 
         case DELETE:
             List<DBItemInventoryTagGroup> dbGroups2 = dbLayer.getGroups(modifyTags.getGroups());
-            //set groupId = 0 for Workflow, job, order tags
+            // set groupId = 0 for Workflow, job, order tags
             Set<JOCEvent> events2 = new HashSet<>();
             dbLayer.deleteGroupIds(dbGroups2.stream().map(DBItemInventoryTagGroup::getId).collect(Collectors.toList()), null, events2);
             dbLayer.deleteGroups(dbGroups2);

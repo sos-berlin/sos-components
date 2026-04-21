@@ -143,7 +143,6 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 taggingItem.setTagId(tagNameToIdMap.get(tagName));
                 taggingItem.setWorkflowName(config.getName());
                 taggingItem.setId(null);
-                taggingItem.setModified(date);
                 return taggingItem;
             }).collect(Collectors.toSet());
             

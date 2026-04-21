@@ -84,11 +84,11 @@ import js7.base.problem.Problem;
 public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
-    private static final Set<ConfigurationType> preDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(
-            Arrays.asList(ConfigurationType.INCLUDESCRIPT, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR, 
-                    ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT)));
-    private static final Set<ConfigurationType> postDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(
-            Arrays.asList(ConfigurationType.SCHEDULE)));
+    private static final Set<ConfigurationType> preDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(Arrays.asList(
+            ConfigurationType.INCLUDESCRIPT, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR,
+            ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT)));
+    private static final Set<ConfigurationType> postDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(Arrays.asList(
+            ConfigurationType.SCHEDULE)));
     private static final String SEMAPHORE_ID = "RELEASE";
 
     @Override
@@ -114,20 +114,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
         return responseStatusJSOk(Date.from(Instant.now()));
     }
-    
+
     private List<Err419> release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
-        /* 
-         * - acquire semaphore 
-         * - cancel orders of renamed schedules (orders related to old schedule name)
-         * - cancel orders
-         * - call release first with preDeployReleasables
-         * - release semaphore
-         * - wait 50 ms
-         * - acquire semaphore a second time
-         * - call release again with postDeployReleasables
-         * - recreate orders
-         * - release semaphore final time and remove it
-         * */
+        /*
+         * - acquire semaphore - cancel orders of renamed schedules (orders related to old schedule name) - cancel orders - call release first with
+         * preDeployReleasables - release semaphore - wait 50 ms - acquire semaphore a second time - call release again with postDeployReleasables - recreate
+         * orders - release semaphore final time and remove it
+         */
         PublishSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
         LOGGER.debug("acquire semaphore from release with AT " + accessToken);
 
@@ -159,13 +152,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 errors = new ArrayList<>();
                 dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
-                // call update for preDeploy 
+                // call update for preDeploy
                 if (in.getDelete() != null && !in.getDelete().isEmpty()) {
                     session.setAutoCommit(false);
                     Globals.beginTransaction(session);
                     errors.addAll(delete(in.getDelete(), dbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                             withDeletionOfEmptyFolders));
-                    if(errors != null && !errors.isEmpty()) {
+                    if (errors != null && !errors.isEmpty()) {
                         Globals.rollback(session);
                     } else {
                         Globals.commit(session);
@@ -191,7 +184,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     releaseAndReaquireSemaphore(accessToken);
                     futureSession = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(release-post-deploy)");
                     InventoryDBLayer layer = new InventoryDBLayer(futureSession);
-                    // call update for postDeploy 
+                    // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                         update(in.getUpdate(), layer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, false);
@@ -205,8 +198,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     try {
                         PublishSemaphore.release(accessToken);
                         LOGGER.debug("final release semaphore from release with AT " + accessToken);
-                        if(PublishSemaphore.getInstance().getSemaphore(accessToken)
-                                .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                        if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
+                                .equals(SEMAPHORE_ID)).isPresent()) {
                             PublishSemaphore.remove(accessToken);
                             LOGGER.debug("final remove semaphore from release with AT " + accessToken);
                         }
@@ -219,8 +212,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         } finally {
             try {
                 PublishSemaphore.release(accessToken);
-                if(PublishSemaphore.getInstance().getSemaphore(accessToken)
-                        .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(
+                        SEMAPHORE_ID)).isPresent()) {
                     PublishSemaphore.remove(accessToken);
                     LOGGER.debug("final remove semaphore from release with AT " + accessToken);
                 }
@@ -229,7 +222,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
         }
     }
-    
+
     private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
         try {
             PublishSemaphore.release(accessToken);
@@ -240,7 +233,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         if (PublishSemaphore.availablePermits(accessToken) == 1) {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+            }
         }
         PublishSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
         LOGGER.debug("acquire again semaphore from release with AT " + accessToken);
@@ -333,8 +327,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 } else if (!conf.getValid()) {
                     throw new ControllerInvalidResponseDataException(String.format("%s is not valid", conf.getPath()));
                 } else {
-                    if ((preDeploy && !preDeployReleasables.contains(conf.getTypeAsEnum())) || 
-                            (!preDeploy && !postDeployReleasables.contains(conf.getTypeAsEnum()))) {
+                    if ((preDeploy && !preDeployReleasables.contains(conf.getTypeAsEnum())) || (!preDeploy && !postDeployReleasables.contains(conf
+                            .getTypeAsEnum()))) {
                         continue;
                     }
                     bulkErrors.addAll(updateReleasedObject(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
@@ -381,8 +375,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private List<Err419> updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Map<String, Workflow> cachedWorkflows,
-            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean preDeploy) throws SOSHibernateException, JsonParseException,
-            JsonMappingException, IOException {
+            DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean preDeploy) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, IOException {
         List<Err419> errors = new ArrayList<>();
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes(), false);
 
@@ -391,9 +385,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             // createAuditLog(conf, conf.getTypeAsEnum(), auditLogger, auditParams);
             conf.setAuditLogId(dbAuditLog.getId());
             for (DBItemInventoryConfiguration item : folderContent) {
-                if (item.getReleased() || !item.getValid()
-                        || (preDeploy && !preDeployReleasables.contains(item.getTypeAsEnum()))
-                        || (!preDeploy && !postDeployReleasables.contains(item.getTypeAsEnum()))) {
+                if (item.getReleased() || !item.getValid() || (preDeploy && !preDeployReleasables.contains(item.getTypeAsEnum())) || (!preDeploy
+                        && !postDeployReleasables.contains(item.getTypeAsEnum()))) {
                     continue;
                 }
                 errors.addAll(updateReleasedObject(item, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging));
@@ -416,8 +409,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
         // Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException:
         // Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
-        List<DBItemInventoryReleasedConfiguration> constrainedReleaseItems = 
-                dbLayer.getReleasedConfigurationByNameAndType(conf.getName(), conf.getType());
+        List<DBItemInventoryReleasedConfiguration> constrainedReleaseItems = dbLayer.getReleasedConfigurationByNameAndType(conf.getName(), conf
+                .getType());
 
         if (releaseItem == null) {
             // delete all other db items with same objectType and name
@@ -427,7 +420,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     dbLayer.getSession().delete(constrained);
                 }
             }
-            dbLayer.getSession().save(setReleaseItem(null, conf, dbAuditLog.getCreated()));
+            dbLayer.getSession().save(setReleaseItem(null, conf));
         } else {
             // delete all other db items with same objectType and name but different id
             // dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
@@ -436,12 +429,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     dbLayer.getSession().delete(constrainedReleaseItems);
                 }
             }
-            dbLayer.getSession().update(setReleaseItem(releaseItem, conf, dbAuditLog.getCreated()));
+            dbLayer.getSession().update(setReleaseItem(releaseItem, conf));
         }
         conf.setReleased(true);
-        conf.setModified(dbAuditLog.getCreated());
         dbLayer.getSession().update(conf);
-        // after successful update, set enforce flag to false for related dependencies 
+        // after successful update, set enforce flag to false for related dependencies
         DependencyResolver.updateDependencies(conf);
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));
@@ -449,18 +441,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return errors;
     }
 
-    private DBItemInventoryReleasedConfiguration setReleaseItem(DBItemInventoryReleasedConfiguration item, DBItemInventoryConfiguration conf,
-            Date now) {
+    private DBItemInventoryReleasedConfiguration setReleaseItem(DBItemInventoryReleasedConfiguration item, DBItemInventoryConfiguration conf) {
         if (item == null) {
             item = new DBItemInventoryReleasedConfiguration();
             item.setId(null);
-            item.setCreated(now);
             item.setCid(conf.getId());
         }
         item.setAuditLogId(conf.getAuditLogId());
         item.setContent(conf.getContent());
         item.setFolder(conf.getFolder());
-        item.setModified(now);
         item.setName(conf.getName());
         item.setPath(conf.getPath());
         item.setTitle(conf.getTitle());
@@ -575,7 +564,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
         return errors;
     }
-    
+
     private String getDeployedWorkflowJson(InventoryDBLayer dbLayer, String workflowName) throws SOSHibernateException {
         String wj = null;
         int trials = 4;
@@ -794,7 +783,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         states.add(DailyPlanOrderStateText.SUBMITTED);
         return states;
     }
-    
+
     private List<CompletableFuture<Void>> cancelOrders(ReleaseFilter filter, List<String> schedulePaths, String xAccessToken) {
         List<CompletableFuture<Void>> futures = new ArrayList<CompletableFuture<Void>>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
@@ -883,23 +872,22 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         };
                         InventoryDBLayer dbLayerForCompleteableFuture = new InventoryDBLayer(session);
                         // get all schedules from database
-                        List<DBItemInventoryConfiguration> allSchedules = dbLayerForCompleteableFuture.getConfigurationByNames(
-                                schedulePaths.stream().map(schedulePath -> Paths.get(schedulePath).getFileName().toString()).collect(
-                                        Collectors.toList()), ConfigurationType.SCHEDULE.intValue());
+                        List<DBItemInventoryConfiguration> allSchedules = dbLayerForCompleteableFuture.getConfigurationByNames(schedulePaths.stream()
+                                .map(schedulePath -> Paths.get(schedulePath).getFileName().toString()).collect(Collectors.toList()),
+                                ConfigurationType.SCHEDULE.intValue());
                         // map all schedule path for submitWhenPlanned = true and submitWhenPlanned = false
-                        Map<Boolean, List<String>> schedules = allSchedules.stream().collect(Collectors.groupingBy(grouper, Collectors
-                                .mapping(DBItemInventoryConfiguration::getPath, Collectors.toList())));
+                        Map<Boolean, List<String>> schedules = allSchedules.stream().collect(Collectors.groupingBy(grouper, Collectors.mapping(
+                                DBItemInventoryConfiguration::getPath, Collectors.toList())));
                         // create all GenerateRequest
                         List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(session, controllerId);
-                        List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null).map(
-                                entry -> {
-                                    try {
-                                        return ordersGenerate.getGenerateRequestsForReleaseDeploy(filter.getAddOrdersDateFrom(), null,
-                                                entry.getValue(), controllerId, entry.getKey(), allowedDailyPlanDates);
-                                    } catch (Exception ex) {
-                                        return null;
-                                    }
-                                }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toList());
+                        List<GenerateRequest> requests = schedules.entrySet().stream().filter(entry -> entry.getKey() != null).map(entry -> {
+                            try {
+                                return ordersGenerate.getGenerateRequestsForReleaseDeploy(filter.getAddOrdersDateFrom(), null, entry.getValue(),
+                                        controllerId, entry.getKey(), allowedDailyPlanDates);
+                            } catch (Exception ex) {
+                                return null;
+                            }
+                        }).filter(Objects::nonNull).flatMap(List::stream).collect(Collectors.toList());
                         if (!requests.isEmpty()) {
                             successful = ordersGenerate.generateOrders(requests, xAccessToken, false, filter.getIncludeLate(), IMPL_PATH);
                         }
@@ -913,5 +901,5 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
         }
     }
-    
+
 }

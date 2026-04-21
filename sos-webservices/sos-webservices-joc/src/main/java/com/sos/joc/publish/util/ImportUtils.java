@@ -169,7 +169,6 @@ public class ImportUtils {
 
     public static final String JOC_META_INFO_FILENAME = "meta_inf";
 
-    
     public static UpdateableConfigurationObject createUpdateableConfiguration(DBItemInventoryConfiguration existingConfiguration,
             ConfigurationObject configuration, Map<ConfigurationType, List<ConfigurationObject>> configurations, String prefix, String suffix,
             String targetFolder, DBLayerDeploy dbLayer) throws SOSHibernateException {
@@ -178,13 +177,13 @@ public class ImportUtils {
         SuffixPrefix suffixPrefix = null;
         // prefix/suffix will always be added to the configurations name if not empty, even if no previous configuration exist
         if (existingConfiguration != null) {
-            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
-                    clusterSettings.getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(), 
-                    new InventoryDBLayer(dbLayer.getSession()));
+            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings), clusterSettings
+                    .getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(), new InventoryDBLayer(dbLayer
+                            .getSession()));
         } else {
-            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings), 
-                    clusterSettings.getImportSuffix().getDefault(), configuration.getName(), configuration.getObjectType(), 
-                    new InventoryDBLayer(dbLayer.getSession()));
+            suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings), clusterSettings
+                    .getImportSuffix().getDefault(), configuration.getName(), configuration.getObjectType(), new InventoryDBLayer(dbLayer
+                            .getSession()));
         }
         final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
         final String oldName = configuration.getName();
@@ -223,30 +222,31 @@ public class ImportUtils {
         return new UpdateableConfigurationObject(configuration, existingConfiguration, oldName, newName, referencedBy, targetFolder);
     }
 
-    public static void replaceReferences (UpdateableConfigurationObject updateableItem) {
-    	
-//    	Date now = Date.from(Instant.now());
-    	// update existing configuration from archive
-    	updateableItem.getConfigurationObject().setName(updateableItem.getNewName());
-    	if (updateableItem.getTargetFolder() != null && !updateableItem.getTargetFolder().isEmpty()) {
-    		Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationObject().getPath()).getParent();
-    		updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
-    	} else {
-    		updateableItem.getConfigurationObject().setPath(
-    				Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
-    	}
-    	// update configurations referenced by existing configuration from DB
-    	if (updateableItem.getReferencedBy() != null && !updateableItem.getReferencedBy().isEmpty()) {
-    	    Map<String, String> oldNewNames =  Collections.singletonMap(updateableItem.getOldName(), updateableItem .getNewName());
-            
-        	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
+    public static void replaceReferences(UpdateableConfigurationObject updateableItem) {
+
+        // Date now = Date.from(Instant.now());
+        // update existing configuration from archive
+        updateableItem.getConfigurationObject().setName(updateableItem.getNewName());
+        if (updateableItem.getTargetFolder() != null && !updateableItem.getTargetFolder().isEmpty()) {
+            Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationObject().getPath()).getParent();
+            updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
+        } else {
+            updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(
+                    updateableItem.getNewName()).toString().replace('\\', '/'));
+        }
+        // update configurations referenced by existing configuration from DB
+        if (updateableItem.getReferencedBy() != null && !updateableItem.getReferencedBy().isEmpty()) {
+            Map<String, String> oldNewNames = Collections.singletonMap(updateableItem.getOldName(), updateableItem.getNewName());
+
+            for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.LOCK)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
+                            json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem
+                                    .getNewName() + "\"");
+                            ((WorkflowEdit) configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (IOException e) {
                             throw new JocImportException(e);
                         }
@@ -260,8 +260,9 @@ public class ImportUtils {
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKFLOW)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
+                            json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem
+                                    .getNewName() + "\"");
+                            ((WorkflowEdit) configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (IOException e) {
                             throw new JocImportException(e);
                         }
@@ -303,47 +304,49 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = JsonConverter.replaceNameOfIncludeScript(json, updateableItem.getOldName(), updateableItem.getNewName());
-                            
-                            ((WorkflowEdit)configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
+
+                            ((WorkflowEdit) configurationWithReference).setConfiguration(WorkflowConverter.convertInventoryWorkflow(json));
                         } catch (Exception e) {
                             throw new JocImportException(e);
                         }
                     }
                     break;
                 case FILEORDERSOURCE:
-                	if (((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName())
-                			|| ((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName()
-                				.equals(updateableItem.getConfigurationObject().getName())) {
-                		((FileOrderSourceEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
-                	}
+                    if (((FileOrderSourceEdit) configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName())
+                            || ((FileOrderSourceEdit) configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem
+                                    .getConfigurationObject().getName())) {
+                        ((FileOrderSourceEdit) configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
+                    }
                     break;
                 case SCHEDULE:
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKFLOW)) {
-                        if (((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames() != null && 
-                                ((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames().contains(updateableItem.getOldName())) {
-                            ((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowNames(
-                                    ((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowNames().stream()
-                                    .map(item -> item.equals(updateableItem.getOldName()) ? updateableItem.getNewName() : item).collect(Collectors.toList()));
-                        } else if (updateableItem.getOldName().equals(((ScheduleEdit)configurationWithReference).getConfiguration().getWorkflowName())) {
-                            ((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
+                        if (((ScheduleEdit) configurationWithReference).getConfiguration().getWorkflowNames() != null
+                                && ((ScheduleEdit) configurationWithReference).getConfiguration().getWorkflowNames().contains(updateableItem
+                                        .getOldName())) {
+                            ((ScheduleEdit) configurationWithReference).getConfiguration().setWorkflowNames(
+                                    ((ScheduleEdit) configurationWithReference).getConfiguration().getWorkflowNames().stream().map(item -> item
+                                            .equals(updateableItem.getOldName()) ? updateableItem.getNewName() : item).collect(Collectors.toList()));
+                        } else if (updateableItem.getOldName().equals(((ScheduleEdit) configurationWithReference).getConfiguration()
+                                .getWorkflowName())) {
+                            ((ScheduleEdit) configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
                         }
-                    } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKINGDAYSCALENDAR)) {
-                    	List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)configurationWithReference).getConfiguration().getCalendars();
-                    	assignedCalendars.stream().forEach(item -> {
-                        	if (item.getCalendarName().equals(updateableItem.getOldName()) || 
-                        			item.getCalendarName().equals(updateableItem.getConfigurationObject().getName())) {
-                        		item.setCalendarName(updateableItem.getNewName());
-                        	}
-                    	});
-                    } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
-                    	List<AssignedNonWorkingDayCalendars> assignedNWDCalendars = 
-                    			((ScheduleEdit)configurationWithReference).getConfiguration().getNonWorkingDayCalendars();
-                    	assignedNWDCalendars.stream().forEach(item -> {
-                        	if (item.getCalendarName().equals(updateableItem.getOldName()) 
-                        			|| item.getCalendarName().equals(updateableItem.getConfigurationObject().getName())) {
-                        		item.setCalendarName(updateableItem.getNewName());
-                        	}
-                    	});
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKINGDAYSCALENDAR)) {
+                        List<AssignedCalendars> assignedCalendars = ((ScheduleEdit) configurationWithReference).getConfiguration().getCalendars();
+                        assignedCalendars.stream().forEach(item -> {
+                            if (item.getCalendarName().equals(updateableItem.getOldName()) || item.getCalendarName().equals(updateableItem
+                                    .getConfigurationObject().getName())) {
+                                item.setCalendarName(updateableItem.getNewName());
+                            }
+                        });
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
+                        List<AssignedNonWorkingDayCalendars> assignedNWDCalendars = ((ScheduleEdit) configurationWithReference).getConfiguration()
+                                .getNonWorkingDayCalendars();
+                        assignedNWDCalendars.stream().forEach(item -> {
+                            if (item.getCalendarName().equals(updateableItem.getOldName()) || item.getCalendarName().equals(updateableItem
+                                    .getConfigurationObject().getName())) {
+                                item.setCalendarName(updateableItem.getNewName());
+                            }
+                        });
                     }
                     break;
                 case JOBTEMPLATE:
@@ -351,7 +354,7 @@ public class ImportUtils {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
                             json = JsonConverter.replaceNameOfIncludeScript(json, updateableItem.getOldName(), updateableItem.getNewName());
-                            ((JobEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
+                            ((JobEdit) configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, JobTemplate.class));
                         } catch (Exception e) {
                             throw new JocImportException(e);
                         }
@@ -359,36 +362,37 @@ public class ImportUtils {
                         try {
                             JobTemplate jt = (JobTemplate) configurationWithReference.getConfiguration();
                             if (jt.getJobResourceNames() != null) {
-                                jt.setJobResourceNames(jt.getJobResourceNames().stream().map(s -> oldNewNames.getOrDefault(s, s)).collect(
-                                        Collectors.toList()));
+                                jt.setJobResourceNames(jt.getJobResourceNames().stream().map(s -> oldNewNames.getOrDefault(s, s)).collect(Collectors
+                                        .toList()));
                             }
                         } catch (Exception e) {
                             throw new JocImportException(e);
                         }
-                    } 
+                    }
                     break;
                 default:
                     break;
                 }
-        	}
-    	}
+            }
+        }
     }
 
-    public static DBItemInventoryConfiguration updateConfigurationWithChangedReferences (DBLayerDeploy dbLayer, ConfigurationObject config) {
-        DBItemInventoryConfiguration alreadyExist = dbLayer.getInventoryConfigurationByNameAndType(config.getName(), config.getObjectType().intValue());
+    public static DBItemInventoryConfiguration updateConfigurationWithChangedReferences(DBLayerDeploy dbLayer, ConfigurationObject config) {
+        DBItemInventoryConfiguration alreadyExist = dbLayer.getInventoryConfigurationByNameAndType(config.getName(), config.getObjectType()
+                .intValue());
         if (alreadyExist != null) {
             try {
                 alreadyExist.setContent(JocInventory.toString(config.getConfiguration()));
-                alreadyExist.setModified(Date.from(Instant.now()));
                 try {
-                    Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()), null);
+                    Validator.validate(alreadyExist.getTypeAsEnum(), alreadyExist.getContent().getBytes(), new InventoryDBLayer(dbLayer.getSession()),
+                            null);
                     alreadyExist.setValid(true);
                 } catch (Throwable e) {
                     alreadyExist.setValid(false);
                 }
                 JocInventory.updateConfiguration(new InventoryDBLayer(dbLayer.getSession()), alreadyExist);
             } catch (JsonProcessingException e) {
-                LOGGER.error(e.getMessage(),e);
+                LOGGER.error(e.getMessage(), e);
             } catch (SOSHibernateException e) {
                 throw new JocSosHibernateException(e);
             } catch (IOException e) {
@@ -397,92 +401,91 @@ public class ImportUtils {
         }
         return alreadyExist;
     }
-    
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByWorkflowName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         Predicate<String> hasWorkflow = Pattern.compile("\"workflowName\"\\s*:\\s*\"" + name + "\"").asPredicate();
-        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
-                .map(item -> {
-                    try {
-                        if (hasWorkflow.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
-                            return item;
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType())).map(item -> {
+            try {
+                if (hasWorkflow.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
+                    return item;
+                }
+            } catch (JsonProcessingException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         Predicate<String> hasLock = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").asPredicate();
         return configurations.stream().map(item -> {
-                    try {
-                        if (hasLock.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
-                            return item;
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+            try {
+                if (hasLock.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
+                    return item;
+                }
+            } catch (JsonProcessingException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, List<ConfigurationObject> configurations) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName(String name, List<ConfigurationObject> configurations) {
         Predicate<String> hasNoticeBoard = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\"").asPredicate();
-        if(configurations == null) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         return configurations.stream().map(item -> {
-                    try {
-                        Workflow wf = (Workflow)item.getConfiguration();
-                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        if (hasNoticeBoard.test(wfJson)) {
-                            return item;
-                        }
-                        if (HAS_NOTICE_BOARDS.test(wfJson)) {
-                            if(WorkflowsHelper.hasBoard(name, wf.getInstructions())) {
-                                return item;
-                            }
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-    
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
-            return Collections.emptySet();
-        }
-        return configurations.stream().map(item -> {
-                    Workflow wf = (Workflow) item.getConfiguration();
-                    if (wf.getJobResourceNames() != null && wf.getJobResourceNames().contains(name)) {
+            try {
+                Workflow wf = (Workflow) item.getConfiguration();
+                String wfJson = Globals.objectMapper.writeValueAsString(wf);
+                if (hasNoticeBoard.test(wfJson)) {
+                    return item;
+                }
+                if (HAS_NOTICE_BOARDS.test(wfJson)) {
+                    if (WorkflowsHelper.hasBoard(name, wf.getInstructions())) {
                         return item;
                     }
-                    if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
-                        for (Job job : wf.getJobs().getAdditionalProperties().values()) {
-                            if (job.getJobResourceNames() != null && job.getJobResourceNames().contains(name)) {
-                                return item;
-                            }
-                        }
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+                }
+            } catch (JsonProcessingException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedJobTemplatesFromArchiveByJobResourcesName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobResourceName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         return configurations.stream().map(item -> {
-            JobTemplate jt = (JobTemplate)item.getConfiguration();
+            Workflow wf = (Workflow) item.getConfiguration();
+            if (wf.getJobResourceNames() != null && wf.getJobResourceNames().contains(name)) {
+                return item;
+            }
+            if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
+                for (Job job : wf.getJobs().getAdditionalProperties().values()) {
+                    if (job.getJobResourceNames() != null && job.getJobResourceNames().contains(name)) {
+                        return item;
+                    }
+                }
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    private static Set<ConfigurationObject> getUsedJobTemplatesFromArchiveByJobResourcesName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
+            return Collections.emptySet();
+        }
+        return configurations.stream().map(item -> {
+            JobTemplate jt = (JobTemplate) item.getConfiguration();
             if (jt.getJobResourceNames() != null && jt.getJobResourceNames().contains(name)) {
                 for (int i = 0; i < jt.getJobResourceNames().size(); i++) {
                     if (jt.getJobResourceNames().get(i).equals(name)) {
@@ -491,70 +494,67 @@ public class ImportUtils {
                 }
             }
             return null;
-            
+
         }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByJobTemplateName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         return configurations.stream().map(item -> {
-                    Workflow wf = (Workflow) item.getConfiguration();
-                    if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
-                        for (Job job : wf.getJobs().getAdditionalProperties().values()) {
-                            if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null && job.getJobTemplate().getName().equals(
-                                    name)) {
-                                return item;
-                            }
-                        }
+            Workflow wf = (Workflow) item.getConfiguration();
+            if (wf.getJobs() != null && wf.getJobs().getAdditionalProperties() != null) {
+                for (Job job : wf.getJobs().getAdditionalProperties().values()) {
+                    if (job.getJobTemplate() != null && job.getJobTemplate().getName() != null && job.getJobTemplate().getName().equals(name)) {
+                        return item;
                     }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+                }
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-    
-    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByIncludeScriptName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
         Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + name
                 + "\\s*").asPredicate();
         return configurations.stream().map(item -> {
-                    try {
-                        if (hasScriptInclude.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
-                            return item;
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOGGER.error(e.getMessage(), e);
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+            try {
+                if (hasScriptInclude.test(Globals.objectMapper.writeValueAsString(item.getConfiguration()))) {
+                    return item;
+                }
+            } catch (JsonProcessingException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
-//        Set<ConfigurationObject> returnValues = new HashSet<ConfigurationObject>();
-//        for(ConfigurationObject item : configurations) {
-//            if (ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) && ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name)) {
-//                returnValues.add(item);
-//            }
-//        }
-//        return returnValues;
-        if(configurations == null) {
+    private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName(String name, List<ConfigurationObject> configurations) {
+        // Set<ConfigurationObject> returnValues = new HashSet<ConfigurationObject>();
+        // for(ConfigurationObject item : configurations) {
+        // if (ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) && ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name))
+        // {
+        // returnValues.add(item);
+        // }
+        // }
+        // return returnValues;
+        if (configurations == null) {
             return Collections.emptySet();
         }
-        return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) 
-                && ((FileOrderSourceEdit) item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
+        return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType()) && ((FileOrderSourceEdit) item)
+                .getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
     }
 
-    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, List<ConfigurationObject> configurations) {
-        if(configurations == null) {
+    private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName(String name, List<ConfigurationObject> configurations) {
+        if (configurations == null) {
             return Collections.emptySet();
         }
-        return configurations.stream()
-                .filter(item -> (((ScheduleEdit)item).getConfiguration().getWorkflowNames() != null 
-                    && ((ScheduleEdit)item).getConfiguration().getWorkflowNames().contains(name))
-                        || name.equals(((ScheduleEdit)item).getConfiguration().getWorkflowName()))
+        return configurations.stream().filter(item -> (((ScheduleEdit) item).getConfiguration().getWorkflowNames() != null && ((ScheduleEdit) item)
+                .getConfiguration().getWorkflowNames().contains(name)) || name.equals(((ScheduleEdit) item).getConfiguration().getWorkflowName()))
                 .collect(Collectors.toSet());
     }
 
@@ -585,7 +585,7 @@ public class ImportUtils {
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-    
+
     public static List<ConfigurationType> getImportOrder() {
         return Arrays.asList(ConfigurationType.REPORT, ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD, ConfigurationType.JOBRESOURCE,
                 ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
@@ -609,7 +609,7 @@ public class ImportUtils {
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 String filename = Paths.get(entryName).getFileName().toString();
-                if(!SOSCheckJavaVariableName.test(filename)) {
+                if (!SOSCheckJavaVariableName.test(filename)) {
                     notImported.add(filename);
                     continue;
                 }
@@ -640,13 +640,13 @@ public class ImportUtils {
                 }
             }
             objects.stream().forEach(item -> objectsWithSignature.put(item, null));
-//            objects.stream().forEach(item -> {
-//                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-//                        .get());
-//            });
-            for(ControllerObject item : objects) {
+            // objects.stream().forEach(item -> {
+            // objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+            // .get());
+            // });
+            for (ControllerObject item : objects) {
                 for (SignaturePath item2 : signaturePaths) {
-                    if(item2.getObjectPath().equals(item.getPath())) {
+                    if (item2.getObjectPath().equals(item.getPath())) {
                         objectsWithSignature.put(item, item2);
                         break;
                     }
@@ -659,7 +659,7 @@ public class ImportUtils {
                 } catch (IOException e) {
                 }
             }
-            if(!notImported.isEmpty()) {
+            if (!notImported.isEmpty()) {
                 LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
                 LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
@@ -670,7 +670,7 @@ public class ImportUtils {
     public static ArchiveValues readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
             DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
             DBOpenSessionException {
-        ArchiveValues values = new ArchiveValues(); 
+        ArchiveValues values = new ArchiveValues();
         ExportedTags tagsFromArchive = null;
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         ZipInputStream zipStream = null;
@@ -752,7 +752,7 @@ public class ImportUtils {
                 }
                 String entryName = entry.getName().replace('\\', '/');
                 String filename = Paths.get(entryName).getFileName().toString();
-                if(!SOSCheckJavaVariableName.test(filename)) {
+                if (!SOSCheckJavaVariableName.test(filename)) {
                     notImported.add(filename);
                     continue;
                 }
@@ -783,18 +783,18 @@ public class ImportUtils {
                 }
             }
             objects.stream().forEach(item -> objectsWithSignature.put(item, null));
-            for(ControllerObject item : objects) {
+            for (ControllerObject item : objects) {
                 for (SignaturePath item2 : signaturePaths) {
-                    if(item2.getObjectPath().equals(item.getPath())) {
+                    if (item2.getObjectPath().equals(item.getPath())) {
                         objectsWithSignature.put(item, item2);
                         break;
                     }
                 }
             }
-//            objects.stream().forEach(item -> {
-//                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-//                        .get());
-//            });
+            // objects.stream().forEach(item -> {
+            // objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+            // .get());
+            // });
         } finally {
             try {
                 if (tarArchiveInputStream != null) {
@@ -805,7 +805,7 @@ public class ImportUtils {
                 }
             } catch (Exception e) {
             }
-            if(!notImported.isEmpty()) {
+            if (!notImported.isEmpty()) {
                 LOGGER.warn("The following files were not imported, as the filenames do not comply to the JS7 naming rules.");
                 LOGGER.warn(String.format("%1$s", notImported.toString()));
             }
@@ -813,13 +813,13 @@ public class ImportUtils {
         return objectsWithSignature;
     }
 
-    public static ArchiveValues readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
+    public static ArchiveValues readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
+            DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
+            DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
-        ArchiveValues values = new ArchiveValues(); 
+        ArchiveValues values = new ArchiveValues();
         ExportedTags tagsFromArchive = null;
         try {
             gzipInputStream = new GZIPInputStream(inputStream);
@@ -894,7 +894,7 @@ public class ImportUtils {
             WorkflowEdit workflowEdit = new WorkflowEdit();
             com.sos.inventory.model.workflow.Workflow workflow = (com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(outBuffer
                     .toString(StandardCharsets.UTF_8), ConfigurationType.WORKFLOW);
-            //workflow = JsonSerializer.emptyValuesToNull(workflow);
+            // workflow = JsonSerializer.emptyValuesToNull(workflow);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
@@ -942,7 +942,8 @@ public class ImportUtils {
             lockEdit.setObjectType(ConfigurationType.LOCK);
             return lockEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""));
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(),
+                    ""));
             if (normalizedPath.startsWith("//")) {
                 normalizedPath = normalizedPath.substring(1);
             }
@@ -984,9 +985,9 @@ public class ImportUtils {
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource =
-                    (com.sos.inventory.model.fileordersource.FileOrderSource) JocInventory.content2IJSObject(outBuffer
-                            .toString(StandardCharsets.UTF_8), ConfigurationType.FILEORDERSOURCE);
-            //fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
+                    (com.sos.inventory.model.fileordersource.FileOrderSource) JocInventory.content2IJSObject(outBuffer.toString(
+                            StandardCharsets.UTF_8), ConfigurationType.FILEORDERSOURCE);
+            // fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -1026,8 +1027,7 @@ public class ImportUtils {
             if (checkObjectNotEmpty(script)) {
                 scriptEdit.setConfiguration(script);
             } else {
-                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
+                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.", normalizedPath));
             }
             scriptEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             scriptEdit.setPath(normalizedPath);
@@ -1091,8 +1091,7 @@ public class ImportUtils {
             if (checkObjectNotEmpty(report)) {
                 reportEdit.setConfiguration(report);
             } else {
-                throw new JocImportException(String.format("Report with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
+                throw new JocImportException(String.format("Report with path %1$s not imported. Object values could not be mapped.", normalizedPath));
             }
             reportEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             reportEdit.setPath(normalizedPath);
@@ -1117,7 +1116,7 @@ public class ImportUtils {
             return true;
         }
     }
-    
+
     private static boolean checkObjectNotEmpty(JobTemplate job) {
         if (job != null && job.getExecutable() == null) {
             return false;
@@ -1125,7 +1124,7 @@ public class ImportUtils {
             return true;
         }
     }
-    
+
     private static boolean checkObjectNotEmpty(Report report) {
         if (report != null && report.getFrequencies() == null && report.getTemplateName() == null) {
             return false;
@@ -1273,24 +1272,24 @@ public class ImportUtils {
             return false;
         }
     }
-    
-    public static void validateAndUpdate (List<DBItemInventoryConfiguration> storedConfigurations, Set<String> agentNames,
+
+    public static void validateAndUpdate(List<DBItemInventoryConfiguration> storedConfigurations, Set<String> agentNames,
             SOSHibernateSession session) {
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        storedConfigurations.stream()
-            .forEach(cfg -> {
-                boolean wasValid = cfg.getValid();
-                cfg.setValid(validateConfiguration(cfg, agentNames, dbLayer));
-                if(wasValid != cfg.getValid()) {
-                    try {
-                        JocInventory.updateConfiguration(dbLayer, cfg);
-//                        session.update(cfg);
-                    } catch (Throwable e) {
-                        throw new JocSosHibernateException(e);
-                    }
-                }});
+        storedConfigurations.stream().forEach(cfg -> {
+            boolean wasValid = cfg.getValid();
+            cfg.setValid(validateConfiguration(cfg, agentNames, dbLayer));
+            if (wasValid != cfg.getValid()) {
+                try {
+                    JocInventory.updateConfiguration(dbLayer, cfg);
+                    // session.update(cfg);
+                } catch (Throwable e) {
+                    throw new JocSosHibernateException(e);
+                }
+            }
+        });
     }
-    
+
     private static ControllerObject createControllerObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
             throws JsonParseException, JsonMappingException, IOException {
         String importedJson = outBuffer.toString(StandardCharsets.UTF_8.displayName());
@@ -1345,7 +1344,8 @@ public class ImportUtils {
                 throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""))));
             }
-            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), "")));
+            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(),
+                    "")));
             boardPublish.setObjectType(DeployType.NOTICEBOARD);
             return boardPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1384,7 +1384,7 @@ public class ImportUtils {
             JsonMappingException, IOException {
         SignaturePath signaturePath = new SignaturePath();
         Signature signature = new Signature();
-        String sig = outBuffer.toString(); //.replaceAll("[\\r\\n]","");
+        String sig = outBuffer.toString(); // .replaceAll("[\\r\\n]","");
         signature.setSignatureString(sig);
         signaturePath.setSignature(signature);
         if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
@@ -1453,7 +1453,7 @@ public class ImportUtils {
         }
         return agents;
     }
-    
+
     public static Set<Agent> readAgentsFromTarGzipFileContent(InputStream inputStream) throws IOException {
         Set<Agent> agents = new HashSet<Agent>();
         GZIPInputStream gzipInputStream = null;
@@ -1502,7 +1502,7 @@ public class ImportUtils {
         try {
             JsonValidator.validate(bytes, URI.create(jsonSchema));
         } catch (SOSJsonSchemaException e) {
-            //JOC-1984 - ignore minimum error for ordering
+            // JOC-1984 - ignore minimum error for ordering
             if (!e.getErrors().isEmpty()) {
                 e.getErrors().removeIf(vm -> vm.getPath().endsWith("ordering") && vm.getCode().equals(ValidatorTypeCode.MINIMUM.getErrorCode()));
                 if (!e.getErrors().isEmpty()) {
@@ -1514,15 +1514,15 @@ public class ImportUtils {
         }
         Agent agent = Globals.objectMapper.readValue(bytes, Agent.class);
         String agentId = filename.replace(AGENT_FILE_EXTENSION, "");
-        
+
         if (agent.getAgentCluster() != null) {
             agent.getAgentCluster().setAgentId(agentId);
-            
+
             if (agent.getAgentCluster().getSubagents() != null) {
                 agent.getAgentCluster().getSubagents().forEach(subagent -> subagent.setAgentId(agentId));
             }
         }
-        
+
         if (agent.getSubagentClusters() != null) {
             agent.getSubagentClusters().forEach(sac -> sac.setAgentId(agentId));
         }
@@ -1531,10 +1531,10 @@ public class ImportUtils {
             agent.getStandaloneAgent().setAgentId(agentId);
         }
         return agent;
-        
+
     }
-    
-    public static void revalidateInvalidInvConfigurations (List<DBItemInventoryConfiguration> storedConfigurations) {
+
+    public static void revalidateInvalidInvConfigurations(List<DBItemInventoryConfiguration> storedConfigurations) {
         SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("./inventory/import");
         InventoryDBLayer dbLayer = new InventoryDBLayer(session);
         InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
@@ -1546,18 +1546,18 @@ public class ImportUtils {
                 invalidDBItems.removeAll(storedConfigurations);
             }
             Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
-            invalidDBItems.stream().filter(cfg -> validateConfiguration(cfg, visibleAgentNames, dbLayer)
-            ).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
-                try {
-                    folders.add(Paths.get(cfg.getPath()).getParent());
-                    if (JocInventory.isWorkflow(cfg.getType())) {
-                        workflowInvIds.add(cfg.getId());
-                    }
-                    dbLayer.getSession().update(cfg);
-                } catch (Exception e) {
-                    //
-                }
-            });
+            invalidDBItems.stream().filter(cfg -> validateConfiguration(cfg, visibleAgentNames, dbLayer)).peek(cfg -> cfg.setValid(true)).forEach(
+                    cfg -> {
+                        try {
+                            folders.add(Paths.get(cfg.getPath()).getParent());
+                            if (JocInventory.isWorkflow(cfg.getType())) {
+                                workflowInvIds.add(cfg.getId());
+                            }
+                            dbLayer.getSession().update(cfg);
+                        } catch (Exception e) {
+                            //
+                        }
+                    });
             folders.stream().map(folder -> folder.toString().replace('\\', '/')).forEach(JocInventory::postEvent);
             // Tagging events
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
@@ -1571,7 +1571,7 @@ public class ImportUtils {
         }
     }
 
-    private static boolean validateConfiguration (DBItemInventoryConfiguration cfg, Set<String> visibleAgentNames, InventoryDBLayer dbLayer) {
+    private static boolean validateConfiguration(DBItemInventoryConfiguration cfg, Set<String> visibleAgentNames, InventoryDBLayer dbLayer) {
         try {
             Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);
             return true;
@@ -1579,7 +1579,7 @@ public class ImportUtils {
             return false;
         }
     }
-    
+
     public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             ExportedTags tagsFromArchive, Boolean overwriteTags, SOSHibernateSession session) throws SOSHibernateException {
         if (Boolean.TRUE.equals(overwriteTags)) {
@@ -1602,7 +1602,7 @@ public class ImportUtils {
                 throw new IllegalArgumentException("The imported tag '" + gt1.getTag() + "' is both ungrouped and grouped");
             }
         };
-        
+
         Collector<GroupedTag, ?, Map<String, GroupedTag>> toMapCollector = Collectors.toMap(GroupedTag::getTag, Function.identity(), merge);
 
         List<GroupedTag> groupedWorkflowTags = Optional.ofNullable(tagsFromArchive.getTags()).orElse(Collections.emptyList()).stream().sorted(
@@ -1654,14 +1654,13 @@ public class ImportUtils {
                     if (!dbGroupsMap.containsKey(group)) {
                         DBItemInventoryTagGroup item = new DBItemInventoryTagGroup();
                         item.setName(group);
-                        item.setModified(now);
                         item.setOrdering(++maxGroupsOrdering);
                         session.save(item);
                         dbGroupsMap.put(group, item.getId());
                     }
                 }
             }
-            
+
             // workflow tags
             InventoryTagDBLayer tagDBLayer = new InventoryTagDBLayer(session);
             Map<String, DBItemInventoryTag> updatedTags = updateTags(tagDBLayer, groupedWorkflowTags, groupedTags, dbGroupsMap, now, null);
@@ -1673,11 +1672,12 @@ public class ImportUtils {
             // orderTags
             InventoryOrderTagDBLayer orderTagDBLayer = new InventoryOrderTagDBLayer(session);
             Map<String, DBItemInventoryOrderTag> orderTagsWithNewGroupId = new HashMap<>();
-            Map<String, DBItemInventoryOrderTag> updatedOrderTags = updateTags(orderTagDBLayer, groupedOrderTags, groupedTags, dbGroupsMap,
-                    now, orderTagsWithNewGroupId);
+            @SuppressWarnings("unused")
+            Map<String, DBItemInventoryOrderTag> updatedOrderTags = updateTags(orderTagDBLayer, groupedOrderTags, groupedTags, dbGroupsMap, now,
+                    orderTagsWithNewGroupId);
 
-            //history orderTags
-            List<DBItemHistoryOrderTag> historyOrderTags =  OrderTags.getTagsByTagNames(orderTagsWithNewGroupId.keySet(), session);
+            // history orderTags
+            List<DBItemHistoryOrderTag> historyOrderTags = OrderTags.getTagsByTagNames(orderTagsWithNewGroupId.keySet(), session);
             for (DBItemHistoryOrderTag historyOrderTag : historyOrderTags) {
                 Optional<Long> newGroupId = Optional.ofNullable(orderTagsWithNewGroupId.get(historyOrderTag.getTagName())).map(
                         DBItemInventoryOrderTag::getGroupId);
@@ -1687,16 +1687,16 @@ public class ImportUtils {
                     session.update(historyOrderTag);
                 }
             }
-            
+
             // tagging
             DBLayerDeploy dbDepLayer = new DBLayerDeploy(session);
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap = cfgs.stream().collect(Collectors.groupingBy(
                     DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
-            
+
             // workflow tagging
             Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = getTagsPerWorkflows(tagsFromArchive.getTags(), cfgsMap, oldNewNameMap,
                     dbDepLayer);
-            
+
             for (Map.Entry<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflow : tagsPerWorkflows.entrySet()) {
                 List<DBItemInventoryTagging> dbTagItems = tagDBLayer.getTaggings(tagsPerWorkflow.getKey().getId());
                 List<Long> tagIds = tagsPerWorkflow.getValue().stream().map(GroupedTag::new).map(GroupedTag::getTag).map(updatedTags::get).filter(
@@ -1708,7 +1708,6 @@ public class ImportUtils {
                         if (tagsPerWorkflow.getKey().getName().equals(dbTagItem.getName())) {
                             continue;
                         } else { // maybe new name because of suffix/prefix during import
-                            dbTagItem.setModified(now);
                             dbTagItem.setName(tagsPerWorkflow.getKey().getName());
                             session.update(dbTagItems);
                         }
@@ -1721,23 +1720,22 @@ public class ImportUtils {
                     newItem.setCid(tagsPerWorkflow.getKey().getId());
                     newItem.setName(tagsPerWorkflow.getKey().getName());
                     newItem.setType(tagsPerWorkflow.getKey().getType());
-                    newItem.setModified(now);
                     newItem.setTagId(tagId);
                     session.save(newItem);
                 }
             }
-            
+
             // job tagging
             Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = getJobTagsPerWorkflows(tagsFromArchive.getJobTags(), cfgsMap,
                     oldNewNameMap, dbDepLayer);
-            
+
             for (Map.Entry<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflow : jobTagsPerWorkflows.entrySet()) {
                 Set<DBItemInventoryJobTagging> dbJobTagItems = jobTagDBLayer.getTaggings(jobTagsPerWorkflow.getKey().getId());
 
                 for (DBItemInventoryJobTagging dbJobTagItem : dbJobTagItems) {
                     session.delete(dbJobTagItem);
                 }
-                
+
                 for (JobTags jts : jobTagsPerWorkflow.getValue()) {
                     for (String jobTag : jts.getJobTags()) {
                         Optional<Long> tagId = Optional.ofNullable(updatedJobTags.get(new GroupedTag(jobTag).getTag())).map(
@@ -1747,14 +1745,13 @@ public class ImportUtils {
                             newItem.setCid(jobTagsPerWorkflow.getKey().getId());
                             newItem.setWorkflowName(jobTagsPerWorkflow.getKey().getName());
                             newItem.setJobName(jts.getJobName());
-                            newItem.setModified(now);
                             newItem.setTagId(tagId.get());
                             session.save(newItem);
                         }
                     }
                 }
             }
-            
+
             // order tagging
             Optional<ExportedOrderTags> exportedOrderTags = Optional.ofNullable(tagsFromArchive.getOrderTags());
             // fileordersources
@@ -1766,7 +1763,7 @@ public class ImportUtils {
 
         }
     }
-    
+
     private static <T extends IDBItemTag> Map<String, T> updateTags(ATagDBLayer<T> dbLayer, List<GroupedTag> groupedTagsFromArchive,
             Map<String, GroupedTag> groupedTags, Map<String, Long> dbGroupsMap, Date now, Map<String, T> tagsWithNewGroupId)
             throws SOSHibernateException {
@@ -1780,7 +1777,6 @@ public class ImportUtils {
                 Long groupId = gt.getGroup().map(dbGroupsMap::get).orElse(0L);
                 if (!groupId.equals(item.getGroupId())) {
                     item.setGroupId(groupId);
-                    item.setModified(now);
                     dbLayer.getSession().update(item);
                     if (tagsWithNewGroupId != null) {
                         tagsWithNewGroupId.put(item.getName(), item);
@@ -1795,7 +1791,6 @@ public class ImportUtils {
                 Long groupId = gt.getGroup().map(dbGroupsMap::get).orElse(0L);
                 T newItem = dbLayer.newDBItem();
                 newItem.setGroupId(groupId);
-                newItem.setModified(now);
                 newItem.setOrdering(++maxOrdering);
                 newItem.setName(gt.getTag());
                 dbLayer.getSession().save(newItem);
@@ -1804,7 +1799,7 @@ public class ImportUtils {
         }
         return updatedTags;
     }
-    
+
     private static Map<DBItemInventoryConfiguration, Set<String>> getTagsPerWorkflows(List<ExportedTagItem> tags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer) {
@@ -1838,7 +1833,7 @@ public class ImportUtils {
         }
         return tagsPerWorkflows;
     }
-    
+
     private static Map<DBItemInventoryConfiguration, Set<JobTags>> getJobTagsPerWorkflows(List<ExportedJobTagItem> jobTags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer) {
@@ -1848,8 +1843,8 @@ public class ImportUtils {
             jobTags.forEach(w -> {
                 if (w.getJobs() != null && w.getJobs().getAdditionalProperties() != null && !w.getJobs().getAdditionalProperties().isEmpty() && w
                         .getName() != null) {
-                    DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap
-                            .getOrDefault(objectType, Collections.emptyMap()).getOrDefault(w.getName(), w.getName()));
+                    DBItemInventoryConfiguration conf = cfgsMap.getOrDefault(objectType, Collections.emptyMap()).get(oldNewNameMap.getOrDefault(
+                            objectType, Collections.emptyMap()).getOrDefault(w.getName(), w.getName()));
                     if (conf == null) {
                         conf = invDBLayer.getConfigurationByName(w.getName(), objectType.intValue());
                         if (conf != null) {
@@ -1870,7 +1865,7 @@ public class ImportUtils {
         }
         return jobTagsPerWorkflows;
     }
-    
+
     private static void updateFileOrderSources(Optional<List<FileOrderSourceOrderTags>> orderTags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
@@ -1894,7 +1889,6 @@ public class ImportUtils {
                                 if (!tagsWithoutGroup.equals(fos.getTags())) {
                                     fos.setTags(tagsWithoutGroup);
                                     conf.setContent(JocInventory.toString(fos));
-                                    conf.setModified(now);
                                     if (overwriteTags) {
                                         invDBLayer.getSession().update(conf);
                                     } else {
@@ -1912,11 +1906,11 @@ public class ImportUtils {
             });
         }
     }
-    
+
     private static void updateSchedules(Optional<List<ScheduleOrderTags>> orderTags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
-        
+
         ConfigurationType objectType = ConfigurationType.SCHEDULE;
         InventoryDBLayer dbLayer = new InventoryDBLayer(invDBLayer.getSession());
         if (orderTags.isPresent()) {
@@ -1945,7 +1939,6 @@ public class ImportUtils {
                                 });
                                 if (b.get()) {
                                     conf.setContent(JocInventory.toString(sch));
-                                    conf.setModified(now);
                                     if (overwriteTags) {
                                         invDBLayer.getSession().update(conf);
                                     } else {
@@ -1963,7 +1956,7 @@ public class ImportUtils {
             });
         }
     }
-    
+
     private static void updateWorkflows(Optional<List<AddOrdersOrderTags>> orderTags,
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             DBLayerDeploy invDBLayer, Date now, boolean overwriteTags) {
@@ -1989,7 +1982,6 @@ public class ImportUtils {
                                         b);
                                 if (b.get()) {
                                     conf.setContent(JocInventory.toString(wf));
-                                    conf.setModified(now);
                                     if (overwriteTags) {
                                         invDBLayer.getSession().update(conf);
                                         JocInventory.handleWorkflowSearch(dbLayer, wf, conf.getId());
@@ -2008,11 +2000,11 @@ public class ImportUtils {
             });
         }
     }
-    
+
     private static void updateWorkflowInstructions(List<Instruction> insts, Map<String, LinkedHashSet<String>> orderTags, AtomicInteger pos,
             AtomicBoolean b) {
         if (insts != null && !orderTags.isEmpty()) {
-        
+
             for (int i = 0; i < insts.size(); i++) {
                 Instruction inst = insts.get(i);
                 switch (inst.getTYPE()) {
@@ -2108,7 +2100,7 @@ public class ImportUtils {
                             .collect(Collectors.toSet())).orElse(null));
                     String newTags = String.join(",", Optional.ofNullable(ao.getTags()).orElse(Collections.emptySet()));
                     if (!oldTags.equals(newTags)) {
-                       b.set(true); 
+                        b.set(true);
                     }
                     break;
                 default:
@@ -2120,23 +2112,22 @@ public class ImportUtils {
 
     public static void importTags(List<DBItemInventoryConfiguration> cfgs, Map<ConfigurationType, Map<String, String>> oldNewNameMap,
             ExportedTags tagsFromArchive, SOSHibernateSession session) throws SOSHibernateException {
-//        List<DBItemInventoryTag> newTags = new ArrayList<>();
-//        List<DBItemInventoryTag> storedTags = new ArrayList<>();
-   
-        
+        // List<DBItemInventoryTag> newTags = new ArrayList<>();
+        // List<DBItemInventoryTag> storedTags = new ArrayList<>();
+
         if (tagsFromArchive != null) {
-            
+
             InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
             InventoryTagGroupDBLayer dbGroupLayer = new InventoryTagGroupDBLayer(session);
             DBLayerDeploy dbDepLayer = new DBLayerDeploy(session);
             Date now = Date.from(Instant.now());
             Map<String, DBItemInventoryTagGroup> allGroups = dbGroupLayer.getAllGroups().stream().collect(Collectors.toMap(
                     DBItemInventoryTagGroup::getName, Function.identity()));
-            Integer maxGroupOrdering2 = allGroups.values().stream().collect(Collectors.maxBy(Comparator
-                    .comparingInt(DBItemInventoryTagGroup::getOrdering))).map(DBItemInventoryTagGroup::getOrdering).orElse(0);
+            Integer maxGroupOrdering2 = allGroups.values().stream().collect(Collectors.maxBy(Comparator.comparingInt(
+                    DBItemInventoryTagGroup::getOrdering))).map(DBItemInventoryTagGroup::getOrdering).orElse(0);
             AtomicInteger maxGroupOrdering = new AtomicInteger(maxGroupOrdering2 + 1);
-//            Map<String, DBItemInventoryTag> allTags = dbLayer.getAllTags().stream().collect(Collectors.toMap(
-//                    DBItemInventoryTag::getName, Function.identity()));
+            // Map<String, DBItemInventoryTag> allTags = dbLayer.getAllTags().stream().collect(Collectors.toMap(
+            // DBItemInventoryTag::getName, Function.identity()));
 
             // add new groups
             Consumer<GroupedTag> addGroup = gt -> {
@@ -2147,7 +2138,6 @@ public class ImportUtils {
                     if (gItem == null) {
                         gItem = new DBItemInventoryTagGroup();
                         gItem.setName(g);
-                        gItem.setModified(now);
                         gItem.setOrdering(maxGroupOrdering.getAndIncrement());
                     }
                     return gItem;
@@ -2161,7 +2151,7 @@ public class ImportUtils {
                     }
                 });
             };
-            
+
             if (tagsFromArchive.getTags() != null) {
                 tagsFromArchive.getTags().stream().map(ExportedTagItem::getName).map(GroupedTag::new).forEach(addGroup);
             }
@@ -2170,26 +2160,26 @@ public class ImportUtils {
                         ExportedJobTagItems::getAdditionalProperties).filter(Objects::nonNull).map(Map::values).flatMap(Collection::stream).flatMap(
                                 Collection::stream).distinct().map(GroupedTag::new).forEach(addGroup);
             }
-            
+
             Map<String, Long> dbGroupsMap = allGroups.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getId()));
 
             Map<ConfigurationType, Map<String, DBItemInventoryConfiguration>> cfgsMap = cfgs.stream().collect(Collectors.groupingBy(
                     DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, Function.identity())));
-            
+
             Map<DBItemInventoryConfiguration, Set<String>> tagsPerWorkflows = getTagsPerWorkflows(tagsFromArchive.getTags(), cfgsMap, oldNewNameMap,
                     dbDepLayer);
 
             if (!tagsPerWorkflows.isEmpty()) {
                 TaggingImpl.storeTaggings(tagsPerWorkflows, dbGroupsMap, dbLayer, true);
             }
-            
+
             Map<DBItemInventoryConfiguration, Set<JobTags>> jobTagsPerWorkflows = getJobTagsPerWorkflows(tagsFromArchive.getJobTags(), cfgsMap,
                     oldNewNameMap, dbDepLayer);
 
             if (!jobTagsPerWorkflows.isEmpty()) {
                 com.sos.joc.tags.job.impl.TaggingImpl.storeTaggings(jobTagsPerWorkflows, dbGroupsMap, new InventoryJobTagDBLayer(session), true);
             }
-            
+
             // order tagging
             // fileordersources
             updateFileOrderSources(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getFileOrderSources), cfgsMap,
@@ -2200,7 +2190,7 @@ public class ImportUtils {
             // workflows
             updateWorkflows(Optional.ofNullable(tagsFromArchive.getOrderTags()).map(ExportedOrderTags::getWorkflows), cfgsMap, oldNewNameMap,
                     dbDepLayer, now, false);
-            
+
         }
     }
 }

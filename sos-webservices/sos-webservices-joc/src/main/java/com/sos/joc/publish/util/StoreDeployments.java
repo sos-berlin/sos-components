@@ -130,10 +130,9 @@ public class StoreDeployments {
                             if (JocInventory.isWorkflow(toUpdate.getType())) {
                                 workflowInvIds.add(toUpdate.getId());
                             }
-                            if(!redeploy) {
+                            if (!redeploy) {
                                 toUpdate.setDeployed(true);
                             }
-                            toUpdate.setModified(Date.from(Instant.now()));
                             dbLayer.getSession().update(toUpdate);
                         }
                     } else {
@@ -189,12 +188,12 @@ public class StoreDeployments {
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
-                    PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
-                    .ifPresent(set -> workflowNames.removeAll(set));
+                    PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames).ifPresent(
+                            set -> workflowNames.removeAll(set));
                     // get the schedules referencing these workflows
                     List<String> workflowsWithSubmit = new ArrayList<String>();
                     List<String> workflowsWithoutSubmit = new ArrayList<String>();
-                    
+
                     for (String workflowName : workflowNames) {
                         List<DBItemInventoryReleasedConfiguration> scheduleDbItems = invDbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
                         for (DBItemInventoryReleasedConfiguration scheduleDbItem : scheduleDbItems) {
@@ -216,7 +215,7 @@ public class StoreDeployments {
                                 true, allowedDailyPlanDates));
                     }
                     if (!workflowsWithoutSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithoutSubmit, null, controllerId,
                                 false, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
@@ -226,20 +225,20 @@ public class StoreDeployments {
                         }
                     }
                 }
-                // after successful deployment, set enforce flag to false for related dependencies 
-                PublishUtils.resetDependenciesEnforcementAfterPublish(
-                        optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
-                            .collect(Collectors.toSet()),
-                        newHibernateSession);
+                // after successful deployment, set enforce flag to false for related dependencies
+                PublishUtils.resetDependenciesEnforcementAfterPublish(optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
+                        .collect(Collectors.toSet()), newHibernateSession);
             } else if (either.isLeft()) {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
-                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer, wsIdentifier);
+                @SuppressWarnings("unused")
+                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer,
+                        wsIdentifier);
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
-//                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+                // dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
@@ -248,8 +247,8 @@ public class StoreDeployments {
             Globals.disconnect(newHibernateSession);
             try {
                 PublishSemaphore.release(accessToken);
-                if(PublishSemaphore.getInstance().getSemaphore(accessToken)
-                        .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(
+                        SEMAPHORE_ID)).isPresent()) {
                     PublishSemaphore.remove(accessToken);
                     LOGGER.debug("final remove semaphore from deploy with AT " + accessToken);
                 }
@@ -259,18 +258,17 @@ public class StoreDeployments {
         }
     }
 
-    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer, String wsIdentifier)
-            throws SOSHibernateException {
+    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer,
+            String wsIdentifier) throws SOSHibernateException {
         List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
         LOGGER.trace("JSON(s) rejected from controller: ");
-        optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item
-                .getContent()));
+        optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item.getContent()));
         for (DBItemDeploymentHistory optimistic : optimisticEntries) {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
             dbLayer.getSession().update(optimistic);
             // update related inventory configuration to deployed=false
-            if(!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
+            if (!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
                 DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
                 if (cfg != null) {
                     cfg.setDeployed(false);
@@ -300,6 +298,7 @@ public class StoreDeployments {
                 storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer, false);
             }
 
+            @SuppressWarnings("unused")
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             // boolean verified = false;
             boolean selfIssued = false;
@@ -312,7 +311,7 @@ public class StoreDeployments {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                         .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null);
-                
+
                 BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations1).thenAccept(either -> processAfterAdd(either, account,
@@ -334,7 +333,7 @@ public class StoreDeployments {
                         Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
                                         .getCertificate(), null);
-                        
+
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations2).thenAccept(either -> processAfterAdd(either,
@@ -347,7 +346,7 @@ public class StoreDeployments {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
-                        
+
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations3).thenAccept(either -> processAfterAdd(either,
@@ -373,7 +372,7 @@ public class StoreDeployments {
                         Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
                                         .getCertificate(), null);
-                        
+
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations4).thenAccept(either -> processAfterAdd(either,
@@ -386,7 +385,7 @@ public class StoreDeployments {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
-                        
+
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations5).thenAccept(either -> processAfterAdd(either,

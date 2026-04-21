@@ -20,12 +20,12 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
 
     private static final String API_CALL_SHARE = "./inventory/favorites/share";
     private static final String API_CALL_UNSHARE = "./inventory/favorites/make_private";
-    
+
     @Override
     public JOCDefaultResponse shareFavorites(String accessToken, byte[] filterBytes) {
         return shareFavorites(accessToken, filterBytes, API_CALL_SHARE);
     }
-    
+
     @Override
     public JOCDefaultResponse unshareFavorites(String accessToken, byte[] filterBytes) {
         return shareFavorites(accessToken, filterBytes, API_CALL_UNSHARE);
@@ -42,21 +42,20 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
-            Date now = Date.from(Instant.now());
             if (apiCall.equals(API_CALL_SHARE)) {
-                favorites.getFavoriteIds().stream().forEach(f -> dbLayer.shareFavorite(f, now));
+                favorites.getFavoriteIds().stream().forEach(f -> dbLayer.shareFavorite(f));
             } else {
-                favorites.getFavoriteIds().stream().forEach(f -> dbLayer.unShareFavorite(f, now));
+                favorites.getFavoriteIds().stream().forEach(f -> dbLayer.unShareFavorite(f));
             }
             Globals.commit(connection);
-            
-            return responseStatusJSOk(now);
+
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             Globals.rollback(connection);
             return responseStatusJSError(e);

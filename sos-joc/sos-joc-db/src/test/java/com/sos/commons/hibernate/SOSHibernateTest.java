@@ -289,8 +289,7 @@ public class SOSHibernateTest {
             DBItemInventoryTag t = new DBItemInventoryTag();
             t.setName(new Date().toString());
             t.setOrdering(Integer.valueOf(1));
-            t.setModified(new Date());
-
+         
             session.beginTransaction();
             session.save(t);
 

@@ -1,7 +1,6 @@
 package com.sos.joc.db.favorite;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -96,7 +95,7 @@ public class FavoriteDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public int deleteByAccount(String accountName) throws SOSHibernateException {
         String hql = "delete from " + DBItemInventoryFavoriteClass + " where account=:accountName";
         Query<DBItemIamIdentityService> query = getSession().createQuery(hql);
@@ -105,23 +104,20 @@ public class FavoriteDBLayer extends DBLayer {
         return row;
     }
 
-
-    public Integer takeOverFavorite(FavoriteSharedIdentifier sharedFavorite, Date now, Integer ordering) {
+    public Integer takeOverFavorite(FavoriteSharedIdentifier sharedFavorite, Integer ordering) {
         try {
             DBItemInventoryFavorite sharedItem = getSharedFavorite(sharedFavorite);
             DBItemInventoryFavorite item = getFavorite(sharedFavorite);
             boolean isNew = (item == null);
             if (isNew) {
                 item = new DBItemInventoryFavorite();
-                item.setAccount(account);
-                item.setCreated(now);
                 item.setId(null);
+                item.setAccount(account);
                 item.setName(sharedItem.getName());
                 item.setType(sharedItem.getType());
                 item.setOrdering(ordering);
                 item.setShared(false);
             }
-            item.setModified(now);
             item.setFavorite(sharedItem.getFavorite());
             if (isNew) {
                 getSession().save(item);
@@ -137,15 +133,14 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
 
-    public Integer storeFavorite(StoreFavorite storeFavorite, Date now, Integer ordering) {
+    public Integer storeFavorite(StoreFavorite storeFavorite, Integer ordering) {
         try {
             DBItemInventoryFavorite item = getFavorite(storeFavorite.getName(), storeFavorite.getType());
             boolean isNew = (item == null);
             if (isNew) {
                 item = new DBItemInventoryFavorite();
-                item.setAccount(account);
-                item.setCreated(now);
                 item.setId(null);
+                item.setAccount(account);
                 item.setName(storeFavorite.getName());
                 item.setType(storeFavorite.getType().intValue());
                 item.setOrdering(ordering);
@@ -155,7 +150,6 @@ public class FavoriteDBLayer extends DBLayer {
                     item.setShared(storeFavorite.getShared());
                 }
             }
-            item.setModified(now);
             if (storeFavorite.getContent() != null && storeFavorite.getContent().isEmpty()) {
                 storeFavorite.setContent(null);
             }
@@ -174,12 +168,11 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
 
-    public int shareFavorite(FavoriteIdentifier favorite, Date now) {
+    public int shareFavorite(FavoriteIdentifier favorite) {
         try {
             DBItemInventoryFavorite item = getFavorite(favorite);
             if (item != null && !item.getShared()) {
                 item.setShared(true);
-                item.setModified(now);
                 getSession().update(item);
                 return 1;
             }
@@ -191,12 +184,11 @@ public class FavoriteDBLayer extends DBLayer {
         }
     }
 
-    public int unShareFavorite(FavoriteIdentifier favorite, Date now) {
+    public int unShareFavorite(FavoriteIdentifier favorite) {
         try {
             DBItemInventoryFavorite item = getFavorite(favorite);
             if (item != null && item.getShared()) {
                 item.setShared(false);
-                item.setModified(now);
                 getSession().update(item);
                 return 1;
             }

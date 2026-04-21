@@ -51,7 +51,7 @@ import js7.data.platform.PlatformInfo;
 import js7.data_for_java.value.JExpression;
 
 public class AgentStoreUtils {
-    
+
     private static AgentStoreUtils instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentStoreUtils.class);
 
@@ -66,7 +66,7 @@ public class AgentStoreUtils {
         }
         return instance;
     }
-    
+
     public static void storeStandaloneAgent(Map<String, Agent> agentMap, String controllerId, boolean overwrite, boolean onlyAdd, boolean onlyEdit,
             InventoryAgentInstancesDBLayer dbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAllAgents();
@@ -76,7 +76,7 @@ public class AgentStoreUtils {
                 .toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName)) : Collections.emptyMap();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = !allNames.isEmpty() ? dbLayer.getAgentNameAliases(allNames.keySet()) : Collections
                 .emptyMap();
-        
+
         agentMap.values().forEach(requestedA -> {
             dbAgents.stream().filter(a -> !a.getAgentId().equals(requestedA.getAgentId())).filter(a -> a.getUri() != null && !a.getUri().isEmpty())
                     .filter(a -> requestedA.getUrl().equals(a.getUri())).findAny().ifPresent(a -> {
@@ -87,58 +87,58 @@ public class AgentStoreUtils {
                         throw new JocBadRequestException(String.format("Agent url %s is already used by Subagent %s", a.getUri(), a.getSubAgentId()));
                     });
         });
-        
+
         Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
         Set<String> missedAgentNames = new HashSet<>();
-        
+
         Map<DBItemInventoryAgentInstance, Agent> agentsForUpdate = new HashMap<>();
-                
+
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
-            //if (overwrite) { //TODO that's wrong!!! used by import. If it is false -> all agent from agentMap will be inserted
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    if (position < dbAgent.getOrdering()) {
-                        position = dbAgent.getOrdering();
-                    }
-                    Agent agentFound = agentMap.remove(dbAgent.getAgentId());
-                    if (agentFound == null) {
-                        continue;
-                    }
-                    
-                    if (!overwrite) {
-                        continue;
-                    }
-                    
-                    if (!dbAgent.getControllerId().equals(controllerId)) {
-                        throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(),
-                                dbAgent.getControllerId()));
-                    }
-                    
-                    missedAgentNames.addAll(checkUniquenessOfAgentNames(agentFound, allAliases, allNames));
-                    
-                    dbAgent.setHidden(agentFound.getHidden());
-                    if (!dbAgent.getAgentName().equals(agentFound.getAgentName())) {
-                        dbAgent.setAgentName(agentFound.getAgentName());
-                        agentNamesAndAliases.add(agentFound.getAgentName());
-                    }
-                    dbAgent.setTitle(agentFound.getTitle());
-                    if (!dbAgent.getUri().equals(agentFound.getUrl())) {
-                        dbAgent.setDeployed(false);
-                    }
-                    if (!Optional.ofNullable(dbAgent.getProcessLimit()).equals(Optional.ofNullable(agentFound.getProcessLimit()))) {
-                        dbAgent.setDeployed(false);
-                    }
-                    dbAgent.setUri(agentFound.getUrl());
-                    dbAgent.setProcessLimit(agentFound.getProcessLimit());
-                    agentsForUpdate.put(dbAgent, agentFound);
-//                    dbLayer.updateAgent(dbAgent);
-//                    newAliases.put(agentFound.getAgentId(), updateAliases(dbLayer, agentFound, allAliases.get(agentFound.getAgentId())));
+            // if (overwrite) { //TODO that's wrong!!! used by import. If it is false -> all agent from agentMap will be inserted
+            for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                if (position < dbAgent.getOrdering()) {
+                    position = dbAgent.getOrdering();
                 }
-            //}
+                Agent agentFound = agentMap.remove(dbAgent.getAgentId());
+                if (agentFound == null) {
+                    continue;
+                }
+
+                if (!overwrite) {
+                    continue;
+                }
+
+                if (!dbAgent.getControllerId().equals(controllerId)) {
+                    throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(), dbAgent
+                            .getControllerId()));
+                }
+
+                missedAgentNames.addAll(checkUniquenessOfAgentNames(agentFound, allAliases, allNames));
+
+                dbAgent.setHidden(agentFound.getHidden());
+                if (!dbAgent.getAgentName().equals(agentFound.getAgentName())) {
+                    dbAgent.setAgentName(agentFound.getAgentName());
+                    agentNamesAndAliases.add(agentFound.getAgentName());
+                }
+                dbAgent.setTitle(agentFound.getTitle());
+                if (!dbAgent.getUri().equals(agentFound.getUrl())) {
+                    dbAgent.setDeployed(false);
+                }
+                if (!Optional.ofNullable(dbAgent.getProcessLimit()).equals(Optional.ofNullable(agentFound.getProcessLimit()))) {
+                    dbAgent.setDeployed(false);
+                }
+                dbAgent.setUri(agentFound.getUrl());
+                dbAgent.setProcessLimit(agentFound.getProcessLimit());
+                agentsForUpdate.put(dbAgent, agentFound);
+                // dbLayer.updateAgent(dbAgent);
+                // newAliases.put(agentFound.getAgentId(), updateAliases(dbLayer, agentFound, allAliases.get(agentFound.getAgentId())));
+            }
+            // }
         }
-        
+
         // TODO check if Agent is already stored as cluster agent???
-        
+
         if (onlyAdd && !agentsForUpdate.isEmpty()) {
             if (agentsForUpdate.size() == 1) {
                 throw new JocBadRequestException("Agent with ID '" + agentsForUpdate.keySet().iterator().next().getAgentId() + "' already exists.");
@@ -147,7 +147,7 @@ public class AgentStoreUtils {
                 throw new JocBadRequestException("Agents with IDs " + s + " already exists.");
             }
         }
-        
+
         if (onlyEdit && !agentMap.isEmpty()) {
             if (agentMap.size() == 1) {
                 throw new JocBadRequestException("Agent with ID '" + agentMap.keySet().iterator().next() + "' doesn't exist.");
@@ -156,16 +156,16 @@ public class AgentStoreUtils {
                 throw new JocBadRequestException("Agents with IDs " + s + " don't exist.");
             }
         }
-        
+
         for (Map.Entry<DBItemInventoryAgentInstance, Agent> agentForUpdate : agentsForUpdate.entrySet()) {
             dbLayer.updateAgent(agentForUpdate.getKey());
             newAliases.put(agentForUpdate.getKey().getAgentId(), updateAliases(dbLayer, agentForUpdate.getValue(), allAliases.get(agentForUpdate
                     .getKey().getAgentId())));
         }
-        
+
         for (Agent newAgent : agentMap.values()) {
             checkUniquenessOfAgentNames(newAgent, allAliases, allNames);
-            
+
             DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
             dbAgent.setId(null);
             dbAgent.setAgentId(newAgent.getAgentId());
@@ -186,17 +186,17 @@ public class AgentStoreUtils {
             newAliases.put(newAgent.getAgentId(), updateAliases(dbLayer, newAgent, allAliases.get(newAgent.getAgentId())));
             agentNamesAndAliases.add(newAgent.getAgentName());
         }
-        
+
         agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
         AgentHelper.validateWorkflowsByAgentNames(dbLayer, agentNamesAndAliases, missedAgentNames);
     }
-    
+
     public static void storeClusterAgent(Map<String, ClusterAgent> clusterAgentMap, Set<SubAgent> requestedSubagents,
             Set<String> requestedSubagentIds, String controllerId, boolean overwrite, boolean onlyAdd, boolean onlyEdit,
             InventoryAgentInstancesDBLayer agentDbLayer, InventorySubagentClustersDBLayer subagentDbLayer) throws SOSHibernateException {
         List<DBItemInventoryAgentInstance> dbAgents = agentDbLayer.getAllAgents();
-        
+
         Map<String, String> allNames = dbAgents != null ? dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).collect(Collectors
                 .toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName)) : Collections.emptyMap();
         Map<String, Set<DBItemInventoryAgentName>> allAliases = !allNames.isEmpty() ? agentDbLayer.getAgentNameAliases(allNames.keySet())
@@ -205,31 +205,30 @@ public class AgentStoreUtils {
         Map<String, Set<DBItemInventoryAgentName>> newAliases = new HashMap<>();
         Set<String> missedAgentNames = new HashSet<>();
         Set<String> agentNamesAndAliases = new HashSet<>();
-//        List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
-//                controllerId));
+        // List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
+        // controllerId));
         List<DBItemInventorySubAgentInstance> dbSubAgents = agentDbLayer.getSubAgentInstancesByControllerIds(null);
         // check uniqueness of SubagentUrl with DB
         Set<String> requestedSubagentUrls = requestedSubagents.stream().map(SubAgent::getUrl).collect(Collectors.toSet());
-        dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s
-                .getUri())).findAny().ifPresent(s -> {
-                    throw new JocBadRequestException(
-                            String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
+        dbSubAgents.stream().filter(s -> !requestedSubagentIds.contains(s.getSubAgentId())).filter(s -> requestedSubagentUrls.contains(s.getUri()))
+                .findAny().ifPresent(s -> {
+                    throw new JocBadRequestException(String.format("Subagent url %s is already used by Subagent %s", s.getUri(), s.getSubAgentId()));
                 });
-        dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a.getUri()))
-                .filter(a -> clusterAgentMap.get(a.getAgentId()) == null || !clusterAgentMap.get(a.getAgentId()).getSubagents().stream()
-                .map(SubAgent::getUrl).collect(Collectors.toSet()).contains(a.getUri())).findAny().ifPresent(s -> {
-                            throw new JocBadRequestException(
-                                    String.format("Subagent url %s is already used by Agent %s", s.getUri(), s.getAgentId()));
+        dbAgents.stream().filter(a -> a.getUri() != null && !a.getUri().isEmpty()).filter(a -> requestedSubagentUrls.contains(a.getUri())).filter(
+                a -> clusterAgentMap.get(a.getAgentId()) == null || !clusterAgentMap.get(a.getAgentId()).getSubagents().stream().map(SubAgent::getUrl)
+                        .collect(Collectors.toSet()).contains(a.getUri())).findAny().ifPresent(s -> {
+                            throw new JocBadRequestException(String.format("Subagent url %s is already used by Agent %s", s.getUri(), s
+                                    .getAgentId()));
                         });
-        
+
         // check uniqueness of (Sub-)AgentId with DB per controller
         dbAgents.stream().filter(a -> a.getControllerId().equals(controllerId)).map(DBItemInventoryAgentInstance::getAgentId).filter(
                 aId -> requestedSubagentIds.contains(aId)).findAny().ifPresent(aId -> {
                     throw new JocBadRequestException(String.format("Subagent id '%s' is already used by an Agent", aId));
                 });
-        
+
         Map<DBItemInventoryAgentInstance, ClusterAgent> agentsForUpdate = new HashMap<>();
-        
+
         int position = -1;
         if (dbAgents != null && !dbAgents.isEmpty()) {
             for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -240,18 +239,18 @@ public class AgentStoreUtils {
                 if (agent == null) {
                     continue;
                 }
-                
+
                 if (!overwrite) {
-                    continue; 
+                    continue;
                 }
-                
+
                 if (!dbAgent.getControllerId().equals(controllerId)) {
-                    throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(),
-                            dbAgent.getControllerId()));
+                    throw new JocBadRequestException(String.format("Agent '%s' is already assigned to Controller '%s'", dbAgent.getAgentId(), dbAgent
+                            .getControllerId()));
                 }
-                
+
                 missedAgentNames.addAll(checkUniquenessOfAgentNames(agent, allAliases, allNames));
-                
+
                 dbAgent.setHidden(agent.getHidden());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setTitle(agent.getTitle());
@@ -261,13 +260,13 @@ public class AgentStoreUtils {
                 dbAgent.setProcessLimit(agent.getProcessLimit());
                 agentNamesAndAliases.add(dbAgent.getAgentName());
                 agentsForUpdate.put(dbAgent, agent);
-//                agentDbLayer.updateAgent(dbAgent);
-//                
-//                saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
-//                newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
+                // agentDbLayer.updateAgent(dbAgent);
+                //
+                // saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, dbAgent, dbSubAgents, agent.getSubagents(), overwrite);
+                // newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
             }
         }
-        
+
         // TODO check if Agent is already stored as standalone agent???
         if (onlyAdd && !agentsForUpdate.isEmpty()) {
             if (agentsForUpdate.size() == 1) {
@@ -277,7 +276,7 @@ public class AgentStoreUtils {
                 throw new JocBadRequestException("Agents with IDs " + s + " already exists.");
             }
         }
-        
+
         if (onlyEdit && !clusterAgentMap.isEmpty()) {
             if (clusterAgentMap.size() == 1) {
                 throw new JocBadRequestException("Agent with ID '" + clusterAgentMap.keySet().iterator().next() + "' doesn't exist.");
@@ -286,7 +285,7 @@ public class AgentStoreUtils {
                 throw new JocBadRequestException("Agents with IDs " + s + " don't exist.");
             }
         }
-        
+
         for (Map.Entry<DBItemInventoryAgentInstance, ClusterAgent> agentForUpdate : agentsForUpdate.entrySet()) {
             agentDbLayer.updateAgent(agentForUpdate.getKey());
             saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, agentForUpdate.getKey(), dbSubAgents, agentForUpdate.getValue().getSubagents(),
@@ -294,10 +293,10 @@ public class AgentStoreUtils {
             newAliases.put(agentForUpdate.getKey().getAgentId(), updateAliases(agentDbLayer, agentForUpdate.getValue(), allAliases.get(agentForUpdate
                     .getKey().getAgentId())));
         }
-        
+
         for (ClusterAgent agent : clusterAgentMap.values()) {
             checkUniquenessOfAgentNames(agent, allAliases, allNames);
-            
+
             DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
             dbAgent.setId(null);
             dbAgent.setAgentId(agent.getAgentId());
@@ -319,15 +318,15 @@ public class AgentStoreUtils {
             saveOrUpdate(agentDbLayer, subagentDbLayer, controllerId, dbAgent, dbSubAgents, agent.getSubagents(), overwrite, false, false);
             newAliases.put(agent.getAgentId(), updateAliases(agentDbLayer, agent, allAliases.get(agent.getAgentId())));
         }
-        
+
         agentNamesAndAliases = Stream.concat(agentNamesAndAliases.stream(), newAliases.values().stream().flatMap(s -> s.stream().map(
                 DBItemInventoryAgentName::getAgentName))).collect(Collectors.toSet());
         AgentHelper.validateWorkflowsByAgentNames(agentDbLayer, agentNamesAndAliases, missedAgentNames);
     }
-    
+
     public static Set<String> storeSubagentCluster(List<SubagentCluster> subagentCluster, InventoryAgentInstancesDBLayer agentDbLayer,
             InventorySubagentClustersDBLayer agentClusterDBLayer, boolean overwrite, boolean onlyAdd, boolean onlyEdit) throws SOSHibernateException {
-        
+
         Map<String, String> agentToControllerMap = agentDbLayer.getAllAgents().stream().collect(Collectors.toMap(
                 DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getControllerId));
 
@@ -344,49 +343,49 @@ public class AgentStoreUtils {
 
             storeSubagentCluster(subagentClusterPerController.getKey(), subagentMap, agentClusterDBLayer, now, overwrite, onlyAdd, onlyEdit);
         }
-        
+
         return subagentClustersPerController.keySet();
     }
-    
+
     private static void checkSubagentCluster(List<SubagentCluster> subagentCluster, InventorySubagentClustersDBLayer agentClusterDBLayer) {
-        Map<String, Long> subagentClusterIds = subagentCluster.stream().collect(Collectors.groupingBy(
-                SubagentCluster::getSubagentClusterId, Collectors.counting()));
+        Map<String, Long> subagentClusterIds = subagentCluster.stream().collect(Collectors.groupingBy(SubagentCluster::getSubagentClusterId,
+                Collectors.counting()));
 
         // check uniqueness of SubagentClusterIds per Controller
         subagentClusterIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
             throw new JocBadRequestException(String.format("SubagentClusterId '%s' has to be unique per Controller", e.getKey()));
         });
-        
+
         // check java name rules of SubagentClusterIds
         subagentClusterIds.keySet().forEach(sId -> SOSCheckJavaVariableName.test("Subagent Cluster ID", sId));
-        
+
         // Check if all subagents in the inventory
-        List<String> subagentIds = subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(
-                SubAgentId::getSubagentId).distinct().collect(Collectors.toList());
+        List<String> subagentIds = subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(SubAgentId::getSubagentId)
+                .distinct().collect(Collectors.toList());
         String missingSubagentId = agentClusterDBLayer.getFirstSubagentIdThatNotExists(subagentIds);
         if (!missingSubagentId.isEmpty()) {
             throw new JocBadRequestException(String.format("At least one Subagent doesn't exist: '%s'", missingSubagentId));
         }
 
         // Check priority expressions
-        subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(SubAgentId::getPriority).map(
-                JExpression::parse).filter(Either::isLeft).findAny().ifPresent(ProblemHelper::throwProblemIfExist);
+        subagentCluster.stream().map(SubagentCluster::getSubagentIds).flatMap(List::stream).map(SubAgentId::getPriority).map(JExpression::parse)
+                .filter(Either::isLeft).findAny().ifPresent(ProblemHelper::throwProblemIfExist);
     }
-    
+
     private static List<DBItemInventorySubAgentCluster> storeSubagentCluster(String controllerId, Map<String, SubagentCluster> subagentClusterMap,
             InventorySubagentClustersDBLayer agentClusterDBLayer, Date modified, boolean overwrite, boolean onlyAdd, boolean onlyEdit)
             throws SOSHibernateException {
         List<String> subagentClusterIds = subagentClusterMap.keySet().stream().collect(Collectors.toList());
         List<DBItemInventorySubAgentCluster> dbsubagentClusters = agentClusterDBLayer.getSubagentClusters(controllerId, subagentClusterIds);
-        List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = 
-                agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds, controllerId);
-        
+        List<DBItemInventorySubAgentClusterMember> dbsubagentClusterMembers = agentClusterDBLayer.getSubagentClusterMembers(subagentClusterIds,
+                controllerId);
+
         Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap = Collections.emptyMap();
         if (dbsubagentClusterMembers != null) {
             dbsubagentClusterMembersMap = dbsubagentClusterMembers.stream().collect(Collectors.groupingBy(
                     DBItemInventorySubAgentClusterMember::getSubAgentClusterId));
         }
-        
+
         // update
         if (dbsubagentClusters != null) {
             for (DBItemInventorySubAgentCluster dbsubagentCluster : dbsubagentClusters) {
@@ -394,31 +393,30 @@ public class AgentStoreUtils {
                 if (s == null) {
                     continue;
                 }
-                
+
                 if (!overwrite) {
                     continue;
                 }
-                
+
                 if (!dbsubagentCluster.getAgentId().equals(s.getAgentId())) {
-                    throw new JocBadRequestException(String.format("Subagent Cluster ID '%s' is already used for Agent '%s'",
-                            dbsubagentCluster.getSubAgentClusterId(), dbsubagentCluster.getAgentId()));
+                    throw new JocBadRequestException(String.format("Subagent Cluster ID '%s' is already used for Agent '%s'", dbsubagentCluster
+                            .getSubAgentClusterId(), dbsubagentCluster.getAgentId()));
                 }
                 if (onlyAdd) {
                     throw new JocBadRequestException("Subagent Cluster ID '" + dbsubagentCluster.getSubAgentClusterId() + "' already exists.");
                 }
                 dbsubagentCluster.setControllerId(controllerId);
                 dbsubagentCluster.setDeployed(false);
-                dbsubagentCluster.setModified(modified);
                 dbsubagentCluster.setTitle(s.getTitle());
                 agentClusterDBLayer.getSession().update(dbsubagentCluster);
-                updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(),
-                        modified);
+                updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s
+                        .getSubagentClusterId(), modified);
             }
         }
         // insert
         int position = agentClusterDBLayer.getMaxOrdering();
         for (SubagentCluster s : subagentClusterMap.values()) {
-            if (s.getSubagentIds().isEmpty()) { //don't store a new subagent cluster with an empty cluster
+            if (s.getSubagentIds().isEmpty()) { // don't store a new subagent cluster with an empty cluster
                 continue;
             }
             if (onlyEdit) {
@@ -428,18 +426,18 @@ public class AgentStoreUtils {
             dbsubagentCluster.setId(null);
             dbsubagentCluster.setControllerId(controllerId);
             dbsubagentCluster.setDeployed(false);
-            dbsubagentCluster.setModified(modified);
             dbsubagentCluster.setAgentId(s.getAgentId());
             dbsubagentCluster.setTitle(s.getTitle());
             dbsubagentCluster.setSubAgentClusterId(s.getSubagentClusterId());
             dbsubagentCluster.setOrdering(++position);
             agentClusterDBLayer.getSession().save(dbsubagentCluster);
 
-            updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(), modified);
+            updateMembers(agentClusterDBLayer.getSession(), controllerId, dbsubagentClusterMembersMap, s.getSubagentIds(), s.getSubagentClusterId(),
+                    modified);
         }
         return dbsubagentClusters;
     }
-    
+
     public static Set<DBItemInventoryAgentName> updateAliases(InventoryAgentInstancesDBLayer agentDBLayer, Agent agent,
             Collection<DBItemInventoryAgentName> dbAliases) throws SOSHibernateException {
         if (dbAliases != null) {
@@ -463,11 +461,11 @@ public class AgentStoreUtils {
         }
         return newAliases;
     }
-    
+
     public static String getUniquenessMsg(String key, Map.Entry<String, Long> e) {
         return key + " has to be unique: " + e.getKey() + " is used " + (e.getValue() == 2L ? "twice" : e.getValue() + " times");
     }
-    
+
     // check uniqueness of AgentName/-aliases
     public static void checkUniquenessOfAgentNames(List<? extends Agent> agents) throws JocBadRequestException {
         agents.stream().map(a -> {
@@ -482,12 +480,12 @@ public class AgentStoreUtils {
                     throw new JocBadRequestException(AgentStoreUtils.getUniquenessMsg("AgentName/-aliase", e));
                 });
     }
-    
+
     public static void saveOrUpdate(InventoryAgentInstancesDBLayer dbLayer, InventorySubagentClustersDBLayer clusterDbLayer, String controllerId,
             DBItemInventoryAgentInstance dbAgent, Collection<DBItemInventorySubAgentInstance> dbSubAgents, Collection<SubAgent> subAgents,
             boolean overwrite, boolean onlyAdd, boolean onlyEdit) throws SOSHibernateException {
-        subAgents.stream().collect(Collectors.groupingBy(SubAgent::getSubagentId, Collectors.counting())).entrySet().stream()
-                .filter(e -> e.getValue() > 1L).map(Map.Entry::getKey).findAny().ifPresent(sId -> {
+        subAgents.stream().collect(Collectors.groupingBy(SubAgent::getSubagentId, Collectors.counting())).entrySet().stream().filter(e -> e
+                .getValue() > 1L).map(Map.Entry::getKey).findAny().ifPresent(sId -> {
                     throw new JocBadRequestException("Subagent ID '" + sId + "' must be unique");
                 });
         // TODO URL has to be unique?
@@ -496,19 +494,19 @@ public class AgentStoreUtils {
         // throw new JocBadRequestException("URL '" + sUrl + "' must be unique");
         // });
         String agentId = dbAgent.getAgentId();
-        Map<Boolean, List<DBItemInventorySubAgentInstance>> mapOfAgentIds = dbSubAgents.stream().collect(
-                Collectors.groupingBy(s -> s.getAgentId().equals(agentId)));
+        Map<Boolean, List<DBItemInventorySubAgentInstance>> mapOfAgentIds = dbSubAgents.stream().collect(Collectors.groupingBy(s -> s.getAgentId()
+                .equals(agentId)));
         dbSubAgents = null;
         List<String> subAgentIds = subAgents.stream().map(SubAgent::getSubagentId).distinct().collect(Collectors.toList());
         // checks if subagentId from request is used in other agentIds
         mapOfAgentIds.getOrDefault(false, Collections.emptyList()).parallelStream().filter(s -> subAgentIds.contains(s.getSubAgentId())).findAny()
                 .ifPresent(s -> {
-                    throw new JocBadRequestException("Subagent Id has to be unique: '" + s.getSubAgentId()
-                            + "' is already used in Agent '" + s.getAgentId() + "'");
+                    throw new JocBadRequestException("Subagent Id has to be unique: '" + s.getSubAgentId() + "' is already used in Agent '" + s
+                            .getAgentId() + "'");
                 });
         // checks java name rules of SubagentIds
         subAgentIds.forEach(id -> SOSCheckJavaVariableName.test("Subagent ID", id));
-        
+
         Set<String> existingSubagentClusters = clusterDbLayer.getSubagentClusterMembers(subAgentIds, controllerId).stream().map(
                 DBItemInventorySubAgentClusterMember::getSubAgentClusterId).collect(Collectors.toSet());
         // checks that director and standby director can only exist once
@@ -529,7 +527,7 @@ public class AgentStoreUtils {
         Map<String, DBItemInventorySubAgentInstance> subAgentsOfCurAgent = mapOfAgentIds.getOrDefault(true, Collections.emptyList()).stream().collect(
                 Collectors.toMap(DBItemInventorySubAgentInstance::getSubAgentId, Function.identity()));
         Set<DBItemInventorySubAgentInstance> curDbSubAgents = new HashSet<>();
-        
+
         mapOfAgentIds = null;
         int position = -1;
         int clusterPosition = -1;
@@ -544,11 +542,11 @@ public class AgentStoreUtils {
             DBItemInventorySubAgentInstance dbSubAgent = subAgentsOfCurAgent.remove(subAgent.getSubagentId());
             if (dbSubAgent == null) {
                 // save
-                
+
                 if (onlyEdit) {
                     throw new JocBadRequestException("Subagent with ID '" + subAgent.getSubagentId() + "' doesn't exist.");
                 }
-                
+
                 if (primaryDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.PRIMARY_DIRECTOR)) {
                     primaryDirectorIsChanged = true;
                 }
@@ -571,19 +569,18 @@ public class AgentStoreUtils {
                 curDbSubAgents.add(newDbSubAgent);
             } else {
                 if (overwrite) {
-//                    // update (if subagent and dbSubangent unequal)
-//                    if (dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector()) && dbSubAgent.getUri().equals(subAgent.getUrl())) {
-//                        if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
-//                            saveNewSubAgentCluster(subAgent, agentId, dbLayer.getSession(), ++clusterPosition, now);
-//                        }
-//                        continue;
-//                    }
-                    
+                    // // update (if subagent and dbSubangent unequal)
+                    // if (dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector()) && dbSubAgent.getUri().equals(subAgent.getUrl())) {
+                    // if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
+                    // saveNewSubAgentCluster(subAgent, agentId, dbLayer.getSession(), ++clusterPosition, now);
+                    // }
+                    // continue;
+                    // }
+
                     if (onlyAdd) {
                         throw new JocBadRequestException("Subagent with ID '" + subAgent.getSubagentId() + "' already exists.");
                     }
-                    
-                    
+
                     if (primaryDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.PRIMARY_DIRECTOR) && !subAgent.getSubagentId()
                             .equals(primaryDirector.getSubAgentId())) {
                         if (primaryDirectorIsChanged) {
@@ -592,8 +589,8 @@ public class AgentStoreUtils {
                             primaryDirectorIsChanged = true;
                         }
                     }
-                    if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.SECONDARY_DIRECTOR) && !subAgent.getSubagentId()
-                            .equals(standbyDirector.getSubAgentId())) {
+                    if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.SECONDARY_DIRECTOR) && !subAgent
+                            .getSubagentId().equals(standbyDirector.getSubAgentId())) {
                         if (standbyDirectorIsChanged) {
                             throw new JocBadRequestException("At most one SubAgent can be a standby director");
                         } else if (!dbSubAgent.getDirectorAsEnum().equals(subAgent.getIsDirector())) {
@@ -609,13 +606,13 @@ public class AgentStoreUtils {
                     dbSubAgent.setIsDirector(subAgent.getIsDirector());
                     dbSubAgent.setUri(subAgent.getUrl());
                     dbSubAgent.setTitle(subAgent.getTitle());
-                    //dbSubAgent.setDeployed(false);
+                    // dbSubAgent.setDeployed(false);
                     dbSubAgent.setTransaction("update");
                     curDbSubAgents.add(dbSubAgent);
                 }
             }
             if (subAgent.getWithGenerateSubagentCluster() && !existingSubagentClusters.contains(subAgent.getSubagentId())) {
-                saveNewSubAgentCluster(subAgent, controllerId, agentId, dbLayer.getSession(), ++clusterPosition, now);
+                saveNewSubAgentCluster(subAgent, controllerId, agentId, dbLayer.getSession(), ++clusterPosition);
             }
         }
         if (primaryDirectorIsChanged || standbyDirectorIsChanged) {
@@ -632,13 +629,12 @@ public class AgentStoreUtils {
                 curDbSubAgents.add(standbyDirector);
             }
         }
-        
+
         String directorUrl = null;
         for (DBItemInventorySubAgentInstance item : curDbSubAgents) {
             if (item.getIsDirector() == SubagentDirectorType.PRIMARY_DIRECTOR.intValue()) {
                 directorUrl = item.getUri();
             }
-            item.setModified(now);
             if ("save".equals(item.getTransaction())) {
                 dbLayer.getSession().save(item);
             } else if ("update".equals(item.getTransaction())) {
@@ -650,19 +646,19 @@ public class AgentStoreUtils {
             dbLayer.updateAgent(dbAgent);
         }
     }
-    
+
     private static <T extends Agent> Set<String> checkUniquenessOfAgentNames(T agent, Map<String, Set<DBItemInventoryAgentName>> allAliases,
             Map<String, String> allNames) {
-        
+
         Set<String> missingAliases = Collections.emptySet();
-        
+
         for (Map.Entry<String, String> name : allNames.entrySet()) {
             Set<String> aliase = allAliases.getOrDefault(name.getKey(), Collections.emptySet()).stream().map(DBItemInventoryAgentName::getAgentName)
                     .collect(Collectors.toSet());
             aliase.add(name.getValue());
 
             if (name.getKey().equals(agent.getAgentId())) {
-                if (agent.getAgentNameAliases() !=  null && !agent.getAgentNameAliases().isEmpty()) {
+                if (agent.getAgentNameAliases() != null && !agent.getAgentNameAliases().isEmpty()) {
                     aliase.removeAll(agent.getAgentNameAliases());
                 }
                 aliase.remove(agent.getAgentName());
@@ -687,32 +683,30 @@ public class AgentStoreUtils {
                 }
             }
         }
-        
+
         return missingAliases;
     }
-    
-    private static void saveNewSubAgentCluster(SubAgent subAgent, String controllerId, String agentId, SOSHibernateSession connection, int position, Date now)
+
+    private static void saveNewSubAgentCluster(SubAgent subAgent, String controllerId, String agentId, SOSHibernateSession connection, int position)
             throws SOSHibernateException {
-            DBItemInventorySubAgentCluster dbSubagentCluster = new DBItemInventorySubAgentCluster();
-            dbSubagentCluster.setId(null);
-            dbSubagentCluster.setControllerId(controllerId);
-            dbSubagentCluster.setDeployed(false);
-            dbSubagentCluster.setModified(now);
-            dbSubagentCluster.setAgentId(agentId);
-            dbSubagentCluster.setSubAgentClusterId(subAgent.getSubagentId());
-            dbSubagentCluster.setTitle(subAgent.getTitle());
-            dbSubagentCluster.setOrdering(position);
-            DBItemInventorySubAgentClusterMember dbSubagentClusterMember = new DBItemInventorySubAgentClusterMember();
-            dbSubagentClusterMember.setId(null);
-            dbSubagentClusterMember.setControllerId(controllerId);
-            dbSubagentClusterMember.setModified(now);
-            dbSubagentClusterMember.setPriority("0");
-            dbSubagentClusterMember.setSubAgentClusterId(subAgent.getSubagentId());
-            dbSubagentClusterMember.setSubAgentId(subAgent.getSubagentId());
-            connection.save(dbSubagentCluster);
-            connection.save(dbSubagentClusterMember);
+        DBItemInventorySubAgentCluster dbSubagentCluster = new DBItemInventorySubAgentCluster();
+        dbSubagentCluster.setId(null);
+        dbSubagentCluster.setControllerId(controllerId);
+        dbSubagentCluster.setDeployed(false);
+        dbSubagentCluster.setAgentId(agentId);
+        dbSubagentCluster.setSubAgentClusterId(subAgent.getSubagentId());
+        dbSubagentCluster.setTitle(subAgent.getTitle());
+        dbSubagentCluster.setOrdering(position);
+        DBItemInventorySubAgentClusterMember dbSubagentClusterMember = new DBItemInventorySubAgentClusterMember();
+        dbSubagentClusterMember.setId(null);
+        dbSubagentClusterMember.setControllerId(controllerId);
+        dbSubagentClusterMember.setPriority("0");
+        dbSubagentClusterMember.setSubAgentClusterId(subAgent.getSubagentId());
+        dbSubagentClusterMember.setSubAgentId(subAgent.getSubagentId());
+        connection.save(dbSubagentCluster);
+        connection.save(dbSubagentClusterMember);
     }
-    
+
     private static void updateMembers(SOSHibernateSession connection, String controllerId,
             Map<String, List<DBItemInventorySubAgentClusterMember>> dbsubagentClusterMembersMap, List<SubAgentId> subAgents, String subagentClusterId,
             Date now) throws SOSHibernateException {
@@ -725,16 +719,16 @@ public class AgentStoreUtils {
         if (members == null) {
             members = Collections.emptyList();
         }
-        
+
         Map<String, Long> subagentIds = subAgents.stream().collect(Collectors.groupingBy(SubAgentId::getSubagentId, Collectors.counting()));
         // check uniqueness of SubagentIds per Subagent Cluster
         subagentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
             throw new JocBadRequestException("Subagent ID has to be unique per Subagent Cluster: " + e.getKey() + " is used " + (e.getValue() == 2L
                     ? "twice" : e.getValue() + " times"));
         });
-        
+
         Map<String, SubAgentId> subagentMap = subAgents.stream().collect(Collectors.toMap(SubAgentId::getSubagentId, Function.identity()));
-        
+
         // update member
         for (DBItemInventorySubAgentClusterMember member : members) {
             if (subagentMap.isEmpty()) {
@@ -747,7 +741,6 @@ public class AgentStoreUtils {
                     if (member.getControllerId() == null || member.getControllerId().isEmpty()) {
                         member.setControllerId(controllerId);
                     }
-                    member.setModified(now);
                     member.setPriority(subAgent.getPriority());
                     connection.update(member);
                 }
@@ -758,14 +751,13 @@ public class AgentStoreUtils {
             DBItemInventorySubAgentClusterMember member = new DBItemInventorySubAgentClusterMember();
             member.setId(null);
             member.setControllerId(controllerId);
-            member.setModified(now);
             member.setPriority(subAgent.getPriority());
             member.setSubAgentId(subAgent.getSubagentId());
             member.setSubAgentClusterId(subagentClusterId);
             connection.save(member);
         }
     }
-    
+
     @Subscribe({ AgentVersionUpdatedEvent.class })
     public static void updateAgentVersion(AgentVersionUpdatedEvent event) {
         SOSHibernateSession connection = null;
@@ -779,20 +771,20 @@ public class AgentStoreUtils {
             query.setMaxResults(1);
             DBItemInventoryAgentInstance result = connection.getSingleResult(query);
             boolean updated = false;
-            if(result != null) {
+            if (result != null) {
                 LOGGER.trace("result.getVersion() : " + result.getVersion());
                 LOGGER.trace("event.getVersion() : " + event.getVersion());
-                if(result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
+                if (result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
                     result.setVersion(event.getVersion());
                     updated = true;
                 }
                 LOGGER.trace("result.getJavaVersion() : " + result.getJavaVersion());
                 LOGGER.trace("event.getJavaVersion() : " + event.getJavaVersion());
-                if(result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
+                if (result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
                     result.setJavaVersion(event.getJavaVersion());
                     updated = true;
                 }
-                if(updated) {
+                if (updated) {
                     connection.update(result);
                     LOGGER.trace("agent version updated to version " + event.getVersion());
                 }
@@ -803,7 +795,7 @@ public class AgentStoreUtils {
             closeDBConnection(connection);
         }
     }
-    
+
     public static void updateAgentVersion(String agentId, Optional<PlatformInfo> pOpt) {
         pOpt.ifPresent(p -> updateAgentVersion(new AgentVersionUpdatedEvent(agentId, p.js7Version().string(), p.java().version())));
     }
@@ -821,20 +813,20 @@ public class AgentStoreUtils {
             query.setMaxResults(1);
             DBItemInventorySubAgentInstance result = connection.getSingleResult(query);
             boolean updated = false;
-            if(result != null) {
+            if (result != null) {
                 LOGGER.trace("result.getVersion() : " + result.getVersion());
                 LOGGER.trace("event.getVersion() : " + event.getVersion());
-                if(result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
+                if (result.getVersion() == null || !result.getVersion().equals(event.getVersion())) {
                     result.setVersion(event.getVersion());
                     updated = true;
                 }
                 LOGGER.trace("result.getJavaVersion() : " + result.getJavaVersion());
                 LOGGER.trace("event.getJavaVersion() : " + event.getJavaVersion());
-                if(result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
+                if (result.getJavaVersion() == null || !result.getJavaVersion().equals(event.getJavaVersion())) {
                     result.setJavaVersion(event.getJavaVersion());
                     updated = true;
                 }
-                if(updated) {
+                if (updated) {
                     connection.update(result);
                     LOGGER.trace("agent version updated to version " + event.getVersion());
                 }
@@ -845,7 +837,7 @@ public class AgentStoreUtils {
             closeDBConnection(connection);
         }
     }
-    
+
     public static void updateSubagentVersion(String agentId, String subagentId, Optional<PlatformInfo> pOpt) {
         pOpt.ifPresent(p -> updateSubagentVersion(new SubagentVersionUpdatedEvent(agentId, subagentId, p.js7Version().string(), p.java().version())));
     }
@@ -853,7 +845,7 @@ public class AgentStoreUtils {
     private static SOSHibernateSession initDBConnection() {
         return Globals.createSosHibernateStatelessConnection(AgentStoreUtils.class.getSimpleName());
     }
-    
+
     private static void closeDBConnection(SOSHibernateSession connection) {
         Globals.disconnect(connection);
     }

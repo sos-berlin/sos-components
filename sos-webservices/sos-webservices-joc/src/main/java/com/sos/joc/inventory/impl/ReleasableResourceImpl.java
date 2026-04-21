@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -57,17 +58,17 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-            
+
             if (ConfigurationType.FOLDER.equals(type)) {
                 throw new JocNotImplementedException("use ./inventory/releasables for folders!");
             }
             if (!JocInventory.isReleasable(type)) {
                 throw new ControllerInvalidResponseDataException("Object is not a 'Scheduling Object': " + type.value());
             }
-            
+
             // get deleted folders
             List<String> deletedFolders = dbLayer.getDeletedFolders();
             // if inside deletedFolders -> setDeleted(true);
@@ -75,43 +76,40 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
             if (deletedFolders != null && !deletedFolders.isEmpty() && deletedFolders.stream().parallel().anyMatch(filter)) {
                 config.setDeleted(true);
             }
-            
+
             DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(config.getId());
-            
+
             if (in.getWithoutDrafts() && releasedItem != null) {  // contains only drafts which are already released
                 throw new JocDeployException(String.format("%s is a draft without a released version: %s", type.value().toLowerCase(), config
                         .getPath()));
             }
             if (in.getWithoutReleased() && config.getReleased()) {
-                throw new JocDeployException(String.format("%s is already released: %s", type.value().toLowerCase(), config
-                        .getPath()));
+                throw new JocDeployException(String.format("%s is already released: %s", type.value().toLowerCase(), config.getPath()));
             }
             if (in.getWithoutReleased() && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config
-                        .getPath()));
+                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config.getPath()));
             }
             if (!in.getWithoutReleased() && releasedItem != null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config
-                        .getPath()));
+                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config.getPath()));
             }
-            
+
             ResponseReleasableTreeItem treeItem = getResponseReleasableTreeItem(config);
-            
+
             if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
                 Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
                 if (!treeItem.getReleased() && config.getValid() && !in.getWithoutDrafts()) {
                     ResponseReleasableVersion draft = new ResponseReleasableVersion();
                     draft.setId(config.getId());
-                    draft.setVersionDate(config.getModified());
+                    draft.setVersionDate(SOSDate.toDate(config.getModified()));
                     versions.add(draft);
                 }
                 versions.addAll(getVersion(config.getId(), releasedItem, in.getWithoutReleased()));
-//                if (versions.isEmpty()) {
-//                    versions = null;
-//                }
+                // if (versions.isEmpty()) {
+                // versions = null;
+                // }
                 treeItem.setReleasableVersions(versions);
             }
-            
+
             ResponseReleasable result = new ResponseReleasable();
             result.setDeliveryDate(Date.from(Instant.now()));
             result.setReleasable(treeItem);
@@ -123,27 +121,28 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
             Globals.disconnect(session);
         }
     }
-    
-    public static Set<ResponseReleasableVersion> getVersion(Long confId, List<DBItemInventoryReleasedConfiguration> releases, boolean withoutReleased) {
+
+    public static Set<ResponseReleasableVersion> getVersion(Long confId, List<DBItemInventoryReleasedConfiguration> releases,
+            boolean withoutReleased) {
         if (releases == null || releases.isEmpty() || withoutReleased) {
             return Collections.emptySet();
         }
         return getVersion(confId, releases.get(0), withoutReleased);
     }
-    
+
     public static Set<ResponseReleasableVersion> getVersion(Long confId, DBItemInventoryReleasedConfiguration release, boolean withoutReleased) {
         if (release == null || withoutReleased) {
             return Collections.emptySet();
         }
         ResponseReleasableVersion rv = new ResponseReleasableVersion();
         rv.setId(confId);
-        rv.setVersionDate(release.getModified());
+        rv.setVersionDate(SOSDate.toDate(release.getModified()));
         rv.setReleaseId(release.getId());
         rv.setReleasePath(release.getPath());
-        
+
         return Collections.singleton(rv);
     }
-    
+
     public static ResponseReleasableTreeItem getResponseReleasableTreeItem(DBItemInventoryConfiguration item) {
         ResponseReleasableTreeItem treeItem = new ResponseReleasableTreeItem();
         treeItem.setId(item.getId());

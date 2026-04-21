@@ -126,7 +126,6 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             taggingItem.setType(config.getType());
             taggingItem.setTagId(tagNameToIdMap.get(tagName));
             taggingItem.setId(null);
-            taggingItem.setModified(date);
             return taggingItem;
         }).collect(Collectors.toSet());
         
@@ -214,7 +213,6 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                     DBItemInventoryTagging item = new DBItemInventoryTagging();
                     item.setCid(i.getCId());
                     item.setId(null);
-                    item.setModified(date);
                     item.setName(JocInventory.pathToName(i.getPath()));
                     item.setTagId(null);
                     item.setType(i.getType());

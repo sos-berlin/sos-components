@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -61,8 +62,8 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions, true);
                 item = setProperties(in, item, dbLayer, false);
-                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(item
-                        .getPath(), item.getType())));
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
+                        new AuditLogDetail(item.getPath(), item.getType())));
                 item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
                 if (JocInventory.isFolder(item.getType())) {
@@ -80,7 +81,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     JocInventory.postEvent(item.getFolder());
                     JocInventory.postObjectEvent(item.getPath(), item.getTypeAsEnum());
                 }
-                
+
             } catch (DBMissingDataException e) {
                 checkRequiredParameter("path", in.getPath());
                 checkRequiredParameter("objectType", in.getObjectType());
@@ -104,7 +105,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                                 namedItems.get(0).getPath()));
                     }
                 }
-                
+
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
                 // mkdirs if necessary
@@ -113,7 +114,6 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, dbLayer, true);
-                item.setCreated(Date.from(Instant.now()));
                 item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
                 if (JocInventory.isFolder(item.getType())) {
@@ -131,7 +131,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             answer.setId(item.getId());
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setPath(item.getPath());
-            answer.setConfigurationDate(item.getModified());
+            answer.setConfigurationDate(SOSDate.toDate(item.getModified()));
             answer.setObjectType(JocInventory.getType(item.getType()));
             answer.setValid(item.getValid());
             answer.setInvalidMsg(in.getInvalidMsg());
@@ -208,7 +208,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                         }
                     }
                     break;
-                case WORKFLOW: 
+                case WORKFLOW:
                     addFileVariableIfAssignedInFileOrderSource(in.getConfiguration(), item.getName(), dbLayer);
                     break;
                 default:
@@ -221,7 +221,6 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
 
         item.setDeployed(false);
         item.setReleased(false);
-        item.setModified(Date.from(Instant.now()));
         return item;
     }
 
@@ -245,12 +244,12 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                 }
             }
             updateInvalidFileOrderSourcesIfBecomeValid(foss, dbLayer);
-            
+
         } catch (Exception e) {
             //
         }
     }
-    
+
     private static void updateInvalidFileOrderSourcesIfBecomeValid(List<DBItemInventoryConfiguration> foss, InventoryDBLayer dbLayer) {
         Predicate<DBItemInventoryConfiguration> isValid = DBItemInventoryConfiguration::getValid;
         foss.stream().filter(isValid.negate()).forEach(i -> {

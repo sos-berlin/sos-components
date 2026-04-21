@@ -27,7 +27,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
-import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -44,7 +43,7 @@ import jakarta.ws.rs.Path;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteDraftResource {
-    
+
     private List<RequestFilter> updated = new ArrayList<>();
     private List<RequestFilter> deleted = new ArrayList<>();
     private List<DBItemInventoryConfiguration> updatedDbItems = new ArrayList<>();
@@ -65,7 +64,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             return responseStatusJSError(e);
         }
     }
-    
+
     @Override
     public JOCDefaultResponse deleteFolder(final String accessToken, byte[] inBytes) {
         try {
@@ -120,7 +119,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                         dbAuditLog));
             }
             Globals.commit(session);
-            
+
             auditLogObjectsLogging.log();
 
             entity.setDeleted(deleted);
@@ -146,7 +145,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Globals.disconnect(session);
         }
     }
-    
+
     private JOCDefaultResponse deleteFolder(RequestFolder in, boolean withDeletionOfEmptyFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -164,7 +163,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             List<Long> workflowInvIds = new ArrayList<>();
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
-            
+
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, dbAuditLog.getId());
@@ -185,7 +184,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }).collect(Collectors.toSet()));
             }
             Globals.commit(session);
-            
+
             auditLogObjectsLogging.log();
 
             entity.setDeleted(deleted);
@@ -201,7 +200,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
                 }
             }
-            if(!updatedDbItems.isEmpty()) {
+            if (!updatedDbItems.isEmpty()) {
                 DependencyResolver.updateDependencies(updatedDbItems);
             }
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -212,7 +211,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Globals.disconnect(session);
         }
     }
-    
+
     private void deleteUpdateDraft(ConfigurationType type, InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, Long auditLogId)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         RequestFilter r = new RequestFilter();
@@ -232,7 +231,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 item.setReleased(false);
                 item.setDeployed(true);
                 item.setContent(lastDeployment.getContent());
-                item.setModified(lastDeployment.getDeploymentDate());
                 JocInventory.updateConfiguration(dbLayer, item);
                 updated.add(r);
                 updatedDbItems.add(item);
@@ -249,7 +247,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 item.setReleased(true);
                 item.setDeployed(false);
                 item.setContent(releasedItem.getContent());
-                item.setModified(releasedItem.getModified());
                 JocInventory.updateConfiguration(dbLayer, item);
                 updated.add(r);
                 updatedDbItems.add(item);

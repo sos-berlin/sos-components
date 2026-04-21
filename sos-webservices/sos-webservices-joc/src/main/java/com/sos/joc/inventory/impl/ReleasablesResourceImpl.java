@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -64,7 +65,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             return responseStatusJSError(e);
         }
     }
-    
+
     @Override
     public JOCDefaultResponse releasablesTree(final String accessToken, byte[] inBytes) {
         try {
@@ -100,7 +101,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 result.setPath(in.getFolder());
                 return result;
             }
-            
+
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -112,7 +113,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             Comparator<ResponseReleasableTreeItem> comp = Comparator.comparing(ResponseReleasableTreeItem::getFolder).thenComparing(
                     ResponseReleasableTreeItem::getObjectName).thenComparing(ResponseReleasableTreeItem::getObjectType);
             Set<ResponseReleasableTreeItem> releasables = new TreeSet<>(comp);
-            
+
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
             if (folder != null && folder.getDeleted()) {
                 releasables.addAll(getResponseStreamOfDeletedItem(Arrays.asList(folder), Collections.emptyList(), permittedFolders));
@@ -135,7 +136,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                         .getRecursive(), deletedFolders), releasedItems, in.getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in
                                 .getWithoutReleased()));
             }
-            
+
             if (withTree) {
                 final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
                         .emptySet());
@@ -168,7 +169,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 result.setFolders(null);
                 return result;
             }
-            
+
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -176,7 +177,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             Globals.disconnect(session);
         }
     }
-    
+
     private Set<ResponseReleasableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
             List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
         if (deletedConfs != null) {
@@ -200,7 +201,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             return Collections.emptySet();
         }
     }
-    
+
     private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list,
             Map<Long, List<DBItemInventoryReleasedConfiguration>> releasedItems, Boolean onlyValidObjects, Set<Folder> permittedFolders,
             Boolean withoutDrafts, Boolean withoutReleased) {
@@ -225,19 +226,17 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                     return folderIsNotEmpty(item.getPath(), paths);
                 }
             };
-            return list.stream()
-                    .filter(folderIsNotEmpty)
-                    //.filter(item -> !item.getReleased())
-                    //.filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
-                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
-                    .map(item -> {
+            return list.stream().filter(folderIsNotEmpty)
+                    // .filter(item -> !item.getReleased())
+                    // .filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
+                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders)).map(item -> {
                         ResponseReleasableTreeItem treeItem = ReleasableResourceImpl.getResponseReleasableTreeItem(item);
                         Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
                         if (ConfigurationType.FOLDER.intValue() != item.getType()) {
                             if (!treeItem.getReleased() && item.getValid() && !withoutDrafts) {
                                 ResponseReleasableVersion draft = new ResponseReleasableVersion();
                                 draft.setId(item.getId());
-                                draft.setVersionDate(item.getModified());
+                                draft.setVersionDate(SOSDate.toDate(item.getModified()));
                                 versions.add(draft);
                             }
                             versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()), withoutReleased));
@@ -249,43 +248,42 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                         }
                         treeItem.setReleasableVersions(versions);
                         return treeItem;
-                    })
-                    .collect(Collectors.toSet());
+                    }).collect(Collectors.toSet());
         } else {
             return Collections.emptySet();
         }
     }
-    
-//    private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list, Boolean onlyValidObjects,
-//            Set<Folder> permittedFolders) {
-//        if (list != null) {
-//            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item.getPath())
-//                    .collect(Collectors.toSet());
-//            Predicate<DBItemInventoryConfiguration> folderIsNotEmpty = item -> {
-//                if (ConfigurationType.FOLDER.intValue() != item.getType()) {
-//                    return true;
-//                } else {
-//                    return folderIsNotEmpty(item.getPath(), paths);
-//                }
-//            };
-//            
-//            return list.stream()
-//                    .filter(folderIsNotEmpty)
-//                    //.filter(item -> !item.getReleased())
-//                    .filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
-//                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
-//                    .map(item -> ReleasableResourceImpl.getResponseReleasableTreeItem(item))
-//                    .collect(Collectors.toSet());
-//        } else {
-//            return Collections.emptySet();
-//        }
-//    }
-    
+
+    // private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list, Boolean onlyValidObjects,
+    // Set<Folder> permittedFolders) {
+    // if (list != null) {
+    // final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item.getPath())
+    // .collect(Collectors.toSet());
+    // Predicate<DBItemInventoryConfiguration> folderIsNotEmpty = item -> {
+    // if (ConfigurationType.FOLDER.intValue() != item.getType()) {
+    // return true;
+    // } else {
+    // return folderIsNotEmpty(item.getPath(), paths);
+    // }
+    // };
+    //
+    // return list.stream()
+    // .filter(folderIsNotEmpty)
+    // //.filter(item -> !item.getReleased())
+    // .filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
+    // .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
+    // .map(item -> ReleasableResourceImpl.getResponseReleasableTreeItem(item))
+    // .collect(Collectors.toSet());
+    // } else {
+    // return Collections.emptySet();
+    // }
+    // }
+
     private static boolean folderIsNotEmpty(String folder, Set<String> paths) {
         Predicate<String> filter = f -> f.startsWith((folder + "/").replaceAll("//+", "/"));
         return paths.stream().parallel().anyMatch(filter);
     }
-    
+
     private static ResponseReleasables getTree(SortedSet<ResponseReleasables> folders, Path startFolder, Boolean recursive) {
         Map<Path, ResponseReleasables> treeMap = new HashMap<>();
         for (ResponseReleasables folder : folders) {
@@ -312,7 +310,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         }
         return treeMap.get(startFolder);
     }
-    
+
     private static void fillTreeMap(Map<Path, ResponseReleasables> treeMap, Path folder, ResponseReleasables tree) {
         Path parent = folder.getParent();
         if (parent != null) {

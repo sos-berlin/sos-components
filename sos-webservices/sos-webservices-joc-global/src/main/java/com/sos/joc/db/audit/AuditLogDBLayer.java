@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
@@ -51,22 +49,22 @@ public class AuditLogDBLayer {
     public ScrollableResults<AuditLogDBItem> getAuditLogs(AuditLogFilter filter, Collection<String> controllerIds,
             Collection<CategoryType> categories, boolean withDeployment) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-        
+
             // advanced search with objects or folders
             boolean withFolders = filter.getFolders() != null && !filter.getFolders().isEmpty();
             boolean withObjectName = filter.getObjectName() != null && !filter.getObjectName().isEmpty();
             boolean withObjectTypes = filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty();
             boolean withAdvancedSearch = withFolders || withObjectName || withObjectTypes;
-            
+
             boolean searchInDepHistory = withDeployment;
             if (withDeployment && withObjectTypes && !filter.getObjectTypes().stream().anyMatch(t -> !ObjectType.ORDER.equals(t))) {
                 searchInDepHistory = false;
             }
-            
+
             Date createdFrom = JobSchedulerDate.getDateFrom(filter.getDateFrom(), filter.getTimeZone());
             Date createdTo = JobSchedulerDate.getDateTo(filter.getDateTo(), filter.getTimeZone());
             String tableAlias = "al.";
-            
+
             StringBuilder hql = new StringBuilder("select ");
             hql.append(tableAlias + "id as id,");
             hql.append(tableAlias + "account as account,");
@@ -79,7 +77,7 @@ public class AuditLogDBLayer {
             hql.append(tableAlias + "timeSpent as timeSpent,");
             hql.append(tableAlias + "ticketLink as ticketLink");
             hql.append(" from ").append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ").append(tableAlias.substring(0, tableAlias.length() - 1));
-            
+
             Set<String> clause = new LinkedHashSet<>();
 
             if (!controllerIds.isEmpty()) {
@@ -132,7 +130,7 @@ public class AuditLogDBLayer {
                     clause.add(tableAlias + "comment = :comment");
                 }
             }
-            
+
             if (!clause.isEmpty()) {
                 hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
@@ -140,7 +138,7 @@ public class AuditLogDBLayer {
             hql.append(" order by " + tableAlias + "id desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString(), AuditLogDBItem.class);
 
-            //bindParameters
+            // bindParameters
             if (!controllerIds.isEmpty()) {
                 if (controllerIds.size() == 1) {
                     query.setParameter("controllerId", controllerIds.iterator().next());
@@ -172,10 +170,10 @@ public class AuditLogDBLayer {
                 }
             }
             if (createdFrom != null) {
-                query.setParameter("from", createdFrom, TemporalType.TIMESTAMP);
+                query.setParameter("from", createdFrom);
             }
             if (createdTo != null) {
-                query.setParameter("to", createdTo, TemporalType.TIMESTAMP);
+                query.setParameter("to", createdTo);
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
                 if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
@@ -201,7 +199,7 @@ public class AuditLogDBLayer {
             if (filter.getLimit() != null) {
                 query.setMaxResults(filter.getLimit());
             }
-            
+
             return query.scroll();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -256,7 +254,7 @@ public class AuditLogDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     private String getAuditlogIdsSelectInAuditLogDetails(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
         boolean hasOrderType = objectTypes == null || objectTypes.isEmpty() || objectTypes.contains(ObjectType.ORDER);
         StringBuilder hql = new StringBuilder("select auditLogId from ");
@@ -265,7 +263,7 @@ public class AuditLogDBLayer {
         hql.append(" group by auditLogId");
         return hql.toString();
     }
-    
+
     private String getAuditlogIdsSelectInDepHistory(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
         StringBuilder hql = new StringBuilder("select auditlogId from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY);

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -89,12 +90,12 @@ import com.sos.sign.model.workflow.Workflow;
 import jakarta.ws.rs.core.StreamingOutput;
 
 public class ExportUtils {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ExportUtils.class);
     private static final String AGENT_FILE_EXTENSION = ".agent.json";
     public static final String TAGS_ENTRY_OLD_NAME = "workflow.tags.json";
     public static final String TAGS_ENTRY_NAME = "tags.json";
-    
+
     public static final Map<ConfigurationType, String> extensionMap = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
         private static final long serialVersionUID = 1L;
@@ -115,7 +116,6 @@ public class ExportUtils {
         }
     });
 
-    
     public static Set<ControllerObject> getFolderControllerObjectsForSigning(ExportFolderFilter filter, String account, DBLayerDeploy dbLayer,
             String commitId) throws SOSHibernateException {
         Map<String, List<ControllerObject>> allObjects = new HashMap<String, List<ControllerObject>>();
@@ -127,35 +127,34 @@ public class ExportUtils {
             final String controllerId = filter.getForSigning().getControllerId();
             final boolean recursive = filter.getForSigning().getRecursive();
             final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
-            if(!filter.getForSigning().getWithoutDeployed()) {
+            if (!filter.getForSigning().getWithoutDeployed()) {
                 allDeployedItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(folderPaths, recursive, controllerId, dbLayer));
                 allDeployedItems.stream().filter(Objects::nonNull).filter(item -> filterTypes.contains(ConfigurationType.fromValue(item.getType())))
-                    .forEach(item -> {
-                        if(allObjects.containsKey(item.getName())) {
-                            allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
-                        } else {
-                            allObjects.put(item.getName(), new ArrayList<ControllerObject>());
-                            allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
-                        }
-                    });
-            }
-            if(!filter.getForSigning().getWithoutDrafts()) {
-                allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
-                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(
-                        item -> {
-                            if(allObjects.containsKey(item.getName())) {
-                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                        .forEach(item -> {
+                            if (allObjects.containsKey(item.getName())) {
+                                allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
                             } else {
                                 allObjects.put(item.getName(), new ArrayList<ControllerObject>());
-                                allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                                allObjects.get(item.getName()).add(getContollerObjectFromDBItem(item, commitId, account, releasedScripts));
                             }
                         });
             }
+            if (!filter.getForSigning().getWithoutDrafts()) {
+                allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
+                allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).forEach(item -> {
+                    if (allObjects.containsKey(item.getName())) {
+                        allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                    } else {
+                        allObjects.put(item.getName(), new ArrayList<ControllerObject>());
+                        allObjects.get(item.getName()).add(mapInvConfigToJSObject(item, account, commitId, releasedScripts));
+                    }
+                });
+            }
         }
         return allObjects.values().stream().flatMap(List::stream).collect(Collectors.toSet());
-//        return new HashSet<ControllerObject>(allObjects.values());
+        // return new HashSet<ControllerObject>(allObjects.values());
     }
-    
+
     public static Set<ConfigurationObject> getFolderConfigurationObjectsForShallowCopy(ExportFolderFilter filter, String account,
             DBLayerDeploy dbLayer) throws SOSHibernateException {
         Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
@@ -180,24 +179,21 @@ public class ExportUtils {
                 allDraftItems.addAll(getDeployableInventoryConfigurationsfromFolders(folderPaths, recursive, dbLayer));
                 allDraftItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(folderPaths, recursive, dbLayer));
                 if (filter.getShallowCopy().getOnlyValidObjects()) {
-                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull)
-                            .filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum()))
+                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum()))
                             .filter(DBItemInventoryConfiguration::getValid).collect(Collectors.toSet());
                 } else {
-                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull)
-                            .filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum())).collect(Collectors.toSet());
+                    allDraftItems = allDraftItems.stream().filter(Objects::nonNull).filter(dbItem -> filterTypes.contains(dbItem.getTypeAsEnum()))
+                            .collect(Collectors.toSet());
                 }
                 allDraftItems.stream().map(PublishUtils::getConfigurationObjectFromDBItem).forEach(cfg -> allObjects.add(cfg));
             }
         }
         return allObjects;
     }
-    
 
     public static Set<ControllerObject> getDeployableControllerObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId,
-            String account)
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
-            SOSHibernateException {
+            String account) throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException,
+            IOException, SOSHibernateException {
         Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
@@ -257,7 +253,7 @@ public class ExportUtils {
             jsObject.setContent(JsonConverter.readAsConvertedDeployObject(null, item.getPath(), item.getContent(), StoreDeployments.CLASS_MAPPING.get(
                     item.getType()), commitId, releasedScripts));
             jsObject.setAccount(account);
-            jsObject.setModified(item.getModified());
+            jsObject.setModified(SOSDate.toDate(item.getModified()));
             return jsObject;
         } catch (IOException e) {
             throw new JocException(e);
@@ -286,22 +282,20 @@ public class ExportUtils {
 
     private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<String> folders, boolean recursive,
             String controllerId, DBLayerDeploy dbLayer) {
-        Map<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
-                folders.stream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item, controllerId, recursive)).flatMap(List::stream)
-                .collect(Collectors.groupingBy(item -> item.getType() + ":" + item.getName(), 
+        Map<String, Optional<DBItemDeploymentHistory>> groupedEntries = folders.stream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item,
+                controllerId, recursive)).flatMap(List::stream).collect(Collectors.groupingBy(item -> item.getType() + ":" + item.getName(),
                         Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getDeploymentDate))));
-        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
-                .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
+        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get).filter(item -> OperationType.DELETE.value() != item
+                .getOperation()).collect(Collectors.toSet());
     }
 
     private static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<String> folders, boolean recursive,
             String controllerId, DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, recursive, controllerId, dbLayer);
-        List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>(); 
+        List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>();
         folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item, recursive)));
-        allLatest = allLatest.stream().filter(item -> allCfgs.stream()
-                .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null) != null).filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        allLatest = allLatest.stream().filter(item -> allCfgs.stream().filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId()))
+                .findFirst().orElse(null) != null).filter(Objects::nonNull).collect(Collectors.toSet());
         allLatest = allLatest.stream().filter(item -> {
             if (item.getName() == null || item.getName().isEmpty()) {
                 LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
@@ -309,9 +303,9 @@ public class ExportUtils {
                 item.setName(name);
                 LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
             }
-            DBItemInventoryConfiguration dbItem = allCfgs.stream()
-                    .filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst().orElse(null);
-            if(dbItem != null) {
+            DBItemInventoryConfiguration dbItem = allCfgs.stream().filter(cfg -> cfg.getId().equals(item.getInventoryConfigurationId())).findFirst()
+                    .orElse(null);
+            if (dbItem != null) {
                 return dbItem.getDeployed();
             } else {
                 // history items source does not exist in current configuration
@@ -365,7 +359,7 @@ public class ExportUtils {
         }).filter(Objects::nonNull).collect(Collectors.toSet());
         return allReleased;
     }
-    
+
     private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item) {
         try {
             ConfigurationObject configurationObject = new ConfigurationObject();
@@ -379,10 +373,10 @@ public class ExportUtils {
             throw new JocException(e);
         }
     }
-    
-    public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
-            String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
+
+    public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames, String commitId, String controllerId, DBLayerDeploy dbLayer,
+            Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -472,15 +466,15 @@ public class ExportUtils {
         return streamingOutput;
     }
 
-//    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
-//            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
-//        return writeZipFileShallow(deployables, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
-//    }
+    // public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
+    // Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) {
+    // return writeZipFileShallow(deployables, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
+    // }
 
     public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths, boolean withAllTags) {
         ExportedTags tags = getTagsToExportFromConfigurationObjects(deployables, withAllTags, dbLayer.getSession());
-        
+
         Map<String, String> groupedOrderTags = getGroupedOrderTags(deployables, dbLayer.getSession());
 
         StreamingOutput streamingOutput = new StreamingOutput() {
@@ -570,7 +564,7 @@ public class ExportUtils {
     public static StreamingOutput writeTarGzipFileForSigning(Set<ControllerObject> deployables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
-        
+
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -681,15 +675,15 @@ public class ExportUtils {
         return streamingOutput;
     }
 
-//    public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
-//            Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
-//        return writeTarGzipFileShallow(configurations, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
-//    }
+    // public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
+    // Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths) throws Exception {
+    // return writeTarGzipFileShallow(configurations, dbLayer, jocVersion, apiVersion, inventoryVersion, relativePath, startPaths, false);
+    // }
 
     public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> configurations, DBLayerDeploy dbLayer, Version jocVersion,
             Version apiVersion, Version inventoryVersion, boolean relativePath, List<String> startPaths, boolean withAllTags) throws Exception {
         ExportedTags tags = getTagsToExportFromConfigurationObjects(configurations, withAllTags, dbLayer.getSession());
-        
+
         Map<String, String> groupedOrderTags = getGroupedOrderTags(configurations, dbLayer.getSession());
 
         StreamingOutput streamingOutput = new StreamingOutput() {
@@ -723,19 +717,21 @@ public class ExportUtils {
                             default:
                                 break;
                             }
-                            
+
                             String extension = extensionMap.get(deployable.getObjectType());
                             if (extension != null) {
                                 content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = null;
-                                if(relativePath && startPaths != null && !startPaths.isEmpty()) {
-                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path)).findFirst();
-                                    if(startPathOptional.isPresent()) {
+                                if (relativePath && startPaths != null && !startPaths.isEmpty()) {
+                                    Optional<String> startPathOptional = startPaths.stream().filter(path -> deployable.getPath().startsWith(path))
+                                            .findFirst();
+                                    if (startPathOptional.isPresent()) {
                                         String startPath = startPathOptional.get();
                                         String startFolder = Paths.get(startPath).getFileName().toString();
                                         Path path = Paths.get(deployable.getPath());
-                                        if(startPath != null && path.startsWith(startPath)) {
-                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace('\\', '/').concat(extension));
+                                        if (startPath != null && path.startsWith(startPath)) {
+                                            zipEntryName = startFolder.concat("/").concat(Paths.get(startPath).relativize(path).toString().replace(
+                                                    '\\', '/').concat(extension));
                                         }
                                     } else {
                                         zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -810,14 +806,15 @@ public class ExportUtils {
         if (apiVersion != null) {
             jocMetaInfo.setApiVersion(apiVersion.getVersion());
         }
-        if(commitId != null) {
+        if (commitId != null) {
             jocMetaInfo.setVersionId(commitId);
         }
         return jocMetaInfo;
     }
-    
+
     public static StreamingOutput writeAgentExportZipFile(Set<Agent> agents) {
         StreamingOutput streamingOutput = new StreamingOutput() {
+
             @Override
             public void write(OutputStream output) throws IOException {
                 ZipOutputStream zipOut = null;
@@ -850,9 +847,10 @@ public class ExportUtils {
         };
         return streamingOutput;
     }
-        
+
     public static StreamingOutput writeAgentExportTarGzipFile(Set<Agent> agents) {
         StreamingOutput streamingOutput = new StreamingOutput() {
+
             @Override
             public void write(OutputStream output) throws IOException {
                 GZIPOutputStream gzipOut = null;
@@ -878,7 +876,7 @@ public class ExportUtils {
                         tarOut.write(contentBytes);
                         tarOut.closeArchiveEntry();
                     }
-                
+
                     tarOut.flush();
                 } finally {
                     if (tarOut != null) {
@@ -902,24 +900,24 @@ public class ExportUtils {
                         } catch (Exception e) {
                         }
                     }
-    
+
                 }
-    
+
             }
         };
         return streamingOutput;
     }
-    
+
     private static Map<String, String> getGroupedOrderTags(Set<ConfigurationObject> configurations, SOSHibernateSession session) {
         InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
         Set<ConfigurationType> objectsWithOrderTags = EnumSet.of(ConfigurationType.WORKFLOW, ConfigurationType.SCHEDULE,
                 ConfigurationType.FILEORDERSOURCE);
         boolean hasObjectsWithOrderTags = configurations != null && configurations.stream().anyMatch(d -> objectsWithOrderTags.contains(d
                 .getObjectType()));
-        return hasObjectsWithOrderTags ? dbOrderTagLayer.getGroupedTags(null, true).stream().distinct().collect(
-                Collectors.toMap(GroupedTag::getTag, GroupedTag::toString)) : Collections.emptyMap();
+        return hasObjectsWithOrderTags ? dbOrderTagLayer.getGroupedTags(null, true).stream().distinct().collect(Collectors.toMap(GroupedTag::getTag,
+                GroupedTag::toString)) : Collections.emptyMap();
     }
-    
+
     private static ExportedTags getTagsToExportFromConfigurationObjects(Set<ConfigurationObject> deployables, boolean withAllTags,
             SOSHibernateSession session) {
         if (withAllTags) {
@@ -935,7 +933,7 @@ public class ExportUtils {
         InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
         InventoryJobTagDBLayer dbJobTagLayer = new InventoryJobTagDBLayer(session);
         InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
-        
+
         // workflow tags
         BiFunction<ExportedTagItem, ResponseBaseSearchItem, ExportedTagItem> toExportedTagItem = (eti, r) -> {
             eti.setName(new GroupedTag(r.getGroup(), r.getName()).toString());
@@ -958,7 +956,7 @@ public class ExportUtils {
         BiFunction<ExportedJobTagItem, InventoryJobTagItem, ExportedJobTagItem> toExportedJobTagItem = (ejti, jti) -> {
             ejti.setName(jti.getWorkflowName());
             if (ejti.getJobs() == null) {
-                ejti.setJobs(new ExportedJobTagItems()); 
+                ejti.setJobs(new ExportedJobTagItems());
             }
             ejti.getJobs().addAdditionalProperties(jti.getJobName(), new GroupedTag(jti.getGroup(), jti.getTagName()).toString());
             return ejti;
@@ -978,19 +976,19 @@ public class ExportUtils {
         List<Integer> types = Arrays.asList(ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
         Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags = invDbLayer.getConfigurationsWithOrderTags(types).stream().collect(
                 Collectors.groupingBy(DBItemInventoryConfiguration::getTypeAsEnum));
-        
+
         Map<String, String> workflowsWithTags = invDbLayer.getWorkflowWithOrderTags();
-        
+
         ExportedOrderTags ot = new ExportedOrderTags();
         ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags, groupedOrderTags));
         ot.setSchedules(getSchedulesOrderTags(confWithTags, groupedOrderTags));
         ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags, groupedOrderTags));
-        
+
         tagsToExport.setOrderTags(ot);
 
         return tagsToExport;
     }
-    
+
     private static List<FileOrderSourceOrderTags> getFileOrderSourceOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags,
             Map<String, String> groupedOrderTags) {
         List<FileOrderSourceOrderTags> ot = new ArrayList<>();
@@ -1015,7 +1013,7 @@ public class ExportUtils {
         }
         return ot;
     }
-    
+
     private static List<ScheduleOrderTags> getSchedulesOrderTags(Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags,
             Map<String, String> groupedOrderTags) {
         List<ScheduleOrderTags> ot = new ArrayList<>();
@@ -1050,7 +1048,7 @@ public class ExportUtils {
         }
         return ot;
     }
-    
+
     private static List<AddOrdersOrderTags> getAddOrderOrderTags(Map<String, String> workflowsWithTags, Map<String, String> groupedOrderTags) {
         List<AddOrdersOrderTags> ot = workflowsWithTags.entrySet().stream().map(dbItem -> {
             try {
@@ -1078,9 +1076,9 @@ public class ExportUtils {
         InventoryOrderTagDBLayer dbOrderTagLayer = new InventoryOrderTagDBLayer(session);
         Map<String, ExportedTagItem> tags = new HashMap<>();
         Set<ExportedJobTagItem> jobTags = new HashSet<>();
-        
+
         for (ConfigurationObject deployable : deployables) {
-            
+
             ExportedTaggedObject reference = new ExportedTaggedObject();
             reference.setName(JocInventory.pathToName(deployable.getPath()));
             reference.setType(deployable.getObjectType().value());
@@ -1091,7 +1089,7 @@ public class ExportUtils {
                 job.setName(reference.getName());
                 jobTags.add(job);
             }
-            
+
             tagDbLayer.getTagsWithGroupsAndOrdering(deployable.getId()).forEach(tag -> {
                 ExportedTagItem tagItem = tags.getOrDefault(tag.toString(), new ExportedTagItem());
                 tagItem.setName(tag.toString());
@@ -1100,7 +1098,7 @@ public class ExportUtils {
                 tags.put(tag.toString(), tagItem);
             });
         }
-        
+
         // order tags
         List<Integer> types = Arrays.asList(ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
         Map<ConfigurationType, List<DBItemInventoryConfiguration>> confWithTags = invDbLayer.getConfigurationsWithOrderTags(types).stream().collect(
@@ -1127,13 +1125,13 @@ public class ExportUtils {
         ot.setFileOrderSources(getFileOrderSourceOrderTags(confWithTags, groupedOrderTags));
         ot.setSchedules(getSchedulesOrderTags(confWithTags, groupedOrderTags));
         ot.setWorkflows(getAddOrderOrderTags(workflowsWithTags, groupedOrderTags));
-        
+
         tagsToExport.setTags(tags.values().stream().collect(Collectors.toList()));
         tagsToExport.setJobTags(jobTags.stream().collect(Collectors.toList()));
         tagsToExport.setOrderTags(ot);
         return tagsToExport;
     }
-    
+
     private static ExportedJobTagItems getJobTags(ConfigurationObject deployable, InventoryJobTagDBLayer dbJobTagLayer) {
         if (ConfigurationType.WORKFLOW.equals(deployable.getObjectType())) {
             com.sos.inventory.model.workflow.Workflow w = (com.sos.inventory.model.workflow.Workflow) deployable.getConfiguration();

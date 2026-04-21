@@ -44,22 +44,22 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            
+
             session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-            
+
             if (JocInventory.isFolder(type) && JocInventory.ROOT_FOLDER.equals(config.getPath())) {
                 throw new JocFolderPermissionsException("Root folder cannot be renamed");
             }
-            
+
             final java.nio.file.Path oldPath = Paths.get(config.getPath());
             final String oldFolder = config.getFolder();
             final java.nio.file.Path p = Paths.get(oldFolder).resolve(in.getNewPath()).normalize();
             boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(p.toString().replace('\\', '/'));
             String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
-            
+
             Set<String> events = new HashSet<>();
             Set<String> folderEvents = new HashSet<>();
             List<Long> workflowInvIds = new ArrayList<>();
@@ -67,17 +67,17 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             if (JocInventory.isWorkflow(config.getType())) {
                 workflowInvIds.add(config.getId());
             }
-            
+
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
-            
+
             if (config.getPath().equals(newPath)) { // Nothing to do
                 response.setPath(newPath);
                 response.setId(config.getId());
                 response.setDeliveryDate(Date.from(Instant.now()));
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
             }
-            
+
             // Check folder permissions
             if (JocInventory.isFolder(type)) {
                 if (!folderPermissions.isPermittedForFolder(newPath)) {
@@ -88,7 +88,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
                 }
             }
-            
+
             // Check Java variable name rules
             for (int i = 0; i < p.getNameCount(); i++) {
                 if (i == p.getNameCount() - 1) {
@@ -112,7 +112,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), dbAuditLog.getId());
                     return oldItem;
                 }).collect(Collectors.toList());
-                
+
                 JocAuditLog.storeAuditLogDetails(auditLogDetails, session, dbAuditLog);
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null, JocInventory.isDescriptor(config
@@ -135,12 +135,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                         }
                     }
                 }
-                
+
                 if (newItem != null) {
                     deletedIds.add(newItem.getId());
                     JocInventory.deleteConfiguration(dbLayer, newItem);
                 }
-                
+
                 setItem(config, p, dbAuditLog.getId());
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
@@ -148,8 +148,8 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 } else {
                     JocInventory.updateConfiguration(dbLayer, config);
                 }
-                if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
-                        || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
+                if (config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) || config.getTypeAsEnum().equals(
+                        ConfigurationType.DESCRIPTORFOLDER)) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
                 } else {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.FOLDER);
@@ -164,17 +164,17 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 }
                 response.setPath(config.getPath());
                 response.setId(config.getId());
-                
+
                 events.add(newPath);
                 folderEvents.add(newFolder);
-                
+
             } else {
                 if (!newPath.equalsIgnoreCase(config.getPath())) { // if not only upper-lower case is changed then check if target exists
                     DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
-                    
+
                     if (targetItem != null) {
-                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", 
-                                ConfigurationType.fromValue(config.getType()).value().toLowerCase(), targetItem.getPath()));
+                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
+                                .value().toLowerCase(), targetItem.getPath()));
                     } else {
                         // check unique name
                         List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());
@@ -187,47 +187,45 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                         }
                     }
                 }
-                
+
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 DependencyResolver.updateDependenciesForRenaming(config);
-                
+
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
-                
-                //rename TAGGINGS
+
+                // rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
                 if (isRename && ConfigurationType.WORKFLOW.equals(config.getTypeAsEnum())) {
                     String newName = p.getFileName().toString();
-                    Date now = Date.from(Instant.now());
                     InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                     for (DBItemInventoryTagging tagging : dbTagLayer.getTaggings(config.getId())) {
                         tagging.setName(newName);
-                        tagging.setModified(now);
                         dbTagLayer.getSession().update(tagging);
                     }
-                    new InventoryJobTagDBLayer(session).renameWorkflow(config.getId(), newName, now);
+                    new InventoryJobTagDBLayer(session).renameWorkflow(config.getId(), newName);
                 }
-                
+
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
-                
-                if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
-                        || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
+
+                if (config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) || config.getTypeAsEnum().equals(
+                        ConfigurationType.DESCRIPTORFOLDER)) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
                 } else {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.FOLDER);
                 }
                 response.setPath(config.getPath());
                 response.setId(config.getId());
-                
+
                 events.add(newFolder);
             }
-            
+
             Globals.commit(session);
             events.forEach(JocInventory::postEvent);
             folderEvents.forEach(JocInventory::postFolderEvent);
-            
+
             // post event: InventoryTaggingUpdated
             if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
@@ -243,33 +241,33 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             Globals.disconnect(session);
         }
     }
-    
+
     private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem, Long auditLogId) {
         boolean itemIsRenamed = false;
         boolean itemIsMoved = false;
-        if(!oldItem.getName().equals(newItem.getFileName().toString())) {
+        if (!oldItem.getName().equals(newItem.getFileName().toString())) {
             itemIsRenamed = true;
         }
-        if(!oldItem.getFolder().equals(newItem.getParent().toString().replace('\\', '/'))) {
+        if (!oldItem.getFolder().equals(newItem.getParent().toString().replace('\\', '/'))) {
             itemIsMoved = true;
         }
         oldItem.setPath(newItem.toString().replace('\\', '/'));
         oldItem.setFolder(newItem.getParent().toString().replace('\\', '/'));
         oldItem.setName(newItem.getFileName().toString());
-        if(itemIsRenamed) {
+        if (itemIsRenamed) {
             oldItem.setDeployed(false);
             oldItem.setReleased(false);
         }
         oldItem.setAuditLogId(auditLogId);
-        oldItem.setModified(Date.from(Instant.now()));
-        if(itemIsMoved && !itemIsRenamed) {
+        if (itemIsMoved && !itemIsRenamed) {
             // TODO: post events
-            postNewDepHistoryEntryEvent(oldItem.getName(), newItem.getParent().toString().replace('\\', '/'), oldItem.getType(), oldItem.getId(), auditLogId);
+            postNewDepHistoryEntryEvent(oldItem.getName(), newItem.getParent().toString().replace('\\', '/'), oldItem.getType(), oldItem.getId(),
+                    auditLogId);
         }
     }
 
     private static void postNewDepHistoryEntryEvent(String name, String folder, Integer objectType, Long inventoryId, Long auditLogId) {
         EventBus.getInstance().post(new DeploymentHistoryMoveEvent(name, folder, objectType, inventoryId, auditLogId));
     }
-    
+
 }
