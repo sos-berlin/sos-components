@@ -111,11 +111,6 @@ public class JocServletContainer extends ServletContainer {
             
             JocClusterService.getInstance().start(StartupMode.automatic, true);
             DependencyUpdate.getInstance().updateThreaded();
-//            try {
-//                cleanupOldDeployedFolders();
-//            } catch (Exception e) {
-//                LOGGER.warn("cleanup deployed files: ", e.toString());
-//            }
             cleanupAllTempDirSubFolders();
         }, "servlet-init").start();
         
@@ -153,48 +148,8 @@ public class JocServletContainer extends ServletContainer {
             Globals.sosHibernateFactory.close();
         }
 
-//        try {
-//            cleanupOldDeployedFolders();
-//        } catch (Exception e) {
-//            LOGGER.warn("cleanup deployed files: " + e.toString());
-//        }
         cleanupAllTempDirSubFolders();
     }
-
-//    private Set<Path> getDeployedFolders() throws IOException {
-//        final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir"));
-//        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc([._]war)?-.+-any-\\d+$").asPredicate();
-//        return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
-//    }
-
-//    private Optional<Path> getCurrentDeployedFolder(Set<Path> deployedFolders) throws IOException {
-//        if (deployedFolders != null && deployedFolders.size() > 1) {
-//            return deployedFolders.stream().max((i, j) -> {
-//                try {
-//                    return Files.getLastModifiedTime(i).compareTo(Files.getLastModifiedTime(j));
-//                } catch (IOException e) {
-//                    return 0;
-//                }
-//            });
-//        } else if (deployedFolders.size() == 1) {
-//            return Optional.of(deployedFolders.iterator().next());
-//        }
-//        throw new IOException("cleanup deployed files: couldn't determine current deploy folder");
-//    }
-
-//    private void cleanupOldDeployedFolders(final Set<Path> oldDeployedFolders) {
-//        oldDeployedFolders.stream().forEach(this::cleanupFolder);
-//    }
-
-//    private void cleanupOldDeployedFolders() throws IOException {
-//        if (System.getProperty("os.name").startsWith("Windows")) {
-//            Set<Path> deployedFolders = getDeployedFolders();
-//            final Optional<Path> currentDeployedFolder = getCurrentDeployedFolder(deployedFolders);
-//            if (currentDeployedFolder.isPresent() && deployedFolders.remove(currentDeployedFolder.get())) {
-//                cleanupOldDeployedFolders(deployedFolders);
-//            }
-//        }
-//    }
 
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
