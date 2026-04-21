@@ -57,7 +57,7 @@ public class SOSDate {
      * @param val the local date-time to convert, may be {@code null}
      * @return the corresponding {@code Date}, or {@code null} if input is {@code null} */
     public static Date toUtcDate(LocalDateTime val) {
-        return val == null ? null : Date.from(val.atZone(ZoneOffset.UTC).toInstant());
+        return val == null ? null : Date.from(val.toInstant(ZoneOffset.UTC));
     }
 
     /** Converts a supported temporal object into a {@link Date}.
@@ -160,7 +160,7 @@ public class SOSDate {
         if (val == null) {
             return 0L;
         }
-        return val.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
+        return val.toInstant(ZoneOffset.UTC).toEpochMilli();
     }
 
     /** Converts the given {@link ZonedDateTime} to UTC and subtracts the specified minutes.
