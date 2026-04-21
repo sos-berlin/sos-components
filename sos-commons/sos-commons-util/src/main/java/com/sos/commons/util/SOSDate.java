@@ -44,42 +44,118 @@ public class SOSDate {
      * (e.g. 2026-03-29 03:00:00). */
     public static final boolean DEFAULT_STRICT_PARSING = false;
 
+    /** Converts an {@link Instant} to a {@link Date}.
+     *
+     * @param val the instant to convert, may be {@code null}
+     * @return the corresponding {@code Date}, or {@code null} if input is {@code null} */
     public static Date toDate(Instant val) {
         return val == null ? null : Date.from(val);
     }
 
+    /** Converts a {@link LocalDateTime} to a {@link Date} by interpreting it as UTC.
+     *
+     * @param val the local date-time to convert, may be {@code null}
+     * @return the corresponding {@code Date}, or {@code null} if input is {@code null} */
     public static Date toUtcDate(LocalDateTime val) {
         return val == null ? null : Date.from(val.atZone(ZoneOffset.UTC).toInstant());
     }
 
+    /** Converts a supported temporal object into a {@link Date}.
+     *
+     * <p>
+     * Supported input types:
+     * <ul>
+     * <li>{@link LocalDateTime} (interpreted as UTC)</li>
+     * <li>{@link Instant}</li>
+     * <li>{@link ZonedDateTime}</li>
+     * <li>{@link Date} (returned as-is)</li>
+     * </ul>
+     *
+     * <p>
+     * Unsupported types will result in an {@link IllegalArgumentException}.
+     *
+     * @param val the temporal value to convert, may be {@code null}
+     * @return the corresponding {@code Date}, or {@code null} if input is {@code null}
+     * @throws IllegalArgumentException if the type is not supported */
+    public static Date toDate(Object val) {
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof LocalDateTime) {
+            return toUtcDate((LocalDateTime) val);
+        }
+        if (val instanceof Date) {
+            return (Date) val;
+        }
+        if (val instanceof Instant) {
+            return toDate((Instant) val);
+        }
+        if (val instanceof ZonedDateTime) {
+            return toDate((ZonedDateTime) val);
+        }
+
+        throw new IllegalArgumentException("[" + val + "]Unsupported type for toDate: " + val.getClass().getName());
+    }
+
+    /** Converts a {@link ZonedDateTime} to a {@link Date}.
+     *
+     * @param val the zoned date-time to convert, may be {@code null}
+     * @return the corresponding {@code Date}, or {@code null} if input is {@code null} */
     public static Date toDate(ZonedDateTime val) {
         return val == null ? null : Date.from(val.toInstant());
     }
 
+    /** Converts a {@link Date} to an {@link Instant}.
+     *
+     * @param val the date to convert, may be {@code null}
+     * @return the corresponding {@code Instant}, or {@code null} if input is {@code null} */
     public static Instant toInstant(Date val) {
         return val == null ? null : val.toInstant();
     }
 
+    /** Converts a {@link ZonedDateTime} to an {@link Instant}.
+     *
+     * @param val the zoned date-time to convert, may be {@code null}
+     * @return the corresponding {@code Instant}, or {@code null} if input is {@code null} */
     public static Instant toInstant(ZonedDateTime val) {
         return val == null ? null : val.toInstant();
     }
 
+    /** Converts an {@link Instant} to a {@link LocalDateTime} using UTC.
+     *
+     * @param val the instant to convert, may be {@code null}
+     * @return the corresponding UTC-based {@code LocalDateTime}, or {@code null} if input is {@code null} */
     public static LocalDateTime toUtcLocalDateTime(Instant val) {
         return val == null ? null : LocalDateTime.ofInstant(val, ZoneOffset.UTC);
     }
 
+    /** Converts a {@link Date} to a {@link LocalDateTime} using UTC.
+     *
+     * @param val the date to convert, may be {@code null}
+     * @return the corresponding UTC-based {@code LocalDateTime}, or {@code null} if input is {@code null} */
     public static LocalDateTime toUtcLocalDateTime(Date val) {
         return val == null ? null : toUtcLocalDateTime(val.toInstant());
     }
 
+    /** Converts a {@link ZonedDateTime} to a {@link LocalDateTime} using UTC.
+     *
+     * @param val the zoned date-time to convert, may be {@code null}
+     * @return the corresponding UTC-based {@code LocalDateTime}, or {@code null} if input is {@code null} */
     public static LocalDateTime toUtcLocalDateTime(ZonedDateTime val) {
         return val == null ? null : LocalDateTime.ofInstant(val.toInstant(), ZoneOffset.UTC);
     }
 
+    /** Returns the current UTC time as a {@link LocalDateTime}.
+     *
+     * @return the current UTC-based {@code LocalDateTime} */
     public static LocalDateTime getUtcNowLocalDateTime() {
         return LocalDateTime.now(Clock.systemUTC());
     }
 
+    /** Converts a UTC-based {@link LocalDateTime} to epoch milliseconds.
+     *
+     * @param val the local date-time (interpreted as UTC), may be {@code null}
+     * @return the epoch milliseconds since 1970-01-01T00:00:00Z, or {@code 0L} if input is {@code null} */
     public static long toUtcEpochMilli(LocalDateTime val) {
         if (val == null) {
             return 0L;
@@ -87,6 +163,11 @@ public class SOSDate {
         return val.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
     }
 
+    /** Converts the given {@link ZonedDateTime} to UTC and subtracts the specified minutes.
+     *
+     * @param datetime the date-time to adjust, may be {@code null}
+     * @param minutes the number of minutes to subtract
+     * @return the adjusted UTC-based {@code ZonedDateTime}, or {@code null} if input is {@code null} */
     public static ZonedDateTime toUtcMinusMinutes(ZonedDateTime datetime, long minutes) {
         if (datetime == null) {
             return null;

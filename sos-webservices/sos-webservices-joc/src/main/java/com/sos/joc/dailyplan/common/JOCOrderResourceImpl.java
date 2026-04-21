@@ -234,7 +234,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return p;
 
     }
-    
+
     protected Set<String> addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
             DailyPlanOrderFilterDef in, List<DBItemDailyPlanWithHistory> orders, List<PlannedOrderItem> result) {
         return addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false, Collections.emptyMap(), false);
@@ -308,14 +308,14 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             item.getCyclicOrder().setCount(Integer.parseInt(minIteminfo[0].toString()));
 
             item.getCyclicOrder().setFirstOrderId((String) minIteminfo[1]);
-            item.getCyclicOrder().setFirstStart((Date) minIteminfo[2]);
+            item.getCyclicOrder().setFirstStart(SOSDate.toDate(minIteminfo[2]));
 
             item.getCyclicOrder().setLastOrderId(item.getOrderId());
             item.getCyclicOrder().setLastStart(item.getPlannedStartTime());
 
             item.setOrderId(item.getCyclicOrder().getFirstOrderId());
             item.setPlannedStartTime(item.getCyclicOrder().getFirstStart());
-            item.setExpectedEndTime((Date) minIteminfo[3]);
+            item.setExpectedEndTime(SOSDate.toDate(minIteminfo[3]));
 
             String state = item.getState().get_text().value();
             if (DailyPlanOrderStateText.PLANNED.value().equals(state) && !item.getLate() && new Date().getTime() > item.getCyclicOrder()
