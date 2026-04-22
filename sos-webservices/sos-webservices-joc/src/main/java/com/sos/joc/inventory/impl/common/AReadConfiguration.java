@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl.common;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -146,8 +147,8 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
 
                 item.setDeployed(false);
 
-                List<Date> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(config.getId(), "modified");
-                Date releasedLastModified = null;
+                List<LocalDateTime> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(config.getId(), "modified");
+                LocalDateTime releasedLastModified = null;
                 if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
                     releasedLastModified = releasedModifieds.get(0);
                     item.setHasReleases(true);
@@ -164,7 +165,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
                         if (releasedLastModified == null) {
                             item.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                         } else {
-                            if (SOSDate.toUtcLocalDateTime(releasedLastModified).isAfter(config.getModified())) {
+                            if (releasedLastModified.isAfter(config.getModified())) {
                                 item.setState(ItemStateEnum.RELEASE_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);

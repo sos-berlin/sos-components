@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -457,8 +458,8 @@ public class JocInventory {
             }
         } else if (JocInventory.isReleasable(type)) {
             cfg.setDeployed(false);
-            List<Date> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(dbItem.getId(), "modified");
-            Date releasedLastModified = null;
+            List<LocalDateTime> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(dbItem.getId(), "modified");
+            LocalDateTime releasedLastModified = null;
             if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
                 releasedLastModified = releasedModifieds.get(0);
                 cfg.setHasReleases(true);
@@ -472,7 +473,7 @@ public class JocInventory {
                     if (releasedLastModified == null) {
                         cfg.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                     } else {
-                        if (SOSDate.toUtcLocalDateTime(releasedLastModified).isAfter(dbItem.getModified())) {
+                        if (releasedLastModified.isAfter(dbItem.getModified())) {
                             cfg.setState(ItemStateEnum.RELEASE_IS_NEWER);
                         } else {
                             cfg.setState(ItemStateEnum.DRAFT_IS_NEWER);
