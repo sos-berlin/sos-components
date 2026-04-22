@@ -145,6 +145,43 @@ public class SOSDate {
         return val == null ? null : LocalDateTime.ofInstant(val.toInstant(), ZoneOffset.UTC);
     }
 
+    /** Converts a supported temporal object into a {@link LocalDateTime} using UTC.
+     *
+     * <p>
+     * Supported input types:
+     * <ul>
+     * <li>{@link LocalDateTime} (returned as-is)</li>
+     * <li>{@link Instant}</li>
+     * <li>{@link ZonedDateTime}</li>
+     * <li>{@link Date}</li>
+     * </ul>
+     *
+     * <p>
+     * Unsupported types will result in an {@link IllegalArgumentException}.
+     *
+     * @param val the temporal value to convert, may be {@code null}
+     * @return the corresponding {@code LocalDateTime}, or {@code null} if input is {@code null}
+     * @throws IllegalArgumentException if the type is not supported */
+    public static LocalDateTime toUtcLocalDateTime(Object val) {
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof LocalDateTime) {
+            return (LocalDateTime) val;
+        }
+        if (val instanceof Date) {
+            return toUtcLocalDateTime((Date) val);
+        }
+        if (val instanceof Instant) {
+            return toUtcLocalDateTime((Instant) val);
+        }
+        if (val instanceof ZonedDateTime) {
+            return toUtcLocalDateTime((ZonedDateTime) val);
+        }
+
+        throw new IllegalArgumentException("[" + val + "]Unsupported type for toUtcLocalDateTime: " + val.getClass().getName());
+    }
+
     /** Returns the current UTC time as a {@link LocalDateTime}.
      *
      * @return the current UTC-based {@code LocalDateTime} */

@@ -1,9 +1,11 @@
 package com.sos.joc.db.dailyplan;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.OrderStateText;
 
@@ -29,7 +31,7 @@ public class DBItemDailyPlanWithHistory {
     private Long repeatInterval;
     private Date plannedStart;
     private Date expectedEnd;
-    private Date plannedOrderCreated;
+    private LocalDateTime plannedOrderCreated;
 
     private Long orderHistoryId;
     private Date startTime;
@@ -59,7 +61,7 @@ public class DBItemDailyPlanWithHistory {
                 return DailyPlanOrderStateText.FINISHED;
             default:
                 if (endTime != null) {
-                    return DailyPlanOrderStateText.FINISHED; 
+                    return DailyPlanOrderStateText.FINISHED;
                 }
                 return DailyPlanOrderStateText.SUBMITTED;
             }
@@ -67,7 +69,7 @@ public class DBItemDailyPlanWithHistory {
             return DailyPlanOrderStateText.PLANNED;
         }
     }
-    
+
     private OrderStateText getStateAsEnum() {
         try {
             return OrderStateText.fromValue(state);
@@ -199,12 +201,12 @@ public class DBItemDailyPlanWithHistory {
         this.expectedEnd = val;
     }
 
-    public Date getPlannedOrderCreated() {
+    public LocalDateTime getPlannedOrderCreated() {
         return plannedOrderCreated;
     }
 
-    public void setPlannedOrderCreated(Date val) {
-        plannedOrderCreated = val;
+    public void setPlannedOrderCreated(Object val) {
+        plannedOrderCreated = SOSDate.toUtcLocalDateTime(val);
     }
 
     public Long getOrderHistoryId() {
