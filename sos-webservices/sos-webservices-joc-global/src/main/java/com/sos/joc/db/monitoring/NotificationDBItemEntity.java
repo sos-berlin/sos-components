@@ -1,6 +1,9 @@
 package com.sos.joc.db.monitoring;
 
+import java.time.LocalDateTime;
 import java.util.Date;
+
+import com.sos.commons.util.SOSDate;
 
 public class NotificationDBItemEntity {
 
@@ -9,7 +12,7 @@ public class NotificationDBItemEntity {
     private String notificationId;
     private boolean hasMonitors;
     private Long recoveredNotificationId;
-    private Date created;
+    private LocalDateTime created;
 
     private Long orderHistoryId;
     private String controllerId;
@@ -35,7 +38,7 @@ public class NotificationDBItemEntity {
 
     private String acknowledgementAccount;
     private String acknowledgementComment;
-    private Date acknowledgementCreated;
+    private LocalDateTime acknowledgementCreated;
 
     public Long getId() {
         return id;
@@ -77,12 +80,12 @@ public class NotificationDBItemEntity {
         recoveredNotificationId = val;
     }
 
-    public Date getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(Date val) {
-        created = val;
+    public void setCreated(Object val) {
+        created = SOSDate.toUtcLocalDateTime(val);
     }
 
     public Long getOrderHistoryId() {
@@ -261,11 +264,11 @@ public class NotificationDBItemEntity {
         acknowledgementComment = val;
     }
 
-    public Date getAcknowledgementCreated() {
+    public LocalDateTime getAcknowledgementCreated() {
         return acknowledgementCreated;
     }
 
-    public void setAcknowledgementCreated(Date val) {
-        acknowledgementCreated = val;
+    public void setAcknowledgementCreated(Object val) {
+        acknowledgementCreated = SOSDate.toUtcLocalDateTime(val);
     }
 }

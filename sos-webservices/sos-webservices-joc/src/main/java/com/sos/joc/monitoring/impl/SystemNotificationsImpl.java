@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -128,7 +129,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
             AcknowledgementItem ac = new AcknowledgementItem();
             ac.setAccount(entity.getAcknowledgementAccount());
             ac.setComment(entity.getAcknowledgementComment());
-            ac.setCreated(entity.getAcknowledgementCreated());
+            ac.setCreated(SOSDate.toDate(entity.getAcknowledgementCreated()));
             item.setAcknowledgement(ac);
         }
         return item;

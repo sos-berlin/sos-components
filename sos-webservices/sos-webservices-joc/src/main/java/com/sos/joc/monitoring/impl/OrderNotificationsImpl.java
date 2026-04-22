@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.Globals;
@@ -132,7 +133,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
         OrderNotificationItem item = new OrderNotificationItem();
         item.setNotificationId(entity.getId());
         item.setType(getType(entity.getType()));
-        item.setCreated(entity.getCreated());
+        item.setCreated(SOSDate.toUtcDate(entity.getCreated()));
         item.setHasMonitors(entity.getHasMonitors());
         if (entity.getRecoveredNotificationId() != null && entity.getRecoveredNotificationId() > 0L) {
             item.setRecoveredNotificationId(entity.getRecoveredNotificationId());
@@ -161,7 +162,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             AcknowledgementItem ac = new AcknowledgementItem();
             ac.setAccount(entity.getAcknowledgementAccount());
             ac.setComment(entity.getAcknowledgementComment());
-            ac.setCreated(entity.getAcknowledgementCreated());
+            ac.setCreated(SOSDate.toUtcDate(entity.getAcknowledgementCreated()));
 
             item.setAcknowledgement(ac);
         }

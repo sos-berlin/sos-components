@@ -84,4 +84,11 @@ public class ReportDbItem extends ReportItem {
         }
     }
 
+    public void setModified(Object val) {
+        super.setModified(SOSDate.toDate(val));
+    }
+
+    public void setCreated(Object val) {
+        super.setCreated(SOSDate.toDate(val));
+    }
 }
