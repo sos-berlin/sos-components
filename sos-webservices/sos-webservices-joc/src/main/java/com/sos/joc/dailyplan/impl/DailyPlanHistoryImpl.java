@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -84,7 +85,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             if (response != null) {
                 return response;
             }
-            
+
             MainResponse answer = new MainResponse();
             if (Proxies.getControllerDbInstances().isEmpty()) {
                 answer.setDates(Collections.emptyList());
@@ -100,7 +101,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
             Date dateFrom = toUTCDate(in.getDateFrom());
             Date dateTo = toUTCDate(in.getDateTo());
-            Map<Date, DateItem> map = new HashMap<>();
+            Map<String, DateItem> map = new HashMap<>();
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
@@ -108,7 +109,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             if (!Proxies.getControllerDbInstances().isEmpty()) {
                 result = dbLayer.getDates(allowedControllers, dateFrom, dateTo, in.getSubmitted(), getLimit(in.getLimit()));
             }
-            
+
             if (result != null) {
                 for (int i = 0; i < result.size(); i++) {
                     Object[] o = (Object[]) result.get(i);
@@ -126,21 +127,22 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     }
 
                     DateItem di = null;
-                    if (map.containsKey(date)) {
-                        di = map.get(date);
+                    String dateAsString = SOSDate.getDateAsString(date);
+                    if (map.containsKey(dateAsString)) {
+                        di = map.get(dateAsString);
                         di.setCountTotal(di.getCountTotal() + ci.getCountTotal());
                         di.setCountSubmitted(di.getCountSubmitted() + ci.getCountSubmitted());
                         di.getControllers().add(ci);
                         di.getControllers().sort((e1, e2) -> e1.getControllerId().compareTo(e2.getControllerId()));
                     } else {
                         di = new DateItem();
-                        di.setDate(date);
+                        di.setDate(dateAsString);
                         di.setCountTotal(ci.getCountTotal());
                         di.setCountSubmitted(ci.getCountSubmitted());
                         di.setControllers(new ArrayList<>());
                         di.getControllers().add(ci);
                     }
-                    map.put(date, di);
+                    map.put(dateAsString, di);
                 }
             }
             session.close();

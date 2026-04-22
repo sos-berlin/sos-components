@@ -2,7 +2,6 @@
 package com.sos.joc.model.dailyplan.history.items;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,15 +28,15 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DateItem {
 
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("date")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date date;
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String date;
     /**
      * non negative long
      * <p>
@@ -60,26 +59,26 @@ public class DateItem {
     private List<ControllerItem> controllers = new ArrayList<ControllerItem>();
 
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("date")
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
     /**
-     * timestamp
+     * date
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO date YYYY-MM-DD
      * (Required)
      * 
      */
     @JsonProperty("date")
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
