@@ -13,6 +13,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.SearchStringHelper;
@@ -170,10 +171,10 @@ public class AuditLogDBLayer {
                 }
             }
             if (createdFrom != null) {
-                query.setParameter("from", createdFrom);
+                query.setParameter("from", SOSDate.toUtcLocalDateTime(createdFrom));
             }
             if (createdTo != null) {
-                query.setParameter("to", createdTo);
+                query.setParameter("to", SOSDate.toUtcLocalDateTime(createdTo));
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
                 if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {

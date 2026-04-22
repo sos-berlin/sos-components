@@ -66,23 +66,16 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
 
     @Override
-	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
-			FormDataBodyPart body, 
-            String format,
-			boolean overwrite,
-			Boolean overwriteTags,
-            String targetFolder,
-			String prefix, 
-			String suffix,
-			String timeSpent,
-			String ticketLink,
-			String comment) throws Exception {
+    public JOCDefaultResponse postImportConfiguration(String xAccessToken, FormDataBodyPart body, String format, boolean overwrite,
+            Boolean overwriteTags, String targetFolder, String prefix, String suffix, String timeSpent, String ticketLink, String comment)
+            throws Exception {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
         try {
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         ImportFilter filter = new ImportFilter();
         filter.setAuditLog(auditLog);
         filter.setTargetFolder(!"/".equals(targetFolder) ? targetFolder : null);
@@ -92,19 +85,19 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setSuffix(suffix);
         filter.setFormat(ArchiveFormat.fromValue(format));
         filter.setFilename(PublishUtils.getImportFilename(body));
-		return postImportConfiguration(xAccessToken, body, filter, auditLog);
-	}
+        return postImportConfiguration(xAccessToken, body, filter, auditLog);
+    }
 
-	private JOCDefaultResponse postImportConfiguration(String xAccessToken, FormDataBodyPart body, ImportFilter filter,
-			AuditParams auditLog) throws Exception {
+    private JOCDefaultResponse postImportConfiguration(String xAccessToken, FormDataBodyPart body, ImportFilter filter, AuditParams auditLog)
+            throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
             byte[] fakeRequest = Globals.objectMapper.writeValueAsBytes(filter);
-            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY); 
+            initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(fakeRequest, ImportFilter.class);
-            //4-eyes principle cannot support uploads
+            // 4-eyes principle cannot support uploads
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -115,15 +108,15 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
             if (filter.getOverwrite() && (filter.getSuffix() != null || filter.getPrefix() != null)) {
-            	throw new JocImportException("conflicting arguments: overwrite=true - no prefix/suffix allowed!");
+                throw new JocImportException("conflicting arguments: overwrite=true - no prefix/suffix allowed!");
             }
             if (filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                 SOSCheckJavaVariableName.testFolder("target folder", filter.getTargetFolder());
             }
-            
+
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             Long auditLogId = dbAuditItem.getId();
-            
+
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             ArchiveValues values = null;
@@ -133,16 +126,16 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
                 values = ImportUtils.readZipFileContent(stream, jocMetaInfo);
                 configurations = values.getConfigurations();
-                
+
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
                 values = ImportUtils.readTarGzipFileContent(stream, jocMetaInfo);
                 configurations = values.getConfigurations();
             } else {
-            	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!", uploadFileName)); 
+                throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!",
+                        uploadFileName));
             }
-            if(!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                // TODO: process transformation rules 
+            if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                // TODO: process transformation rules
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
                 LOGGER.info(String.format("  and API schema version: %1$s", jocMetaInfo.getApiVersion()));
@@ -151,26 +144,26 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             Set<String> agentNames = agentDbLayer.getVisibleAgentNames();
-            
+
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
             Map<ConfigurationType, Map<String, String>> oldNewNameMap = new HashMap<>();
             List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>();
-            
+
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     Stream<ConfigurationObject> cfgStream = configurations.stream().filter(Objects::nonNull);
-                    if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                    if (filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                         cfgStream = cfgStream.peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()));
                         // filter according to folder permissions on target folder
                     }
-                    filteredConfigurations = cfgStream.filter(configuration 
-                            -> canAdd(configuration.getPath(), permittedFolders)).collect(Collectors.toSet());
+                    filteredConfigurations = cfgStream.filter(configuration -> canAdd(configuration.getPath(), permittedFolders)).collect(Collectors
+                            .toSet());
                     if (!filteredConfigurations.isEmpty()) {
-                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
-                                .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream().collect(Collectors
+                                .groupingBy(ConfigurationObject::getObjectType));
                         for (ConfigurationType type : importOrder) {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
@@ -179,7 +172,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             .getObjectType());
                                     if (existingItem != null) {
                                         // only update inventory if content(item update) or path(move) has changed
-                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration()) 
+                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration())
                                                 || !existingItem.getPath().equals(configuration.getPath())) {
                                             storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
                                                     auditLogId, agentNames));
@@ -191,13 +184,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             }
                         }
                     }
-            	} else {
-                    if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
-                    		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
-                    	// process prefix/suffix only if overwrite==false AND one of both not empty 
-                        
-                    	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
-                    			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                } else {
+                    if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) || (filter.getPrefix() != null && !filter.getPrefix()
+                            .isEmpty())) {
+                        // process prefix/suffix only if overwrite==false AND one of both not empty
+
+                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream().collect(Collectors
+                                .groupingBy(ConfigurationObject::getObjectType));
                         Map<ConfigurationObject, Set<ConfigurationObject>> updatedReferencesByUpdateableConfiguration = new HashMap<>();
                         for (ConfigurationType type : importOrder) {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
@@ -207,13 +200,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             configuration.getObjectType());
                                     if (canAdd(configuration.getPath(), permittedFolders)) {
                                         filteredConfigurations.add(configuration);
-                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(
-                                                existingConfiguration, configuration, configurationsByType, filter.getPrefix(), 
-                                                filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                                        UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(existingConfiguration,
+                                                configuration, configurationsByType, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(),
+                                                dbLayer);
                                         ImportUtils.replaceReferences(updateable);
-                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), 
-                                                updateable.getReferencedBy());
-                                        
+                                        updatedReferencesByUpdateableConfiguration.put(updateable.getConfigurationObject(), updateable
+                                                .getReferencedBy());
+
                                         storedConfigurations.add(dbLayer.saveInventoryConfiguration(updateable.getConfigurationObject(), account,
                                                 auditLogId, agentNames));
                                         oldNewNameMap.putIfAbsent(updateable.getConfigurationObject().getObjectType(), new HashMap<>());
@@ -227,58 +220,59 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         Set<ConfigurationObject> alreadyStored = new HashSet<ConfigurationObject>();
                         for (ConfigurationObject reference : updatedReferencesByUpdateableConfiguration.keySet()) {
                             Set<ConfigurationObject> referencedBy = updatedReferencesByUpdateableConfiguration.get(reference);
-                            if(referencedBy != null) {
-                                 for (ConfigurationObject refBy : referencedBy) { 
-                                     if (!alreadyStored.contains(refBy)) {
-                                         DBItemInventoryConfiguration stored = 
-                                                 ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
-                                         alreadyStored.add(refBy);
-                                         if(stored != null) {
-                                             updated.add(stored);
-                                         }
-                                     }
-                                 }
+                            if (referencedBy != null) {
+                                for (ConfigurationObject refBy : referencedBy) {
+                                    if (!alreadyStored.contains(refBy)) {
+                                        DBItemInventoryConfiguration stored = ImportUtils.updateConfigurationWithChangedReferences(dbLayer, refBy);
+                                        alreadyStored.add(refBy);
+                                        if (stored != null) {
+                                            updated.add(stored);
+                                        }
+                                    }
+                                }
                             }
                         }
                     } else {
                         // check if items to import already exist in current configuration and ignore them
                         // import only if item does not exist yet
-                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
-                                .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream().collect(Collectors
+                                .groupingBy(ConfigurationObject::getObjectType));
                         for (ConfigurationType type : importOrder) {
                             List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                             if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                 for (ConfigurationObject configuration : configurationObjectsByType) {
-                                    DBItemInventoryConfiguration existingConfiguration = 
-                                            dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                                    DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(),
+                                            configuration.getObjectType());
                                     if (existingConfiguration == null) {
-                                        if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                                            if(!configuration.getPath().startsWith(filter.getTargetFolder())) {
+                                        if (filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                                            if (!configuration.getPath().startsWith(filter.getTargetFolder())) {
                                                 configuration.setPath(filter.getTargetFolder() + configuration.getPath());
                                             }
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
+                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId,
+                                                        agentNames));
                                             }
                                         } else {
                                             if (canAdd(configuration.getPath(), permittedFolders)) {
                                                 filteredConfigurations.add(configuration);
-                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
+                                                storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId,
+                                                        agentNames));
                                             }
                                         }
                                     } else {
-                                      storedConfigurations.add(existingConfiguration);
+                                        storedConfigurations.add(existingConfiguration);
                                     }
                                 }
                             }
                         }
                     }
-            	}
+                }
                 updated.addAll(storedConfigurations);
                 DependencyResolver.updateDependencies(updated);
                 if (!filteredConfigurations.isEmpty()) {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
-                            .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
+                            .intValue())), hibernateSession, auditLogId);
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                     filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(
                             item -> {
@@ -290,7 +284,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             });
                 }
             }
-            
+
             if (values.getTags() != null) {
                 ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), filter.getOverwriteTags(), hibernateSession);
             }
@@ -304,17 +298,14 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     LOGGER.error("", e);
                 }
                 // post events
-                Stream.concat(storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath), report.getValidObjs().stream()
-                        .map(ReportItem::getPath)).map(JOCResourceImpl::getParent).distinct().forEach(JocInventory::postEvent);
+                Stream.concat(storedConfigurations.stream().map(DBItemInventoryConfiguration::getPath), report.getValidObjs().stream().map(
+                        ReportItem::getPath)).map(JOCResourceImpl::getParent).distinct().forEach(JocInventory::postEvent);
                 // post folder events
-                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct()
-                    .peek(JocInventory::postFolderEvent)
-                    .map(parent -> parent.replaceFirst(filter.getTargetFolder(), ""))
-                    .forEach(JocInventory::postFolderEvent);
+                if (filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct().peek(JocInventory::postFolderEvent).map(
+                            parent -> parent.replaceFirst(filter.getTargetFolder(), "")).forEach(JocInventory::postFolderEvent);
                 } else {
-                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct()
-                    .forEach(JocInventory::postFolderEvent);
+                    storedConfigurations.stream().map(DBItemInventoryConfiguration::getFolder).distinct().forEach(JocInventory::postFolderEvent);
                 }
             });
             return responseStatusJSOk(Date.from(Instant.now()));
@@ -326,8 +317,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 if (stream != null) {
                     stream.close();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
-	}
+    }
 
 }

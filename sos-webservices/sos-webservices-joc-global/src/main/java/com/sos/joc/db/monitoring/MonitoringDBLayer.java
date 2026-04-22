@@ -14,6 +14,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryAgent;
@@ -54,7 +55,7 @@ public class MonitoringDBLayer extends DBLayer {
 
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
         if (dateFrom != null) {
-            query.setParameter("dateFrom", dateFrom);
+            query.setParameter("dateFrom", SOSDate.toUtcLocalDateTime(dateFrom));
         }
         if (!controllerIds.isEmpty()) {
             query.setParameterList("controllerIds", controllerIds);
@@ -517,7 +518,7 @@ public class MonitoringDBLayer extends DBLayer {
 
         return l.stream().collect(Collectors.groupingBy(entry -> (String) entry[0],// key - controllerId
                 Collectors.toMap(entry -> (String) entry[1],// key - agentId
-                        entry -> Collections.singletonMap((String) entry[2], (Date) entry[3]),   // value - map - url, modified
+                        entry -> Collections.singletonMap((String) entry[2], SOSDate.toDate(entry[3])),   // value - map - url, modified
                         (existing, replacement) -> replacement)));
     }
 

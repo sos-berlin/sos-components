@@ -61,16 +61,16 @@ public class JOCResourceImpl {
     protected JobSchedulerUser jobschedulerUser;
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
-//    private String accessToken;
+    // private String accessToken;
     private String headerAccessToken;
     private JocAuditTrail jocAuditLog = new JocAuditTrail();
-    
+
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
-    
-    @Context 
+
+    @Context
     private HttpServletRequest httpRequest;
-    
+
     private byte[] origBody;
 
     private JocError jocError = new JocError();
@@ -78,7 +78,7 @@ public class JOCResourceImpl {
     protected void initGetPermissions(String accessToken) throws JocException {
         headerAccessToken = accessToken;
         if (jobschedulerUser == null) {
-//            this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
+            // this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
 
@@ -91,7 +91,7 @@ public class JOCResourceImpl {
         }
         return controllerId;
     }
-    
+
     protected ControllerPermissions getBasicControllerDefaultPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions();
@@ -107,31 +107,31 @@ public class JOCResourceImpl {
         initGetPermissions(accessToken);
         return jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions();
     }
-    
+
     protected Stream<ControllerPermissions> getControllerPermissions(String controllerId, String accessToken) throws JocException {
         initGetPermissions(accessToken);
         controllerId = getControllerId(controllerId);
         return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(controllerId), jobschedulerUser
                 .getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId));
     }
-    
+
     protected ControllerPermissions get4EyesControllerPermissions(String controllerId) throws JocException {
         controllerId = getControllerId(controllerId);
         return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId);
     }
-    
+
     protected Stream<ControllerPermissions> getControllerDefaultPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
                 .get4EyesControllerDefaultPermissions());
     }
-    
+
     protected Stream<JocPermissions> getJocPermissions(String accessToken) throws JocException {
         initGetPermissions(accessToken);
         return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
                 .get4EyesJocPermissions());
     }
-    
+
     protected JocPermissions get4EyesJocPermissions() throws JocException {
         return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesJocPermissions();
     }
@@ -156,7 +156,7 @@ public class JOCResourceImpl {
     }
 
     public JocError getJocErrorWithPrintMetaInfoAndClear(Logger logger) {
-        if(jocError != null && jocError.getMetaInfo() != null && !jocError.getMetaInfo().isEmpty()) {
+        if (jocError != null && jocError.getMetaInfo() != null && !jocError.getMetaInfo().isEmpty()) {
             logger.info(jocError.printMetaInfo());
             jocError.getMetaInfo().clear();
         }
@@ -265,14 +265,14 @@ public class JOCResourceImpl {
     public JocAuditLog getJocAuditLog() {
         return jocAuditLog;
     }
-    
+
     public JocAuditTrail getJocAuditTrail() {
         return jocAuditLog;
     }
-    
-//    public void logAuditTrail() {
-//        jocAuditLog.log();
-//    }
+
+    // public void logAuditTrail() {
+    // jocAuditLog.log();
+    // }
 
     public DBItemJocAuditLog storeAuditLog(AuditParams audit) {
         checkRequiredComment(audit);
@@ -301,7 +301,7 @@ public class JOCResourceImpl {
 
     public void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, DBItemJocAuditLog dbAuditLog) {
         if (dbAuditLog != null) {
-            JocAuditLog.storeAuditLogDetails(details, connection, dbAuditLog.getId(), dbAuditLog.getCreated());
+            JocAuditLog.storeAuditLogDetails(details, connection, dbAuditLog.getId());
         }
     }
 
@@ -319,18 +319,18 @@ public class JOCResourceImpl {
     public JOCDefaultResponse accessDeniedResponse() {
         return accessDeniedResponse("Access denied");
     }
-    
+
     public JOCDefaultResponse approvalRequestResponse() {
         return approvalRequestResponse("4-eyes principle: Operation needs approval process");
     }
-    
+
     public JOCDefaultResponse approvalRequestResponse(String message) {
         if (approvalRequestId == null || !approvalRequestId.trim().matches("\\d+") || approvalRequestId.trim().equals("0")) {
             return JOCDefaultResponse.responseStatus433(getError433Schema(message), jocAuditLog);
         } else {
             // already checked in initLooging method
             // Long fEyesId = Long.valueOf(fourEyesId.trim());
-            // check dataset of fEyesId: 
+            // check dataset of fEyesId:
             // 1. db.accountName == current accountName
             // 2. db.url == current url
             // 3. db.approved == true
@@ -338,7 +338,7 @@ public class JOCResourceImpl {
             return null;
         }
     }
-    
+
     private byte[] getError433Schema(String message) {
         SOSHibernateSession session = null;
         try {
@@ -374,7 +374,7 @@ public class JOCResourceImpl {
         jocError.setMessage(message);
         return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
-    
+
     public JOCDefaultResponse accessDeniedResponseByUnsupported4EyesPrinciple() {
         String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         String message = String.format(
@@ -383,15 +383,15 @@ public class JOCResourceImpl {
         jocError.setMessage(message);
         return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
-    
+
     public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken, CategoryType category) throws Exception {
         origBody = originBody;
         return initLogging(request, maskedBody, accessToken, category);
     }
-    
+
     public byte[] initLogging(String request, byte[] body, String accessToken, CategoryType category) throws Exception {
         headerAccessToken = accessToken;
-//        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
+        // this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
@@ -406,10 +406,10 @@ public class JOCResourceImpl {
         if (sosAuthCurrentAccountAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
-        
+
         return body;
     }
-    
+
     public byte[] initLogging(String request, byte[] body, CategoryType category) throws Exception {
         return initLogging2(request, body, null, category);
     }
@@ -424,12 +424,12 @@ public class JOCResourceImpl {
         if (request == null || request.isEmpty()) {
             request = "-";
         }
-        
+
         Either<Exception, byte[]> fourEyesBody = getApprovalRequestBody(request, user, body);
         if (fourEyesBody.isRight()) {
             body = fourEyesBody.get();
         }
-        
+
         String bodyStr = "-";
         if (body != null) {
             try {
@@ -439,13 +439,13 @@ public class JOCResourceImpl {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }
         }
-//        Optional<String> ipAddress = Optional.ofNullable(jobschedulerUser).map(u -> {
-//            try {
-//                return u.getSOSAuthCurrentAccount();
-//            } catch (Exception e) {
-//                return null;
-//            }
-//        }).map(SOSAuthCurrentAccount::getCallerIpAddress);
+        // Optional<String> ipAddress = Optional.ofNullable(jobschedulerUser).map(u -> {
+        // try {
+        // return u.getSOSAuthCurrentAccount();
+        // } catch (Exception e) {
+        // return null;
+        // }
+        // }).map(SOSAuthCurrentAccount::getCallerIpAddress);
         Optional<String> ipAddress = Optional.ofNullable(httpRequest).map(HttpServletRequest::getRemoteAddr);
         jocAuditLog = new JocAuditTrail(user, request, bodyStr, Optional.ofNullable(accessToken), ipAddress, category);
 
@@ -457,14 +457,14 @@ public class JOCResourceImpl {
         }
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
         jocError.setApiCall(request);
-        
+
         if (fourEyesBody.isLeft()) {
             throw fourEyesBody.getLeft();
         }
-        
+
         return body;
     }
-    
+
     private Either<Exception, byte[]> getApprovalRequestBody(String request, String user, byte[] body) {
         Either<Exception, byte[]> either = Either.right(body);
         if (approvalRequestId != null && approvalRequestId.trim().matches("\\d+") && !approvalRequestId.trim().equals("0")) {
@@ -499,7 +499,7 @@ public class JOCResourceImpl {
                 case EXECUTED:
                     throw new JocAccessDeniedException("Approval request: approved request is already in progress");
                 }
-                
+
                 new ApprovalDBLayer(hibernateSession).updateRequestorStatusInclusiveTransaction(aRId, RequestorState.EXECUTED);
                 EventBus.getInstance().post(new ApprovalUpdatedEvent());
 
@@ -516,25 +516,25 @@ public class JOCResourceImpl {
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
         return initPermissions(controllerId, permission, false);
     }
-    
+
     public JOCDefaultResponse initPermissions(String controllerId, Stream<Boolean> permissions) throws JocException {
         return initPermissions(controllerId, permissions.toList());
     }
-    
+
     public JOCDefaultResponse initManageAccountPermissions(String accessToken) throws JocException {
         List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts().getManage()).toList();
         return initPermissions(null, perms.get(0), perms.get(1), true);
     }
-    
+
     public JOCDefaultResponse initPermissions(String controllerId, List<Boolean> permissions) throws JocException {
         return initPermissions(controllerId, permissions.get(0), permissions.get(1));
     }
-    
+
     @SafeVarargs
     public final JOCDefaultResponse initOrPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
         return initPermissions(controllerId, orPermissions(permissions));
     }
-    
+
     @SafeVarargs
     public final List<Boolean> orPermissions(Stream<Boolean>... permissions) throws JocException {
         // p wird verordert; p4eyes wird verundet
@@ -542,7 +542,7 @@ public class JOCResourceImpl {
         boolean p4eyes = true;
         for (Stream<Boolean> perms : permissions) {
             List<Boolean> pList = perms.toList();
-            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions 
+            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions
             if (pList.isEmpty()) {
                 continue;
             }
@@ -550,17 +550,17 @@ public class JOCResourceImpl {
                 p = pList.get(0);
             }
             if (!pList.get(1)) {
-                p4eyes = false; 
+                p4eyes = false;
             }
         }
         return Arrays.asList(p, p4eyes);
     }
-    
+
     @SafeVarargs
     public final JOCDefaultResponse initAndPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
         return initPermissions(controllerId, andPermissions(permissions));
     }
-    
+
     @SafeVarargs
     public final List<Boolean> andPermissions(Stream<Boolean>... permissions) throws JocException {
         if (permissions.length == 0) {
@@ -571,12 +571,12 @@ public class JOCResourceImpl {
         boolean p4eyes = false;
         for (Stream<Boolean> perms : permissions) {
             List<Boolean> pList = perms.toList();
-            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions 
+            // pList.get(0): normal permissions; pList.get(1): 4-eyes permissions
             if (pList.isEmpty()) {
                 continue;
             }
             if (!pList.get(0)) {
-                p = false; 
+                p = false;
             }
             if (!p4eyes) {
                 p4eyes = pList.get(1);
@@ -584,15 +584,15 @@ public class JOCResourceImpl {
         }
         return Arrays.asList(p, p4eyes);
     }
-    
+
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {
         return initPermissions(controllerId, permission, fourEyesPermission, false);
     }
-    
+
     private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes)
             throws JocException {
         JOCDefaultResponse jocDefaultResponse = null;
-        
+
         if (!jobschedulerUser.isAuthenticated()) {
             return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
         }
@@ -672,68 +672,63 @@ public class JOCResourceImpl {
             return null;
         }
     }
-    
-    
-//    public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
-//        jocAuditLog.setResponse(entity);
-//        return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
-//    }
-    
+
+    // public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
+    // jocAuditLog.setResponse(entity);
+    // return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
+    // }
+
     public JOCDefaultResponse responseStatus200(byte[] entity, String mediaType) {
-        /** no response iff
-         * application/pdf
-         * application/octet-stream
-         * image/*
-         */
+        /** no response iff application/pdf application/octet-stream image/* */
         jocAuditLog.setResponse(entity);
         return JOCDefaultResponse.responseStatus200(entity, mediaType, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus200(byte[] entity) {
         return responseStatus200(entity, MediaType.APPLICATION_JSON);
     }
-    
+
     public JOCDefaultResponse responseOctetStreamDownloadStatus200(StreamingOutput entity, String downloadFileName) {
         return responseOctetStreamDownloadStatus200(entity, downloadFileName, null);
     }
-    
+
     public JOCDefaultResponse responseOctetStreamDownloadStatus200(StreamingOutput entity, String downloadFileName, Long uncompressedLength) {
         return JOCDefaultResponse.responseOctetStreamDownloadStatus200(entity, downloadFileName, uncompressedLength, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatusJSOk(Date surveyDate) {
         return JOCDefaultResponse.responseStatusJSOk(surveyDate, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatusJSError(Throwable e) {
         return responseStatusJSError(e, MediaType.APPLICATION_JSON);
     }
-    
+
     public JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) {
         return JOCDefaultResponse.responseStatusJSError(e, jocError, mediaType, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus434JSError(JocException e) {
         return responseStatus434JSError(e, false);
     }
-    
+
     public JOCDefaultResponse responseStatus434JSError(JocException e, boolean withoutLogging) {
         e.addErrorMetaInfo(jocError);
         return JOCDefaultResponse.responseStatus434JSError(e, withoutLogging, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus419(List<Err419> listOfErrors) {
         return JOCDefaultResponse.responseStatus419(listOfErrors, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus200(SOSAuthCurrentAccountAnswer entity) {
         return JOCDefaultResponse.responseStatus200(entity, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
         return JOCDefaultResponse.responseStatus401(entity, jocAuditLog);
     }
-    
+
     public JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
         return JOCDefaultResponse.responseStatus403(entity, jocAuditLog);
     }

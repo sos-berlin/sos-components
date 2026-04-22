@@ -2,8 +2,6 @@ package com.sos.joc.classes.audit;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.util.Date;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -81,12 +79,9 @@ public class AuditLogDetail {
         orderId = val;
     }
 
-    public DBItemJocAuditLogDetails getAuditLogDetail(Long auditlogId, Date now) {
+    public DBItemJocAuditLogDetails getAuditLogDetail(Long auditlogId) {
         if (path == null || type == null || auditlogId == null || ObjectType.FOLDER.intValue() == type) {
             return null;
-        }
-        if (now == null) {
-            now = Date.from(Instant.now());
         }
         DBItemJocAuditLogDetails dbItem = new DBItemJocAuditLogDetails();
         dbItem.setId(null);

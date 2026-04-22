@@ -1,7 +1,8 @@
 package com.sos.joc.db.joc;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
+import com.sos.commons.hibernate.annotations.SOSCreationTimestampUtc;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -42,14 +43,15 @@ public class DBItemJocAuditLog extends DBItem {
     @Column(name = "[COMMENT]", nullable = true)
     private String comment;
 
-    @Column(name = "[CREATED]", nullable = true)
-    private Date created;
-
     @Column(name = "[TICKET_LINK]", nullable = true)
     private String ticketLink;
 
     @Column(name = "[TIME_SPENT]", nullable = true)
     private Integer timeSpent;
+
+    @Column(name = "[CREATED]", nullable = true)
+    @SOSCreationTimestampUtc
+    private LocalDateTime created;
 
     public Long getId() {
         return id;
@@ -116,14 +118,6 @@ public class DBItemJocAuditLog extends DBItem {
         comment = val;
     }
 
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date val) {
-        created = val;
-    }
-
     public String getTicketLink() {
         return ticketLink;
     }
@@ -139,4 +133,9 @@ public class DBItemJocAuditLog extends DBItem {
     public void setTimeSpent(Integer val) {
         timeSpent = val;
     }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
 }

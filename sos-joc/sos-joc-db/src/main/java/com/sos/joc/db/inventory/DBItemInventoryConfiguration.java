@@ -222,4 +222,16 @@ public class DBItemInventoryConfiguration extends DBItem {
         return modified;
     }
 
+    /** Manually set due to mapping logic - see InventoryDeployablesTreeFolderItem.map() in joc-webservices-joc-global */
+    @Transient
+    public void setCreated(LocalDateTime val) {
+        created = val;
+    }
+
+    /** Manually set due to mapping logic - see InventoryDeployablesTreeFolderItem.map() in joc-webservices-joc-global */
+    @Transient
+    public void setModified(LocalDateTime val) {
+        modified = val;
+    }
+
 }

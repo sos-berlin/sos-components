@@ -1629,7 +1629,6 @@ public class DBLayerDeploy {
         return folder;
     }
 
-    @SuppressWarnings("deprecation")
     public List<DBItemDeploymentHistory> getDeploymentHistoryCommits(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
             throws SOSHibernateException {
         if (allowedControllers == null) {
@@ -1659,13 +1658,11 @@ public class DBLayerDeploy {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item),
-                        TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item),
-                        TemporalType.TIMESTAMP);
+                query.setParameter(item, (Date) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
                 break;
             case "controllerId":
                 query.setParameterList("controllerIds", allowedControllers);

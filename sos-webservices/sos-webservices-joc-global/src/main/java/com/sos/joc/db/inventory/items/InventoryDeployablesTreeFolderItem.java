@@ -1,7 +1,9 @@
 package com.sos.joc.db.inventory.items;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.model.publish.DeploymentState;
 
@@ -18,6 +20,8 @@ public class InventoryDeployablesTreeFolderItem {
     private boolean icDeployed;
     private boolean icReleased;
     private Long icAuditLogId;
+    private LocalDateTime icCreated;
+    private LocalDateTime icModified;
 
     private Long dhId;
     private String dhCommitId;
@@ -75,6 +79,14 @@ public class InventoryDeployablesTreeFolderItem {
         this.icAuditLogId = icAuditLogId;
     }
 
+    public void setIcCreated(Object icCreated) {
+        this.icCreated = SOSDate.toUtcLocalDateTime(icCreated);
+    }
+
+    public void setIcModified(Object icModified) {
+        this.icModified = SOSDate.toUtcLocalDateTime(icModified);
+    }
+
     public void setDhId(Long dhId) {
         this.dhId = dhId;
     }
@@ -122,6 +134,8 @@ public class InventoryDeployablesTreeFolderItem {
             configuration.setDeployed(icDeployed);
             configuration.setReleased(icReleased);
             configuration.setAuditLogId(icAuditLogId);
+            configuration.setCreated(icCreated);
+            configuration.setModified(icModified);
         }
         if (dhId != null && DeploymentState.DEPLOYED.value().equals(dhState)) {
             deployment = new InventoryDeploymentItem(dhId, dhCommitId, dhVersion, dhOperation, dhDeploymentDate, dhPath, dhControllerId);

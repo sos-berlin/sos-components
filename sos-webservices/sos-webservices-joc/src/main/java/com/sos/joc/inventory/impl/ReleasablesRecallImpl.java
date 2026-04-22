@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if (response != null) {
                 return response;
             }
-            
+
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             Optional<JocBadRequestException> optException = recallFilter.getReleasables().stream().filter(released -> !JocInventory.isReleasable(
@@ -66,14 +65,15 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
 
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
             Set<String> events = new HashSet<>();
-            for(Releasable r : recallFilter.getReleasables()) {
-                DBItemInventoryReleasedConfiguration released = dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType());
-                if(released != null && dbLayer.recallReleasedConfiguration(released, dbAuditLogId)) {
+            for (Releasable r : recallFilter.getReleasables()) {
+                DBItemInventoryReleasedConfiguration released = dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r
+                        .getObjectType());
+                if (released != null && dbLayer.recallReleasedConfiguration(released, dbAuditLogId)) {
                     auditLogDetails.add(new AuditLogDetail(released.getPath(), released.getType()));
                     events.add(released.getFolder());
                 }
             }
-            JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId, dbAuditLog.getCreated());
+            JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId);
             events.stream().forEach(JocInventory::postEvent);
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
@@ -95,17 +95,17 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if (response != null) {
                 return response;
             }
-            
+
             InventoryDBLayer dbInvLayer = new InventoryDBLayer(hibernateSession);
             DBLayerDeploy dbDepLayer = new DBLayerDeploy(hibernateSession);
-            
+
             if (!folderPermissions.isPermittedForFolder(recallFilter.getPath())) {
                 throw new JocFolderPermissionsException("Access denied: " + recallFilter.getPath());
             }
-            
+
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
             Long dbAuditLogId = dbAuditLog.getId();
-            
+
             Folder folder = new Folder();
             folder.setFolder(recallFilter.getPath());
             folder.setRecursive(recallFilter.getRecursive());
@@ -120,10 +120,10 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                         auditLogDetails.add(new AuditLogDetail(released.getPath(), released.getType()));
                     }
                 }
-                JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId, dbAuditLog.getCreated());
+                JocAuditLog.storeAuditLogDetails(auditLogDetails, hibernateSession, dbAuditLogId);
                 JocInventory.postEvent(recallFilter.getPath());
             }
-            
+
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);

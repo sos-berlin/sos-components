@@ -39,7 +39,7 @@ import com.sos.joc.publish.util.ImportUtils;
 import com.sos.schema.JsonValidator;
 
 @jakarta.ws.rs.Path("inventory/repository")
-public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IRepositoryUpdateFrom{
+public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IRepositoryUpdateFrom {
 
     private static final String API_CALL = "./inventory/repository/update";
     private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryUpdateFromImpl.class);
@@ -58,22 +58,22 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             permitted = GitSemaphore.tryAcquire();
             if (!permitted) {
                 throw new JocConcurrentAccessException(GitCommandUtils.CONCURRENT_ACCESS_MESSAGE);
             }
-            
+
             DBItemJocAuditLog dbAuditlog = storeAuditLog(filter.getAuditLog());
 
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
-            
+
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            
+
             Set<DBItemInventoryConfiguration> dbItemsToUpdate = RepositoryUtil.getUpdatedDbItems(filter, repositoriesBase, dbLayer);
             Set<DBItemInventoryConfiguration> newDbItems = RepositoryUtil.getNewItemsToUpdate(filter, repositoriesBase, dbLayer);
-            
+
             dbItemsToUpdate.stream().forEach(item -> {
                 try {
                     item.setRepoControlled(true);
@@ -82,7 +82,7 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     throw new JocSosHibernateException(e);
                 }
             });
-            
+
             updateTopLevelFolder(dbItemsToUpdate, dbLayer);
             InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
             newDbItems.stream().forEach(item -> {
@@ -91,21 +91,21 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
                     if (item.getId() == null || item.getId() == 0L) {
                         dbLayer.getSession().save(item);
                     }
-                    if(item.getFolder() != null && !item.getFolder().isEmpty() && !"/".equals(item.getFolder())) {
+                    if (item.getFolder() != null && !item.getFolder().isEmpty() && !"/".equals(item.getFolder())) {
                         JocInventory.makeParentDirs(invDbLayer, Paths.get(item.getFolder()), ConfigurationType.FOLDER);
                     }
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
             });
-            
+
             updateTopLevelFolder(newDbItems, dbLayer);
             ImportUtils.validateAndUpdate(new ArrayList<DBItemInventoryConfiguration>(dbItemsToUpdate), null, hibernateSession);
             ImportUtils.validateAndUpdate(new ArrayList<DBItemInventoryConfiguration>(newDbItems), null, hibernateSession);
-            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(), 
-                    item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
-            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), 
-                    item.getType())), dbAuditlog.getId(), dbAuditlog.getCreated()));
+            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(dbItemsToUpdate.stream().map(item -> new AuditLogDetail(item.getPath(),
+                    item.getType())), dbAuditlog.getId()));
+            CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(newDbItems.stream().map(item -> new AuditLogDetail(item.getPath(), item
+                    .getType())), dbAuditlog.getId()));
             Date apiCallFinished = Date.from(Instant.now());
             LOGGER.trace("*** read from repository finished ***" + apiCallFinished);
             LOGGER.trace("complete WS time : " + (apiCallFinished.getTime() - started.getTime()) + " ms");
@@ -119,17 +119,17 @@ public class RepositoryUpdateFromImpl extends JOCResourceImpl implements IReposi
         } finally {
             Globals.disconnect(hibernateSession);
             if (permitted) {
-                GitSemaphore.release(); 
+                GitSemaphore.release();
             }
         }
     }
 
     private void updateTopLevelFolder(Set<DBItemInventoryConfiguration> items, DBLayerDeploy dbLayer) throws SOSHibernateException {
         String topLevelFolder = "";
-        for(DBItemInventoryConfiguration cfg : items) {
+        for (DBItemInventoryConfiguration cfg : items) {
             topLevelFolder = Paths.get(cfg.getPath()).subpath(0, 1).toString();
             DBItemInventoryConfiguration topLevelFolderDBitem = dbLayer.getConfigurationByPath("/" + topLevelFolder, ConfigurationType.FOLDER);
-            if(topLevelFolderDBitem != null) {
+            if (topLevelFolderDBitem != null) {
                 topLevelFolderDBitem.setRepoControlled(true);
                 dbLayer.getSession().update(topLevelFolderDBitem);
                 break;

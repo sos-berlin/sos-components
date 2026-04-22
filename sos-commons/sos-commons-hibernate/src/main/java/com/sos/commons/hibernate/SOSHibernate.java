@@ -2,6 +2,7 @@ package com.sos.commons.hibernate;
 
 import java.lang.reflect.Field;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -370,8 +371,12 @@ public class SOSHibernate {
                         sb.append(",");
                     }
                     Object val = query.getParameterValue(parameter.getName());
-                    if (val != null && val instanceof Date) {
-                        val = SOSDate.getDateTimeAsString((Date) val);
+                    if (val != null) {
+                        if (val instanceof LocalDateTime) {
+                            val = SOSDate.getDateTimeAsString((LocalDateTime) val);
+                        } else if (val instanceof Date) {
+                            val = SOSDate.getDateTimeAsString((Date) val);
+                        }
                     }
                     sb.append(parameter.getName() + "=" + val);
                     i++;

@@ -3,6 +3,7 @@ package com.sos.joc.db;
 import java.beans.Transient;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -133,7 +134,14 @@ public abstract class DBItem implements Serializable {
                 String val = "";
                 Object oVal = field.get(this);
                 if (oVal != null) {
-                    if (oVal instanceof Date) {
+                    if (oVal instanceof LocalDateTime) {
+                        Date date = SOSDate.toUtcDate((LocalDateTime) oVal);
+                        if (withZoneOffset) {
+                            val = SOSDate.getDateTimeWithZoneOffsetAsString(date, timeZone);
+                        } else {
+                            val = SOSDate.getDateTimeAsString(date, timeZone);
+                        }
+                    } else if (oVal instanceof Date) {
                         if (withZoneOffset) {
                             val = SOSDate.getDateTimeWithZoneOffsetAsString((Date) oVal, timeZone);
                         } else {

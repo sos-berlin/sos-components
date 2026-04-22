@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSDate;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -78,7 +77,7 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
         hql.append("where created < :created ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("created", SOSDate.toUtcDate(datetime.getDatetime()));
+        query.setParameter("created", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
 
