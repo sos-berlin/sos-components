@@ -30,9 +30,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
@@ -137,8 +139,21 @@ public class UnitTestSimpleWSImplHelper {
         SOSHibernateSession session = null;
         try {
             session = Globals.getHibernateFactory().openStatelessSession("getControllersId");
-            Query<String> query = session.createQuery("select controllerId from " + DBLayer.DBITEM_INV_JS_INSTANCES);
-            controllerIds = session.getResultList(query);
+            Query<DBItemInventoryJSInstance> query = session.createQuery("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+
+            controllerIds = new ArrayList<>();
+            List<DBItemInventoryJSInstance> result = session.getResultList(query);
+            for (DBItemInventoryJSInstance item : result) {
+                List<DBItemInventoryJSInstance> controllerItems = null;
+                if (Proxies.getControllerDbInstances().containsKey(item.getControllerId())) {
+                    controllerItems = Proxies.getControllerDbInstances().get(item.getControllerId());
+                } else {
+                    controllerItems = new ArrayList<>();
+                    controllerIds.add(item.getControllerId());
+                }
+                controllerItems.add(item);
+                Proxies.getControllerDbInstances().put(item.getControllerId(), controllerItems);
+            }
         } catch (Throwable e) {
             LOGGER.warn(String.format("[getControllersId]%s", e.toString()), e);
         } finally {
