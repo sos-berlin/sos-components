@@ -2,10 +2,12 @@ package com.sos.joc.classes;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -31,11 +33,13 @@ public class JobSchedulerDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
     // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
-    public static final Long NEVER_MILLIS =  253402300799000L;
-    public static final Instant NEVER =  Instant.ofEpochMilli(NEVER_MILLIS);
+    public static final Long NEVER_MILLIS = 253402300799000L;
+    public static final Instant NEVER = Instant.ofEpochMilli(NEVER_MILLIS);
     private static final ZoneId UTC = ZoneId.of("UTC");
+    private static final Pattern dateTimePattern = Pattern.compile(
+            "^(?<timestamp>\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2})(?<nanos>[.,]\\d{3,9})?(?:(?<offset>Z|[+-]\\d{2})(?<offset2>:?\\d{2})?)?.*$",
+            Pattern.DOTALL);
 
-    
     public static Date nowInUtc() {
         String now = getNowInISO();
         Instant instant = getScheduledForInUTC(now, TimeZone.getDefault().getID()).get();
@@ -184,7 +188,7 @@ public class JobSchedulerDate {
             return NEVER;
         }
         Pattern offsetPattern = Pattern.compile(
-                "(\\d{2,4}-\\d{1,2}-\\d{1,2}(?:T| )\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
+                "(\\d{2,4}-\\d{1,2}-\\d{1,2}(?:T| )\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-]\\d{2}(?::?\\d{2})?|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");
         Matcher m = offsetPattern.matcher(dateStr);
         TimeZone timeZ = null;
@@ -204,7 +208,15 @@ public class JobSchedulerDate {
             }
             if (m.find()) {
                 if (timeZ == null) {
-                    timeZ = (m.group(2) != null) ? TimeZone.getTimeZone("GMT" + m.group(2)) : TimeZone.getTimeZone(ZoneOffset.UTC);
+                    String offset = m.group(2);
+                    if (offset == null || offset.equals("Z")) {
+                        timeZ = TimeZone.getTimeZone(ZoneOffset.UTC);  
+                    } else {
+                        if (!offset.contains(":") && m.group(2).length() > 3) {
+                            offset = offset.substring(0, 3) + ":" + offset.substring(3);
+                        }
+                        timeZ = TimeZone.getTimeZone(OffsetDateTime.parse("2000-01-01T00:00:00" + offset).getOffset());
+                    }
                 }
                 dateStr = m.group(1);
             } else if (timeZ == null) {
@@ -340,6 +352,13 @@ public class JobSchedulerDate {
     public static Instant getInstantFromZoneId(String timestamp, ZoneId zoneId) {
         // TODO check timestamp format
         Instant instant = Instant.parse(timestamp.replace(" ", "T").replace(",", ".") + "Z");
+        return getInstantFromZoneId(instant, zoneId);
+    }
+    
+    public static Instant getInstantFromZoneId(Instant instant, ZoneId zoneId) {
+        if (instant == null) {
+            return null;
+        }
         if (zoneId.getId().equals("UTC") || zoneId.getId().equals("Etc/UTC") || zoneId.getId().equals("GMT")) {
             return instant;
         }
@@ -350,6 +369,10 @@ public class JobSchedulerDate {
     public static Instant getInstantToZoneId(String timestamp, ZoneId zoneId) {
         // TODO check timestamp format
         Instant instant = Instant.parse(timestamp.replace(" ", "T").replace(",", ".") + "Z");
+        return getInstantToZoneId(instant, zoneId);
+    }
+    
+    public static Instant getInstantToZoneId(Instant instant, ZoneId zoneId) {
         if (zoneId.getId().equals("UTC") || zoneId.getId().equals("Etc/UTC") || zoneId.getId().equals("GMT")) {
             return instant;
         }
@@ -387,5 +410,35 @@ public class JobSchedulerDate {
             }
         }
         return null;
+    }
+    
+    // timestamp in the form: yyyy-mm-dd[ T]hh:mm:ss([.,]SSS)?(Z|[+-]offset)
+    public static Instant getInstantOfZoneId(String timestamp, ZoneId zoneId) {
+        // assumption: timestamp is utc -> return instant in zoneid
+        Matcher m = dateTimePattern.matcher(timestamp);
+        boolean zoneIdRequired = false;
+        StringBuffer sb = new StringBuffer();
+        if (m.matches()) {
+            zoneIdRequired = m.group("offset") == null;
+            if (m.group("offset2") != null && !m.group("offset2").startsWith(":")) {
+                m.appendReplacement(sb, m.group("timestamp").replace(' ', 'T') + Optional.ofNullable(m.group("nanos")).orElse("").replace(',', '.')
+                        + m.group("offset") + ":" + m.group("offset2"));
+            } else {
+                m.appendReplacement(sb, m.group("timestamp").replace(' ', 'T') + Optional.ofNullable(m.group("nanos")).orElse("").replace(',', '.')
+                        + Optional.ofNullable(m.group("offset")).orElse("Z"));
+            }
+        } else {
+            throw new DateTimeException(timestamp + " must have the form: yyyy-MM-dd[ T]hh:mm:ss([.,]SSS)?(Z|[+-]offset)?");
+        }
+        m.appendTail(sb);
+        if (zoneIdRequired) {
+            Instant instant = Instant.parse(sb.toString());
+            if (zoneId.getId().equals("UTC") || zoneId.getId().equals("Etc/UTC") || zoneId.getId().equals("GMT")) {
+                return instant;
+            }
+            return ZonedDateTime.ofInstant(instant, UTC).withZoneSameLocal(zoneId).toInstant();
+        } else {
+            return OffsetDateTime.parse(sb.toString()).toInstant();
+        }
     }
 }
