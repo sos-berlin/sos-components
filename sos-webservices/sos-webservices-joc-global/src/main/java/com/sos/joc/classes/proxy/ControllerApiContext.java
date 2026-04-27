@@ -3,6 +3,7 @@ package com.sos.joc.classes.proxy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class ControllerApiContext {
         } else {
             admissions = Collections.singletonList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
         }
-        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
+        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), Optional.empty());
     }
 
     private static String toString(ProxyCredentials credentials) {

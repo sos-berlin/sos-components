@@ -253,7 +253,7 @@ public class ProxyTest {
             JControllerProxy controllerProxy = Proxy.of(credential);
             Instant b = Instant.now();
             LOGGER.info("---------------------" + b.toString());
-            //JControllerProxy controllerProxy2 = ControllerApi.of(credential).startProxy().get();
+            //JControllerProxy controllerProxy2 = ControllerApi.of(credential).startProxyAwaitCoupling().get();
 //            JControllerProxy controllerProxy2 = Proxy.of(ProxyCredentialsBuilder.withControllerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
 //            .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.HISTORY).build());
             Instant c = Instant.now();

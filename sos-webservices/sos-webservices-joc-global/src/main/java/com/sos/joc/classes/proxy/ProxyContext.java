@@ -96,7 +96,7 @@ public class ProxyContext {
     
     protected void start(JControllerApi controllerApi) throws ControllerConnectionRefusedException {
         LOGGER.info(String.format("start Proxy of %s", toString()));
-        this.proxyFuture = controllerApi.startProxy(getProxyEventBus());
+        this.proxyFuture = controllerApi.startProxyAwaitCoupling(getProxyEventBus());
         this.coupledFuture = startMonitorFuture(120);
     }
 
