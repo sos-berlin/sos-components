@@ -2,6 +2,7 @@ package com.sos.joc.history.controller.proxy.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ public class JProxyTestClass {
 
     public JControllerApi getControllerApi(ProxyUser user, String uriPrimary, String uriBackup) {
         LOGGER.info(String.format("[%s]getControllerApi ...", uriPrimary));
-        return context.newControllerApi(getAdmissions(user, uriPrimary, uriBackup), JHttpsConfig.empty());
+        return context.newControllerApi(getAdmissions(user, uriPrimary, uriBackup), JHttpsConfig.empty(), Optional.empty());
     }
 
     private List<JAdmission> getAdmissions(ProxyUser user, String uriPrimary, String uriBackup) {
