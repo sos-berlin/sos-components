@@ -27,7 +27,7 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
 import js7.base.log.reader.LogLineKey;
-import js7.data.node.EngineServerId;
+import js7.data.node.Js7ServerId;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
@@ -78,7 +78,7 @@ public class LogTest {
             //Instant instant = LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC);
             //Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(LogLevel.debug(), instant, 100l);
             //LogLineKey.
-            Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(EngineServerId.primaryController, LogLevel.debug(), Instant.parse(
+            Flux<List<KeyedLogLine>> flux = proxy.keyedLogLineFlux(Js7ServerId.primaryController, LogLevel.debug(), Instant.parse(
                     "2026-03-03T17:35:00Z"), OptionalLong.of(10l));
             // Error handling and completion
             flux = flux.doOnError(this::fluxDoOnError);
@@ -93,7 +93,7 @@ public class LogTest {
 //                //loglines.addAll(keyedLogLines.stream().map(KeyedLogLine::line).toList());
 //            }).reduce(LogLineKey.parse("0/0").toOption().get(), (a, lines) -> a = lines.get(lines.size() - 1).key()).toFuture().get();
             
-            flux = proxy.keyedLogLineFlux(EngineServerId.primaryController, LogLevel.debug(), Instant.parse("2026-03-03T17:35:00Z"), OptionalLong.of(10l));
+            flux = proxy.keyedLogLineFlux(Js7ServerId.primaryController, LogLevel.debug(), Instant.parse("2026-03-03T17:35:00Z"), OptionalLong.of(10l));
             LogLineKey llk2 = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).doOnNext(keyedLogLines -> {
                 //System.out.println(keyedLogLines);
                 //keyedLogLines.stream().map(KeyedLogLine::line).forEach(LOGGER::info);
@@ -106,7 +106,7 @@ public class LogTest {
             LOGGER.info("loglineKey position: " + llk2.position());
             
             LogLineKey llkTest = llk2; //LogLineKey.parse("0/150041").toOption().get();
-            flux = proxy.keyedLogLineFlux(EngineServerId.primaryController, LogLevel.debug(), llkTest, OptionalLong.of(10l));
+            flux = proxy.keyedLogLineFlux(Js7ServerId.primaryController, LogLevel.debug(), llkTest, OptionalLong.of(10l));
             LogLineKey llk3;
             try {
                 llk3 = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).doOnNext(keyedLogLines -> {
