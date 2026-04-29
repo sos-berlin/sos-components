@@ -230,12 +230,12 @@ public class JobResource implements IInventoryObject, IConfigurationObject, IDep
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("arguments", arguments).append("env", env).append("documentationName", documentationName).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("arguments", arguments).append("env", env).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(arguments).append(documentationName).append(tYPE).append(env).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(arguments).append(documentationName).append(tYPE).append(env).append(title).toHashCode();
     }
 
     @Override
@@ -247,7 +247,19 @@ public class JobResource implements IInventoryObject, IConfigurationObject, IDep
             return false;
         }
         JobResource rhs = ((JobResource) other);
-        return new EqualsBuilder().append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof JobResource) == false) {
+            return false;
+        }
+        JobResource rhs = ((JobResource) other);
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(tYPE, rhs.tYPE).append(env, rhs.env).isEquals();
     }
 
 }

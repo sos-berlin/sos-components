@@ -344,4 +344,9 @@ public class Report implements IInventoryObject, IConfigurationObject, IReleaseO
         return new EqualsBuilder().append(hits, rhs.hits).append(period, rhs.period).append(controllerId, rhs.controllerId).append(templateName, rhs.templateName).append(monthFrom, rhs.monthFrom).append(sort, rhs.sort).append(title, rhs.title).append(version, rhs.version).append(frequencies, rhs.frequencies).append(monthTo, rhs.monthTo).isEquals();
     }
 
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        return equals(other);
+    }
+
 }

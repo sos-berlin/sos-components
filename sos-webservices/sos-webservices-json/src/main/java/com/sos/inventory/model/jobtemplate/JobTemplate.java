@@ -642,12 +642,12 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("killAtEndOfAdmissionPeriod", killAtEndOfAdmissionPeriod).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("warnOnErrWritten", warnOnErrWritten).append("arguments", arguments).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("description", description).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).append("hash", hash).append("isNotRestartable", isNotRestartable).toString();
+        return new ToStringBuilder(this).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("killAtEndOfAdmissionPeriod", killAtEndOfAdmissionPeriod).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("warnOnErrWritten", warnOnErrWritten).append("arguments", arguments).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("description", description).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).append("hash", hash).append("isNotRestartable", isNotRestartable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(failOnErrWritten).append(description).append(title).append(version).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(notification).append(graceTimeout).append(defaultArguments).append(killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay).append(arguments).append(documentationName).append(isNotRestartable).append(hash).append(warnOnErrWritten).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(failOnErrWritten).append(description).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(notification).append(graceTimeout).append(defaultArguments).append(killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay).append(arguments).append(documentationName).append(isNotRestartable).append(hash).append(warnOnErrWritten).toHashCode();
     }
 
     @Override
@@ -659,7 +659,19 @@ public class JobTemplate implements IInventoryObject, IConfigurationObject, IRel
             return false;
         }
         JobTemplate rhs = ((JobTemplate) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(description, rhs.description).append(title, rhs.title).append(version, rhs.version).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(isNotRestartable, rhs.isNotRestartable).append(hash, rhs.hash).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(description, rhs.description).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(isNotRestartable, rhs.isNotRestartable).append(hash, rhs.hash).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof JobTemplate) == false) {
+            return false;
+        }
+        JobTemplate rhs = ((JobTemplate) other);
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(arguments, rhs.arguments).append(isNotRestartable, rhs.isNotRestartable).append(hash, rhs.hash).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
     }
 
 }

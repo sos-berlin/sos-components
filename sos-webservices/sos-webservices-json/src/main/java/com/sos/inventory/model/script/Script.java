@@ -173,12 +173,12 @@ public class Script implements IInventoryObject, IConfigurationObject, IReleaseO
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("title", title).append("documentationName", documentationName).append("script", script).toString();
+        return new ToStringBuilder(this).append("title", title).append("documentationName", documentationName).append("script", script).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationName).append(title).append(version).append(script).toHashCode();
+        return new HashCodeBuilder().append(documentationName).append(title).append(script).toHashCode();
     }
 
     @Override
@@ -190,7 +190,19 @@ public class Script implements IInventoryObject, IConfigurationObject, IReleaseO
             return false;
         }
         Script rhs = ((Script) other);
-        return new EqualsBuilder().append(documentationName, rhs.documentationName).append(title, rhs.title).append(version, rhs.version).append(script, rhs.script).isEquals();
+        return new EqualsBuilder().append(documentationName, rhs.documentationName).append(title, rhs.title).append(script, rhs.script).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Script) == false) {
+            return false;
+        }
+        Script rhs = ((Script) other);
+        return new EqualsBuilder().append(script, rhs.script).isEquals();
     }
 
 }

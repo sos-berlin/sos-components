@@ -411,12 +411,12 @@ public class Calendar implements IInventoryObject, ICalendarObject, IConfigurati
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("version", version).append("documentationName", documentationName).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationName", documentationName).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(excludes).append(name).append(from).append(includes).append(id).append(documentationName).append(to).append(type).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(path).append(excludes).append(name).append(from).append(includes).append(id).append(documentationName).append(to).append(type).append(title).toHashCode();
     }
 
     @Override
@@ -428,7 +428,19 @@ public class Calendar implements IInventoryObject, ICalendarObject, IConfigurati
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(documentationName, rhs.documentationName).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(documentationName, rhs.documentationName).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Calendar) == false) {
+            return false;
+        }
+        Calendar rhs = ((Calendar) other);
+        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(to, rhs.to).append(type, rhs.type).isEquals();
     }
 
 }

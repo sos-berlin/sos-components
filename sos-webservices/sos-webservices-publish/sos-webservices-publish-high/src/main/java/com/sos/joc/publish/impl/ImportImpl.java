@@ -179,8 +179,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             .getObjectType());
                                     if (existingItem != null) {
                                         // only update inventory if content(item update) or path(move) has changed
-                                        if (!JocInventory.isJsonHashEqual(existingItem.getContent(), configuration.getConfiguration()) 
-                                                || !existingItem.getPath().equals(configuration.getPath())) {
+                                        if (!JocInventory.content2IJSObject(existingItem.getContent(), configuration.getObjectType())
+                                                .sufficientlyEquals(configuration.getConfiguration()) || !existingItem.getPath()
+                                                .equals(configuration.getPath())) {
                                             storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
                                                     auditLogId, agentNames));
                                         }

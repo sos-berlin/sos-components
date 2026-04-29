@@ -299,12 +299,12 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("boardType", boardType).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("boardType", boardType).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(boardType).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(documentationName).append(tYPE).append(title).append(version).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(boardType).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(documentationName).append(tYPE).append(title).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -316,7 +316,19 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(boardType, rhs.boardType).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(boardType, rhs.boardType).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(endOfLife, rhs.endOfLife).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Board) == false) {
+            return false;
+        }
+        Board rhs = ((Board) other);
+        return new EqualsBuilder().append(boardType, rhs.boardType).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(tYPE, rhs.tYPE).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

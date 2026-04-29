@@ -109,4 +109,9 @@ public class Folder implements IConfigurationObject
         return new EqualsBuilder().append(title, rhs.title).append(path, rhs.path).isEquals();
     }
 
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        return equals(other);
+    }
+
 }

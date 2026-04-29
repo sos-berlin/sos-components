@@ -362,12 +362,12 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("priority", priority).append("documentationName", documentationName).append("tags", tags).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("priority", priority).append("documentationName", documentationName).append("tags", tags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(directoryExpr).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(priority).append(version).append(directory).append(tags).append(delay).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(directoryExpr).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(priority).append(directory).append(tags).append(delay).append(documentationName).toHashCode();
     }
 
     @Override
@@ -379,7 +379,19 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(priority, rhs.priority).append(version, rhs.version).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(priority, rhs.priority).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).append(documentationName, rhs.documentationName).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof FileOrderSource) == false) {
+            return false;
+        }
+        FileOrderSource rhs = ((FileOrderSource) other);
+        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(directory, rhs.directory).append(tags, rhs.tags).append(delay, rhs.delay).isEquals();
     }
 
 }
