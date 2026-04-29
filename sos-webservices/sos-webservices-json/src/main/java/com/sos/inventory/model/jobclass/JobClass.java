@@ -230,4 +230,9 @@ public class JobClass implements IInventoryObject, IConfigurationObject, IDeploy
         return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        return equals(other);
+    }
+
 }

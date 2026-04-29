@@ -182,4 +182,9 @@ public class DeploymentDescriptor implements IInventoryObject, IConfigurationObj
         return new EqualsBuilder().append(license, rhs.license).append(certificates, rhs.certificates).append(controllers, rhs.controllers).append(descriptor, rhs.descriptor).append(agents, rhs.agents).append(joc, rhs.joc).isEquals();
     }
 
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        return equals(other);
+    }
+
 }

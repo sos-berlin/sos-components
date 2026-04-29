@@ -687,4 +687,16 @@ public class Job implements IConfigurationObject
         return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(jobTemplate, rhs.jobTemplate).append(parallelism, rhs.parallelism).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(documentationName, rhs.documentationName).append(jobResourceNames, rhs.jobResourceNames).append(agentName, rhs.agentName).append(subagentClusterIdExpr, rhs.subagentClusterIdExpr).append(withSubagentClusterIdExpr, rhs.withSubagentClusterIdExpr).append(executable, rhs.executable).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(defaultArguments, rhs.defaultArguments).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(subagentClusterId, rhs.subagentClusterId).append(isNotRestartable, rhs.isNotRestartable).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
     }
 
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Job) == false) {
+            return false;
+        }
+        Job rhs = ((Job) other);
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(jobTemplate, rhs.jobTemplate).append(parallelism, rhs.parallelism).append(criticality, rhs.criticality).append(failOnErrWritten, rhs.failOnErrWritten).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(jobResourceNames, rhs.jobResourceNames).append(agentName, rhs.agentName).append(subagentClusterIdExpr, rhs.subagentClusterIdExpr).append(withSubagentClusterIdExpr, rhs.withSubagentClusterIdExpr).append(executable, rhs.executable).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(defaultArguments, rhs.defaultArguments).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(subagentClusterId, rhs.subagentClusterId).append(isNotRestartable, rhs.isNotRestartable).append(warnOnErrWritten, rhs.warnOnErrWritten).isEquals();
+    }
+
 }

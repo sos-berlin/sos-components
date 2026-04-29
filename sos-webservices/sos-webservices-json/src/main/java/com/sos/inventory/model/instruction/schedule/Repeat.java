@@ -108,7 +108,7 @@ public abstract class Repeat
             return false;
         }
         Repeat rhs = ((Repeat) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

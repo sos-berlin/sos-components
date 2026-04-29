@@ -1,7 +1,11 @@
 
 package com.sos.inventory.model.workflow;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.job.Job;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -335,12 +340,12 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("timeZone", timeZone).append("title", title).append("documentationName", documentationName).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("timeZone", timeZone).append("title", title).append("documentationName", documentationName).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(versionId).append(jobResourceNames).append(jobs).append(timeZone).append(documentationName).append(tYPE).append(title).append(version).append(orderPreparation).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(jobResourceNames).append(jobs).append(timeZone).append(documentationName).append(tYPE).append(title).append(orderPreparation).toHashCode();
     }
 
     @Override
@@ -352,7 +357,37 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(orderPreparation, rhs.orderPreparation).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderPreparation, rhs.orderPreparation).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Workflow) == false) {
+            return false;
+        }
+        Workflow rhs = ((Workflow) other);
+        boolean sufficientlyEqual = new EqualsBuilder().append(instructions, rhs.instructions).append(jobResourceNames, rhs.jobResourceNames)
+                .append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(orderPreparation, rhs.orderPreparation).isEquals();
+        if(sufficientlyEqual) {
+            Map<String, Job> thisJobs = Optional.ofNullable(jobs).map(Jobs::getAdditionalProperties).orElse(Collections.emptyMap());
+            Map<String, Job> otherJobs = Optional.ofNullable(rhs.jobs).map(Jobs::getAdditionalProperties).orElse(Collections.emptyMap());
+            if(!thisJobs.keySet().equals(otherJobs.keySet())) {
+                sufficientlyEqual = false;
+            } else {
+                for(Map.Entry<String, Job> entry : thisJobs.entrySet()) {
+                    Job thisJob = entry.getValue();
+                    Job otherJob = otherJobs.get(entry.getKey());
+                    if(!thisJob.sufficientlyEquals(otherJob)) {
+                        sufficientlyEqual = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return sufficientlyEqual; 
     }
 
 }

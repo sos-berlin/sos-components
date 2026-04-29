@@ -158,7 +158,7 @@ public abstract class Instruction
             return false;
         }
         Instruction rhs = ((Instruction) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

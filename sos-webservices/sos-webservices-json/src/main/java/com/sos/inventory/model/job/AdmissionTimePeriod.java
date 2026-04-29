@@ -126,7 +126,7 @@ public abstract class AdmissionTimePeriod
             return false;
         }
         AdmissionTimePeriod rhs = ((AdmissionTimePeriod) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(duration, rhs.duration).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(duration, rhs.duration).isEquals();
     }
 
 }

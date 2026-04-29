@@ -306,12 +306,12 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("orderParameterisations", orderParameterisations).toString();
+        return new ToStringBuilder(this).append("path", path).append("workflowName", workflowName).append("workflowNames", workflowNames).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("orderParameterisations", orderParameterisations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(title).append(orderParameterisations).append(version).toHashCode();
+        return new HashCodeBuilder().append(workflowNames).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(title).append(orderParameterisations).toHashCode();
     }
 
     @Override
@@ -323,7 +323,19 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(title, rhs.title).append(orderParameterisations, rhs.orderParameterisations).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(title, rhs.title).append(orderParameterisations, rhs.orderParameterisations).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Schedule) == false) {
+            return false;
+        }
+        Schedule rhs = ((Schedule) other);
+        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(orderParameterisations, rhs.orderParameterisations).isEquals();
     }
 
 }

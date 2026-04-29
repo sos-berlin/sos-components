@@ -192,12 +192,12 @@ public class Lock implements IInventoryObject, IConfigurationObject, IDeployObje
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("limit", limit).append("documentationName", documentationName).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("limit", limit).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(limit).append(documentationName).append(tYPE).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(limit).append(documentationName).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -209,7 +209,19 @@ public class Lock implements IInventoryObject, IConfigurationObject, IDeployObje
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().append(limit, rhs.limit).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(limit, rhs.limit).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+    }
+
+    @Override
+    public boolean sufficientlyEquals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Lock) == false) {
+            return false;
+        }
+        Lock rhs = ((Lock) other);
+        return new EqualsBuilder().append(limit, rhs.limit).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }
