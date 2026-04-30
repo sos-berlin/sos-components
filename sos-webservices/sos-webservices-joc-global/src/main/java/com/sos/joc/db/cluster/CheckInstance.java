@@ -198,6 +198,7 @@ public class CheckInstance {
                 Path startscript = Paths.get(jettyHome).resolve("bin").resolve("jetty.sh");
                 if (Files.exists(startscript)) {
                     System.out.println("...try to stop Jetty in 3s");
+                    LOGGER.info("...try to stop Jetty in 3s");
                     new Thread(() -> {
                         try {
                             TimeUnit.SECONDS.sleep(3);
