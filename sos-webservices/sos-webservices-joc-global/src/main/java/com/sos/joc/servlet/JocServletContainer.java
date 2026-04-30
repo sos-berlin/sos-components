@@ -80,6 +80,7 @@ public class JocServletContainer extends ServletContainer {
                 LOGGER.info("----> closing DB Connections");
                 Globals.sosHibernateFactory.close();
             }
+            LOGGER.error("", e);
             CheckInstance.stopJOC();
             throw new ServletException(e);
         }
