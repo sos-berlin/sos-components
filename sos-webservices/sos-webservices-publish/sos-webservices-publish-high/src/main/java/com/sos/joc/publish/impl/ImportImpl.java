@@ -279,7 +279,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 DependencyResolver.updateDependencies(updated);
                 if (!filteredConfigurations.isEmpty()) {
                     JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
-                            .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
+                            .intValue())), hibernateSession, auditLogId);
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                     filteredConfigurations.stream().map(ConfigurationObject::getPath).map(path -> Paths.get(path).getParent()).distinct().forEach(
                             item -> {
