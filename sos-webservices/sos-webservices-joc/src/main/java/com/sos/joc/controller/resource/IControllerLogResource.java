@@ -13,13 +13,12 @@ public interface IControllerLogResource {
     @POST
     @Path("log")
     @Consumes("application/json")
-    public JOCDefaultResponse getLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
-    
+    public JOCDefaultResponse getLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("Accept-Encoding") String acceptEncoding,
+            byte[] filterBytes);
+
     @POST
     @Path("log/download")
     @Consumes("application/json")
-    // @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postDownloadLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("Accept-Encoding") String acceptEncoding, byte[] filterBytes);
+    public JOCDefaultResponse postDownloadLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

@@ -839,8 +839,6 @@ public class OrderTags {
             return Collections.emptySet();
         }
 
-        connection = Globals.createSosHibernateStatelessConnection(OrderTags.class.getSimpleName());
-
         StringBuilder hql = new StringBuilder("select new ").append(GroupedTag.class.getName());
         hql.append("(g.name, t.tagName) from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS).append(" t left join ");
         hql.append(DBLayer.DBITEM_INV_TAG_GROUPS).append(" g on t.groupId = g.id");

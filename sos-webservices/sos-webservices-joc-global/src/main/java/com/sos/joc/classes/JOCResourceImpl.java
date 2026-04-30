@@ -163,7 +163,7 @@ public class JOCResourceImpl {
         return jocError;
     }
 
-    public Date getDateFromString(String dateString) {
+    public static Date getDateFromString(String dateString) {
         Date date = null;
         try {
             dateString = dateString.trim().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}) ", "$1T");
@@ -177,12 +177,12 @@ public class JOCResourceImpl {
         return date;
     }
 
-    public Date getDateFromTimestamp(Long timeStamp) {
+    public static Date getDateFromTimestamp(Long timeStamp) {
         Instant fromEpochMilli = Instant.ofEpochMilli(timeStamp / 1000);
         return Date.from(fromEpochMilli);
     }
 
-    public String normalizePath(String path) {
+    public static String normalizePath(String path) {
         return Globals.normalizePath(path);
     }
 
@@ -193,7 +193,7 @@ public class JOCResourceImpl {
         return ("/" + path.trim()).replaceAll("//+", "/");
     }
 
-    public boolean checkRequiredComment(AuditParams auditParams) throws JocMissingCommentException {
+    public static boolean checkRequiredComment(AuditParams auditParams) throws JocMissingCommentException {
         if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             String comment = null;
             if (auditParams != null) {
@@ -206,42 +206,42 @@ public class JOCResourceImpl {
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, String paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, String paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null || paramVal.isEmpty()) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
         }
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, Long paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, Long paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
         }
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, Object paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, Object paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
         }
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, URI paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, URI paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null || paramVal.toString().isEmpty()) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
         }
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, Collection<?> paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, Collection<?> paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null || paramVal.isEmpty()) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
         }
         return true;
     }
 
-    public boolean checkRequiredParameter(String paramKey, Integer paramVal) throws JocMissingRequiredParameterException {
+    public static boolean checkRequiredParameter(String paramKey, Integer paramVal) throws JocMissingRequiredParameterException {
         return checkRequiredParameter(paramKey, String.valueOf(paramVal));
     }
 
