@@ -21,7 +21,7 @@ import js7.base.log.reader.KeyedLogLine;
 
 public class LogHelper {
     
-    private static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSS").withZone(ZoneId.of("UTC"));
+    private static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss,SSS").withZone(ZoneId.of("UTC"));
 
     public static LogLevel getLogLevel(RequestLevel level) {
         if (level == null) {
