@@ -1042,6 +1042,11 @@ public class DBLayerDeploy {
 
     public DBItemInventoryConfiguration updateInventoryConfiguration(ConfigurationObject configuration, DBItemInventoryConfiguration existingConfiguration, 
             String account, Long auditLogId, Set<String> agentNames) {
+        return updateInventoryConfiguration(configuration, existingConfiguration, account, auditLogId, agentNames, true);
+    }
+    
+    public DBItemInventoryConfiguration updateInventoryConfiguration(ConfigurationObject configuration, DBItemInventoryConfiguration existingConfiguration, 
+            String account, Long auditLogId, Set<String> agentNames, boolean updatePublishState) {
         String configPath = configuration.getPath();
         ConfigurationType configType = configuration.getObjectType();
         try {
@@ -1064,8 +1069,10 @@ public class DBLayerDeploy {
                 }
                 existingConfiguration.setAuditLogId(auditLogId);
                 existingConfiguration.setValid(valid);
-                existingConfiguration.setDeployed(false);
-                existingConfiguration.setReleased(false);
+                if(updatePublishState) {
+                    existingConfiguration.setDeployed(false);
+                    existingConfiguration.setReleased(false);
+                }
                 existingConfiguration.setType(configuration.getObjectType());
                 JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
             }
