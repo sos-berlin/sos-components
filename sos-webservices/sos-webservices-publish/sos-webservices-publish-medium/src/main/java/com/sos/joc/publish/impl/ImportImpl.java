@@ -183,7 +183,10 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                                 .sufficientlyEquals(configuration.getConfiguration()) || !existingItem.getPath()
                                                 .equals(configuration.getPath())) {
                                             storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
-                                                    auditLogId, agentNames));
+                                                    auditLogId, agentNames, true));
+                                        } else {
+                                            storedConfigurations.add(dbLayer.updateInventoryConfiguration(configuration, existingItem, account,
+                                                    auditLogId, agentNames, false));
                                         }
                                     } else {
                                         storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
