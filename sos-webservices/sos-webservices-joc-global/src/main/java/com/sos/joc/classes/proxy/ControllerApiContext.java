@@ -40,7 +40,9 @@ public class ControllerApiContext {
         if (ProxyUser.JOC.value().equals(credentials.getAccount())) {
            pId = Optional.of(ProxyId.apply(Globals.getJocId() + "-" + credentials.getControllerId()));
         }
-        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
+        JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
+        api.setActive(pId.isPresent() && ClusterWatch.jocIsActive());
+        return api;
     }
 
     private static String toString(ProxyCredentials credentials) {

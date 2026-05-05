@@ -47,6 +47,7 @@ public class ClusterWatch {
     private volatile ConcurrentMap<String, ClusterWatchServiceContext> startedWatches = new ConcurrentHashMap<>();
     private Map<String, String> urlMapper = null;
     protected static boolean onStart = true;
+    private boolean jocIsActive = false;
     
     private ClusterWatch() {
         EventBus.getInstance().register(this);
@@ -73,6 +74,7 @@ public class ClusterWatch {
     public void listenEvent(ActiveClusterChangedEvent evt) {
         onStart = false;
         if (evt.getNewClusterMemberId() != null) {
+            jocIsActive = false;
             LOGGER.debug("[ClusterWatch] memberId = " + memberId);
             LOGGER.info("[ClusterWatch] current watched Controller clusters by " + toStringWithId() + ": " + startedWatches.keySet().toString());
             LOGGER.info("[ClusterWatch] receive event: " + evt.toString());
@@ -86,6 +88,7 @@ public class ClusterWatch {
                 // deactivate proxy metrics
                 Proxies.getJOCControllerApis().forEach(api -> api.setActive(false));
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
+                jocIsActive = true;
                 // start for all controllerIds
                 SOSHibernateSession sosHibernateSession = null;
                 try {
@@ -117,6 +120,10 @@ public class ClusterWatch {
                 Proxies.getJOCControllerApis().forEach(api -> api.setActive(true));
             }
         }
+    }
+    
+    public static boolean jocIsActive() {
+        return ClusterWatch.instance.jocIsActive;
     }
     
 //    @Subscribe({ ProxyRestarted.class })
