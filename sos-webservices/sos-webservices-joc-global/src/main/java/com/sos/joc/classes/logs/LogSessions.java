@@ -1,6 +1,7 @@
 package com.sos.joc.classes.logs;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,11 +27,22 @@ public class LogSessions {
         return instance;
     }
     
+    public static synchronized void addSession(String accessToken, String logToken, LogSession logSession) {
+        LogSessions lss = LogSessions.getInstance();
+        lss.clean();
+        lss._addSession(accessToken, logToken, logSession);
+    }
+    
     public LogSession getSession(String accessToken, String logToken) {
         return sessions.getOrDefault(accessToken, Collections.emptyMap()).get(logToken);
     }
     
-    public void clean() {
+    private void _addSession(String accessToken, String logToken, LogSession logSession) {
+        sessions.putIfAbsent(accessToken, new HashMap<>());
+        sessions.get(accessToken).put(logToken, logSession);
+    }
+    
+    private void clean() {
         Optional.ofNullable(Globals.jocWebserviceDataContainer.getCurrentAccountsList()).map(SOSAuthCurrentAccountsList::getAccessTokens).ifPresent(
                 ats -> sessions.keySet().removeIf(key -> !ats.contains(key)));
     }

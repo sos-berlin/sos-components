@@ -6,8 +6,12 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.sos.joc.classes.JobSchedulerDate;
@@ -18,10 +22,103 @@ import com.sos.joc.model.log.RequestLevel;
 
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
+import js7.data.node.Js7ServerId;
+import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.log.JLogSelection;
+import reactor.core.scheduler.Schedulers;
 
 public class LogHelper {
     
     private static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss,SSS").withZone(ZoneId.of("UTC"));
+    
+    public static LogResponse getResponse(JControllerProxy proxy, String accessToken, LogBaseRequest in, Js7ServerId serverId, String timezone) {
+        LogResponse entity = new LogResponse();
+        entity.setTimeZone(timezone);
+        ZoneId zoneId = getZoneId(entity.getTimeZone());
+
+        entity.setLogLines(new ArrayList<>());
+
+        Instant instantFrom = getInstantFromZoneId(in, zoneId, false);
+        Optional<Instant> instantTo = Optional.ofNullable(getInstantFromZoneId(in, zoneId, true));
+
+        OptionalLong numOfLines = in.getNumOfLines() != null ? OptionalLong.of(Math.min(in.getNumOfLines(), 2500L)) : OptionalLong.of(2500L);
+        LogLevel logLevel = getLogLevel(in.getLevel());
+
+        // consider lastLine is null if flux stream is empty
+        JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines);
+        KeyedLogLine lastLine = proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
+                .commonPool())).flatMapIterable(Function.identity()).takeWhile(dateToIsReached(instantTo, zoneId, entity)).doOnNext(
+                        keyedLogLine -> {
+                            entity.getLogLines().add(keyedLogLine.line());
+                        }).blockLast();
+        if (lastLine == null) {
+            entity.setIsComplete(true);
+        }
+        if (!entity.getIsComplete() && in.getNumOfLines() != null && entity.getLogLines().size() <= in.getNumOfLines().intValue()) {
+            if (in.getNumOfLines() <= 2500L) {
+                entity.setIsComplete(true);
+            } else if (entity.getLogLines().size() < 2500L) {
+                entity.setIsComplete(true);
+            }
+        }
+        // System.out.println(lastLine.key().toString());
+        if (lastLine != null) {
+            entity.setToken(UUID.randomUUID().toString());
+            // TODO numOfLines from request - entity.getLogLines.size()
+            // controllerId
+            LogSession ls = new LogSession(in.getControllerId(), serverId, logLevel, instantFrom, instantTo, numOfLines, zoneId, lastLine.key(),
+                    entity.getToken());
+            LogSessions.addSession(accessToken, entity.getToken(), ls);
+        }
+        return entity;
+    }
+    
+    public static boolean checkIfEmpty(JControllerProxy proxy, String accessToken, LogBaseRequest in, Js7ServerId serverId, String timezone) {
+        Instant instantFrom = getInstantFromZoneId(in, getZoneId(timezone), false);
+        LogLevel logLevel = getLogLevel(in.getLevel());
+
+        // consider lastLine is null if flux stream is empty
+        JLogSelection selection = JLogSelection.empty().withLineLimit(OptionalLong.of(1l));
+        KeyedLogLine lastLine = proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(
+                ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).blockLast();
+        return lastLine == null;
+    }
+    
+//    public static LogResponse getResponse1(String accessToken, LogSession ls) {
+//        LogResponse entity = new LogResponse();
+//        ZoneId zoneId = ls.getZoneId();
+//        entity.setTimeZone(zoneId.getId());
+//        
+//        JControllerProxy proxy = Proxy.of(ls.getControllerId());
+//        entity.setLogLines(new ArrayList<>());
+//
+//        Optional<Instant> instantTo = ls.getDateTo();
+//        OptionalLong numOfLines = ls.getNumOfLines(); // TODO wrong: only rest of lines after previous calls
+//
+//        // consider lastLine is null if flux stream is empty
+//        KeyedLogLine lastLine = proxy.keyedLogLineFlux(ls.getServerId(), ls.getLogLevel(), ls.getKey(), numOfLines).publishOn(Schedulers.fromExecutor(
+//                ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).takeWhile(LogHelper.dateToIsReached(instantTo, zoneId, entity))
+//                .doOnNext(keyedLogLine -> {
+//                    entity.getLogLines().add(keyedLogLine.line());
+//                }).blockLast();
+//        if (lastLine == null) {
+//            entity.setIsComplete(true);
+//        }
+//        if (!entity.getIsComplete() && in.getNumOfLines() != null && entity.getLogLines().size() <= in.getNumOfLines().intValue()) {
+//            if (in.getNumOfLines() <= 2500L) {
+//                entity.setIsComplete(true);
+//            } else if (entity.getLogLines().size() < 2500L) {
+//                entity.setIsComplete(true);
+//            }
+//        }
+//        // System.out.println(lastLine.key().toString());
+//        if (lastLine != null) {
+//            entity.setToken(UUID.randomUUID().toString());
+//            LogSession ls = new LogSession(serverId, logLevel, instantFrom, instantTo, numOfLines, zoneId, lastLine.key(), entity.getToken());
+//            LogSessions.addSession(accessToken, entity.getToken(), ls);
+//        }
+//        return entity;
+//    }
 
     public static LogLevel getLogLevel(RequestLevel level) {
         if (level == null) {
@@ -47,12 +144,12 @@ public class LogHelper {
         return getDownloadFilename(getAgentPrefix(agentId, isDirector), level, dateFrom, dateTo, now, numOfLines, compressed);
     }
     
-    public static Instant getInstantFromZoneId(LogBaseRequest in, ZoneId zoneId, boolean dateTo) {
+    public static Instant getInstantFromZoneId(LogBaseRequest in, ZoneId zoneId, boolean to) {
         Instant instant;
-        if (dateTo) {
-            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), dateTo, in.getTimeZone());
+        if (to) {
+            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), to, in.getTimeZone());
         } else {
-            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), dateTo, in.getTimeZone());
+            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), to, in.getTimeZone());
             Instant now = Instant.now();
             if (now.isBefore(instant)) {
                 instant = now;
@@ -145,6 +242,14 @@ public class LogHelper {
 
     private static String getFirst14Digits(Instant instant) {
         return instant.toString().replaceAll("[^0-9]", "").substring(0, 14);
+    }
+    
+    public static ZoneId getZoneId(String timezone) {
+        try {
+            return ZoneId.of(timezone);
+        } catch (Exception e) {
+            return ZoneId.of("UTC");
+        }
     }
     
 }
