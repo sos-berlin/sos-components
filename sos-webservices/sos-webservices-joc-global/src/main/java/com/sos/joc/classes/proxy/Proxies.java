@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -263,10 +264,10 @@ public class Proxies {
         return Proxies.getInstance().controllerDbInstances;
     }
     
-//    public static Optional<JCredentials> getJOCCredentials() {
-//        return Proxies.getInstance().controllerApis.keySet().stream().filter(p -> ProxyUser.JOC.getUser().equals(p.getUser().getUser())).map(
-//                ProxyCredentials::getAccount).findAny();
-//    }
+    public static List<JControllerApi> getJOCControllerApis() {
+        return Proxies.getInstance().controllerApis.entrySet().stream().filter(e -> ProxyUser.JOC.value().equals(e.getKey().getAccount())).map(
+                Map.Entry::getValue).toList();
+    }
     
     public static ProxyCoupled getJOCCredentials(String url) {
         return Proxies.getInstance().proxyCredentials.get(url);

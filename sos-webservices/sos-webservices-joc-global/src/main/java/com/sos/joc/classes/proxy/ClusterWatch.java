@@ -83,6 +83,8 @@ public class ClusterWatch {
                     LOGGER.info("[ClusterWatch] try to stop watches");
                     startedWatches.keySet().forEach(this::stop);
                 }
+                // deactivate proxy metrics
+                Proxies.getJOCControllerApis().forEach(api -> api.setActive(false));
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
                 // start for all controllerIds
                 SOSHibernateSession sosHibernateSession = null;
@@ -111,6 +113,8 @@ public class ClusterWatch {
                 } finally {
                     Globals.disconnect(sosHibernateSession);
                 }
+                // activate proxy metrics
+                Proxies.getJOCControllerApis().forEach(api -> api.setActive(true));
             }
         }
     }

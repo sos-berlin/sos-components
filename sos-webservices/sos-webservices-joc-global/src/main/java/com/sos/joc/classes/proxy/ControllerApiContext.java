@@ -8,8 +8,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 
+import js7.data.proxy.ProxyId;
 import js7.data_for_java.auth.JAdmission;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
@@ -34,7 +36,11 @@ public class ControllerApiContext {
         } else {
             admissions = Collections.singletonList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
         }
-        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), Optional.empty());
+        Optional<ProxyId> pId = Optional.empty();
+        if (ProxyUser.JOC.value().equals(credentials.getAccount())) {
+           pId = Optional.of(ProxyId.apply(Globals.getJocId() + "-" + credentials.getControllerId()));
+        }
+        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
     }
 
     private static String toString(ProxyCredentials credentials) {
