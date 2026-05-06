@@ -111,6 +111,41 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
+            String accessToken) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, 
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, 
+            ExecutionException {
+        Map<String, CompletableFuture<Either<Problem, Void>>> futures = new HashMap<>();
+        for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
+            String controllerId = entry.getKey();
+            List<DBItemDailyPlanOrder> orders = entry.getValue();
+            final Set<String> orderIds = orders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
+            final JControllerProxy proxy = Proxy.of(controllerId);
+            final JControllerState currentState = proxy.currentState();
+            Stream<JOrder> orderStream = Stream.empty();
+            if (!orderIds.isEmpty()) {
+                orderStream = currentState.ordersBy(o -> orderIds.contains(o.id().string()));
+            }
+            final Set<JOrder> jOrders = orderStream.filter(OrdersHelper::isPendingOrScheduledOrBlocked).collect(Collectors.toSet());
+            final Set<OrderId> oIds = jOrders.stream().map(JOrder::id).collect(Collectors.toSet());
+            CompletableFuture<Either<Problem, Void>> f = jOrders.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
+                proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
+                        oIds, JCancellationMode.freshOnly()));
+            futures.put(controllerId, f.thenApply(either -> {
+                        if (either.isRight()) {
+                            try {
+                                updateDailyPlan("cancelOrders", orderIds, false);
+                            } catch (Exception ex) {
+                                either = Either.left(Problem.pure(ex.toString()));
+                            }
+                        } else {
+                        }
+                        return either;
+                    }));
+        }
+        return futures;
+    }
+
+    public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
             String accessToken, AuditParams auditLog, boolean withAudit, boolean withEvent) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -151,7 +186,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             final Set<JOrder> jOrders = orderStream.filter(OrdersHelper::isPendingOrScheduledOrBlocked).collect(Collectors.toSet());
             final Set<OrderId> oIds = jOrders.stream().map(JOrder::id).collect(Collectors.toSet());
             final Set<String> oIds2 = oIds.stream().map(OrderId::string).collect(Collectors.toSet());
-            
+            // orderIds <- from filter, oids2 <- from proxy
             updateUnknownOrders(controllerId, orderIds, oIds2, getSettings(), withEvent);
 
             if (orderIds != null) {
