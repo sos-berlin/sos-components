@@ -139,11 +139,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // schedules from the request
                 Set<String> inSchedulesPaths = in.getUpdate().stream().filter(r -> r.getObjectType().equals(ConfigurationType.SCHEDULE)).map(
                         RequestFilter::getPath).collect(Collectors.toSet());
-                // already released schedules with no renaming
-                Set<String> keys = renamedOldSchedulePathsWithWorkflowNames.keySet().stream().filter(path -> inSchedulesPaths.contains(path)).collect(
-                        Collectors.toSet());
                 // remove schedules that are not renamed
-                keys.stream().forEach(key -> renamedOldSchedulePathsWithWorkflowNames.remove(key));
+                renamedOldSchedulePathsWithWorkflowNames.keySet().removeIf(inSchedulesPaths::contains);
                 // cancel based on the old name of renamed schedules
                 if (!renamedOldSchedulePathsWithWorkflowNames.isEmpty()) {
                     // TODO: synchronization needed
@@ -638,31 +635,30 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     if (releasedConf != null) {
                         if (ConfigurationType.SCHEDULE.equals(conf.getTypeAsEnum())) {
                             // only add if planOrderAutomatically = true
-                            Schedule schedule = Globals.objectMapper.readValue(releasedConf.getContent(), Schedule.class);
+                            Schedule schedule = JocInventory.convertSchedule(releasedConf.getContent(), Schedule.class);
                             if (schedule.getPlanOrderAutomatically()) {
-                                if (releasedConf.getContent().contains("workflowNames")) {
-                                    List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(releasedConf.getContent());
+                                if (!schedule.getWorkflowNames().isEmpty()) {
                                     if (schedulePathsWithWorkflowNames.containsKey(releasedConf.getPath())) {
-                                        schedulePathsWithWorkflowNames.get(releasedConf.getPath()).addAll(workflowNames);
+                                        schedulePathsWithWorkflowNames.get(releasedConf.getPath()).addAll(schedule.getWorkflowNames());
                                     } else {
-                                        schedulePathsWithWorkflowNames.put(releasedConf.getPath(), workflowNames);
+                                        schedulePathsWithWorkflowNames.put(releasedConf.getPath(), schedule.getWorkflowNames());
                                     }
                                 }
                             }
-                        } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(releasedConf.getTypeAsEnum())
-                                || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(releasedConf.getTypeAsEnum())) {
+                        } else if (JocInventory.isCalendar(releasedConf.getTypeAsEnum())) {
                             // only add if planOrderAutomatically = true
-                            List<DBItemInventoryReleasedConfiguration> schedules = dbLayer.getUsedReleasedSchedulesByReleasedCalendarName(releasedConf
-                                    .getName());
+                            List<DBItemInventoryReleasedConfiguration> schedules = dbLayer.getUsedReleasedSchedulesByReleasedCalendarName(
+                                    releasedConf.getName());
                             if (schedules != null) {
                                 for (DBItemInventoryReleasedConfiguration scheduleDbItem : schedules) {
-                                    Schedule schedule = Globals.objectMapper.readValue(scheduleDbItem.getContent(), Schedule.class);
+                                    Schedule schedule = JocInventory.convertSchedule(scheduleDbItem.getContent(), Schedule.class);
                                     if (schedule.getPlanOrderAutomatically()) {
-                                        List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(scheduleDbItem.getContent());
-                                        if (schedulePathsWithWorkflowNames.containsKey(scheduleDbItem.getPath())) {
-                                            schedulePathsWithWorkflowNames.get(scheduleDbItem.getPath()).addAll(workflowNames);
-                                        } else {
-                                            schedulePathsWithWorkflowNames.put(scheduleDbItem.getPath(), workflowNames);
+                                        if(!schedule.getWorkflowNames().isEmpty()) {
+                                            if (schedulePathsWithWorkflowNames.containsKey(scheduleDbItem.getPath())) {
+                                                schedulePathsWithWorkflowNames.get(scheduleDbItem.getPath()).addAll(schedule.getWorkflowNames());
+                                            } else {
+                                                schedulePathsWithWorkflowNames.put(scheduleDbItem.getPath(), schedule.getWorkflowNames());
+                                            }
                                         }
                                     }
                                 }
@@ -676,7 +672,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
         return schedulePathsWithWorkflowNames;
     }
-
+    
     private Map<String, List<String>> getSchedulePathsWithWorkflowNames(ReleaseFilter in, InventoryDBLayer dbLayer) {
         Map<String, List<String>> schedulePathsWithWorkflowNames = new HashMap<String, List<String>>();
         List<RequestFilter> all = Stream.concat(in.getDelete().stream(), in.getUpdate().stream()).collect(Collectors.toList());
@@ -689,30 +685,29 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 if (conf != null) {
                     if (ConfigurationType.SCHEDULE.equals(conf.getTypeAsEnum())) {
                         // only add if planOrderAutomatically = true
-                        Schedule schedule = Globals.objectMapper.readValue(conf.getContent(), Schedule.class);
+                        Schedule schedule = JocInventory.convertSchedule(conf.getContent(), Schedule.class);
                         if (schedule.getPlanOrderAutomatically()) {
-                            if (conf.getContent().contains("workflowNames")) {
-                                List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(conf.getContent());
+                            if (!schedule.getWorkflowNames().isEmpty()) {
                                 if (schedulePathsWithWorkflowNames.containsKey(conf.getPath())) {
-                                    schedulePathsWithWorkflowNames.get(conf.getPath()).addAll(workflowNames);
+                                    schedulePathsWithWorkflowNames.get(conf.getPath()).addAll(schedule.getWorkflowNames());
                                 } else {
-                                    schedulePathsWithWorkflowNames.put(conf.getPath(), workflowNames);
+                                    schedulePathsWithWorkflowNames.put(conf.getPath(), schedule.getWorkflowNames());
                                 }
                             }
                         }
-                    } else if (ConfigurationType.WORKINGDAYSCALENDAR.equals(conf.getTypeAsEnum()) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(
-                            conf.getTypeAsEnum())) {
+                    } else if (JocInventory.isCalendar(conf.getTypeAsEnum())) {
                         // only add if planOrderAutomatically = true
                         List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByCalendarName(conf.getName());
                         if (schedules != null) {
                             for (DBItemInventoryConfiguration scheduleDbItem : schedules) {
-                                Schedule schedule = Globals.objectMapper.readValue(scheduleDbItem.getContent(), Schedule.class);
+                                Schedule schedule = JocInventory.convertSchedule(scheduleDbItem.getContent(), Schedule.class);
                                 if (schedule.getPlanOrderAutomatically()) {
-                                    List<String> workflowNames = JocInventory.getWorkflowNamesFromScheduleJson(scheduleDbItem.getContent());
-                                    if (schedulePathsWithWorkflowNames.containsKey(scheduleDbItem.getPath())) {
-                                        schedulePathsWithWorkflowNames.get(scheduleDbItem.getPath()).addAll(workflowNames);
-                                    } else {
-                                        schedulePathsWithWorkflowNames.put(scheduleDbItem.getPath(), workflowNames);
+                                    if (!schedule.getWorkflowNames().isEmpty()) {
+                                        if (schedulePathsWithWorkflowNames.containsKey(scheduleDbItem.getPath())) {
+                                            schedulePathsWithWorkflowNames.get(scheduleDbItem.getPath()).addAll(schedule.getWorkflowNames());
+                                        } else {
+                                            schedulePathsWithWorkflowNames.put(scheduleDbItem.getPath(), schedule.getWorkflowNames());
+                                        }
                                     }
                                 }
                             }
@@ -778,10 +773,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private static List<DailyPlanOrderStateText> getOrderStatesForFilter() {
-        List<DailyPlanOrderStateText> states = new ArrayList<DailyPlanOrderStateText>();
-        states.add(DailyPlanOrderStateText.PLANNED);
-        states.add(DailyPlanOrderStateText.SUBMITTED);
-        return states;
+        return Arrays.asList(DailyPlanOrderStateText.PLANNED, DailyPlanOrderStateText.SUBMITTED);
     }
 
     private List<CompletableFuture<Void>> cancelOrders(ReleaseFilter filter, List<String> schedulePaths, String xAccessToken) {
@@ -807,7 +799,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
                             xAccessToken, false, false);
                     Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                            ordersPerController, xAccessToken, null, false, false);
+                            ordersPerController, xAccessToken);
                     for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
                         if (!cancelOrderResponsePerController.containsKey(controllerId)) {
                             cancelOrderResponsePerController.put(controllerId, CompletableFuture.completedFuture(Either.right(null)));
@@ -826,7 +818,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     }
                                 } catch (SOSHibernateException e) {
                                     getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                    LOGGER.warn("generation of new orders failed.", e);
+                                    LOGGER.warn("Order delete failed.", e);
                                 }
                             } else {
                                 getJocErrorWithPrintMetaInfoAndClear(LOGGER);
