@@ -263,9 +263,9 @@ public class Proxies {
         return Proxies.getInstance().controllerDbInstances;
     }
     
-    public static List<JControllerApi> getJOCControllerApis() {
-        return Proxies.getInstance().controllerApis.entrySet().stream().filter(e -> ProxyUser.JOC.value().equals(e.getKey().getAccount())).map(
-                Map.Entry::getValue).toList();
+    public static Map<ProxyCredentials, JControllerApi> getJOCControllerApis() {
+        return Proxies.getInstance().controllerApis.entrySet().stream().filter(e -> ProxyUser.JOC.value().equals(e.getKey().getAccount())).collect(
+                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
     
     public static ProxyCoupled getJOCCredentials(String url) {

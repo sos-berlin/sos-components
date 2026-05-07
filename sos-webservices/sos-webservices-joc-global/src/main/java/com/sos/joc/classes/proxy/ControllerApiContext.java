@@ -40,13 +40,15 @@ public class ControllerApiContext {
         if (ProxyUser.JOC.value().equals(credentials.getAccount())) {
            pId = Optional.of(ProxyId.apply(Globals.getJocId() + "-" + credentials.getControllerId()));
         }
-//        JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
-//        api.setActive(pId.isPresent() && ClusterWatch.jocIsActive());
-//        return api;
-        return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), Optional.empty());
+        JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
+        api.setActive(pId.isPresent() && ClusterWatch.jocIsActive());
+        pId.map(id -> String.format("ControllerApi: %s, ProxyId (%s): %s for metrics", toString(credentials), id, (ClusterWatch.jocIsActive()
+                ? "active" : "inactive"))).ifPresent(LOGGER::info);
+        return api;
+        //return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), Optional.empty());
     }
 
-    private static String toString(ProxyCredentials credentials) {
+    protected static String toString(ProxyCredentials credentials) {
         if (credentials.getBackupUrl() != null) {
             return String.format("'%s' cluster (%s, %s)", credentials.getControllerId(), credentials.getUrl(), credentials.getBackupUrl());
         } else {
