@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -22,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
+import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
@@ -51,10 +53,12 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
+import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
@@ -110,39 +114,78 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
 
-    public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
-            String accessToken) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, 
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, 
-            ExecutionException {
-        Map<String, CompletableFuture<Either<Problem, Void>>> futures = new HashMap<>();
+    public synchronized Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(
+            Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken) throws SOSHibernateException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+        Map<String, CompletableFuture<ControllerCommandResponse>> futures = new HashMap<>();
         for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
             String controllerId = entry.getKey();
             List<DBItemDailyPlanOrder> orders = entry.getValue();
             final Set<String> orderIds = orders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
             final JControllerProxy proxy = Proxy.of(controllerId);
-            final JControllerState currentState = proxy.currentState();
-            Stream<JOrder> orderStream = Stream.empty();
-            if (!orderIds.isEmpty()) {
-                orderStream = currentState.ordersBy(o -> orderIds.contains(o.id().string()));
-            }
-            final Set<JOrder> jOrders = orderStream.filter(OrdersHelper::isPendingOrScheduledOrBlocked).collect(Collectors.toSet());
-            final Set<OrderId> oIds = jOrders.stream().map(JOrder::id).collect(Collectors.toSet());
-            CompletableFuture<Either<Problem, Void>> f = jOrders.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
-                proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
-                        oIds, JCancellationMode.freshOnly()));
-            futures.put(controllerId, f.thenApply(either -> {
-                        if (either.isRight()) {
-                            try {
-                                updateDailyPlan("cancelOrders", orderIds, false);
-                            } catch (Exception ex) {
-                                either = Either.left(Problem.pure(ex.toString()));
-                            }
-                        } else {
-                        }
-                        return either;
-                    }));
+            
+            CompletableFuture<ControllerCommandResponse> response = cancelRecursively(proxy, orderIds, controllerId, futures, Either.right(null), 0)
+//            final JControllerState currentState = proxy.currentState();
+//            Stream<JOrder> orderStream = Stream.empty();
+//            if (!orderIds.isEmpty()) {
+//                orderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> orderIds.contains(o
+//                        .id().string())));
+//            }
+//            final Set<OrderId> oIds = orderStream.map(JOrder::id).collect(Collectors.toSet());
+//            CompletableFuture<Either<Problem, Void>> f = oIds.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
+//                proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
+//                        oIds, JCancellationMode.freshOnly()));
+//            
+//            CompletableFuture<ControllerCommandResponse> response = f.thenCompose(e -> {
+//                if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).contains(ProblemHelper.UNKNOWN_ORDER + ":")) {
+//                    return cancelRecursively(proxy, orderIds, controllerId, futures, e, 0);
+//                }
+//                return CompletableFuture.completedFuture(e);
+//            })
+            .thenApply(either -> {
+                if (either.isRight()) {
+                    try {
+                        updateDailyPlan("cancelOrders", orderIds, false);
+                        return new ControllerCommandResponse(controllerId);
+                    } catch (Exception ex) {
+                        return new ControllerCommandResponse(controllerId, Optional.of(ex));
+                    }
+                } else {
+                    return new ControllerCommandResponse(controllerId, Optional.of(ProblemHelper.getExceptionOfProblem(either.getLeft())));
+                }
+            });
+            futures.put(controllerId, response);
         }
         return futures;
+    }
+    
+    private CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds, String controllerId,
+            Map<String, CompletableFuture<ControllerCommandResponse>> futures, Either<Problem, Void> either, int count) {
+        if(count > 0) {
+            LOGGER.info("error occurred. retry cancel order. " + count + " try. " + ProblemHelper.getErrorMessage(either.getLeft()));
+        }
+        if (count >= 3) {
+            return CompletableFuture.completedFuture(either);
+        }
+        final JControllerState currentState = proxy.currentState();
+        Stream<JOrder> orderStream = Stream.empty();
+        if (!orderIds.isEmpty()) {
+            orderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> orderIds.contains(o
+                    .id().string())));
+        }
+        final Set<OrderId> oIds = orderStream.map(JOrder::id).collect(Collectors.toSet());
+        CompletableFuture<Either<Problem, Void>> future = oIds.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
+            proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
+                    oIds, JCancellationMode.freshOnly()));
+        int newCount = count + 1;
+        return future.thenCompose(e -> {
+            if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).matches(".*(" + ProblemHelper.UNKNOWN_ORDER +"|" 
+                    + ProblemHelper.CANCEL_STARTED_ORDER + "):.*")) {
+                return cancelRecursively(proxy, orderIds, controllerId, futures, e, newCount);
+            }
+            return CompletableFuture.completedFuture(e);
+        });
     }
 
     public synchronized Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,

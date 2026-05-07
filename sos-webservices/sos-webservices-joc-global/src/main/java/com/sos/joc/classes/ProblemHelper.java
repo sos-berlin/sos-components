@@ -1,5 +1,7 @@
 package com.sos.joc.classes;
 
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -23,6 +25,9 @@ public class ProblemHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProblemHelper.class);
     private static final String UNKNOWN_KEY = "UnknownKey";
     private static final String UNKNOWN_PATH = "UnknownPath";
+    public static final String UNKNOWN_ORDER = "UnknownOrder";
+    public static final String CANCEL_STARTED_ORDER = "CancelStartedOrder";
+
 
     public static String getErrorMessage(Problem problem) {
         if (problem == null) {
@@ -161,8 +166,7 @@ public class ProblemHelper {
             return new ControllerServiceUnavailableException(getErrorMessage(problem));
         default:
             // UnknownKey
-            if (problem.codeOrNull() != null && (UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string()) || UNKNOWN_PATH.equalsIgnoreCase(problem
-                    .codeOrNull().string()))) {
+            if (problem.codeOrNull() != null && Arrays.asList(UNKNOWN_KEY, UNKNOWN_PATH, UNKNOWN_ORDER).contains(problem.codeOrNull().string())) {
                 return new ControllerObjectNotExistException(problem.message());
             }
             return new JocBadRequestException(getErrorMessage(problem));
