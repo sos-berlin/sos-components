@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -46,6 +47,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.agent.SubagentDirectorType;
+import com.typesafe.config.ConfigFactory;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
@@ -53,6 +55,7 @@ import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.data_for_java.subagent.JSubagentItem;
+import js7.proxy.data.GroupAndProxyId;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
@@ -61,7 +64,7 @@ public class Proxies {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
-    private static JProxyContext proxyContext = new JProxyContext();
+    private static JProxyContext proxyContext = null;
     private volatile ConcurrentMap<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
@@ -77,7 +80,9 @@ public class Proxies {
             proxies = new Proxies();
         }
         if (proxyContext == null) {
-            proxyContext = new JProxyContext();
+            proxyContext = JProxyContext.start(Optional.of(GroupAndProxyId.of("JOC", Globals.getJocId())), ConfigFactory.empty())
+                    .join();
+            proxyContext.makeSingleton();
         }
         return proxies;
     }

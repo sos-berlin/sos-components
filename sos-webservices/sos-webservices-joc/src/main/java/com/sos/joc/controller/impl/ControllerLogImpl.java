@@ -72,7 +72,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             byte[] header = getHeader(dbItem, instantFrom, timeZone);
 
             JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines);
-            Flux<byte[]> flux = proxy.rawLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
+            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
                     .commonPool())).flatMapIterable(Function.identity()).takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));
 
             return responseOctetStreamDownloadStatus200(new FluxStreamingOutput(true, flux, header), targetFilename);

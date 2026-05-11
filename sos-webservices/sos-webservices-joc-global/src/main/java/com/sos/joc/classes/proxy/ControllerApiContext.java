@@ -3,15 +3,12 @@ package com.sos.joc.classes.proxy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 
-import js7.data.proxy.ProxyId;
 import js7.data_for_java.auth.JAdmission;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
@@ -36,16 +33,16 @@ public class ControllerApiContext {
         } else {
             admissions = Collections.singletonList(JAdmission.of(credentials.getUrl(), credentials.getAccount()));
         }
-        Optional<ProxyId> pId = Optional.empty();
+        JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
         if (ProxyUser.JOC.value().equals(credentials.getAccount())) {
-           pId = Optional.of(ProxyId.apply(Globals.getJocId() + "-" + credentials.getControllerId()));
+            api.setActive(ClusterWatch.jocIsActive());
+            LOGGER.info(String.format("ControllerApi: %s: %s for metrics", toString(credentials), (ClusterWatch.jocIsActive()
+                    ? "active" : "inactive")));
+        } else {
+            api.setActive(false);
         }
-        JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), pId);
-        api.setActive(pId.isPresent() && ClusterWatch.jocIsActive());
-        pId.map(id -> String.format("ControllerApi: %s, ProxyId (%s): %s for metrics", toString(credentials), id, (ClusterWatch.jocIsActive()
-                ? "active" : "inactive"))).ifPresent(LOGGER::info);
+        api.setActive(ProxyUser.JOC.value().equals(credentials.getAccount()) && ClusterWatch.jocIsActive());
         return api;
-        //return proxyContext.newControllerApi(admissions, credentials.getHttpsConfig(), Optional.empty());
     }
 
     protected static String toString(ProxyCredentials credentials) {
