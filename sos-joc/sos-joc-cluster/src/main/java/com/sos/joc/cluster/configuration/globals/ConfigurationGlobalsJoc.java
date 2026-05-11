@@ -26,7 +26,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
             "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of Controller object",
             "Rerun with parameter changes", "Change of external dependency", "Application deployment and upgrade");
-    
+
     private ConfigurationEntry forceCommentsForAuditLog = new ConfigurationEntry("force_comments_for_audit_log", "false",
             GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry commentsForAuditLog = new ConfigurationEntry("comments_for_audit_log", String.join(";", AUDIT_LOG_COMMENTS),
@@ -64,8 +64,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry showViewMonitor = new ConfigurationEntry("show_view_monitor", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewReport = new ConfigurationEntry("show_view_report", null, GlobalSettingsSectionValueType.BOOLEAN);
     // private ConfigurationEntry showViewJobstreams = new ConfigurationEntry("show_view_jobstreams", null, GlobalSettingsSectionValueType.BOOLEAN);
-    
-    private ConfigurationEntry displayFoldersInViews = new ConfigurationEntry("display_folders_in_views", "true", GlobalSettingsSectionValueType.BOOLEAN);
+
+    private ConfigurationEntry displayFoldersInViews = new ConfigurationEntry("display_folders_in_views", "true",
+            GlobalSettingsSectionValueType.BOOLEAN);
 
     // private Map<ShowViewName, ConfigurationEntry> showViews = EnumSet.allOf(ShowViewName.class).stream().collect(Collectors.toMap(s -> s,
     // s -> new ConfigurationEntry("show_view_" + s.name(), null, GlobalSettingsSectionValueType.BOOLEAN)));
@@ -84,29 +85,30 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     private ConfigurationEntry logMaxDisplaySize = new ConfigurationEntry("log_maximum_display_size", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    private ConfigurationEntry logApplicableSize = new ConfigurationEntry("log_applicable_size", "500",
+    private ConfigurationEntry logApplicableSize = new ConfigurationEntry("log_applicable_size", "50",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "1000", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+    private ConfigurationEntry logMaxSize = new ConfigurationEntry("log_maximum_size", "50", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
     // History - end
 
     private ConfigurationEntry jocReverseProxyUrl = new ConfigurationEntry("joc_reverse_proxy_url", null, GlobalSettingsSectionValueType.STRING);
 
     private ConfigurationEntry allowEmptyArguments = new ConfigurationEntry("allow_empty_arguments", "false", GlobalSettingsSectionValueType.BOOLEAN);
-    private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false", GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry allowUndeclaredVariables = new ConfigurationEntry("allow_undeclared_variables", "false",
+            GlobalSettingsSectionValueType.BOOLEAN);
 
-    //reporting: java options
+    // reporting: java options
     private ConfigurationEntry reportJavaOptions = new ConfigurationEntry("report_java_options", "-Xmx64M", GlobalSettingsSectionValueType.STRING);
 
-    //order tags instead orderId
+    // order tags instead orderId
     private ConfigurationEntry numOfTagsDisplayedAsOrderId = new ConfigurationEntry("num_of_tags_displayed_as_order_id", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    //display workflow tags
+    // display workflow tags
     private ConfigurationEntry numOfWOrkflowTagsDisplayed = new ConfigurationEntry("num_of_workflow_tags_displayed", "0",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-    
-    //role of 4-eyes principle
+
+    // role of 4-eyes principle
     private ConfigurationEntry approvalRequestorRole = new ConfigurationEntry("approval_requestor_role", "", GlobalSettingsSectionValueType.STRING);
-    
+
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -138,7 +140,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewMonitor.setOrdering(++index);
         showViewReport.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
-        
+
         displayFoldersInViews.setOrdering(++index);
 
         jocPwd.setOrdering(++index);
@@ -160,11 +162,11 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         allowEmptyArguments.setOrdering(++index);
         allowUndeclaredVariables.setOrdering(++index);
-        
+
         reportJavaOptions.setOrdering(++index);
         numOfTagsDisplayedAsOrderId.setOrdering(++index);
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
-        
+
         approvalRequestorRole.setOrdering(++index);
     }
 
@@ -317,27 +319,27 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     }
 
     public boolean getAllowUndeclaredVariables() {
-        if(allowUndeclaredVariables.getValue() == null) {
+        if (allowUndeclaredVariables.getValue() == null) {
             return allowUndeclaredVariables.getDefault().equalsIgnoreCase("true");
         }
         return allowUndeclaredVariables.getValue().equalsIgnoreCase("true");
     }
-    
+
     public boolean getDisplayFoldersInViews() {
-        if(displayFoldersInViews.getValue() == null) {
+        if (displayFoldersInViews.getValue() == null) {
             return displayFoldersInViews.getDefault().equalsIgnoreCase("true");
         }
         return displayFoldersInViews.getValue().equalsIgnoreCase("true");
     }
-    
+
     public ConfigurationEntry getReportJavaOptions() {
         return reportJavaOptions;
     }
-    
-//    public ConfigurationEntry getNumOfTagsDisplayedAsOrderId() {
-//        return numOfTagsDisplayedAsOrderId;
-//    }
-    
+
+    // public ConfigurationEntry getNumOfTagsDisplayedAsOrderId() {
+    // return numOfTagsDisplayedAsOrderId;
+    // }
+
     public Integer getNumOfTagsDisplayedAsOrderId() {
         try {
             return Integer.parseInt(numOfTagsDisplayedAsOrderId.getValue());
@@ -345,7 +347,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return 0; // default
         }
     }
-    
+
     public Integer getNumOfWorkflowTagsDisplayed() {
         try {
             return Integer.parseInt(numOfWOrkflowTagsDisplayed.getValue());
@@ -353,9 +355,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             return 0; // default
         }
     }
-    
+
     public ConfigurationEntry getApprovalRequestorRole() {
         return approvalRequestorRole;
     }
-    
+
 }
