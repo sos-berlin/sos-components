@@ -1,19 +1,20 @@
 package com.sos.joc.db.configuration;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.model.configuration.Profile;
 
 public class ConfigurationProfile extends Profile {
 
-    public ConfigurationProfile(String account, Date lastLogin) {
+    public ConfigurationProfile(String account, LocalDateTime lastLogin) {
         setAccount(account);
-        setLastLogin(lastLogin);
+        setLastLogin(SOSDate.toUtcDate(lastLogin));
     }
-    
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(getAccount()).toHashCode();
