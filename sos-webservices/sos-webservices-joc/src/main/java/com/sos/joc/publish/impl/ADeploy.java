@@ -306,7 +306,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
                             .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
                         List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = getCancelOrderFuture(controllerId, xAccessToken, orderFilter);
-                        CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenAccept(ccr -> {
+                        CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
                                     .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                             mappedFutures.putIfAbsent(true, Collections.emptyList());
@@ -432,7 +432,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
         Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                xAccessToken, false, false);
+                xAccessToken);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                 ordersPerController, xAccessToken);
         for (String controllerIdInstance : Proxies.getControllerDbInstances().keySet()) {

@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -90,7 +89,6 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.base.problem.Problem;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseResource {
@@ -180,7 +178,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             List<CompletableFuture<ControllerCommandResponse>> futures = cancelOrders(in, 
                     Stream.concat(schedulePaths.stream(), renamedOldSchedulePathsWithWorkflowNames.keySet().stream()).distinct().toList(), accessToken);
             
-            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenAccept(ccr -> {
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
                 Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
                         .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                 mappedFutures.putIfAbsent(true, Collections.emptyList());
@@ -767,57 +765,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return schedulePathsWithWorkflowNames;
     }
 
-    private void cancelOrdersForRenamedSchedules(String addOrdersDateFrom, Map<String, List<String>> schedulePathsWithWorkflowNames,
-            String xAccessToken) {
-        if (addOrdersDateFrom != null && !addOrdersDateFrom.isEmpty()) {
-            DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-            DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-            DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-            if ("now".equals(addOrdersDateFrom.toLowerCase())) {
-                SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
-                orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
-            } else {
-                orderFilter.setDailyPlanDateFrom(addOrdersDateFrom);
-            }
-            orderFilter.setSchedulePaths(new ArrayList<String>(schedulePathsWithWorkflowNames.keySet()));
-            if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-                try {
-                    Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                            xAccessToken, false, false);
-                    Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                            ordersPerController, xAccessToken, null, false, false);
-                    for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                        cancelOrderResponsePerController.getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)))
-                                .thenAccept(either -> {
-                                    if (either.isRight()) {
-                                        DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
-                                        localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
-                                        localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                                        localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-                                        try {
-                                            boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false);
-                                            if (!successful) {
-                                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                                LOGGER.warn("Order delete failed due to missing permission.");
-                                            }
-                                        } catch (SOSHibernateException e) {
-                                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                            LOGGER.warn("Order delete failed due to: ", e);
-                                        }
-                                    } else {
-                                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                        LOGGER.warn(ProblemHelper.getErrorMessage(either.getLeft()));
-                                    }
-                                });
-                    }
-
-                } catch (Exception e) {
-                    LOGGER.warn(e.getMessage());
-                }
-            }
-        }
-    }
-
     private static List<DailyPlanOrderStateText> getOrderStatesForFilter() {
         return Arrays.asList(DailyPlanOrderStateText.PLANNED, DailyPlanOrderStateText.SUBMITTED);
     }
@@ -844,14 +791,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
                 Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                        xAccessToken, false, false);
+                        xAccessToken);
                 Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                         ordersPerController, xAccessToken);
-                for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                    if (!cancelOrderResponsePerController.containsKey(controllerId)) {
-                        cancelOrderResponsePerController.put(controllerId, CompletableFuture.completedFuture(
-                                new ControllerCommandResponse(controllerId)));
-                    }
+                for (String controllerId : ordersPerController.keySet()) {
+                    cancelOrderResponsePerController.putIfAbsent(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
+                            controllerId)));
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
                             DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();

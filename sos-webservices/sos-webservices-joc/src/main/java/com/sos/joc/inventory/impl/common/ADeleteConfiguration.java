@@ -440,9 +440,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             
             try {
                 Map<String, List<DBItemDailyPlanOrder>> ordersPerController = 
-                        cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken, false, false);
-                Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = 
-                        cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
+                        cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter, xAccessToken);
+                Map<String, CompletableFuture<Either<Problem, Void>>> cancelOrderResponsePerController = Collections.emptyMap();
+                        //cancelOrderImpl.cancelOrders(ordersPerController, xAccessToken, null, false, false);
 
                 for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
                     if(!cancelOrderResponsePerController.containsKey(controllerId)) {
