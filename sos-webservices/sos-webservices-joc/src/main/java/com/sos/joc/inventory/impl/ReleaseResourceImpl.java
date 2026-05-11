@@ -138,6 +138,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - acquire semaphore a second time 
          * - call release again with postDeployReleasables (store)
          * - recreate orders 
+         */
         PublishSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
         LOGGER.debug("acquire semaphore from release with AT " + accessToken);
 
