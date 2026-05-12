@@ -279,7 +279,9 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                         getJocErrorWithPrintMetaInfoAndClear(LOGGER);
                         LOGGER.error(ccr.getControllerId(), ccr.getException().get());
                     }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-            EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+            if (!message.isEmpty()) {
+                EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+            }
         });
     }
 
