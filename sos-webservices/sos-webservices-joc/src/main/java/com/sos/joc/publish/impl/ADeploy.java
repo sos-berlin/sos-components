@@ -324,30 +324,30 @@ public abstract class ADeploy extends JOCResourceImpl {
                             SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                                     updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                             // call updateRepo command via ControllerApi for given controller
-                            SOSHibernateSession session2 = null;
+                            SOSHibernateSession sessionAfterCancel = null;
                             try {
-                                session2 = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
-                                StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(session2), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
+                                sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
+                                StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
                                         getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             } finally {
-                                Globals.disconnect(session2);
+                                Globals.disconnect(sessionAfterCancel);
                             }
                         });
                     } else {
                         SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                                 updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                         // call updateRepo command via ControllerApi for given controller
-                        SOSHibernateSession session2 = null;
+                        SOSHibernateSession sessionWithoutCancel = null;
                         try {
-                            session2 = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
-                            StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(session2), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
+                            sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy"); 
+                            StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
                                     getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         } finally {
-                            Globals.disconnect(session2);
+                            Globals.disconnect(sessionWithoutCancel);
                         }
                     }
                 }
