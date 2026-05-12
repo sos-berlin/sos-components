@@ -170,7 +170,7 @@ public class SMBJProviderUtils {
             } else {
                 if (selection.checkFileName(name) && selection.isValidFileType(info)) {
                     ProviderFile file = provider.createProviderFile(fullPath, info);
-                    if (selection.checkProviderFileMinMaxSize(file)) {
+                    if (selection.checkProviderFile(provider, file)) {
                         counterAdded++;
 
                         file.setIndex(counterAdded);

@@ -109,4 +109,22 @@ public class SOSShellTest {
     public void testJava() {
         LOGGER.info(SOSShell.getJavaHome());
     }
+
+    @Ignore
+    @Test
+    public void testByteSize() {
+        try {
+            LOGGER.info("[1]" + SOSShell.formatBytes(1));
+            LOGGER.info("[1_024]" + SOSShell.formatBytes(1024));
+            LOGGER.info("[1_500]" + SOSShell.formatBytes(1500));
+            LOGGER.info("[1_500_500]" + SOSShell.formatBytes(1_500_500));
+            LOGGER.info("[1_500_500_500]" + SOSShell.formatBytes(1_500_500_500));
+            LOGGER.info("[1.46 KB]" + SOSShell.parseByteSize("1.46 KB"));
+            LOGGER.info("[1.43mb]" + SOSShell.parseByteSize("1.43mb"));
+            LOGGER.info("[1,4 GB]" + SOSShell.parseByteSize("1,4 GB"));
+            LOGGER.info("[1mb 2kb]" + SOSShell.parseByteSize("1mb 2kb"));
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
 }

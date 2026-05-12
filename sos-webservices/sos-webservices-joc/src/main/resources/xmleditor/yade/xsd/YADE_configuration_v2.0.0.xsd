@@ -3043,10 +3043,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>This value is used as the socket timeout parameter, and also as the default connection timeout.</p>
                <p>A value of <em>0</em> (the default value) indicates <em>no timeout</em>.</p>
                <!---
-        includes/Duration-Values.xhtml will be included (see work.xsd)
+        includes/Duration-Seconds-Values.xhtml will be included (see work.xsd)
         -->
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -3059,7 +3059,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -4020,9 +4021,11 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 	  </xs:element>
     <!-- common SocketTimeout -->
-    <xs:element name="SocketTimeout" default="0s">
+    <xs:element name="SocketTimeout" default="0">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/SocketTimeout"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/SocketTimeout">
+                <Note include="Duration-Seconds-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -4034,9 +4037,15 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>Read Timeout	- Maximum time to wait for a response after the connection is established.</p>
                <p>If <em>0</em>, the system will wait indefinitely for a response (i.e., no timeout will be applied).</p>
-               <p> </p>
-               <p>	Possible values:
+               <!---
+        includes/Duration-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats (case-insensitive):
 			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                     </li>
                      <li>
                         <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
                      </li>
@@ -4045,7 +4054,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -5679,7 +5689,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>Sets the duration to wait between sending control connection keepalive messages when processing file upload or download.</p>
                <p>If zero is specified, any keep-alive message must not be sent.</p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (milliseconds), e.g.: <em>60000</em>
@@ -5695,7 +5705,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -10261,6 +10272,10 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="Polling" minOccurs="0"/>
 				        <xs:element ref="ResultSet" minOccurs="0"/>
 				        <xs:element ref="MaxFiles" minOccurs="0"/>
+                <xs:element ref="MinFileAge" minOccurs="0"/>
+                <xs:element ref="MaxFileAge" minOccurs="0"/>
+                <xs:element ref="MinFileSize" minOccurs="0"/>
+                <xs:element ref="MaxFileSize" minOccurs="0"/>
 				        <xs:element ref="CheckIntegrityHash" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
@@ -10335,6 +10350,244 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
+    <xs:element name="MinFileAge" type="DurationAbsIsoOrDaySecondsOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MinFileAge">
+                <Note include="Duration-AbsIso-Or-Days-Seconds-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the minimum last-modified age of files that are considered for transfer.</p>
+               <p>Files younger than this limit are skipped during file transfer.</p>
+               <!---
+        includes/Duration-Days-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats:</p>
+               <ul>
+                  <li>Relative duration (case-insensitive):
+            <ul>
+                        <li>
+                           <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;s</em> - seconds, e.g.: <em>30s</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;m</em> - minutes, e.g.: <em>1m</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;h</em> - hours, e.g.: <em>1h</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;d</em> - days, e.g.: <em>1d</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Composite relative values (space-separated):
+            <ul>
+                        <li>e.g.: <em>1m 30s</em>
+                        </li>
+                        <li>e.g.: <em>1d 2h 3m 4s</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Absolute timestamp (ISO-8601, UTC or with offset):
+            <ul>
+                        <li>
+                           <em>2026-05-12T14:30:00Z</em> (UTC, must use uppercase Z)</li>
+                        <li>
+                           <em>2026-05-12T14:30:00+02:00</em> (with timezone offset)</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MaxFileAge" type="DurationAbsIsoOrDaySecondsOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MaxFileAge">
+                <Note include="Duration-AbsIso-Or-Days-Seconds-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the maximum last-modified age of files that are considered for transfer.</p>
+               <p>Files older than this limit are skipped during file transfer.</p>
+               <!---
+        includes/Duration-Days-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats:</p>
+               <ul>
+                  <li>Relative duration (case-insensitive):
+            <ul>
+                        <li>
+                           <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;s</em> - seconds, e.g.: <em>30s</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;m</em> - minutes, e.g.: <em>1m</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;h</em> - hours, e.g.: <em>1h</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;d</em> - days, e.g.: <em>1d</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Composite relative values (space-separated):
+            <ul>
+                        <li>e.g.: <em>1m 30s</em>
+                        </li>
+                        <li>e.g.: <em>1d 2h 3m 4s</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Absolute timestamp (ISO-8601, UTC or with offset):
+            <ul>
+                        <li>
+                           <em>2026-05-12T14:30:00Z</em> (UTC, must use uppercase Z)</li>
+                        <li>
+                           <em>2026-05-12T14:30:00+02:00</em> (with timezone offset)</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MinFileSize" type="FileSizeOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MinFileSize">
+                <Note include="FileSize-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the minimum file size of files that are considered for transfer.</p>
+               <p>Files smaller than this limit will be ignored.</p>
+               <!---
+        includes/FileSize-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats (case-insensitive):
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (bytes), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;B</em> - file size in bytes, e.g.: <em>1B</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;KB</em> - file size in kilobytes, e.g.: <em>1KB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;MB</em> - file size in megabytes, e.g.: <em>1MB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;GB</em> - file size in gigabytes, e.g.: <em>1GB</em>
+                     </li>
+                  </ul>
+               </p>
+               <p/>
+               <p>Decimal values may use either dot or comma as separator:
+            <ul>
+                     <li>e.g.: <em>1.5GB</em> or <em>1,5GB</em>
+                     </li>
+                  </ul>
+		             </p>
+               <p/>
+               <p>Composite values (space-separated):
+            <ul>
+                     <li>e.g.: <em>1GB 200MB 5KB 10B</em>
+                     </li>
+                  </ul>
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MaxFileSize" type="FileSizeOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MaxFileSize">
+            <Note include="FileSize-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the maximum file size of files that are considered for transfer.</p>
+               <p>Files larger than this limit will be ignored.</p>
+               <!---
+        includes/FileSize-Values.xhtml will be included (see work.xsd)
+        -->
+               <p/>
+               <p>Allowed formats (case-insensitive):
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (bytes), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;B</em> - file size in bytes, e.g.: <em>1B</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;KB</em> - file size in kilobytes, e.g.: <em>1KB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;MB</em> - file size in megabytes, e.g.: <em>1MB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;GB</em> - file size in gigabytes, e.g.: <em>1GB</em>
+                     </li>
+                  </ul>
+               </p>
+               <p/>
+               <p>Decimal values may use either dot or comma as separator:
+            <ul>
+                     <li>e.g.: <em>1.5GB</em> or <em>1,5GB</em>
+                     </li>
+                  </ul>
+		             </p>
+               <p/>
+               <p>Composite values (space-separated):
+            <ul>
+                     <li>e.g.: <em>1GB 200MB 5KB 10B</em>
+                     </li>
+                  </ul>
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>		
+	  </xs:element>
 	  <!-- SourceFileOptions - CheckSteadyState -->
 	  <xs:element name="CheckSteadyState">
 		    <xs:annotation>
@@ -10407,7 +10660,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		of incoming files.
 		</p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -10420,7 +10673,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -10624,7 +10878,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>This parameter specifies the wait time before a new poll for files is carried out. </p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -10637,7 +10891,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -10673,7 +10928,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </ul>
 		             </p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (minutes), e.g.: <em>1</em>, <em>30</em>
@@ -10686,7 +10941,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1h 30m 30s</em>
                      </li>
@@ -13827,6 +14083,12 @@ A fragment is referenced via this attribute value by a transfer profile.
             <xs:pattern value="true|false|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="DurationAbsIsoOrDaySecondsOrVarType">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s, 1d 30m, 1d 20h 30m), ISO-8601 datetime or ${VAR} -->
+            <xs:pattern value="([0-9]+)|([0-9]+[smhd](\s+[0-9]+[smhd])*)|(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2}))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="DurationSecondsOrVarType">
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
@@ -13837,6 +14099,12 @@ A fragment is referenced via this attribute value by a transfer profile.
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (minutes)), duration formats (e.g., 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
             <xs:pattern value="([0-9]+)|(([0-9]+[mh](\s+[0-9]+[smh])*))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="FileSizeOrVarType">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (bytes)), file size formats (e.g., 1KB, 1mb 30kb, 1.5GB, 1,5GB), or ${VAR} -->
+            <xs:pattern value="([0-9]+)|(([0-9]+([.,][0-9]+)?)\s*([Gg][Bb]|[Mm][Bb]|[Kk][Bb]|[Bb])(\s+([0-9]+([.,][0-9]+)?)\s*([Gg][Bb]|[Mm][Bb]|[Kk][Bb]|[Bb]))*)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
     <!-- not used because GUI does not support showing values for union types(<xs:simpleType><xs:union memberTypes="VarType"><xs:simpleType><xs:restriction base="xs:int">...) or XSD 1.1 variables (<xs:variable ...) -->

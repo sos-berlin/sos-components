@@ -240,7 +240,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        selection = ProviderFileSelection.createIfNull(getLogger(), selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
                 return false;

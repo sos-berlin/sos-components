@@ -83,7 +83,7 @@ public class MonitorJMS extends AMonitor {
 
     private long getTimeToLive(String val) {
         try {
-            return SOSDate.resolveAge("ms", val);
+            return SOSDate.parseAge("ms", val);
         } catch (Throwable ex) {
             LOGGER.warn(ex.toString(), ex);
             return DEFAULT_TIME_TO_LIVE;

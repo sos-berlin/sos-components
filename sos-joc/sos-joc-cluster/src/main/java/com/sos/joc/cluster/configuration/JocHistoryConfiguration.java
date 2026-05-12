@@ -97,19 +97,19 @@ public class JocHistoryConfiguration implements Serializable {
             bufferTimeoutMaxTime = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_time").trim());
         }
         if (conf.getProperty("history_release_events_interval") != null) {
-            releaseEventsInterval = SOSDate.resolveAge("s", conf.getProperty("history_release_events_interval").trim());
+            releaseEventsInterval = SOSDate.parseAge("s", conf.getProperty("history_release_events_interval").trim());
         }
         if (conf.getProperty("history_cache_age") != null) {
-            cacheAge = SOSDate.resolveAge("s", conf.getProperty("history_cache_age").trim());
+            cacheAge = SOSDate.parseAge("s", conf.getProperty("history_cache_age").trim());
         }
         if (conf.getProperty("history_wait_interval_on_error") != null) {
-            waitIntervalOnError = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_on_error").trim());
+            waitIntervalOnError = SOSDate.parseAge("s", conf.getProperty("history_wait_interval_on_error").trim());
         }
         if (conf.getProperty("history_wait_interval_on_processing_error") != null) {
-            waitIntervalOnProcessingError = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_on_processing_error").trim());
+            waitIntervalOnProcessingError = SOSDate.parseAge("s", conf.getProperty("history_wait_interval_on_processing_error").trim());
         }
         if (conf.getProperty("history_wait_interval_stop_processing_on_errors") != null) {
-            waitIntervalStopProcessingOnErrors = SOSDate.resolveAge("s", conf.getProperty("history_wait_interval_stop_processing_on_errors").trim());
+            waitIntervalStopProcessingOnErrors = SOSDate.parseAge("s", conf.getProperty("history_wait_interval_stop_processing_on_errors").trim());
         }
         if (conf.getProperty("history_max_stop_processing_on_errors") != null) {
             maxStopProcessingOnErrors = Integer.parseInt(conf.getProperty("history_max_stop_processing_on_errors").trim());

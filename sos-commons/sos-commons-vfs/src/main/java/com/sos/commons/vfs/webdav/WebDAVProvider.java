@@ -36,7 +36,7 @@ public class WebDAVProvider extends HTTPProvider {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        selection = ProviderFileSelection.createIfNull(getLogger(), selection);
         String directory = selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory();
         try {
             List<ProviderFile> result = new ArrayList<>();

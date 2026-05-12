@@ -281,11 +281,17 @@ public class YADEClientBannerWriter {
         if (!sourceArgs.getMaxFiles().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFiles()));
         }
-        if (!sourceArgs.getMaxFileSize().isEmpty()) {
-            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFileSize()));
+        if (!sourceArgs.getMinFileAge().isEmpty()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMinFileAge()));
+        }
+        if (!sourceArgs.getMaxFileAge().isEmpty()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFileAge()));
         }
         if (!sourceArgs.getMinFileSize().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMinFileSize()));
+        }
+        if (!sourceArgs.getMaxFileSize().isEmpty()) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getMaxFileSize()));
         }
         if (sourceArgs.getPolling() != null) {
             if (sourceArgs.getPolling().getPollingServer().isTrue()) {

@@ -2,6 +2,9 @@ package com.sos.commons.vfs.commons.file.selection;
 
 import java.util.function.Function;
 
+import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 
 public class ProviderFileSelection {
@@ -12,8 +15,8 @@ public class ProviderFileSelection {
     /** Checks the allowed file type - regular, symbolic link. If not set - all file types allowed */
     private Function<Object, Boolean> fileTypeChecker;
 
-    public static ProviderFileSelection createIfNull(ProviderFileSelection selection) {
-        return selection == null ? new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().build()) : selection;
+    public static ProviderFileSelection createIfNull(ISOSLogger logger, ProviderFileSelection selection) {
+        return selection == null ? new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().build(logger)) : selection;
     }
 
     public ProviderFileSelection(ProviderFileSelectionConfig config) {
@@ -46,25 +49,17 @@ public class ProviderFileSelection {
         return true;
     }
 
-    public boolean checkProviderFileMinMaxSize(ProviderFile file) {
-        if (!checkProviderFileMaxSize(file)) {
+    public boolean checkProviderFile(AProvider<?, ?> provider, ProviderFile file) {
+        if (!checkProviderFileMinAge(provider, file)) {
             return false;
         }
-        if (!checkProviderFileMinSize(file)) {
+        if (!checkProviderFileMaxAge(provider, file)) {
             return false;
         }
-        return true;
-    }
-
-    public boolean checkProviderFileMaxSize(ProviderFile file) {
-        if (config.isFilterByMaxFileSizeEnabled() && file.getSize() > config.getMaxFileSize()) {
+        if (!checkProviderFileMinSize(provider, file)) {
             return false;
         }
-        return true;
-    }
-
-    public boolean checkProviderFileMinSize(ProviderFile file) {
-        if (config.isFilterByMinFileSizeEnabled() && file.getSize() < config.getMinFileSize()) {
+        if (!checkProviderFileMaxSize(provider, file)) {
             return false;
         }
         return true;
@@ -87,6 +82,66 @@ public class ProviderFileSelection {
 
     public ProviderFileSelectionResult getResult() {
         return result;
+    }
+
+    private boolean checkProviderFileMinAge(AProvider<?, ?> provider, ProviderFile file) {
+        Long fileAge = config.getMinFileAge();
+        if (fileAge != null && file.getLastModifiedMillis() > fileAge) {
+            String msg = String.format("%s[Selection][skip][%s][UTC]lastModified=%s > MinFileAge=%s", provider.getLogPrefix(), file.getFullPath(),
+                    file.getLastModifiedAsUTCString(), config.getFileAgeAsUTCString(fileAge));
+            if (config.isPolling()) {
+                config.getLogger().debug(msg);
+            } else {
+                config.getLogger().info(msg);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkProviderFileMaxAge(AProvider<?, ?> provider, ProviderFile file) {
+        Long fileAge = config.getMaxFileAge();
+        if (fileAge != null && file.getLastModifiedMillis() < fileAge) {
+            String msg = String.format("%s[Selection][skip][%s][UTC]lastModified=%s < MaxFileAge=%s", provider.getLogPrefix(), file.getFullPath(),
+                    file.getLastModifiedAsUTCString(), config.getFileAgeAsUTCString(fileAge));
+            if (config.isPolling()) {
+                config.getLogger().debug(msg);
+            } else {
+                config.getLogger().info(msg);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkProviderFileMinSize(AProvider<?, ?> provider, ProviderFile file) {
+        Long fileSize = config.getMinFileSize();
+        if (fileSize != null && file.getSize() < fileSize) {
+            String msg = String.format("%s[Selection][skip][%s]fileSize=%s (%s Bytes) < MinFileSize=%s (%s Bytes)", provider.getLogPrefix(), file
+                    .getFullPath(), SOSShell.formatBytes(file.getSize()), file.getSize(), config.getMinFileSizeConfigured(), fileSize);
+            if (config.isPolling()) {
+                config.getLogger().debug(msg);
+            } else {
+                config.getLogger().info(msg);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkProviderFileMaxSize(AProvider<?, ?> provider, ProviderFile file) {
+        Long fileSize = config.getMaxFileSize();
+        if (fileSize != null && file.getSize() > fileSize) {
+            String msg = String.format("%s[Selection][skip][%s]fileSize=%s (%s Bytes) > MaxFileSize=%s (%s Bytes)", provider.getLogPrefix(), file
+                    .getFullPath(), SOSShell.formatBytes(file.getSize()), file.getSize(), config.getMaxFileSizeConfigured(), fileSize);
+            if (config.isPolling()) {
+                config.getLogger().debug(msg);
+            } else {
+                config.getLogger().info(msg);
+            }
+            return false;
+        }
+        return true;
     }
 
 }

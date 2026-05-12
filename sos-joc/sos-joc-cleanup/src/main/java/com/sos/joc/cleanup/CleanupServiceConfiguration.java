@@ -287,12 +287,12 @@ public class CleanupServiceConfiguration {
                     }
 
                     if (this.configured.endsWith("s")) {
-                        seconds = SOSDate.resolveAge("s", this.configured).intValue();
+                        seconds = SOSDate.parseAge("s", this.configured).intValue();
                         if (seconds < 0) {
                             seconds = 0;
                         }
                     } else {
-                        minutes = SOSDate.resolveAge("m", this.configured).intValue();
+                        minutes = SOSDate.parseAge("m", this.configured).intValue();
                         if (minutes < 0) {
                             minutes = 0;
                         }

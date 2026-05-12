@@ -598,6 +598,18 @@ public class YADEXMLProfileHelper {
                 case "MaxFiles":
                     argsLoader.setIntegerArgumentValue(argsLoader.getSourceArgs().getMaxFiles(), n);
                     break;
+                case "MinFileAge":
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getMinFileAge(), n);
+                    break;
+                case "MaxFileAge":
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getMaxFileAge(), n);
+                    break;
+                case "MinFileSize":
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getMinFileSize(), n);
+                    break;
+                case "MaxFileSize":
+                    argsLoader.setStringArgumentValue(argsLoader.getSourceArgs().getMaxFileSize(), n);
+                    break;
                 case "CheckIntegrityHash":
                     parseSourceOptionCheckIntegrityHash(argsLoader, n);
                     break;

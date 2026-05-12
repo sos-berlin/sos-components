@@ -152,7 +152,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        selection = ProviderFileSelection.createIfNull(getLogger(), selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
                 return false;
@@ -431,24 +431,24 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     break;
 
                 case "soTimeout":// Default: 0
-                    t = SOSDate.resolveAge("ms", val).longValue();
+                    t = SOSDate.parseAge("ms", val).longValue();
                     builder.withSoTimeout(t, TimeUnit.MILLISECONDS);
                     break;
 
                 case "timeout":// Default: 60s, sets readTimeout, transactTimeout, writeTimeout
-                    t = SOSDate.resolveAge("ms", val).longValue();
+                    t = SOSDate.parseAge("ms", val).longValue();
                     builder.withTimeout(t, TimeUnit.MILLISECONDS);
                     break;
                 case "readTimeout":// Default: see timeout
-                    t = SOSDate.resolveAge("ms", val).longValue();
+                    t = SOSDate.parseAge("ms", val).longValue();
                     builder.withReadTimeout(t, TimeUnit.MILLISECONDS);
                     break;
                 case "transactTimeout":// Default: see timeout
-                    t = SOSDate.resolveAge("ms", val).longValue();
+                    t = SOSDate.parseAge("ms", val).longValue();
                     builder.withTransactTimeout(t, TimeUnit.MILLISECONDS);
                     break;
                 case "writeTimeout":// Default: see timeout
-                    t = SOSDate.resolveAge("ms", val).longValue();
+                    t = SOSDate.parseAge("ms", val).longValue();
                     builder.withWriteTimeout(t, TimeUnit.MILLISECONDS);
                     break;
 

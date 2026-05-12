@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -95,10 +96,14 @@ public class YADEArgumentsChecker {
         }
 
         if (ZeroByteTransfer.RELAXED.equals(sourceArgs.getZeroByteTransfer().getValue())) {
-            if (sourceArgs.getMinFileSize().getValue() == null || sourceArgs.getMinFileSize().getValue().longValue() <= 0L) {
-                logger.info("[%s][%s=1]ZeroByteTransfer.RELAXED is active, setting %s=1", YADESourceArguments.LABEL, sourceArgs.getMinFileSize()
-                        .getName(), sourceArgs.getMinFileSize().getName());
-                sourceArgs.getMinFileSize().setValue(Long.valueOf(1L));
+            try {
+                if (ProviderFileSelectionConfig.toFileSize(sourceArgs.getMinFileSize().getValue()) <= 0L) {
+                    logger.info("[%s][%s=1]ZeroByteTransfer.RELAXED is active, setting %s=1", YADESourceArguments.LABEL, sourceArgs.getMinFileSize()
+                            .getName(), sourceArgs.getMinFileSize().getName());
+                    sourceArgs.getMinFileSize().setValue("1");
+                }
+            } catch (Exception e) {
+                throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "]" + e.toString(), e);
             }
         }
 

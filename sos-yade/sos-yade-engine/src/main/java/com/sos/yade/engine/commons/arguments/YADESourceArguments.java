@@ -32,11 +32,12 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     private SOSArgument<String> fileSpec = new SOSArgument<>("FileSpec", false, "^.*$");
     // Max files
     private SOSArgument<Integer> maxFiles = new SOSArgument<>("MaxFiles", false);
-    // Max/Min age/size defined but not used in YADE 1 ------- */
-    // private SOSArgument<String> maxFileAge = new SOSArgument<>("max_file_age", false);
-    // private SOSArgument<String> minFileAge = new SOSArgument<>("min_file_age", false);
-    private SOSArgument<Long> maxFileSize = new SOSArgument<>("MaxFileSize", false);
-    private SOSArgument<Long> minFileSize = new SOSArgument<>("MinFileSize", false);
+    // e.g.: 1d 2h 3m or ISO-8601
+    private SOSArgument<String> minFileAge = new SOSArgument<>("MinFileAge", false);
+    private SOSArgument<String> maxFileAge = new SOSArgument<>("MaxFileAge", false);
+    // e.g.: 40MB, 4KB, 1GB 50MB
+    private SOSArgument<String> minFileSize = new SOSArgument<>("MinFileSize", false);
+    private SOSArgument<String> maxFileSize = new SOSArgument<>("MaxFileSize", false);
 
     /** - Steady state ------- */
     // YADE 1 private SOSArgument<Boolean> checkSteadyStateOfFiles = new SOSArgument<>("check_steady_state_of_files", false, Boolean.valueOf(false));
@@ -164,12 +165,20 @@ public class YADESourceArguments extends YADESourceTargetArguments {
         return maxFiles;
     }
 
-    public SOSArgument<Long> getMaxFileSize() {
-        return maxFileSize;
+    public SOSArgument<String> getMinFileAge() {
+        return minFileAge;
     }
 
-    public SOSArgument<Long> getMinFileSize() {
+    public SOSArgument<String> getMaxFileAge() {
+        return maxFileAge;
+    }
+
+    public SOSArgument<String> getMinFileSize() {
         return minFileSize;
+    }
+
+    public SOSArgument<String> getMaxFileSize() {
+        return maxFileSize;
     }
 
     public SOSArgument<Boolean> getRecursive() {

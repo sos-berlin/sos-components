@@ -119,7 +119,7 @@ public class AzureBlobStorageProviderUtils {
                                     .getFullPath());
                         }
                     } else {
-                        if (selection.checkProviderFileMinMaxSize(file)) {
+                        if (selection.checkProviderFile(provider, file)) {
                             counterAdded++;
 
                             file.setIndex(counterAdded);

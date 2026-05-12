@@ -343,7 +343,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     /** Provider (non-YADE) method */
     public List<ProviderFile> selectFiles(String directory) throws ProviderException {
-        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
+        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build(getLogger())));
     }
 
     public String getLabel() {

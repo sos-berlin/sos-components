@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -613,11 +614,45 @@ public class SOSDate {
         return input.plus(amountToAdd, unit);
     }
 
-    /** @param range e.g.: m - minutes,s -seconds, ms - milliseconds
-     * @param age , e.g.: 1w 2h 45s
-     * @return age in minutes, seconds or milliseconds
-     * @throws SOSInvalidDataException */
-    public static Long resolveAge(String range, String age) throws SOSInvalidDataException {
+    /** Parses a human-readable duration string into a numeric value in the requested target unit.
+     *
+     * <p>
+     * The input string may contain multiple time components separated by whitespace. Each component consists of a numeric value followed by a unit suffix.
+     *
+     * <p>
+     * Supported input units (case-insensitive):
+     * <ul>
+     * <li>{@code w} - weeks</li>
+     * <li>{@code d} - days</li>
+     * <li>{@code h} - hours</li>
+     * <li>{@code m} - minutes</li>
+     * <li>{@code s} - seconds</li>
+     * </ul>
+     *
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code "1w"} - 1 week</li>
+     * <li>{@code "2h 30m"} - 2 hours and 30 minutes</li>
+     * <li>{@code "45s"} - 45 seconds</li>
+     * </ul>
+     *
+     * <p>
+     * The {@code range} parameter defines the output unit:
+     * <ul>
+     * <li>{@code "ms"} - result in milliseconds</li>
+     * <li>{@code "s"} - result in seconds</li>
+     * <li>{@code "m"} (or default) - result in minutes</li>
+     * </ul>
+     *
+     * <p>
+     * All values are internally converted via milliseconds for consistent computation.
+     *
+     * @param range the target output unit (e.g. {@code "m"}, {@code "s"}, {@code "ms"})
+     * @param age the input duration string (e.g. {@code "1w 2h 45s"})
+     * @return the parsed duration in the requested unit
+     * @throws SOSInvalidDataException if the input is empty or contains invalid formats */
+    public static Long parseAge(String range, String age) throws SOSInvalidDataException {
         if (SOSString.isEmpty(age)) {
             throw new SOSInvalidDataException("age is empty");
         }
@@ -642,7 +677,7 @@ public class SOSDate {
         }
 
         Long result = Long.valueOf(0);
-        String[] parts = age.trim().toLowerCase().split(" ");
+        String[] parts = age.trim().toLowerCase(Locale.ROOT).split("\\s+");
         for (String part : parts) {
             if (!SOSString.isEmpty(part)) {
                 String numericalPart = part;
@@ -665,7 +700,7 @@ public class SOSDate {
                         break;
                     case "s":
                         if (range.equals("m")) {
-                            LOGGER.warn("[ignored][" + part + "]");
+                            LOGGER.warn("[range=" + range + ", age=" + age + "][ignored][" + part + "]");
                             continue;
                         }
                         result += multiplicatorMilliseconds * Long.parseLong(numericalPart);
@@ -683,8 +718,37 @@ public class SOSDate {
         return result;
     }
 
-    /** @param val, format: s, hh:mm:ss, hh:mm<br/>
-     *            e.g. 1, 00:00:05, 01:00 */
+    /** Converts a time string into a total number of seconds.
+     *
+     * <p>
+     * The input supports simple time formats separated by colons.
+     *
+     * <p>
+     * Supported formats:
+     * <ul>
+     * <li>{@code s} - seconds (e.g. {@code "1"})</li>
+     * <li>{@code mm:ss} - minutes and seconds (e.g. {@code "01:05"})</li>
+     * <li>{@code hh:mm:ss} - hours, minutes, seconds (e.g. {@code "01:02:03"})</li>
+     * <li>{@code d:hh:mm:ss} - days, hours, minutes, seconds (if provided)</li>
+     * </ul>
+     *
+     * <p>
+     * The method parses values from right to left and applies fixed multipliers for seconds, minutes, hours, and days.
+     *
+     * <p>
+     * Invalid or non-numeric parts are ignored silently.
+     *
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code "1"} - 1 second</li>
+     * <li>{@code "00:00:05"} - 5 seconds</li>
+     * <li>{@code "01:00"} - 60 seconds</li>
+     * <li>{@code "01:02:03"} - 3723 seconds</li>
+     * </ul>
+     *
+     * @param val time string in {@code s}, {@code mm:ss}, or {@code hh:mm:ss} format
+     * @return total time in seconds */
     public static long getTimeAsSeconds(String val) {
         if (SOSString.isEmpty(val)) {
             return 0L;

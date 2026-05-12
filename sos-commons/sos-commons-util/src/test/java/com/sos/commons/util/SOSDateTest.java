@@ -39,6 +39,17 @@ public class SOSDateTest {
 
     @Ignore
     @Test
+    public void testParseAge() throws Exception {
+        LOGGER.info("[m 1]" + SOSDate.parseAge("m", "1"));
+        LOGGER.info("[m 1s]" + SOSDate.parseAge("m", "1s"));
+        LOGGER.info("[s 1m]" + SOSDate.parseAge("s", "1m"));
+        LOGGER.info("[s 1]" + SOSDate.parseAge("s", "1"));
+        LOGGER.info("[ms 1]" + SOSDate.parseAge("ms", "1"));
+        LOGGER.info("[ms 1d]" + SOSDate.parseAge("ms", "1d"));
+    }
+
+    @Ignore
+    @Test
     public void testTimeZones() throws Exception {
         String timeZone = SOSDate.TIMEZONE_UTC;
         // timeZone = "Europe/Berlin";
