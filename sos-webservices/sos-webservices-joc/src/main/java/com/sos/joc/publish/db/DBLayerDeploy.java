@@ -129,6 +129,19 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemDeploymentHistory> getDeployedConfigurations(Collection<Long> inventoryConfigurationIds) throws SOSHibernateException {
+        StringBuilder sql = new StringBuilder();
+        sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        sql.append(" where inventoryConfigurationId in (:inventoryConfigurationIds)");
+        Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+        query.setParameter("inventoryConfigurationIds", inventoryConfigurationIds);
+        List<DBItemDeploymentHistory> results = session.getResultList(query);
+        if(results == null) {
+            return Collections.emptyList();
+        }
+        return results;
+    }
+
     public List<DBItemDeploymentHistory> getDeployedConfigurations(String name, Integer type) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {

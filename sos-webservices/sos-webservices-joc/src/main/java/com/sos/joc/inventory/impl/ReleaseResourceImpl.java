@@ -675,7 +675,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                 if (conf != null) {
-                    DBItemInventoryReleasedConfiguration releasedConf = dbLayer.getReleasedConfigurationByInvId(conf.getId());
+                    DBItemInventoryReleasedConfiguration releasedConf = dbLayer.getReleasedItemByConfigurationId(conf.getId());
                     if (releasedConf != null) {
                         if (ConfigurationType.SCHEDULE.equals(conf.getTypeAsEnum())) {
                             // only add if planOrderAutomatically = true
