@@ -192,8 +192,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
                     EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
                 }
-                
-                if (!mappedFutures.get(false).isEmpty()){
+                if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){
                     // alle gegebenen controllerIds
                     SOSHibernateSession futureSession = null;
                     try {
@@ -241,8 +240,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             });
             return errors;
-        } finally {
+        } catch(Throwable t) {
             releaseSemaphoreFinal(accessToken);
+            throw t;
         }
     }
     
