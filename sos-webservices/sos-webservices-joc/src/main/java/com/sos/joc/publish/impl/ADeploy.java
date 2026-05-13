@@ -422,10 +422,12 @@ public abstract class ADeploy extends JOCResourceImpl {
         }
     }
     
-    private List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFuture(String controllerId, String xAccessToken, DailyPlanOrderFilterDef orderFilter)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
-                DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
-        if(orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) {
+    private List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFuture(String controllerId, String xAccessToken,
+            DailyPlanOrderFilterDef orderFilter) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            SOSHibernateException, ExecutionException {
+        
+        if (orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) {
             return Collections.emptyList();
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
@@ -445,10 +447,13 @@ public abstract class ADeploy extends JOCResourceImpl {
                     DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
                     localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
                     localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                    localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
+                    boolean successful = true;
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
+                        if (!localOrderFilter.getWorkflowPaths().isEmpty()) {
+                            successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
+                        }
                         if (!successful) {
                             return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
                                     "Order delete failed due to missing permission.")));

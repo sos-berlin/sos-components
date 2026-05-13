@@ -206,29 +206,22 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("configIds", configIds);
             int affected =  getSession().executeUpdate(query);
             
-            try {
-                hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES);
-                hql.append(" where cid in (:configIds)");
-                query = getSession().createQuery(hql.toString());
-                query.setParameter("configIds", configIds);
-                getSession().executeUpdate(query);
-            } catch (Exception e) {
-                //
-            }
+//            try {
+//                hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES);
+//                hql.append(" where cid in (:configIds)");
+//                query = getSession().createQuery(hql.toString());
+//                query.setParameter("configIds", configIds);
+//                getSession().executeUpdate(query);
+//            } catch (Exception e) {
+//                //
+//            }
             
             return affected;
         }
     }
 
     public void deleteReleasedItemsAndNotesByInventoryId(List<Long> inventoryIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where cid in (:inventoryIds)");
-        Query<DBItemInventoryReleasedConfiguration> queryReleased = getSession().createQuery(hql.toString());
-        queryReleased.setParameter("inventoryIds", inventoryIds);
-        List<DBItemInventoryReleasedConfiguration> resultsReleased = queryReleased.getResultList();
-        if(resultsReleased == null) {
-            resultsReleased = Collections.emptyList();
-        }
+        List<DBItemInventoryReleasedConfiguration> resultsReleased = getReleasedItemByConfigurationIds(inventoryIds);
         resultsReleased.forEach(item -> {
             try {
                 getSession().delete(item);
@@ -237,7 +230,7 @@ public class InventoryDBLayer extends DBLayer {
             }
         });
 
-        hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_NOTES);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_NOTES);
         hql.append(" where cid in (:inventoryIds)");
         Query<DBItemInventoryNote> queryNotes = getSession().createQuery(hql.toString());
         queryNotes.setParameter("inventoryIds", inventoryIds);

@@ -644,7 +644,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
     }
 
-    private static void deleteReleasedObject(DBItemInventoryConfiguration conf, DBItemJocAuditLog dbAuditLog, InventoryDBLayer dbLayer,
+    public static void deleteReleasedObject(DBItemInventoryConfiguration conf, DBItemJocAuditLog dbAuditLog, InventoryDBLayer dbLayer,
             JocAuditObjectsLog auditLogObjectsLogging) throws SOSHibernateException {
         conf.setAuditLogId(dbAuditLog.getId());
         dbLayer.deleteReleasedItemsByConfigurationIds(Collections.singletonList(conf.getId()));
@@ -794,7 +794,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         xAccessToken);
                 Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                         ordersPerController, xAccessToken);
-                for (String controllerId : ordersPerController.keySet()) {
+                for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
                     cancelOrderResponsePerController.putIfAbsent(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
                             controllerId)));
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
@@ -803,11 +803,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
                             localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
                             localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                            boolean successful = true;
                             try {
                                 // TODO create Method to transfer a set of order objects to delete instead of a filter
-                                boolean successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
+                                if (!localOrderFilter.getSchedulePaths().isEmpty()) {
+                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false); 
+                                }
                                 if (!successful) {
-                                    return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException("Order delete failed due to missing permission.")));
+                                    return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
+                                            "Order delete failed due to missing permission.")));
                                 }
                             } catch (Exception e) {
                                 return new ControllerCommandResponse(controllerId, Optional.of(e));
