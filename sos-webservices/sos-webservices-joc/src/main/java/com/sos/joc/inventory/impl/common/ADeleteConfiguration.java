@@ -49,6 +49,8 @@ import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -83,16 +85,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(request);
-//            session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
-//            Globals.beginTransaction(session);
-            
             Predicate<RequestFilter> isFolder = r -> JocInventory.isFolder(r.getObjectType());
-//            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
-//                //throw new 
-//            }
-//            Set<DBItemDeploymentHistory> allDeployments = new HashSet<>();
+
             DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
             Set<String> foldersForEvent = new HashSet<>();
             List<Long> workflowInvIds = new ArrayList<>();
@@ -107,47 +102,60 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                 mappedFutures.putIfAbsent(true, Collections.emptyList());
                 mappedFutures.putIfAbsent(false, Collections.emptyList());
-                SOSHibernateSession futureSession = null;
-                try {
-                    InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
-
-                    futureDbLayer.deleteReleasedItemsAndNotesByInventoryId(released.stream().map(DBItemInventoryReleasedConfiguration::getCid)
-                            .collect(Collectors.toList()));
-                    for(DBItemInventoryReleasedConfiguration releasedItem : released) {
-                        DBItemInventoryConfiguration config = futureSession.get(DBItemInventoryConfiguration.class, releasedItem.getCid());
-                        // ReleaseResourceImpl.delete is transactional, was replaced by below code
-                        JocInventory.deleteInventoryConfigurationAndPutToTrash(config, futureDbLayer, ConfigurationType.FOLDER);
-                        DBLayerDependencies dependenciesDbLayer = new DBLayerDependencies(futureDbLayer.getSession());
-                        dependenciesDbLayer.deleteDependencies(config);
-                        auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), 
-                                futureSession, dbAuditLog));
-                        foldersForEvent.add(config.getFolder());
+                if(!mappedFutures.get(true).isEmpty()) {
+                    // contains futures with errors
+                    String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
+                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                        LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
+                    }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
+                    EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                }
+                if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){
+                    SOSHibernateSession futureSession = null;
+                    try {
+                        futureSession = Globals.createSosHibernateStatelessConnection(request + " - afterOrderDeletion");
+                        InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
+                        futureDbLayer.deleteReleasedItemsAndNotesByInventoryId(released.stream().map(DBItemInventoryReleasedConfiguration::getCid)
+                                .collect(Collectors.toList()));
+                        for(DBItemInventoryReleasedConfiguration releasedItem : released) {
+                            DBItemInventoryConfiguration config = futureSession.get(DBItemInventoryConfiguration.class, releasedItem.getCid());
+                            // ReleaseResourceImpl.delete is transactional, was replaced by below code
+                            config.setAuditLogId(dbAuditLog.getId());
+                            JocInventory.deleteInventoryConfigurationAndPutToTrash(config, futureDbLayer, ConfigurationType.FOLDER);
+                            DBLayerDependencies dependenciesDbLayer = new DBLayerDependencies(futureDbLayer.getSession());
+                            dependenciesDbLayer.deleteDependencies(config);
+                            auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), 
+                                    futureSession, dbAuditLog));
+                            foldersForEvent.add(config.getFolder());
+                        }
+                        String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
+                                .getConfigurationGlobalsJoc()) : getAccount();
+                        deployments.stream().map(DBItemDeploymentHistory::getFolder).forEach(folder -> foldersForEvent.add(folder));
+                        Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(deployments, new DBLayerDeploy(futureSession),
+                                account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
+                        // events
+                        auditLogObjectsLogging.log();
+                        workflowInvIds.addAll(deployedDeployables.stream().filter(i -> JocInventory.isWorkflow(i.getType())).map(
+                                DBItemInventoryConfiguration::getId).collect(Collectors.toList()));
+                        // post event: InventoryTaggingUpdated
+                        for (String folder: foldersForEvent) {
+                            JocInventory.postEvent(folder);
+                            JocInventory.postTrashEvent(folder);
+                        }
+                        if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
+                            InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(futureSession);
+                            dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
+                            // TODO post JocInventory::postJobTaggingEvent
+                        }
+                        // post events for updating workflows and fileordersources cunsomed by WorkflowRefs
+                        if (deployments != null) {
+                            JocInventory.postDeployHistoryEventWhenDeleted(deployments);
+                        }
+                    } catch (SOSHibernateException | ExecutionException e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
+                    } finally {
+                        Globals.disconnect(futureSession);
                     }
-                    String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
-                            .getConfigurationGlobalsJoc()) : getAccount();
-                    deployments.stream().map(DBItemDeploymentHistory::getFolder).forEach(folder -> foldersForEvent.add(folder));
-                    Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(deployments, new DBLayerDeploy(futureSession),
-                            account, accessToken, getJocError(), dbAuditLog.getId(), true, false, in.getCancelOrdersDateFrom());
-                    // events
-                    auditLogObjectsLogging.log();
-                    workflowInvIds.addAll(deployedDeployables.stream().filter(i -> JocInventory.isWorkflow(i.getType())).map(
-                            DBItemInventoryConfiguration::getId).collect(Collectors.toList()));
-                    // post event: InventoryTaggingUpdated
-                    for (String folder: foldersForEvent) {
-                        JocInventory.postEvent(folder);
-                        JocInventory.postTrashEvent(folder);
-                    }
-                    if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
-                        InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(futureSession);
-                        dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
-                        // TODO post JocInventory::postJobTaggingEvent
-                    }
-                    // post events for updating workflows and fileordersources cunsomed by WorkflowRefs
-                    if (deployments != null) {
-                        JocInventory.postDeployHistoryEventWhenDeleted(deployments);
-                    }
-                } catch (SOSHibernateException | ExecutionException e) {
-                    
                 }
             });
             
@@ -635,11 +643,13 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         controllerId)));
             }
             futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
+                
                 if (ccr.getException().isEmpty()) {
 //                    DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
 //                    localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
 //                    localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
 //                    localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                    
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
                         boolean successful = deleteOrdersImpl.deleteOrders(orderFilterReleased, xAccessToken, false, false);
