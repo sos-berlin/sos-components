@@ -779,7 +779,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
             if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
-                SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
             } else {
                 orderFilter.setDailyPlanDateFrom(filter.getAddOrdersDateFrom());

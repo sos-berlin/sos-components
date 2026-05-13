@@ -344,8 +344,12 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
         
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String dateFormatted = sdf.format(Date.from(Instant.now()));
+        String dateFormatted = cancelOrdersDateFrom;
+        
+        if (cancelOrdersDateFrom == null || cancelOrdersDateFrom.isBlank() || "now".equals(cancelOrdersDateFrom.toLowerCase())) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormatted = sdf.format(Date.from(Instant.now()));
+        }
 
         DailyPlanOrderFilterDef orderFilterDeployed = new DailyPlanOrderFilterDef();
         orderFilterDeployed.setDailyPlanDateFrom(dateFormatted);
