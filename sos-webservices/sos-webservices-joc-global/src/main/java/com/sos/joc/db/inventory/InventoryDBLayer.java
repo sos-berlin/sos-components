@@ -48,6 +48,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
@@ -155,6 +156,18 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getReleasedItemByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid in (:configIds)");
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("configIds", configIds);
+        List<DBItemInventoryReleasedConfiguration> results = getSession().getResultList(query);
+        if((results == null) ) {
+            return Collections.emptyList();
+        }
+        return results;
+    }
+
     public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Integer> types, String folder,
             boolean recursive, Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
@@ -193,18 +206,45 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("configIds", configIds);
             int affected =  getSession().executeUpdate(query);
             
-            try {
-                hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES);
-                hql.append(" where cid in (:configIds)");
-                query = getSession().createQuery(hql.toString());
-                query.setParameter("configIds", configIds);
-                getSession().executeUpdate(query);
-            } catch (Exception e) {
-                //
-            }
+//            try {
+//                hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_NOTES);
+//                hql.append(" where cid in (:configIds)");
+//                query = getSession().createQuery(hql.toString());
+//                query.setParameter("configIds", configIds);
+//                getSession().executeUpdate(query);
+//            } catch (Exception e) {
+//                //
+//            }
             
             return affected;
         }
+    }
+
+    public void deleteReleasedItemsAndNotesByInventoryId(List<Long> inventoryIds) throws SOSHibernateException {
+        List<DBItemInventoryReleasedConfiguration> resultsReleased = getReleasedItemByConfigurationIds(inventoryIds);
+        resultsReleased.forEach(item -> {
+            try {
+                getSession().delete(item);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
+        });
+
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_NOTES);
+        hql.append(" where cid in (:inventoryIds)");
+        Query<DBItemInventoryNote> queryNotes = getSession().createQuery(hql.toString());
+        queryNotes.setParameter("inventoryIds", inventoryIds);
+        List<DBItemInventoryNote> resultsNotes =  queryNotes.getResultList();
+        if(resultsNotes == null) {
+            resultsNotes = Collections.emptyList();
+        }
+        resultsNotes.forEach(item -> {
+            try {
+                getSession().delete(item);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
+        });
     }
 
     public <T> List<T> getReleasedItemPropertyByConfigurationId(Long configId, String propertyName) throws SOSHibernateException {
@@ -273,14 +313,6 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("name", name.toLowerCase());
         query.setMaxResults(1);
         query.setParameter("type", type.intValue());
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryReleasedConfiguration getReleasedConfigurationByInvId(Long cid) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where cid=:cid");
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("cid", cid);
         return getSession().getSingleResult(query);
     }
 

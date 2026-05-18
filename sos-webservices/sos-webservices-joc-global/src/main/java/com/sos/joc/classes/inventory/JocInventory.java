@@ -915,7 +915,7 @@ public class JocInventory {
         if (ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType())) {
             // Only released job templates are assigned to jobs.
             // If job template is renamed or moved then the assignment is missing
-            DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedConfigurationByInvId(item.getId());
+            DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(item.getId());
             if (releasedItem != null && ConfigurationType.JOBTEMPLATE.intValue().equals(item.getType()) && !item.getPath().equals(releasedItem
                     .getPath())) {
                 releasedItem.setFolder(item.getFolder());

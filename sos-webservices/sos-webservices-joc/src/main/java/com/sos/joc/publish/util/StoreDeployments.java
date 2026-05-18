@@ -133,6 +133,7 @@ public class StoreDeployments {
                             if (!redeploy) {
                                 toUpdate.setDeployed(true);
                             }
+
                             dbLayer.getSession().update(toUpdate);
                         }
                     } else {
@@ -228,6 +229,7 @@ public class StoreDeployments {
                 // after successful deployment, set enforce flag to false for related dependencies
                 PublishUtils.resetDependenciesEnforcementAfterPublish(optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
                         .collect(Collectors.toSet()), newHibernateSession);
+
             } else if (either.isLeft()) {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
@@ -236,8 +238,7 @@ public class StoreDeployments {
                 @SuppressWarnings("unused")
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer,
                         wsIdentifier);
-                // if not successful the objects and the related controllerId have to be stored
-                // in a submissions table for reprocessing
+
                 // dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
@@ -263,6 +264,7 @@ public class StoreDeployments {
         List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
         LOGGER.trace("JSON(s) rejected from controller: ");
         optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item.getContent()));
+
         for (DBItemDeploymentHistory optimistic : optimisticEntries) {
             optimistic.setErrorMessage(message);
             optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
