@@ -1,8 +1,6 @@
 {
     "advanced": {
-        "schedule": "2207-schedules",
-        "workflow": "2207-w",
-        "jobName": "Job-2",
+        "jobName": "MyJob",
         "jobNameExactMatch": true
     },
     "returnType": "SCHEDULE"

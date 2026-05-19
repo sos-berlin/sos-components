@@ -17,7 +17,7 @@ public class SearchResourceImplTest {
     @Test
     public void testPostSearch() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new SearchResourceImpl());
-        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.pgsql.xml");
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
         try {
             h.init();
 
