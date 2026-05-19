@@ -1,19 +1,9 @@
 {
-	"advanced": {
-		"agentName": "standaloneAgent",
-		"jobResourcesX": "*",
-		"includeScriptX": "*",
-		"jobTemplateX": "*",
-		"noticeBoardsX": "*",
-		"lockX": "*",
-		"envNameX": "*",
-		"envValueX": "*",
-		"argumentNameX": "*",
-		"argumentValueX": "*",
-		"jobScript": "echo",
-		"jobName": "job_2_d55f0f2d-75f2-49ad-8081-59dc07555cd0",
-		"jobNameExactMatch": true
-	},
-	"deployedOrReleased": true,
-	"returnType": "WORKFLOW"
+    "advanced": {
+        "schedule": "2207-schedules",
+        "workflow": "2207-w",
+        "jobName": "Job-2",
+        "jobNameExactMatch": true
+    },
+    "returnType": "SCHEDULE"
 }
