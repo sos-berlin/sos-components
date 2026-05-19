@@ -907,7 +907,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobName != null) {
             if (jobNameExactMatch) {
                 if (oracle == null) {
-                    query.setParameter("jobName", jobName.getParamValueForLike());
+                    query.setParameter("jobName", jobName.getParamValueForLike(true));
                 } else {
                     query.setParameter("jobName", jobName.value);
                 }
@@ -1574,7 +1574,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobName != null) {
             if (jobNameExactMatch) {
                 if (oracle == null) {
-                    query.setParameter("jobName", jobName.getParamValueForLike());
+                    query.setParameter("jobName", jobName.getParamValueForLike(true));
                 } else {
                     query.setParameter("jobName", jobName.value);
                 }
@@ -1867,7 +1867,11 @@ public class InventorySearchDBLayer extends DBLayer {
         private boolean usePercentsForLike = true;
 
         private String getParamValueForLike() {
-            String val = value.toLowerCase();
+            return getParamValueForLike(false);
+        }
+
+        private String getParamValueForLike(boolean exactMatch) {
+            String val = exactMatch ? value : value.toLowerCase();
             return usePercentsForLike ? "%" + val + "%" : val;
         }
     }
