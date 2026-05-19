@@ -207,7 +207,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
-                        updateDailyPlan("cancelOrders", orderIds, false);
+                        updateDailyPlan("cancelOrders", orderIds, true);
                         return new ControllerCommandResponse(controllerId);
                     } catch (Exception ex) {
                         return new ControllerCommandResponse(controllerId, Optional.of(ex));
