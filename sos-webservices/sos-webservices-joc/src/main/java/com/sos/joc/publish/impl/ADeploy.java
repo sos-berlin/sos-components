@@ -11,9 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -25,22 +27,36 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.PublishSemaphore;
+import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocNotImplementedException;
+import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -60,40 +76,39 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-
 public abstract class ADeploy extends JOCResourceImpl {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ADeploy.class);
     
     public static final String API_CALL = "./inventory/deployment/deploy";
+    private static final String SEMAPHORE_ID = "DEPLOY";
 
 
-    public void deploy(String xAccessToken,DeployFilter deployFilter, SOSHibernateSession hibernateSession, DBItemJocAuditLog dbAuditlog, 
+    public void deploy(String xAccessToken, DeployFilter deployFilter, SOSHibernateSession hibernateSession, DBItemJocAuditLog dbAuditlog,
             JocSecurityLevel secLvl, String apiCall) throws Exception {
         String account;
         if (JocSecurityLevel.HIGH.equals(secLvl)) {
             throw new JocNotImplementedException("This operation is not available for Security Level HIGH, use <import_deploy> instead.");
-        } else if(JocSecurityLevel.LOW.equals(secLvl)) {
-            account =  ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+        } else if (JocSecurityLevel.LOW.equals(secLvl)) {
+            account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
         } else {
             account = this.getAccount();
         }
-        if(account == null) {
+        if (account == null) {
             JocError error = new JocError("cannot determine account for signing.");
             throw new JocException(error);
         }
         if (PublishSemaphore.availablePermits(xAccessToken) == 1) {
             TimeUnit.MILLISECONDS.sleep(100);
         }
-        PublishSemaphore.tryAcquire(xAccessToken);
-        
-        Set<String> allowedControllerIds = Collections.emptySet();
-        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
-                getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+        LOGGER.debug("acquire semaphore from deploy with AT " + xAccessToken);
+        PublishSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
 
-        DBLayerDeploy dbLayer  = new DBLayerDeploy(hibernateSession);
+        Set<String> allowedControllerIds = Collections.emptySet();
+        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
+                availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+
+        DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
         // process filter
         Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
         List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
@@ -101,11 +116,11 @@ public abstract class ADeploy extends JOCResourceImpl {
         List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
         List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
         List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
-        
+
         List<Config> foldersToDelete = null;
         if (deployFilter.getDelete() != null) {
-            foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
-            .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+            foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                    .equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
             if (!(foldersToDelete.size() == 1 && "/".equals(foldersToDelete.get(0).getConfiguration().getPath()))) {
                 foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
             }
@@ -126,7 +141,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             }
             configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
         }
-        
+
         /*
          * get all objects from INV_CONFIGURATION with deployed = false
          * 
@@ -145,7 +160,8 @@ public abstract class ADeploy extends JOCResourceImpl {
             if (depHistoryDBItemsToStore == null) {
                 depHistoryDBItemsToStore = new ArrayList<DBItemDeploymentHistory>();
             }
-            depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain, dbLayer));
+            depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain,
+                    dbLayer));
         }
         /*
          * get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
@@ -156,8 +172,8 @@ public abstract class ADeploy extends JOCResourceImpl {
         if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
             depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream()
-                        .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
+                Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream().collect(Collectors.groupingBy(
+                        DBItemDeploymentHistory::getPath));
                 depHistoryDBItemsToDeployDelete = grouped.keySet().stream().map(item -> grouped.get(item).get(0)).collect(Collectors.toList());
             }
         }
@@ -170,7 +186,7 @@ public abstract class ADeploy extends JOCResourceImpl {
         if (depHistoryDBItemsToStore != null) {
             unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
         }
-        
+
         // set new versionId for first round (update items)
         final String commitId = UUID.randomUUID().toString();
 
@@ -180,10 +196,10 @@ public abstract class ADeploy extends JOCResourceImpl {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         }
-        
+
         final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
         List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
-        
+
         // store to selected controllers
         InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
         Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId = agentDbLayer.getAgentWithAliasesByControllerIds(controllerIds);
@@ -212,30 +228,29 @@ public abstract class ADeploy extends JOCResourceImpl {
                         .filter(draft -> canAdd(draft.getPath(), permittedFolders))
                         .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
                         .collect(Collectors.toList());
-                if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
-                    filteredUnsignedDrafts.stream()
-                        .filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
-                        .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
-                    filteredUnsignedDrafts.stream()
-                        .filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
-                        .forEach(item -> {
-                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
-                            try {
-                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-                                updateableAgentNamesFileOrderSources.add(update);
-                            } catch (Exception e) {}
-                        });
-                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                            commitId, account, filteredUnsignedDrafts, updateableAgentNames, keyPair, controllerId, hibernateSession));
+                if (filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
+                    filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue()).forEach(
+                            item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId,
+                                    item, controllerId)));
+                    filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue()).forEach(item -> {
+                        UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(
+                                agentsWithAliasesByControllerId, item, controllerId);
+                        try {
+                            ((FileOrderSource) item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                            updateableAgentNamesFileOrderSources.add(update);
+                        } catch (Exception e) {
+                        }
+                    });
+                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, filteredUnsignedDrafts, updateableAgentNames,
+                            keyPair, controllerId, hibernateSession));
                 }
             }
             // already deployed objects AgentName handling
             // all items will be signed or re-signed with current commitId
             if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 // filter regarding folder permissions
-                List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                        .filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(dbItem -> cloneToNew(dbItem))
-                        .peek(item -> {
+                List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream().filter(draft -> canAdd(draft.getPath(),
+                        permittedFolders)).map(dbItem -> cloneToNew(dbItem)).peek(item -> {
                             try {
                                 item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
                                         .getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
@@ -245,86 +260,92 @@ public abstract class ADeploy extends JOCResourceImpl {
                             }
                         }).collect(Collectors.toList());
                 if (!filteredUnsignedReDeployables.isEmpty()) {
-                    filteredUnsignedReDeployables.stream()
-                        .filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
-                        .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
-                    filteredUnsignedReDeployables.stream()
-                        .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
-                        .forEach(item -> {
-                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
-                            try {
-                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-                                updateableAgentNamesFileOrderSources.add(update);
-                            } catch (Exception e) {}
-                        });
-                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                            commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
+                    filteredUnsignedReDeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item
+                            .getType()))).forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(
+                                    agentsWithAliasesByControllerId, item, controllerId)));
+                    filteredUnsignedReDeployables.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item
+                            .getType()))).forEach(item -> {
+                                UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(
+                                        agentsWithAliasesByControllerId, item, controllerId);
+                                try {
+                                    ((FileOrderSource) item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                    updateableAgentNamesFileOrderSources.add(update);
+                                } catch (Exception e) {
+                                }
+                            });
+                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, filteredUnsignedReDeployables,
+                            updateableAgentNames, keyPair, controllerId, hibernateSession));
                 }
             }
-            // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-            Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = UpdateItemUtils
-                    .checkRenamingForUpdate(verifiedDeployables.keySet(), controllerId, dbLayer);
+            // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
+            Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = UpdateItemUtils.checkRenamingForUpdate(verifiedDeployables.keySet(),
+                    controllerId, dbLayer);
             if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
-                if (deployFilter.getAddOrdersDateFrom() != null ) {
-                    
-                    DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-                    DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+                if (deployFilter.getAddOrdersDateFrom() != null) {
+
                     DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
                     orderFilter.setControllerIds(Collections.singletonList(controllerId));
-                    if("now".equals(deployFilter.getAddOrdersDateFrom().toLowerCase())) {
+                    if ("now".equals(deployFilter.getAddOrdersDateFrom().toLowerCase())) {
                         SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
                         orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
                     } else {
                         orderFilter.setDailyPlanDateFrom(deployFilter.getAddOrdersDateFrom());
                     }
-                    orderFilter.setWorkflowPaths(
-                            verifiedDeployables.keySet().stream()
-                                .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                                .map(workflow -> workflow.getName()).collect(Collectors.toList())
-                        );
-                    orderFilter.getWorkflowPaths().addAll(
-                            renamedOriginalHistoryEntries.stream()
-                            .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                            .map(workflow -> workflow.getName()).collect(Collectors.toList())
-                        );
+                    orderFilter.setWorkflowPaths(verifiedDeployables.keySet().stream().filter(item -> item.getTypeAsEnum().equals(
+                            DeployType.WORKFLOW)).map(workflow -> workflow.getName()).collect(Collectors.toList()));
+                    orderFilter.getWorkflowPaths().addAll(renamedOriginalHistoryEntries.stream().filter(item -> item.getTypeAsEnum().equals(
+                            DeployType.WORKFLOW)).map(workflow -> workflow.getName()).collect(Collectors.toList()));
+                    PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getWorkflowNames).ifPresent(
+                            set -> orderFilter.getWorkflowPaths().removeAll(set));
+                    List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = getCancelOrderFuture(controllerId, xAccessToken,
+                            orderFilter);
+                    CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
+                        Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
+                                .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+                        mappedFutures.putIfAbsent(true, Collections.emptyList());
+                        mappedFutures.putIfAbsent(false, Collections.emptyList());
 
-                    if(orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
-                        try {
-                            CompletableFuture<Either<Problem, Void>> cancelOrderResponse =
-                                    cancelOrderImpl.cancelOrders(orderFilter, xAccessToken, false, false)
-                                    .getOrDefault(controllerId, CompletableFuture.supplyAsync(() -> Either.right(null)));
-                                cancelOrderResponse.thenAccept(either -> {
-                                    if(either.isRight()) {
-                                        try {
-                                            boolean successful = deleteOrdersImpl.deleteOrders(orderFilter, xAccessToken, false, false);
-                                            if (!successful) {
-                                                JocError je = getJocError();
-                                                if (je != null && je.printMetaInfo() != null) {
-                                                    LOGGER.info(je.printMetaInfo());
-                                                }
-                                                LOGGER.warn("Order delete failed due to missing permission.");
-                                            }
-                                        } catch (SOSHibernateException e) {
-                                            LOGGER.warn("delete of planned orders in db failed.", e.getMessage());
-                                        }
-                                    } else {
-                                        JocError je = getJocError();
-                                        if (je != null && je.printMetaInfo() != null) {
-                                            LOGGER.info(je.printMetaInfo());
-                                        }
-                                        LOGGER.warn("Order cancel failed due to missing permission.");
-                                    }
-                                });
-                        } catch (Exception e) {
-                            LOGGER.warn(e.getMessage());
+                        if (!mappedFutures.get(true).isEmpty()) {
+                            // contains futures with errors
+                            String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
+                                getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                                LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
+                            }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System
+                                    .lineSeparator()));
+                            EventBus.getInstance().post(new ProblemEvent(xAccessToken, null, message));
                         }
+
+                        SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
+                                updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                        // call updateRepo command via ControllerApi for given controller
+                        SOSHibernateSession sessionAfterCancel = null;
+                        try {
+                            sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders");
+                            StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries,
+                                    account, commitId, controllerId, getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(),
+                                    deployFilter.getIncludeLate());
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        } finally {
+                            Globals.disconnect(sessionAfterCancel);
+                        }
+                    });
+                } else {
+                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
+                            updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                    // call updateRepo command via ControllerApi for given controller
+                    SOSHibernateSession sessionWithoutCancel = null;
+                    try {
+                        sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy");
+                        StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec, renamedOriginalHistoryEntries,
+                                account, commitId, controllerId, getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(),
+                                deployFilter.getIncludeLate());
+                    } catch (Exception e) {
+                        throw new JocDeployException(e);
+                    } finally {
+                        Globals.disconnect(sessionWithoutCancel);
                     }
                 }
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
-                        updateableAgentNamesFileOrderSources, dbAuditlog.getId());
-                // call updateRepo command via ControllerApi for given controller
-                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                        getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
             }
         }
         // Delete from all known controllers
@@ -341,27 +362,24 @@ public abstract class ADeploy extends JOCResourceImpl {
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             // store history entries for delete operation optimistically
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                filteredDepHistoryItemsToDelete.addAll(depHistoryDBItemsToDeployDelete.stream()
-                        .filter(history -> canAdd(history.getPath(), permittedFolders))
-                        .collect(Collectors.toList()));
+                filteredDepHistoryItemsToDelete.addAll(depHistoryDBItemsToDeployDelete.stream().filter(history -> canAdd(history.getPath(),
+                        permittedFolders)).collect(Collectors.toList()));
             }
             if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                 // first filter for folder permissions
                 // second filter for not already deleted
                 // remember filtered items for later
-                filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
-                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders))
-                        .filter(item -> item.getControllerId().equals(controllerId) 
-                                && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                        .collect(Collectors.toList()));
+                filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream().filter(fromFolder -> canAdd(fromFolder.getPath(),
+                        permittedFolders)).filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType
+                                .fromValue(item.getOperation()))).collect(Collectors.toList()));
             }
-            Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
-                    .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+            Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream().collect(Collectors.groupingBy(
+                    fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
             // store history entries for delete operation optimistically
-            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account ,dbAuditlog.getId())));
-            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(false), commitIdForDelete, account ,dbAuditlog.getId())));
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, DeleteDeployments.storeNewDepHistoryEntries(
+                    dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account, dbAuditlog.getId())));
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, DeleteDeployments.storeNewDepHistoryEntries(
+                    dbLayer, allItemsToDelete.get(false), commitIdForDelete, account, dbAuditlog.getId())));
             itemsToDeletePerController.put(controllerId, filteredDepHistoryItemsToDelete);
         }
         // delete configurations optimistically from inventory
@@ -369,29 +387,75 @@ public abstract class ADeploy extends JOCResourceImpl {
         if (foldersToDelete != null) {
             folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
         }
-        DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, getAccessToken(), 
-                getJocError(), dbAuditlog.getId(), false);
+        DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, getAccessToken(), getJocError(), dbAuditlog.getId(),
+                false);
         // loop 2: send commands to controllers
         for (String controllerId : allowedControllerIds) {
             // call updateRepo command via Proxy of given controllers
-            if(itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
-                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream()
-                        .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-               if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
-                   UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), controllerId)
-                   .thenAccept(either -> {
-                       DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSources, xAccessToken, 
-                               getJocError(), deployFilter.getAddOrdersDateFrom(), allItemsToDelete.get(false), commitIdForDelete, 
-                               allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
-                   });
-               } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
-                   UpdateItemUtils.updateItemsDelete(commitIdForDelete, allItemsToDelete.get(false), controllerId).thenAccept(either -> {
-                       DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(),
-                               deployFilter.getAddOrdersDateFrom());
-                   });
-               }
+            if (itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
+                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream().collect(
+                        Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                if (allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), controllerId).thenAccept(
+                            either -> {
+                                DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSources, xAccessToken,
+                                        getJocError(), deployFilter.getAddOrdersDateFrom(), allItemsToDelete.get(false), commitIdForDelete,
+                                        allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+                            });
+                } else if (allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
+                    UpdateItemUtils.updateItemsDelete(commitIdForDelete, allItemsToDelete.get(false), controllerId).thenAccept(either -> {
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(),
+                                deployFilter.getAddOrdersDateFrom());
+                    });
+                }
             }
         }
+    }
+    
+    private List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFuture(String controllerId, String xAccessToken,
+            DailyPlanOrderFilterDef orderFilter) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            SOSHibernateException, ExecutionException {
+        
+        if (orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
+        DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+        DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
+                xAccessToken);
+        Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
+                ordersPerController, xAccessToken);
+        for (String controllerIdInstance : Proxies.getControllerDbInstances().keySet()) {
+            if (!cancelOrderResponsePerController.containsKey(controllerIdInstance)) {
+                cancelOrderResponsePerController.put(controllerIdInstance, CompletableFuture.completedFuture(new ControllerCommandResponse(
+                        controllerIdInstance)));
+            }
+            futures.add(cancelOrderResponsePerController.get(controllerIdInstance).thenApply(ccr -> {
+                if (ccr.getException().isEmpty()) {
+                    DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
+                    localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
+                    localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
+                    localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
+                    boolean successful = true;
+                    try {
+                        // TODO create Method to transfer a set of order objects to delete instead of a filter
+                        if (!localOrderFilter.getWorkflowPaths().isEmpty()) {
+                            successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
+                        }
+                        if (!successful) {
+                            return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
+                                    "Order delete failed due to missing permission.")));
+                        }
+                    } catch (Exception e) {
+                        return new ControllerCommandResponse(controllerId, Optional.of(e));
+                    }
+                }
+                return ccr;
+            }));
+        }
+        return futures;
     }
     
     private List<Configuration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {

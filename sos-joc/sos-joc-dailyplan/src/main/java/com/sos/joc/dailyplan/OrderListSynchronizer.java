@@ -395,11 +395,18 @@ public class OrderListSynchronizer {
         LOGGER.info(String.format("%s[stored]%s", lp, counter));
         return counter;
     }
+    
+    public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
+            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            DBOpenSessionException, DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
+        addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, date, withSubmit, durations, true);
+    }
 
     public void addPlannedOrderToControllerAndDB(StartupMode startupMode, String operation, String controllerId, String date, Boolean withSubmit,
-            Map<String, Long> durations) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
-            DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
+            Map<String, Long> durations, boolean cleanupOldOrders) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            DBOpenSessionException, DBInvalidDataException, ExecutionException, JsonProcessingException, ParseException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = "addPlannedOrderToControllerAndDB";
@@ -425,84 +432,92 @@ public class OrderListSynchronizer {
                 Globals.disconnect(session);
             }
             final boolean log2serviceFile = true;// !StartupMode.manual.equals(startupMode);
-            CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, orders);
-            c.thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                if (either.isRight()) {
-                    if (log2serviceFile) {
-                        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
-                    }
-                    SOSHibernateSession session4delete = null;
-                    try {
-                        session4delete = Globals.createSosHibernateStatelessConnection(method + "-" + date);
-                        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
-
-                        Set<Long> oldSubmissionIds = new HashSet<>();
-                        Set<String> cyclicMainParts = new HashSet<>();
-                        for (DBItemDailyPlanOrder item : orders) {
-                            if (!oldSubmissionIds.contains(item.getSubmissionHistoryId())) {
-                                oldSubmissionIds.add(item.getSubmissionHistoryId());
-                            }
-                            if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
-                                dbLayer.deleteSingleCascading(item);
-                                try {
-                                    OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
-                                } catch (Exception e) {
-                                    LOGGER.error("", e);
-                                }
-                            } else {
-                                String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
-                                if (!cyclicMainParts.contains(mainPart)) {
-                                    cyclicMainParts.add(mainPart);
-                                }
-                                try {
-                                    session4delete.delete(item);
-                                } catch (SOSHibernateObjectOperationStaleStateException e1) {
-                                    LOGGER.warn("", e1);
-                                }
-                                try {
-                                    OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
-                                } catch (Exception e) {
-                                    LOGGER.error("", e);
-                                }
-                            }
+            if (cleanupOldOrders) {
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, orders);
+                c.thenAccept(either -> {
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                    if (either.isRight()) {
+                        if (log2serviceFile) {
+                            JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                         }
-                        
-                        // delete cyclic variables when all cyclic orders deleted
-                        for (String cyclicMainPart : cyclicMainParts) {
-                            //if (dbLayer.getCountCyclicOrdersByMainPart(controllerId, cyclicMainPart) == 0L) {
+                        SOSHibernateSession session4delete = null;
+                        try {
+                            session4delete = Globals.createSosHibernateStatelessConnection(method + "-" + date);
+                            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
+
+                            Set<Long> oldSubmissionIds = new HashSet<>();
+                            Set<String> cyclicMainParts = new HashSet<>();
+                            for (DBItemDailyPlanOrder item : orders) {
+                                if (!oldSubmissionIds.contains(item.getSubmissionHistoryId())) {
+                                    oldSubmissionIds.add(item.getSubmissionHistoryId());
+                                }
+                                if (item.getStartMode().equals(DBLayerDailyPlannedOrders.START_MODE_SINGLE)) {
+                                    dbLayer.deleteSingleCascading(item);
+                                    try {
+                                        OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
+                                    } catch (Exception e) {
+                                        LOGGER.error("", e);
+                                    }
+                                } else {
+                                    String mainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
+                                    if (!cyclicMainParts.contains(mainPart)) {
+                                        cyclicMainParts.add(mainPart);
+                                    }
+                                    try {
+                                        session4delete.delete(item);
+                                    } catch (SOSHibernateObjectOperationStaleStateException e1) {
+                                        LOGGER.warn("", e1);
+                                    }
+                                    try {
+                                        OrderTags.deleteTagsOfOrder(controllerId, item.getOrderId(), session4delete);
+                                    } catch (Exception e) {
+                                        LOGGER.error("", e);
+                                    }
+                                }
+                            }
+                            
+                            // delete cyclic variables when all cyclic orders deleted
+                            for (String cyclicMainPart : cyclicMainParts) {
                                 dbLayer.deleteVariablesByCyclicMainPart(controllerId, cyclicMainPart);
-                            //}
-                        }
-                        
-                        // delete submissions with 0 orders
-                        for (Long submissionId : oldSubmissionIds) {
-                            Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
-                            if (count == null || count.equals(0L)) {
-                                try {
-                                    dbLayer.deleteSubmission(controllerId, submissionId);
-                                } catch (Exception e) {
-                                    LOGGER.error("", e);
+                            }
+                            
+                            // delete submissions with 0 orders
+                            for (Long submissionId : oldSubmissionIds) {
+                                Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, submissionId);
+                                if (count == null || count.equals(0L)) {
+                                    try {
+                                        dbLayer.deleteSubmission(controllerId, submissionId);
+                                    } catch (Exception e) {
+                                        LOGGER.error("", e);
+                                    }
                                 }
                             }
-                        }
 
-                        executeStore(startupMode, operation, controllerId, date, durations);
-                        if (withSubmit == null || withSubmit) {
-                            submitOrdersToController(startupMode, controllerId, date);
-                        } else {
-                            if (isDebugEnabled) {
-                                LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
+                            executeStore(startupMode, operation, controllerId, date, durations);
+                            if (withSubmit == null || withSubmit) {
+                                submitOrdersToController(startupMode, controllerId, date);
+                            } else {
+                                if (isDebugEnabled) {
+                                    LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
+                                }
                             }
+                        } catch (Exception e) {
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(session4delete);
                         }
-                    } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
-                    } finally {
-                        Globals.disconnect(session4delete);
+                    }
+                });
+            } else {
+                executeStore(startupMode, operation, controllerId, date, durations);
+                if (withSubmit == null || withSubmit) {
+                    submitOrdersToController(startupMode, controllerId, date);
+                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("%s[skip]withSubmit=%s", lp, withSubmit));
                     }
                 }
-            });
-
+            }
         } else {
             executeStore(startupMode, operation, controllerId, date, durations);
             if (withSubmit == null || withSubmit) {

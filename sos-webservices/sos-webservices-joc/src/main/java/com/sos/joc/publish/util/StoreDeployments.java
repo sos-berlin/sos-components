@@ -32,6 +32,7 @@ import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.PublishSemaphore;
+import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -82,6 +83,7 @@ public class StoreDeployments {
             });
     public static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
     public static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
+    private static final String SEMAPHORE_ID = "DEPLOY";
 
     public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec, String account, String commitId, String controllerId,
             String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
@@ -181,15 +183,18 @@ public class StoreDeployments {
                 // cleanup stored commitIds
                 dbLayer.cleanupCommitIds(commitId);
                 // create new (daily) planned orders
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 if (dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
-                    List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                    List<String> schedulePathsWithSubmit = new ArrayList<String>();
-                    List<String> schedulePathsWithoutSubmit = new ArrayList<String>();
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
+                    PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
+                    .ifPresent(set -> workflowNames.removeAll(set));
                     // get the schedules referencing these workflows
+                    List<String> workflowsWithSubmit = new ArrayList<String>();
+                    List<String> workflowsWithoutSubmit = new ArrayList<String>();
+                    
                     for (String workflowName : workflowNames) {
                         List<DBItemInventoryReleasedConfiguration> scheduleDbItems = invDbLayer.getUsedReleasedSchedulesByWorkflowName(workflowName);
                         for (DBItemInventoryReleasedConfiguration scheduleDbItem : scheduleDbItems) {
@@ -197,22 +202,22 @@ public class StoreDeployments {
                             // check planOrderAutomatically of the schedule first
                             if (schedule.getPlanOrderAutomatically()) {
                                 if (schedule.getSubmitOrderToControllerWhenPlanned()) {
-                                    schedulePathsWithSubmit.add(scheduleDbItem.getPath());
+                                    workflowsWithSubmit.add(workflowName);
                                 } else {
-                                    schedulePathsWithoutSubmit.add(scheduleDbItem.getPath());
+                                    workflowsWithoutSubmit.add(workflowName);
                                 }
                             }
                         }
                     }
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
-                    if (!schedulePathsWithSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithSubmit, controllerId,
+                    if (!workflowsWithSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithSubmit, null, controllerId,
                                 true, allowedDailyPlanDates));
                     }
-                    if (!schedulePathsWithoutSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, null, schedulePathsWithoutSubmit,
-                                controllerId, false, allowedDailyPlanDates));
+                    if (!workflowsWithoutSubmit.isEmpty()) {
+                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
+                                false, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, ADeploy.API_CALL);
@@ -227,9 +232,6 @@ public class StoreDeployments {
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer, wsIdentifier);
-                // if not successful the objects and the related controllerId have to be stored
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
@@ -238,7 +240,11 @@ public class StoreDeployments {
             Globals.disconnect(newHibernateSession);
             try {
                 PublishSemaphore.release(accessToken);
-                PublishSemaphore.remove(accessToken);
+                if(PublishSemaphore.getInstance().getSemaphore(accessToken)
+                        .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                    PublishSemaphore.remove(accessToken);
+                    LOGGER.debug("final remove semaphore from deploy with AT " + accessToken);
+                }
             } catch (Exception e) {
                 // DO NOTHING if semaphore release failed
             }
@@ -278,7 +284,6 @@ public class StoreDeployments {
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String dailyPlanDate,
             boolean includeLate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically

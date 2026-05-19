@@ -8,7 +8,15 @@ public class JocReleaseException extends JocException {
     private static final String ERROR_CODE = "JOC-415";
 
     public JocReleaseException(ConfigurationType type, String path, Throwable cause) {
-        super(new JocError(ERROR_CODE, String.format("[%s path=%s]%s", type, path, cause.getMessage())), cause);
+        super(new JocError(ERROR_CODE, String.format("[%s path=%s] %s", type, path, cause.getMessage())), cause);
+    }
+
+    public JocReleaseException(ConfigurationType type, String path, String message) {
+        super(new JocError(ERROR_CODE, String.format("[%s path=%s] %s", type, path, message)));
+    }
+
+    public JocReleaseException(String message) {
+        super(new JocError(ERROR_CODE, message));
     }
 
 }
