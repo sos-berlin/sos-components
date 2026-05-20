@@ -20,9 +20,9 @@ public class SOSHibernateLikePatterns {
      * <ul>
      * <li>{@code \} - {@code \\} (escaped backslash)</li>
      * <li>{@code _} - {@code \_} (escaped literal underscore)</li>
+     * <li>{@code %} - {@code \%} (escaped literal percent sign)</li>
      * <li>{@code *} - {@code %} (SQL wildcard)</li>
      * <li>{@code ?} - {@code _} (single character wildcard)</li>
-     * 
      * </ul>
      *
      * <h2>Usage</h2>
@@ -53,6 +53,7 @@ public class SOSHibernateLikePatterns {
 
         return glob.replace("\\", "\\\\")  // escape backslash
                 .replace("_", "\\_") // // make SQL LIKE underscore literal instead of wildcard
+                .replace("%", "\\%") // // make SQL LIKE percent sign literal instead of wildcard
                 .replace("*", "%") // glob wildcard to SQL wildcard
                 .replace("?", "_"); // single-char wildcard to SQL wildcard
 
