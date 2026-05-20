@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
+import com.sos.commons.hibernate.function.like.SOSHibernateLike;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
@@ -359,6 +360,7 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonExists.NAME, new SOSHibernateJsonExists(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
+            configuration.addSqlFunction(SOSHibernateLike.NAME, new SOSHibernateLike());
         }
     }
 
