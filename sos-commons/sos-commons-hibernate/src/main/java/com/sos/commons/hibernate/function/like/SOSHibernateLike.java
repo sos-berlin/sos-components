@@ -35,11 +35,11 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
  *
  * <h2>Expected parameter format</h2> The second argument must already be escaped:
  * <ul>
- * <li>{@code *} - {@code %}</li>
- * <li>{@code ?} - {@code _}</li>
- * <li>{@code %} - {@code \%}</li>
- * <li>{@code _} - {@code \_}</li>
- * <li>{@code \} - {@code \\}</li>
+ * <li>{@code \} - {@code \\} (escaped backslash)</li>
+ * <li>{@code _} - {@code \_} (escaped literal underscore)</li>
+ * <li>{@code %} - {@code \%} (escaped literal percent sign)</li>
+ * <li>{@code *} - {@code %} (SQL wildcard)</li>
+ * <li>{@code ?} - {@code _} (single character wildcard)</li>
  * </ul>
  *
  * <h2>SQL generation</h2>
