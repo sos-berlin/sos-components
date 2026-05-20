@@ -360,7 +360,7 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonExists.NAME, new SOSHibernateJsonExists(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
             configuration.addSqlFunction(SOSHibernateSecondsDiff.NAME, new SOSHibernateSecondsDiff(this));
-            configuration.addSqlFunction(SOSHibernateLike.NAME, new SOSHibernateLike());
+            configuration.addSqlFunction(SOSHibernateLike.NAME, new SOSHibernateLike(this));
         }
     }
 
