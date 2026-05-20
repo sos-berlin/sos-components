@@ -10,6 +10,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
 
+import com.sos.commons.hibernate.SOSHibernateFactory;
+
 /** Hibernate SQL function that implements a portable LIKE expression with explicit ESCAPE handling.
  *
  * <p>
@@ -65,8 +67,11 @@ public class SOSHibernateLike extends StandardSQLFunction {
 
     public static final String NAME = "SOS_LIKE";
 
-    public SOSHibernateLike() {
+    private SOSHibernateFactory factory;
+
+    public SOSHibernateLike(SOSHibernateFactory factory) {
         super(NAME, StandardBasicTypes.BOOLEAN);
+        this.factory = factory;
     }
 
     @Override
@@ -78,6 +83,14 @@ public class SOSHibernateLike extends StandardSQLFunction {
         arguments.get(0).accept(translator);
         sqlAppender.appendSql(" like ");
         arguments.get(1).accept(translator);
-        sqlAppender.appendSql(" escape '\\'");
+        switch (this.factory.getDbms()) {
+        case H2:
+        case MYSQL:
+            sqlAppender.appendSql(" escape '\\\\'");
+            break;
+        default:
+            sqlAppender.appendSql(" escape '\\'");
+            break;
+        }
     }
 }
