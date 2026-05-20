@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+
 public class SearchStringHelper {
     
     public static boolean isGlobPattern(String s) {
@@ -11,7 +13,8 @@ public class SearchStringHelper {
     }
 
     public static String globToSqlPattern(String s) {
-        return s.replace('*', '%').replace('?', '_');
+        //return s.replace('*', '%').replace('?', '_');
+        return SOSHibernateLikePatterns.globToSqlLike(s);
     }
 
     public static String getSearchOperator(String s) {

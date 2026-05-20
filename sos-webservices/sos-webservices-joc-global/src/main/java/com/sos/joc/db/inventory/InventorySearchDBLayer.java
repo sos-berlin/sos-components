@@ -95,12 +95,12 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            whereClause.add("lower(name) like :search");
+            whereClause.add("sos_like(lower(name), :search)");
         }
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
-
+        
         Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
         if (types != null && !types.isEmpty()) {
             if (types.size() > 1) {
@@ -124,7 +124,7 @@ public class InventorySearchDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where type=:type");
         if (!SOSString.isEmpty(search) && !search.equals(FIND_ALL)) {
-            hql.append(" and lower(name) like :search");
+            hql.append(" and sos_like(lower(name), :search) ");
         }
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -197,7 +197,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            hql.append("and (sos_like(lower(mt.name), :search) or sos_like(lower(mt.title), :search)) ");
         }
         if (onlyUnDeployedUnReleaseObjects) {
             if (isReleasable) {
@@ -297,7 +297,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            hql.append("and (sos_like(lower(mt.name), :search) or sos_like(lower(mt.title), :search)) ");
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -431,7 +431,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            hql.append("and (sos_like(lower(mt.name), :search) or sos_like(lower(mt.title), :search)) ");
         }
         if (onlyUnDeployedUnReleaseObjects) {
             if (isReleasable) {
@@ -515,12 +515,12 @@ public class InventorySearchDBLayer extends DBLayer {
                     }
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        hql.append(add).append(" sos_like(lower(subt.scheduleName), :schedule) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -531,7 +531,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 }
                 if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                     fileOrderSource = advanced.getFileOrderSource();
-                    hql.append("and lower(subti.name) like :fileOrderSource ");
+                    hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                 }
                 hql.append(") ");
             }
@@ -596,18 +596,18 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
                         hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.jsonContent", "$.workflowName")).append(
                                 "=subt.workflowName").append(" ");
-                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        hql.append(add).append(" sos_like(lower(subt.workflowName), :workflow) ");
                         add = "and";
                     }
 
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        hql.append(add).append(" sos_like(lower(subt.scheduleName), :schedule) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -650,12 +650,12 @@ public class InventorySearchDBLayer extends DBLayer {
                         add = "and";
                     }
                     if (workflow != null) {
-                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        hql.append(add).append(" sos_like(lower(subt.workflowName), :workflow) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -665,7 +665,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
-                        hql.append(add).append(" lower(subti.name) like :fileOrderSource ");
+                        hql.append(add).append(" sos_like(lower(subti.name), :fileOrderSource) ");
                         add = "and";
                     }
                     hql.append(") ");
@@ -688,15 +688,15 @@ public class InventorySearchDBLayer extends DBLayer {
                                 "=subt.workflowName").append(" ");
                     }
                     if (workflow != null) {
-                        hql.append("and lower(subt.workflowName) like :workflow ");
+                        hql.append("and sos_like(lower(subt.workflowName), :workflow) ");
                     }
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append("and lower(subt.scheduleName) like :schedule ");
+                        hql.append("and sos_like(lower(subt.scheduleName), :schedule) ");
                     }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                     hql.append(") ");
                 }
@@ -727,12 +727,12 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.jsonContent", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (workflow != null) {
-                        hql.append(" and lower(subt.workflowName) like :workflow ");
+                        hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                     }
                     if (selectCalendar) {
                         hql.append(" and subt.scheduleName=subtc.scheduleName ");
                         if (calendar != null) {
-                            hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                            hql.append(" and  sos_like(lower(subtc.calendarName), :calendar) ");
                         }
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -745,7 +745,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     if (workflow != null) {
                         hql.append(" where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent",
                                 "$.workflowName"));
-                        hql.append(" and lower(ic.name) like :workflow ");
+                        hql.append(" and sos_like(lower(ic.name), :workflow) ");
                     } else {
                         hql.append(" where 1=1 ");
                     }
@@ -769,13 +769,13 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.jsonContent", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (fileOrderSource != null) {
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                 }
                 if (selectCalendar) {
                     hql.append(" and subt.scheduleName=subtc.scheduleName ");
                     if (calendar != null) {
-                        hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                        hql.append(" and  sos_like(lower(subtc.calendarName), :calendar) ");
                     }
                 }
                 if (selectCalendarOfSpecificType != null) {
@@ -783,7 +783,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append(" and subtic.name=subtc.calendarName ");
                 }
                 if (workflow != null) {
-                    hql.append(" and lower(subt.workflowName) like :workflow ");
+                    hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                 }
                 hql.append(") ");
                 break;
@@ -806,14 +806,14 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.jsonContent", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (fileOrderSource != null) {
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                 }
                 if (workflow != null) {
-                    hql.append(" and  lower(subt.workflowName) like :workflow ");
+                    hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                 }
                 if (schedule != null) {
-                    hql.append(" and  lower(subt.scheduleName) like :schedule ");
+                    hql.append(" and sos_like(lower(subt.scheduleName), :schedule) ");
                 }
                 if (selectCalendarOfSpecificType != null) {
                     hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
@@ -1060,7 +1060,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
+            hql.append("and (sos_like(lower(mt.name), :search) or sos_like(lower(mt.title), :search)) ");
         }
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
@@ -1140,12 +1140,12 @@ public class InventorySearchDBLayer extends DBLayer {
                     }
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        hql.append(add).append(" sos_like(lower(subt.scheduleName), :schedule) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -1161,7 +1161,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     }
                     if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                 }
                 hql.append(") ");
@@ -1227,7 +1227,7 @@ public class InventorySearchDBLayer extends DBLayer {
                         hql.append(add).append(" subti.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
                         hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
                                 "=subt.workflowName").append(" ");
-                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        hql.append(add).append(" sos_like(lower(subt.workflowName), :workflow) ");
                         if (controllerId != null) {
                             hql.append("and subti.controllerId=:controllerId ");
                         }
@@ -1236,12 +1236,12 @@ public class InventorySearchDBLayer extends DBLayer {
 
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append(add).append(" lower(subt.scheduleName) like :schedule ");
+                        hql.append(add).append(" sos_like(lower(subt.scheduleName), :schedule) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -1288,12 +1288,12 @@ public class InventorySearchDBLayer extends DBLayer {
                         add = "and";
                     }
                     if (workflow != null) {
-                        hql.append(add).append(" lower(subt.workflowName) like :workflow ");
+                        hql.append(add).append(" sos_like(lower(subt.workflowName), :workflow) ");
                         add = "and";
                     }
                     if (selectCalendar && !advanced.getCalendar().equals(FIND_ALL)) {
                         calendar = advanced.getCalendar();
-                        hql.append(add).append(" lower(subtc.calendarName) like :calendar ");
+                        hql.append(add).append(" sos_like(lower(subtc.calendarName), :calendar) ");
                         add = "and";
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -1303,7 +1303,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
-                        hql.append(add).append(" lower(subti.name) like :fileOrderSource ");
+                        hql.append(add).append(" sos_like(lower(subti.name), :fileOrderSource) ");
                         add = "and";
                     }
                     hql.append(") ");
@@ -1329,15 +1329,15 @@ public class InventorySearchDBLayer extends DBLayer {
                         }
                     }
                     if (workflow != null) {
-                        hql.append("and lower(subt.workflowName) like :workflow ");
+                        hql.append("and sos_like(lower(subt.workflowName), :workflow) ");
                     }
                     if (selectSchedule && !advanced.getSchedule().equals(FIND_ALL)) {
                         schedule = advanced.getSchedule();
-                        hql.append("and lower(subt.scheduleName) like :schedule ");
+                        hql.append("and sos_like(lower(subt.scheduleName), :schedule) ");
                     }
                     if (selectFileOrderSource && !advanced.getFileOrderSource().equals(FIND_ALL)) {
                         fileOrderSource = advanced.getFileOrderSource();
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                     hql.append(") ");
                 }
@@ -1374,12 +1374,12 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (workflow != null) {
-                        hql.append(" and lower(subt.workflowName) like :workflow ");
+                        hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                     }
                     if (selectCalendar) {
                         hql.append(" and subt.scheduleName=subtc.scheduleName ");
                         if (calendar != null) {
-                            hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                            hql.append(" and  sos_like(lower(subtc.calendarName), :calendar) ");
                         }
                     }
                     if (selectCalendarOfSpecificType != null) {
@@ -1394,7 +1394,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 } else {
                     if (workflow != null) {
                         hql.append(" where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
-                        hql.append(" and lower(ic.name) like :workflow ");
+                        hql.append(" and sos_like(lower(ic.name), :workflow) ");
                     } else {
                         hql.append(" where 1=1 ");
                     }
@@ -1418,7 +1418,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (fileOrderSource != null) {
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                     if (controllerId != null) {
                         hql.append(" and subti.controllerId=:controllerId ");
@@ -1427,7 +1427,7 @@ public class InventorySearchDBLayer extends DBLayer {
                 if (selectCalendar) {
                     hql.append(" and subt.scheduleName=subtc.scheduleName ");
                     if (calendar != null) {
-                        hql.append(" and  lower(subtc.calendarName) like :calendar ");
+                        hql.append(" and  sos_like(lower(subtc.calendarName), :calendar) ");
                     }
                 }
                 if (selectCalendarOfSpecificType != null) {
@@ -1435,7 +1435,7 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append(" and subtic.name=subtc.calendarName ");
                 }
                 if (workflow != null) {
-                    hql.append(" and lower(subt.workflowName) like :workflow ");
+                    hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                 }
                 hql.append(") ");
                 break;
@@ -1458,17 +1458,17 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append("and ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subti.content", "$.workflowName")).append(
                             "=subt.workflowName").append(" ");
                     if (fileOrderSource != null) {
-                        hql.append("and lower(subti.name) like :fileOrderSource ");
+                        hql.append("and sos_like(lower(subti.name), :fileOrderSource) ");
                     }
                     if (controllerId != null) {
                         hql.append(" and subti.controllerId=:controllerId ");
                     }
                 }
                 if (workflow != null) {
-                    hql.append(" and  lower(subt.workflowName) like :workflow ");
+                    hql.append(" and sos_like(lower(subt.workflowName), :workflow) ");
                 }
                 if (schedule != null) {
-                    hql.append(" and  lower(subt.scheduleName) like :schedule ");
+                    hql.append(" and sos_like(lower(subt.scheduleName), :schedule) ");
                 }
                 if (selectCalendarOfSpecificType != null) {
                     hql.append(" and subtic.type=").append(selectCalendarOfSpecificType).append(" ");
@@ -1834,7 +1834,7 @@ public class InventorySearchDBLayer extends DBLayer {
     private String foldersHql(List<String> folders) {
         List<String> f = new ArrayList<>();
         for (int i = 0; i < folders.size(); i++) {
-            f.add("lower(mt.folder) like :folder" + i + " ");
+            f.add("sos_like(lower(mt.folder), :folder" + i + ") ");
         }
         return String.join(" or ", f);
     }

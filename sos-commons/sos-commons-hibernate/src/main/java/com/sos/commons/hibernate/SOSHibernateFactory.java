@@ -30,6 +30,7 @@ import com.sos.commons.hibernate.function.date.SOSHibernateCurrentTimestampUtc;
 import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
+import com.sos.commons.hibernate.function.like.SOSHibernateLike;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSClassUtil;
