@@ -1,7 +1,17 @@
 {
+    "searchx": "test_",
+    "returnType": "FILEORDERSOURCE",
+    "folders": [
+        "/agent/memory_"
+    ],
+    "deployedOrReleased": true,
     "advanced": {
-        "jobName": "MyJob",
-        "jobNameExactMatch": true
+        "jobName": "*",
+        "jobNameExactMatch": true,
+        "jobCriticalityX": "NORMAL",
+        "workflow": "test_",
+        "calendarX": "Any?ays",
+        "envName": "t_"
     },
-    "returnType": "SCHEDULE"
+    "returnTypeX": "SCHEDULE"
 }

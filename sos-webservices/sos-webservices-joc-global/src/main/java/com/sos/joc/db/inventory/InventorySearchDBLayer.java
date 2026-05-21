@@ -22,6 +22,8 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonOperat
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonExists.JsonPathType;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns.CaseMode;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.schedule.Schedule;
@@ -31,7 +33,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -100,7 +101,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
         }
-        
+
         Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
         if (types != null && !types.isEmpty()) {
             if (types.size() > 1) {
@@ -114,7 +115,7 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         return getSession().getResultList(query);
     }
@@ -130,7 +131,7 @@ public class InventorySearchDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         if (!SOSString.isEmpty(search) && !search.equals(FIND_ALL)) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
         if (result == null) {
@@ -228,7 +229,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
         if (search != null) {
-            query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(search, CaseMode.LOWER) + '%');
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -327,7 +328,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
         if (search != null) {
-            query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(search, CaseMode.LOWER) + '%');
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -618,10 +619,11 @@ public class InventorySearchDBLayer extends DBLayer {
                     hql.append(") ");
                 } else {
                     if (workflow != null) {
-                        hql.append("and lower(");
+                        hql.append("and sos_like(");
+                        hql.append("lower(");
                         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
+                        hql.append("), :workflow");
                         hql.append(") ");
-                        hql.append("like :workflow ");
                     }
                 }
                 break;
@@ -870,7 +872,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
         if (search != null) {
-            query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(search, CaseMode.LOWER) + '%');
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -884,16 +886,16 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         /*------------------------*/
         if (fileOrderSource != null) {
-            query.setParameter("fileOrderSource", '%' + fileOrderSource.toLowerCase() + '%');
+            query.setParameter("fileOrderSource", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(fileOrderSource, CaseMode.LOWER) + '%');
         }
         if (schedule != null) {
-            query.setParameter("schedule", '%' + schedule.toLowerCase() + '%');
+            query.setParameter("schedule", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(schedule, CaseMode.LOWER) + '%');
         }
         if (calendar != null) {
-            query.setParameter("calendar", '%' + calendar.toLowerCase() + '%');
+            query.setParameter("calendar", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(calendar, CaseMode.LOWER) + '%');
         }
         if (workflow != null) {
-            query.setParameter("workflow", '%' + workflow.toLowerCase() + '%');
+            query.setParameter("workflow", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(workflow, CaseMode.LOWER) + '%');
         }
         if (jobCountFrom != null) {
             query.setParameter("jobCountFrom", jobCountFrom);
@@ -960,12 +962,18 @@ public class InventorySearchDBLayer extends DBLayer {
             throws SOSHibernateException {
         if (workflows == null || workflows.size() == 0) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[checkJobNameExactMatch][skip]");
+                LOGGER.debug("[checkJobNameExactMatch][skip]no workflows found");
             }
             return workflows;
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("[checkJobNameExactMatch][deployedOrReleased=" + deployedOrReleased + "]jobName=" + jobName);
+        }
+        if (FIND_ALL.equals(jobName)) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[checkJobNameExactMatch][skip]jobName=" + jobName);
+            }
+            return workflows;
         }
         List<InventorySearchItem> result = new ArrayList<>();
         for (InventorySearchItem item : workflows) {
@@ -1253,10 +1261,11 @@ public class InventorySearchDBLayer extends DBLayer {
                 } else {
                     // controllerId already used
                     if (workflow != null) {
-                        hql.append("and lower(");
+                        hql.append("and sos_like(");
+                        hql.append("lower(");
                         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.content", "$.workflowName"));
+                        hql.append("), :workflow");
                         hql.append(") ");
-                        hql.append("like :workflow ");
                     }
                 }
                 break;
@@ -1534,7 +1543,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("type", ConfigurationType.valueOf(type.value()).intValue());
         }
         if (search != null) {
-            query.setParameter("search", SearchStringHelper.globToSqlPattern('%' + search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(search, CaseMode.LOWER) + '%');
         }
         if (searchInFolders) {
             foldersQueryParameters(query, folders);
@@ -1551,16 +1560,16 @@ public class InventorySearchDBLayer extends DBLayer {
         }
         /*------------------------*/
         if (fileOrderSource != null) {
-            query.setParameter("fileOrderSource", '%' + fileOrderSource.toLowerCase() + '%');
+            query.setParameter("fileOrderSource", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(fileOrderSource, CaseMode.LOWER) + '%');
         }
         if (schedule != null) {
-            query.setParameter("schedule", '%' + schedule.toLowerCase() + '%');
+            query.setParameter("schedule", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(schedule, CaseMode.LOWER) + '%');
         }
         if (calendar != null) {
-            query.setParameter("calendar", '%' + calendar.toLowerCase() + '%');
+            query.setParameter("calendar", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(calendar, CaseMode.LOWER) + '%');
         }
         if (workflow != null) {
-            query.setParameter("workflow", '%' + workflow.toLowerCase() + '%');
+            query.setParameter("workflow", '%' + SOSHibernateLikePatterns.globToSqlLikeContains(workflow, CaseMode.LOWER) + '%');
         }
         if (jobCountFrom != null) {
             query.setParameter("jobCountFrom", jobCountFrom);
@@ -1662,6 +1671,7 @@ public class InventorySearchDBLayer extends DBLayer {
         }
     }
 
+    // sos_like and glob patterns are not used because jobCriticality must be one of the fully qualified valid values
     private WorkflowSearchParamResult setHQLAndGetParameterValue(WorkflowSearchOracle oracle, StringBuilder hql, JobCriticality criticality) {
         WorkflowSearchParamResult result = new WorkflowSearchParamResult();
         if (criticality != null) {
@@ -1739,11 +1749,11 @@ public class InventorySearchDBLayer extends DBLayer {
 
             if (oracle == null) {
                 String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
-                hql.append(jsonFunc).append(" ");
                 if (findAll) {
+                    hql.append(jsonFunc).append(" ");
                     hql.append("is not null ");
                 } else {
-                    hql.append("like :").append(paramName).append(" ");
+                    hql.append("sos_like(").append(jsonFunc).append(", :").append(paramName).append(") ");
                 }
             } else {
                 if (findAll) {
@@ -1783,14 +1793,13 @@ public class InventorySearchDBLayer extends DBLayer {
                     result.value = "!include " + result.value;
                 }
             }
-
             if (oracle == null) {
                 String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
-                hql.append("lower(").append(jsonFunc).append(") ");
                 if (findAll) {
+                    hql.append("lower(").append(jsonFunc).append(") ");
                     hql.append("is not null ");
                 } else {
-                    hql.append("like :").append(paramName).append(" ");
+                    hql.append("sos_like(lower(").append(jsonFunc).append("), :" + paramName + ")");
                 }
             } else {
                 if (findAll) {
@@ -1841,7 +1850,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
     private void foldersQueryParameters(Query<InventorySearchItem> query, List<String> folders) {
         for (int i = 0; i < folders.size(); i++) {
-            query.setParameter("folder" + i, folders.get(i).toLowerCase() + '%');
+            query.setParameter("folder" + i, SOSHibernateLikePatterns.globToSqlLikeEndsWith(folders.get(i), CaseMode.LOWER) + '%');
         }
     }
 
@@ -1872,7 +1881,8 @@ public class InventorySearchDBLayer extends DBLayer {
 
         private String getParamValueForLike(boolean exactMatch) {
             String val = exactMatch ? value : value.toLowerCase();
-            return usePercentsForLike ? "%" + val + "%" : val;
+            // CaseMode.NONE because case normalization is already applied earlier
+            return usePercentsForLike ? "%" + SOSHibernateLikePatterns.globToSqlLikeContains(val, CaseMode.NONE) + "%" : val;
         }
     }
 }

@@ -20,10 +20,11 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns.CaseMode;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.inventory.items.InventoryQuickSearchItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -42,7 +43,7 @@ public class DocumentationDBLayer {
     public SOSHibernateSession getSession() {
         return session;
     }
-    
+
     public String getPath(String docRef) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -58,7 +59,7 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public String getDocRef(String path) throws DBConnectionRefusedException, DBInvalidDataException {
         if (!path.contains("/")) {
             return path;
@@ -94,7 +95,7 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemDocumentation getDocumentationByRef(String reference) {
         try {
             StringBuilder sql = new StringBuilder();
@@ -110,7 +111,7 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public String getUniqueDocRef(String reference) throws SOSHibernateException {
         if (reference == null || reference.isEmpty()) {
             return null;
@@ -173,7 +174,7 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemDocumentation> getDocumentations(List<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
         return getDocumentations(paths, false);
     }
@@ -277,7 +278,7 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-  
+
     public Set<Tree> getFoldersByFolder(String folderName, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -325,14 +326,14 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<InventoryQuickSearchItem> getQuickSearchDocus(String search) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path as path, folder as folder, name as name from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
         List<String> whereClause = new ArrayList<>();
         if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
             search = null;
         } else {
-            whereClause.add("lower(name) like :search");
+            whereClause.add("sos_like(lower(name), :search)");
         }
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -341,7 +342,7 @@ public class DocumentationDBLayer {
         Query<InventoryQuickSearchItem> query = getSession().createQuery(hql.toString(), InventoryQuickSearchItem.class);
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         return getSession().getResultList(query);
     }

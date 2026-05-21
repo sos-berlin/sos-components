@@ -8,16 +8,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -26,6 +24,8 @@ import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
+
+import jakarta.persistence.TemporalType;
 
 public class AuditLogDBLayer {
 
@@ -51,22 +51,22 @@ public class AuditLogDBLayer {
     public ScrollableResults<AuditLogDBItem> getAuditLogs(AuditLogFilter filter, Collection<String> controllerIds,
             Collection<CategoryType> categories, boolean withDeployment) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-        
+
             // advanced search with objects or folders
             boolean withFolders = filter.getFolders() != null && !filter.getFolders().isEmpty();
             boolean withObjectName = filter.getObjectName() != null && !filter.getObjectName().isEmpty();
             boolean withObjectTypes = filter.getObjectTypes() != null && !filter.getObjectTypes().isEmpty();
             boolean withAdvancedSearch = withFolders || withObjectName || withObjectTypes;
-            
+
             boolean searchInDepHistory = withDeployment;
             if (withDeployment && withObjectTypes && !filter.getObjectTypes().stream().anyMatch(t -> !ObjectType.ORDER.equals(t))) {
                 searchInDepHistory = false;
             }
-            
+
             Date createdFrom = JobSchedulerDate.getDateFrom(filter.getDateFrom(), filter.getTimeZone());
             Date createdTo = JobSchedulerDate.getDateTo(filter.getDateTo(), filter.getTimeZone());
             String tableAlias = "al.";
-            
+
             StringBuilder hql = new StringBuilder("select ");
             hql.append(tableAlias + "id as id,");
             hql.append(tableAlias + "account as account,");
@@ -79,7 +79,7 @@ public class AuditLogDBLayer {
             hql.append(tableAlias + "timeSpent as timeSpent,");
             hql.append(tableAlias + "ticketLink as ticketLink");
             hql.append(" from ").append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ").append(tableAlias.substring(0, tableAlias.length() - 1));
-            
+
             Set<String> clause = new LinkedHashSet<>();
 
             if (!controllerIds.isEmpty()) {
@@ -112,27 +112,27 @@ public class AuditLogDBLayer {
                 clause.add(tableAlias + "created < :to");
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
-                    clause.add(tableAlias + "ticketLink like :ticketLink");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getTicketLink())) {
+                    clause.add(tableAlias + "sos_like(ticketLink, :ticketLink)");
                 } else {
                     clause.add(tableAlias + "ticketLink = :ticketLink");
                 }
             }
             if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
-                    clause.add(tableAlias + "account like :account");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getAccount())) {
+                    clause.add(tableAlias + "sos_like(account, :account)");
                 } else {
                     clause.add(tableAlias + "account = :account");
                 }
             }
             if (filter.getComment() != null && !filter.getComment().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getComment())) {
-                    clause.add(tableAlias + "comment like :comment");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getComment())) {
+                    clause.add(tableAlias + "sos_like(comment, :comment)");
                 } else {
                     clause.add(tableAlias + "comment = :comment");
                 }
             }
-            
+
             if (!clause.isEmpty()) {
                 hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
@@ -140,7 +140,7 @@ public class AuditLogDBLayer {
             hql.append(" order by " + tableAlias + "id desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString(), AuditLogDBItem.class);
 
-            //bindParameters
+            // bindParameters
             if (!controllerIds.isEmpty()) {
                 if (controllerIds.size() == 1) {
                     query.setParameter("controllerId", controllerIds.iterator().next());
@@ -164,8 +164,8 @@ public class AuditLogDBLayer {
                     }
                 }
                 if (filter.getObjectName() != null && !filter.getObjectName().isEmpty()) {
-                    if (SearchStringHelper.isGlobPattern(filter.getObjectName())) {
-                        query.setParameter("name", SearchStringHelper.globToSqlPattern(filter.getObjectName()));
+                    if (SOSHibernateLikePatterns.containsGlob(filter.getObjectName())) {
+                        query.setParameter("name", SOSHibernateLikePatterns.globToSqlLike(filter.getObjectName()));
                     } else {
                         query.setParameter("name", filter.getObjectName());
                     }
@@ -178,22 +178,22 @@ public class AuditLogDBLayer {
                 query.setParameter("to", createdTo, TemporalType.TIMESTAMP);
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
-                    query.setParameter("ticketLink", SearchStringHelper.globToSqlPattern(filter.getTicketLink()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getTicketLink())) {
+                    query.setParameter("ticketLink", SOSHibernateLikePatterns.globToSqlLike(filter.getTicketLink()));
                 } else {
                     query.setParameter("ticketLink", filter.getTicketLink());
                 }
             }
             if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
-                    query.setParameter("account", SearchStringHelper.globToSqlPattern(filter.getAccount()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getAccount())) {
+                    query.setParameter("account", SOSHibernateLikePatterns.globToSqlLike(filter.getAccount()));
                 } else {
                     query.setParameter("account", filter.getAccount());
                 }
             }
             if (filter.getComment() != null && !filter.getComment().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getComment())) {
-                    query.setParameter("comment", SearchStringHelper.globToSqlPattern(filter.getComment()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getComment())) {
+                    query.setParameter("comment", SOSHibernateLikePatterns.globToSqlLike(filter.getComment()));
                 } else {
                     query.setParameter("comment", filter.getComment());
                 }
@@ -201,7 +201,7 @@ public class AuditLogDBLayer {
             if (filter.getLimit() != null) {
                 query.setMaxResults(filter.getLimit());
             }
-            
+
             return query.scroll();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -256,7 +256,7 @@ public class AuditLogDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     private String getAuditlogIdsSelectInAuditLogDetails(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
         boolean hasOrderType = objectTypes == null || objectTypes.isEmpty() || objectTypes.contains(ObjectType.ORDER);
         StringBuilder hql = new StringBuilder("select auditLogId from ");
@@ -265,7 +265,7 @@ public class AuditLogDBLayer {
         hql.append(" group by auditLogId");
         return hql.toString();
     }
-    
+
     private String getAuditlogIdsSelectInDepHistory(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
         StringBuilder hql = new StringBuilder("select auditlogId from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY);
@@ -301,14 +301,14 @@ public class AuditLogDBLayer {
 
         if (objectName != null && !objectName.isEmpty()) {
             if (hasOrderType) {
-                if (SearchStringHelper.isGlobPattern(objectName)) {
-                    clause.add("(name like :name or orderId like :name)");
+                if (SOSHibernateLikePatterns.containsGlob(objectName)) {
+                    clause.add("(sos_like(name, :name) or sos_like(orderId, :name))");
                 } else {
                     clause.add("(name = :name or orderId = :name)");
                 }
             } else {
-                if (SearchStringHelper.isGlobPattern(objectName)) {
-                    clause.add("name like :name");
+                if (SOSHibernateLikePatterns.containsGlob(objectName)) {
+                    clause.add("sos_like(name, :name)");
                 } else {
                     clause.add("name = :name");
                 }

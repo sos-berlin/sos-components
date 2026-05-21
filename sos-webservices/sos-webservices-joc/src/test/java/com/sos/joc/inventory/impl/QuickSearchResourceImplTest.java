@@ -16,14 +16,14 @@ public class QuickSearchResourceImplTest {
     @Test
     public void testPostSearch() throws Exception {
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new QuickSearchResourceImpl());
-        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.oracle-21c.xml");
-        
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+
         RequestQuickSearchFilter in = new RequestQuickSearchFilter();
         in.setSearch("te?*t");
         in.setSearch("al?");
-        in.setSearch("test_");
+        in.setSearch("?te%");
         in.setToken("ae53f3be24838ff1b5cc95c1789462719094210c3a3290092874f88f0c786c21");
-        
+
         try {
             h.init();
 
