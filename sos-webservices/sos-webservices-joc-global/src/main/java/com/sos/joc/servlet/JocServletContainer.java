@@ -121,7 +121,6 @@ public class JocServletContainer extends ServletContainer {
     @Override
     public void destroy() {
         LOGGER.debug("----> destroy on close JOC");
-        super.destroy();
 
         NotificationAppender.doNotify = false;
         QuickSearchStore.close();
@@ -149,6 +148,7 @@ public class JocServletContainer extends ServletContainer {
             Globals.sosHibernateFactory.close();
         }
 
+        super.destroy();
         cleanupAllTempDirSubFolders();
     }
 

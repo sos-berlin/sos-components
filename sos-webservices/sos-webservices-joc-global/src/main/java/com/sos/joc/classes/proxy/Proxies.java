@@ -446,27 +446,19 @@ public class Proxies {
     
     private void _closeAll() {
         LOGGER.info("closing all proxies ...");
-        try {
-            CompletableFuture.allOf(controllerApis.values().stream()
+        CompletableFuture.allOf(controllerApis.values().stream()
+                .peek(api -> api.setActive(false))
                 .map(JControllerApi::stop).toArray(CompletableFuture[]::new))
-                .thenRun(() -> {
+                .thenCompose(v -> {
                     controllerFutures.clear();
                     controllerApis.clear();
                     ClusterWatch.getInstance().clear();
-                    proxyContext.close();
-                    proxyContext = null;
-                }).get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
-        } finally {
-            try {
-                if(proxyContext != null) {
-                    proxyContext.close();
-                }
-            } catch (Exception e) {
-            } finally {
-                proxyContext = null;
-            }
-        }
+                    return proxyContext.release();
+                })
+                .exceptionally(ex -> {
+                    LOGGER.warn("", ex); 
+                    return null;
+                });
     }
     
     private void initControllerDbInstances(Map<String, String> urlMapper) throws JocConfigurationException, DBOpenSessionException,
