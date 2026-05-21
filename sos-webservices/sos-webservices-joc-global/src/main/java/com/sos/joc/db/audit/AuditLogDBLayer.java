@@ -14,6 +14,7 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -24,8 +25,6 @@ import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
-
-import jakarta.persistence.TemporalType;
 
 public class AuditLogDBLayer {
 
