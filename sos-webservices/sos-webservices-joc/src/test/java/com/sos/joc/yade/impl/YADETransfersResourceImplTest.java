@@ -1,5 +1,7 @@
 package com.sos.joc.yade.impl;
 
+import java.util.Collections;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ public class YADETransfersResourceImplTest {
 
             TransferFilter in = new TransferFilter();
             in.setCompact(false);
+            in.setSourceFiles(Collections.singletonList("*t*?"));
 
             h.post("postYADETransfers", in);
         } catch (Throwable e) {

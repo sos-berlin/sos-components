@@ -32,6 +32,8 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns.CaseMode;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.deploy.DeployType;
@@ -66,7 +68,6 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -97,7 +98,8 @@ public class OrderTags {
 
     private static OrderTags instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderTags.class);
-    private static final TypeReference<Map<String, Set<String>>> typeRefAddOrderTags = new TypeReference<Map<String, Set<String>>>() {};
+    private static final TypeReference<Map<String, Set<String>>> typeRefAddOrderTags = new TypeReference<Map<String, Set<String>>>() {
+    };
     /** rerun interval in seconds */
     private static final long RERUN_INTERVAL = 1;
     private static final int MAX_RERUNS = 3;
@@ -394,7 +396,7 @@ public class OrderTags {
             }
         }
     }
-    
+
     public static void deleteTags2(String controllerId, List<String> orderIds, SOSHibernateSession connection) throws SOSHibernateException {
         if (controllerId != null && orderIds != null && !orderIds.isEmpty()) {
 
@@ -416,11 +418,11 @@ public class OrderTags {
                 if (!SOSString.isEmpty(controllerId)) {
                     query.setParameter("controllerId", controllerId);
                 }
-                
+
                 List<DBItemHistoryOrderTag> result = query.getResultList();
                 if (result != null) {
                     for (DBItemHistoryOrderTag dbItem : result) {
-                        connection.delete(dbItem); 
+                        connection.delete(dbItem);
                     }
                 }
             }
@@ -443,7 +445,7 @@ public class OrderTags {
             }
         }
     }
-    
+
     private static <T> int executeUpdate(String callerMethodName, Query<T> query, SOSHibernateSession session) throws SOSHibernateException {
         int result = 0;
         int count = 0;
@@ -562,7 +564,7 @@ public class OrderTags {
             }
         }
     }
-    
+
     private static List<DBItemHistoryOrderTag> getHistoryOrderTag(String controllerId, String orderId, SOSHibernateSession connection)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_TAGS);
@@ -1073,7 +1075,7 @@ public class OrderTags {
             search = null;
             // whereClause.add("tagName is not null");
         } else {
-            whereClause.add("lower(tagName) like :search");
+            whereClause.add("sos_like(lower(tagName), :search)");
         }
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -1083,7 +1085,7 @@ public class OrderTags {
         Query<ResponseBaseSearchItem> query = session.createQuery(hql.toString(), ResponseBaseSearchItem.class);
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + "%").replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);

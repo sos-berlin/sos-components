@@ -15,14 +15,16 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferState;
+
+import jakarta.persistence.TemporalType;
 
 public class JocDBLayerYade {
 
@@ -205,8 +207,8 @@ public class JocDBLayerYade {
 
         if (withProfiles) {
             hql.append(and).append(filter.getProfiles().stream().map(p -> {
-                if (SearchStringHelper.isGlobPattern(p)) {
-                    return "yt.profileName like '" + SearchStringHelper.globToSqlPattern(p) + "'";
+                if (SOSHibernateLikePatterns.containsGlob(p)) {
+                    return "sos_like(yt.profileName, '" + SOSHibernateLikePatterns.globToSqlLike(p) + "')";
                 } else {
                     return "yt.profileName = '" + p + "'";
                 }
@@ -215,8 +217,8 @@ public class JocDBLayerYade {
         }
         if (withWorkflowNames) {
             hql.append(and).append(filter.getWorkflowNames().stream().map(w -> {
-                if (SearchStringHelper.isGlobPattern(w)) {
-                    return "yt.workflowName like '" + SearchStringHelper.globToSqlPattern(w) + "'";
+                if (SOSHibernateLikePatterns.containsGlob(w)) {
+                    return "sos_like(yt.workflowName, '" + SOSHibernateLikePatterns.globToSqlLike(w) + "')";
                 } else {
                     return "yt.workflowName = '" + w + "'";
                 }
@@ -326,8 +328,8 @@ public class JocDBLayerYade {
             }
             if (withSourceFiles) {
                 clauses.add(filter.getSourceFiles().stream().map(f -> {
-                    if (SearchStringHelper.isGlobPattern(f)) {
-                        return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
+                    if (SOSHibernateLikePatterns.containsGlob(f)) {
+                        return "sos_like(sourcePath, '" + SOSHibernateLikePatterns.globToSqlLike(f) + "')";
                     } else {
                         return "sourcePath = '" + f + "'";
                     }
@@ -335,8 +337,8 @@ public class JocDBLayerYade {
             }
             if (withTargetFiles) {
                 clauses.add(filter.getTargetFiles().stream().map(f -> {
-                    if (SearchStringHelper.isGlobPattern(f)) {
-                        return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
+                    if (SOSHibernateLikePatterns.containsGlob(f)) {
+                        return "sos_like(targetPath, '" + SOSHibernateLikePatterns.globToSqlLike(f) + "')";
                     } else {
                         return "targetPath = '" + f + "'";
                     }
@@ -383,8 +385,8 @@ public class JocDBLayerYade {
 
         if (sourceFiles != null && !sourceFiles.isEmpty()) {
             clauses.add(sourceFiles.stream().map(f -> {
-                if (SearchStringHelper.isGlobPattern(f)) {
-                    return "sourcePath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
+                if (SOSHibernateLikePatterns.containsGlob(f)) {
+                    return "sos_like(sourcePath, '" + SOSHibernateLikePatterns.globToSqlLike(f) + "')";
                 } else {
                     return "sourcePath = '" + f + "'";
                 }
@@ -392,8 +394,8 @@ public class JocDBLayerYade {
         }
         if (targetFiles != null && !targetFiles.isEmpty()) {
             clauses.add(targetFiles.stream().map(f -> {
-                if (SearchStringHelper.isGlobPattern(f)) {
-                    return "targetPath like '" + SearchStringHelper.globToSqlPattern(f) + "'";
+                if (SOSHibernateLikePatterns.containsGlob(f)) {
+                    return "sos_like(targetPath, '" + SOSHibernateLikePatterns.globToSqlLike(f) + "')";
                 } else {
                     return "targetPath = '" + f + "'";
                 }

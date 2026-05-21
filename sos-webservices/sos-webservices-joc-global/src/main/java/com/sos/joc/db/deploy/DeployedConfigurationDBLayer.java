@@ -23,6 +23,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns.CaseMode;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
@@ -58,11 +60,11 @@ public class DeployedConfigurationDBLayer {
         this.session = connection;
         setRegexpParamPrefixSuffix();
     }
-    
+
     public SOSHibernateSession getSession() {
         return session;
     }
-    
+
     public List<InventoryQuickSearchItem> getQuickSearchInventoryConfigurations(String controllerId, Collection<Integer> types, String search)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path as path, type as type, folder as folder, name as name from ").append(
@@ -78,7 +80,7 @@ public class DeployedConfigurationDBLayer {
         if (SOSString.isEmpty(search) || search.equals("*")) {
             search = null;
         } else {
-            whereClause.add("lower(name) like :search");
+            whereClause.add("sos_like(lower(name), :search)");
         }
         if (SOSString.isEmpty(controllerId)) {
             controllerId = null;
@@ -99,16 +101,15 @@ public class DeployedConfigurationDBLayer {
         }
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + '%').replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
         }
         return session.getResultList(query);
     }
-    
-    public List<InventoryTagItem> getTagSearch(String controllerId, Collection<Integer> types, String search)
-            throws SOSHibernateException {
+
+    public List<InventoryTagItem> getTagSearch(String controllerId, Collection<Integer> types, String search) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select c.folder as folder, t.name as name, t.ordering as ordering from ");
         hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" c ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg ");
@@ -132,7 +133,7 @@ public class DeployedConfigurationDBLayer {
             search = null;
             whereClause.add("t.name is not null");
         } else {
-            whereClause.add("lower(t.name) like :search");
+            whereClause.add("sos_like(lower(t.name), :search)");
         }
         if (!whereClause.isEmpty()) {
             hql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -149,22 +150,22 @@ public class DeployedConfigurationDBLayer {
         }
         if (search != null) {
             // (only) on the right hand side always %
-            query.setParameter("search", SearchStringHelper.globToSqlPattern(search.toLowerCase() + "%").replaceAll("%%+", "%"));
+            query.setParameter("search", SOSHibernateLikePatterns.globToSqlLikeEndsWith(search, CaseMode.LOWER) + '%');
         }
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
         }
         return session.getResultList(query);
     }
-    
+
     public List<String> getDeployedWorkflowNamesByTags(String controllerId, Collection<String> tags) throws SOSHibernateException {
         return getDeployedWorkflowPathsOrNamesByTags(controllerId, "name", tags);
     }
-    
+
     public List<String> getDeployedWorkflowPathsByTags(String controllerId, Collection<String> tags) throws SOSHibernateException {
         return getDeployedWorkflowPathsOrNamesByTags(controllerId, "path", tags);
     }
-    
+
     private List<String> getDeployedWorkflowPathsOrNamesByTags(String controllerId, String field, Collection<String> tags)
             throws SOSHibernateException {
         if (tags == null || tags.isEmpty()) {
@@ -453,7 +454,8 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(c.inventoryConfigurationId, c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ");
+            hql.append(
+                    "(c.inventoryConfigurationId, c.path, c.name, c.title, c.invContent, c.commitId, c.deploymentDate, false as isCurrentVersion) from ");
             hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" c ");
             if (filter.getTags() != null && !filter.getTags().isEmpty()) {
                 hql.append(" left join ").append(DBLayer.DBITEM_INV_TAGGINGS).append(" tg on (tg.name=c.name and tg.type=c.type)");
@@ -567,24 +569,24 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public <T extends WorkflowId> List<T> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "post");
     }
 
-    public <T extends WorkflowId> List<T> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "expect");
     }
-    
-    public <T extends WorkflowId> List<T> getUsedWorkflowsByConsumeNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+
+    public <T extends WorkflowId> List<T> getUsedWorkflowsByConsumeNoticeBoard(String boardName, String controllerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoard(boardName, controllerId, "consume");
     }
 
     // type = consume, post or expect
-    private <T extends WorkflowId> List<T> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId, String type) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    private <T extends WorkflowId> List<T> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId, String type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
             hql.append("(dc.path, dc.commitId) from ");
@@ -613,7 +615,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public <T extends WorkflowId> List<T> getUsedWorkflowsByNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -640,12 +642,11 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+
+    public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         return getUsedWorkflowsByNoticeBoards(null, controllerId).collect(Collectors.toList());
     }
-    
+
     public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId, Set<String> boardNames) throws DBConnectionRefusedException,
             DBInvalidDataException {
         Stream<WorkflowBoards> wbs = getUsedWorkflowsByNoticeBoards(null, controllerId);
@@ -654,7 +655,7 @@ public class DeployedConfigurationDBLayer {
         }
         return wbs.collect(Collectors.toList());
     }
-    
+
     public Stream<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -690,41 +691,40 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-//    public Stream<WorkflowBoards> getWorkflowsWithTopLevelBoards(String controllerId) throws DBConnectionRefusedException,
-//            DBInvalidDataException {
-//        try {
-//            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
-//            StringBuilder hql = new StringBuilder("select new ").append(DeployedWorkflowWithBoards.class.getName());
-//            hql.append("(dc.path, dc.commitId, dc.content, sw.instructions) from ");
-//            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
-//            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
-//            hql.append("where dc.type=:type ");
-//            hql.append("and dc.controllerId=:controllerId ");
-//            hql.append("and sw.deployed=1 ");
-//            hql.append("and ");
-//            hql.append(jsonFunc).append(" is not null ");
-//            // sometimes two rows in DBITEM_SEARCH_WORKFLOWS for the same Workflow -> then use youngest
-//            hql.append("and sw.modified=(select max(modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
-//            hql.append(" where inventoryConfigurationId=sw.inventoryConfigurationId)");
-//
-//            Query<DeployedWorkflowWithBoards> query = session.createQuery(hql.toString());
-//            query.setParameter("type", DeployType.WORKFLOW.intValue());
-//            query.setParameter("controllerId", controllerId);
-//            List<DeployedWorkflowWithBoards> result = session.getResultList(query);
-//            if (result != null) {
-//                return result.stream().map(DeployedWorkflowWithBoards::mapToWorkflowBoards).filter(Objects::nonNull);
-//            }
-//            return Stream.empty();
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-    
-    public List<DeployedWorkflowWithBoards> getWorkflowsWithBoards(String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+
+    // public Stream<WorkflowBoards> getWorkflowsWithTopLevelBoards(String controllerId) throws DBConnectionRefusedException,
+    // DBInvalidDataException {
+    // try {
+    // String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
+    // StringBuilder hql = new StringBuilder("select new ").append(DeployedWorkflowWithBoards.class.getName());
+    // hql.append("(dc.path, dc.commitId, dc.content, sw.instructions) from ");
+    // hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+    // hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+    // hql.append("where dc.type=:type ");
+    // hql.append("and dc.controllerId=:controllerId ");
+    // hql.append("and sw.deployed=1 ");
+    // hql.append("and ");
+    // hql.append(jsonFunc).append(" is not null ");
+    // // sometimes two rows in DBITEM_SEARCH_WORKFLOWS for the same Workflow -> then use youngest
+    // hql.append("and sw.modified=(select max(modified) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+    // hql.append(" where inventoryConfigurationId=sw.inventoryConfigurationId)");
+    //
+    // Query<DeployedWorkflowWithBoards> query = session.createQuery(hql.toString());
+    // query.setParameter("type", DeployType.WORKFLOW.intValue());
+    // query.setParameter("controllerId", controllerId);
+    // List<DeployedWorkflowWithBoards> result = session.getResultList(query);
+    // if (result != null) {
+    // return result.stream().map(DeployedWorkflowWithBoards::mapToWorkflowBoards).filter(Objects::nonNull);
+    // }
+    // return Stream.empty();
+    // } catch (SOSHibernateInvalidSessionException ex) {
+    // throw new DBConnectionRefusedException(ex);
+    // } catch (Exception ex) {
+    // throw new DBInvalidDataException(ex);
+    // }
+    // }
+
+    public List<DeployedWorkflowWithBoards> getWorkflowsWithBoards(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
             StringBuilder hql = new StringBuilder("select new ").append(DeployedWorkflowWithBoards.class.getName());
@@ -782,8 +782,8 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public <T extends WorkflowId> List<T> getAddOrderWorkflowsByWorkflow(String workflowName, String controllerId) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public <T extends WorkflowId> List<T> getAddOrderWorkflowsByWorkflow(String workflowName, String controllerId)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(WorkflowIdAndTags.class.getName());
             hql.append("(dc.path, dc.commitId) from ");
@@ -841,7 +841,7 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Map<String, String> getAddOrderTags(String controllerId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select dc.name as name, ");
@@ -1011,7 +1011,7 @@ public class DeployedConfigurationDBLayer {
             }
             clauses.add(clause);
         }
-        
+
         if (filter.getTags() != null && !filter.getTags().isEmpty()) {
             String clause = IntStream.range(0, filter.getTags().size()).mapToObj(i -> "t.name in (:tags" + i + ")").collect(Collectors.joining(
                     " or "));

@@ -13,10 +13,9 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.commons.util.SOSDate;
+import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -25,6 +24,8 @@ import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.common.Folder;
+
+import jakarta.persistence.TemporalType;
 
 public class AuditLogDBLayer {
 
@@ -111,22 +112,22 @@ public class AuditLogDBLayer {
                 clause.add(tableAlias + "created < :to");
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
-                    clause.add(tableAlias + "ticketLink like :ticketLink");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getTicketLink())) {
+                    clause.add(tableAlias + "sos_like(ticketLink, :ticketLink)");
                 } else {
                     clause.add(tableAlias + "ticketLink = :ticketLink");
                 }
             }
             if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
-                    clause.add(tableAlias + "account like :account");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getAccount())) {
+                    clause.add(tableAlias + "sos_like(account, :account)");
                 } else {
                     clause.add(tableAlias + "account = :account");
                 }
             }
             if (filter.getComment() != null && !filter.getComment().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getComment())) {
-                    clause.add(tableAlias + "comment like :comment");
+                if (SOSHibernateLikePatterns.containsGlob(filter.getComment())) {
+                    clause.add(tableAlias + "sos_like(comment, :comment)");
                 } else {
                     clause.add(tableAlias + "comment = :comment");
                 }
@@ -163,8 +164,8 @@ public class AuditLogDBLayer {
                     }
                 }
                 if (filter.getObjectName() != null && !filter.getObjectName().isEmpty()) {
-                    if (SearchStringHelper.isGlobPattern(filter.getObjectName())) {
-                        query.setParameter("name", SearchStringHelper.globToSqlPattern(filter.getObjectName()));
+                    if (SOSHibernateLikePatterns.containsGlob(filter.getObjectName())) {
+                        query.setParameter("name", SOSHibernateLikePatterns.globToSqlLike(filter.getObjectName()));
                     } else {
                         query.setParameter("name", filter.getObjectName());
                     }
@@ -177,22 +178,22 @@ public class AuditLogDBLayer {
                 query.setParameter("to", SOSDate.toUtcLocalDateTime(createdTo));
             }
             if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
-                    query.setParameter("ticketLink", SearchStringHelper.globToSqlPattern(filter.getTicketLink()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getTicketLink())) {
+                    query.setParameter("ticketLink", SOSHibernateLikePatterns.globToSqlLike(filter.getTicketLink()));
                 } else {
                     query.setParameter("ticketLink", filter.getTicketLink());
                 }
             }
             if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
-                    query.setParameter("account", SearchStringHelper.globToSqlPattern(filter.getAccount()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getAccount())) {
+                    query.setParameter("account", SOSHibernateLikePatterns.globToSqlLike(filter.getAccount()));
                 } else {
                     query.setParameter("account", filter.getAccount());
                 }
             }
             if (filter.getComment() != null && !filter.getComment().isEmpty()) {
-                if (SearchStringHelper.isGlobPattern(filter.getComment())) {
-                    query.setParameter("comment", SearchStringHelper.globToSqlPattern(filter.getComment()));
+                if (SOSHibernateLikePatterns.containsGlob(filter.getComment())) {
+                    query.setParameter("comment", SOSHibernateLikePatterns.globToSqlLike(filter.getComment()));
                 } else {
                     query.setParameter("comment", filter.getComment());
                 }
@@ -300,14 +301,14 @@ public class AuditLogDBLayer {
 
         if (objectName != null && !objectName.isEmpty()) {
             if (hasOrderType) {
-                if (SearchStringHelper.isGlobPattern(objectName)) {
-                    clause.add("(name like :name or orderId like :name)");
+                if (SOSHibernateLikePatterns.containsGlob(objectName)) {
+                    clause.add("(sos_like(name, :name) or sos_like(orderId, :name))");
                 } else {
                     clause.add("(name = :name or orderId = :name)");
                 }
             } else {
-                if (SearchStringHelper.isGlobPattern(objectName)) {
-                    clause.add("name like :name");
+                if (SOSHibernateLikePatterns.containsGlob(objectName)) {
+                    clause.add("sos_like(name, :name)");
                 } else {
                     clause.add("name = :name");
                 }
