@@ -1,5 +1,8 @@
 package com.sos.joc.classes.proxy;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -83,6 +86,10 @@ public class Proxies {
             proxyContext = JProxyContext.start(Optional.of(GroupAndProxyId.of("JOC", Globals.getJocId())), ConfigFactory.empty())
                     .join();
             proxyContext.makeSingleton();
+            Path logsDir = Paths.get("logs");
+            if (Files.isDirectory(logsDir)) {
+                proxyContext.registerLogDirectoryMBean(logsDir); 
+            }
         }
         return proxies;
     }
@@ -447,7 +454,7 @@ public class Proxies {
     private void _closeAll() {
         LOGGER.info("closing all proxies ...");
         CompletableFuture.allOf(controllerApis.values().stream()
-                .peek(api -> api.setActive(false))
+                .peek(api -> api.allowEngineMetrics(false))
                 .map(JControllerApi::stop).toArray(CompletableFuture[]::new))
                 .thenCompose(v -> {
                     controllerFutures.clear();

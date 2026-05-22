@@ -35,13 +35,13 @@ public class ControllerApiContext {
         }
         JControllerApi api = proxyContext.newControllerApi(admissions, credentials.getHttpsConfig());
         if (ProxyUser.JOC.value().equals(credentials.getAccount())) {
-            api.setActive(ClusterWatch.jocIsActive());
+            api.allowEngineMetrics(ClusterWatch.jocIsActive());
             LOGGER.info(String.format("ControllerApi: %s: %s for metrics", toString(credentials), (ClusterWatch.jocIsActive()
                     ? "active" : "inactive")));
         } else {
-            api.setActive(false);
+            api.allowEngineMetrics(false);
         }
-        api.setActive(ProxyUser.JOC.value().equals(credentials.getAccount()) && ClusterWatch.jocIsActive());
+        api.allowEngineMetrics(ProxyUser.JOC.value().equals(credentials.getAccount()) && ClusterWatch.jocIsActive());
         return api;
     }
 

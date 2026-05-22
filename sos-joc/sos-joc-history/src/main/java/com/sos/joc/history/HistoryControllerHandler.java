@@ -338,7 +338,7 @@ public class HistoryControllerHandler {
         stopper = new FluxStopper();
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             // Original Flux
-            Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
+            Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()), ProxyUser.HISTORY.getUser());
             if (LOGGER.isTraceEnabled()) {
                 // Only actual signals are logged, such as onSubscribe, request(n), onNext(element), onComplete, onError, cancel.
                 // - request(1) happens because the history Flux is terminated with .toIterable().forEach

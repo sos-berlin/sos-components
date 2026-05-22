@@ -87,7 +87,7 @@ public class ClusterWatch {
                 }
                 // deactivate proxy metrics
                 Proxies.getJOCControllerApis().forEach((cred, api) -> {
-                    api.setActive(false);
+                    api.allowEngineMetrics(false);
                     LOGGER.info("ControllerApi " + ControllerApiContext.toString(cred) + ": inactive for metrics");
                 });
             } else if (memberId.equals(evt.getNewClusterMemberId())) {
@@ -121,7 +121,7 @@ public class ClusterWatch {
                 }
                 // activate proxy metrics
                 Proxies.getJOCControllerApis().forEach((cred, api) -> {
-                    api.setActive(true);
+                    api.allowEngineMetrics(true);
                     LOGGER.info("ControllerApi " + ControllerApiContext.toString(cred) + ": active for metrics");
                 });
             }
