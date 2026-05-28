@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,8 +41,8 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
@@ -79,8 +80,8 @@ public class HistoryMonitoringModel implements Serializable {
 
     private ScheduledExecutorService threadPool;
     private CopyOnWriteArraySet<AHistoryBean> payloads = new CopyOnWriteArraySet<>();
-    // HashMap type on the left side for serializing
-    private HashMap<Long, HistoryOrderStepBean> longerThan = new HashMap<>();// new ConcurrentHashMap<>();
+    // concurrent because - close(serialization) is called from another thread.
+    private Map<Long, HistoryOrderStepBean> longerThan = new ConcurrentHashMap<>();
 
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
@@ -102,6 +103,7 @@ public class HistoryMonitoringModel implements Serializable {
 
     @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class, HistoryOrderTaskLogFirstStderr.class })
     public void handleHistoryEvents(HistoryEvent evt) {
+        // allow new events if closed
         MonitorService.setLogger();
         // LOGGER.info("[EV]" + SOSString.toString(evt));
         if (evt.getPayload() != null) {
@@ -260,7 +262,7 @@ public class HistoryMonitoringModel implements Serializable {
                             pauseCounter.set(pauseCounter.get() + 1);
                             if (MAX_PAUSE_IN_SECONDS > 0 && pauseCounter.get() >= MAX_PAUSE_IN_SECONDS) {
                                 pause.set(false);
-                                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][oause][stopped]MAX_PAUSE_IN_SECONDS="
+                                LOGGER.info("[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "][cause][stopped]MAX_PAUSE_IN_SECONDS="
                                         + MAX_PAUSE_IN_SECONDS + " reached");
                             }
                         } else {
@@ -276,7 +278,7 @@ public class HistoryMonitoringModel implements Serializable {
                     }
                 } catch (Throwable e) {
                     MonitorService.setLogger();
-                    LOGGER.error(e.toString(), e);
+                    LOGGER.warn(e.toString(), e);
                 } finally {
                     inProcess.set(false);
                 }
@@ -386,9 +388,9 @@ public class HistoryMonitoringModel implements Serializable {
             LOGGER.info(String.format("[%s][%s-%s][UTC][%s-%s][%s]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, firstEventId, toNotify
                     .getLastEventId(), eventIdAsTime(firstEventId), eventIdAsTime(toNotify.getLastEventId()), SOSDate.getDuration(Duration.between(
                             start, Instant.now())), toRemove.size()));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             dbLayer.rollback();
-            LOGGER.error(e.toString(), e);
+            LOGGER.warn(e.toString(), e);
         } finally {
             dbLayer.close();
             payloads.removeAll(toRemove);
@@ -416,7 +418,7 @@ public class HistoryMonitoringModel implements Serializable {
 
             Date endTime = getEventIdAsDate(calculatedEventId);
             Map<Long, HistoryOrderStepResult> w = new HashMap<>();
-            longerThan.entrySet().stream().forEach(entry -> {
+            longerThan.entrySet().stream().takeWhile(c -> !closed.get()).forEach(entry -> {
                 HistoryOrderStepBean hosb = entry.getValue();
                 Date stepEndTime = hosb.getEndTime() == null ? endTime : hosb.getEndTime();
                 HistoryOrderStepResultWarn warn = analyzeLongerThan(dbLayer, hosb, hosb.getWarnIfLonger(), hosb.getStartTime(), stepEndTime, entry
@@ -427,7 +429,7 @@ public class HistoryMonitoringModel implements Serializable {
 
                     try {
                         LOGGER.info(String.format(
-                                "[%s][handleLongerThan][UTC][start=%s,calculated current=%s][%s]orderId=%s,workflow=%s,job=%s(historyId=%s)",
+                                "[%s][handleLongerThan][UTC][start=%s,calculated current=%s][%s]orderId=%s, workflow=%s, job=%s(historyId=%s)",
                                 MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, SOSDate.getTimeAsString(hosb.getStartTime()), SOSDate.getTimeAsString(
                                         stepEndTime), warn.getText(), hosb.getOrderId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                                                 .getHistoryId()));
@@ -441,6 +443,9 @@ public class HistoryMonitoringModel implements Serializable {
             }
 
             for (Map.Entry<Long, HistoryOrderStepResult> entry : w.entrySet()) {
+                if (closed.get()) {
+                    break;
+                }
                 if (longerThan.containsKey(entry.getKey())) {
                     longerThan.remove(entry.getKey());
                 }
@@ -448,9 +453,9 @@ public class HistoryMonitoringModel implements Serializable {
             }
             LOGGER.info(String.format("[%s][handleLongerThan][processed=%s]toNotify steps=%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, w
                     .size(), toNotify.getSteps().size()));
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             // dbLayer.rollback();
-            LOGGER.error(ex.toString(), ex);
+            LOGGER.warn(ex.toString(), ex);
         } finally {
             dbLayer.close();
             setLastActivityEnd();
@@ -657,7 +662,7 @@ public class HistoryMonitoringModel implements Serializable {
                     + " matches the configured warning return codes " + hosb.getWarnReturnCodes());
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][workflowPath=%s,job=%s(historyId=%s)]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb
+                LOGGER.debug(String.format("[%s][%s][workflowPath=%s, job=%s(historyId=%s)]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb
                         .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), SOSString.toString(warn)));
             }
         }
@@ -715,6 +720,15 @@ public class HistoryMonitoringModel implements Serializable {
             }
 
             if (diff > expected.getSeconds()) {
+                if (LOGGER.isDebugEnabled()) {
+                    try {
+                        LOGGER.debug(String.format("[%s][analyzeLongerThan][match][diff=%s > %s][startTime=%s, endTime=%s]%s",
+                                MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, diff, expected.getSeconds(), SOSDate.getDateTimeAsString(startTime),
+                                SOSDate.getDateTimeAsString(endTime), SOSString.toString(hosb)));
+                    } catch (Throwable e) {
+                        LOGGER.warn(e.toString(), e);
+                    }
+                }
                 return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
                         getExpectedDurationMessage(definition, expected)));
             } else {
@@ -796,7 +810,7 @@ public class HistoryMonitoringModel implements Serializable {
                         avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
                     }
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s]avg=%s",
+                        LOGGER.debug(String.format("[%s][%s][workflowPath=%s, job=%s(historyId=%s)][%s definition=%s]avg=%s",
                                 MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                                         .getHistoryId(), type, definition, avg));
                     }
@@ -815,7 +829,7 @@ public class HistoryMonitoringModel implements Serializable {
                     }
                 }
             } catch (SOSHibernateException e) {
-                LOGGER.error(String.format("[%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s][error on get jobAvg]%s",
+                LOGGER.warn(String.format("[%s][%s][workflowPath=%s, job=%s(historyId=%s)][%s definition=%s][error on get jobAvg]%s",
                         MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                                 .getHistoryId(), type, definition, e.toString()), e);
             }
@@ -827,7 +841,7 @@ public class HistoryMonitoringModel implements Serializable {
             seconds = Long.parseLong(definition);
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[%s][%s][workflowPath=%s,job=%s(historyId=%s)][%s definition=%s]seconds=%s",
+            LOGGER.debug(String.format("[%s][%s][workflowPath=%s, job=%s(historyId=%s)][%s definition=%s]seconds=%s",
                     MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                             .getHistoryId(), type, definition, seconds));
         }
@@ -856,12 +870,12 @@ public class HistoryMonitoringModel implements Serializable {
                 try {
                     dbLayer.getSession().save(item);
                     return true;
-                } catch (Throwable e) {
-                    LOGGER.error(String.format("[%s][save]%s", historyId, e.toString()), e);
+                } catch (Exception e) {
+                    LOGGER.warn(String.format("[%s][save]%s", historyId, e.toString()), e);
                 }
             }
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][get]%s", historyId, e.toString()), e);
+        } catch (Exception e) {
+            LOGGER.warn(String.format("[%s][get]%s", historyId, e.toString()), e);
         }
         return false;
     }
@@ -871,12 +885,15 @@ public class HistoryMonitoringModel implements Serializable {
         int longerThanSize = longerThan.size();
         if (payloadsSize > 0 || longerThanSize > 0) {
             try {
-                saveJocVariable(new SOSSerializer<SerializedHistoryResult>().serializeCompressed2bytes(new SerializedHistoryResult(payloads,
-                        longerThan)));
-                LOGGER.info(String.format("[%s][serialized]payloads=%s,longerThan=%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, payloadsSize,
+                CopyOnWriteArraySet<AHistoryBean> payloadsSnapshot = new CopyOnWriteArraySet<>(payloads);
+                Map<Long, HistoryOrderStepBean> longerThanSnapshot = new HashMap<>(longerThan);
+
+                saveJocVariable(new SOSSerializer<SerializedHistoryResult>().serializeCompressed2bytes(new SerializedHistoryResult(payloadsSnapshot,
+                        longerThanSnapshot)));
+                LOGGER.info(String.format("[%s][serialized]payloads=%s, longerThan=%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, payloadsSize,
                         longerThanSize));
-            } catch (Throwable e) {
-                LOGGER.error(String.format("[%s][serialize]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, e.toString()), e);
+            } catch (Exception e) {
+                LOGGER.warn(String.format("[%s][serialize]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, e.toString()), e);
             }
             payloads.clear();
             longerThan.clear();
@@ -894,8 +911,8 @@ public class HistoryMonitoringModel implements Serializable {
             }
             deserialize(var);
             deleteJocVariable();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][deserialize]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, e.toString()), e);
+        } catch (Exception e) {
+            LOGGER.warn(String.format("[%s][deserialize]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, e.toString()), e);
         }
     }
 
@@ -914,7 +931,7 @@ public class HistoryMonitoringModel implements Serializable {
             // longerThan on start is empty ... ?
             longerThan.putAll(sr.getLongerThan());
         }
-        LOGGER.info(String.format("[%s][deserialized]payloads=%s,longerThan=%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, payloadsSize,
+        LOGGER.info(String.format("[%s][deserialized]payloads=%s, longerThan=%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, payloadsSize,
                 longerThanSize));
     }
 
@@ -954,7 +971,7 @@ public class HistoryMonitoringModel implements Serializable {
             dbLayer.getSession().commit();
         } catch (Exception e) {
             dbLayer.rollback();
-            LOGGER.error(e.toString(), e);
+            LOGGER.warn(e.toString(), e);
         } finally {
             dbLayer.close();
         }
