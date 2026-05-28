@@ -104,7 +104,7 @@ public class HistoryMonitorServiceTest {
                 int counter = i + 1;
                 LOGGER.info(counter + ")---------handleHistoryEvents-----------------");
 
-                Date now = SOSDate.add(new Date(), -10, ChronoUnit.SECONDS);
+                Date now = SOSDate.addToDate(new Date(), -10, ChronoUnit.SECONDS);
                 DBItemHistoryOrderStep item = createStepStartDbItem(counter, now, controllerId, orderId, workflowName, workflowVersion);
 
                 HistoryTaskEvent startEvt = createStepStartEvent(counter, now, item, warnIfLonger, warnIfShorter, warnReturnCodes, notification);
@@ -126,7 +126,7 @@ public class HistoryMonitorServiceTest {
 
     private static DBItemHistoryOrderStep createStepStartDbItem(int counter, Date now, String controllerId, String orderId, String workflowName,
             String workflowVersion) {
-        Date startTime = SOSDate.add(now, -60, ChronoUnit.SECONDS);
+        Date startTime = SOSDate.addToDate(now, -60, ChronoUnit.SECONDS);
         Long startEventId = JocClusterUtil.getDateAsEventId(startTime);
 
         DBItemHistoryOrderStep item = new DBItemHistoryOrderStep();
@@ -135,7 +135,7 @@ public class HistoryMonitorServiceTest {
         item.setAgentUri("http://localhost:4555");
         item.setConstraintHash(null);
         item.setControllerId(controllerId);
-        item.setCreated(now);
+        // item.setCreated(now);
         item.setCriticality(JobCriticality.NORMAL);
         item.setCriticality(item.getCriticalityAsEnum().intValue());
         item.setEndEventId(null);
@@ -146,7 +146,7 @@ public class HistoryMonitorServiceTest {
         item.setJobLabel("junit");
         item.setJobName("junit");
         item.setLogId(0l);
-        item.setModified(now);
+        // item.setModified(now);
         item.setOrderId(orderId);
         item.setPosition(Integer.valueOf(0));
         item.setRetryCounter(Integer.valueOf(0));
@@ -178,7 +178,7 @@ public class HistoryMonitorServiceTest {
         EventType eventType = EventType.OrderProcessed;
         Long eventId = JocClusterUtil.getDateAsEventId(now) + counter;
 
-        Date endTime = SOSDate.add(now, -10, ChronoUnit.SECONDS);
+        Date endTime = SOSDate.addToDate(now, -10, ChronoUnit.SECONDS);
         Long endEventId = JocClusterUtil.getDateAsEventId(endTime);
 
         item.setEndEventId(endEventId);
