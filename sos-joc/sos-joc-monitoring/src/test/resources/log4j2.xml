@@ -3,17 +3,19 @@
 	<Appenders>
 		<!-- Appender for root logger -->
 		<Console name="stdout" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{ISO8601}{Europe/Berlin} %-5p %c{1.}:%L - %m%n"/>
+			<PatternLayout
+				pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] (%F:%L) - %m%n" />
 		</Console>
 	</Appenders>
 
 	<Loggers>
-		<Logger name="com.sos" level="trace"/>
-		<Logger name="net" level="trace"/>
+		<Logger name="com.sos" level="debug" />
+		<Logger name="net" level="debug" />
 
-		<!-- root logger with console appender. All other loggers inherit from this logger. -->
+		<!-- root logger with console appender. All other loggers inherit from 
+			this logger. -->
 		<Root level="info">
-			<AppenderRef ref="stdout"/>
+			<AppenderRef ref="stdout" />
 		</Root>
 	</Loggers>
 </Configuration>

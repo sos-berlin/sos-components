@@ -49,6 +49,28 @@ public class SOSReflection {
         memberValues.put(key, newValue);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T getDeclaredField(Object o, Class<T> returnClazz, String fieldName) throws Exception {
+        Class<?> clazz = o.getClass();
+        Field field = null;
+
+        while (clazz != null) {
+            try {
+                field = clazz.getDeclaredField(fieldName);
+                break;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+
+        if (field == null) {
+            throw new NoSuchFieldException("Field '" + fieldName + "' not found in class hierarchy of " + o.getClass().getName());
+        }
+
+        field.setAccessible(true);
+        return (T) field.get(o);
+    }
+
     public static void setDeclaredFieldValue(Object o, String fieldName, Object fieldValue) throws Exception {
         Class<?> clazz = o.getClass();
         Field field = null;
