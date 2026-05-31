@@ -9,15 +9,13 @@ import java.util.OptionalLong;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.logs.FluxStreamingOutput;
 import com.sos.joc.classes.logs.LogHelper;
+import com.sos.joc.classes.logs.LogSession;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.resource.IControllerLogResource;
@@ -29,6 +27,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.log.ControllerLogRequest;
 import com.sos.joc.model.log.LogResponse;
+import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -43,13 +42,13 @@ import reactor.core.scheduler.Schedulers;
 public class ControllerLogImpl extends JOCResourceImpl implements IControllerLogResource {
 
     private static final String LOG_API_CALL = "./controller/log";
+    private static final String LOG_RUNNING_API_CALL = "./controller/log/running";
     private static final String LOG_DOWNLOAD_API_CALL = "./controller/log/download";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerLogImpl.class);
 
     @Override
     public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
         try {
-            ControllerLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes);
+            ControllerLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes, ControllerLogRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
@@ -71,9 +70,11 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             String targetFilename = LogHelper.getControllerDownloadFilename(dbItem, in.getLevel(), instantFrom, instantTo, now, numOfLines, true);
             byte[] header = getHeader(dbItem, instantFrom, timeZone);
 
-            JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines);
-            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
-                    .commonPool())).flatMapIterable(Function.identity()).takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));
+            JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
+            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection)
+                    .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                    .flatMapIterable(Function.identity());
+                    //.takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));
 
             return responseOctetStreamDownloadStatus200(new FluxStreamingOutput(true, flux, header), targetFilename);
         } catch (Exception e) {
@@ -84,7 +85,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     @Override
     public JOCDefaultResponse getLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            ControllerLogRequest in = init(LOG_API_CALL, accessToken, filterBytes);
+            ControllerLogRequest in = init(LOG_API_CALL, accessToken, filterBytes, ControllerLogRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
@@ -103,18 +104,43 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             return responseStatusJSError(e);
         }
     }
+    
+    @Override
+    public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            String controllerId = logSession.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            checkAndGetDBInstances(controllerId);
+            LogResponse entity = LogHelper.getRunningResponse(logSession, in.getLogToken());
 
-    private ControllerLogRequest init(String apiCall, String accessToken, byte[] filterBytes) throws Exception {
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+
+    private <T> T init(String apiCall, String accessToken, byte[] filterBytes, Class<T> clazz) throws Exception {
         filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
-        JsonValidator.validateFailFast(filterBytes, ControllerLogRequest.class);
-        return Globals.objectMapper.readValue(filterBytes, ControllerLogRequest.class);
+        JsonValidator.validateFailFast(filterBytes, clazz);
+        return Globals.objectMapper.readValue(filterBytes, clazz);
+    }
+    
+    public static List<DBItemInventoryJSInstance> checkAndGetDBInstances(String controllerId) {
+        List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
+        if (controllerInstances == null) {
+            throw new JocBadRequestException("Couldn't find Controller with ID " + controllerId);
+        }
+        return controllerInstances;
     }
 
     private DBItemInventoryJSInstance getDBInstance(ControllerLogRequest in) {
-        List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(in.getControllerId());
-        if (controllerInstances == null) {
-            throw new JocBadRequestException("Couldn't find Controller with ID " + in.getControllerId());
-        }
+        List<DBItemInventoryJSInstance> controllerInstances = checkAndGetDBInstances(in.getControllerId());
         if (controllerInstances.size() > 1) { // is cluster
             checkRequiredParameter("role", in.getRole());
             boolean isPrimary = !in.getRole().equals(Role.BACKUP);

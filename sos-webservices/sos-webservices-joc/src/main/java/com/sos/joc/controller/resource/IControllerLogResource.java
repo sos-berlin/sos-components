@@ -17,6 +17,12 @@ public interface IControllerLogResource {
             byte[] filterBytes);
 
     @POST
+    @Path("log/running")
+    @Consumes("application/json")
+    public JOCDefaultResponse getRunningLog(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("Accept-Encoding") String acceptEncoding,
+            byte[] filterBytes);
+
+    @POST
     @Path("log/download")
     @Consumes("application/json")
     public JOCDefaultResponse postDownloadLog(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

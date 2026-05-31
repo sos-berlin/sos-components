@@ -10,20 +10,20 @@ import java.util.OptionalLong;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.logs.FluxStreamingOutput;
 import com.sos.joc.classes.logs.LogHelper;
+import com.sos.joc.classes.logs.LogSession;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.controller.impl.ControllerLogImpl;
 import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.log.AgentLogRequest;
 import com.sos.joc.model.log.LogResponse;
+import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -46,12 +46,12 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
 
     private static final String LOG_API_CALL = "./agent/log";
     private static final String LOG_DOWNLOAD_API_CALL = "./agent/log/download";
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentLogImpl.class);
+    private static final String LOG_RUNNING_API_CALL = "./agent/log/running";
 
     @Override
     public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
         try {
-            AgentLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes);
+            AgentLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes, AgentLogRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
@@ -82,9 +82,11 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
                     numOfLines, true);
             byte[] header = getHeader(director, platforminfo, instantFrom, timeZone);
             
-            JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines);
-            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
-                    .commonPool())).flatMapIterable(Function.identity()).takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));
+            JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
+            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection)
+                    .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                    .flatMapIterable(Function.identity());
+                    //.takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));
 
             return responseOctetStreamDownloadStatus200(new FluxStreamingOutput(true, flux, header), targetFilename);
         } catch (Exception e) {
@@ -95,13 +97,14 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
     @Override
     public JOCDefaultResponse getLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            AgentLogRequest in = init(LOG_API_CALL, accessToken, filterBytes);
+            AgentLogRequest in = init(LOG_API_CALL, accessToken, filterBytes, AgentLogRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
+            ControllerLogImpl.checkAndGetDBInstances(in.getControllerId());
             JControllerProxy proxy = Proxy.of(in.getControllerId());
             JControllerState currentState = proxy.currentState();
             JAgentRef agent = currentState.pathToAgentRef().get(AgentPath.of(in.getAgentId()));
@@ -127,6 +130,26 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
         }
     }
     
+    @Override
+    public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            String controllerId = logSession.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            ControllerLogImpl.checkAndGetDBInstances(controllerId);
+            LogResponse entity = LogHelper.getRunningResponse(logSession, in.getLogToken());
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
     private static SubagentId getDirector(AgentLogRequest in, List<SubagentId> directors) {
         // TODO check if standalone agent has also (one) director? I think yes
         SubagentId director = SubagentId.of(in.getAgentId());
@@ -144,10 +167,10 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
         return directors.size() == 1 ? 0 : directors.indexOf(director) + 1;
     }
 
-    private AgentLogRequest init(String apiCall, String accessToken, byte[] filterBytes) throws Exception {
+    private <T> T init(String apiCall, String accessToken, byte[] filterBytes, Class<T> clazz) throws Exception {
         filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
-        JsonValidator.validateFailFast(filterBytes, AgentLogRequest.class);
-        return Globals.objectMapper.readValue(filterBytes, AgentLogRequest.class);
+        JsonValidator.validateFailFast(filterBytes, clazz);
+        return Globals.objectMapper.readValue(filterBytes, clazz);
     }
     
     private static byte[] getHeader(SubagentId subagentId, Optional<PlatformInfo> platforminfo, Instant instantFrom, String timeZone) {

@@ -23,7 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "dateFrom",
     "dateTo",
     "timeZone",
-    "numOfLines"
+    "numOfLines",
+    "limit"
 })
 public class LogBaseRequest {
 
@@ -66,8 +67,22 @@ public class LogBaseRequest {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("numOfLines")
     private Long numOfLines;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    private Long limit;
 
     /**
      * controllerId
@@ -171,24 +186,58 @@ public class LogBaseRequest {
         this.timeZone = timeZone;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("numOfLines")
     public Long getNumOfLines() {
         return numOfLines;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("numOfLines")
     public void setNumOfLines(Long numOfLines) {
         this.numOfLines = numOfLines;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public Long getLimit() {
+        return limit;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Long limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("level", level).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("numOfLines", numOfLines).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("level", level).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("numOfLines", numOfLines).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfLines).append(controllerId).append(level).append(dateTo).append(timeZone).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(numOfLines).append(controllerId).append(level).append(dateTo).append(limit).append(timeZone).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -200,7 +249,7 @@ public class LogBaseRequest {
             return false;
         }
         LogBaseRequest rhs = ((LogBaseRequest) other);
-        return new EqualsBuilder().append(numOfLines, rhs.numOfLines).append(controllerId, rhs.controllerId).append(level, rhs.level).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(numOfLines, rhs.numOfLines).append(controllerId, rhs.controllerId).append(level, rhs.level).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

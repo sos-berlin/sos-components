@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "logLines",
     "timeZone",
-    "token",
+    "logToken",
     "isComplete"
 })
 public class LogResponse {
@@ -44,13 +44,8 @@ public class LogResponse {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("token")
-    private String token;
+    @JsonProperty("logToken")
+    private String logToken;
     /**
      * 
      * (Required)
@@ -103,24 +98,14 @@ public class LogResponse {
         this.timeZone = timeZone;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("token")
-    public String getToken() {
-        return token;
+    @JsonProperty("logToken")
+    public String getLogToken() {
+        return logToken;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("token")
-    public void setToken(String token) {
-        this.token = token;
+    @JsonProperty("logToken")
+    public void setLogToken(String logToken) {
+        this.logToken = logToken;
     }
 
     /**
@@ -145,12 +130,12 @@ public class LogResponse {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("logLines", logLines).append("timeZone", timeZone).append("token", token).append("isComplete", isComplete).toString();
+        return new ToStringBuilder(this).append("logLines", logLines).append("timeZone", timeZone).append("logToken", logToken).append("isComplete", isComplete).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(logLines).append(token).append(isComplete).toHashCode();
+        return new HashCodeBuilder().append(timeZone).append(logToken).append(logLines).append(isComplete).toHashCode();
     }
 
     @Override
@@ -162,7 +147,7 @@ public class LogResponse {
             return false;
         }
         LogResponse rhs = ((LogResponse) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(logLines, rhs.logLines).append(token, rhs.token).append(isComplete, rhs.isComplete).isEquals();
+        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(logToken, rhs.logToken).append(logLines, rhs.logLines).append(isComplete, rhs.isComplete).isEquals();
     }
 
 }
