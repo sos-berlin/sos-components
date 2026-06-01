@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -355,7 +356,7 @@ public class DailyPlanRunner extends TimerTask {
                     settings.setDailyPlanDate(dailyPlanCalendar.getTime());
                 }
 
-                closeOldPlans(startupMode, controllerId, ageOfPlansToBeClosedAutomatically);
+                closeOldPlans(startupMode, controllerId, ageOfPlansToBeClosedAutomatically, settings.getTimeZone());
                 setUnknownPlansAreOpenFromDate(startupMode, controllerId);
 
             }
@@ -873,11 +874,11 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // service
-    private static void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically) {
+    private static void closeOldPlans(StartupMode startupMode, String controllerId, int ageOfPlansToBeClosedAutomatically, String dailyplanTimezone) {
 
         if (ageOfPlansToBeClosedAutomatically > 0) {
             try {
-                LocalDate ld = LocalDate.now(ZoneOffset.UTC);
+                LocalDate ld = LocalDate.now(ZoneId.of(dailyplanTimezone));
                 if (ageOfPlansToBeClosedAutomatically > 1) {
                     ld = ld.minusDays(Integer.valueOf(ageOfPlansToBeClosedAutomatically - 1).longValue());
                 }
