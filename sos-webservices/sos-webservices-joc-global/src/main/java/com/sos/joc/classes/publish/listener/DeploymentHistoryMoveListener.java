@@ -2,6 +2,7 @@ package com.sos.joc.classes.publish.listener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -114,7 +115,8 @@ public class DeploymentHistoryMoveListener {
         cloned.setControllerId(toClone.getControllerId());
         cloned.setControllerInstanceId(toClone.getControllerInstanceId());
         cloned.setDeleteDate(toClone.getDeleteDate());
-        cloned.setDeploymentDate(toClone.getDeploymentDate());
+        Date newDepDate = new Date(toClone.getDeploymentDate().getTime() + 1000l);
+        cloned.setDeploymentDate(newDepDate); //JOC-2222 make sure that DeploymentDate increases monotonically (see also JOC-2174) 
         cloned.setErrorMessage(toClone.getErrorMessage());
         cloned.setFolder(newFolder);
         cloned.setInvContent(toClone.getInvContent());
