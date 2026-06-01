@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum RequestLevel {
 
     ERROR("ERROR"),
+    WARN("WARN"),
     INFO("INFO"),
     DEBUG("DEBUG");
     private final String value;

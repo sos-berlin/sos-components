@@ -154,6 +154,7 @@ public class LogHelper {
         }
         switch (level) {
         case ERROR:
+        case WARN:
             return LogLevel.error();
         case DEBUG:
             return LogLevel.debug();
