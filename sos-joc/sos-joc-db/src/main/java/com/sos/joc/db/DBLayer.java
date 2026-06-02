@@ -25,7 +25,7 @@ import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepConfigurationJoin;
 import com.sos.joc.db.deployment.DBItemDepKeys;
-import com.sos.joc.db.deployment.DBItemDepNamePaths;
+
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -353,8 +353,8 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_DEP_CONFIGURATIONS_JOIN = DBItemDepConfigurationJoin.class.getSimpleName();
     public static final String VIEW_DEP_CONFIGURATIONS_JOIN = "DEP_CONFIGURATIONS_JOIN";
     
-    public static final String DBITEM_DEP_NAMEPATHS = DBItemDepNamePaths.class.getSimpleName();
-    public static final String VIEW_DEP_NAMEPATHS = "DEP_NAMEPATHS";
+
+
 
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
@@ -614,7 +614,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepConfigurationJoin.class);
         cl.add(DBItemDeploymentSubmission.class);
         cl.add(DBItemDepCommitIds.class);
-        cl.add(DBItemDepNamePaths.class);
+
 
         cl.add(DBItemIamBlockedAccount.class);
         cl.add(DBItemIamHistory.class);
