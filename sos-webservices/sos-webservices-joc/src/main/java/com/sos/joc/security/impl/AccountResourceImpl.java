@@ -168,7 +168,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                 }
             }
 
-            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
+            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
             String initialPassword = sosInitialPasswordSetting.getInitialPassword();
 
             String password = "";
@@ -534,7 +534,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
 
         if (IdentityServiceTypes.JOC.value().equals(dbItemIamIdentityService.getIdentityServiceType())) {
 
-            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
+            SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
 
             if (account.getPassword() != null && !account.getPassword().equals(account.getRepeatedPassword())) {
                 JocError error = new JocError();

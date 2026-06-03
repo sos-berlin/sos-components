@@ -1,5 +1,7 @@
 package com.sos.joc.cluster.configuration.globals;
 
+import java.util.Optional;
+
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
@@ -28,8 +30,9 @@ public class ConfigurationGlobalsIdentityService extends AConfigurationSection {
         return initialPassword;
     }
 
-    public ConfigurationEntry getMininumPasswordLength() {
-        return minimumPasswordLength;
+    public Integer getMininumPasswordLength() {
+        String _default = Optional.ofNullable(minimumPasswordLength).map(ConfigurationEntry::getDefault).orElse("1");
+        return Integer.valueOf(Optional.ofNullable(minimumPasswordLength).map(ConfigurationEntry::getValue).orElse(_default));
     }
 
 }
