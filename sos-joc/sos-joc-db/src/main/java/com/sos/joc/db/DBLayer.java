@@ -603,8 +603,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepConfiguration.class);
         cl.add(DBItemDeploymentSubmission.class);
         cl.add(DBItemDepCommitIds.class);
-        cl.add(DBItemDepNamePaths.class);
-
+        
         cl.add(DBItemIamBlockedAccount.class);
         cl.add(DBItemIamHistory.class);
         cl.add(DBItemIamHistoryDetails.class);

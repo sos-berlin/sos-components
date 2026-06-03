@@ -20,6 +20,8 @@ import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowPathEvent;
+import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.OperationType;
 
 import js7.data_for_java.workflow.JWorkflowId;
 
@@ -106,13 +108,19 @@ public class WorkflowPaths {
     private void _initNamePath(SOSHibernateSession connection) {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-            hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
+            hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where type=:type");
+            hql.append(" and state=:state");
+            hql.append(" and operation=:operation");
+            hql.append(" order by id desc");
             Query<InventoryNamePath> query = connection.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("state", DeploymentState.DEPLOYED.value());
+            query.setParameter("operation", OperationType.UPDATE.value());
             List<InventoryNamePath> result = connection.getResultList(query);
             if (result != null) {
-                namePathMap = result.stream().distinct().collect(Collectors.toConcurrentMap(InventoryNamePath::getName, InventoryNamePath::getPath));
+                namePathMap = result.stream().distinct()
+                        .collect(Collectors.toConcurrentMap(InventoryNamePath::getName, InventoryNamePath::getPath, (v1, v2) -> v1));
             }
         } catch (SOSHibernateException e) {
             LOGGER.warn(e.toString());
@@ -126,11 +134,16 @@ public class WorkflowPaths {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(WorkflowPaths.class.getSimpleName());
-            StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
+            StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where type=:type and name=:name");
+            hql.append(" and state=:state");
+            hql.append(" and operation=:operation");
+            hql.append(" order by id desc");
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("name", name);
+            query.setParameter("state", DeploymentState.DEPLOYED.value());
+            query.setParameter("operation", OperationType.UPDATE.value());
             query.setMaxResults(1);
             String result = session.getSingleResult(query);
             if (result != null) {

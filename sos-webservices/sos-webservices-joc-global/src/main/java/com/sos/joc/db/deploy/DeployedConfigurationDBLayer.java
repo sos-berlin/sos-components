@@ -47,6 +47,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.tree.Tree;
 
 public class DeployedConfigurationDBLayer {
@@ -540,7 +542,7 @@ public class DeployedConfigurationDBLayer {
         } else {
             try {
                 StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-                hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
+                hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_HISTORY);
                 hql.append(" where name in (:names)");
                 if (controllerId != null) {
                     hql.append(" and controllerId=:controllerId");
@@ -548,6 +550,10 @@ public class DeployedConfigurationDBLayer {
                 if (type != null) {
                     hql.append(" and type=:type");
                 }
+                hql.append(" and state=:state");
+                hql.append(" and operation=:operation");
+                hql.append(" order by id desc");
+                
                 Query<InventoryNamePath> query = session.createQuery(hql.toString());
                 query.setParameterList("names", names);
                 if (controllerId != null) {
@@ -556,9 +562,13 @@ public class DeployedConfigurationDBLayer {
                 if (type != null) {
                     query.setParameter("type", type);
                 }
+                query.setParameter("state", DeploymentState.DEPLOYED.value());
+                query.setParameter("operation", OperationType.UPDATE.value());
+                
                 List<InventoryNamePath> result = session.getResultList(query);
                 if (result != null) {
-                    return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
+                    return result.stream().distinct()
+                            .collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath, (v1, v2) -> v1));
                 }
                 return Collections.emptyMap();
             } catch (Exception e) {
