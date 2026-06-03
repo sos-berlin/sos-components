@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.sos.auth.classes.SOSAuthHelper;
-import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.classes.SOSInitialPasswordSetting;
 import com.sos.auth.classes.SOSPasswordHasher;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -40,10 +39,10 @@ public class SOSSecurityDBConfiguration {
     private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
             DBItemIamIdentityService dbItemIamIdentityService, boolean updateAccounts) throws Exception {
 
-        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
+        //SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-        SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings(sosHibernateSession);
+        SOSInitialPasswordSetting sosInitialPasswordSetting = SOSAuthHelper.getInitialPasswordSettings();
         String initialPassword = sosInitialPasswordSetting.getInitialPassword();
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {

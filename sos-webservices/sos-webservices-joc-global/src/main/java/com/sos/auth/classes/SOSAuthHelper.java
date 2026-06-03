@@ -35,7 +35,6 @@ import javax.naming.InvalidNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
@@ -60,8 +59,6 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.db.security.IamRoleDBLayer;
 import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocError;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
@@ -190,29 +187,15 @@ public class SOSAuthHelper {
         return false;
     }
 
-    public static SOSInitialPasswordSetting getInitialPasswordSettings(SOSHibernateSession sosHibernateSession) throws JsonParseException,
-            JsonMappingException, IOException, SOSHibernateException {
+    public static SOSInitialPasswordSetting getInitialPasswordSettings() {
 
         String initialPassword = Globals.getConfigurationGlobalsIdentityService().getInitialPassword().getValue();
-        Long minPasswordLength = Long.valueOf(
-                Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue() != null 
-                        ? Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getValue() 
-                        : Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength().getDefault()
-            );
+        Integer minPasswordLength = Globals.getConfigurationGlobalsIdentityService().getMininumPasswordLength();
         SOSInitialPasswordSetting sosInitialPasswordSetting = new SOSInitialPasswordSetting();
 
-        if (minPasswordLength == null) {
-            minPasswordLength = 0L;
-        }
         if (initialPassword == null) {
             initialPassword = INITIAL;
             LOGGER.info("Missing initial password settings. Using default value=" + INITIAL);
-        } else {
-            if (initialPassword.length() < minPasswordLength) {
-                JocError error = new JocError();
-                error.setMessage("Initial password is too short");
-                throw new JocException(error);
-            }
         }
 
         sosInitialPasswordSetting.setInitialPassword(initialPassword);

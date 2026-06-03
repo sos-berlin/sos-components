@@ -3,7 +3,7 @@ package com.sos.auth.classes;
 public class SOSInitialPasswordSetting {
 
     String initialPassword;
-    Long mininumPasswordLength;
+    Integer mininumPasswordLength;
 
     public String getInitialPassword() {
         if (initialPassword == null) {
@@ -16,16 +16,16 @@ public class SOSInitialPasswordSetting {
         this.initialPassword = initialPassword;
     }
 
-    public Long getMininumPasswordLength() {
+    public Integer getMininumPasswordLength() {
         return mininumPasswordLength;
     }
 
-    public void setMininumPasswordLength(Long mininumPasswordLength) {
+    public void setMininumPasswordLength(Integer mininumPasswordLength) {
         this.mininumPasswordLength = mininumPasswordLength;
     }
 
     public boolean isMininumPasswordLength(String password) {
-        return (mininumPasswordLength == 0L) || "********".equals(password) || (password.length() >= mininumPasswordLength);
+        return (mininumPasswordLength == 0) || "********".equals(password) || (password.length() >= mininumPasswordLength);
     }
 
 }
