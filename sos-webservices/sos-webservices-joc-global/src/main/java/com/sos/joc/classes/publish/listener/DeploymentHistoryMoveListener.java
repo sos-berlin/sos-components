@@ -123,7 +123,7 @@ public class DeploymentHistoryMoveListener {
         cloned.setInventoryConfigurationId(toClone.getInventoryConfigurationId());
         cloned.setName(toClone.getName());
         cloned.setOperation(toClone.getOperation());
-        cloned.setPath(newFolder.concat("/").concat(toClone.getName()));
+        cloned.setPath(newFolder.concat("/").replace("//+", "/").concat(toClone.getName()));
         cloned.setSignedContent(toClone.getSignedContent());
         cloned.setState(toClone.getState());
         cloned.setTitle(toClone.getTitle());
