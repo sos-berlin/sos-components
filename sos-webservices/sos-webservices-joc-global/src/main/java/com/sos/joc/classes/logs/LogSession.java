@@ -79,15 +79,21 @@ public class LogSession {
         this.responsedNumOfLines += responsedNumOfLines;
     }
     
-    public OptionalLong getNewRequestedNumOfLines() {
+    public OptionalLong getNewRequestedNumOfLines(Long runningChunkSize) {
+        Long rChunkSize = runningChunkSize;
+        if (runningChunkSize == null) {
+            rChunkSize = chunkSize;
+        } else if (runningChunkSize < 0) {
+            rChunkSize = Long.MAX_VALUE;
+        }
         if (requestedNumOfLines == null) {
-           return OptionalLong.of(chunkSize); 
+           return OptionalLong.of(rChunkSize); 
         }
         Long rest = requestedNumOfLines - responsedNumOfLines;
         if (rest <= 0) {
             return OptionalLong.empty();
         }
-        return OptionalLong.of(Math.min(rest, chunkSize));
+        return OptionalLong.of(Math.min(rest, rChunkSize));
     }
 
     public String getToken() {

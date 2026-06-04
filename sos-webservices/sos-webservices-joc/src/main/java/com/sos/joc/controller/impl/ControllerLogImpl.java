@@ -117,7 +117,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
                 return jocDefaultResponse;
             }
             checkAndGetDBInstances(controllerId);
-            LogResponse entity = LogHelper.getRunningResponse(logSession, in.getLogToken());
+            LogResponse entity = LogHelper.getRunningResponse(logSession, in);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {

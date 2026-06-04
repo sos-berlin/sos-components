@@ -30,6 +30,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.log.LogBaseRequest;
 import com.sos.joc.model.log.LogResponse;
 import com.sos.joc.model.log.RequestLevel;
+import com.sos.joc.model.log.RunningLogRequest;
 
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
@@ -81,18 +82,6 @@ public class LogHelper {
         KeyedLogLine lastLine = setLogLines(proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection), instantTo, zoneId, false, entity);
         
         setIsComplete(lastLine, instantToIsInPast, in.getNumOfLines(), 0, chunkSize, entity);
-        
-        
-        if (lastLine == null) {
-            entity.setIsComplete(instantToIsInPast);
-        }
-        if (!entity.getIsComplete() && in.getNumOfLines() != null && entity.getLogLines().size() <= in.getNumOfLines().intValue()) {
-            if (in.getNumOfLines() <= chunkSize) {
-                entity.setIsComplete(true);
-            } else if (entity.getLogLines().size() < chunkSize) {
-                entity.setIsComplete(true);
-            }
-        }
 
         entity.setLogToken(UUID.randomUUID().toString());
         LogSession ls = new LogSession(in.getControllerId(), serverId, logLevel, instantFrom, instantTo, in.getNumOfLines(), entity.getLogLines()
@@ -330,7 +319,7 @@ public class LogHelper {
         return logSession;
     }
 
-    public static LogResponse getRunningResponse(LogSession logSession, String token) throws ControllerConnectionResetException,
+    public static LogResponse getRunningResponse(LogSession logSession, RunningLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
@@ -340,10 +329,10 @@ public class LogHelper {
         LogResponse entity = new LogResponse();
         entity.setTimeZone(zoneId.getId());
         entity.setLogLines(new ArrayList<>());
-        entity.setLogToken(token);
+        entity.setLogToken(in.getLogToken());
         entity.setIsComplete(false);
-
-        OptionalLong numOfLines = logSession.getNewRequestedNumOfLines();
+        
+        OptionalLong numOfLines = logSession.getNewRequestedNumOfLines(in.getLimit());
         if (numOfLines.isEmpty()) {
             entity.setIsComplete(true);
             return entity;

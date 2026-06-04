@@ -142,7 +142,7 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
                 return jocDefaultResponse;
             }
             ControllerLogImpl.checkAndGetDBInstances(controllerId);
-            LogResponse entity = LogHelper.getRunningResponse(logSession, in.getLogToken());
+            LogResponse entity = LogHelper.getRunningResponse(logSession, in);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {

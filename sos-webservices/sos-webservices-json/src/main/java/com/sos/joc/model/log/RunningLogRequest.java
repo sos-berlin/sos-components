@@ -17,7 +17,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "logToken"
+    "logToken",
+    "limit"
 })
 public class RunningLogRequest {
 
@@ -28,6 +29,14 @@ public class RunningLogRequest {
      */
     @JsonProperty("logToken")
     private String logToken;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    private Long limit;
 
     /**
      * 
@@ -49,14 +58,36 @@ public class RunningLogRequest {
         this.logToken = logToken;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public Long getLimit() {
+        return limit;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Long limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("logToken", logToken).toString();
+        return new ToStringBuilder(this).append("logToken", logToken).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(logToken).toHashCode();
+        return new HashCodeBuilder().append(logToken).append(limit).toHashCode();
     }
 
     @Override
@@ -68,7 +99,7 @@ public class RunningLogRequest {
             return false;
         }
         RunningLogRequest rhs = ((RunningLogRequest) other);
-        return new EqualsBuilder().append(logToken, rhs.logToken).isEquals();
+        return new EqualsBuilder().append(logToken, rhs.logToken).append(limit, rhs.limit).isEquals();
     }
 
 }
