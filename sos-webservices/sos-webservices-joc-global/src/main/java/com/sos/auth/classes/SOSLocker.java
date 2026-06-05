@@ -26,10 +26,8 @@ public class SOSLocker {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLocker.class);
     private Map<String, SOSLockerContent> locker;
 
-    private String encrypt(String keyStr, Object value) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
+    private String encrypt(String keyStr, String value) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
             UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
-
-        String valueString = (String) value;
 
         keyStr = keyStr + KEY;
         byte[] key = (keyStr).getBytes("UTF-8");
@@ -40,13 +38,13 @@ public class SOSLocker {
 
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-        byte[] encrypted = cipher.doFinal(valueString.getBytes());
+        byte[] encrypted = cipher.doFinal(value.getBytes());
 
         String encodedValue = Base64.getEncoder().encodeToString(encrypted);
         return encodedValue;
     }
 
-    private String decrypt(String keyStr, Object encodedValue) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException,
+    private String decrypt(String keyStr, String encodedValue) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException,
             NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         keyStr = keyStr + KEY;
         byte[] key = (keyStr).getBytes("UTF-8");
@@ -55,7 +53,7 @@ public class SOSLocker {
         key = Arrays.copyOf(key, 16);
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-        byte[] decodedBytes = Base64.getDecoder().decode((String) encodedValue);
+        byte[] decodedBytes = Base64.getDecoder().decode(encodedValue);
 
         Cipher cipher2 = Cipher.getInstance("AES");
         cipher2.init(Cipher.DECRYPT_MODE, secretKeySpec);
@@ -63,18 +61,20 @@ public class SOSLocker {
         return new String(cipherData2);
     }
 
-    public String addContent(Map<String, Object> content) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
+    public String addContent(Map<String, String> content) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
             UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
         String key = SOSAuthHelper.createAccessToken();
         if (locker == null) {
             locker = new HashMap<String, SOSLockerContent>();
         }
-        for (Entry<String, Object> entry : content.entrySet()) {
-            if (entry.getValue() == null) {
-                LOGGER.debug("Value of '" + entry.getKey() + "' is null -> will not to be stored in the locker");
-                continue;
+        if (content != null) {
+            for (Entry<String, String> entry : content.entrySet()) {
+                if (entry.getValue() == null) {
+                    LOGGER.debug("Value of '" + entry.getKey() + "' is null -> will not to be stored in the locker");
+                    continue;
+                }
+                content.put(entry.getKey(), encrypt(key, entry.getValue()));
             }
-            content.put(entry.getKey(), encrypt(key, entry.getValue()));
         }
         SOSLockerContent sosLockerContent = new SOSLockerContent();
         sosLockerContent.setContent(content);
@@ -83,17 +83,17 @@ public class SOSLocker {
         return key;
     }
 
-    public Map<String, Object> getContent(String key) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException,
+    public Map<String, String> getContent(String key) throws InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException,
             NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         if (locker == null) {
             locker = new HashMap<String, SOSLockerContent>();
         }
-        Map<String, Object> content = null;
+        Map<String, String> content = null;
         if (locker.get(key) != null) {
             content = locker.get(key).getContent();
         }
         if (content != null) {
-            for (Entry<String, Object> entry : content.entrySet()) {
+            for (Entry<String, String> entry : content.entrySet()) {
                 content.put(entry.getKey(), decrypt(key, entry.getValue()));
             }
         }
@@ -137,7 +137,7 @@ public class SOSLocker {
         if (locker == null) {
             locker = new HashMap<String, SOSLockerContent>();
         }
-        Map<String, Object> content = null;
+        Map<String, String> content = null;
         if (locker.get(key) != null) {
             content = locker.get(key).getContent();
         }
@@ -152,18 +152,18 @@ public class SOSLocker {
         return locker.size();
     }
 
-    public boolean getMaximumSizeReached(Map<String, Object> content) {
+    public boolean getMaximumSizeReached(Map<String, String> content) {
         if (content == null) {
             return false;
         }
 
         Long size = 0L;
 
-        for (Entry<String, Object> entry : content.entrySet()) {
+        for (Entry<String, String> entry : content.entrySet()) {
             if (entry.getValue() == null) {
                 continue;
             }
-            size = size + entry.getValue().toString().length();
+            size = size + entry.getValue().length();
         }
         if (size > 256 * 1024L) {
             return true;
@@ -173,13 +173,13 @@ public class SOSLocker {
 
     public static void main(String[] args) throws Exception {
         SOSLocker sosLocker = new SOSLocker();
-        Map<String, Object> content = new HashMap<String, Object>();
+        Map<String, String> content = new HashMap<>();
         content.put("a", "1");
         content.put("b", "2");
         String key = sosLocker.addContent(content);
         content = null;
-        Map<String, Object> x = sosLocker.getContent(key);
-        for (Entry<String, Object> entry : x.entrySet()) {
+        Map<String, String> x = sosLocker.getContent(key);
+        for (Entry<String, String> entry : x.entrySet()) {
             System.out.println(entry.getKey() + "=" + entry.getValue());
         }
         sosLocker.removeContent(key);
@@ -187,7 +187,7 @@ public class SOSLocker {
 
         x = sosLocker.getContent(key);
         if (x != null) {
-            for (Entry<String, Object> entry : x.entrySet()) {
+            for (Entry<String, String> entry : x.entrySet()) {
                 System.out.println(entry.getKey() + "=" + entry.getValue());
             }
         }

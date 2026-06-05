@@ -34,7 +34,6 @@ import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -59,6 +58,7 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.locker.Variables;
 import com.sos.joc.model.security.oidc.GetTokenRequest;
 import com.sos.joc.model.security.oidc.GetTokenResponse;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
@@ -360,9 +360,9 @@ public class SOSServicePermissionIam {
                 if (loginParams.isOIDCLogin() && loginParams.getLockerKey() != null) {
                     
                     Locker locker = SOSLockerHelper.lockerGet(loginParams.getLockerKey());
-                    Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
+                    Map<String, String> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
                             .orElse(Collections.emptyMap());
-                    String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+                    String endSessionEndPoint = loginProps.get("endSessionEndPoint");
                     if (endSessionEndPoint != null) {
                         if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
                             // do nothing, is made by GUI

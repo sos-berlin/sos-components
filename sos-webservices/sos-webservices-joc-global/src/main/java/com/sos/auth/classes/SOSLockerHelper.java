@@ -9,12 +9,12 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
 import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.locker.Variables;
 
 public class SOSLockerHelper {
 
@@ -22,13 +22,10 @@ public class SOSLockerHelper {
             UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
 
         SOSLocker sosLocker = Globals.jocWebserviceDataContainer.getSOSLocker();
-        if (SOSAuthHelper.getCountAccounts() * 3 < sosLocker.getCount()) {
-            throw new JocException(new JocError("No more lockers availabe. Maximum reached"));
-        }
         String key = sosLocker.addContent(locker.getContent().getAdditionalProperties());
         if (sosLocker.getMaximumSizeReached(locker.getContent().getAdditionalProperties())) {
             sosLocker.removeContent(key);
-            throw new JocException(new JocError("Size for content is to big"));
+            throw new JocException(new JocError("Size of locker content is too big"));
         }
         locker.setKey(key);
         locker.setContent(null);
@@ -47,7 +44,7 @@ public class SOSLockerHelper {
             throw new JocObjectNotExistException("Locker for key " + locker.getKey() + " is empty");
         }
 
-        Map<String, Object> content = sosLocker.getContent(lockerKey);
+        Map<String, String> content = sosLocker.getContent(lockerKey);
         if (content != null) {
             locker.setContent(new Variables());
             locker.getContent().setAdditionalProperties(content);

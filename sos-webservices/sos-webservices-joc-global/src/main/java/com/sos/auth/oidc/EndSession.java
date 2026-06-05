@@ -15,7 +15,6 @@ import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocAuthenticationException;
@@ -25,6 +24,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInvalidResponseDataException;
 import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.locker.Variables;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
@@ -54,12 +54,12 @@ public class EndSession extends SOSRestApiClient {
             throws SOSSSLException {
 
         try {
-            Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
+            Map<String, String> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
                     Collections.emptyMap());
-            String token = (String) loginProps.get("token");
-            String clientId = (String) loginProps.get("clientId");
-            String clientSecret = (String) loginProps.get("clientSecret");
-            String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+            String token = loginProps.get("token");
+            String clientId = loginProps.get("clientId");
+            String clientSecret = loginProps.get("clientSecret");
+            String endSessionEndPoint = loginProps.get("endSessionEndPoint");
             
             addHeader("Origin", origin);
             
