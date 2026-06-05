@@ -25,17 +25,19 @@ import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
-import com.sos.inventory.model.common.Variables;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocBadRequestException;
+
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInvalidResponseDataException;
 import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.locker.Variables;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
@@ -66,13 +68,14 @@ public class EndSession {
 
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws SOSSSLException {
+
         try {
-            Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
+            Map<String, String> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties).orElse(
                     Collections.emptyMap());
-            String token = (String) loginProps.get("token");
-            String clientId = (String) loginProps.get("clientId");
-            String clientSecret = (String) loginProps.get("clientSecret");
-            String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+            String token = loginProps.get("token");
+            String clientId = loginProps.get("clientId");
+            String clientSecret = loginProps.get("clientSecret");
+            String endSessionEndPoint = loginProps.get("endSessionEndPoint");
             if(additionalHeaders == null) {
                 additionalHeaders = new HashMap<String, String>(3);
             }
@@ -80,18 +83,25 @@ public class EndSession {
             
             if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
                 httpMethod = "GET";
+
                 setUriBuilder(endSessionEndPoint, referrer);
             } else {
                 httpMethod = "POST";
+
                 if (token == null || clientId == null) {
                     throw new JocAuthenticationException("Incomplete data to close session at OIDC identity service: " + props.getIamOidcName());
                 }
+
                 if (!SOSString.isEmpty(clientSecret)) {
+
                     List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
+
                     if (supportedMethods.contains("client_secret_basic")) {
+
                         String s = clientId + ":" + clientSecret;
                         String authEncBytes = Base64.getEncoder().encodeToString(s.getBytes());
                         additionalHeaders.put("Authorization", "Basic " + authEncBytes);
+
                         createBody(token, referrer);
                         
                     } else { //if (supportedMethods.contains("client_secret_post")) {
@@ -100,8 +110,10 @@ public class EndSession {
                 } else {
                     createBody(clientId, clientSecret, token, referrer);
                 }
+
                 setUriBuilder(endSessionEndPoint);
             }
+
         } catch (JocAuthenticationException e) {
             throw e;
         } catch (Exception e) {
@@ -156,6 +168,7 @@ public class EndSession {
         }
     }
     
+
     private String getStringFromPost(URI uri) throws JocException {
         Map<String,String> headers = new HashMap<String, String>();
         headers.put("Accept", "application/json, text/plain, */*");
@@ -174,9 +187,11 @@ public class EndSession {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
+
             throw new JocBadRequestException(jocError, e);
         }
     }
+
     
     private String getJsonStringFromResponse(HttpExecutionResult<String> result, URI uri, JocError jocError) throws JocException {
         int httpReplyCode = result.response().statusCode();
@@ -184,13 +199,16 @@ public class EndSession {
         if (response == null) {
             response = "";
         }
+
         try {
             switch (httpReplyCode) {
             case 200:
+
                 if (response.isEmpty()) {
                     throw new JocInvalidResponseDataException("Unexpected empty response");
                 }
                 return response;
+
             default:
                 throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
             }
