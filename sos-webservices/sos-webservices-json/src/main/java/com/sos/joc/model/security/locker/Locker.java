@@ -3,9 +3,7 @@ package com.sos.joc.model.security.locker;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -32,14 +30,7 @@ public class Locker {
      */
     @JsonProperty("key")
     private String key;
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("content")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables content;
 
     /**
@@ -82,23 +73,11 @@ public class Locker {
         this.key = key;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("content")
     public Variables getContent() {
         return content;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
     @JsonProperty("content")
     public void setContent(Variables content) {
         this.content = content;

@@ -35,7 +35,7 @@ import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.common.Variables;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -65,6 +65,7 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
 import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 import com.sos.joc.model.security.locker.Locker;
+import com.sos.joc.model.security.locker.Variables;
 import com.sos.joc.model.security.oidc.GetTokenRequest;
 import com.sos.joc.model.security.oidc.GetTokenResponse;
 import com.sos.joc.model.security.oidc.OpenIdConfiguration;
@@ -119,6 +120,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 return responseStatusJSError(new JocException(new JocError("Account is not valid")));
             }
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount.getSosPermissionJocCockpitControllers()));
+
 
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -224,6 +226,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             } else {
                 vars.setAdditionalProperty("endSessionEndPoint", conf.getEnd_session_endpoint());
             }
+
             Locker locker = new Locker();
             locker.setContent(vars);
             String lockerKey = SOSLockerHelper.lockerPut(locker).getKey();
@@ -370,15 +373,16 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 if (currentAccount.getCurrentSubject() != null) {
                     sosSessionHandler.getTimeout();
                     sosSessionHandler.stop();
+
                     
                     // JOC-2038
                     SOSLoginParameters loginParams = currentAccount.getSosLoginParameters();
                     if (loginParams.isOIDCLogin() && loginParams.getLockerKey() != null) {
                         
                         Locker locker = SOSLockerHelper.lockerGet(loginParams.getLockerKey());
-                        Map<String, Object> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
+                    Map<String, String> loginProps = Optional.ofNullable(locker).map(Locker::getContent).map(Variables::getAdditionalProperties)
                                 .orElse(Collections.emptyMap());
-                        String endSessionEndPoint = (String) loginProps.get("endSessionEndPoint");
+                    String endSessionEndPoint = loginProps.get("endSessionEndPoint");
                         if (endSessionEndPoint != null) {
                             if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
                                 // do nothing, is made by GUI
@@ -446,6 +450,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 Globals.sosHibernateFactory.build();
             }
             return responseStatus200("Db connections reconnected".getBytes(), MediaType.TEXT_PLAIN);
+
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -550,6 +555,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             MDC.remove("context");
         }
     }
+
 
     private String createAccount(SOSAuthCurrentAccount currentAccount, String password, DBItemIamIdentityService dbItemIdentityService)
             throws Exception {
@@ -668,9 +674,11 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                         sosLogin.setMsg("login denied: no role assignment found");
                         currentAccount.setCurrentSubject(null);
                     } else {
+
                         sosLogin.setMsg("login denied: no permission assignment found");
                         currentAccount.setCurrentSubject(null);
                     }
+
                     authorization = false;
                 }
             }
@@ -1108,6 +1116,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 if (sosLoginParameters.basicAuthorizationHeaderIsEmpty()) {
                     sosLoginParameters.setBasicAuthorization("Basic " + Base64.getEncoder().encodeToString((sosLoginParameters.getAccount() + ":"
                             + pwd).getBytes()));
+
                 }
             }
 
@@ -1168,6 +1177,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 jocAuditLog.logAuditMessage(audit);
                 SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
                 return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosSessionHandler.getTimeout(), jocAuditLog);
+
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
