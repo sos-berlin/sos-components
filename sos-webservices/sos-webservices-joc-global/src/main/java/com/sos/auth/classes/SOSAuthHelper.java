@@ -435,14 +435,22 @@ public class SOSAuthHelper {
         filter.setConfigurationType(ConfigurationType.GLOBALS.name());
         DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(filter, 0);
 
+        JsonReader json = null;
         if (dbItem != null) {
-            JsonReader json = Json.createReader(new StringReader(dbItem.getConfigurationItem()));
-            JsonObject jsonObject = json.readObject();
-            if (jsonObject.getJsonObject(JOC) == null || jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT) == null || jsonObject
-                    .getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE) == null) {
-                return ROOT;
-            } else {
-                return jsonObject.getJsonObject(JOC).getJsonObject(DEFAULT_PROFILE_ACCOUNT).getString(VALUE);
+            try {
+                json = Json.createReader(new StringReader(dbItem.getConfigurationItem()));
+                JsonObject jsonObject = json.readObject();
+                
+                return Optional.ofNullable(jsonObject).map(j -> j.getJsonObject(JOC)).map(j -> j.getJsonObject(DEFAULT_PROFILE_ACCOUNT)).map(j -> j
+                        .getString(VALUE)).orElse(ROOT);
+            } finally {
+                if (json != null) {
+                    try {
+                        json.close();
+                    } catch (Exception e) {
+                        //;
+                    }
+                }
             }
         } else {
             return ROOT;
