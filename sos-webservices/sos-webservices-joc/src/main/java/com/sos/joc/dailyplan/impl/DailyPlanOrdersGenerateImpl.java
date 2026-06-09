@@ -170,7 +170,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         for (String dailyPlanDate : in.getDailyPlanDates()) {
             DailyPlanRunner runner = newDailyPlanRunner(dailyPlanDate, in, getSettings(), parentCaller);
             Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules,
-                    dailyPlanDate, in.getWithSubmit(), getJocError(), accessToken, includeLate, false);
+                    dailyPlanDate, in.getWithSubmit(), getJocError(), accessToken, includeLate, true);
 
             if (withAudit) {
                 allGeneratedOrders.putAll(generatedOrders);
