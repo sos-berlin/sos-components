@@ -92,6 +92,8 @@
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.29</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
+    <!-- jetty dependencies are used to be integrated into sbom only, no direct usage -->
+    <jetty.version>11.0.26</jetty.version>
   </properties>
 
   <build>
@@ -1014,6 +1016,13 @@
         <groupId>com.networknt</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>${json.schema.validator.version}</version>
+      </dependency>
+      <!-- needed for sbom creation only -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-home</artifactId>
+        <version>${jetty.version}</version>
+        <type>zip</type>
       </dependency>
 
     </dependencies>

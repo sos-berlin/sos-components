@@ -161,6 +161,13 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+    <!-- needed for sbom creation only -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-home</artifactId>
+      <type>zip</type>
+      <scope>provided</scope>
+    </dependency>
 	</dependencies>
 
 </project>
