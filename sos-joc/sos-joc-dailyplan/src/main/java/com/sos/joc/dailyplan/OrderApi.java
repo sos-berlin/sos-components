@@ -1,7 +1,9 @@
 package com.sos.joc.dailyplan;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +11,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -227,17 +231,25 @@ public class OrderApi {
 
             final boolean log2serviceFile = true; // !StartupMode.manual.equals(startupMode);
             if (submitOrdersIndividually) {
-                List<JControllerCommand> addOrderCommands = fo.stream().map(JControllerCommand::addOrder).collect(Collectors.toList());
-                proxy.api().executeCommand(JControllerCommand.batch(addOrderCommands)).thenAccept(either -> {
+                AtomicLong chunkSize = new AtomicLong(0);
+                // max request size for controller commands is 8M. We use 7.5M
+                long maxRequestSize = 1024 * 512 * 15L;
+                List<CompletableFuture<Either<Problem, Response>>> chunkedBatchCommands = fo.stream().map(JControllerCommand::addOrder).collect(
+                        Collectors.groupingBy(c -> chunkSize.addAndGet(c.toJson().getBytes(StandardCharsets.UTF_8).length) / maxRequestSize)).values()
+                        .stream().map(JControllerCommand::batch).map(proxy.api()::executeCommand).toList();
+                
+                CompletableFuture.allOf(chunkedBatchCommands.toArray(CompletableFuture[]::new)).thenRun(() -> {
                     if (log2serviceFile) {
                         JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
                     }
-                    if (either.isRight()) { 
+                    Map<Boolean, List<Either<Problem, Response>>> result = chunkedBatchCommands.stream().map(CompletableFuture::join).collect(
+                            Collectors.groupingBy(Either::isRight));
+                    Set<OrderId> successOrders = new HashSet<>();
+                    Map<OrderId, String> failedOrders = new HashMap<>();
+                    
+                    result.getOrDefault(true, Collections.emptyList()).forEach(e -> {
+                        List<Either<Problem, Response>> responses = JControllerCommandResponse.fromBatch(e.get()).get().responses();
                         
-                        List<Either<Problem, Response>> responses = JControllerCommandResponse.fromBatch(either.get()).get().responses();
-                        Set<OrderId> successOrders = new HashSet<>();
-                        Map<OrderId, String> failedOrders = new HashMap<>();
-
                         for (int i = 0; i < responses.size(); i++) {
                             Either<Problem, Response> response = responses.get(i);
                             if (response.isRight()) {
@@ -246,63 +258,58 @@ public class OrderApi {
                                 failedOrders.put(fo.get(i).id(), response.getLeft().message());
                             }
                         }
-                        
-                        if (!successOrders.isEmpty()) {
-                            updateHistoryOnSuccess(proxy.api(), successOrders, items, jocError, accessToken, controllerId, method, lp);
-                        }
-                        if (!failedOrders.isEmpty()) {
-                            updateHistoryOnError(failedOrders, items, jocError, accessToken, controllerId, method, lp);
-                        }
-                        
-                        /* this "either" is almost always "right" when using JControllerCommand.batch: 
-                         * either.toString() -> Right(BatchResponse(1 succeeded and 1 failed))
-                         */
-                        
-//                        if (either.get().toString().contains(set.size() + " succeeded and 0 failed")) {
-//                            updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
-//                            
-//                        } else {
-//
-//                            // check if all orders are added
-//                            Map<OrderId, JOrder> knownOrders = proxy.currentState().idToOrder();
-//                            if (set.stream().anyMatch(oId -> knownOrders.get(oId) == null)) {
-//                                // at least one failed -> check again after 2 seconds
-//                                try {
-//                                    TimeUnit.SECONDS.sleep(2);
-//                                } catch (InterruptedException ex) {
-//                                    //
-//                                }
-//                                // WORKAROUND: addOrders sends eventId to proxy so that proxy should be up to date
-//                                proxy.api().addOrders(Flux.empty()).thenAccept(e -> {
-//                                    try {
-//                                        TimeUnit.SECONDS.sleep(1);
-//                                    } catch (InterruptedException ex) {
-//                                        //
-//                                    }
-//                                    Set<OrderId> newKnownOrderIds = proxy.currentState().idToOrder().keySet();
-//                                    Map<Boolean, Set<OrderId>> orderIdsToSuccessOrNot = set.stream().collect(Collectors.groupingBy(
-//                                            newKnownOrderIds::contains, Collectors.toSet()));
-//
-//                                    if (orderIdsToSuccessOrNot.containsKey(Boolean.TRUE)) {
-//                                        updateHistoryOnSuccess(proxy.api(), orderIdsToSuccessOrNot.get(Boolean.TRUE), items, jocError, accessToken,
-//                                                controllerId, method, lp);
-//                                    }
-//                                    if (orderIdsToSuccessOrNot.containsKey(Boolean.FALSE)) {
-//                                        updateHistoryOnError(null, orderIdsToSuccessOrNot.get(Boolean.FALSE), items, jocError, accessToken,
-//                                                controllerId, method, lp);
-//                                    }
-//                                });
-//
-//                            } else {
-//                                updateHistoryOnSuccess(proxy.api(), set, items, jocError, accessToken, controllerId, method, lp);
-//                            }
-//                        }
-
-                    } else {
-                        updateHistoryOnError(either, fo.stream().map(JFreshOrder::id).collect(Collectors.toSet()), items, jocError, accessToken,
+                    });
+                    
+                    if (!successOrders.isEmpty()) {
+                        updateHistoryOnSuccess(proxy.api(), successOrders, items, jocError, accessToken, controllerId, method, lp);
+                    }
+                    if (!failedOrders.isEmpty()) {
+                        updateHistoryOnError(failedOrders, items, jocError, accessToken, controllerId, method, lp);
+                    }
+                    
+                    Set<OrderId> oIds = fo.stream().map(JFreshOrder::id).collect(Collectors.toSet());
+                    oIds.removeAll(successOrders);
+                    oIds.removeAll(failedOrders.keySet());
+                    
+                    if (!oIds.isEmpty()) { //further failed orders with left either from batch command
+                        updateHistoryOnError(Optional.of(result.get(false)).map(l -> l.get(0)).orElse(null), oIds, items, jocError, accessToken,
                                 controllerId, method, lp);
                     }
+                    
                 });
+
+//                List<JControllerCommand> addOrderCommands = fo.stream().map(JControllerCommand::addOrder).collect(Collectors.toList());
+//                proxy.api().executeCommand(JControllerCommand.batch(addOrderCommands)).thenAccept(either -> {
+//                    if (log2serviceFile) {
+//                        JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
+//                    }
+//                    if (either.isRight()) { 
+//                        
+//                        List<Either<Problem, Response>> responses = JControllerCommandResponse.fromBatch(either.get()).get().responses();
+//                        Set<OrderId> successOrders = new HashSet<>();
+//                        Map<OrderId, String> failedOrders = new HashMap<>();
+//
+//                        for (int i = 0; i < responses.size(); i++) {
+//                            Either<Problem, Response> response = responses.get(i);
+//                            if (response.isRight()) {
+//                                successOrders.add(fo.get(i).id());
+//                            } else {
+//                                failedOrders.put(fo.get(i).id(), response.getLeft().message());
+//                            }
+//                        }
+//                        
+//                        if (!successOrders.isEmpty()) {
+//                            updateHistoryOnSuccess(proxy.api(), successOrders, items, jocError, accessToken, controllerId, method, lp);
+//                        }
+//                        if (!failedOrders.isEmpty()) {
+//                            updateHistoryOnError(failedOrders, items, jocError, accessToken, controllerId, method, lp);
+//                        }
+//                        
+//                    } else {
+//                        updateHistoryOnError(either, fo.stream().map(JFreshOrder::id).collect(Collectors.toSet()), items, jocError, accessToken,
+//                                controllerId, method, lp);
+//                    }
+//                });
             } else {
                 proxy.api().addOrders(Flux.fromIterable(fo)).thenAccept(either -> {
                     if (log2serviceFile) {
@@ -355,7 +362,7 @@ public class OrderApi {
         return orders;
     }
     
-    private static void updateHistoryOnSuccess(JControllerApi controllerApi, Set<OrderId> set, Map<String, DBItemDailyPlanHistory> items,
+    private static void updateHistoryOnSuccess(JControllerApi controllerApi, Set<OrderId> orderIds, Map<String, DBItemDailyPlanHistory> items,
             JocError jocError, String accessToken, String controllerId, String method, String lp) {
         SOSHibernateSession session = null;
         try {
@@ -366,18 +373,18 @@ public class OrderApi {
 
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
-            int updateOrders = updatePlannedOrders(dbLayer, set, controllerId);
+            int updateOrders = updatePlannedOrders(dbLayer, orderIds, controllerId);
             Instant updateOrdersEnd = Instant.now();
-            int updateHistory = updateHistory(dbLayer, set, items, true, null);
+            int updateHistory = updateHistory(dbLayer, orderIds, items, true, null);
             Globals.commit(session);
             session.close();
             session = null;
-
-            controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
-                    controllerId));
+            
+            controllerApi.deleteOrdersWhenTerminated(Flux.fromIterable(orderIds)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
+                    jocError, controllerId));
 
             Instant end = Instant.now();
-            LOGGER.info(String.format("%s[submitted=%s][updated db planned orders=%s(%s),history=%s(%s)]", lp, set.size(), updateOrders, SOSDate
+            LOGGER.info(String.format("%s[submitted=%s][updated db planned orders=%s(%s),history=%s(%s)]", lp, orderIds.size(), updateOrders, SOSDate
                     .getDuration(start, updateOrdersEnd), updateHistory, SOSDate.getDuration(updateOrdersEnd, end)));
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -412,7 +419,7 @@ public class OrderApi {
             if (either == null) {
                 msg = "submission failed for " + set.size() + " orders: " + set.toString();
             }
-            LOGGER.info(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
+            LOGGER.warn(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
                     end), msg));
             if (jocError != null) {
                 if (either == null) {
@@ -454,7 +461,7 @@ public class OrderApi {
             String msg = "submission failed for " + ordersWithError.size() + " orders: " + ordersWithError.entrySet().stream().collect(Collectors
                     .groupingBy(Map.Entry::getValue)).toString();
 
-            LOGGER.info(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
+            LOGGER.warn(String.format("%s[onError][rollback submitted=false][updated history=%s(%s)]%s", lp, updateHistory, SOSDate.getDuration(start,
                     end), msg));
             if (jocError != null) {
                 if (lp.contains("deploy")) {
