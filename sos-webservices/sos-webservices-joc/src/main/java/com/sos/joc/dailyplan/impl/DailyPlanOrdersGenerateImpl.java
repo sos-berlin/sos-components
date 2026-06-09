@@ -166,7 +166,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         // log to service log file
         JocClusterServiceLogger.setLogger(ClusterServices.dailyplan.name());
         Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.webservice, controllerId, dailyPlanSchedules, in
-                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate, false);
+                .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken, includeLate, true);
         JocClusterServiceLogger.clearAllLoggers();
 
         if (withAudit) {
