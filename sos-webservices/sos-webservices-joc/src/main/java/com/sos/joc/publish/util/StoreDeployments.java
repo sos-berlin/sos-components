@@ -212,12 +212,12 @@ public class StoreDeployments {
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
                     if (!workflowsWithSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithSubmit, null, controllerId,
-                                true, allowedDailyPlanDates));
+                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithSubmit, null, controllerId,
+                                true, true, allowedDailyPlanDates));
                     }
                     if (!workflowsWithoutSubmit.isEmpty()) {
-                        requests.addAll(ordersGenerate.getGenerateRequestsForReleaseDeploy(dailyPlanDate, workflowsWithoutSubmit, null, controllerId,
-                                false, allowedDailyPlanDates));
+                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
+                                false, true, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
                         boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, ADeploy.API_CALL);
