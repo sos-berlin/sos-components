@@ -501,7 +501,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (submitted.size() > 0) {// submitted - single and all cyclic
             final Requirements orderPreparation = (workflow != null) ? workflow.getOrderPreparation() : null;
-            CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), submitted);
+            CompletableFuture<Either<Problem, Void>> c = OrdersHelper.cancelFreshOrders(in.getControllerId(), submitted);
             c.thenAccept(either -> {
                 SOSHibernateSession sessionNew = null;
                 try {
@@ -924,7 +924,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
 
         // OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), itemsMap.get(Boolean.FALSE)).thenAccept(either -> {
-        OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), allItems).thenAccept(either -> {
+        OrdersHelper.cancelFreshOrders(in.getControllerId(), allItems).thenAccept(either -> {
             SOSHibernateSession sessionNew = null;
             try {
 
@@ -1103,7 +1103,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 session.close();
                 session = null;
 
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(in.getControllerId(), submitted);
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.cancelFreshOrders(in.getControllerId(), submitted);
                 c.thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), in.getControllerId());
                     if (either.isRight()) {

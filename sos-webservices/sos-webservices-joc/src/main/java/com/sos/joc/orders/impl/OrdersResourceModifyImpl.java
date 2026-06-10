@@ -885,7 +885,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //            JControllerApi api = ControllerApi.of(controllerId);
 //            oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).forEach(command -> api.executeCommand(
 //                    command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
-//            return CompletableFuture.supplyAsync(() -> Either.right(null));
+//            return CompletableFuture.completedFuture(Either.right(null));
             
             List<JControllerCommand> commandsAP = oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).collect(
                     Collectors.toList());

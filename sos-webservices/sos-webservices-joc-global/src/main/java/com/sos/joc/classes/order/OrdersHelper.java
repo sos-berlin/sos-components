@@ -74,7 +74,6 @@ import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -1652,38 +1651,47 @@ public class OrdersHelper {
         }
     }
 
-    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
+    public static CompletableFuture<Either<Problem, Void>> cancelFreshOrders(String controllerId,
             Collection<DBItemDailyPlanOrder> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
 
-        Set<OrderId> setOfSubmittedOrderIds = listOfDailyPlanOrders.stream().parallel().filter(DBItemDailyPlanOrder::getSubmitted).map(
-                DBItemDailyPlanOrder::getOrderId).map(OrderId::of).collect(Collectors.toSet());
-
-        if (setOfSubmittedOrderIds.isEmpty()) { // if order isn't submitted then it should work without proxy
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
-        }
-        JControllerProxy proxy = Proxy.of(controllerId);
-        Set<OrderId> orderIds = proxy.currentState().ordersBy(o -> setOfSubmittedOrderIds.contains(o.id())).parallel().map(JOrder::id).collect(
-                (Collectors.toSet()));
-        if (orderIds.isEmpty()) {
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
-        } else {
-            return proxy.api().cancelOrders(orderIds, JCancellationMode.freshOnly());
-        }
+        return cancelFreshOrders(Proxy.of(controllerId), listOfDailyPlanOrders.stream().parallel().map(DBItemDailyPlanOrder::getOrderId).collect(
+                Collectors.toSet()), controllerId);
     }
-
-    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
-            List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
-        Set<OrderId> orderIds = listOfPlannedOrders.stream().parallel().map(DBItemDailyPlanWithHistory::getOrderId).map(OrderId::of).collect(
-                Collectors.toSet());
-        if (orderIds.isEmpty()) {
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
-        } else {
-            return ControllerApi.of(controllerId).cancelOrders(orderIds, JCancellationMode.freshOnly());
-        }
+    
+    public static CompletableFuture<Either<Problem, Void>> cancelFreshOrders(JControllerProxy proxy, Set<String> orderIds, String controllerId) {
+        return cancelRecursively(proxy, orderIds, controllerId, Either.right(null), 0);
     }
-
+    
+    private static CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds, String controllerId,
+            Either<Problem, Void> either, int count) {
+        if(count > 0) {
+            LOGGER.info("error occurred. retry cancel order. " + count + " try. " + ProblemHelper.getErrorMessage(either.getLeft()));
+        }
+        if (count >= 3) {
+            return CompletableFuture.completedFuture(either);
+        }
+        final JControllerState currentState = proxy.currentState();
+        Stream<JOrder> orderStream = Stream.empty();
+        if (!orderIds.isEmpty()) {
+            orderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> orderIds.contains(o
+                    .id().string())));
+        }
+        final Set<OrderId> oIds = orderStream.map(JOrder::id).collect(Collectors.toSet());
+        CompletableFuture<Either<Problem, Void>> future = oIds.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
+            proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
+                    oIds, JCancellationMode.freshOnly()));
+        int newCount = count + 1;
+        return future.thenCompose(e -> {
+            if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).matches(".*(" + ProblemHelper.UNKNOWN_ORDER +"|" 
+                    + ProblemHelper.CANCEL_STARTED_ORDER + "):.*")) {
+                return cancelRecursively(proxy, orderIds, controllerId, e, newCount);
+            }
+            return CompletableFuture.completedFuture(e);
+        });
+    }
+    
     // #2021-10-12#C40382260571-00012-12-dailyplan_shedule_cyclic
     // #2021-10-12#C40382260571-
     public static String getCyclicOrderIdMainPart(String orderId) {

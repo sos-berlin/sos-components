@@ -210,7 +210,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
         Optional<BigDecimal> prio = Optional.of(new BigDecimal(in.getPriority()));
         List<JControllerCommand> commands = oIdsStream.map(oId -> JControllerCommand.changeOrder(oId, prio)).toList();
         if (commands.isEmpty()) {
-            return CompletableFuture.supplyAsync(() -> Either.right(null));
+            return CompletableFuture.completedFuture(Either.right(null));
         } else if (commands.size() == 1) {
             return ControllerApi.of(in.getControllerId()).executeCommand(commands.get(0));
         } else {
