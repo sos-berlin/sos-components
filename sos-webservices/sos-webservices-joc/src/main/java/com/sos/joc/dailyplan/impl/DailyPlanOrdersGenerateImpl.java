@@ -305,16 +305,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         return successful;
     }
 
-    public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId)
-            throws ParseException, SOSHibernateException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, true, false, null);
-    }
-
-    public List<GenerateRequest> getGenerateRequestsForReleaseDeploy(String date, List<String> workflowPaths, List<String> schedulePaths,
-            String controllerId, Boolean withSubmit, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
-        return getGenerateRequests(date, workflowPaths, schedulePaths, controllerId, withSubmit, true, allowedDailyPlanDates);
-    }
-
     public List<GenerateRequest> getGenerateRequests(String date, List<String> workflowPaths, List<String> schedulePaths, String controllerId,
             Boolean withSubmit, boolean forReleaseDeploy, List<String> allowedDailyPlanDates) throws ParseException, SOSHibernateException {
         setSettings(IMPL_PATH);
@@ -353,7 +343,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             } else {
                 req.setWithSubmit(false);
             }
-            req.setOverwrite(true);
+            if(forReleaseDeploy) {
+                req.setOverwrite(false);
+            } else {
+                req.setOverwrite(true);
+            }
             req.setDailyPlanDate(dailyPlanDate);
             req.setWorkflowPaths(workflowsPathItem);
             req.setSchedulePaths(schedulesPathItem);
