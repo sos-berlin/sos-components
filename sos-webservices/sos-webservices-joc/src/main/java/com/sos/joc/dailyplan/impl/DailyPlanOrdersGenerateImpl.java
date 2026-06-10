@@ -333,7 +333,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             } else {
                 req.setWithSubmit(false);
             }
-            req.setOverwrite(true);
+            req.setOverwrite(!forReleaseDeploy);
             req.setDailyPlanDate(dailyPlanDate);
             req.setWorkflowPaths(workflowsPathItem);
             req.setSchedulePaths(schedulesPathItem);
