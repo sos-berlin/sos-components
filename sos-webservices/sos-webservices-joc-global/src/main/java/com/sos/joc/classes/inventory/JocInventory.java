@@ -754,7 +754,7 @@ public class JocInventory {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
             // temp. because of rename error on root folder
-            config.setPath(config.getPath().replace("//+", "/"));
+            config.setPath(config.getPath().replaceAll("//+", "/"));
         } else {
             if (!isFolder(type) && path != null && !path.contains("/")) {
                 name = path;
@@ -801,7 +801,7 @@ public class JocInventory {
                     throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
                 }
                 // temp. because of rename error on root folder
-                config.setPath(config.getPath().replace("//+", "/"));
+                config.setPath(config.getPath().replaceAll("//+", "/"));
             }
         }
         return config;

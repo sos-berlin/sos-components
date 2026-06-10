@@ -81,10 +81,10 @@ public class DeploymentHistoryMoveListener {
             for(DBItemDailyPlanOrder order : ordersToUpdate) {
                 if(ConfigurationType.WORKFLOW.equals(objectType)) {
                     order.setWorkflowFolder(folder);
-                    order.setWorkflowPath(folder.concat("/").concat(order.getWorkflowName()));
+                    order.setWorkflowPath(folder.concat("/").replaceAll("//+", "/").concat(order.getWorkflowName()));
                 } else if (ConfigurationType.SCHEDULE.equals(objectType)) {
                     order.setScheduleFolder(folder);
-                    order.setSchedulePath(folder.concat("/").concat(order.getScheduleName()));
+                    order.setSchedulePath(folder.concat("/").replaceAll("//+", "/").concat(order.getScheduleName()));
                 }
                 session.update(order);
             }
@@ -121,7 +121,7 @@ public class DeploymentHistoryMoveListener {
         cloned.setInventoryConfigurationId(toClone.getInventoryConfigurationId());
         cloned.setName(toClone.getName());
         cloned.setOperation(toClone.getOperation());
-        cloned.setPath(newFolder.concat("/").concat(toClone.getName()));
+        cloned.setPath(newFolder.concat("/").replaceAll("//+", "/").concat(toClone.getName()));
         cloned.setSignedContent(toClone.getSignedContent());
         cloned.setState(toClone.getState());
         cloned.setTitle(toClone.getTitle());
