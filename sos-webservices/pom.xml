@@ -25,6 +25,7 @@
 		<!--module>sos-webservices-server</module-->
 		<module>sos-webservices-patch-executor</module>
 		<module>sos-webservices-publish</module>
+		<module>sos-webservices-sbom-jetty</module>
 	</modules>
 
 </project>
