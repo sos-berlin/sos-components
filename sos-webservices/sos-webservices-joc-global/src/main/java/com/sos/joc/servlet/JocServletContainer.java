@@ -126,8 +126,7 @@ public class JocServletContainer extends ServletContainer {
     @Override
     public void destroy() {
         LOGGER.debug("----> destroy on close JOC");
-        super.destroy();
-
+        
         NotificationAppender.doNotify = false;
         QuickSearchStore.close();
         AgentClusterWatch.close();
@@ -159,6 +158,7 @@ public class JocServletContainer extends ServletContainer {
 //        } catch (Exception e) {
 //            LOGGER.warn("cleanup deployed files: " + e.toString());
 //        }
+        super.destroy();
         cleanupAllTempDirSubFolders();
     }
 

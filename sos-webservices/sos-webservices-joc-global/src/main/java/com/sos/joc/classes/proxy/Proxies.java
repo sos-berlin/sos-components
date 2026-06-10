@@ -450,17 +450,11 @@ public class Proxies {
                     ClusterWatch.getInstance().clear();
                     proxyContext.close();
                     proxyContext = null;
-                }).get(30, TimeUnit.SECONDS);
+                }).exceptionally(ex -> {
+                    LOGGER.warn("", ex); 
+                    return null;
+                }).get(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-        } finally {
-            try {
-                if(proxyContext != null) {
-                    proxyContext.close();
-                }
-            } catch (Exception e) {
-            } finally {
-                proxyContext = null;
-            }
         }
     }
     
