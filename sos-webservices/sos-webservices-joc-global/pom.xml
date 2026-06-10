@@ -166,7 +166,6 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-home</artifactId>
       <type>zip</type>
-      <scope>provided</scope>
     </dependency>
 	</dependencies>
 
