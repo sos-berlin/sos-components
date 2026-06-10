@@ -374,27 +374,20 @@ public class DailyPlanRunner extends TimerTask {
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken)
             throws Exception {
-        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, false, true);
+        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, false);
     }
 
-    /* service (createPlan) */
+    /* service (createPlan) & DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken,
             boolean includeLate) throws Exception {
-        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, includeLate, true);
-    }
-
-    /* DailyPlanOrdersGenerateImpl */
-    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
-            Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, Boolean withSubmit, JocError jocError, String accessToken,
-            boolean includeLate, boolean cleanupOldOrders) throws Exception {
-        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, includeLate, cleanupOldOrders);
+        return generateDailyPlan(startupMode, controllerId, dailyPlanSchedules, dailyPlanDate, null, withSubmit, jocError, accessToken, includeLate);
     }
 
     /* DailyPlanOrdersGenerateImpl */
     public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(StartupMode startupMode, String controllerId,
             Collection<DailyPlanSchedule> dailyPlanSchedules, String dailyPlanDate, DBItemDailyPlanSubmission submission, Boolean withSubmit,
-            JocError jocError, String accessToken, boolean includeLate, boolean cleanupOldOrders) throws Exception {
+            JocError jocError, String accessToken, boolean includeLate) throws Exception {
 
         String operation = withSubmit ? "creating/submitting" : "creating";
         String caller = DailyPlanHelper.getCallerForLog(settings);
@@ -423,7 +416,7 @@ public class DailyPlanRunner extends TimerTask {
 
             calculateDurations(controllerId, dailyPlanDate, dailyPlanSchedules);
 
-            synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations, cleanupOldOrders);
+            synchronizer.addPlannedOrderToControllerAndDB(startupMode, operation, controllerId, dailyPlanDate, withSubmit, durations);
             EventBus.getInstance().post(new DailyPlanEvent(controllerId, dailyPlanDate));
         } else {
             LOGGER.info(String.format("%s[skip]%s", lp, c));

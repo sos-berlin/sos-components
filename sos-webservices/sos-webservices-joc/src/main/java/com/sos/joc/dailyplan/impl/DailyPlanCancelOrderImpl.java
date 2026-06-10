@@ -51,23 +51,15 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.base.problem.Problem;
-import js7.data.order.Order;
-import js7.data.order.OrderId;
-import js7.data_for_java.command.JCancellationMode;
-import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderPredicates;
 import js7.proxy.javaapi.JControllerProxy;
-import reactor.core.publisher.Flux;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements IDailyPlanCancelOrder {
@@ -133,11 +125,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             final Set<String> orderIds = orders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
             final JControllerProxy proxy = Proxy.of(controllerId);
             
-            CompletableFuture<ControllerCommandResponse> response = cancelRecursively(proxy, orderIds, controllerId, futures, Either.right(null), 0)
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
-                        updateDailyPlan("cancelOrders", orderIds, false);
+                        updateDailyPlan(orderIds, false);
                         return new ControllerCommandResponse(controllerId);
                     } catch (Exception ex) {
                         return new ControllerCommandResponse(controllerId, Optional.of(ex));
@@ -149,34 +141,6 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             futures.put(controllerId, response);
         }
         return futures;
-    }
-    
-    private CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds, String controllerId,
-            Map<String, CompletableFuture<ControllerCommandResponse>> futures, Either<Problem, Void> either, int count) {
-        if(count > 0) {
-            LOGGER.info("error occurred. retry cancel order. " + count + " try. " + ProblemHelper.getErrorMessage(either.getLeft()));
-        }
-        if (count >= 3) {
-            return CompletableFuture.completedFuture(either);
-        }
-        final JControllerState currentState = proxy.currentState();
-        Stream<JOrder> orderStream = Stream.empty();
-        if (!orderIds.isEmpty()) {
-            orderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> orderIds.contains(o
-                    .id().string())));
-        }
-        final Set<OrderId> oIds = orderStream.map(JOrder::id).collect(Collectors.toSet());
-        CompletableFuture<Either<Problem, Void>> future = oIds.isEmpty() ? CompletableFuture.completedFuture(Either.right(null)) :  
-            proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
-                    oIds, JCancellationMode.freshOnly()));
-        int newCount = count + 1;
-        return future.thenCompose(e -> {
-            if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).matches(".*(" + ProblemHelper.UNKNOWN_ORDER +"|" 
-                    + ProblemHelper.CANCEL_STARTED_ORDER + "):.*")) {
-                return cancelRecursively(proxy, orderIds, controllerId, futures, e, newCount);
-            }
-            return CompletableFuture.completedFuture(e);
-        });
     }
 
     private synchronized Collection<CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
@@ -203,11 +167,11 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             
             final JControllerProxy proxy = Proxy.of(controllerId);
             
-            CompletableFuture<ControllerCommandResponse> response = cancelRecursively(proxy, orderIds, controllerId, futures, Either.right(null), 0)
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
-                        updateDailyPlan("cancelOrders", orderIds, true);
+                        updateDailyPlan(orderIds, true);
                         return new ControllerCommandResponse(controllerId);
                     } catch (Exception ex) {
                         return new ControllerCommandResponse(controllerId, Optional.of(ex));
@@ -285,13 +249,12 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         });
     }
 
-    private static void updateDailyPlan(String caller, Collection<String> orderIds, boolean withEvent) throws SOSHibernateException {
-        // SOSClassUtil.printStackTrace(true, LOGGER);
+    private static void updateDailyPlan(Collection<String> orderIds, boolean withEvent) {
         SOSHibernateSession session = null;
         if (!orderIds.isEmpty()) {
             try {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[updateDailyPlan][caller=%s][orderIds=%s]%s", caller, orderIds.size(), String.join(",", orderIds)));
+                    LOGGER.debug(String.format("[updateDailyPlan][caller=cancelOrders][orderIds=%s]%s", orderIds.size(), String.join(",", orderIds)));
                 }
 
                 DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH);
@@ -302,7 +265,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 filter.setSortMode(null);
                 filter.setOrderCriteria(null);
 
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(" + caller + ")");
+                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(cancelOrders)");
                 session.setAutoCommit(false);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 Globals.beginTransaction(session);
@@ -325,13 +288,13 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
             } catch (Exception e) {
                 Globals.rollback(session);
-                throw e;
+                throw new JocSosHibernateException(e);
             } finally {
                 Globals.disconnect(session);
             }
         } else {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[updateDailyPlan][caller=%s]No orderIds to be updated in daily plan", caller));
+                LOGGER.debug("[updateDailyPlan][caller=cancelOrders]No orderIds to be updated in daily plan");
             }
         }
     }

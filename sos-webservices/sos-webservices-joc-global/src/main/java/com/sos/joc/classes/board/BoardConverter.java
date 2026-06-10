@@ -254,14 +254,14 @@ public class BoardConverter {
     }
 
     public static CompletableFuture<Either<Problem, Response>> convert(JControllerApi api, Map<JBoardItem, JBoardItem> newOldBoards) {
-        return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.supplyAsync(() -> Either.right(null)));
+        return convert(newOldBoards).map(api::executeCommand).orElse(CompletableFuture.completedFuture(Either.right(null)));
     }
     
     public static CompletableFuture<Either<Problem, Response>> convertFromDepItems(JControllerProxy proxy, Collection<DBItemDeploymentHistory> depItems) {
         try {
             return convert(proxy.api(), getNewOldBoardMapFromDepItems(depItems, proxy.currentState()));
         } catch (Throwable e) {
-            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
         }
 //        try {
 //            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromDepItems(depItems, proxy.currentState());
@@ -273,7 +273,7 @@ public class BoardConverter {
 //                }
 //            });
 //        } catch (Throwable e) {
-//            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+//            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
 //        }
     }
     
@@ -281,7 +281,7 @@ public class BoardConverter {
         try {
             return convert(proxy.api(), getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState()));
         } catch (Throwable e) {
-            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
         }
 //        try {
 //            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState());
@@ -293,7 +293,7 @@ public class BoardConverter {
 //                }
 //            });
 //        } catch (Throwable e) {
-//            return CompletableFuture.supplyAsync(() -> Either.left(Problem.of(e.toString())));
+//            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
 //        }
     }
 

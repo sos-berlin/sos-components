@@ -286,6 +286,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         if (!jOrders.isEmpty()) {
             command(currentState, action, modifyOrders, jOrders).thenAccept(either -> {
+
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
@@ -293,6 +294,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                     if (Action.SUSPEND.equals(action)) {
                         Set<JOrder> jOrdersInRetry = jOrders.stream().filter(OrdersHelper::isContinuableAfterSuspending).collect(Collectors.toSet());
+
                         if (!jOrdersInRetry.isEmpty()) {
                             try {
                                 TimeUnit.SECONDS.sleep(3);
@@ -572,6 +574,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private void singleOrder(JOrder jOrder, ModifyOrders modifyOrders, JControllerState currentState, boolean withPositionOrLabel, Long auditLogId)
             throws JsonParseException, JsonMappingException, JocBadRequestException, JocFolderPermissionsException, IOException {
+
         singleOrder(jOrder.id().string(), modifyOrders, currentState, withPositionOrLabel, false, auditLogId);
     }
 
@@ -772,18 +775,22 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         switch (action) {
         case RESUME:
             Map<Boolean, Set<JOrder>> resumableOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isResumable, Collectors.toSet()));
+
             postProblem(resumableOrders, controllerId, withPostProblem, "resumable");
             return resumableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case ANSWER_PROMPT:
             Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isPrompting, Collectors.toSet()));
+
             postProblem(promptingOrders, controllerId, withPostProblem, "prompting");
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case SUSPEND:
             Map<Boolean, Set<JOrder>> suspendibleOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isSuspendible, Collectors.toSet()));
+
             postProblem(suspendibleOrders, controllerId, withPostProblem, "suspendible");
             return suspendibleOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         case CONTINUE:
             Map<Boolean, Set<JOrder>> continuableOrders = orderStream.collect(Collectors.groupingBy(OrdersHelper::isContinuable, Collectors.toSet()));
+
             postProblem(continuableOrders, controllerId, withPostProblem, "continuable");
             return continuableOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         default:
@@ -881,7 +888,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             // JControllerApi api = ControllerApi.of(controllerId);
             // oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).forEach(command -> api.executeCommand(
             // command).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId)));
-            // return CompletableFuture.supplyAsync(() -> Either.right(null));
+//            return CompletableFuture.completedFuture(Either.right(null));
 
             List<JControllerCommand> commandsAP = oIdsStream.map(ControllerCommand.AnswerOrderPrompt::new).map(JControllerCommand::apply).collect(
                     Collectors.toList());
@@ -928,6 +935,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             // only dailyPlan orders
             List<String> orderIds = jOrders.stream().map(JOrder::id).map(OrderId::string).filter(s -> s.matches(".*#[PC][0-9]+-.*")).toList();
 
+
             SOSHibernateSession session = null;
             if (!orderIds.isEmpty()) {
                 try {
@@ -939,6 +947,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     session.setAutoCommit(false);
                     DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                     Globals.beginTransaction(session);
+
 
                     dbLayer.getDailyPlanOrders(controllerId, orderIds).stream().map(DailyPlanModifyPriorityImpl.setPriority(priority)).filter(
                             Optional::isPresent).map(Optional::get).forEach(item -> dbLayer.updateOrderParameterisation(item));
