@@ -82,10 +82,10 @@ public class DeploymentHistoryMoveListener {
             for(DBItemDailyPlanOrder order : ordersToUpdate) {
                 if(ConfigurationType.WORKFLOW.equals(objectType)) {
                     order.setWorkflowFolder(folder);
-                    order.setWorkflowPath(folder.concat("/").concat(order.getWorkflowName()));
+                    order.setWorkflowPath(folder.concat("/").replaceAll("//+", "/").concat(order.getWorkflowName()));
                 } else if (ConfigurationType.SCHEDULE.equals(objectType)) {
                     order.setScheduleFolder(folder);
-                    order.setSchedulePath(folder.concat("/").concat(order.getScheduleName()));
+                    order.setSchedulePath(folder.concat("/").replaceAll("//+", "/").concat(order.getScheduleName()));
                 }
                 session.update(order);
             }
