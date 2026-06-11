@@ -34,6 +34,8 @@ import js7.data.platform.PlatformInfo;
 import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.subagent.JSubagentItem;
+import js7.data_for_java.subagent.JSubagentItemState;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.log.JLogSelection;
 import reactor.core.publisher.Flux;
@@ -60,16 +62,28 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
 
             JControllerProxy proxy = Proxy.of(in.getControllerId());
             JControllerState currentState = proxy.currentState();
-            JAgentRef agent = currentState.pathToAgentRef().get(AgentPath.of(in.getAgentId()));
+            AgentPath agentPath = AgentPath.of(in.getAgentId());
+            JAgentRef agent = currentState.pathToAgentRef().get(agentPath);
             if (agent == null) {
                 throw new JocBadRequestException("Couldn't find Agent with ID " + in.getAgentId());
             }
             List<SubagentId> directors = agent.directors();
-            SubagentId director = getDirector(in, directors);
-            Integer isPrimary = getIsPrimary(directors, director);
-            Js7ServerId serverId = Js7ServerId.subagent(director);
-            Optional<PlatformInfo> platforminfo = OptionConverters.toJava(currentState.idToSubagentItemState().get(director).asScala()
-                    .platformInfo());
+            SubagentId subagentId = directors.get(0);
+            if (currentState.idToSubagentItemState().values().stream().map(JSubagentItemState::subagentItem).map(JSubagentItem::agentPath).filter(
+                    agentPath::equals).count() > 1l) {
+                checkRequiredParameter("subagentId", in.getSubagentId());
+                subagentId = SubagentId.of(in.getSubagentId());
+            }
+            JSubagentItemState subagent = currentState.idToSubagentItemState().get(subagentId);
+            if (subagent == null) {
+                throw new JocBadRequestException("Couldn't find Subagent with ID " + in.getSubagentId()); 
+            }
+            if (!subagent.subagentItem().agentPath().equals(agentPath)) {
+                throw new JocBadRequestException("Subagent with ID " + in.getSubagentId() + " doesn't belong to Agent " + in.getAgentId());
+            }
+            Js7ServerId serverId = Js7ServerId.subagent(subagentId);
+            //Integer isPrimary = getIsPrimary(directors, director);
+            Optional<PlatformInfo> platforminfo = OptionConverters.toJava(subagent.asScala().platformInfo());
             String timeZone = platforminfo.map(PlatformInfo::timezone).orElse("GMT");
             ZoneId zoneId = LogHelper.getZoneId(timeZone);
             Instant instantFrom = LogHelper.getInstantFromZoneId(in, zoneId, false);
@@ -78,9 +92,9 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
             Instant now = Instant.now();
             LogLevel logLevel = LogHelper.getLogLevel(in.getLevel());
 
-            String targetFilename = LogHelper.getAgentDownloadFilename(director.string(), isPrimary, in.getLevel(), instantFrom, instantTo, now,
-                    numOfLines, true);
-            byte[] header = getHeader(director, platforminfo, instantFrom, timeZone);
+            String targetFilename = LogHelper.getAgentDownloadFilename(subagentId.string(), in.getLevel(), instantFrom, instantTo, now, numOfLines,
+                    true);
+            byte[] header = getHeader(subagentId, platforminfo, instantFrom, timeZone);
             
             JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
             Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection)
@@ -107,15 +121,27 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
             ControllerLogImpl.checkAndGetDBInstances(in.getControllerId());
             JControllerProxy proxy = Proxy.of(in.getControllerId());
             JControllerState currentState = proxy.currentState();
-            JAgentRef agent = currentState.pathToAgentRef().get(AgentPath.of(in.getAgentId()));
+            AgentPath agentPath = AgentPath.of(in.getAgentId());
+            JAgentRef agent = currentState.pathToAgentRef().get(agentPath);
             if (agent == null) {
                 throw new JocBadRequestException("Couldn't find Agent with ID " + in.getAgentId());
             }
             List<SubagentId> directors = agent.directors();
-            SubagentId director = getDirector(in, directors);
-            Js7ServerId serverId = Js7ServerId.subagent(director);
-            Optional<PlatformInfo> platforminfo = OptionConverters.toJava(currentState.idToSubagentItemState().get(director).asScala()
-                    .platformInfo());
+            SubagentId subagentId = directors.get(0);
+            if (currentState.idToSubagentItemState().values().stream().map(JSubagentItemState::subagentItem).map(JSubagentItem::agentPath).filter(
+                    agentPath::equals).count() > 1l) {
+                checkRequiredParameter("subagentId", in.getSubagentId());
+                subagentId = SubagentId.of(in.getSubagentId());
+            }
+            JSubagentItemState subagent = currentState.idToSubagentItemState().get(subagentId);
+            if (subagent == null) {
+                throw new JocBadRequestException("Couldn't find Subagent with ID " + in.getSubagentId()); 
+            }
+            if (!subagent.subagentItem().agentPath().equals(agentPath)) {
+                throw new JocBadRequestException("Subagent with ID " + in.getSubagentId() + " doesn't belong to Agent " + in.getAgentId());
+            }
+            Js7ServerId serverId = Js7ServerId.subagent(subagentId);
+            Optional<PlatformInfo> platforminfo = OptionConverters.toJava(subagent.asScala().platformInfo());
             String timeZone = platforminfo.map(PlatformInfo::timezone).orElse("GMT");
             
 //            if (LogHelper.checkIfEmpty(proxy, accessToken, in, serverId, timeZone)) {
@@ -150,22 +176,22 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
         }
     }
     
-    private static SubagentId getDirector(AgentLogRequest in, List<SubagentId> directors) {
-        // TODO check if standalone agent has also (one) director? I think yes
-        SubagentId director = SubagentId.of(in.getAgentId());
-        if (directors.size() == 1) {
-            director = directors.get(0);
-        } else if (directors.size() > 1) {
-            checkRequiredParameter("subagentId", in.getSubagentId()); 
-            director = directors.stream().filter(SubagentId.of(in.getSubagentId())::equals).findAny().orElseThrow(
-                    () -> new JocBadRequestException("Couldn't find Director-Agent with ID " + in.getSubagentId()));
-        }
-        return director;
-    }
+//    private static SubagentId getDirector(AgentLogRequest in, List<SubagentId> directors) {
+//        // TODO check if standalone agent has also (one) director? I think yes
+//        SubagentId director = SubagentId.of(in.getAgentId());
+//        if (directors.size() == 1) {
+//            director = directors.get(0);
+//        } else if (directors.size() > 1) {
+//            checkRequiredParameter("subagentId", in.getSubagentId()); 
+//            director = directors.stream().filter(SubagentId.of(in.getSubagentId())::equals).findAny().orElseThrow(
+//                    () -> new JocBadRequestException("Couldn't find Agent director with ID " + in.getSubagentId()));
+//        }
+//        return director;
+//    }
     
-    private static Integer getIsPrimary(List<SubagentId> directors, SubagentId director) {
-        return directors.size() == 1 ? 0 : directors.indexOf(director) + 1;
-    }
+//    private static Integer getIsPrimary(List<SubagentId> directors, SubagentId director) {
+//        return directors.size() == 1 ? 0 : directors.indexOf(director) + 1;
+//    }
 
     private <T> T init(String apiCall, String accessToken, byte[] filterBytes, Class<T> clazz) throws Exception {
         filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);

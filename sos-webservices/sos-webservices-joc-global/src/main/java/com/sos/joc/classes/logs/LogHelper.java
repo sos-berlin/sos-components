@@ -35,6 +35,7 @@ import com.sos.joc.model.log.RunningLogRequest;
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
 import js7.data.node.Js7ServerId;
+import js7.data.subagent.SubagentId;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.log.JLogSelection;
 import reactor.core.publisher.Flux;
@@ -157,9 +158,9 @@ public class LogHelper {
         return getDownloadFilename(getControllerPrefix(dbItem), level, dateFrom, dateTo, now, numOfLines, compressed);
     }
 
-    public static String getAgentDownloadFilename(String agentId, Integer isDirector, RequestLevel level, Instant dateFrom,
-            Optional<Instant> dateTo, Instant now, OptionalLong numOfLines, boolean compressed) {
-        return getDownloadFilename(getAgentPrefix(agentId, isDirector), level, dateFrom, dateTo, now, numOfLines, compressed);
+    public static String getAgentDownloadFilename(String agentId, RequestLevel level, Instant dateFrom, Optional<Instant> dateTo, Instant now,
+            OptionalLong numOfLines, boolean compressed) {
+        return getDownloadFilename(getAgentPrefix(agentId), level, dateFrom, dateTo, now, numOfLines, compressed);
     }
     
     public static Instant getInstant(LogBaseRequest in, boolean to) {
@@ -232,21 +233,21 @@ public class LogHelper {
         return String.format("%s%s-", dbItem.getControllerId(), serverRoleSuffix);
     }
 
-    private static String getAgentPrefix(final String agentId, Integer isDirector) {
+    private static String getAgentPrefix(final String agentId) {
         // truncate AgentId!!! because of filename length
         // length: <=100 + <=8 --> max. 119
-        return String.format("%s%s-", (agentId.length() > 100) ? agentId.substring(0, 100) : agentId, getAgentRoleSuffix(isDirector));
+        return String.format("%s-", (agentId.length() > 100) ? agentId.substring(0, 100) : agentId);
     }
     
-    private static String getAgentRoleSuffix(Integer isDirector) {
-        if (isDirector == null || isDirector == 0) {
-            return "";
-        } else if (isDirector == 1) {
-            return "-primary";
-        } else {
-            return "-backup";
-        }
-    }
+//    private static String getAgentRoleSuffix(Integer isDirector) {
+//        if (isDirector == null || isDirector == 0) {
+//            return "";
+//        } else if (isDirector == 1) {
+//            return "-primary";
+//        } else {
+//            return "-backup";
+//        }
+//    }
 
     private static String getDateToOrLines(Optional<Instant> dateTo, Instant now, OptionalLong numOfLines) {
         Optional<String> dtTo = dateTo.map(LogHelper::getFirst14Digits);
