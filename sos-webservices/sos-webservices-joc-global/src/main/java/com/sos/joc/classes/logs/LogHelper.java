@@ -158,9 +158,9 @@ public class LogHelper {
         return getDownloadFilename(getControllerPrefix(dbItem), level, dateFrom, dateTo, now, numOfLines, compressed);
     }
 
-    public static String getAgentDownloadFilename(String agentId, RequestLevel level, Instant dateFrom, Optional<Instant> dateTo, Instant now,
+    public static String getAgentDownloadFilename(SubagentId subagentId, RequestLevel level, Instant dateFrom, Optional<Instant> dateTo, Instant now,
             OptionalLong numOfLines, boolean compressed) {
-        return getDownloadFilename(getAgentPrefix(agentId), level, dateFrom, dateTo, now, numOfLines, compressed);
+        return getDownloadFilename(getAgentPrefix(subagentId), level, dateFrom, dateTo, now, numOfLines, compressed);
     }
     
     public static Instant getInstant(LogBaseRequest in, boolean to) {
@@ -233,21 +233,12 @@ public class LogHelper {
         return String.format("%s%s-", dbItem.getControllerId(), serverRoleSuffix);
     }
 
-    private static String getAgentPrefix(final String agentId) {
+    private static String getAgentPrefix(final SubagentId subagentId) {
         // truncate AgentId!!! because of filename length
-        // length: <=100 + <=8 --> max. 119
-        return String.format("%s-", (agentId.length() > 100) ? agentId.substring(0, 100) : agentId);
+        // length: <=100
+        String saId = subagentId.string();
+        return String.format("%s-", (saId.length() > 100) ? saId.substring(0, 100) : saId);
     }
-    
-//    private static String getAgentRoleSuffix(Integer isDirector) {
-//        if (isDirector == null || isDirector == 0) {
-//            return "";
-//        } else if (isDirector == 1) {
-//            return "-primary";
-//        } else {
-//            return "-backup";
-//        }
-//    }
 
     private static String getDateToOrLines(Optional<Instant> dateTo, Instant now, OptionalLong numOfLines) {
         Optional<String> dtTo = dateTo.map(LogHelper::getFirst14Digits);
