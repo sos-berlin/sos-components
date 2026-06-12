@@ -21,6 +21,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "releasables",
+    "keepOrders",
     "auditLog"
 })
 public class ReleasableRecallFilter {
@@ -32,6 +33,8 @@ public class ReleasableRecallFilter {
      */
     @JsonProperty("releasables")
     private List<Releasable> releasables = new ArrayList<Releasable>();
+    @JsonProperty("keepOrders")
+    private Boolean keepOrders = false;
     /**
      * auditParams
      * <p>
@@ -61,6 +64,16 @@ public class ReleasableRecallFilter {
         this.releasables = releasables;
     }
 
+    @JsonProperty("keepOrders")
+    public Boolean getKeepOrders() {
+        return keepOrders;
+    }
+
+    @JsonProperty("keepOrders")
+    public void setKeepOrders(Boolean keepOrders) {
+        this.keepOrders = keepOrders;
+    }
+
     /**
      * auditParams
      * <p>
@@ -85,12 +98,12 @@ public class ReleasableRecallFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("releasables", releasables).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("releasables", releasables).append("keepOrders", keepOrders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(releasables).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(keepOrders).append(releasables).toHashCode();
     }
 
     @Override
@@ -102,7 +115,7 @@ public class ReleasableRecallFilter {
             return false;
         }
         ReleasableRecallFilter rhs = ((ReleasableRecallFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(releasables, rhs.releasables).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(keepOrders, rhs.keepOrders).append(releasables, rhs.releasables).isEquals();
     }
 
 }

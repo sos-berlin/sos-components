@@ -4,13 +4,15 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,12 +24,19 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.controller.ControllerCommandResponse;
+import com.sos.joc.classes.inventory.PublishSemaphore;
+import com.sos.joc.classes.inventory.RecallRevokeSemaphore;
+import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
+import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -47,6 +56,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
     private static final String API_CALL = "./inventory/deployment/revoke";
     private static final Logger LOGGER = LoggerFactory.getLogger(RevokeImpl.class);
     private DBLayerDeploy dbLayer = null;
+    private static final String SEMAPHORE_ID = "REVOKE";
 
     @Override
     public JOCDefaultResponse postRevoke(String xAccessToken, byte[] filter) throws Exception {
@@ -62,10 +72,12 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            LOGGER.debug("acquire semaphore from deploy with AT " + xAccessToken);
+            RemoveSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
             DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog());
             Set<String> allowedControllerIds = Collections.emptySet();
-            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-            		.filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
+                    getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
             String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
@@ -100,9 +112,12 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             // Delete from all allowed controllers from filter
             final String commitIdForRevoke = UUID.randomUUID().toString();
             final String commitIdForRevokeFileOrderSources = UUID.randomUUID().toString();
-            Map<String, List<DBItemDeploymentHistory>> itemsToRevokePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+//            Map<String, List<DBItemDeploymentHistory>> itemsToRevokePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             // loop 1: store db entries optimistically
             for (String controllerId : controllerIds) {
+                if (!allowedControllerIds.contains(controllerId)) {
+                    continue;
+                }
                 List<DBItemDeploymentHistory> filteredDepHistoryItemsToRevoke = new ArrayList<DBItemDeploymentHistory>();
                 folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
@@ -120,50 +135,88 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                 }
                 
-                DeleteDeployments.checkIfWorkflowsHaveOrders(controllerId, filteredDepHistoryItemsToRevoke.stream().filter(o -> DeployType.WORKFLOW
-                        .equals(o.getTypeAsEnum())).map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
-
-                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
-                        fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources,
-                        controllerId, dbAuditlog.getId(), account);
-                DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
-                        .getId(), account);
-                itemsToRevokePerController.put(controllerId, filteredDepHistoryItemsToRevoke);
-            }
-            // loop 2: send commands to controllers
-            for (String controllerId : allowedControllerIds) {
-                if(itemsToRevokePerController.get(controllerId) != null && !itemsToRevokePerController.get(controllerId).isEmpty()) {
-                    Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToRevokePerController.get(controllerId).stream()
-                            .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-                    if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
-                        UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), controllerId)
-                        .thenAccept(either -> {
-                            DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevokeFileOrderSources, xAccessToken, 
-                                    getJocError(), allItemsToDelete.get(false), commitIdForRevoke, 
-                                    allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
-                        });
+                DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(new HashSet<DBItemDeploymentHistory>(filteredDepHistoryItemsToRevoke), 
+                        Optional.of(null), "now", controllerId);
+                
+                List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
+                        CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);
+                CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
+                    Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
+                            .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+                    mappedFutures.putIfAbsent(true, Collections.emptyList());
+                    mappedFutures.putIfAbsent(false, Collections.emptyList());
+                    
+                    if(!mappedFutures.get(true).isEmpty()) {
+                        // contains futures with errors
+                        String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
+                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
+                            LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
+                        }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
+                        EventBus.getInstance().post(new ProblemEvent(xAccessToken, null, message));
+                    } else {
+                        // if
+                        //      no error occurred on cancelOrders 
+                        // then
+                        //      STORE optimistically and send commands to controllers
                         
-                    } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
-                        UpdateItemUtils.updateItemsDelete(commitIdForRevoke, allItemsToDelete.get(false), controllerId)
-                        .thenAccept(either -> {
-                            DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
-                        });
-                        
+                        Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
+                                fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources,
+                                controllerId, dbAuditlog.getId(), account);
+                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
+                                .getId(), account);
+                        if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
+                            UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), controllerId)
+                            .thenAccept(either -> {
+                                DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevokeFileOrderSources, xAccessToken, 
+                                        getJocError(), allItemsToDelete.get(false), commitIdForRevoke, 
+                                        allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+                            });
+                            
+                        } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
+                            UpdateItemUtils.updateItemsDelete(commitIdForRevoke, allItemsToDelete.get(false), controllerId)
+                            .thenAccept(either -> {
+                                DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
+                            });
+                            
+                        }
                     }
-                }
+                });
             }
+            releaseAndReaquireSemaphore(xAccessToken);
             Date deployWSFinished = Date.from(Instant.now());
             LOGGER.trace("*** revoke finished ***" + deployWSFinished);
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
             LOGGER.trace("collecting items took: " + (collectingItemsFinished.getTime() - started.getTime()) + " ms");
             return responseStatusJSOk(Date.from(Instant.now()));
-
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
+            RemoveSemaphore.release(xAccessToken);
+            if (PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
+                    .equals(SEMAPHORE_ID)).isPresent()) {
+                PublishSemaphore.remove(xAccessToken);
+                LOGGER.debug("final remove semaphore from release with AT " + xAccessToken);
+            }
             Globals.disconnect(hibernateSession);
         }
+    }
+
+    private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
+        try {
+            RemoveSemaphore.release(accessToken);
+            LOGGER.debug("release semaphore from release with AT " + accessToken);
+        } catch (Exception e) {
+            // DO NOTHING if semaphore release failed
+        }
+        if (RemoveSemaphore.availablePermits(accessToken) == 1) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
+        RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
+        LOGGER.debug("acquire again semaphore from release with AT " + accessToken);
     }
 
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (RevokeFilter revokeFilter) {
@@ -186,4 +239,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         }
     }
     
+    private void cancelOrders() {
+        
+    }
 }

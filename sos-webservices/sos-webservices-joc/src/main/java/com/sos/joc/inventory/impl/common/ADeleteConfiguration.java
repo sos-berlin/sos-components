@@ -436,7 +436,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         });
     }
     
-    private static Optional<List<String>> addScheduleNames(DBItemInventoryReleasedConfiguration config, InventoryDBLayer dbLayer)
+    public static Optional<List<String>> addScheduleNames(DBItemInventoryReleasedConfiguration config, InventoryDBLayer dbLayer)
             throws SOSHibernateException {
         if (ConfigurationType.SCHEDULE.intValue().equals(config.getType())) {
             return Optional.of(Collections.singletonList(config.getName()));

@@ -163,6 +163,14 @@ public class JOCResourceImpl {
         return jocError;
     }
 
+    public static JocError getJocErrorWithPrintMetaInfoAndClear(JocError error, Logger logger) {
+        if (error != null && error.getMetaInfo() != null && !error.getMetaInfo().isEmpty()) {
+            logger.info(error.printMetaInfo());
+            error.getMetaInfo().clear();
+        }
+        return error;
+    }
+
     public static Date getDateFromString(String dateString) {
         Date date = null;
         try {
