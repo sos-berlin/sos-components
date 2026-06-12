@@ -285,27 +285,14 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
                     if (deployFilter.getAddOrdersDateFrom() != null ) {
                         
-                        DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-                        orderFilter.setControllerIds(Collections.singletonList(controllerId));
-                        if("now".equals(deployFilter.getAddOrdersDateFrom().toLowerCase())) {
-                            SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
-                            orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
-                        } else {
-                            orderFilter.setDailyPlanDateFrom(deployFilter.getAddOrdersDateFrom());
-                        }
-                        orderFilter.setWorkflowPaths(
-                                verifiedDeployables.keySet().stream()
-                                    .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                                    .map(workflow -> workflow.getName()).collect(Collectors.toList())
-                            );
-                        orderFilter.getWorkflowPaths().addAll(
-                                renamedOriginalHistoryEntries.stream()
-                                .filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW))
-                                .map(workflow -> workflow.getName()).collect(Collectors.toList())
-                            );
+                        DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(verifiedDeployables.keySet(), 
+                                Optional.of(renamedOriginalHistoryEntries), deployFilter.getAddOrdersDateFrom(), controllerId);
+
                         PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
                             .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
-                        List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = getCancelOrderFuture(controllerId, xAccessToken, orderFilter);
+                        
+                        List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);
+                        
                         CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
                                     .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
@@ -319,20 +306,20 @@ public abstract class ADeploy extends JOCResourceImpl {
                                     LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
                                 }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
                                 EventBus.getInstance().post(new ProblemEvent(xAccessToken, null, message));
-                            }
-                            
-                            SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
-                                    updateableAgentNamesFileOrderSources, dbAuditlog.getId());
-                            // call updateRepo command via ControllerApi for given controller
-                            SOSHibernateSession sessionAfterCancel = null;
-                            try {
-                                sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
-                                StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                        getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            } finally {
-                                Globals.disconnect(sessionAfterCancel);
+                            } else {
+                                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
+                                        updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                                // call updateRepo command via ControllerApi for given controller
+                                SOSHibernateSession sessionAfterCancel = null;
+                                try {
+                                    sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
+                                    StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
+                                            getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
+                                } catch (Exception e) {
+                                    throw new JocDeployException(e);
+                                } finally {
+                                    Globals.disconnect(sessionAfterCancel);
+                                }
                             }
                         });
                     } else {
@@ -420,52 +407,6 @@ public abstract class ADeploy extends JOCResourceImpl {
         } finally {
             Globals.disconnect(session);
         }
-    }
-    
-    private List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFuture(String controllerId, String xAccessToken,
-            DailyPlanOrderFilterDef orderFilter) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            SOSHibernateException, ExecutionException {
-        
-        if (orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
-        DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-        DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                xAccessToken);
-        Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                ordersPerController, xAccessToken);
-        for (String controllerIdInstance : Proxies.getControllerDbInstances().keySet()) {
-            if (!cancelOrderResponsePerController.containsKey(controllerIdInstance)) {
-                cancelOrderResponsePerController.put(controllerIdInstance, CompletableFuture.completedFuture(new ControllerCommandResponse(
-                        controllerIdInstance)));
-            }
-            futures.add(cancelOrderResponsePerController.get(controllerIdInstance).thenApply(ccr -> {
-                if (ccr.getException().isEmpty()) {
-                    DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
-                    localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
-                    localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
-                    boolean successful = true;
-                    try {
-                        // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        if (!localOrderFilter.getWorkflowPaths().isEmpty()) {
-                            successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
-                        }
-                        if (!successful) {
-                            return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
-                                    "Order delete failed due to missing permission.")));
-                        }
-                    } catch (Exception e) {
-                        return new ControllerCommandResponse(controllerId, Optional.of(e));
-                    }
-                }
-                return ccr;
-            }));
-        }
-        return futures;
     }
     
     private List<Configuration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {

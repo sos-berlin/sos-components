@@ -163,7 +163,15 @@ public class JOCResourceImpl {
         return jocError;
     }
 
-    public Date getDateFromString(String dateString) {
+    public static JocError getJocErrorWithPrintMetaInfoAndClear(JocError error, Logger logger) {
+        if (error != null && error.getMetaInfo() != null && !error.getMetaInfo().isEmpty()) {
+            logger.info(error.printMetaInfo());
+            error.getMetaInfo().clear();
+        }
+        return error;
+    }
+
+    public static Date getDateFromString(String dateString) {
         Date date = null;
         try {
             dateString = dateString.trim().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}) ", "$1T");
