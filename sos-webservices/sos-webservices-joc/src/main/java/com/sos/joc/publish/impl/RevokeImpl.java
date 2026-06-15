@@ -135,8 +135,8 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                 }
                 
-                DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(new HashSet<DBItemDeploymentHistory>(filteredDepHistoryItemsToRevoke), 
-                        Optional.of(null), "now", controllerId);
+                DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(new HashSet<DBItemDeploymentHistory>(
+                        filteredDepHistoryItemsToRevoke), Optional.ofNullable(null), "now", controllerId);
                 
                 List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
                         CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);
