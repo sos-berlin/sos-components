@@ -52,7 +52,7 @@ public class ReportingDBLayer extends DBLayer {
             }
             hql.append(" from ").append(DBLayer.DBITEM_REPORTS).append(" rh ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_MAPPING).append(" rm ");
-            hql.append("on rh.Id=rm.reportId ");
+            hql.append("on rh.id=rm.reportId ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
             hql.append("on rm.runId=rr.id ");
 
