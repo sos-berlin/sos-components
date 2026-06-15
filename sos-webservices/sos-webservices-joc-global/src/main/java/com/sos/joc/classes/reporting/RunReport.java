@@ -13,8 +13,10 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -167,16 +169,17 @@ public class RunReport extends AReporting {
             // TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
 
-                reportDBItem.setFrequency(f.intValue());
-                boolean reportExists = reportExists(reportDBItem, in);
-                if (!reportExists) {
+//                reportDBItem.setFrequency(f.intValue());
+//                //reportDBItem.setDateTo(getDate(getLocalDateTo(getLocalDateTime(runDbItem.getDateFrom()), f)));
+//                boolean reportExists = reportExists(reportDBItem, in);
+//                if (!reportExists) {
                     Path tempDir = runPerFrequency(f, commonScript);
                     tempDirs.add(tempDir);
                     dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                             file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
-                } else {
-                    skippedRun(f, commonScript);
-                }
+//                } else {
+//                    skippedRun(f, commonScript);
+//                }
             }
 
             runDbItem.setReportCount(dbItems.size());
@@ -257,16 +260,16 @@ public class RunReport extends AReporting {
         }
     }
 
-    private static void skippedRun(Frequency f, String commonScript) {
-        try {
-            StringBuilder s = new StringBuilder(commonScript);
-            s.append(" -p ").append(f.strValue());
-            s.append(" -k ").append("\"\"");
-            JOCSOSShell.executeCommand(s.toString(), reportingDir);
-        } catch (Exception e) {
-            //
-        }
-    }
+//    private static void skippedRun(Frequency f, String commonScript) {
+//        try {
+//            StringBuilder s = new StringBuilder(commonScript);
+//            s.append(" -p ").append(f.strValue());
+//            s.append(" -k ").append("\"\"");
+//            JOCSOSShell.executeCommand(s.toString(), reportingDir);
+//        } catch (Exception e) {
+//            //
+//        }
+//    }
 
     private static void deleteTmpDir(final Path tempDir) {
         if (tempDir != null) {
@@ -415,23 +418,23 @@ public class RunReport extends AReporting {
         }
     }
 
-    private static boolean reportExists(DBItemReport dbItemReport, final Report in) throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("ReportExists");
-
-            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-
-            String constraintHash = dbItemReport.hashConstraint(in.getTemplateName().intValue(), in.getHits(), in.getControllerId(), in.getSort()
-                    .intValue(), in.getPeriod().getLength(), in.getPeriod().getStep());
-
-            DBItemReport oldItem = dbLayer.getReport(constraintHash);
-            return (oldItem != null);
-
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
+//    private static boolean reportExists(DBItemReport dbItemReport, final Report in) throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("ReportExists");
+//
+//            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+//
+//            String constraintHash = dbItemReport.hashConstraint(in.getTemplateName().intValue(), in.getHits(), in.getControllerId(), in.getSort()
+//                    .intValue(), in.getPeriod().getLength(), in.getPeriod().getStep());
+//
+//            DBItemReport oldItem = dbLayer.getReport(constraintHash);
+//            return (oldItem != null);
+//
+//        } finally {
+//            Globals.disconnect(session);
+//        }
+//    }
 
     private static void insert(final Report in, DBItemReportRun runDbItem, Collection<DBItemReport> dbItems) throws Exception {
         SOSHibernateSession session = null;
@@ -441,6 +444,7 @@ public class RunReport extends AReporting {
             Globals.beginTransaction(session);
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+            Map<Long, DBItemReportRun> oldRuns = new HashMap<>();
 
             for (DBItemReport dbItem : dbItems) {
                 String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem
@@ -448,17 +452,26 @@ public class RunReport extends AReporting {
                 dbItem.setConstraintHash(constraintHash);
 
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
+                boolean updated = false;
                 if (oldItem != null) {
-                    oldItem.setRunId(runDbItem.getId());
-
-                    session.update(oldItem);
-                } else {
+                    DBItemReportRun oldRun = oldRuns.get(oldItem.getRunId());
+                    if (oldRun == null) {
+                        oldRun = session.get(DBItemReportRun.class, oldItem.getRunId());
+                        if (oldRun != null) {
+                            oldRuns.put(oldItem.getRunId(), oldRun);
+                        }
+                    }
+                    if (oldRun != null && oldRun.getName().equals(runDbItem.getName())) {
+                        oldItem.setRunId(runDbItem.getId());
+                        session.update(oldItem);
+                        updated = true;
+                    }
+                } 
+                if (!updated) {
                     dbItem.setRunId(runDbItem.getId());
                     dbItem.setContent(Files.readAllBytes(dbItem.getReportFile()));
-
                     session.save(dbItem);
                 }
-
             }
 
             updateRun(runDbItem, session);
