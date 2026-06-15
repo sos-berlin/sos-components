@@ -67,11 +67,11 @@ public class ReportArguments {
     }
 
     public void setHits(String hits) {
-        try {
+//        try {
             this.hits = Integer.valueOf(hits);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+//        } catch (NumberFormatException e) {
+//            throw e;
+//        }
     }
 
     public void setReqportFrequency(String frequencyValue) {
@@ -115,19 +115,19 @@ public class ReportArguments {
     public void checkRequired() throws SOSRequiredArgumentMissingException {
         String msg = "";
         if (reportId == null) {
-            msg += ("Missing parameter value for <-r --report>") + "\n";
+            msg += ("Missing parameter value for <-r --report>") + System.lineSeparator();
         }
         if (inputDirectory == null) {
-            msg += ("Missing parameter value for <-i --inputDirectory>") + "\n";
+            msg += ("Missing parameter value for <-i --inputDirectory>") + System.lineSeparator();
         }
         if (reportFrequency == null) {
-            msg += ("Missing parameter value for <-p --frequencies>") + "\n";
+            msg += ("Missing parameter value for <-p --frequencies>") + System.lineSeparator();
         }
         if (outputDirectory == null) {
-            msg += ("Missing parameter value for <-o --outputDirectory>") + "\n";
+            msg += ("Missing parameter value for <-o --outputDirectory>") + System.lineSeparator();
         }
         if (monthFrom == null) {
-            msg += ("Missing parameter value for <-s --monthFrom>") + "\n";
+            msg += ("Missing parameter value for <-s --monthFrom>") + System.lineSeparator();
         }
         if (!msg.isEmpty()) {
             throw new SOSRequiredArgumentMissingException(msg);

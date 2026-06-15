@@ -42,7 +42,7 @@ public class DeleteReportsImpl extends JOCResourceImpl implements IDeleteReports
             Globals.beginTransaction(session);
             
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            in.getReportIds().forEach(id -> dbLayer.delete(id));
+            in.getReportIds().forEach(dbLayer::delete);
             Globals.commit(session);
             
             EventBus.getInstance().post(new ReportsUpdated());

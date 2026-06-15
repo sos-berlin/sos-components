@@ -124,7 +124,6 @@ public class CSVFileReader {
             if (Files.exists(path)) {
 
                 LOGGER.debug("File:" + path.getFileName() + " in " + path.getParent());
-                Files.newBufferedReader(path);
                 BufferedReader br = Files.newBufferedReader(path);
 
                 Map<String, String> record = new HashMap<String, String>();

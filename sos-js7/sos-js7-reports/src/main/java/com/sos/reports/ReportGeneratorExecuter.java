@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.reports.classes.CSVFileReader;
 import com.sos.reports.classes.IReport;
 import com.sos.reports.classes.ReportArguments;
@@ -90,7 +91,7 @@ public class ReportGeneratorExecuter {
             report = new ReportSuccessfulJobs();
             break;
         default:
-            throw new SOSException("Not yet implemented: " + reportArguments.reportId);
+            throw new SOSInvalidDataException("Not yet implemented: " + reportArguments.reportId);
         }
         report.setReportArguments(reportArguments);
 
@@ -102,7 +103,7 @@ public class ReportGeneratorExecuter {
             csvFileReader.readOrders(report, reportArguments);
             break;
         default:
-            throw new SOSException("Unknown report type: " + report.getType());
+            throw new SOSInvalidDataException("Unknown report type: " + report.getType());
         }
 
     }

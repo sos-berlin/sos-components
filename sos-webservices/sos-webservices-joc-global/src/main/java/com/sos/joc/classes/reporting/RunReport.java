@@ -13,10 +13,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -37,6 +35,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.reporting.DBItemReport;
+import com.sos.joc.db.reporting.DBItemReportMapping;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
@@ -444,34 +443,28 @@ public class RunReport extends AReporting {
             Globals.beginTransaction(session);
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-            Map<Long, DBItemReportRun> oldRuns = new HashMap<>();
-
             for (DBItemReport dbItem : dbItems) {
+                DBItemReportMapping rmDbItem = new DBItemReportMapping();
+                rmDbItem.setRunId(runDbItem.getId());
+                
                 String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem
                         .getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
                 dbItem.setConstraintHash(constraintHash);
 
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
-                boolean updated = false;
                 if (oldItem != null) {
-                    DBItemReportRun oldRun = oldRuns.get(oldItem.getRunId());
-                    if (oldRun == null) {
-                        oldRun = session.get(DBItemReportRun.class, oldItem.getRunId());
-                        if (oldRun != null) {
-                            oldRuns.put(oldItem.getRunId(), oldRun);
-                        }
-                    }
-                    if (oldRun != null && oldRun.getName().equals(runDbItem.getName())) {
-                        oldItem.setRunId(runDbItem.getId());
-                        session.update(oldItem);
-                        updated = true;
-                    }
-                } 
-                if (!updated) {
+                    rmDbItem.setReportId(oldItem.getId());
+                    oldItem.setRunId(runDbItem.getId());
+
+                    session.update(oldItem);
+                } else {
                     dbItem.setRunId(runDbItem.getId());
                     dbItem.setContent(Files.readAllBytes(dbItem.getReportFile()));
+
                     session.save(dbItem);
+                    rmDbItem.setReportId(dbItem.getId());
                 }
+                session.save(rmDbItem);
             }
 
             updateRun(runDbItem, session);

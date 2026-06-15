@@ -33,7 +33,7 @@ public class ReportingDBLayer extends DBLayer {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("select rh.id as id");
-            hql.append(",rh.runId as runId");
+            hql.append(",rr.id as runId");
             hql.append(",rr.path as path");
             hql.append(",rr.title as title");
             hql.append(",rr.templateId as templateName");
@@ -51,8 +51,10 @@ public class ReportingDBLayer extends DBLayer {
                 hql.append(",rh.content as content");
             }
             hql.append(" from ").append(DBLayer.DBITEM_REPORTS).append(" rh ");
+            hql.append("left join ").append(DBLayer.DBITEM_REPORT_MAPPING).append(" rm ");
+            hql.append("on rh.Id=rm.reportId ");
             hql.append("left join ").append(DBLayer.DBITEM_REPORT_RUN).append(" rr ");
-            hql.append("on rh.runId=rr.id");
+            hql.append("on rm.runId=rr.id ");
 
             List<String> clause = new ArrayList<>(4);
 
@@ -142,6 +144,19 @@ public class ReportingDBLayer extends DBLayer {
             if (item != null) {
                 getSession().delete(item);
             }
+            deleteMapping(id);
+        } catch (SOSHibernateException e) {
+            throw new DBInvalidDataException(e);
+        }
+    }
+    
+    private int deleteMapping(Long reportId) {
+        try {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_REPORT_MAPPING);
+            hql.append(" where reportId =:reportId");
+            Query<Integer> query = getSession().createQuery(hql.toString());
+            query.setParameter("reportId", reportId);
+            return getSession().executeUpdate(query);
         } catch (SOSHibernateException e) {
             throw new DBInvalidDataException(e);
         }
