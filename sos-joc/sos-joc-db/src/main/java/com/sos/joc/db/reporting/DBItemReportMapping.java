@@ -25,15 +25,15 @@ public class DBItemReportMapping extends DBItem {
     public Long getReportId() {
         return reportId;
     }
-    public void setReportId(Long changeId) {
-        this.reportId = changeId;
+    public void setReportId(Long val) {
+        this.reportId = val;
     }
     
     public Long getRunId() {
         return runId;
     }
-    public void setRunId(Long invId) {
-        this.runId = invId;
+    public void setRunId(Long val) {
+        this.runId = val;
     }
 
 }
