@@ -67,11 +67,11 @@ public class ReportArguments {
     }
 
     public void setHits(String hits) {
-        try {
+//        try {
             this.hits = Integer.valueOf(hits);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+//        } catch (NumberFormatException e) {
+//            throw e;
+//        }
     }
 
     public void setReqportFrequency(String frequencyValue) {

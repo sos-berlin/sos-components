@@ -35,6 +35,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.reporting.DBItemReport;
+import com.sos.joc.db.reporting.DBItemReportMapping;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.event.EventBus;
@@ -83,7 +84,7 @@ public class RunReport extends AReporting {
         }
         return null;
     }
-    
+
     // public because used in Validator
     public static LocalDate relativeDateToSpecificLocalDate(String month, boolean to) {
         // TODO for unit y -> always 01-yyyy
@@ -145,7 +146,7 @@ public class RunReport extends AReporting {
             }
             return ld;
         } else if (month.matches("\\d{4}-(0[1-9]|1[0-2])")) {
-            return LocalDate.of(Integer.valueOf(month.substring(0,4)), Integer.valueOf(month.substring(5)), 1);
+            return LocalDate.of(Integer.valueOf(month.substring(0, 4)), Integer.valueOf(month.substring(5)), 1);
         } else {
             throw new IllegalArgumentException("month" + (to ? "To" : "From") + " has to be in the form yyyy-mm or [0-9]+[mqy]");
         }
@@ -167,16 +168,16 @@ public class RunReport extends AReporting {
             // TODO SOSTimeout timeout = new SOSTimeout(10, TimeUnit.Hours);
             for (Frequency f : in.getFrequencies()) {
 
-                reportDBItem.setFrequency(f.intValue());
-                boolean reportExists = reportExists(reportDBItem, in);
-                if (!reportExists) {
+//                reportDBItem.setFrequency(f.intValue());
+//                boolean reportExists = reportExists(reportDBItem, in);
+//                if (!reportExists) {
                     Path tempDir = runPerFrequency(f, commonScript);
                     tempDirs.add(tempDir);
                     dbItems.addAll(Files.list(tempDir).filter(file -> file.getFileName().toString().startsWith(reportFilePrefix)).map(
                             file -> getHistoryDBItem(file, f)).collect(Collectors.toList()));
-                } else {
-                    skippedRun(f, commonScript);
-                }
+//                } else {
+//                    skippedRun(f, commonScript);
+//                }
             }
 
             runDbItem.setReportCount(dbItems.size());
@@ -256,17 +257,17 @@ public class RunReport extends AReporting {
             throw e;
         }
     }
-    
-    private static void skippedRun(Frequency f, String commonScript) {
-        try {
-            StringBuilder s = new StringBuilder(commonScript);
-            s.append(" -p ").append(f.strValue());
-            s.append(" -k ").append("\"\"");
-            JOCSOSShell.executeCommand(s.toString(), reportingDir);
-        } catch (Exception e) {
-            //
-        }
-    }
+
+//    private static void skippedRun(Frequency f, String commonScript) {
+//        try {
+//            StringBuilder s = new StringBuilder(commonScript);
+//            s.append(" -p ").append(f.strValue());
+//            s.append(" -k ").append("\"\"");
+//            JOCSOSShell.executeCommand(s.toString(), reportingDir);
+//        } catch (Exception e) {
+//            //
+//        }
+//    }
 
     private static void deleteTmpDir(final Path tempDir) {
         if (tempDir != null) {
@@ -396,7 +397,7 @@ public class RunReport extends AReporting {
             Globals.disconnect(session);
         }
     }
-    
+
     private static void updateRun(final DBItemReportRun runDbItem, Date now, SOSHibernateSession session) throws Exception {
         runDbItem.setState(ReportRunStateText.SUCCESSFUL.intValue());
         runDbItem.setModified(now);
@@ -420,23 +421,23 @@ public class RunReport extends AReporting {
         }
     }
 
-    private static boolean reportExists(DBItemReport dbItemReport, final Report in) throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("ReportExists");
-
-            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-
-            String constraintHash = dbItemReport.hashConstraint(in.getTemplateName().intValue(), in.getHits(), in.getControllerId(), in.getSort()
-                    .intValue(), in.getPeriod().getLength(), in.getPeriod().getStep());
-
-            DBItemReport oldItem = dbLayer.getReport(constraintHash);
-            return (oldItem != null);
-
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
+//    private static boolean reportExists(DBItemReport dbItemReport, final Report in) throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection("ReportExists");
+//
+//            ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+//
+//            String constraintHash = dbItemReport.hashConstraint(in.getTemplateName().intValue(), in.getHits(), in.getControllerId(), in.getSort()
+//                    .intValue(), in.getPeriod().getLength(), in.getPeriod().getStep());
+//
+//            DBItemReport oldItem = dbLayer.getReport(constraintHash);
+//            return (oldItem != null);
+//
+//        } finally {
+//            Globals.disconnect(session);
+//        }
+//    }
 
     private static void insert(final Report in, DBItemReportRun runDbItem, Collection<DBItemReport> dbItems) throws Exception {
         SOSHibernateSession session = null;
@@ -446,16 +447,21 @@ public class RunReport extends AReporting {
             Globals.beginTransaction(session);
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
-
             Date now = Date.from(Instant.now());
-
+            
+            dbLayer.deleteMappingOfReportName(runDbItem.getName());
+            
             for (DBItemReport dbItem : dbItems) {
+                DBItemReportMapping rmDbItem = new DBItemReportMapping();
+                rmDbItem.setRunId(runDbItem.getId());
+                
                 String constraintHash = dbItem.hashConstraint(runDbItem.getTemplateId(), runDbItem.getHits(), runDbItem.getControllerId(), runDbItem
                         .getSort(), runDbItem.getPeriodLength(), runDbItem.getPeriodStep());
                 dbItem.setConstraintHash(constraintHash);
 
                 DBItemReport oldItem = dbLayer.getReport(constraintHash);
                 if (oldItem != null) {
+                    rmDbItem.setReportId(oldItem.getId());
                     oldItem.setRunId(runDbItem.getId());
                     oldItem.setModified(now);
 
@@ -467,10 +473,11 @@ public class RunReport extends AReporting {
                     dbItem.setContent(Files.readAllBytes(dbItem.getReportFile()));
 
                     session.save(dbItem);
+                    rmDbItem.setReportId(dbItem.getId());
                 }
-
+                session.save(rmDbItem);
             }
-            
+
             updateRun(runDbItem, now, session);
 
             Globals.commit(session);

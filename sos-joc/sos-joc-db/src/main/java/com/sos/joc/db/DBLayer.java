@@ -86,6 +86,7 @@ import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.monitoring.DBItemSystemNotification;
 import com.sos.joc.db.reporting.DBItemReport;
+import com.sos.joc.db.reporting.DBItemReportMapping;
 import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
@@ -418,6 +419,9 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_REPORT_RUN = DBItemReportRun.class.getSimpleName();
     public static final String TABLE_REPORT_RUNS = "REPORT_RUNS";
     public static final String TABLE_REPORT_RUNS_SEQUENCE = "SEQ_REP_RUN";
+    
+    public static final String DBITEM_REPORT_MAPPING = DBItemReportMapping.class.getSimpleName();
+    public static final String TABLE_REPORT_MAPPINGS = "REPORT_MAPPINGS";
 
     public static final String DBITEM_ENC_CERTIFICATE = DBItemEncCertificate.class.getSimpleName();
     public static final String TABLE_ENC_CERTIFICATE = "ENC_CERTIFICATES";
@@ -625,6 +629,7 @@ public class DBLayer implements Serializable {
 
         cl.add(DBItemReport.class);
         cl.add(DBItemReportRun.class);
+        cl.add(DBItemReportMapping.class);
 
         cl.add(DBItemEncCertificate.class);
         cl.add(DBItemEncAgentCertificate.class);
