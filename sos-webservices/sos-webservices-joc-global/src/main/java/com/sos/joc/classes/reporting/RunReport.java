@@ -169,7 +169,6 @@ public class RunReport extends AReporting {
             for (Frequency f : in.getFrequencies()) {
 
 //                reportDBItem.setFrequency(f.intValue());
-//                //reportDBItem.setDateTo(getDate(getLocalDateTo(getLocalDateTime(runDbItem.getDateFrom()), f)));
 //                boolean reportExists = reportExists(reportDBItem, in);
 //                if (!reportExists) {
                     Path tempDir = runPerFrequency(f, commonScript);
@@ -443,6 +442,9 @@ public class RunReport extends AReporting {
             Globals.beginTransaction(session);
 
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
+            
+            dbLayer.deleteMappingOfReportName(runDbItem.getName());
+            
             for (DBItemReport dbItem : dbItems) {
                 DBItemReportMapping rmDbItem = new DBItemReportMapping();
                 rmDbItem.setRunId(runDbItem.getId());
