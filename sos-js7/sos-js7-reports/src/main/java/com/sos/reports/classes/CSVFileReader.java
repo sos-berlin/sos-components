@@ -48,55 +48,55 @@ public class CSVFileReader {
 
             if (Files.exists(path)) {
 
-                LOGGER.debug("File:" + path.getFileName() + " in " + path.getParent());
-                BufferedReader br = new BufferedReader(new FileReader(path.toFile()));
+                LOGGER.debug("File:" + path.getFileName() + " in " + path.getParent().toString());
+                try (BufferedReader br = Files.newBufferedReader(path)) {
+                    Map<String, String> record = new HashMap<String, String>();
+                    String line = br.readLine();
+                    String[] cols = line.split(SEMICOLON_DELIMITER);
 
-                Map<String, String> record = new HashMap<String, String>();
-                String line = br.readLine();
-                String[] cols = line.split(SEMICOLON_DELIMITER);
-
-                while ((line = br.readLine()) != null) {
-                    String[] values = line.split(SEMICOLON_DELIMITER);
-                    ReportRecord orderRecord = new ReportRecord();
-                    for (int i = 0; i < values.length; i++) {
-                        if (i < cols.length) {
-                            record.put(cols[i].toLowerCase(), values[i]);
-                        }
-                    }
-
-                    orderRecord.setId(record.getOrDefault(COL_ID, "-1"));
-                    orderRecord.setControllerId(record.getOrDefault(COL_CONTROLLER_ID, ""));
-                    if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
-                            orderRecord.getControllerId())) {
-                        orderRecord.setOrderId(record.getOrDefault(COL_ORDER_ID, ""));
-                        orderRecord.setWorkflowPath(record.getOrDefault(COL_WORKFLOW_PATH, ""));
-                        orderRecord.setWorkflowVersionId(record.getOrDefault(COL_WORKFLOW_VERSION_ID, ""));
-                        orderRecord.setWorkflowName(record.getOrDefault(COL_WORKFLOW_NAME, ""));
-                        orderRecord.setStartTime(record.getOrDefault(COL_START_TIME, ""));
-                        orderRecord.setPlannedTime(record.getOrDefault(COL_PLANNED_TIME, ""));
-                        orderRecord.setEndTime(record.getOrDefault(COL_END_TIME, ""));
-                        orderRecord.setError(record.getOrDefault(COL_ERROR, "0"));
-                        orderRecord.setCreated(record.getOrDefault(COL_CREATED, ""));
-                        orderRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
-                        orderRecord.setOrderState(record.getOrDefault(COL_ORDER_STATE, "0"));
-                        orderRecord.setState(record.getOrDefault(COL_STATE, "0"));
-                        if (orderRecord.getStartTime() != null) {
-
-                            if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
-                                LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
-
-                                report.putHits();
-                                report.reset();
-                                reportArguments.reportFrequency.nextPeriod();
-                                LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
+                    while ((line = br.readLine()) != null) {
+                        String[] values = line.split(SEMICOLON_DELIMITER);
+                        ReportRecord orderRecord = new ReportRecord();
+                        for (int i = 0; i < values.length; i++) {
+                            if (i < cols.length) {
+                                record.put(cols[i].toLowerCase(), values[i]);
                             }
-                            report.count(orderRecord);
+                        }
+
+                        orderRecord.setId(record.getOrDefault(COL_ID, "-1"));
+                        orderRecord.setControllerId(record.getOrDefault(COL_CONTROLLER_ID, ""));
+                        if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
+                                orderRecord.getControllerId())) {
+                            orderRecord.setOrderId(record.getOrDefault(COL_ORDER_ID, ""));
+                            orderRecord.setWorkflowPath(record.getOrDefault(COL_WORKFLOW_PATH, ""));
+                            orderRecord.setWorkflowVersionId(record.getOrDefault(COL_WORKFLOW_VERSION_ID, ""));
+                            orderRecord.setWorkflowName(record.getOrDefault(COL_WORKFLOW_NAME, ""));
+                            orderRecord.setStartTime(record.getOrDefault(COL_START_TIME, ""));
+                            orderRecord.setPlannedTime(record.getOrDefault(COL_PLANNED_TIME, ""));
+                            orderRecord.setEndTime(record.getOrDefault(COL_END_TIME, ""));
+                            orderRecord.setError(record.getOrDefault(COL_ERROR, "0"));
+                            orderRecord.setCreated(record.getOrDefault(COL_CREATED, ""));
+                            orderRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
+                            orderRecord.setOrderState(record.getOrDefault(COL_ORDER_STATE, "0"));
+                            orderRecord.setState(record.getOrDefault(COL_STATE, "0"));
+                            if (orderRecord.getStartTime() != null) {
+
+                                if (reportArguments.reportFrequency.endOfInterval(orderRecord.getStartTime().toLocalDate())) {
+                                    LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
+
+                                    report.putHits();
+                                    report.reset();
+                                    reportArguments.reportFrequency.nextPeriod();
+                                    LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
+                                }
+                                report.count(orderRecord);
+                            }
                         }
                     }
+                    report.putHits();
                 }
-                report.putHits();
 
             } else {
                 LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
