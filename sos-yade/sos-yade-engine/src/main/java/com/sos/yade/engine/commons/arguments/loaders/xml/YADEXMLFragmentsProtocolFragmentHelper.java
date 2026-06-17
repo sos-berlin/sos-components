@@ -515,13 +515,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     protected static void parseConfigurationFiles(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node configurationFiles) {
-        List<Path> files = new ArrayList<>();
+        List<String> files = new ArrayList<>();
 
         NodeList nl = configurationFiles.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE && "ConfigurationFile".equals(n.getNodeName())) {
-                files.add(Path.of(argsLoader.getValue(n)));
+                files.add(argsLoader.getValue(n));
             }
         }
 

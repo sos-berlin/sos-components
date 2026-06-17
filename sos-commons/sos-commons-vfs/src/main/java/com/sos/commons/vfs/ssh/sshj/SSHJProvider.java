@@ -79,9 +79,7 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
         }
 
         try {
-            getLogger().info(getConnectMsg());
-
-            connectInternal();
+            connectInternal(getConnectMsg());
             // default: disable_auto_detect_shell=false
             // - executes the "uname" command once to retrieve advanced server information (e.g., OS, Shell)
             getServerInfo();
@@ -94,7 +92,7 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                             getServerInfo());
                 }
                 disconnectInternal();
-                connectInternal();
+                connectInternal(getConnectMsg());
             }
 
             getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
@@ -675,12 +673,12 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
         return createProviderFile(path, attr.getSize(), SSHJProviderUtils.getFileLastModifiedMillis(attr));
     }
 
-    private void connectInternal() throws Exception {
+    private void connectInternal(String connectMsg) throws Exception {
         synchronized (clientLock) {
             // Creates the client unconditionally (no null check), because SSHJClientFactory.createAuthenticatedClient() performs the connect and
             // authentication.
             // If a previous sshClient instance exists, it must be closed via disconnect().
-            sshClient = SSHJClientFactory.createAuthenticatedClient(getLogger(), getArguments(), getProxyConfig());
+            sshClient = SSHJClientFactory.createAuthenticatedClient(this, connectMsg);
             setServerVersion(sshClient.getTransport().getServerVersion());
         }
     }

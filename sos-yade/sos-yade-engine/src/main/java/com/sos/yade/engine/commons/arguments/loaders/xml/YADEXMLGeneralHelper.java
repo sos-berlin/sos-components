@@ -1,6 +1,5 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,11 +41,11 @@ public class YADEXMLGeneralHelper {
         if (nl == null) {
             return;
         }
-        List<Path> files = new ArrayList<>();
+        List<String> files = new ArrayList<>();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE && "SystemPropertyFile".equals(n.getNodeName())) {
-                files.add(Path.of(argsLoader.getValue(n)));
+                files.add(argsLoader.getValue(n));
             }
         }
         if (files.size() > 0) {

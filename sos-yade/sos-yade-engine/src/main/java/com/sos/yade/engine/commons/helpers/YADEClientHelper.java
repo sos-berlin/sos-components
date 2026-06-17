@@ -1,7 +1,5 @@
 package com.sos.yade.engine.commons.helpers;
 
-import java.io.BufferedReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
@@ -9,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -21,25 +19,12 @@ public class YADEClientHelper {
     private static String NEW_LINE = "\n"; // System.lineSeparator();
 
     public static void setSystemPropertiesFromFiles(ISOSLogger logger, YADEClientArguments args) {
-        if (args == null || SOSCollection.isEmpty(args.getSystemPropertyFiles().getValue())) {
+        Properties p = AProvider.loadSystemProperties(logger, args.getSystemPropertyFiles());
+        if (p == null || p.isEmpty()) {
             return;
         }
-        String method = "setSystemPropertiesFromFiles";
-        logger.info("[%s][files]", method, SOSString.join(args.getSystemPropertyFiles().getValue(), ",", f -> f.toString()));
-        Properties p = new Properties();
-        for (Path file : args.getSystemPropertyFiles().getValue()) {
-            if (Files.exists(file) && Files.isRegularFile(file)) {
-                try (BufferedReader reader = Files.newBufferedReader(file)) {
-                    p.load(reader);
-                    logger.info("[%s][%s]loaded", method, file);
-                } catch (Exception e) {
-                    logger.warn("[%s][%s][failed]%s", method, file, e.toString());
-                }
-            } else {
-                logger.warn("[%s][%s]does not exist or is not a regular file", method, file);
-            }
-        }
 
+        String method = "set system properties";
         for (String n : p.stringPropertyNames()) {
             String v = p.getProperty(n);
             if (logger.isDebugEnabled()) {
