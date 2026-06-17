@@ -1,8 +1,11 @@
 
 package com.sos.joc.model.publish;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -24,11 +27,24 @@ public enum OperationType {
     }
 
     @JsonValue
+    public String strValue() {
+        return this.name();
+    }
+    
     public Integer value() {
         return this.value;
     }
 
     @JsonCreator
+    public static OperationType fromValue(String value) {
+        Optional<OperationType> opt = Arrays.asList(OperationType.values()).stream().filter(c -> c.name().equals(value)).findAny();
+        if (opt.isEmpty()) {
+            throw new IllegalArgumentException(value);
+        } else {
+            return opt.get();
+        }
+    }
+    
     public static OperationType fromValue(Integer value) {
         OperationType constant = CONSTANTS.get(value);
         if (constant == null) {

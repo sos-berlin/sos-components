@@ -4,19 +4,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DepHistoryCompactFilter;
 import com.sos.joc.model.publish.DepHistoryDetailFilter;
-import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeploySyncFilter;
 
 public abstract class FilterAttributesMapper {
 
-    public static Set<String> getDefaultAttributesFromFilter (DepHistoryDetailFilter filter, Collection<String> allowedControllers) {
+    public static Set<String> getDefaultAttributesFromFilter(DepHistoryDetailFilter filter, Collection<String> allowedControllers) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getAccount() != null) {
             filterAttributes.add("account");
@@ -60,13 +56,10 @@ public abstract class FilterAttributesMapper {
         if (filter.getTo() != null) {
             filterAttributes.add("to");
         }
-        if (filter.getLimit() != null) {
-            filterAttributes.add("limit");
-        }
         return filterAttributes;
     }
 
-    public static Set<String> getDefaultAttributesFromFilter (DepHistoryCompactFilter filter, Collection<String> allowedControllers) {
+    public static Set<String> getDefaultAttributesFromFilter(DepHistoryCompactFilter filter, Collection<String> allowedControllers) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getAccount() != null) {
             filterAttributes.add("account");
@@ -89,16 +82,19 @@ public abstract class FilterAttributesMapper {
         if (filter.getTo() != null) {
             filterAttributes.add("to");
         }
-        if (filter.getLimit() != null) {
-            filterAttributes.add("limit");
-        }
         if(filter.getState() != null) {
             filterAttributes.add("state");
+        }
+        if (filter.getOperation() != null) {
+            filterAttributes.add("operation");
+        }
+        if(filter.getDeployType() != null) {
+            filterAttributes.add("type");
         }
         return filterAttributes;
     }
 
-    public static Object getValueByFilterAttribute (DepHistoryDetailFilter filter, String attribute) {
+    public static Object getValueByFilterAttribute(DepHistoryDetailFilter filter, String attribute) {
         switch(attribute) {
             case "account":
                 return filter.getAccount();
@@ -107,12 +103,8 @@ public abstract class FilterAttributesMapper {
             case "folder":
                 return filter.getFolder();
             case "type":
-                try {
-                    return DeployType.fromValue(filter.getDeployType()).intValue();
-                } catch(Exception e) {
-                    return ConfigurationType.fromValue(filter.getDeployType()).intValue();
-                } 
-            case "controllerId":
+                return filter.getDeployType().intValue();
+            case "controllerId": // not used: allowedControllers
                 return filter.getControllerId();
             case "commitId":
                 return filter.getCommitId();
@@ -121,9 +113,9 @@ public abstract class FilterAttributesMapper {
             case "version":
                 return filter.getVersion();
             case "operation":
-                return OperationType.valueOf(filter.getOperation()).value();
+                return filter.getOperation().value();
             case "state":
-                return DeploymentState.valueOf(filter.getState()).value();
+                return filter.getState().value();
             case "deploymentDate":
                 return filter.getDeploymentDate();
             case "deleteDate":
@@ -140,13 +132,13 @@ public abstract class FilterAttributesMapper {
         return null;
     }
 
-    public static Object getValueByFilterAttribute (DepHistoryCompactFilter filter, String attribute) {
+    public static Object getValueByFilterAttribute(DepHistoryCompactFilter filter, String attribute) {
         switch(attribute) {
             case "account":
                 return filter.getAccount();
             case "folder":
                 return filter.getFolder();
-            case "controllerId":
+            case "controllerId": // not used: allowedControllers
                 return filter.getControllerId();
             case "deploymentDate":
                 return filter.getDeploymentDate();
@@ -158,10 +150,12 @@ public abstract class FilterAttributesMapper {
                 return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
             case "timeZone":
                 return filter.getTimeZone();
-            case "limit":
-                return filter.getLimit();
+            case "operation":
+                return filter.getOperation().value();
             case "state" :
-                return DeploymentState.valueOf(filter.getState()).value();
+                return filter.getState().value();
+            case "type":
+                return filter.getDeployType().intValue();
         }
         return null;
     }
