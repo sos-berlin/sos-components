@@ -2646,7 +2646,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="ConfigurationFile">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/Configuration/ConfigurationFile"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/Configuration/ConfigurationFile">
+                 <Note include="ConfigurationFile-Format"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -2663,22 +2665,22 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			An application configuration file contains settings that are specific to an app.
         </p>
-            <p/>
-            <p>The settings are supplied in a simple INI-style configuration format.</p>
-            <p>This element supports the following input formats:</p>
-            <ul>
-               <li>File path
-             <ul>
-                     <li>The file name and extension are arbitrary and have no functional meaning.</li>
-                  </ul>
-               </li>
-               <li>Inline configuration content
-             <ul>
-                     <li>To ensure that the value is interpreted as configuration content rather than a file path, the content must contain at least two non-empty lines.</li>
-                     <li>A non-empty line is any line that is not blank. For example, a line starting with the comment character <em>#</em> is considered non-empty.</li>
-                  </ul>
-               </li>
-            </ul>
+                 <p/>
+               <p>The settings are supplied in a simple INI-style configuration format.</p>
+               <p>This element supports the following input formats:</p>
+               <ul>
+                  <li>File path
+                <ul>
+                        <li>The file name and extension are arbitrary and have no functional meaning.</li>
+                     </ul>
+                  </li>
+                  <li>Inline configuration content
+                <ul>
+                        <li>To ensure that the value is interpreted as configuration content rather than a file path, the content must contain at least two non-empty lines.</li>
+                        <li>A non-empty line is any line that is not blank. For example, a line starting with the comment character <em>#</em> is considered non-empty.</li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -8887,7 +8889,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="SystemPropertyFile">
 		    <xs:annotation>
-         <xs:appinfo source="General/SystemPropertyFiles/SystemPropertyFile"/>
+         <xs:appinfo source="General/SystemPropertyFiles/SystemPropertyFile">
+                <Note include="ConfigurationFile-Format"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -8900,7 +8904,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			Properties from Java property files are applied as system properties by YADE.
 		</p>
-            <p/>
+                <p/>
                <p>The settings are supplied in a simple INI-style configuration format.</p>
                <p>This element supports the following input formats:</p>
                <ul>
