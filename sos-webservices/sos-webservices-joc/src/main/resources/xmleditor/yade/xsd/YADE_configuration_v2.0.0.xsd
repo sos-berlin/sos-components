@@ -2669,16 +2669,16 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>The settings are supplied in a simple INI-style configuration format.</p>
                <p>This element supports the following input formats:</p>
                <ul>
-                  <li>
-                     <strong>File path</strong>
-                     <ul>
-                        <li>The file must be accessible on the machine where YADE is running.</li>
+               <li>
+                  <strong>File path</strong>
+                  <ul>
+                     <li>The file must be accessible on the machine where YADE is running.</li>
                         <li>The file name and extension are arbitrary and have no functional meaning.</li>
                      </ul>
                   </li>
-                  <li>
-                     <strong>Inline configuration content</strong>
-                     <ul>
+               <li>
+                  <strong>Inline configuration content</strong>
+                  <ul>
                         <li>To ensure that the value is interpreted as configuration content rather than a file path, the content must contain at least two non-empty lines.</li>
                         <li>A non-empty line is any line that is not blank. For example, a line starting with the comment character <em>#</em> is considered non-empty.</li>
                      </ul>
@@ -8904,10 +8904,32 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			Properties from Java property files are applied as system properties by YADE.
-		</p>
-                <p/>
+               <ul>
+                  <li>
+                     <strong>General behavior</strong>
+                     <ul>
+                        <li>Properties from Java property files are applied as system properties by YADE.</li>
+                        <li>System properties are global within a single JVM.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <strong>YADE Standalone Client (safe)</strong>
+                     <ul>
+                        <li>Each transfer runs in its own JVM process.</li>
+                        <li>System properties are isolated per transfer.</li>
+                        <li>No side effects outside the transfer scope.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <strong>YADE as Java JITL Job (risky)</strong>
+                     <ul>
+                        <li>All transfers run within the same Agent JVM.</li>
+                        <li>System properties are shared across the entire Agent JVM (Agent environment).</li>
+                        <li>This may affect all transfers and the Agent as a whole within the same JVM.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
                <p>The settings are supplied in a simple INI-style configuration format.</p>
                <p>This element supports the following input formats:</p>
                <ul>

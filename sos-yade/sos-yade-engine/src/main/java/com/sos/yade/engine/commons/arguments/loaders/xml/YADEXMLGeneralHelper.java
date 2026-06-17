@@ -49,7 +49,11 @@ public class YADEXMLGeneralHelper {
             }
         }
         if (files.size() > 0) {
-            argsLoader.getClientArgs().getSystemPropertyFiles().setValue(files);
+            if (argsLoader.getClientArgs().getSystemPropertyFiles().isEmpty()) {
+                argsLoader.getClientArgs().getSystemPropertyFiles().setValue(files);
+            } else {
+                argsLoader.getClientArgs().getSystemPropertyFiles().getValue().addAll(files);
+            }
         }
     }
 
