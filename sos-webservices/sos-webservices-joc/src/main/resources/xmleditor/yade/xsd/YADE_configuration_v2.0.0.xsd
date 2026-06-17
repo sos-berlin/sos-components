@@ -8889,10 +8889,32 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			Properties from Java property files are applied as system properties by YADE.
-		</p>
-            <p/>
+               <ul>
+                  <li>
+                     <strong>General behavior</strong>
+                     <ul>
+                        <li>Properties from Java property files are applied as system properties by YADE.</li>
+                        <li>System properties are global within a single JVM.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <strong>YADE Standalone Client (safe)</strong>
+                     <ul>
+                        <li>Each transfer runs in its own JVM process.</li>
+                        <li>System properties are isolated per transfer.</li>
+                        <li>No side effects outside the transfer scope.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <strong>YADE as Java JITL Job (risky)</strong>
+                     <ul>
+                        <li>All transfers run within the same Agent JVM.</li>
+                        <li>System properties are shared across the entire Agent JVM (Agent environment).</li>
+                        <li>This may affect all transfers and the Agent as a whole within the same JVM.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
                <p>The settings are supplied in a simple INI-style configuration format.</p>
                <p>This element supports the following input formats:</p>
                <ul>
