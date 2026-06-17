@@ -1,6 +1,5 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
-import java.nio.file.Path;
 import java.util.List;
 
 import com.sos.commons.util.arguments.base.SOSArgument;
@@ -236,7 +235,7 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         if (args.getConfigurationFiles().isDirty()) {
             sb.append("<ConfigurationFiles>");
-            for (Path configurationFile : args.getConfigurationFiles().getValue()) {
+            for (String configurationFile : args.getConfigurationFiles().getValue()) {
                 sb.append("<ConfigurationFile>").append(cdata(configurationFile.toString())).append("</ConfigurationFile>");
             }
             sb.append("</ConfigurationFiles>");
@@ -432,7 +431,7 @@ public class YADEXMLJumpHostSettingsWriter {
         // Other
         if (args.getConfigurationFiles().isDirty()) {
             sb.append("<ConfigurationFiles>");
-            for (Path configurationFile : args.getConfigurationFiles().getValue()) {
+            for (String configurationFile : args.getConfigurationFiles().getValue()) {
                 sb.append("<ConfigurationFile>").append(cdata(configurationFile.toString())).append("</ConfigurationFile>");
             }
             sb.append("</ConfigurationFiles>");

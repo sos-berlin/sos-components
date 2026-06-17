@@ -1,12 +1,16 @@
 package com.sos.commons.vfs.commons;
 
 import java.io.BufferedReader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -300,32 +304,79 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         resourcePool = null;
     }
 
-    public Properties getConfigurationPropertiesFromFiles() {
+    public Properties loadConfiguration() {
         if (SOSCollection.isEmpty(getArguments().getConfigurationFiles().getValue())) {
             return null;
         }
-        String method = "getConfigurationPropertiesFromFiles";
-        if (logger.isDebugEnabled()) {
-            logger.debug("[%s][%s]%s", getLabel(), method, SOSString.join(getArguments().getConfigurationFiles().getValue(), ",", f -> f.toString()));
-        }
+        String method = "load configuration";
         Properties p = new Properties();
-        for (Path file : getArguments().getConfigurationFiles().getValue()) {
-            if (Files.exists(file) && Files.isRegularFile(file)) {
-                try (BufferedReader reader = Files.newBufferedReader(file)) {
+        for (String config : getArguments().getConfigurationFiles().getValue()) {
+            Path file = toPathOrNull(config);
+            if (file == null) { // configuration content
+                try (StringReader reader = new StringReader(config)) {
                     p.load(reader);
-                    logger.info("[%s][%s][%s]loaded", getLabel(), method, file);
+                    logger.info("[%s][%s]config content loaded", getLabel(), method);
                 } catch (Exception e) {
-                    logger.warn("[%s][%s][%s][failed]%s", getLabel(), method, file, e.toString());
+                    logger.warn("[%s][%s][%s][failed to load config content]%s", getLabel(), method, config, e.toString());
                 }
-            } else {
-                logger.warn("[%s][%s][%s]does not exist or is not a regular file", getLabel(), method, file);
+            } else { // configuration file
+                if (Files.exists(file) && Files.isRegularFile(file)) {
+                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                        p.load(reader);
+                        logger.info("[%s][%s][%s]config file loaded", getLabel(), method, file);
+                    } catch (Exception e) {
+                        logger.warn("[%s][%s][%s][failed to load config file]%s", getLabel(), method, file, e.toString());
+                    }
+                } else {
+                    logger.warn("[%s][%s][%s]config file not found or not a regular file", getLabel(), method, file);
+                }
             }
         }
+        removeSemicolonKeys(p);
 
         if (logger.isDebugEnabled()) {
             for (String n : p.stringPropertyNames()) {
                 String v = p.getProperty(n);
                 logger.debug("[%s][%s]%s=%s", getLabel(), method, n, v);
+            }
+        }
+        return p;
+    }
+
+    public static Properties loadSystemProperties(ISOSLogger logger, SOSArgument<List<String>> configs) {
+        if (SOSCollection.isEmpty(configs.getValue())) {
+            return null;
+        }
+        String method = "load system properties";
+        Properties p = new Properties();
+        for (String config : configs.getValue()) {
+            Path file = toPathOrNull(config);
+            if (file == null) { // configuration content
+                try (StringReader reader = new StringReader(config)) {
+                    p.load(reader);
+                    logger.info("[%s]system properties content loaded", method);
+                } catch (Exception e) {
+                    logger.warn("[%s][%s][failed to load system properties content]%s", method, config, e.toString());
+                }
+            } else { // configuration file
+                if (Files.exists(file) && Files.isRegularFile(file)) {
+                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                        p.load(reader);
+                        logger.info("[%s][%s]system properties file loaded", method, file);
+                    } catch (Exception e) {
+                        logger.warn("[%s][%s][failed to load system properties file]%s", method, file, e.toString());
+                    }
+                } else {
+                    logger.warn("[%s][%s]system properties file not found or not a regular file", method, file);
+                }
+            }
+        }
+        removeSemicolonKeys(p);
+
+        if (logger.isDebugEnabled()) {
+            for (String n : p.stringPropertyNames()) {
+                String v = p.getProperty(n);
+                logger.debug("[%s]%s=%s", method, n, v);
             }
         }
         return p;
@@ -555,4 +606,32 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         }
     }
 
+    private static Path toPathOrNull(String value) {
+        try {
+            // multi-line content is never a valid file path
+            if (value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) {
+                return null;
+            }
+
+            return Paths.get(value);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Removes entries with keys starting with ';' from the Properties object.
+     *
+     * This is required because the standard Java Properties parser does not treat lines starting with ';' as comments (only '#' and '!' are supported).
+     *
+     * In this configuration format, ';' is used as a custom comment marker. Without this cleanup step, such lines would be interpreted as actual properties
+     * with invalid keys like ";key", which could lead to incorrect configuration being passed to the application. */
+    private static void removeSemicolonKeys(Properties p) {
+        Iterator<Map.Entry<Object, Object>> it = p.entrySet().iterator();
+
+        while (it.hasNext()) {
+            if (((String) it.next().getKey()).startsWith(";")) {
+                it.remove();
+            }
+        }
+    }
 }

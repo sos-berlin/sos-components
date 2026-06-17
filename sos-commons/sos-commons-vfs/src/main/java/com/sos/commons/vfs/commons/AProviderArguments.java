@@ -1,6 +1,5 @@
 package com.sos.commons.vfs.commons;
 
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -55,8 +54,8 @@ public abstract class AProviderArguments extends ASOSArguments {
     // - Maximum time to wait while establishing a connection.
     /** see {@link ASOSArguments#asSeconds(SOSArgument, long) */
     private SOSArgument<String> connectTimeout = new SOSArgument<>("connect_timeout", false, "0");
-
-    private SOSArgument<List<Path>> configurationFiles = new SOSArgument<>("configuration_files", false);
+    /** Path or file content */
+    private SOSArgument<List<String>> configurationFiles = new SOSArgument<>("configuration_files", false);
 
     // JS7
     private SOSArgument<EnumSet<FileType>> validFileTypes = new SOSArgument<>("valid_file_types", false, EnumSet.of(FileType.REGULAR,
@@ -126,7 +125,7 @@ public abstract class AProviderArguments extends ASOSArguments {
         return (int) SOSArgumentHelper.asMillis(connectTimeout);
     }
 
-    public SOSArgument<List<Path>> getConfigurationFiles() {
+    public SOSArgument<List<String>> getConfigurationFiles() {
         return configurationFiles;
     }
 

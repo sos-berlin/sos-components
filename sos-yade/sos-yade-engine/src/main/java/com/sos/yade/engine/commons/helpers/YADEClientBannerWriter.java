@@ -220,7 +220,9 @@ public class YADEClientBannerWriter {
         if (!clientArgs.getExpectedResultSetCount().isEmpty()) {
             l.add(YADEArgumentsHelper.toString(clientArgs.getExpectedResultSetCount()));
         }
-
+        if (!clientArgs.getSystemPropertyFiles().isEmpty()) {
+            l.add(clientArgs.getSystemPropertyFiles().getName());
+        }
         if (l.size() > 0) {
             logger.info("[" + YADEClientArguments.LABEL + "]" + String.join(", ", l));
         }

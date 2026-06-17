@@ -404,7 +404,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
 
     private SMBClient createClient() {
         Builder builder = SmbConfig.builder();
-        applyConfiguratedProperties(getConfigurationPropertiesFromFiles(), builder);
+        applyConfiguratedProperties(loadConfiguration(), builder);
 
         SmbConfig config = builder.build();
         if (getLogger().isDebugEnabled()) {
@@ -417,7 +417,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
     }
 
     private void applyConfiguratedProperties(Properties configuration, Builder builder) {
-        if (configuration == null) {
+        if (configuration == null || configuration.isEmpty()) {
             return;
         }
         configuration.entrySet().forEach(e -> {
@@ -483,10 +483,12 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 case "encryptData":// Default: false
                     builder.withEncryptData(Boolean.parseBoolean(val));
                     break;
-                case "sossmbj.accessMaskMaximumAllowed":
+                case "sos.smbj.accessMaskMaximumAllowed": // new
+                case "sossmbj.accessMaskMaximumAllowed": // compatibility - deprecated
                     accessMaskMaximumAllowed = Boolean.parseBoolean(val);
                     break;
-                case "sossmbj.pathSeparator":
+                case "sos.smbj.pathSeparator": // new
+                case "sossmbj.pathSeparator": // compatibility - deprecated
                     getLogger().info(String.format(
                             "%s[applyConfiguratedProperties][%s=%s]The setting is no longer supported. The path separator %s is used.",
                             getLogPrefix(), key, val, getPathSeparator()));

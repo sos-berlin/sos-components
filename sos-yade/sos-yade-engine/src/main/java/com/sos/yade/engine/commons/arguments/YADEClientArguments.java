@@ -21,7 +21,8 @@ public class YADEClientArguments extends ASOSArguments {
     // String because can contains expressions, e.g. [date:.... timezone:]
     private SOSArgument<String> resultSetFile = new SOSArgument<>("ResultSetFile", false);
 
-    private SOSArgument<List<Path>> systemPropertyFiles = new SOSArgument<>("SystemPropertyFiles", false);
+    // Path or inline-content
+    private SOSArgument<List<String>> systemPropertyFiles = new SOSArgument<>("SystemPropertyFiles", false);
 
     /** - Banner ------- */
     private SOSArgument<Path> bannerHeader = new SOSArgument<>("banner_header", false);
@@ -43,7 +44,7 @@ public class YADEClientArguments extends ASOSArguments {
         return resultSetFile;
     }
 
-    public SOSArgument<List<Path>> getSystemPropertyFiles() {
+    public SOSArgument<List<String>> getSystemPropertyFiles() {
         return systemPropertyFiles;
     }
 

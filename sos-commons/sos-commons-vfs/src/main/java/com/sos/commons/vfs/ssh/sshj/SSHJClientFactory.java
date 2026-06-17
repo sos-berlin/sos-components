@@ -16,7 +16,6 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.socket.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
@@ -41,54 +40,58 @@ public class SSHJClientFactory {
 
     private static final String SSH_MSG_UNIMPLEMENTED = "SSH_MSG_UNIMPLEMENTED";
 
-    protected static SSHClient createAuthenticatedClient(ISOSLogger logger, SSHProviderArguments args, ProxyConfig proxyConfig) throws Exception {
+    protected static SSHClient createAuthenticatedClient(SSHJProvider provider, String connectMsg) throws Exception {
         /** 1) Create */
-        SSHClient client = create(args, proxyConfig);
+        SSHClient client = create(provider);
         /** 2) Connect */
-        client.connect(args.getHost().getValue(), args.getPort().getValue());
+        provider.getLogger().info(connectMsg);
+        client.connect(provider.getArguments().getHost().getValue(), provider.getArguments().getPort().getValue());
         /** 3) Authenticate */
-        authenticate(logger, args, client);
+        authenticate(provider, client);
         /** 4) Post-Connect Keep Alive */
-        if (!args.getServerAliveInterval().isEmpty()) {
-            client.getConnection().getKeepAlive().setKeepAliveInterval(args.getServerAliveIntervalAsSeconds());
-            if (!args.getServerAliveCountMax().isEmpty()) {
+        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
+            client.getConnection().getKeepAlive().setKeepAliveInterval(provider.getArguments().getServerAliveIntervalAsSeconds());
+            if (!provider.getArguments().getServerAliveCountMax().isEmpty()) {
                 // NOTE - KeepAliveRunner - is only available if KeepAliveProvider.KEEP_ALIVE is used, otherwise it is an instance of SSHJ Heartbeater
-                ((KeepAliveRunner) client.getConnection().getKeepAlive()).setMaxAliveCount(args.getServerAliveCountMax().getValue().intValue());
+                ((KeepAliveRunner) client.getConnection().getKeepAlive()).setMaxAliveCount(provider.getArguments().getServerAliveCountMax().getValue()
+                        .intValue());
             }
         }
         return client;
     }
 
-    private static SSHClient create(SSHProviderArguments args, ProxyConfig proxyConfig) throws Exception {
+    private static SSHClient create(SSHJProvider provider) throws Exception {
         Config config = new DefaultConfig();
+        SSHJConfigPostProcessor.apply(provider, config);
+
         // Keep Alive Provider - see NOTE above about KeepAliveRunner
-        if (!args.getServerAliveInterval().isEmpty()) {
+        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
             config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
         }
         // SSH Client
         SSHClient client = new SSHClient(config);
-        setHostKeyVerifier(args, client);
-        setCompression(args, client);
+        setHostKeyVerifier(provider.getArguments(), client);
+        setCompression(provider.getArguments(), client);
         // CHARSET
-        client.setRemoteCharset(args.getRemoteCharset().getValue());
+        client.setRemoteCharset(provider.getArguments().getRemoteCharset().getValue());
         // TIMEOUT
-        client.setTimeout(args.getSocketTimeoutAsMillis());
-        client.setConnectTimeout(args.getConnectTimeoutAsMillis());
+        client.setTimeout(provider.getArguments().getSocketTimeoutAsMillis());
+        client.setConnectTimeout(provider.getArguments().getConnectTimeoutAsMillis());
         // PROXY
-        if (proxyConfig != null) {
-            client.setSocketFactory(new ProxySocketFactory(proxyConfig));
+        if (provider.getProxyConfig() != null) {
+            client.setSocketFactory(new ProxySocketFactory(provider.getProxyConfig()));
         }
         return client;
     }
 
-    private static void authenticate(ISOSLogger logger, SSHProviderArguments args, SSHClient client) throws ProviderAuthenticationException {
+    private static void authenticate(SSHJProvider provider, SSHClient client) throws ProviderAuthenticationException {
         try {
-            if (!args.getPreferredAuthentications().isEmpty()) {
-                usePreferredAuthentications(args, client);
-            } else if (!args.getRequiredAuthentications().isEmpty()) {
-                useRequiredAuthentications(logger, args, client);
+            if (!provider.getArguments().getPreferredAuthentications().isEmpty()) {
+                usePreferredAuthentications(provider.getArguments(), client);
+            } else if (!provider.getArguments().getRequiredAuthentications().isEmpty()) {
+                useRequiredAuthentications(provider.getLogger(), provider.getArguments(), client);
             } else {
-                useAuthMethodAuthentication(args, client);
+                useAuthMethodAuthentication(provider.getArguments(), client);
             }
         } catch (ProviderAuthenticationException e) {
             throw e;
