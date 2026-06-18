@@ -4,7 +4,9 @@ package com.sos.joc.model.publish;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -49,23 +51,25 @@ public class DepHistoryItem {
     @JsonProperty("account")
     private String account;
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
+    @JsonPropertyDescription("absolute path of an object.")
     private String folder;
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -89,34 +93,48 @@ public class DepHistoryItem {
     @JsonProperty("version")
     private String version;
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("deployType")
-    private String deployType;
+    private ConfigurationType deployType;
     /**
-     * string without < and >
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
      * <p>
      * 
      * 
      */
     @JsonProperty("operation")
-    private String operation;
+    private OperationType operation;
     /**
-     * string without < and >
+     * deployment state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    private String state;
+    private DeploymentState state;
     @JsonProperty("errorMessage")
     private String errorMessage;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deploymentDate;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deleteDate;
     /**
      * non negative long
@@ -198,9 +216,9 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -209,9 +227,9 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -220,9 +238,9 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -231,9 +249,9 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -242,7 +260,7 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -253,7 +271,7 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * controllerId
      * <p>
      * 
      * 
@@ -308,68 +326,68 @@ public class DepHistoryItem {
     }
 
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("deployType")
-    public String getDeployType() {
+    public ConfigurationType getDeployType() {
         return deployType;
     }
 
     /**
-     * string without < and >
+     * configuration types
      * <p>
      * 
      * 
      */
     @JsonProperty("deployType")
-    public void setDeployType(String deployType) {
+    public void setDeployType(ConfigurationType deployType) {
         this.deployType = deployType;
     }
 
     /**
-     * string without < and >
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
      * <p>
      * 
      * 
      */
     @JsonProperty("operation")
-    public String getOperation() {
+    public OperationType getOperation() {
         return operation;
     }
 
     /**
-     * string without < and >
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
      * <p>
      * 
      * 
      */
     @JsonProperty("operation")
-    public void setOperation(String operation) {
+    public void setOperation(OperationType operation) {
         this.operation = operation;
     }
 
     /**
-     * string without < and >
+     * deployment state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public String getState() {
+    public DeploymentState getState() {
         return state;
     }
 
     /**
-     * string without < and >
+     * deployment state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public void setState(String state) {
+    public void setState(DeploymentState state) {
         this.state = state;
     }
 
@@ -383,21 +401,45 @@ public class DepHistoryItem {
         this.errorMessage = errorMessage;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
     public Date getDeploymentDate() {
         return deploymentDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
     public void setDeploymentDate(Date deploymentDate) {
         this.deploymentDate = deploymentDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
     public Date getDeleteDate() {
         return deleteDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
     public void setDeleteDate(Date deleteDate) {
         this.deleteDate = deleteDate;

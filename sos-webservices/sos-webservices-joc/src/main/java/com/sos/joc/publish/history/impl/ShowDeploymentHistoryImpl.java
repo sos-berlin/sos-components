@@ -6,9 +6,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -26,7 +27,6 @@ import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.history.DepHistoryItemsCount;
 import com.sos.joc.publish.history.resource.IShowDeploymentHistory;
 import com.sos.schema.JsonValidator;
 
@@ -76,48 +76,53 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             }
             
             if (Proxies.getControllerDbInstances().isEmpty()) {
-                return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(Collections.emptyList())));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(Stream.empty())));
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemDeploymentHistory> dbHistoryItems = new ArrayList<DBItemDeploymentHistory>();
-            folderPermissions.setSchedulerId(controllerId);
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            Map<String, Set<Folder>> permittedFolders = folderPermissions.getListOfFolders(allowedControllers.isEmpty() ? Proxies
+                    .getControllerDbInstances().keySet() : allowedControllers);
+
+            Predicate<DBItemDeploymentHistory> canAdd = item -> {
+                Set<Folder> pFolders = permittedFolders.get(item.getControllerId());
+                return pFolders != null && canAdd(item.getPath(), pFolders);
+            };
+            
+            Stream<DepHistoryItem> dbHistoryItemStream = Stream.empty();
             if (filter.getCompactFilter() != null) {
                 dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
-                Map<String, List<DBItemDeploymentHistory>> groupedDbHistoryItems = dbHistoryItems.stream()
-                        .collect(Collectors.groupingBy(DBItemDeploymentHistory::getCommitId));
-                dbHistoryItems = groupedDbHistoryItems.entrySet().stream().map(item -> {
-                    DepHistoryItemsCount counter = countItems(item.getValue());
+                Map<String, List<DBItemDeploymentHistory>> groupedDbHistoryItems = dbHistoryItems.stream().filter(canAdd).collect(Collectors
+                        .groupingBy(DBItemDeploymentHistory::getCommitId));
+                dbHistoryItemStream = groupedDbHistoryItems.entrySet().stream().map(item -> {
+                    Map<Integer, Long> counts = item.getValue().stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getType, Collectors
+                            .counting()));
                     DBItemDeploymentHistory entry = item.getValue().get(0);
-                    entry.setWorkflowCount(counter.getCountWorkflows());
-                    entry.setFosCount(counter.getCountFileOrderSources());
-                    entry.setJobResourceCount(counter.getCountJobResources());
-                    entry.setBoardCount(counter.getCountBoards());
-                    entry.setLockCount(counter.getCountLocks());
-                    return entry;
-                }).filter(item -> canAdd(item.getPath(), permittedFolders))
-                        .filter(Objects::nonNull).collect(Collectors.toList());
-                if (dbHistoryItems.size() > filter.getCompactFilter().getLimit()) {
-                    // reduce list size to limit from filter
-                    dbHistoryItems = dbHistoryItems.subList(0, filter.getCompactFilter().getLimit());
-                }
-                dbHistoryItems.stream().forEachOrdered(item -> {
-                    item.setId(null);
-                    item.setType(null);
-                    item.setPath(null);
-                    item.setFolder(null);
-                    item.setContent(null);
-                    item.setInvContent(null);
-                    item.setSignedContent(null);
-                    item.setInventoryConfigurationId(null);
+                    entry.setId(null);
+                    entry.setType(null);
+                    entry.setPath(null);
+                    entry.setFolder(null);
+                    entry.setInventoryConfigurationId(null);
+                    DepHistoryItem dhItem = mapDBItemToDepHistoryItem(entry);
+                    dhItem.setWorkflowCount(counts.get(DeployType.WORKFLOW.intValue()));
+                    dhItem.setFileOrderSourceCount(counts.get(DeployType.FILEORDERSOURCE.intValue()));
+                    dhItem.setJobResourceCount(counts.get(DeployType.JOBRESOURCE.intValue()));
+                    dhItem.setBoardCount(counts.get(DeployType.NOTICEBOARD.intValue()));
+                    dhItem.setLockCount(counts.get(DeployType.LOCK.intValue()));
+                    return dhItem;
                 });
+                if (filter.getCompactFilter().getLimit() > -1) {
+                    dbHistoryItemStream = dbHistoryItemStream.limit(filter.getCompactFilter().getLimit());
+                }
             } else {
-                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers).stream()
-                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toList());
+                dbHistoryItemStream = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers).stream().filter(canAdd).map(
+                        this::mapDBItemToDepHistoryItem);
+                if (filter.getDetailFilter().getLimit() > -1) {
+                    dbHistoryItemStream = dbHistoryItemStream.limit(filter.getDetailFilter().getLimit());
+                }
             }
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(dbHistoryItems)));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(dbHistoryItemStream)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -127,24 +132,14 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
         }
     }
     
-    private DepHistoryItemsCount countItems (List<DBItemDeploymentHistory> groupedDbHistoryItems) {
-        DepHistoryItemsCount counter = new DepHistoryItemsCount();
-        counter.setCountWorkflows(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count());
-        counter.setCountLocks(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count());
-        counter.setCountFileOrderSources(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count());
-        counter.setCountJobResources(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count());
-        counter.setCountBoards(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.NOTICEBOARD.intValue() == item.getType()).count());
-        return counter;
-    }
-    
-    private DepHistory getDepHistoryFromDBItems(List<DBItemDeploymentHistory> dbHistoryItems) {
+    private DepHistory getDepHistoryFromDBItems(Stream<DepHistoryItem> dbHistoryItems) {
         DepHistory depHistory = new DepHistory();
-        depHistory.setDepHistory(dbHistoryItems.stream().map(item -> mapDBItemToDepHistoryItem(item)).collect(Collectors.toList()));
+        depHistory.setDepHistory(dbHistoryItems.toList());
         depHistory.setDeliveryDate(Date.from(Instant.now()));
         return depHistory;
     }
 
-    private DepHistoryItem mapDBItemToDepHistoryItem (DBItemDeploymentHistory dbItem) {
+    private DepHistoryItem mapDBItemToDepHistoryItem(DBItemDeploymentHistory dbItem) {
         DepHistoryItem depHistoryItem = new DepHistoryItem();
         depHistoryItem.setAccount(dbItem.getAccount());
         depHistoryItem.setCommitId(dbItem.getCommitId());
@@ -153,36 +148,21 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
         depHistoryItem.setDeploymentDate(dbItem.getDeploymentDate());
         depHistoryItem.setDeploymentId(dbItem.getId());
         if (dbItem.getType() != null) {
-            depHistoryItem.setDeployType(DeployType.fromValue(dbItem.getType()).value());
+            depHistoryItem.setDeployType(ConfigurationType.fromValue(dbItem.getType()));
         }
         depHistoryItem.setFolder(dbItem.getFolder());
         depHistoryItem.setInvConfigurationId(dbItem.getInventoryConfigurationId());
         if(dbItem.getOperation() != null) {
-            depHistoryItem.setOperation(OperationType.fromValue(dbItem.getOperation()).name());
+            depHistoryItem.setOperation(OperationType.fromValue(dbItem.getOperation()));
         }
         depHistoryItem.setPath(dbItem.getPath());
         if(dbItem.getState() != null) {
-            depHistoryItem.setState(DeploymentState.fromValue(dbItem.getState()).name());
+            depHistoryItem.setState(DeploymentState.fromValue(dbItem.getState()));
         }
         if (dbItem.getErrorMessage() != null && !dbItem.getErrorMessage().isEmpty()) {
             depHistoryItem.setErrorMessage(dbItem.getErrorMessage());
         }
         depHistoryItem.setVersion(dbItem.getVersion());
-        if (dbItem.getWorkflowCount() > 0L) {
-            depHistoryItem.setWorkflowCount(dbItem.getWorkflowCount());
-        }
-        if (dbItem.getFosCount() > 0L) {
-            depHistoryItem.setFileOrderSourceCount(dbItem.getFosCount());
-        }
-        if (dbItem.getJobResourceCount() > 0L) {
-            depHistoryItem.setJobResourceCount(dbItem.getJobResourceCount());
-        }
-        if (dbItem.getBoardCount() > 0L) {
-            depHistoryItem.setBoardCount(dbItem.getBoardCount());
-        }
-        if (dbItem.getLockCount() > 0L) {
-            depHistoryItem.setLockCount(dbItem.getLockCount());
-        }
         return depHistoryItem;
         
     }

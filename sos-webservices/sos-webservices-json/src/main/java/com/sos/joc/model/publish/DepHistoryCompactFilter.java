@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -34,18 +35,55 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class DepHistoryCompactFilter {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     private String account;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("folder")
+    @JsonPropertyDescription("absolute path of an object.")
     private String folder;
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
+    /**
+     * configuration types
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deployType")
-    private String deployType;
+    private ConfigurationType deployType;
+    /**
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("operation")
-    private String operation;
+    private OperationType operation;
+    /**
+     * deployment state
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("state")
-    private String state;
+    private DeploymentState state;
     /**
      * timestamp
      * <p>
@@ -83,6 +121,8 @@ public class DepHistoryCompactFilter {
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String to;
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -90,70 +130,142 @@ public class DepHistoryCompactFilter {
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
     /**
-     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * Limits the number of resulting items; -1=unlimited
      * 
      */
     @JsonProperty("limit")
-    @JsonPropertyDescription("Only for db history URIs. Restricts the number of delivered items; -1=unlimited")
+    @JsonPropertyDescription("Limits the number of resulting items; -1=unlimited")
     private Integer limit = 5000;
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("folder")
     public String getFolder() {
         return folder;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("folder")
     public void setFolder(String folder) {
         this.folder = folder;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
 
+    /**
+     * configuration types
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deployType")
-    public String getDeployType() {
+    public ConfigurationType getDeployType() {
         return deployType;
     }
 
+    /**
+     * configuration types
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("deployType")
-    public void setDeployType(String deployType) {
+    public void setDeployType(ConfigurationType deployType) {
         this.deployType = deployType;
     }
 
+    /**
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("operation")
-    public String getOperation() {
+    public OperationType getOperation() {
         return operation;
     }
 
+    /**
+     * JOC PGP Key Type, based on the Security Level of JOC Cockpit
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("operation")
-    public void setOperation(String operation) {
+    public void setOperation(OperationType operation) {
         this.operation = operation;
     }
 
+    /**
+     * deployment state
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("state")
-    public String getState() {
+    public DeploymentState getState() {
         return state;
     }
 
+    /**
+     * deployment state
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("state")
-    public void setState(String state) {
+    public void setState(DeploymentState state) {
         this.state = state;
     }
 
@@ -246,6 +358,8 @@ public class DepHistoryCompactFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -255,6 +369,8 @@ public class DepHistoryCompactFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -264,7 +380,7 @@ public class DepHistoryCompactFilter {
     }
 
     /**
-     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * Limits the number of resulting items; -1=unlimited
      * 
      */
     @JsonProperty("limit")
@@ -273,7 +389,7 @@ public class DepHistoryCompactFilter {
     }
 
     /**
-     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * Limits the number of resulting items; -1=unlimited
      * 
      */
     @JsonProperty("limit")
