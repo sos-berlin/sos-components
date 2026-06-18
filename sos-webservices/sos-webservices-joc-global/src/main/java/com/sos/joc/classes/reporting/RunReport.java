@@ -234,12 +234,12 @@ public class RunReport extends AReporting {
         try {
             tempDir = createTempDirectory();
             Path currentWorkDir = Paths.get("").toAbsolutePath(); // jetty_base is working directory
+            Path relativizeTempDir = currentWorkDir.relativize(tempDir);
             // reportingDir (jetty_base/reporting) is working directory
             //Path relativizeTempDir = reportingDir.relativize(tempDir);
             StringBuilder s = new StringBuilder(commonScript);
             s.append(" -p ").append(f.strValue());
-            //s.append(" -o ").append(relativizeTempDir.toString().replace('\\', '/'));
-            s.append(" -o ").append(tempDir.toString().replace('\\', '/'));
+            s.append(" -o ").append(relativizeTempDir.toString().replace('\\', '/'));
             String script = s.toString();
             LOGGER.info("[Reporting][run] " + script);
             SOSCommandResult cResult = JOCSOSShell.executeCommand(script, currentWorkDir);
