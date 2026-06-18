@@ -118,6 +118,9 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             } else {
                 dbHistoryItemStream = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers).stream().filter(canAdd).map(
                         this::mapDBItemToDepHistoryItem);
+                if (filter.getDetailFilter().getLimit() > -1) {
+                    dbHistoryItemStream = dbHistoryItemStream.limit(filter.getDetailFilter().getLimit());
+                }
             }
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(getDepHistoryFromDBItems(dbHistoryItemStream)));
         } catch (Exception e) {
