@@ -1,7 +1,6 @@
 package com.sos.reports.classes;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,17 +37,17 @@ public class CSVFileReader {
 
     public void readOrders(IReport report, ReportArguments reportArguments) throws IOException {
 
-        LOGGER.debug("read data for report:" + report.getType() + "/" + reportArguments.reportId);
+        LOGGER.debug("read data for report:" + report.getType().name() + "/" + reportArguments.reportId);
         Interval interval = new Interval();
         interval.setInterval(reportArguments.monthFrom, reportArguments.monthTo);
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory, report.getType().toString().toLowerCase(), interval.currentInterval() + ".csv");
-
+            Path path = Paths.get(reportArguments.inputDirectory, report.getType().name().toLowerCase(), interval.currentInterval() + ".csv");
+            
             if (Files.exists(path)) {
 
-                LOGGER.debug("File:" + path.getFileName() + " in " + path.getParent().toString());
+                LOGGER.debug("File:" + path.getFileName().toString() + " in " + path.getParent().toString());
                 try (BufferedReader br = Files.newBufferedReader(path)) {
                     Map<String, String> record = new HashMap<String, String>();
                     String line = br.readLine();
@@ -99,7 +98,7 @@ public class CSVFileReader {
                 }
 
             } else {
-                LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
+                LOGGER.warn("File:" + path.getFileName().toString() + " not found in " + path.getParent().toString());
             }
             interval.next();
             while (reportArguments.reportFrequency.isBefore(interval)) {
@@ -113,71 +112,72 @@ public class CSVFileReader {
 
     public void readJobs(IReport report, ReportArguments reportArguments) throws IOException {
 
-        LOGGER.debug("read data for report:" + report.getType() + "/" + reportArguments.reportId);
+        LOGGER.debug("read data for report:" + report.getType().name() + "/" + reportArguments.reportId);
         Interval interval = new Interval();
         interval.setInterval(reportArguments.monthFrom, reportArguments.monthTo);
 
         while (!interval.end()) {
 
-            Path path = Paths.get(reportArguments.inputDirectory, report.getType().toString().toLowerCase(), interval.currentInterval() + ".csv");
+            Path path = Paths.get(reportArguments.inputDirectory, report.getType().name().toLowerCase(), interval.currentInterval() + ".csv");
 
             if (Files.exists(path)) {
 
-                LOGGER.debug("File:" + path.getFileName() + " in " + path.getParent());
-                BufferedReader br = Files.newBufferedReader(path);
+                LOGGER.debug("File:" + path.getFileName().toString() + " in " + path.getParent().toString());
+                try (BufferedReader br = Files.newBufferedReader(path)) {
 
-                Map<String, String> record = new HashMap<String, String>();
-                String line = br.readLine();
-                String[] cols = line.split(SEMICOLON_DELIMITER);
+                    Map<String, String> record = new HashMap<String, String>();
+                    String line = br.readLine();
+                    String[] cols = line.split(SEMICOLON_DELIMITER);
 
-                while ((line = br.readLine()) != null) {
-                    String[] values = line.split(SEMICOLON_DELIMITER);
-                    ReportRecord jobRecord = new ReportRecord();
-                    for (int i = 0; i < values.length; i++) {
-                        if (i < cols.length) {
-                            record.put(cols[i].toLowerCase(), values[i]);
-                        }
-                    }
-
-                    jobRecord.setId(record.getOrDefault(COL_ID, "-1"));
-                    jobRecord.setControllerId(record.getOrDefault(COL_CONTROLLER_ID, ""));
-                    if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
-                            jobRecord.getControllerId())) {
-                        jobRecord.setOrderId(record.getOrDefault(COL_ORDER_ID, ""));
-                        jobRecord.setWorkflowPath(record.getOrDefault(COL_WORKFLOW_PATH, ""));
-                        jobRecord.setWorkflowVersionId(record.getOrDefault(COL_WORKFLOW_VERSION_ID, ""));
-                        jobRecord.setWorkflowName(record.getOrDefault(COL_WORKFLOW_NAME, ""));
-                        jobRecord.setPosition(record.getOrDefault(COL_POSITION, "0"));
-                        jobRecord.setJobName(record.getOrDefault(COL_JOB_NAME, ""));
-                        jobRecord.setCriticality(record.getOrDefault(COL_CRITICALITY, ""));
-                        jobRecord.setAgentId(record.getOrDefault(COL_AGENT_ID, ""));
-                        jobRecord.setAgentName(record.getOrDefault(COL_AGENT_NAME, ""));
-                        jobRecord.setStartTime(record.getOrDefault(COL_START_TIME, ""));
-                        jobRecord.setEndTime(record.getOrDefault(COL_END_TIME, ""));
-                        jobRecord.setError(record.getOrDefault(COL_ERROR, "0"));
-                        jobRecord.setCreated(record.getOrDefault(COL_CREATED, ""));
-                        jobRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
-                        jobRecord.setState(record.getOrDefault(COL_STATE, "0"));
-                        if (jobRecord.getStartTime() != null) {
-
-                            if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
-
-                                LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
-
-                                report.putHits();
-                                report.reset();
-                                reportArguments.reportFrequency.nextPeriod();
-                                LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
-                                        + reportArguments.reportFrequency.getTo());
+                    while ((line = br.readLine()) != null) {
+                        String[] values = line.split(SEMICOLON_DELIMITER);
+                        ReportRecord jobRecord = new ReportRecord();
+                        for (int i = 0; i < values.length; i++) {
+                            if (i < cols.length) {
+                                record.put(cols[i].toLowerCase(), values[i]);
                             }
-                            report.count(jobRecord);
+                        }
+
+                        jobRecord.setId(record.getOrDefault(COL_ID, "-1"));
+                        jobRecord.setControllerId(record.getOrDefault(COL_CONTROLLER_ID, ""));
+                        if (reportArguments.controllerId == null || reportArguments.controllerId.isEmpty() || reportArguments.controllerId.equals(
+                                jobRecord.getControllerId())) {
+                            jobRecord.setOrderId(record.getOrDefault(COL_ORDER_ID, ""));
+                            jobRecord.setWorkflowPath(record.getOrDefault(COL_WORKFLOW_PATH, ""));
+                            jobRecord.setWorkflowVersionId(record.getOrDefault(COL_WORKFLOW_VERSION_ID, ""));
+                            jobRecord.setWorkflowName(record.getOrDefault(COL_WORKFLOW_NAME, ""));
+                            jobRecord.setPosition(record.getOrDefault(COL_POSITION, "0"));
+                            jobRecord.setJobName(record.getOrDefault(COL_JOB_NAME, ""));
+                            jobRecord.setCriticality(record.getOrDefault(COL_CRITICALITY, ""));
+                            jobRecord.setAgentId(record.getOrDefault(COL_AGENT_ID, ""));
+                            jobRecord.setAgentName(record.getOrDefault(COL_AGENT_NAME, ""));
+                            jobRecord.setStartTime(record.getOrDefault(COL_START_TIME, ""));
+                            jobRecord.setEndTime(record.getOrDefault(COL_END_TIME, ""));
+                            jobRecord.setError(record.getOrDefault(COL_ERROR, "0"));
+                            jobRecord.setCreated(record.getOrDefault(COL_CREATED, ""));
+                            jobRecord.setModified(record.getOrDefault(COL_MODIFIED, ""));
+                            jobRecord.setState(record.getOrDefault(COL_STATE, "0"));
+                            if (jobRecord.getStartTime() != null) {
+
+                                if (reportArguments.reportFrequency.endOfInterval(jobRecord.getStartTime().toLocalDate())) {
+
+                                    LOGGER.debug("Interval end reached:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
+
+                                    report.putHits();
+                                    report.reset();
+                                    reportArguments.reportFrequency.nextPeriod();
+                                    LOGGER.debug("new frequency interval:" + reportArguments.reportFrequency.getFrom() + " to "
+                                            + reportArguments.reportFrequency.getTo());
+                                }
+                                report.count(jobRecord);
+                            }
                         }
                     }
+                    report.putHits();
                 }
-                report.putHits();
             } else {
-                LOGGER.debug("File:" + path.getFileName() + " not found in " + path.getParent());
+                LOGGER.warn("File:" + path.getFileName().toString() + " not found in " + path.getParent().toString());
             }
             interval.next();
             while (reportArguments.reportFrequency.isBefore(interval)) {
