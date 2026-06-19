@@ -42,7 +42,8 @@ public class CancelOrdersPublishHelper {
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
         
-        if (orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) {
+        if ((orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) && 
+                (orderFilter.getSchedulePaths() == null || orderFilter.getSchedulePaths().isEmpty())) {
             return Collections.emptyList();
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
@@ -62,11 +63,17 @@ public class CancelOrdersPublishHelper {
                     DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
                     localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
                     localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
+                    if(orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
+                        localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
+                    }
+                    if(orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
+                        localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                    }
                     boolean successful = true;
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        if (!localOrderFilter.getWorkflowPaths().isEmpty()) {
+                        if ((localOrderFilter.getWorkflowPaths() != null && !localOrderFilter.getWorkflowPaths().isEmpty()) ||
+                                (localOrderFilter.getSchedulePaths() != null && !localOrderFilter.getSchedulePaths().isEmpty())) {
                             successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false);
                         }
                         if (!successful) {
