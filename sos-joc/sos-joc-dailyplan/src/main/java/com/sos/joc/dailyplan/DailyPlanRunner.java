@@ -1250,8 +1250,11 @@ public class DailyPlanRunner extends TimerTask {
                                             "%s[WorkingDaysCalendar=%s][frequencyResolverDate=%s][checkNonWorkingDaysNextPrev=%s][periodResolver]startTimes size=%s",
                                             logPrefix, assignedCalendar.getCalendarName(), frequencyResolverDate, checkNonWorkingDaysNextPrev,
                                             startTimes.size()));
-
                                 }
+                                
+                                boolean isNonWorkingDay = isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
+                                        calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsString, nonWorkingDaysForSuppress,
+                                        frequencyResolverDate);
 
                                 st: for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
                                     Period p = periodEntry.getValue();
@@ -1265,9 +1268,7 @@ public class DailyPlanRunner extends TimerTask {
                                             }
                                             break;
                                         case SUPPRESS:
-                                            if (isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
-                                                    calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsString,
-                                                    nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
+                                            if (isNonWorkingDay) {
                                                 continue st;
                                             } else {
                                                 break;
@@ -1275,9 +1276,7 @@ public class DailyPlanRunner extends TimerTask {
                                             // suppress because if the current day is a NonWorking day - it is a not a Next/Previous NonWorking day
                                         case NEXTNONWORKINGDAY:
                                         case PREVIOUSNONWORKINGDAY:
-                                            if (checkNonWorkingDaysNextPrev && isNonWorkingDay(isDebugEnabled, logPrefix, invDbLayer, schedule,
-                                                    calculateStartTimesNonWorkingCalendars, actDateAsString, nextDateAsString,
-                                                    nonWorkingDaysForSuppress, p, frequencyResolverDate)) {
+                                            if (checkNonWorkingDaysNextPrev && isNonWorkingDay) {
                                                 continue st;
                                             } else {
                                                 break;
@@ -1471,7 +1470,7 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private boolean isNonWorkingDay(boolean isDebugEnabled, String logPrefix, InventoryDBLayer dbLayer, Schedule schedule,
-            Map<String, Calendar> nonWorkingCalendars, String dateAsString, String nextDateAsString, Set<String> nonWorkingDays, Period p,
+            Map<String, Calendar> nonWorkingCalendars, String dateAsString, String nextDateAsString, Set<String> nonWorkingDays,
             String frequencyResolverDate) throws Exception {
         String method = "isNonWorkingDay";
         if (nonWorkingDays.size() == 0) {
@@ -1480,14 +1479,14 @@ public class DailyPlanRunner extends TimerTask {
         }
         if (nonWorkingDays.contains(dateAsString)) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][%s][isNonWorkingDay=true][%s]nonWorkingDays=%s", logPrefix,
-                        frequencyResolverDate, p.getWhenHoliday(), DailyPlanHelper.toString(p), String.join(",", nonWorkingDays)));
+                LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][isNonWorkingDay=true]nonWorkingDays=%s", logPrefix,
+                        frequencyResolverDate, String.join(",", nonWorkingDays)));
             }
             return true;
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][%s][isNonWorkingDay=false][%s]nonWorkingDays=%s", logPrefix,
-                    frequencyResolverDate, p.getWhenHoliday(), DailyPlanHelper.toString(p), String.join(",", nonWorkingDays)));
+            LOGGER.debug(String.format("%s[FrequencyResolver date=%s][NonWorkingDays][isNonWorkingDay=false]nonWorkingDays=%s", logPrefix,
+                    frequencyResolverDate, String.join(",", nonWorkingDays)));
         }
         return false;
     }
