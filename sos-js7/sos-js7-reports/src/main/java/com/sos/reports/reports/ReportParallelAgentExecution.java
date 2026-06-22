@@ -1,19 +1,18 @@
 package com.sos.reports.reports;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.sos.inventory.model.report.ReportOrder;
 import com.sos.joc.model.reporting.result.ReportResult;
 import com.sos.joc.model.reporting.result.ReportResultData;
@@ -29,7 +28,7 @@ public class ReportParallelAgentExecution implements IReport {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReportParallelAgentExecution.class);
     private ReportArguments reportArguments;
 
-    Map<String, List<ReportPeriod>> agents = new HashMap<String, List<ReportPeriod>>();
+    Map<String, List<ReportPeriod>> agents = new HashMap<>();
 
     private ReportPeriod createPeriod(ReportRecord jobRecord) {
         ReportPeriod reportPeriod = new ReportPeriod();
@@ -49,18 +48,18 @@ public class ReportParallelAgentExecution implements IReport {
 
     public void count(ReportRecord jobRecord) {
         List<ReportPeriod> periods = agents.get(jobRecord.getAgentId());
-        List<ReportPeriod> newPeriods = new ArrayList<ReportPeriod>();
+        List<ReportPeriod> newPeriods = new ArrayList<>();
 
         if (periods == null) {
-            periods = new ArrayList<ReportPeriod>();
+            periods = new ArrayList<>();
             agents.put(jobRecord.getAgentId(), periods);
         }
 
         ReportPeriod reportPeriod = createPeriod(jobRecord);
 
         for (ReportPeriod period : periods) {
-            if ((reportPeriod.getFrom().isAfter(period.getFrom()) && reportPeriod.getFrom().isBefore(period.getTo())) || (reportPeriod.getTo()
-                    .isAfter(period.getFrom()) && reportPeriod.getTo().isBefore(period.getTo())) || (reportPeriod.getFrom().isBefore(period.getFrom())
+            if ((!reportPeriod.getFrom().isBefore(period.getFrom()) && !reportPeriod.getFrom().isAfter(period.getTo())) || (reportPeriod.getTo()
+                    .isAfter(period.getFrom()) && !reportPeriod.getTo().isAfter(period.getTo())) || (reportPeriod.getFrom().isBefore(period.getFrom())
                             && reportPeriod.getTo().isAfter(period.getTo()))) {
                 reportPeriod.addCount();
             }
@@ -90,48 +89,32 @@ public class ReportParallelAgentExecution implements IReport {
 
     public ReportResult putHits() {
 
-        Map<String, ReportResultData> parallelAgents = new HashMap<String, ReportResultData>();
-
-        Comparator<ReportResultData> byCount = (obj1, obj2) -> obj1.getCount().compareTo(obj2.getCount());
-
         ReportResult reportResult = new ReportResult();
-
-        for (Entry<String, List<ReportPeriod>> entryAgentPeriods : agents.entrySet()) {
-            List<ReportPeriod> periods = entryAgentPeriods.getValue();
-
-            ReportPeriod maxValue = periods.stream().max(Comparator.comparing(v -> v.getCount())).get();
-            ReportResultData reportResultData = new ReportResultData();
-            reportResultData.setAgentName(entryAgentPeriods.getKey());
-            reportResultData.setCount(maxValue.getCount());
-            parallelAgents.put(entryAgentPeriods.getKey(), reportResultData);
-        }
-
-        LinkedHashMap<String, ReportResultData> agentsParallelPeriodsResult = null;
-        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
-            agentsParallelPeriodsResult = parallelAgents.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount)
-                    .reversed()).limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                            LinkedHashMap::new));
-        } else {
-            agentsParallelPeriodsResult = parallelAgents.entrySet().stream().sorted(Map.Entry.<String, ReportResultData> comparingByValue(byCount))
-                    .limit(reportArguments.hits).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1,
-                            LinkedHashMap::new));
-        }
-
-        reportResult.setData(new ArrayList<ReportResultData>());
+        reportResult.setData(new ArrayList<>());
         reportResult.setType(getType().name());
 
-        for (Entry<String, ReportResultData> entry : agentsParallelPeriodsResult.entrySet()) {
-            reportResult.getData().add(entry.getValue());
-            LOGGER.debug("-----New Entry -----------------------");
-            LOGGER.debug(entry.getKey() + ":" + entry.getValue().getCount());
-
+        Stream<ReportResultData> resultStream = agents.entrySet().stream().map(m -> {
+            ReportResultData reportResultData = new ReportResultData();
+            reportResultData.setAgentName(m.getKey());
+            reportResultData.setCount(m.getValue().stream().map(ReportPeriod::getCount).max(Comparator.comparing(Function.identity()))
+                    .orElse(0L));
+            return reportResultData;
+        });
+        if (this.reportArguments.sort.equals(ReportOrder.HIGHEST)) {
+            resultStream = resultStream.sorted(Comparator.comparingLong(ReportResultData::getCount).reversed());
+        } else {
+            resultStream = resultStream.sorted(Comparator.comparingLong(ReportResultData::getCount));
         }
-        ObjectWriter writer = ReportHelper.prettyPrintObjectMapper.writer();
+        resultStream.limit(reportArguments.hits).forEachOrdered(m -> {
+            reportResult.getData().add(m);
+            LOGGER.debug("-----New Entry -----------------------");
+            LOGGER.debug(m.getAgentName() + ":" + m.getCount());
+        });
 
         try {
-            writer.writeValue(new java.io.File(reportArguments.getOutputFilename()), reportResult);
+            ReportHelper.prettyPrintObjectMapper.writeValue(Paths.get(reportArguments.getOutputFilename()).toFile(), reportResult);
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
 
         return reportResult;
