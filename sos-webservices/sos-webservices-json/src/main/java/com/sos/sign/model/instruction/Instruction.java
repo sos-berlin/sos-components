@@ -141,12 +141,12 @@ public abstract class Instruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("label", label).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("label", label).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(label).toHashCode();
     }
 
     @Override
@@ -158,7 +158,7 @@ public abstract class Instruction
             return false;
         }
         Instruction rhs = ((Instruction) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append("label", label).isEquals();
     }
 
 }
