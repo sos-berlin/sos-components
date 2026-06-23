@@ -26,7 +26,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.PublishSemaphore;
-import com.sos.joc.classes.inventory.RecallRevokeSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
