@@ -51,7 +51,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
-import com.sos.joc.model.inventory.release.Releasable;
 import com.sos.joc.model.inventory.release.ReleasableRecallFilter;
 import com.sos.joc.model.inventory.release.ReleasableRecallFolderFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
