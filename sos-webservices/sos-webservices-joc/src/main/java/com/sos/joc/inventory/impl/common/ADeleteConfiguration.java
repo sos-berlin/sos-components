@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +35,9 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.PublishSemaphore;
+import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
+import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
@@ -57,6 +61,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -74,12 +79,14 @@ import io.vavr.control.Either;
 public abstract class ADeleteConfiguration extends JOCResourceImpl {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ADeleteConfiguration.class);
+    private static final String SEMAPHORE_ID = "REMOVE";
     
     public JOCDefaultResponse remove(String accessToken, RequestFilters in, String request) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            
+            RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
+
             session = Globals.createSosHibernateStatelessConnection(request);
 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -309,6 +316,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             throw e;
         } finally {
             Globals.disconnect(session);
+            
         }
     }
 
@@ -375,6 +383,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
                 }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
                 EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                releaseAndReaquireSemaphore(accessToken);
             }
             if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){
                 SOSHibernateSession futureSession = null;
@@ -426,11 +435,18 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     }
                     // post events for updating workflows and fileordersources consumed by WorkflowRefs
                     JocInventory.postDeployHistoryEventWhenDeleted(deployments);
-                    
+                    releaseAndReaquireSemaphore(accessToken);
                 } catch (Exception e) {
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
                 } finally {
                     Globals.disconnect(futureSession);
+                    RemoveSemaphore.release(accessToken);
+                    if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
+                            .equals(SEMAPHORE_ID)).isPresent()) {
+                        PublishSemaphore.remove(accessToken);
+                        LOGGER.debug("final remove semaphore from remove with AT " + accessToken);
+                    }
+
                 }
             }
         });
@@ -528,4 +544,26 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
         return futures;
     }
+
+    private static void releaseAndReaquireSemaphore(String accessToken) {
+        try {
+            RemoveSemaphore.release(accessToken);
+            LOGGER.debug("release semaphore from remove with AT " + accessToken);
+        } catch (Exception e) {
+            // DO NOTHING if semaphore release failed
+        }
+        if (RemoveSemaphore.availablePermits(accessToken) == 1) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+            }
+        }
+        try {
+            RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
+        } catch (InterruptedException e) {
+            throw new JocException(e);
+        }
+        LOGGER.debug("acquire again semaphore from remove with AT " + accessToken);
+    }
+
 }

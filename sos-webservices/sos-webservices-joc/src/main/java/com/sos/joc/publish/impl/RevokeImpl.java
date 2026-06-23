@@ -195,7 +195,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             if (PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
                     .equals(SEMAPHORE_ID)).isPresent()) {
                 PublishSemaphore.remove(xAccessToken);
-                LOGGER.debug("final remove semaphore from release with AT " + xAccessToken);
+                LOGGER.debug("final remove semaphore from revoke with AT " + xAccessToken);
             }
             Globals.disconnect(hibernateSession);
         }
@@ -204,7 +204,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
     private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
         try {
             RemoveSemaphore.release(accessToken);
-            LOGGER.debug("release semaphore from release with AT " + accessToken);
+            LOGGER.debug("release semaphore from revoke with AT " + accessToken);
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
@@ -215,7 +215,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             }
         }
         RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-        LOGGER.debug("acquire again semaphore from release with AT " + accessToken);
+        LOGGER.debug("acquire again semaphore from revoke with AT " + accessToken);
     }
 
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (RevokeFilter revokeFilter) {
