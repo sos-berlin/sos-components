@@ -131,6 +131,13 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                 throw new JocFolderPermissionsException("Access denied: " + recallFilter.getPath());
             }
             
+            if (RemoveSemaphore.availablePermits(accessToken) == 1) {
+                TimeUnit.MILLISECONDS.sleep(100);
+            }
+            if(!recallFilter.getKeepOrders()) {
+                LOGGER.debug("acquire semaphore from recall with AT " + accessToken);
+                RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
+            }
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
             Long dbAuditLogId = dbAuditLog.getId();
             
@@ -174,6 +181,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                         LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
                     }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
                     EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                    removeSemapohoreFinally(accessToken);
                 } else {
                     SOSHibernateSession futureSession = null;
                     try {
@@ -189,11 +197,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                         events.stream().forEach(JocInventory::postEvent);
                     } finally {
                         Globals.disconnect(futureSession);
-                        RemoveSemaphore.release(accessToken);
-                        if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(
-                                SEMAPHORE_ID)).isPresent()) {
-                            PublishSemaphore.remove(accessToken);
-                        }
+                        removeSemapohoreFinally(accessToken);
                     }
                 }
             });
@@ -206,6 +210,14 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             });
             JocAuditLog.storeAuditLogDetails(auditLogDetails, dbLayer.getSession(), dbAuditLogId);
             events.stream().forEach(JocInventory::postEvent);
+        }
+    }
+
+    private static void removeSemapohoreFinally(String accessToken) {
+        RemoveSemaphore.release(accessToken);
+        if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(
+                SEMAPHORE_ID)).isPresent()) {
+            PublishSemaphore.remove(accessToken);
         }
     }
 
