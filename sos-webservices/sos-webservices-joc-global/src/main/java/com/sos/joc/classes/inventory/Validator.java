@@ -194,7 +194,7 @@ public class Validator {
 
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
             Set<String> visibleAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
-        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
+        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)), true);
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
                 || ConfigurationType.JOBTEMPLATE.equals(type) || ConfigurationType.WORKINGDAYSCALENDAR.equals(type)
                 || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
@@ -318,7 +318,7 @@ public class Validator {
     public static void revalidate(ConfigurationType type, byte[] configBytes, IConfigurationObject config,
             Map<ConfigurationType, Set<String>> invObjNames, Map<String, String> workflowJsonsByName, Set<String> visibleAgentNames)
             throws SOSJsonSchemaException, IOException, JocConfigurationException {
-        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
+        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)), true);
         if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)
                 || ConfigurationType.JOBTEMPLATE.equals(type) || ConfigurationType.WORKINGDAYSCALENDAR.equals(type)
                 || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type)) {
