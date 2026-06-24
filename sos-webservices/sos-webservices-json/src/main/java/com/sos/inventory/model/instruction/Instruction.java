@@ -195,7 +195,7 @@ public abstract class Instruction
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(position).append("label", label).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(position).append(label).toHashCode();
     }
 
     @Override
