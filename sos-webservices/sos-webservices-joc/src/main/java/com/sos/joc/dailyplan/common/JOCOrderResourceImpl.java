@@ -105,20 +105,28 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 filter.setScheduleNames(in.getSchedulePaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
             }
             if (in.getScheduleFolders() != null && !in.getScheduleFolders().isEmpty()) {
-                Set<Folder> permitted = addPermittedFolder(in.getScheduleFolders(), folderPermissions);
-                if (permitted.isEmpty()) {
-                    // hasPermission = false; //maybe the schedules were deleted
+                if(folderPermissions != null) {
+                    Set<Folder> permitted = addPermittedFolder(in.getScheduleFolders(), folderPermissions);
+                    if (permitted.isEmpty()) {
+                        // hasPermission = false; //maybe the schedules were deleted
+                    } else {
+                        filter.addScheduleFolders(permitted);
+                    }
                 } else {
-                    filter.addScheduleFolders(permitted);
+                    filter.addScheduleFolders(in.getScheduleFolders());
                 }
             }
             if (in.getWorkflowFolders() != null && !in.getWorkflowFolders().isEmpty()) {
+                if(folderPermissions != null) {
                 Set<Folder> permitted = addPermittedFolder(in.getWorkflowFolders(), folderPermissions);
-                if (permitted.isEmpty()) {
-                    // hasPermission = false;
-                } else {
-                    filter.addWorkflowFolders(permitted);
+                    if (permitted.isEmpty()) {
+                        // hasPermission = false;
+                    } else {
+                        filter.addWorkflowFolders(permitted);
+                    }
                 }
+            } else {
+                filter.addWorkflowFolders(in.getWorkflowFolders());
             }
             if (in.getWorkflowPaths() != null && !in.getWorkflowPaths().isEmpty()) {
                 filter.setWorkflowNames(in.getWorkflowPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList()));
