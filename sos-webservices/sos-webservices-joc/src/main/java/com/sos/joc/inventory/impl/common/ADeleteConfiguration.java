@@ -526,10 +526,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
                         if (!localOrderFilterReleased.getSchedulePaths().isEmpty()) {
-                            successful1 = deleteOrdersImpl.deleteOrders(localOrderFilterReleased, xAccessToken, false, false); 
+                            successful1 = deleteOrdersImpl.deleteOrders(localOrderFilterReleased, xAccessToken, false, false, false); 
                         }
                         if (!localOrderFilterDeployed.getWorkflowPaths().isEmpty()) {
-                            successful2 = deleteOrdersImpl.deleteOrders(localOrderFilterDeployed, xAccessToken, false, false);
+                            successful2 = deleteOrdersImpl.deleteOrders(localOrderFilterDeployed, xAccessToken, false, false, false);
                         }
                         if (!successful1 || !successful2) {
                             return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(

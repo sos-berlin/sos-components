@@ -810,7 +810,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             try {
                                 // TODO create Method to transfer a set of order objects to delete instead of a filter
                                 if (!localOrderFilter.getSchedulePaths().isEmpty()) {
-                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false); 
+                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false); 
                                 }
                                 if (!successful) {
                                     return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
