@@ -6,6 +6,8 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public class ConnectionJNDI extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     public static String DEFAULT_LOOKUP_NAME = "ConnectionFactory";
 
     private static String ATTRIBUTE_NAME_FILE = "file";

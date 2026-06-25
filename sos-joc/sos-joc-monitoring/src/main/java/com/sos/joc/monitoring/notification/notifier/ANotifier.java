@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,15 +58,15 @@ public abstract class ANotifier {
     private Map<String, String> systemVars;
     private NotificationStatus status;
     private TimeZone timeZone;
-    private int nr;
+    private String identifier;
 
     // OrderNotifications
-    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
-            DBItemNotification mn);
+    public abstract NotifyResult notifyOrderNotification(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo,
+            DBItemMonitoringOrderStep mos, DBItemNotification mn);
 
     // SystemNotifications
-    public abstract NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime,
-            String exception);
+    public abstract NotifyResult notifySystemNotification(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event,
+            Date dateTime, String exception);
 
     public abstract void close();
 
@@ -210,93 +211,89 @@ public abstract class ANotifier {
         }
     }
 
-    // SystemNotification
-    protected String getInfo4execute(boolean isExecute, SystemMonitoringEvent event, NotificationType type, String addInfo) {
+    protected String getSystemNotificationExecutionInfo(Instant start, Instant end, boolean isExecute, SystemMonitoringEvent event, String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append(Configuration.LOG_INTENT);
-        sb.append("[").append(nr).append("]");
         sb.append("[").append(isExecute ? "execute" : "executed").append("]");
+        sb.append(getExecutionTimeInfo(start, end));
+        sb.append("[").append(identifier).append("]");
         sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
-        sb.append(getInfo(event, type));
+        sb.append(getSystemNotificationInfo(event));
         if (addInfo != null) {
             sb.append(addInfo);
         }
         return sb.toString();
     }
 
-    protected String getInfo4executeFailed(SystemMonitoringEvent event, NotificationType type, String addInfo) {
+    protected String getSystemNotificationExecutionFailedInfo(Instant start, Instant end, SystemMonitoringEvent event, String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append(Configuration.LOG_INTENT);
-        sb.append("[").append(nr).append("]");
         sb.append("[failed]");
+        sb.append(getExecutionTimeInfo(start, end));
+        sb.append("[").append(identifier).append("]");
         sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
-        sb.append(getInfo(event, type));
+        sb.append(getSystemNotificationInfo(event));
         if (addInfo != null) {
             sb.append(addInfo);
         }
         return sb.toString();
     }
 
-    // HistoryNotification
-    protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type,
+    protected String getOrderNotificationExecutionInfo(Instant start, Instant end, boolean isExecute, DBItemMonitoringOrder mo,
+            DBItemMonitoringOrderStep mos, String addInfo) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Configuration.LOG_INTENT);
+        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
+        sb.append(getExecutionTimeInfo(start, end));
+        sb.append("[").append(identifier).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
+        sb.append(getInfo(mo, mos));
+        if (addInfo != null) {
+            sb.append(addInfo);
+        }
+        return sb.toString();
+    }
+
+    protected String getOrderNotificationExecutionFailedInfo(Instant start, Instant end, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append(Configuration.LOG_INTENT);
-        sb.append("[").append(nr).append("]");
-        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
-        sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
-        sb.append(getInfo(mo, mos, type));
-        if (addInfo != null) {
-            sb.append(addInfo);
-        }
-        return sb.toString();
-    }
-
-    protected String getInfo4executeFailed(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Configuration.LOG_INTENT);
-        sb.append("[").append(nr).append("]");
         sb.append("[failed]");
+        sb.append(getExecutionTimeInfo(start, end));
+        sb.append("[").append(identifier).append("]");
         sb.append("[").append(getClass().getSimpleName()).append(" ").append(getMonitorInfo(getMonitor())).append("]");
-        sb.append(getInfo(mo, mos, type));
+        sb.append(getInfo(mo, mos));
         if (addInfo != null) {
             sb.append(addInfo);
         }
         return sb.toString();
     }
 
-    public static String getTypeAsString(NotificationType type) {
-        return "on " + type.value();
+    public static String getTypeAsString(NotificationType type, JobWarning warnReason) {
+        String v = "on " + type.value();
+        if (warnReason != null && !JobWarning.NONE.equals(warnReason)) {
+            v += " " + warnReason;
+        }
+        return v;
     }
 
-    public static StringBuilder getMainInfo(AMonitor monitor) {
-        return getMainInfo(monitor, null);
-    }
-
-    private static StringBuilder getMainInfo(AMonitor monitor, NotificationType type) {
+    public static StringBuilder getMonitorInfo(AMonitor monitor) {
         if (monitor == null) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(monitor.getType().value()).append(" ").append(getMonitorInfo(monitor)).append("]");
-        if (type != null) {
-            sb.append("[").append(getTypeAsString(type)).append("]");
-        }
+        sb.append("[").append(monitor.getType().value());
+        sb.append(" monitor=").append(monitor.getMonitorName());
+        sb.append(", timeZone=").append(monitor.getTimeZoneValue());
+        sb.append("]");
         return sb;
     }
 
-    private static String getMonitorInfo(AMonitor monitor) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("monitor=").append(monitor.getMonitorName());
-        sb.append(",timeZone=").append(monitor.getTimeZoneValue());
-        return sb.toString();
-    }
-
-    public static StringBuilder getInfo(OrderNotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
+    public static StringBuilder getInfo(OrderNotifyAnalyzer analyzer, AMonitor monitor) {
         if (analyzer == null || monitor == null) {
             return null;
         }
-        StringBuilder sb = new StringBuilder(getMainInfo(monitor, type));
+        StringBuilder sb = new StringBuilder(getMonitorInfo(monitor));
         return sb.append(getInfo(analyzer));
     }
 
@@ -304,38 +301,32 @@ public abstract class ANotifier {
         if (analyzer == null) {
             return null;
         }
-        return getInfo(analyzer.getOrder(), analyzer.getOrderStep(), null);
+        return getInfo(analyzer.getOrder(), analyzer.getOrderStep());
     }
 
-    private static StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
+    private static StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         StringBuilder sb = new StringBuilder();
-        if (type != null) {
-            sb.append("[").append(getTypeAsString(type)).append("]");
-        }
         sb.append("[");
         if (mo != null) {
             sb.append("controllerId=").append(mo.getControllerId());
-            sb.append(",workflow=").append(mo.getWorkflowName());
-            sb.append(",orderId=").append(mo.getOrderId());
+            sb.append(", workflow=").append(mo.getWorkflowName());
+            sb.append(", orderId=").append(mo.getOrderId());
         }
         if (mos != null) {
-            sb.append(",job=").append(mos.getJobName());
-            sb.append(",label=").append(mos.getJobLabel());
-            sb.append(",position=").append(mos.getPosition());
+            sb.append(", job=").append(mos.getJobName());
+            sb.append(", label=").append(mos.getJobLabel());
+            sb.append(", position=").append(mos.getPosition());
         }
         sb.append("]");
         return sb;
     }
 
     // SystemNotifier
-    private static StringBuilder getInfo(SystemMonitoringEvent event, NotificationType type) {
+    private static StringBuilder getSystemNotificationInfo(SystemMonitoringEvent event) {
         StringBuilder sb = new StringBuilder();
-        if (type != null) {
-            sb.append("[").append(getTypeAsString(type)).append("]");
-        }
         sb.append("[");
         sb.append("category=").append(event.getCategory());
-        sb.append(",name=").append(event.getLoggerName());
+        sb.append(", name=").append(event.getLoggerName());
         sb.append("]");
         return sb;
     }
@@ -531,12 +522,29 @@ public abstract class ANotifier {
         }
     }
 
+    private String getExecutionTimeInfo(Instant start, Instant end) {
+        if (start != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[UTC ");
+            sb.append(SOSDate.tryGetDateTimeAsString(start));
+            if (end != null) {
+                sb.append("-");
+                sb.append(SOSDate.tryGetDateTimeAsString(end));
+                sb.append(" ");
+                sb.append(SOSDate.getDuration(start, end));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        return "";
+    }
+
     protected JocVariables getJocVariables() {
         return jocVariables;
     }
 
-    public void setNr(int nr) {
-        this.nr = nr;
+    public void setIdentifier(String val) {
+        this.identifier = val;
     }
 
 }

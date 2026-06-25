@@ -44,6 +44,8 @@ public class HistoryMonitorServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMonitorServiceTest.class);
 
+    private static final int NUMBER_OF_GENERATED_PAYLOADS = 10;
+
     @Ignore
     @Test
     public void test() {
@@ -64,6 +66,7 @@ public class HistoryMonitorServiceTest {
                     session.setAutoCommit(false);
                     session.beginTransaction();
                     session.executeUpdate("delete from " + DBLayer.DBITEM_MON_ORDER_STEPS + " where jobName='junit'");
+                    session.executeUpdate("delete from " + DBLayer.DBITEM_JOC_VARIABLES + " where name='monitor'");
                     session.commit();
                     session = null;
                 } catch (Exception e) {
@@ -100,7 +103,7 @@ public class HistoryMonitorServiceTest {
 
         new Thread(() -> {
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < NUMBER_OF_GENERATED_PAYLOADS; i++) {
                 int counter = i + 1;
                 LOGGER.info(counter + ")---------handleHistoryEvents-----------------");
 

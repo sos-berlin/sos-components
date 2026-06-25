@@ -1,15 +1,19 @@
 package com.sos.joc.monitoring.configuration;
 
+import java.io.Serializable;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSString;
 
-public abstract class AElement {
+public abstract class AElement implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static final String ASTERISK = "*";
 
-    private final Element element;
+    private transient final Element element;
     private final String elementName;
 
     public AElement(Node node) {

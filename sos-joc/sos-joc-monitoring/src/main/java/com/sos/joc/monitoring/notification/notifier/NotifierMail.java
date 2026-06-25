@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,8 +39,8 @@ public class NotifierMail extends ANotifier {
 
     private SOSMail mail = null;
 
-    public NotifierMail(int nr, MonitorMail monitor) throws Exception {
-        super.setNr(nr);
+    public NotifierMail(String identifier, MonitorMail monitor) throws Exception {
+        super.setIdentifier(identifier);
         this.monitor = monitor;
         init();
     }
@@ -49,9 +50,8 @@ public class NotifierMail extends ANotifier {
         return monitor;
     }
 
-    // OrderNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+    public NotifyResult notifyOrderNotification(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
         if (mail == null) {
             NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
@@ -70,23 +70,26 @@ public class NotifierMail extends ANotifier {
         mail.setSubject(resolve(monitor.getSubject(), true));
         mail.setBody(body);
 
+        Instant start = Instant.now();
         try {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
 
-            LOGGER.info(getInfo4execute(true, mo, mos, type, info.toString()));
+            LOGGER.info(getOrderNotificationExecutionInfo(start, null, true, mo, mos, info.toString()));
 
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    result.setError(getInfo4executeFailed(mo, mos, type, monitor.getInfo().toString()));
+                    Instant end = Instant.now();
+                    result.setError(getOrderNotificationExecutionFailedInfo(start, end, mo, mos, monitor.getInfo().toString()));
                 }
             }
             return result;
         } catch (Throwable e) {
-            result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            Instant end = Instant.now();
+            result.setError(getOrderNotificationExecutionFailedInfo(start, end, mo, mos, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         } finally {
             try {
@@ -96,9 +99,9 @@ public class NotifierMail extends ANotifier {
         }
     }
 
-    // SystemNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+    public NotifyResult notifySystemNotification(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime,
+            String exception) {
         if (mail == null) {
             NotifyResult result = new NotifyResult(monitor.getMessage(), getSendInfo());
             result.setError("mail is null");
@@ -111,23 +114,26 @@ public class NotifierMail extends ANotifier {
 
         mail.setSubject(resolveSystemVars(monitor.getSubject(), true));
         mail.setBody(body);
+        Instant start = Instant.now();
         try {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
 
-            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+            LOGGER.info(getSystemNotificationExecutionInfo(start, null, true, event, info.toString()));
 
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    result.setError(getInfo4executeFailed(event, type, monitor.getInfo().toString()));
+                    Instant end = Instant.now();
+                    result.setError(getSystemNotificationExecutionFailedInfo(start, end, event, monitor.getInfo().toString()));
                 }
             }
             return result;
         } catch (Throwable e) {
-            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            Instant end = Instant.now();
+            result.setError(getSystemNotificationExecutionFailedInfo(start, end, event, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         } finally {
             try {
@@ -311,12 +317,12 @@ public class NotifierMail extends ANotifier {
                 jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
             } catch (Throwable e) {
                 LOGGER.error(String.format("%s[%s][job=%s][error on read job notification][%s]%s", Configuration.LOG_INTENT, ANotifier
-                        .getTypeAsString(type), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
+                        .getTypeAsString(type, null), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
             if (HistoryNotification.isJobMailNotificationEmpty(jn)) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[%s][skip][job=%s][job notification][%s]missing settings", Configuration.LOG_INTENT, ANotifier
-                            .getTypeAsString(type), mos.getJobName(), mos.getJobNotification()));
+                            .getTypeAsString(type, null), mos.getJobName(), mos.getJobNotification()));
                 }
                 return null;
             } else if (jn.getMail() == null) {
@@ -324,8 +330,8 @@ public class NotifierMail extends ANotifier {
             }
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[%s][job=%s][use job notification]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(type), mos
-                        .getJobName(), mos.getJobNotification()));
+                LOGGER.debug(String.format("%s[%s][job=%s][use job notification]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(type, null),
+                        mos.getJobName(), mos.getJobNotification()));
             }
 
             // check job notification
@@ -357,7 +363,7 @@ public class NotifierMail extends ANotifier {
                 }
             } catch (Throwable e) {
                 LOGGER.error(String.format("%s[%s][job=%s][error on set mail recipients][%s]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(
-                        type), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
+                        type, null), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
 
         }
@@ -414,7 +420,7 @@ public class NotifierMail extends ANotifier {
     private StringBuilder getSkipCause(NotificationType type, String msg, String jobName, String to, String cc, String bcc,
             List<JobNotificationType> types) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(ANotifier.getTypeAsString(type)).append("]");
+        sb.append("[").append(ANotifier.getTypeAsString(type, null)).append("]");
         sb.append("[").append(msg).append("]");
         sb.append("[job=").append(jobName).append("]");
         if (types != null) {

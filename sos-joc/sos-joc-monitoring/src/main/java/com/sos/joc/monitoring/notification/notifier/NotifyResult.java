@@ -1,7 +1,10 @@
 package com.sos.joc.monitoring.notification.notifier;
 
-public class NotifyResult {
+import java.io.Serializable;
 
+public class NotifyResult implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private final String message;
     private final StringBuilder sendInfo;
     private final StringBuilder skipCause;
@@ -47,26 +50,4 @@ public class NotifyResult {
         return skipCause;
     }
 
-    public class NotifyResultError {
-
-        private final String message;
-        private final Throwable exception;
-
-        public NotifyResultError(String error) {
-            this(error, null);
-        }
-
-        public NotifyResultError(String message, Throwable exception) {
-            this.message = message;
-            this.exception = exception;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public Throwable getException() {
-            return exception;
-        }
-    }
 }

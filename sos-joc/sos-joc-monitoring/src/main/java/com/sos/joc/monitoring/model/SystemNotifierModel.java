@@ -98,7 +98,7 @@ public class SystemNotifierModel {
         for (AMonitor m : notification.getMonitors()) {
             ANotifier n = null;
             try {
-                n = m.createNotifier(i);
+                n = m.createNotifier(i + "");
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);// contains all informations about the type etc
                 result.addMonitor(DBLayerMonitoring.createSystemNotificationMonitor(m, new NotifyResult(m.getMessage(), e)));
@@ -106,7 +106,7 @@ public class SystemNotifierModel {
             }
             if (n != null) {
                 try {
-                    NotifyResult nr = n.notify(event.getType(), m.getTimeZone(), jocId, event, dateTime, exception);
+                    NotifyResult nr = n.notifySystemNotification(event.getType(), m.getTimeZone(), jocId, event, dateTime, exception);
                     if (nr != null && nr.getError() != null) {
                         LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
                     }
@@ -114,8 +114,8 @@ public class SystemNotifierModel {
                     if (nr.getSkipCause() == null) {
                         result.addMonitor(DBLayerMonitoring.createSystemNotificationMonitor(m, nr));
                     } else {
-                        LOGGER.info(String.format("%s[%s][systemNotification][skip]%s%s", Configuration.LOG_INTENT, i, ANotifier.getMainInfo(m), nr
-                                .getSkipCause()));
+                        LOGGER.info(String.format("%s[%s][systemNotification][%s][skip]%s%s", Configuration.LOG_INTENT, i, event.getType(), ANotifier
+                                .getMonitorInfo(m), nr.getSkipCause()));
                     }
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);

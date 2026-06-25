@@ -1,7 +1,10 @@
 package com.sos.joc.monitoring.db;
 
-public class LastWorkflowNotificationDBItemEntity {
+import java.io.Serializable;
 
+public class LastWorkflowNotificationDBItemEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     private Long id;
     private Integer type;
     private String notificationId;

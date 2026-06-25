@@ -13,6 +13,7 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorMail extends AMonitor {
 
+    private static final long serialVersionUID = 1L;
     private static final String ELEMENT_NAME_FROM = "From";
     private static final String ELEMENT_NAME_TO = "To";
     private static final String ELEMENT_NAME_CC = "CC";
@@ -52,8 +53,8 @@ public class MonitorMail extends AMonitor {
     }
 
     @Override
-    public NotifierMail createNotifier(int nr) throws Exception {
-        return new NotifierMail(nr, this);
+    public NotifierMail createNotifier(String identifier) throws Exception {
+        return new NotifierMail(identifier, this);
     }
 
     @Override

@@ -15,6 +15,8 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public class Workflow extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Workflow.class);
 
     private static String ATTRIBUTE_NAME_PATH = "path";

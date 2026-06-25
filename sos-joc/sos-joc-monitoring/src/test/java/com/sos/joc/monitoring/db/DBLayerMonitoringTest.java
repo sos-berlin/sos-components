@@ -102,7 +102,7 @@ public class DBLayerMonitoringTest {
             longerThan.put(b1.getHistoryId(), b1);
 
             saveJocVariable(factory, new SOSSerializer<SerializedHistoryResult>().serializeCompressed2bytes(new SerializedHistoryResult(payloads,
-                    longerThan)));
+                    longerThan, null, null)));
         } catch (Exception e) {
             throw e;
         } finally {

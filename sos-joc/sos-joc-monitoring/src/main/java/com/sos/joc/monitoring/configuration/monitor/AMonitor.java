@@ -19,6 +19,8 @@ import com.sos.monitoring.MonitorType;
 
 public abstract class AMonitor extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AMonitor.class);
 
     public static final String ATTRIBUTE_NAME_REF = "ref";
@@ -55,7 +57,7 @@ public abstract class AMonitor extends AElement {
         this.monitorName = getValue(this.refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }
 
-    public abstract ANotifier createNotifier(int nr) throws Exception;
+    public abstract ANotifier createNotifier(String identifier) throws Exception;
 
     public abstract MonitorType getType();
 

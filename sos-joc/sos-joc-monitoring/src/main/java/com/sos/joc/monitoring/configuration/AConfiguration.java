@@ -17,6 +17,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.monitoring.mail.MailResource;
 import com.sos.joc.log4j2.NotificationAppender;
@@ -36,6 +37,8 @@ public abstract class AConfiguration {
 
     private static final String LOG_FIND_START = LOG_INTENT + "[find][start]";
     private static final String LOG_FIND_END = LOG_INTENT + "[find][end]";
+    private static final String ATTRIBUTE_NAME_NOTIFICATIONS_PARALLELISM = "parallelism";
+    private static final String ATTRIBUTE_NAME_NOTIFICATIONS_RETRY_INCOMPLETE_ON_STARTUP = "retry_incomplete_on_startup";
 
     private static String JOC_TITLE;
     private static String JOC_URI;
@@ -48,6 +51,9 @@ public abstract class AConfiguration {
 
     private SystemNotification systemNotification;
     private boolean hasNotifications;
+    // order notifications - monitor executor parallelism
+    private int notificationParallelism = 10;
+    private boolean retryIncompleteNotificationsOnStartup;
 
     public void loadIfNotExists(String caller, String jocTitle, String jocUri) {
         if (hasNotifications || systemNotification != null) {
@@ -95,10 +101,10 @@ public abstract class AConfiguration {
                 if (hasNotifications || systemNotification != null) {
                     List<String> names = handleMailResources(dbLayer);
                     LOGGER.info(String.format(
-                            "[%s][configuration][SystemNotification=%s][Notifications type %s=%s,%s=%s,%s=%s][JobResources=%s][JOC_URI=%s][JOC_REVERSE_PROXY_URI=%s]",
-                            caller, getSystemNotificationInfo(), NotificationType.ERROR.name(), onError.size(), NotificationType.WARNING.name(),
-                            onWarning.size(), NotificationType.SUCCESS.name(), onSuccess.size(), String.join(",", getJobResources4Log(names)),
-                            JOC_URI, JOC_REVERSE_PROXY_URI));
+                            "[%s][configuration][SystemNotification=%s][Notifications parallelism=%s, retry_incomplete_on_startup=%s, type %s=%s, %s=%s, %s=%s][JobResources=%s][JOC_URI=%s][JOC_REVERSE_PROXY_URI=%s]",
+                            caller, getSystemNotificationInfo(), notificationParallelism, retryIncompleteNotificationsOnStartup,
+                            NotificationType.ERROR.name(), onError.size(), NotificationType.WARNING.name(), onWarning.size(), NotificationType.SUCCESS
+                                    .name(), onSuccess.size(), String.join(",", getJobResources4Log(names)), JOC_URI, JOC_REVERSE_PROXY_URI));
                 } else {
                     LOGGER.info(String.format("[%s][configuration]exists=false", caller));
                 }
@@ -287,6 +293,9 @@ public abstract class AConfiguration {
 
         try {
             Document doc = SOSXML.parse(xml);
+
+            setNotificationsProperties(doc);
+
             NodeList nl = SOSXML.newXPath().selectNodes(doc, "./Configurations/Notifications/Notification");
             if (nl != null) {
                 for (int i = 0; i < nl.getLength(); i++) {
@@ -436,6 +445,37 @@ public abstract class AConfiguration {
         }
     }
 
+    private void setNotificationsProperties(Document doc) {//
+        try {
+            Node n = SOSXML.newXPath().selectNode(doc, "./Configurations/Notifications");
+            if (n != null) {
+                String v = ((Element) n).getAttribute(ATTRIBUTE_NAME_NOTIFICATIONS_PARALLELISM);
+                if (!SOSString.isEmpty(v)) {
+                    try {
+                        notificationParallelism = Integer.parseInt(v);
+                        if (notificationParallelism <= 0) {
+                            notificationParallelism = 1;
+                            LOGGER.info("[set notifications parallelism][configured=" + v + "]using=1");
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("[set notifications parallelism][parallelism=" + v + "]" + e.toString(), e);
+                    }
+                }
+                v = ((Element) n).getAttribute(ATTRIBUTE_NAME_NOTIFICATIONS_RETRY_INCOMPLETE_ON_STARTUP);
+                if (!SOSString.isEmpty(v)) {
+                    try {
+                        retryIncompleteNotificationsOnStartup = Boolean.parseBoolean(v);
+                    } catch (Exception e) {
+                        LOGGER.error("[set notifications retry_incomplete_on_startup][retry_incomplete_on_startup=" + v + "]" + e.toString(), e);
+                    }
+                }
+            }
+        } catch (SOSXMLXPathException e) {
+            LOGGER.error("[setNotificationsProperties]" + e.toString(), e);
+        }
+
+    }
+
     public List<Notification> getOnError() {
         return onError;
     }
@@ -470,5 +510,13 @@ public abstract class AConfiguration {
 
     public boolean hasOnSuccess() {
         return onSuccess.size() > 0;
+    }
+
+    public int getNotificationParallelism() {
+        return notificationParallelism;
+    }
+
+    public boolean retryIncompleteNotificationsOnStartup() {
+        return retryIncompleteNotificationsOnStartup;
     }
 }

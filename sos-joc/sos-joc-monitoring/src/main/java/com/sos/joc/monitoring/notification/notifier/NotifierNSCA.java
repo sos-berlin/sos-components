@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,8 +59,8 @@ public class NotifierNSCA extends ANotifier {
     private String serviceName;
     private Level level;
 
-    public NotifierNSCA(int nr, MonitorNSCA monitor) throws Exception {
-        super.setNr(nr);
+    public NotifierNSCA(String identifier, MonitorNSCA monitor) throws Exception {
+        super.setIdentifier(identifier);
         this.monitor = monitor;
         init();
     }
@@ -73,11 +74,11 @@ public class NotifierNSCA extends ANotifier {
     public void close() {
     }
 
-    // OrderNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+    public NotifyResult notifyOrderNotification(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
 
+        Instant start = Instant.now();
         try {
             set(type, timeZone, mo, mos, mn);
             set(type);
@@ -96,21 +97,23 @@ public class NotifierNSCA extends ANotifier {
             info.append("[service host=").append(payload.getHostname()).append("]");
             info.append("[level=").append(payload.getLevel()).append("]");
             info.append(payload.getMessage());
-            LOGGER.info(getInfo4execute(true, mo, mos, type, info.toString()));
+            LOGGER.info(getOrderNotificationExecutionInfo(start, null, true, mo, mos, info.toString()));
 
             sender.send(payload);
             return new NotifyResult(payload.getMessage(), getSendInfo());
         } catch (Throwable e) {
+            Instant end = Instant.now();
             NotifyResult result = new NotifyResult(message, getSendInfo());
-            result.setError(getInfo4executeFailed(mo, mos, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            result.setError(getOrderNotificationExecutionFailedInfo(start, end, mo, mos, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         }
     }
 
-    // SystemNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+    public NotifyResult notifySystemNotification(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime,
+            String exception) {
 
+        Instant start = Instant.now();
         try {
             set(type, timeZone, jocId, event, dateTime, exception);
             set(type);
@@ -129,13 +132,14 @@ public class NotifierNSCA extends ANotifier {
             info.append("[service host=").append(payload.getHostname()).append("]");
             info.append("[level=").append(payload.getLevel()).append("]");
             info.append(payload.getMessage());
-            LOGGER.info(getInfo4execute(true, event, type, info.toString()));
+            LOGGER.info(getSystemNotificationExecutionInfo(start, null, true, event, info.toString()));
 
             sender.send(payload);
             return new NotifyResult(payload.getMessage(), getSendInfo());
         } catch (Throwable e) {
+            Instant end = Instant.now();
             NotifyResult result = new NotifyResult(message, getSendInfo());
-            result.setError(getInfo4executeFailed(event, type, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
+            result.setError(getSystemNotificationExecutionFailedInfo(start, end, event, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
         }
     }
