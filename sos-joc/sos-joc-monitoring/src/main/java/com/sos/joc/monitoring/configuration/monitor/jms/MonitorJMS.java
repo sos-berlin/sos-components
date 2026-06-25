@@ -18,6 +18,8 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorJMS extends AMonitor {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MonitorJMS.class);
 
     private static int DEFAULT_ACKNOWLEDGE_MODE = Session.CLIENT_ACKNOWLEDGE;
@@ -72,8 +74,8 @@ public class MonitorJMS extends AMonitor {
     }
 
     @Override
-    public NotifierJMS createNotifier(int nr) throws Exception {
-        return new NotifierJMS(nr, this);
+    public NotifierJMS createNotifier(String identifier) throws Exception {
+        return new NotifierJMS(identifier, this);
     }
 
     @Override

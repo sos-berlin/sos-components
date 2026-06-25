@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.model;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
-import com.sos.joc.cluster.bean.history.HistoryOrderBean;
-import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -23,11 +22,15 @@ import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
+import com.sos.joc.monitoring.model.bean.MonitorOrderResult;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarn;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.OrderNotificationRange;
 
-public class OrderNotifyAnalyzer {
+public class OrderNotifyAnalyzer implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderNotifyAnalyzer.class);
 
@@ -49,31 +52,31 @@ public class OrderNotifyAnalyzer {
     // TODO
     private boolean checkPeriodAge = false;
 
-    protected boolean analyze(OrderNotificationRange range, DBLayerMonitoring dbLayer, List<Notification> list, HistoryOrderBean hob,
-            HistoryOrderStepBean hosb, NotificationType type, List<HistoryOrderStepResultWarn> warnings) throws Exception {
+    protected boolean analyze(OrderNotificationRange range, DBLayerMonitoring dbLayer, List<Notification> list, MonitorOrderResult mor,
+            MonitorOrderStepResult mosr, NotificationType type, List<MonitorOrderStepResultWarn> warnings) throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         switch (range) {
         case WORKFLOW_JOB:
-            orderId = hosb.getHistoryOrderId();
-            stepId = hosb.getHistoryId();
-            workflowPosition = hosb.getWorkflowPosition();
-            controllerId = hosb.getControllerId();
+            orderId = mosr.getStep().getHistoryOrderId();
+            stepId = mosr.getStep().getHistoryId();
+            workflowPosition = mosr.getStep().getWorkflowPosition();
+            controllerId = mosr.getStep().getControllerId();
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, range, type, toString(list),
-                        SOSString.toString(hosb)));
+                        SOSString.toString(mosr)));
             }
             break;
         case WORKFLOW:
-            orderId = hob.getHistoryId();
-            stepId = hob.getCurrentHistoryOrderStepId();
-            workflowPosition = hob.getWorkflowPosition();
-            controllerId = hob.getControllerId();
+            orderId = mor.getOrder().getHistoryId();
+            stepId = mor.getOrder().getCurrentHistoryOrderStepId();
+            workflowPosition = mor.getOrder().getWorkflowPosition();
+            controllerId = mor.getOrder().getControllerId();
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, range, type, toString(list),
-                        SOSString.toString(hob)));
+                        SOSString.toString(mor)));
             }
             break;
         }

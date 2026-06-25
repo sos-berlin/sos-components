@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +39,8 @@ public class NotifierCommand extends ANotifier {
         COMMAND_EXECUTER_WORKING_DIR = getWorkingDir();
     }
 
-    public NotifierCommand(int nr, MonitorCommand monitor) {
-        super.setNr(nr);
+    public NotifierCommand(String identifier, MonitorCommand monitor) {
+        super.setIdentifier(identifier);
         this.monitor = monitor;
     }
 
@@ -48,50 +49,53 @@ public class NotifierCommand extends ANotifier {
         return monitor;
     }
 
-    // OrderNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
+    public NotifyResult notifyOrderNotification(NotificationType type, TimeZone timeZone, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos,
             DBItemNotification mn) {
 
         set(type, timeZone, mo, mos, mn);
         String cmd = resolve(monitor.getCommand(), false);
-        LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
+        Instant start = Instant.now();
+        LOGGER.info(getOrderNotificationExecutionInfo(start, null, true, mo, mos, cmd));
 
         SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd), COMMAND_EXECUTER_WORKING_DIR);
         NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
+        Instant end = Instant.now();
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
             info.append(commandResult);
 
-            result.setError(getInfo4executeFailed(mo, mos, type, info.toString()));
+            result.setError(getOrderNotificationExecutionFailedInfo(start, end, mo, mos, info.toString()), commandResult.getException());
             return result;
         }
 
-        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, mo, mos, type, commandResult.getCommand()));
+        LOGGER.info(Configuration.LOG_INTENT_2 + getOrderNotificationExecutionInfo(start, end, false, mo, mos, commandResult.getCommand()));
         return result;
     }
 
-    // SystemNotification
     @Override
-    public NotifyResult notify(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime, String exception) {
+    public NotifyResult notifySystemNotification(NotificationType type, TimeZone timeZone, String jocId, SystemMonitoringEvent event, Date dateTime,
+            String exception) {
 
         set(type, timeZone, jocId, event, dateTime, exception);
         String cmd = resolveSystemVars(monitor.getCommand(), false);
-        LOGGER.info(getInfo4execute(true, event, type, cmd));
+        Instant start = Instant.now();
+        LOGGER.info(getSystemNotificationExecutionInfo(start, null, true, event, cmd));
 
         SOSCommandResult commandResult = JOCSOSShell.executeCommand(cmd, TIMEOUT, getEnvVariables(cmd), COMMAND_EXECUTER_WORKING_DIR);
         NotifyResult result = new NotifyResult(commandResult.getCommand(), getSendInfo());
+        Instant end = Instant.now();
         if (commandResult.hasError()) {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
             info.append(commandResult);
 
-            result.setError(getInfo4executeFailed(event, type, info.toString()));
+            result.setError(getSystemNotificationExecutionFailedInfo(start, end, event, info.toString()));
             return result;
         }
 
-        LOGGER.info(Configuration.LOG_INTENT_2 + getInfo4execute(false, event, type, commandResult.getCommand()));
+        LOGGER.info(Configuration.LOG_INTENT_2 + getSystemNotificationExecutionInfo(start, end, false, event, commandResult.getCommand()));
         return result;
     }
 

@@ -24,6 +24,8 @@ import com.sos.monitoring.notification.NotificationType;
 
 public class Notification extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
 
     private static final String ELEMENT_NAME_NOTIFICATION_MONITORS = "NotificationMonitors";
@@ -170,7 +172,7 @@ public class Notification extends AElement {
         if (monitors == null || monitors.size() == 0) {
             return "";
         }
-        return monitors.stream().map(n -> n.getClass().getSimpleName()).collect(Collectors.joining(","));
+        return monitors.stream().map(n -> n.getClass().getSimpleName()).collect(Collectors.joining(", "));
     }
 
     public List<Workflow> getWorkflows() {

@@ -14,6 +14,8 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public class WorkflowJob extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowJob.class);
 
     private static String ATTRIBUTE_NAME_NAME = "name";

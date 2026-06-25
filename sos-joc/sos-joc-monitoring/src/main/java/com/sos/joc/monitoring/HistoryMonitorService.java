@@ -125,7 +125,7 @@ public class HistoryMonitorService extends AJocActiveMemberService {
         // 1-history monitoring, 2 - configuration thread
         factory = new JocClusterHibernateFactory(configFile, 1, 2);
         factory.setIdentifier(MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY);
-        factory.setAutoCommit(false);
+        factory.setAutoCommit(false); // DBLayerMonitoring - executes update/delete statements
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getMonitoringClassMapping());
         factory.build();

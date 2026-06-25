@@ -1,7 +1,7 @@
 package com.sos.cluster;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -62,34 +62,34 @@ public class ThreadPoolTest {
     private ThreadPoolExecutor createThreadPoolExecutor() {
         ThreadPoolExecutor r = null;
 
-        int maxThreads = 2;
+        int maxThreads = 5;
 
         // r = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
         // r = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-        // r = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-        // r = new ThreadPoolExecutor(0, maxThreads, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+        // r = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+        r = new ThreadPoolExecutor(0, maxThreads, 10L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
         // r = new ThreadPoolExecutor(maxThreads, maxThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
-        r = new ThreadPoolExecutor(maxThreads, maxThreads, 60L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        // r = new ThreadPoolExecutor(maxThreads, maxThreads, 10L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 
         return r;
     }
 
     @Ignore
     @Test
-    public void testFixedTreadPool() throws Exception {
+    public void testThreadPool() throws Exception {
         ThreadPoolExecutor threadPool = createThreadPoolExecutor();
 
         submitTask(threadPool, "1");
         submitTask(threadPool, "2");
         submitTask(threadPool, "3");
 
-        setPoolSize(threadPool, 5);
+        // setPoolSize(threadPool, 5);
 
-        submitTask(threadPool, "4");
-        submitTask(threadPool, "5");
-        submitTask(threadPool, "6");
+        // submitTask(threadPool, "4");
+        // submitTask(threadPool, "5");
+        // submitTask(threadPool, "6");
 
-        // setPoolSize(threadPool, 1);
+        setPoolSize(threadPool, 1);
 
         // submitTask(threadPool, "7");
         // submitTask(threadPool, "8");
@@ -103,7 +103,8 @@ public class ThreadPoolTest {
             @Override
             public void run() {
 
-                LOGGER.info(String.format("[run][%s][poolSize=%s]start ...", identifier, threadPool.getPoolSize()));
+                LOGGER.info(String.format("[run][%s][poolSize=%s][activeCount=%s]start ...", identifier, threadPool.getPoolSize(), threadPool
+                        .getActiveCount()));
                 waitFor(5);
                 LOGGER.info(String.format("[run][%s]end", identifier));
             }

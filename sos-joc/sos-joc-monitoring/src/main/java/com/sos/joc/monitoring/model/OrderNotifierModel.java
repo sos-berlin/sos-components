@@ -2,12 +2,24 @@ package com.sos.joc.monitoring.model;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,13 +27,13 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.concurrency.SOSNamedForkJoinPoolThreadFactory;
 import com.sos.history.JobWarning;
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
-import com.sos.joc.cluster.bean.history.HistoryOrderBean;
-import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
@@ -37,9 +49,13 @@ import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.ToNotify;
+import com.sos.joc.monitoring.model.bean.AMonitorResult;
+import com.sos.joc.monitoring.model.bean.MonitorEmptyResult;
+import com.sos.joc.monitoring.model.bean.MonitorOrderResult;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarn;
+import com.sos.joc.monitoring.model.bean.NotifierTask;
+import com.sos.joc.monitoring.model.bean.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationType;
@@ -51,125 +67,239 @@ public class OrderNotifierModel {
 
     private static final String LOG_IDENTIFIER = String.format("[%s][%s]", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY,
             MonitorService.NOTIFICATION_IDENTIFIER);
-    private static final String IDENTIFIER = String.format("%s_%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY,
-            MonitorService.NOTIFICATION_IDENTIFIER);
 
-    private final SOSHibernateFactory factory;
+    private static final String IDENTIFIER = String.format("%s_n", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY);
+    private static final String IDENTIFIER_NOTIFICATION_MONITOR_EXECUTOR = IDENTIFIER + "_ex";
+    private static final String IDENTIFIER_NOTIFICATION_DB = IDENTIFIER + "_db";
 
-    private DBLayerMonitoring dbLayer;
+    private static final AMonitorResult CANDIDATES_WAKEUP_ENTRY = new MonitorEmptyResult();
+    private final Path hibernateConfigFile;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    private SOSHibernateFactory factory;
+    // Lazy initialization: initialized only if Notification is used in the current JS7 environment
+    // Queue of entries to be processed. BlockingQueue.take() waits efficiently until an entry becomes available.
+    private BlockingQueue<AMonitorResult> candidates;
+    // Active notifiers
+    private Set<NotifierTask> active;
+    // Dedicated dispatcher thread that consumes queue entries and starts notification processing in the background.
+    private Thread dispatcherThread;
+    // Monitor service thread group
+    private ThreadGroup threadGroup;
+    // Executor for parallel notification delivery (email, script, etc.).
+    private ExecutorService notificationMonitorExecutor;
+    // Single-threaded executor for persisting notification results from notificationExecutor.
+    private ExecutorService dbUpdateExecutor;
+
     private AtomicBoolean closed = new AtomicBoolean();
 
-    private ExecutorService threadPool;
-
     protected OrderNotifierModel(ThreadGroup threadGroup, Path hibernateConfigFile) {
-        MonitorService.setLogger();
+        this.threadGroup = threadGroup;
+        this.hibernateConfigFile = hibernateConfigFile;
+    }
 
-        this.factory = createFactory(hibernateConfigFile);
-        if (factory == null) {
-            LOGGER.info(String.format("[%s][skip]due to the database factory errors", LOG_IDENTIFIER));
-        } else {
-            dbLayer = new DBLayerMonitoring(IDENTIFIER);
-            threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(threadGroup, IDENTIFIER));
+    private void initIfNeeded() {
+        if (initialized.compareAndSet(false, true)) {
+            MonitorService.setLogger();
+
+            factory = createFactory();
+            candidates = new LinkedBlockingQueue<>();
+            active = ConcurrentHashMap.newKeySet();
+
+            if (factory == null) {
+                LOGGER.info(String.format("%s[skip]due to the database factory errors", LOG_IDENTIFIER));
+            } else {
+                notificationMonitorExecutor = new ForkJoinPool(Configuration.INSTANCE.getNotificationParallelism(),
+                        new SOSNamedForkJoinPoolThreadFactory(IDENTIFIER_NOTIFICATION_MONITOR_EXECUTOR), null, true);
+
+                dbUpdateExecutor = Executors.newSingleThreadExecutor(new JocClusterThreadFactory(threadGroup, IDENTIFIER_NOTIFICATION_DB));
+
+                dispatcherThread = new Thread(this.threadGroup, this::dispatchLoop, IDENTIFIER);
+                dispatcherThread.setDaemon(true); // does not block JVM shutdown
+                dispatcherThread.start();
+            }
         }
     }
 
-    protected void notify(ToNotify toNotifyPayloads, ToNotify toNotifyExtraStepsWarnings) {
-        if (!Configuration.INSTANCE.hasNotifications() || factory == null) {
+    /** Dispatcher loop: processes entries continuously.<br/>
+     * Uses BlockingQueue.take() to block efficiently when the queue is empty.<br/>
+     * - This avoids any CPU busy-wait and minimizes memory overhead.<br/>
+     * - Note: take() blocks until an entry is available - element is removed from the queue. */
+    private void dispatchLoop() {
+        MonitorService.setLogger();
+
+        if (!initializeFactory()) {
             return;
         }
 
-        Runnable task = new Runnable() {
-
-            @Override
-            public void run() {
-                MonitorService.setLogger();
-                if (!closed.get()) {
-                    notifySteps(toNotifyPayloads.getSteps());
-                    notifyOrders(toNotifyPayloads.getErrorOrders(), toNotifyPayloads.getSuccessOrders());
-                    notifyStepsWarnings(toNotifyExtraStepsWarnings.getSteps());
+        while (!closed.get()) {
+            try {
+                AMonitorResult r = candidates.take();
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("%s[dispatchLoop]%s", LOG_IDENTIFIER, SOSString.toString(r)));
                 }
+                if (r == CANDIDATES_WAKEUP_ENTRY) { // == instead of equals is ok
+                    continue; // go to check closed.get()
+                }
+                if (r != null) {
+                    if (r.isStep()) { // STEP
+                        MonitorOrderStepResult step = (MonitorOrderStepResult) r;
+                        if (r.isWarnStep()) {
+                            notifyStepWarning(step);
+                        } else {
+                            notifyStep(step);
+                        }
+                    } else { // ORDER
+                        MonitorOrderResult order = (MonitorOrderResult) r;
+                        if (order.isErrorOrder()) {
+                            notifyOrder(order, NotificationType.ERROR);
+                        } else {
+                            notifyOrder(order, NotificationType.SUCCESS);
+                        }
+                    }
+                    cleanupActive();
+                }
+            } catch (InterruptedException e) {
+                break;
             }
-        };
-        if (!closed.get()) {
-            threadPool.submit(task);
         }
     }
 
-    private void notifySteps(List<HistoryOrderStepResult> steps) {
-        for (HistoryOrderStepResult step : steps) {
-            notifyStep(step);
+    protected void notify(ToNotify toNotifyPayloads, ToNotify toNotifyLongerThanNotPayloadWarnings) {
+        if (!Configuration.INSTANCE.hasNotifications()) {
+            return;
+        }
+
+        initIfNeeded();
+
+        // PAYLOAD: steps
+        for (MonitorOrderStepResult step : toNotifyPayloads.getSteps()) {
+            step.setIsStep();
+            candidates.add(step);
+        }
+        // PAYLOAD: orders (ERROR, SUCCESS)
+        for (MonitorOrderResult order : toNotifyPayloads.getErrorOrders()) {
+            order.isErrorOrder();
+            candidates.add(order);
+        }
+        for (MonitorOrderResult order : toNotifyPayloads.getSuccessOrders()) {
+            candidates.add(order);
+        }
+        // NOT PAYLOAD: longerThan warning steps
+        for (MonitorOrderStepResult step : toNotifyLongerThanNotPayloadWarnings.getSteps()) {
+            step.setIsWarnStep();
+            candidates.add(step);
         }
     }
 
-    private void notifyStepsWarnings(List<HistoryOrderStepResult> steps) {
-        for (HistoryOrderStepResult step : steps) {
-            notifyStepWarning(step);
-        }
-    }
-
-    private void notifyOrders(List<HistoryOrderBean> error, List<HistoryOrderBean> success) {
-        for (HistoryOrderBean order : error) {
-            notifyOrder(order, NotificationType.ERROR);
-        }
-        for (HistoryOrderBean order : success) {
-            notifyOrder(order, NotificationType.SUCCESS);
-        }
-    }
-
-    private void notifyStep(HistoryOrderStepResult r) {
-        List<Notification> result;
-        HistoryOrderStepBean hosb = r.getStep();
+    private void notifyStep(MonitorOrderStepResult r) {
         OrderNotificationRange range = OrderNotificationRange.WORKFLOW_JOB;
-
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (r.isCompleted()) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[notifyStep][skip][completed=true][%s]%s", range, r.toString()));
+            }
+            return;
+        }
+
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[notifyStep][start][%s]%s", range, r.toString()));
         }
 
         notifyStepWarning(r);
 
-        if (hosb.getError()) {
-            result = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), hosb.getControllerId(), hosb
-                    .getWorkflowPath(), hosb.getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(range, result, null, hosb, NotificationType.ERROR, null);
+        List<Notification> configuredNotifications;
+        if (r.getStep().getError()) {
+            // ERROR
+            if (!r.isErrorCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
+                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
+                                .getCriticality(), r.getStep().getReturnCode());
+                notify(range, configuredNotifications, null, r, NotificationType.ERROR, null);
+                r.setErrorCompleted();
+            }
         } else {
             // RECOVERY
-            result = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), hosb.getControllerId(), hosb
-                    .getWorkflowPath(), hosb.getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(range, result, null, hosb, NotificationType.RECOVERED, null);
+            if (!r.isRecoveryCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
+                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
+                                .getCriticality(), r.getStep().getReturnCode());
+                notify(range, configuredNotifications, null, r, NotificationType.RECOVERED, null);
+                r.setRecoveryCompleted();
+            }
             // SUCCESS
-            result = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnSuccess(), hosb.getControllerId(), hosb
-                    .getWorkflowPath(), hosb.getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(range, result, null, hosb, NotificationType.SUCCESS, null);
+            if (!r.isSuccessCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnSuccess(), r.getStep()
+                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
+                                .getCriticality(), r.getStep().getReturnCode());
+                notify(range, configuredNotifications, null, r, NotificationType.SUCCESS, null);
+                r.setSuccessCompleted();
+            }
         }
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[notifyStep][end][%s]%s", range, r.toString()));
         }
     }
 
-    private void notifyOrder(HistoryOrderBean hob, NotificationType type) {
-        List<Notification> result;
+    private void notifyStepWarning(MonitorOrderStepResult r) {
+        if (Configuration.INSTANCE.getOnWarning().size() > 0 && r.getWarnings().size() > 0) {
+            if (r.isWarnCompleted()) {
+                return;
+            }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[notifyStepWarning][start]warnings=%s", r.getWarnings().size()));
+            }
+            OrderNotificationRange range = OrderNotificationRange.WORKFLOW_JOB;
+            List<Notification> configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnWarning(), r
+                    .getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
+                            .getCriticality(), r.getStep().getReturnCode());
+            notify(range, configuredNotifications, null, r, NotificationType.WARNING, r.getWarnings());
+            r.setWarnCompleted();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[notifyStepWarning][end]warnings=%s", r.getWarnings().size()));
+            }
+        }
+    }
+
+    private void notifyOrder(MonitorOrderResult r, NotificationType type) {
         OrderNotificationRange range = OrderNotificationRange.WORKFLOW;
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyOrder][start][%s][%s]%s", range, type, SOSString.toString(hob)));
+        if (r.isCompleted()) {
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[notifyOrder][skip][completed=true][%s]%s", range, r.toString()));
+            }
+            return;
         }
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[notifyOrder][start][%s][%s]%s", range, type, SOSString.toString(r)));
+        }
+
+        List<Notification> configuredNotifications;
         switch (type) {
         case ERROR:
-            result = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE.getOnError(), hob
-                    .getControllerId(), hob.getWorkflowPath());
-            notify(range, result, hob, null, NotificationType.ERROR, null);
+            if (!r.isErrorCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
+                        .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                notify(range, configuredNotifications, r, null, NotificationType.ERROR, null);
+                r.setErrorCompleted();
+            }
             break;
         case SUCCESS:
             // RECOVERY
-            result = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE.getOnError(), hob
-                    .getControllerId(), hob.getWorkflowPath());
-            notify(range, result, hob, null, NotificationType.RECOVERED, null);
+            if (!r.isRecoveryCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
+                        .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                notify(range, configuredNotifications, r, null, NotificationType.RECOVERED, null);
+                r.setRecoveryCompleted();
+            }
             // SUCCESS
-            result = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE.getOnSuccess(), hob
-                    .getControllerId(), hob.getWorkflowPath());
-            notify(range, result, hob, null, NotificationType.SUCCESS, null);
-
+            if (!r.isSuccessCompleted()) {
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
+                        .getOnSuccess(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                notify(range, configuredNotifications, r, null, NotificationType.SUCCESS, null);
+                r.setSuccessCompleted();
+            }
             break;
         default:
             if (isDebugEnabled) {
@@ -178,59 +308,77 @@ public class OrderNotifierModel {
             break;
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyOrder][end][%s][%s]%s", range, type, SOSString.toString(hob)));
+            LOGGER.debug(String.format("[notifyOrder][end][%s][%s]%s", range, type, SOSString.toString(r)));
         }
     }
 
-    private boolean notify(OrderNotificationRange range, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb,
-            NotificationType type, List<HistoryOrderStepResultWarn> warnings) {
-        if (list.size() == 0) {
+    private boolean notify(OrderNotificationRange range, List<Notification> configuredNotifications, MonitorOrderResult mor,
+            MonitorOrderStepResult mosr, NotificationType type, List<MonitorOrderStepResultWarn> warnings) {
+        if (configuredNotifications.size() == 0) {
             return false;
         }
 
         OrderNotifyAnalyzer analyzer = new OrderNotifyAnalyzer();
-        try {
-            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
 
-            if (!analyzer.analyze(range, dbLayer, list, hob, hosb, type, warnings)) {
+        DBLayerMonitoring dbLayer = new DBLayerMonitoring(IDENTIFIER);
+        try {
+            dbLayer.setSession(factory.openStatelessSession());
+            dbLayer.getSession().beginTransaction();
+
+            if (!analyzer.analyze(range, dbLayer, configuredNotifications, mor, mosr, type, warnings)) {
                 return false;
             }
 
-            dbLayer.getSession().beginTransaction();
             Map<Long, DBItemMonitoringOrderStep> steps = new HashMap<>();
             boolean notified = false;
             boolean isWarning = NotificationType.WARNING.equals(type) && warnings != null;
-            for (Notification notification : list) {
+
+            List<CompletableFuture<NotifierTask>> allFutures = new ArrayList<>();
+            for (Notification notification : configuredNotifications) {
                 if (isWarning) {
-                    for (HistoryOrderStepResultWarn warning : warnings) {
-                        if (notify(range, analyzer, notification, type, steps, warning)) {
+                    for (MonitorOrderStepResultWarn warning : warnings) {
+                        List<CompletableFuture<NotifierTask>> futures = notify(dbLayer, range, analyzer, notification, type, steps, warning);
+                        if (futures != null) {
                             notified = true;
+                            allFutures.addAll(futures);
                         }
                     }
                 } else {
-                    if (notify(range, analyzer, notification, type, steps, null)) {
+                    List<CompletableFuture<NotifierTask>> futures = notify(dbLayer, range, analyzer, notification, type, steps, null);
+                    if (futures != null) {
                         notified = true;
+                        allFutures.addAll(futures);
                     }
                 }
             }
             dbLayer.getSession().commit();
+            dbLayer.close();
+            dbLayer = null;
+
+            // dbUpdateExecutor.execute(() -> {
+            updateMonitors(allFutures);
+            // });
+
             return notified;
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
+        } catch (Exception e) {
+            LOGGER.error(LOG_IDENTIFIER + e.toString(), e);
             dbLayer.rollback();
             return false;
         } finally {
-            dbLayer.close();
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
         }
     }
 
-    private boolean notify(OrderNotificationRange range, OrderNotifyAnalyzer analyzer, Notification notification, NotificationType type,
-            Map<Long, DBItemMonitoringOrderStep> steps, HistoryOrderStepResultWarn warning) throws Exception {
+    private List<CompletableFuture<NotifierTask>> notify(DBLayerMonitoring dbLayer, OrderNotificationRange range, OrderNotifyAnalyzer analyzer,
+            Notification notification, NotificationType type, Map<Long, DBItemMonitoringOrderStep> steps, MonitorOrderStepResultWarn warning)
+            throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         DBItemMonitoringOrderStep os = analyzer.getOrderStep();
         Long recoveredId = null;
-        JobWarning warn = JobWarning.NONE;
+        JobWarning warnReason = JobWarning.NONE;
         String warnText = null;
         switch (type) {
         case ERROR:
@@ -240,7 +388,7 @@ public class OrderNotifierModel {
             if (analyzer.getToRecovery() != null) {
                 LastWorkflowNotificationDBItemEntity r = analyzer.getToRecovery().get(notification.getNotificationId());
                 if (r == null) {
-                    return false;
+                    return null;
                 }
                 recoveredId = r.getId();
                 if (steps.containsKey(r.getStepId())) {
@@ -249,11 +397,12 @@ public class OrderNotifierModel {
                     os = dbLayer.getMonitoringOrderStep(r.getStepId(), true);
                     if (os == null) {
                         if (isDebugEnabled) {
+                            JobWarning wr = warning == null ? null : warning.getReason();
                             LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip][monitoringOrderStep not found]%s",
-                                    Configuration.LOG_INTENT, notification.getNotificationId(), range, ANotifier.getTypeAsString(type), r
+                                    Configuration.LOG_INTENT, notification.getNotificationId(), range, ANotifier.getTypeAsString(type, wr), r
                                             .getStepId()));
                         }
-                        return false;
+                        return null;
                     }
                     steps.put((r.getStepId()), os);
                 }
@@ -263,100 +412,193 @@ public class OrderNotifierModel {
             if (warning == null || warning.getReason() == null) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip]warning or warning reason is null", Configuration.LOG_INTENT,
-                            notification.getNotificationId(), range, ANotifier.getTypeAsString(type)));
+                            notification.getNotificationId(), range, ANotifier.getTypeAsString(type, null)));
                 }
-                return false;
+                return null;
             }
+
             if (analyzer.getSentWarnings() != null && analyzer.getSentWarnings().containsKey(notification.getNotificationId())) {
                 if (analyzer.getSentWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("%s[notification id=%s][%s][%s %s][skip][already sent]%s", Configuration.LOG_INTENT, notification
-                                .getNotificationId(), range, ANotifier.getTypeAsString(type), warning.getReason(), analyzer.getSentWarnings()));
+                                .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), warning.getReason(), analyzer
+                                        .getSentWarnings()));
                     }
-                    return false;
+                    return null;
                 }
             }
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[notification id=%s][%s][%s][warning=%s]sentWarnings=%s", Configuration.LOG_INTENT, notification
-                        .getNotificationId(), range, ANotifier.getTypeAsString(type), SOSString.toString(warning), analyzer.getSentWarnings()));
+                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), SOSString.toString(warning), analyzer
+                                .getSentWarnings()));
             }
 
-            warn = warning.getReason();
+            warnReason = warning.getReason();
             warnText = warning.getText();
             break;
         case ACKNOWLEDGED:
-            return false;
-        }
-
-        if (notification.getMonitors().size() == 0) {
-            LOGGER.info(String.format("[notification id=%s][%s][%s][store to database only]%s%s", notification.getNotificationId(), range, ANotifier
-                    .getTypeAsString(type), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
-        } else {
-            LOGGER.info(String.format("[notification id=%s][%s][%s][send to %s monitors]%s", notification.getNotificationId(), range, ANotifier
-                    .getTypeAsString(type), notification.getMonitors().size(), notification.getMonitorsAsString()));
+            return null;
         }
 
         DBItemNotification mn = null;
         try {
-            mn = dbLayer.saveNotification(notification, analyzer, range, type, recoveredId, warn, warnText);
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[notification id=%s][%s][%s]%s[failed]%s", notification.getNotificationId(), range, ANotifier.getTypeAsString(
-                    type), ANotifier.getInfo(analyzer), e.toString()), e);
-        }
-        int i = 1;
-
-        if (os != null) {
-            try {
-                os.setTags(new InventoryJobTagDBLayer(dbLayer.getSession()).getGroupedTagsOfJob(analyzer.getOrder().getWorkflowName(), os
-                        .getJobName()));
-            } catch (Throwable e) {
-                LOGGER.error(String.format("[notification id=%s][%s][%s]%s[step][setTags][failed]%s", notification.getNotificationId(), range,
-                        ANotifier.getTypeAsString(type), ANotifier.getInfo(analyzer), e.toString()), e);
+            mn = dbLayer.saveNotification(notification, analyzer, range, type, recoveredId, warnReason, warnText);
+            if (notification.getMonitors().size() == 0) {
+                LOGGER.info(String.format("[%s][notification id=%s][%s][%s][store to database only]%s%s", mn.getId(), notification
+                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), (warnText == null ? ""
+                                : warnText)));
+            } else {
+                LOGGER.info(String.format("[%s][notification id=%s][%s][%s][send to %s monitors %s]%s%s", mn.getId(), notification
+                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), notification.getMonitors().size(), notification
+                                .getMonitorsAsString(), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
             }
+        } catch (Exception e) {
+            LOGGER.error(String.format("%s[notification id=%s][%s][%s]%s[failed]%s", LOG_IDENTIFIER, notification.getNotificationId(), range,
+                    ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), e.toString()), e);
         }
 
-        for (AMonitor m : notification.getMonitors()) {
-            ANotifier n = null;
+        if (os != null && analyzer.getOrder() != null) {
             try {
-                n = m.createNotifier(i);
-            } catch (Throwable e) {
-                LOGGER.error(e.toString(), e);// contains all informations about the type etc
-                if (mn == null) {
-                    LOGGER.info(String.format("%s[%s][notification id=%s][%s]%s[skip save notification monitor]due to save notification failed",
-                            Configuration.LOG_INTENT, i, notification.getNotificationId(), range, ANotifier.getInfo(analyzer, m, type)));
-                } else {
-                    dbLayer.saveNotificationMonitor(mn, m, e);
+                if (os.getTags() == null) {
+                    os.setTags(new InventoryJobTagDBLayer(dbLayer.getSession()).getGroupedTagsOfJob(analyzer.getOrder().getWorkflowName(), os
+                            .getJobName()));
                 }
-                n = null;
+            } catch (Exception e) {
+                LOGGER.error(String.format("%s[notification id=%s][%s][%s]%s[step][setTags][failed]%s", LOG_IDENTIFIER, notification
+                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), e.toString()), e);
             }
-            if (n != null) {
-                try {
-                    NotifyResult nr = n.notify(type, m.getTimeZone(), analyzer.getOrder(), os, mn);
-                    if (nr != null && nr.getError() != null) {
-                        LOGGER.error(nr.getError().getMessage(), nr.getError().getException());
-                    }
-                    if (mn == null) {
-                        LOGGER.info(String.format("%s[%s][notification id=%s][%s]%s[skip save notification result]due to save notification failed",
-                                Configuration.LOG_INTENT, i, notification.getNotificationId(), range, ANotifier.getInfo(analyzer, m, type)));
-                    } else {
-                        if (nr.getSkipCause() == null) {
-                            dbLayer.saveNotificationMonitor(mn, m, nr);
-                        } else {
-                            LOGGER.info(String.format("%s[%s][notification id=%s][%s][skip]%s%s%s", Configuration.LOG_INTENT, i, notification
-                                    .getNotificationId(), range, ANotifier.getMainInfo(m), nr.getSkipCause(), ANotifier.getInfo(analyzer)));
-                        }
-                    }
-                } catch (Throwable e) {
-                    LOGGER.error(e.toString(), e);
-                } finally {
-                    n.close();
-                }
-            }
-            i++;
         }
         postEvent(analyzer.getControllerId(), mn, analyzer.getOrder(), os);
-        return true;
+
+        return notifyMonitors(range, analyzer, notification, type, os, warnReason, mn);
+    }
+
+    private List<CompletableFuture<NotifierTask>> notifyMonitors(OrderNotificationRange range, OrderNotifyAnalyzer analyzer,
+            Notification notification, NotificationType type, DBItemMonitoringOrderStep os, JobWarning warnReason, DBItemNotification mn) {
+        List<CompletableFuture<NotifierTask>> futures = new ArrayList<>();
+        int i = 0;
+        Instant now = Instant.now();
+        for (final AMonitor m : notification.getMonitors()) {
+            final int index = ++i;
+            String identifier = mn.getId() + "][" + index + "][" + range + "][" + ANotifier.getTypeAsString(type, warnReason);
+
+            final NotifierTask task = new NotifierTask(range, analyzer, notification, type, m, identifier, mn, os, warnReason);
+            task.setSubmitted(now);
+            active.add(task);
+
+            if (closed.get()) {
+                continue;
+            }
+
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                // return executeMonitorNotification(range, analyzer, notification, type, m, identifier, mn, os, warnReason);
+                return executeMonitorNotification(task);
+            }, notificationMonitorExecutor));
+        }
+        return futures;
+    }
+
+    private void updateMonitors(List<CompletableFuture<NotifierTask>> futures) {
+        for (CompletableFuture<NotifierTask> task : futures) {
+            task.thenAcceptAsync(t -> {
+                MonitorService.setLogger();
+                DBLayerMonitoring dbLayer = null;
+                try {
+                    if (t.isSaveNotificationMonitor()) {
+                        dbLayer = new DBLayerMonitoring(IDENTIFIER_NOTIFICATION_DB);
+                        // dbLayer.setSession(factory.openStatelessSession());
+                        dbLayer.setSession(Globals.createSosHibernateStatelessConnection(IDENTIFIER_NOTIFICATION_DB));
+                        // dbLayer.getSession().beginTransaction();
+                        if (t.getException() != null) {
+                            dbLayer.saveNotificationMonitor(t.getDbNotification(), t.getMonitor(), t.getException());
+                        } else if (t.getNotifyResult() != null) {
+                            dbLayer.saveNotificationMonitor(t.getDbNotification(), t.getMonitor(), t.getNotifyResult());
+                        }
+                        // dbLayer.commit();
+                    }
+                } catch (Exception e) {
+                    // if (dbLayer != null) {
+                    // dbLayer.rollback();
+                    // }
+                    LOGGER.warn(LOG_IDENTIFIER + e.toString(), e);
+                } finally {
+                    if (dbLayer != null) {
+                        dbLayer.close();
+                    }
+                }
+
+            }, dbUpdateExecutor);
+        }
+    }
+
+    private NotifierTask executeMonitorNotification(NotifierTask task) {
+        active.remove(task);
+
+        MonitorService.setLogger();
+
+        // NotifierResult r = new NotifierResult(task.getMonitor());
+        ANotifier n = null;
+        try {
+            n = task.getMonitor().createNotifier(task.getIdentifier());
+        } catch (Exception e) {
+            LOGGER.error(LOG_IDENTIFIER + e.toString(), e);// contains all informations about the type etc
+            if (task.getDbNotification() == null) {
+                LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s]%s[skip save notification monitor]due to save notification failed",
+                        Configuration.LOG_INTENT, task.getIdentifier(), task.getNotification().getNotificationId(), task.getRange(), ANotifier
+                                .getTypeAsString(task.getType(), task.getWarnReason()), ANotifier.getInfo(task.getAnalyzer(), task.getMonitor())));
+            } else {
+                task.setExecuted();
+                task.saveNotificationMonitor();
+
+                task.setException(e);
+            }
+            n = null;
+        }
+
+        if (n != null) {
+            try {
+                NotifyResult nr = n.notifyOrderNotification(task.getType(), task.getMonitor().getTimeZone(), task.getAnalyzer().getOrder(), task
+                        .getDbOrderStep(), task.getDbNotification());
+                if (nr != null && nr.getError() != null) {
+                    if (Configuration.INSTANCE.retryIncompleteNotificationsOnStartup() && closed.get() && nr.getError()
+                            .getException() instanceof InterruptedException) {
+                        LOGGER.info(String.format("%s[on close][%s]notification monitor execution interrupted - marked for retry on next startup",
+                                LOG_IDENTIFIER, task.getIdentifier()));
+
+                        // create retry candidate without execution result data
+                        NotifierTask taskCopy = task.copyWithoutResult();
+                        taskCopy.setSubmitted(task.getSubmitted());
+                        active.add(taskCopy);
+                    }
+                    // LOGGER.error(LOG_IDENTIFIER + nr.getError().getMessage(), nr.getError().getException());
+                    LOGGER.error(LOG_IDENTIFIER + nr.getError().getMessage());
+                }
+                if (task.getDbNotification() == null) {
+                    LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s]%s[skip save notification result]due to save notification failed",
+                            Configuration.LOG_INTENT, task.getIdentifier(), task.getNotification().getNotificationId(), task.getRange(), ANotifier
+                                    .getTypeAsString(task.getType(), task.getWarnReason()), ANotifier.getInfo(task.getAnalyzer(), task
+                                            .getMonitor())));
+                } else {
+                    if (nr.getSkipCause() == null) {
+                        task.saveNotificationMonitor();
+
+                        task.setNotifyResult(nr);
+                    } else {
+                        LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s][skip]%s%s%s", Configuration.LOG_INTENT, task.getIdentifier(),
+                                task.getNotification().getNotificationId(), task.getRange(), ANotifier.getTypeAsString(task.getType(), task
+                                        .getWarnReason()), ANotifier.getMonitorInfo(task.getMonitor()), nr.getSkipCause(), ANotifier.getInfo(task
+                                                .getAnalyzer())));
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error(LOG_IDENTIFIER + e.toString(), e);
+            } finally {
+                task.setExecuted();
+                n.close();
+            }
+        }
+        return task;
     }
 
     private void postEvent(String controllerId, DBItemNotification mn, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
@@ -379,38 +621,63 @@ public class OrderNotifierModel {
         return mo.getErrorText();
     }
 
-    private void notifyStepWarning(HistoryOrderStepResult r) {
-        if (Configuration.INSTANCE.getOnWarning().size() > 0 && r.getWarnings().size() > 0) {
-            OrderNotificationRange range = OrderNotificationRange.WORKFLOW_JOB;
-            HistoryOrderStepBean hosb = r.getStep();
-            List<Notification> result = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnWarning(), hosb
-                    .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(range, result, null, hosb, NotificationType.WARNING, r.getWarnings());
-        }
-    }
-
     protected JocClusterAnswer close(StartupMode mode) {
         MonitorService.setLogger();
         closed.set(true);
 
-        if (threadPool != null) {
-            JocCluster.shutdownThreadPool("[" + IDENTIFIER + "][" + mode + "]", threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        // wake up candidates.take() if it is currently waiting
+        candidates.offer(CANDIDATES_WAKEUP_ENTRY);
+
+        if (dispatcherThread != null) {
+            try {
+                dispatcherThread.join(); // wait for clean termination
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
+        if (notificationMonitorExecutor != null) {
+            JocCluster.shutdownThreadPool("[" + IDENTIFIER_NOTIFICATION_MONITOR_EXECUTOR + "][" + mode + "]", notificationMonitorExecutor, 60);
+        }
+        if (dbUpdateExecutor != null) {
+            JocCluster.shutdownThreadPool("[" + IDENTIFIER_NOTIFICATION_DB + "][" + mode + "]", dbUpdateExecutor, 60);
+        }
+
         closeFactory();
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 
-    private JocClusterHibernateFactory createFactory(Path configFile) {
+    private boolean initializeFactory() {
+        int connErrors = 0;
+
+        while (factory == null && !closed.get()) {
+            connErrors++;
+            LOGGER.info(String.format("%s[skip %s of 10]due to the database factory errors", LOG_IDENTIFIER, connErrors));
+
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                return false;
+            }
+            factory = createFactory();
+            if (connErrors >= 10 && factory == null) {
+                return false;
+            }
+        }
+        return factory != null;
+    }
+
+    private JocClusterHibernateFactory createFactory() {
         JocClusterHibernateFactory factory = null;
         try {
-            factory = new JocClusterHibernateFactory(configFile, 1, 1);
+            factory = new JocClusterHibernateFactory(this.hibernateConfigFile, 1, 1);
             factory.setIdentifier(IDENTIFIER);
-            factory.setAutoCommit(false);
+            factory.setAutoCommit(true); // DBLayerMonitoring - executes select/save - no update/delete statements
             factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             factory.addClassMapping(DBLayer.getMonitoringClassMapping());
             factory.build();
         } catch (SOSHibernateException e) {
-            LOGGER.error(e.toString(), e);
+            LOGGER.error(LOG_IDENTIFIER + "[createFactory][" + hibernateConfigFile + "]" + e.toString(), e);
+            factory = null;
         }
         return factory;
     }
@@ -419,6 +686,76 @@ public class OrderNotifierModel {
         if (factory != null) {
             factory.close();
             LOGGER.info(String.format("%sdatabase factory closed", LOG_IDENTIFIER));
+        }
+    }
+
+    public void setCandidates(Collection<AMonitorResult> queue) {
+        initIfNeeded();
+        this.candidates.addAll(queue);
+    }
+
+    public void runRestoredActiveNotifiers(Set<NotifierTask> tasks) {
+        initIfNeeded();
+
+        List<CompletableFuture<NotifierTask>> futures = new ArrayList<>();
+        Instant now = Instant.now();
+        for (NotifierTask task : tasks) {
+            task.setSubmitted(now);
+            active.add(task);
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                // return executeMonitorNotification(range, analyzer, notification, type, m, identifier, mn, os, warnReason);
+                return executeMonitorNotification(task);
+            }, notificationMonitorExecutor));
+        }
+        updateMonitors(futures);
+    }
+
+    public List<AMonitorResult> getCandidatesSnapshot() {
+        return candidates == null ? new ArrayList<>() : candidates.stream().filter(r -> r != CANDIDATES_WAKEUP_ENTRY).collect(Collectors.toList());
+    }
+
+    public Set<NotifierTask> getActiveSnapshot() {
+        return active == null ? new HashSet<>() : new HashSet<>(active);
+    }
+
+    public void clear() {
+        clearCandidates();
+        clearActive();
+    }
+
+    public int getCandidatesSize() {
+        return candidates == null ? 0 : candidates.size();
+    }
+
+    public int getActiveSize() {
+        return active == null ? 0 : active.size();
+    }
+
+    private void clearCandidates() {
+        if (candidates == null) {
+            return;
+        }
+        candidates.clear();
+    }
+
+    private void clearActive() {
+        if (active == null) {
+            return;
+        }
+        active.clear();
+    }
+
+    private void cleanupActive() {
+        int size = getActiveSize();
+        if (size > 100) {
+            Instant now = Instant.now();
+
+            int before = size;
+            active.removeIf(task -> task.isExceeded(now));
+            int removed = before - active.size();
+            if (removed > 0) {
+                LOGGER.info(String.format("%s[cleanupActive]size=%s, removed=%s", LOG_IDENTIFIER, before, removed));
+            }
         }
     }
 

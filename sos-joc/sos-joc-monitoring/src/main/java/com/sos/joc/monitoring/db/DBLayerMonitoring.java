@@ -31,8 +31,8 @@ import com.sos.joc.monitoring.bean.SystemMonitoringEvent;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.SystemNotification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
-import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.OrderNotifyAnalyzer;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationApplication;
 import com.sos.monitoring.notification.NotificationType;
@@ -76,6 +76,7 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    // HistoryMonitoringpayloadHandler
     public boolean updateOrderOnResumed(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
@@ -95,6 +96,7 @@ public class DBLayerMonitoring extends DBLayer {
         return r != 0;
     }
 
+    // HistoryMonitoringpayloadHandler
     public boolean updateOrderOnForked(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
@@ -115,6 +117,7 @@ public class DBLayerMonitoring extends DBLayer {
         return r != 0;
     }
 
+    // HistoryMonitoringpayloadHandler
     public boolean updateOrder(HistoryOrderBean hob) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
@@ -170,6 +173,7 @@ public class DBLayerMonitoring extends DBLayer {
         return r != 0;
     }
 
+    // HistoryMonitoringpayloadHandler
     public boolean updateOrderOnOrderStep(Long historyId, Long currentHistoryOrderStepId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
@@ -185,7 +189,8 @@ public class DBLayerMonitoring extends DBLayer {
         return r != 0;
     }
 
-    public int setOrderStepEnd(HistoryOrderStepResult result) throws SOSHibernateException {
+    // HistoryMonitoringpayloadHandler
+    public int setOrderStepEnd(MonitorOrderStepResult result) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("set endTime=:endTime ");
         hql.append(",endVariables=:endVariables ");
@@ -222,6 +227,7 @@ public class DBLayerMonitoring extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    // HistoryMonitoringModel
     public int deleteVariable() throws SOSHibernateException {
         String hql = String.format("delete from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = getSession().createQuery(hql);

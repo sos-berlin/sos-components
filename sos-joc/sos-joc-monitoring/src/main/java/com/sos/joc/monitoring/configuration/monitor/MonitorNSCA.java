@@ -8,6 +8,8 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorNSCA extends AMonitor {
 
+    private static final long serialVersionUID = 1L;
+
     private static String ATTRIBUTE_NAME_SERVICE_HOST = "service_host";
     private static String ATTRIBUTE_NAME_MONITOR_HOST = "monitor_host";
     private static String ATTRIBUTE_NAME_MONITOR_PORT = "monitor_port";
@@ -55,8 +57,8 @@ public class MonitorNSCA extends AMonitor {
     }
 
     @Override
-    public NotifierNSCA createNotifier(int nr) throws Exception {
-        return new NotifierNSCA(nr, this);
+    public NotifierNSCA createNotifier(String identifier) throws Exception {
+        return new NotifierNSCA(identifier, this);
     }
 
     @Override

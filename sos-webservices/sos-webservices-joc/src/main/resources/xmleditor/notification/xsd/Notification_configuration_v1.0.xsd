@@ -144,6 +144,58 @@
                 <xs:element ref="SystemNotification" minOccurs="0" maxOccurs="1"/>
 			         <xs:element ref="Notification" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
+            <xs:attribute name="parallelism"
+                       type="xs:integer"
+                       default="10"
+                       use="optional">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Specifies the maximum number of notification monitor executions that may run in parallel.</p>
+                     <p>Increasing this value can improve notification throughput in high-load situations by allowing multiple monitor actions (e.g. email, command) to execute concurrently instead of waiting for previous executions to finish.</p>
+                     <p>A higher value can reduce notification delays, especially when monitor actions are slow or block while waiting for external systems. 
+However, excessive parallelism may increase CPU, memory, database, network, and operating system resource usage and can affect the overall responsiveness of the application.</p>
+                     <p>Choose a value appropriate for the environment and the expected notification workload. 
+        The default value provides a balanced trade-off between throughput and resource consumption for most installations.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+			      </xs:attribute>
+            <!-- GUI - wrong handling type="xs:boolean"
+            <xs:attribute name="retry_incomplete_on_startup" type="xs:boolean" default="false" use="optional">
+				<xs:annotation>
+					<xs:documentation file="N@retry_incomplete_on_startup" />
+				</xs:annotation>
+			</xs:attribute>
+            -->
+            <xs:attribute name="retry_incomplete_on_startup" default="false">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>Specifies whether notification monitor executions that were interrupted during application shutdown should be retried on the next startup.</p>
+                     <p>This can be useful if notification processing was still active when the application stopped and some monitor executions did not complete.</p>
+                     <ul>
+                        <li>Use this option with care
+                <ul>
+                              <li>Depending on the monitor type (for example email, command), it may not always be possible to determine whether the action was partially executed before the shutdown occurred.</li>
+                              <li>
+                                 <strong>Retrying such notifications can result in duplicate actions</strong>.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                     <p>The default value is <em>false</em>.</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+				
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="false"/>
+                        <xs:enumeration value="true"/>
+                    </xs:restriction>                  
+                </xs:simpleType>
+			      </xs:attribute>
 		    </xs:complexType>
 	  </xs:element>
     

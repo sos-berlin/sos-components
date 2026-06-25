@@ -11,6 +11,8 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorCommand extends AMonitor {
 
+    private static final long serialVersionUID = 1L;
+
     private static final String ELEMENT_NAME_COMMAND = "Command";
 
     private final String command;
@@ -22,8 +24,8 @@ public class MonitorCommand extends AMonitor {
     }
 
     @Override
-    public NotifierCommand createNotifier(int nr) throws Exception {
-        return new NotifierCommand(nr, this);
+    public NotifierCommand createNotifier(String identifier) throws Exception {
+        return new NotifierCommand(identifier, this);
     }
 
     @Override

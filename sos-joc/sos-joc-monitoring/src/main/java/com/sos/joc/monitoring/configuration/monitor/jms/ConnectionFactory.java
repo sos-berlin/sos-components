@@ -12,6 +12,8 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public class ConnectionFactory extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     public static String DEFAULT_CONNECTION_FACTORY = "org.apache.activemq.ActiveMQConnectionFactory";
 
     private static String ELEMENT_NAME_CONSTRUCTOR_ARGUMENTS = "ConstructorArguments";
