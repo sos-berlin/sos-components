@@ -25,8 +25,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
-import com.sos.joc.classes.inventory.PublishSemaphore;
-import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
+import com.sos.joc.classes.inventory.RecallRevokeSemaphore;
 import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -72,7 +71,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 return jocDefaultResponse;
             }
             LOGGER.debug("acquire semaphore from deploy with AT " + xAccessToken);
+            if (RemoveSemaphore.availablePermits(xAccessToken) == 1) {
+                TimeUnit.MILLISECONDS.sleep(100);
+            }
             RemoveSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
+            LOGGER.info("acquire semaphore from revoke with AT " + xAccessToken);
+            // if semaphore already contains workflownames from potential recall operation, remove those workflow from cancel order call
+            Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(xAccessToken)
+                    .map(RecallRevokeSemaphore::getWorkflowNames).orElse(Collections.emptySet());
             DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog());
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
@@ -101,7 +107,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 if (!foldersToRevoke.isEmpty()) {
                     itemsFromFolderToRevoke = foldersToRevoke.stream().flatMap(folder -> dbLayer.getLatestDepHistoryItemsFromFolder(folder.getPath(),
                             controllerId, folder.getRecursive()));
-
                 }
             }
             Map<String, List<DBItemDeploymentHistory>> itemsPerControllerToRevokeFromFolder = 
@@ -111,7 +116,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             // Delete from all allowed controllers from filter
             final String commitIdForRevoke = UUID.randomUUID().toString();
             final String commitIdForRevokeFileOrderSources = UUID.randomUUID().toString();
-//            Map<String, List<DBItemDeploymentHistory>> itemsToRevokePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             // loop 1: store db entries optimistically
             for (String controllerId : controllerIds) {
                 if (!allowedControllerIds.contains(controllerId)) {
@@ -133,9 +137,11 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                                 .collect(Collectors.toList()));
                     }
                 }
-                
-                DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(new HashSet<DBItemDeploymentHistory>(
-                        filteredDepHistoryItemsToRevoke), Optional.ofNullable(null), "now", controllerId);
+                Set<DBItemDeploymentHistory> filteredDepHistoryItemsforCancelOrders = filteredDepHistoryItemsToRevoke.stream()
+                        .filter(item -> !workflowsWithAlreadyCanceledOrders.contains(item.getName())).collect(Collectors.toSet());
+                        
+                DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(filteredDepHistoryItemsforCancelOrders,
+                        Optional.ofNullable(null), "now", controllerId);
                 
                 List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
                         CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);
@@ -182,7 +188,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                 });
             }
-            releaseAndReaquireSemaphore(xAccessToken);
             Date deployWSFinished = Date.from(Instant.now());
             LOGGER.trace("*** revoke finished ***" + deployWSFinished);
             LOGGER.trace("complete WS time : " + (deployWSFinished.getTime() - started.getTime()) + " ms");
@@ -191,31 +196,9 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
-            RemoveSemaphore.release(xAccessToken);
-            if (PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
-                    .equals(SEMAPHORE_ID)).isPresent()) {
-                PublishSemaphore.remove(xAccessToken);
-                LOGGER.debug("final remove semaphore from revoke with AT " + xAccessToken);
-            }
+            removeSemapohoreFinally(xAccessToken);
             Globals.disconnect(hibernateSession);
         }
-    }
-
-    private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
-        try {
-            RemoveSemaphore.release(accessToken);
-            LOGGER.debug("release semaphore from revoke with AT " + accessToken);
-        } catch (Exception e) {
-            // DO NOTHING if semaphore release failed
-        }
-        if (RemoveSemaphore.availablePermits(accessToken) == 1) {
-            try {
-                TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {
-            }
-        }
-        RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-        LOGGER.debug("acquire again semaphore from revoke with AT " + accessToken);
     }
 
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (RevokeFilter revokeFilter) {
@@ -238,7 +221,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         }
     }
     
-    private void cancelOrders() {
-        
+    private static void removeSemapohoreFinally(String accessToken) {
+        RemoveSemaphore.release(accessToken);
+        LOGGER.info("release semaphore from revoke with AT " + accessToken);
+        if (RemoveSemaphore.getInstance().getSemaphore(accessToken).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
+                .isPresent()) {
+            RemoveSemaphore.remove(accessToken);
+            LOGGER.info("Semaphore from " + SEMAPHORE_ID + " finally removed.");
+        }
     }
+
 }
