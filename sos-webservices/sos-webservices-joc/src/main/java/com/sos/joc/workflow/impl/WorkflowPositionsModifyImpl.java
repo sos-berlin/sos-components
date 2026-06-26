@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
@@ -34,15 +32,12 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.workflow.ModifyWorkflowPositions;
 import com.sos.joc.workflow.resource.IWorkflowPositionsModify;
-import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
-import js7.data.controller.ControllerCommand.Response;
 import js7.data.workflow.Workflow;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
@@ -53,21 +48,15 @@ import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 
 @Path("workflow")
-public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWorkflowPositionsModify {
+public class WorkflowPositionsModifyImpl extends AWorkflowModify implements IWorkflowPositionsModify {
 
-    private static final String API_CALL = "./workflow/";
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowPositionsModifyImpl.class);
-
-    private enum Action {
-        STOP, UNSTOP
-    }
 
     @Override
     public JOCDefaultResponse stopWorkflows(String accessToken, byte[] filterBytes) {
         try {
-            ModifyWorkflowPositions modifyWorkflow = initRequest(Action.STOP, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
-                    accessToken));
+            ModifyWorkflowPositions modifyWorkflow = initRequest(Action.STOP, accessToken, filterBytes, ModifyWorkflowPositions.class);
+            JOCDefaultResponse jocDefaultResponse = initPermission(modifyWorkflow, accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -81,9 +70,8 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
     @Override
     public JOCDefaultResponse unstopWorkflows(String accessToken, byte[] filterBytes) {
         try {
-            ModifyWorkflowPositions modifyWorkflow = initRequest(Action.UNSTOP, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
-                    accessToken));
+            ModifyWorkflowPositions modifyWorkflow = initRequest(Action.UNSTOP, accessToken, filterBytes, ModifyWorkflowPositions.class);
+            JOCDefaultResponse jocDefaultResponse = initPermission(modifyWorkflow, accessToken);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -124,7 +112,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
             if (modifyWorkflow.getPositions().stream().anyMatch(pos -> pos instanceof String)) {
                 // throw new JocNotImplementedException("The use of labels as positions is not yet implemented");
 
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL + action.name().toLowerCase());
+                connection = Globals.createSosHibernateStatelessConnection(getApiCall(action));
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                 DeployedContent dbWorkflow = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath);
                 Globals.disconnect(connection);
@@ -195,14 +183,10 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
                     throw new JocBadRequestException("None of the requested positions are stopped.");
                 }
                 break;
+            default:
+                break;
             }
         }
-    }
-
-    private ModifyWorkflowPositions initRequest(Action action, String accessToken, byte[] filterBytes) throws Exception {
-        filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.CONTROLLER);
-        JsonValidator.validate(filterBytes, ModifyWorkflowPositions.class);
-        return Globals.objectMapper.readValue(filterBytes, ModifyWorkflowPositions.class);
     }
 
     private void command(String controllerId, Action action, JWorkflow workflow, Set<JPosition> positions, DBItemJocAuditLog dbAuditLog) {
@@ -211,18 +195,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         positions.forEach(l -> m.put(l, stop));
         JControllerCommand command = JControllerCommand.controlWorkflow(workflow.id(), m);
         LOGGER.debug("send command: " + command.toJson());
-        ControllerApi.of(controllerId).executeCommand(command).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow, dbAuditLog));
-    }
-
-    private void thenAcceptHandler(Either<Problem, Response> either, String controllerId, JWorkflow workflow, DBItemJocAuditLog dbAuditLog) {
-        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-        if (either.isRight()) {
-            WorkflowsHelper.storeAuditLogDetailsFromWorkflowPath(workflow.id().path(), dbAuditLog, controllerId).thenAccept(either2 -> ProblemHelper
-                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
-        }
-    }
-
-    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
+        ControllerApi.of(controllerId).executeCommand(command).thenAccept(either -> thenAcceptHandler(either, controllerId, workflow.id(),
+                dbAuditLog));
     }
 }

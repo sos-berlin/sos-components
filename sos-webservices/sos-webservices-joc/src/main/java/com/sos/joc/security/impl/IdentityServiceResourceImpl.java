@@ -60,7 +60,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             IdentityService identityService = new IdentityService();
 
-            this.checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
+            checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
@@ -118,8 +118,8 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("identityServiceName", identityService.getIdentityServiceName());
-            this.checkRequiredParameter("identityServiceType", identityService.getIdentityServiceName());
+            checkRequiredParameter("identityServiceName", identityService.getIdentityServiceName());
+            checkRequiredParameter("identityServiceType", identityService.getIdentityServiceType());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             sosHibernateSession.setAutoCommit(false);
@@ -200,9 +200,6 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("identityServiceOldName", identityServiceRename.getIdentityServiceOldName());
-            this.checkRequiredParameter("identityServiceNewName", identityServiceRename.getIdentityServiceNewName());
-
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
@@ -251,7 +248,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
+            checkRequiredParameter("identityServiceName", identityServiceFilter.getIdentityServiceName());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_DELETE);
             sosHibernateSession.setAutoCommit(false);

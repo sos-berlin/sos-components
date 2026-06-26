@@ -226,6 +226,14 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         if (jOrder == null) {
             throw new JocObjectNotExistException(String.format("Unknown OrderId: %s", order));
         }
+        return get(jOrder, currentState, permittedFolders, position, withStatusCheck);
+    }
+    
+    @JsonIgnore
+    public CheckedResumeOrdersPositions get(JOrder jOrder, JControllerState currentState, Set<Folder> permittedFolders, JPosition position,
+            boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
+            JocFolderPermissionsException {
+
         jOrders = Collections.singleton(jOrder);
         if (withStatusCheck && !OrdersHelper.isResumable(jOrder)) {
             throw new JocBadRequestException("The order is not resumable."); 
@@ -408,16 +416,13 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     
     public static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Set<String> orders, JControllerState currentState,
             Set<Folder> permittedFolders) {
-//        Function1<Order<Order.State>, Object> stateFilter = o -> o.isSuspended();
-//        Iterator<Function1<Order<Order.State>, Object>> failedStates = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
-//                .equals(OrderStateText.FAILED)).map(Map.Entry::getKey).map(JOrderPredicates::byOrderState).iterator();
-//
-//        while (failedStates.hasNext()) {
-//            stateFilter = JOrderPredicates.or(stateFilter, failedStates.next());
-//        }
-//        stateFilter = JOrderPredicates.and(stateFilter, o -> orders.contains(o.id().string()));
-
-        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.and(o -> orders.contains(o.id().string()), OrdersHelper::isResumable);
+        return getResumableOrders(o -> orders.contains(o.id().string()), currentState, permittedFolders);
+    }
+    
+    private static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Function1<Order<Order.State>, Object> containsFilter,
+            JControllerState currentState, Set<Folder> permittedFolders) {
+        
+        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.and(containsFilter, OrdersHelper::isResumable);
         ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
                 JOrder::workflowId, Collectors.toSet()));
 

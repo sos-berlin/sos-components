@@ -2,9 +2,11 @@ package com.sos.joc.cluster.configuration.globals;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -108,6 +110,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     // role of 4-eyes principle
     private ConfigurationEntry approvalRequestorRole = new ConfigurationEntry("approval_requestor_role", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry workflowsRequiringApproval = new ConfigurationEntry("workflows_requiring_approval", "", GlobalSettingsSectionValueType.ARRAY);
 
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
@@ -168,6 +171,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
 
         approvalRequestorRole.setOrdering(++index);
+        workflowsRequiringApproval.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -358,6 +362,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getApprovalRequestorRole() {
         return approvalRequestorRole;
+    }
+    
+    public ConfigurationEntry getWorkflowsRequiringApproval() {
+        return workflowsRequiringApproval;
+    }
+    
+    public List<String> getWorkflowsRequiringApprovalTags() {
+        return Optional.ofNullable(workflowsRequiringApproval.getValues()).orElse(Collections.emptyList());
     }
 
 }

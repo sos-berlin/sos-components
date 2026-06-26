@@ -26,6 +26,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.approval.ApprovalDBLayer;
+import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
 import com.sos.joc.db.joc.DBItemJocApprover;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -528,6 +529,11 @@ public class JOCResourceImpl {
     public JOCDefaultResponse initPermissions(String controllerId, Stream<Boolean> permissions) throws JocException {
         return initPermissions(controllerId, permissions.toList());
     }
+    
+    public JOCDefaultResponse initWorkflowPermissions(String controllerId, Stream<Boolean> permissions, Set<String> workflowNames)
+            throws JocException {
+        return initWorkflowPermissions(controllerId, permissions.toList(), workflowNames);
+    }
 
     public JOCDefaultResponse initManageAccountPermissions(String accessToken) throws JocException {
         List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts().getManage()).toList();
@@ -536,6 +542,11 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse initPermissions(String controllerId, List<Boolean> permissions) throws JocException {
         return initPermissions(controllerId, permissions.get(0), permissions.get(1));
+    }
+    
+    public JOCDefaultResponse initWorkflowPermissions(String controllerId, List<Boolean> permissions, Set<String> workflowNames)
+            throws JocException {
+        return initWorkflowPermissions(controllerId, permissions.get(0), permissions.get(1), workflowNames);
     }
 
     @SafeVarargs
@@ -596,6 +607,34 @@ public class JOCResourceImpl {
     public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {
         return initPermissions(controllerId, permission, fourEyesPermission, false);
     }
+    
+    public JOCDefaultResponse initWorkflowPermissions(String controllerId, boolean permission, boolean fourEyesPermission, Set<String> workflowNames)
+            throws JocException {
+        // JOC-2196 check if workflows have requiring approval tags
+        if (fourEyesPermission && !workflowNames.isEmpty()) { // requestor role needs approval while workflows are processed
+            boolean perm = true;
+            List<String> approvalTags = Globals.getConfigurationGlobalsJoc().getWorkflowsRequiringApprovalTags();
+            if (!approvalTags.isEmpty()) {
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection("checkWorkflowsRequiringApprovalTags");
+                    InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+                    perm = dbLayer.getWorkflowNamesHavingTags(approvalTags).stream().anyMatch(workflowNames::contains);
+                } catch (Exception e) {
+                    LOGGER.warn("Error at reading workflows with requiring approval tags", e);
+                } finally {
+                    Globals.disconnect(session);
+                }
+            }
+            return initPermissions(controllerId, permission, perm, false);
+        }
+        return initPermissions(controllerId, permission, fourEyesPermission, false);
+    }
+    
+    public void setFolderPermissions(String controllerId) {
+        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        folderPermissions.setSchedulerId(controllerId);
+    }
 
     private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes)
             throws JocException {
@@ -618,8 +657,7 @@ public class JOCResourceImpl {
                 return jocDefaultResponse;
             }
         }
-        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
-        folderPermissions.setSchedulerId(controllerId);
+        setFolderPermissions(controllerId);
         return jocDefaultResponse;
     }
 
