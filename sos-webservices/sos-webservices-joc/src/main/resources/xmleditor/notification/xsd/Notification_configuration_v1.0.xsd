@@ -136,6 +136,54 @@
                </ul>
                <strong>Notes</strong>
                <p>Defines the effective notifications by references to the Fragments elements.</p>
+               <ul>
+                  <li>
+                     <em>
+                        <strong>parallelism</strong>
+                     </em> (default: <em>10</em>)
+                <ul>
+                        <li>Specifies the maximum number of notification monitor executions that may run in parallel.</li>
+                        <li>Increasing this value can improve notification throughput in high-load situations by allowing multiple monitor actions (e.g. email, command) to execute concurrently instead of waiting for previous executions to finish.</li>
+                        <li>A higher value can reduce notification delays, especially when monitor actions are slow or block while waiting for external systems.</li>
+                        <li>However, excessive parallelism may increase CPU, memory, database, network, and operating system resource usage and can affect the overall responsiveness of the application.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <em>
+                        <strong>retry_incomplete_on_startup</strong>
+                     </em> (default: <em>false</em>)
+                  <ul>
+                        <li>Specifies whether notification monitor executions that were interrupted during application shutdown should be retried on the next startup.</li>
+                        <li>This can be useful if notification processing was still active when the application stopped and some monitor executions did not complete.
+                        <ul>
+                              <li>This can happen, for example, in high-load situations when a monitor command script requires several seconds to complete.
+                                <ul>
+                                    <li>Notification processing is performed in parallel, however notification completion depends on the execution time of the monitor action.</li>
+                                    <li>During shutdown the monitor service waits up to 60 seconds for active notification executions to finish.
+                                        <ul>
+                                          <li>Notifications that have not yet started processing are persisted and restored on the next startup.</li>
+                                          <li>Notifications that are actively executing can be interrupted and may end with an <em>InterruptedException</em>.</li>
+                                       </ul>
+                                    </li>
+                                 </ul>
+                              </li>
+                           </ul>
+                        </li>
+                        <li>
+                           <strong>Risks</strong> of enabling <strong>retry_incomplete_on_startup</strong>.
+                        <ul>
+                              <li>An <em>InterruptedException</em> does not reliably indicate the actual execution state of the monitor action.
+                                <ul>
+                                    <li>The interruption may occur at any stage of processing and it is generally unknown how much of the intended work has already been completed.</li>
+                                 </ul>
+                              </li>
+                              <li>
+                                 <strong>Retrying such notifications can result in duplicate actions</strong>.</li>
+                           </ul>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -147,22 +195,8 @@
             <xs:attribute name="parallelism"
                        type="xs:integer"
                        default="10"
-                       use="optional">
-            <xs:annotation>
-               <xs:documentation>
-                  <div xmlns="http://www.w3.org/1999/xhtml">
-                     <p>Specifies the maximum number of notification monitor executions that may run in parallel.</p>
-                     <p>Increasing this value can improve notification throughput in high-load situations by allowing multiple monitor actions (e.g. email, command) to execute concurrently instead of waiting for previous executions to finish.</p>
-                     <p>A higher value can reduce notification delays, especially when monitor actions are slow or block while waiting for external systems. 
-However, excessive parallelism may increase CPU, memory, database, network, and operating system resource usage and can affect the overall responsiveness of the application.</p>
-                     <p>Choose a value appropriate for the environment and the expected notification workload. 
-        The default value provides a balanced trade-off between throughput and resource consumption for most installations.</p>
-                  </div>
-               </xs:documentation>
-            </xs:annotation>
-				
-			      </xs:attribute>
-            <!-- GUI - wrong handling type="xs:boolean"
+                       use="optional"/>
+			      <!-- GUI - wrong handling type="xs:boolean"
             <xs:attribute name="retry_incomplete_on_startup" type="xs:boolean" default="false" use="optional">
 				<xs:annotation>
 					<xs:documentation file="N@retry_incomplete_on_startup" />
@@ -170,26 +204,7 @@ However, excessive parallelism may increase CPU, memory, database, network, and 
 			</xs:attribute>
             -->
             <xs:attribute name="retry_incomplete_on_startup" default="false">
-            <xs:annotation>
-               <xs:documentation>
-                  <div xmlns="http://www.w3.org/1999/xhtml">
-                     <p>Specifies whether notification monitor executions that were interrupted during application shutdown should be retried on the next startup.</p>
-                     <p>This can be useful if notification processing was still active when the application stopped and some monitor executions did not complete.</p>
-                     <ul>
-                        <li>Use this option with care
-                <ul>
-                              <li>Depending on the monitor type (for example email, command), it may not always be possible to determine whether the action was partially executed before the shutdown occurred.</li>
-                              <li>
-                                 <strong>Retrying such notifications can result in duplicate actions</strong>.</li>
-                           </ul>
-                        </li>
-                     </ul>
-                     <p>The default value is <em>false</em>.</p>
-                  </div>
-               </xs:documentation>
-            </xs:annotation>
-				
-                <xs:simpleType>
+				        <xs:simpleType>
                     <xs:restriction base="xs:string">
                         <xs:enumeration value="false"/>
                         <xs:enumeration value="true"/>
