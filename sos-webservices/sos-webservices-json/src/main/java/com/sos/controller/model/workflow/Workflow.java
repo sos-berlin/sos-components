@@ -172,8 +172,8 @@ public class Workflow
      * @param workflowTags
      * @param numOfSkippedInstructions
      */
-    public Workflow(String path, Set<String> workflowTags, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, Boolean valid, Boolean deployed, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
-        super(version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
+    public Workflow(String path, Set<String> workflowTags, Boolean isCurrentVersion, Date versionDate, SyncState state, Boolean suspended, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, Boolean hasConsumeNoticeBoards, Boolean hasAddOrderDependencies, Integer numOfStoppedInstructions, Integer numOfSkippedInstructions, Boolean valid, Boolean deployed, String version, String versionId, String timeZone, String dayOffset, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(version, versionId, timeZone, dayOffset, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.path = path;
         this.workflowTags = workflowTags;
         this.isCurrentVersion = isCurrentVersion;

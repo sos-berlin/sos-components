@@ -3,8 +3,10 @@ package com.sos.sign.model.workflow;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IDeployObject;
@@ -64,6 +66,13 @@ public class Workflow implements IDeployObject
     private String versionId;
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
+    /**
+     * time in format HH:MM:SS
+     * 
+     */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonPropertyDescription("time in format HH:MM:SS")
+    private String dayOffset;
     /**
      * string without < and >
      * <p>
@@ -217,6 +226,16 @@ public class Workflow implements IDeployObject
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
+    }
+    
+    @JsonIgnore
+    public String getDayOffset() {
+        return dayOffset;
+    }
+
+    @JsonProperty("dayOffset")
+    public void setDayOffset(String dayOffset) {
+        this.dayOffset = dayOffset;
     }
 
     /**

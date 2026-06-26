@@ -51,11 +51,23 @@ public class OrderMappingTest {
     public void SerializerTest() throws IOException {
         String json = "{\"TYPE\": \"Workflow\", \"title\":\"\", \"jobResourceNames\": [\"\"], \"jobs\": {\"job1\": {\"agentName\": \"secondaryAgent\", \"parallelism\": 100, \"executable\": {\"TYPE\": \"ShellScriptExecutable\", \"script\": \"echo hallo\", \"v1Compatible\": false}, \"failOnErrWritten\": false}, \"transferFile\": {\"agentName\": \"primaryAgent\", \"parallelism\": 100, \"executable\": {\"env\": {}, \"TYPE\": \"ShellScriptExecutable\", \"ReturnCodeMeaning\": {}, \"script\": \"echo hello\", \"v1Compatible\": false}, \"failOnErrWritten\": false}}, \"versionId\": \"38752807-de25-4eb6-b132-1189a9da8cd0\", \"instructions\": [{\"TYPE\": \"Execute.Named\", \"label\": \"job1\", \"jobName\": \"job1\"}, {\"TYPE\": \"Execute.Named\", \"label\": \"transferFile\", \"jobName\": \"transferFile\"}], \"orderRequirements\": {\"parameters\": {\"yade_bin\": {\"type\": \"String\", \"default\": \"/var/sos-berlin.com/yade/bin/jade.sh\"}, \"yade_profile\": {\"type\": \"String\", \"default\": \"product_demo_from_galadriel_sftp\"}, \"yade_settings\": {\"type\": \"String\", \"default\": \"./config/yade.xml\"}, \"yade_java_options\": {\"type\": \"String\", \"default\": \"-Xmx32m\"}}}}";
         Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+        w.setVersion(null);
         String result = JsonSerializer.serializeAsString(w);
         LOGGER.trace(result);
-        String expected = "{\"TYPE\":\"Workflow\",\"version\":\"1.1.0\",\"versionId\":\"38752807-de25-4eb6-b132-1189a9da8cd0\",\"timeZone\":\"Etc/UTC\",\"orderPreparation\":{\"parameters\":{\"yade_bin\":{\"type\":\"String\",\"default\":\"\\\"/var/sos-berlin.com/yade/bin/jade.sh\\\"\"},\"yade_profile\":{\"type\":\"String\",\"default\":\"\\\"product_demo_from_galadriel_sftp\\\"\"},\"yade_settings\":{\"type\":\"String\",\"default\":\"\\\"./config/yade.xml\\\"\"},\"yade_java_options\":{\"type\":\"String\",\"default\":\"\\\"-Xmx32m\\\"\"}}},\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\",\"label\":\"job1\"},{\"TYPE\":\"Execute.Named\",\"jobName\":\"transferFile\",\"label\":\"transferFile\"}],\"jobs\":{\"job1\":{\"agentName\":\"secondaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hallo\"},\"parallelism\":100,\"graceTimeout\":1},\"transferFile\":{\"agentName\":\"primaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hello\"},\"parallelism\":100,\"graceTimeout\":1}}}";
+        String expected = "{\"TYPE\":\"Workflow\",\"versionId\":\"38752807-de25-4eb6-b132-1189a9da8cd0\",\"timeZone\":\"Etc/UTC\",\"orderPreparation\":{\"parameters\":{\"yade_bin\":{\"type\":\"String\",\"default\":\"\\\"/var/sos-berlin.com/yade/bin/jade.sh\\\"\"},\"yade_profile\":{\"type\":\"String\",\"default\":\"\\\"product_demo_from_galadriel_sftp\\\"\"},\"yade_settings\":{\"type\":\"String\",\"default\":\"\\\"./config/yade.xml\\\"\"},\"yade_java_options\":{\"type\":\"String\",\"default\":\"\\\"-Xmx32m\\\"\"}}},\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\",\"label\":\"job1\"},{\"TYPE\":\"Execute.Named\",\"jobName\":\"transferFile\",\"label\":\"transferFile\"}],\"jobs\":{\"job1\":{\"agentName\":\"secondaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hallo\"},\"parallelism\":100,\"graceTimeout\":1},\"transferFile\":{\"agentName\":\"primaryAgent\",\"executable\":{\"TYPE\":\"ShellScriptExecutable\",\"script\":\"echo hello\"},\"parallelism\":100,\"graceTimeout\":1}}}";
         LOGGER.trace(expected);
         assertEquals("SerializerTest", expected, result);
+    }
+    
+    @Test
+    public void dayOffsetTest() throws IOException {
+        String json = "{\"TYPE\": \"Workflow\", \"dayOffset\":\"12:00:00\"}";
+        com.sos.sign.model.workflow.Workflow w = Globals.objectMapper.readValue(json, com.sos.sign.model.workflow.Workflow.class);
+        String result = w.getDayOffset() + Globals.objectMapper.writeValueAsString(w);
+        LOGGER.trace(result);
+        String expected = "12:00:00{\"TYPE\":\"Workflow\",\"timeZone\":\"Etc/UTC\"}";
+        LOGGER.trace(expected);
+        assertEquals("dayOffsetTest", expected, result);
     }
     
 //    @Test
