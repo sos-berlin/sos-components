@@ -75,7 +75,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
             RemoveSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
-            LOGGER.info("acquire semaphore from revoke with AT " + xAccessToken);
+            LOGGER.debug("acquire semaphore from revoke with AT " + xAccessToken);
             // if semaphore already contains workflownames from potential recall operation, remove those workflow from cancel order call
             Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(xAccessToken)
                     .map(RecallRevokeSemaphore::getWorkflowNames).orElse(Collections.emptySet());
@@ -223,11 +223,11 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
     
     private static void removeSemapohoreFinally(String accessToken) {
         RemoveSemaphore.release(accessToken);
-        LOGGER.info("release semaphore from revoke with AT " + accessToken);
+        LOGGER.debug("release semaphore from revoke with AT " + accessToken);
         if (RemoveSemaphore.getInstance().getSemaphore(accessToken).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
                 .isPresent()) {
             RemoveSemaphore.remove(accessToken);
-            LOGGER.info("Semaphore from " + SEMAPHORE_ID + " finally removed.");
+            LOGGER.debug("Semaphore from " + SEMAPHORE_ID + " finally removed.");
         }
     }
 
