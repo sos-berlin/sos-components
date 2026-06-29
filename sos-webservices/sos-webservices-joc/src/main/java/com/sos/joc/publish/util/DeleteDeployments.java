@@ -48,6 +48,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
@@ -73,22 +74,33 @@ public class DeleteDeployments {
             ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.JOBTEMPLATE,
             ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
 
+
     public static Set<DBItemInventoryConfiguration> delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account,
             String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate)
-            throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         if (dbItems == null || dbItems.isEmpty()) {
             return Collections.emptySet();
         }
 
+
         Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> dbItemsPerController = dbItems.stream().filter(Objects::nonNull).filter(
                 item -> OperationType.UPDATE.value() == item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId,
                         Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
+        
+        Map<String, JControllerProxy> proxyPerController = new HashMap<>();
+        dbItemsPerController.keySet().forEach(controllerId -> {
+            try {
+                proxyPerController.put(controllerId, Proxy.of(controllerId));
+            } catch (ExecutionException e) {
+                throw new ProxyNotCoupledException(e);
+            }
+        });
 
         // check older workflow versions
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
-            checkIfWorkflowsHaveOrders(entry.getKey(), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
+            checkIfWorkflowsHaveOrders(proxyPerController.get(entry.getKey()), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
                     DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
         }
 
@@ -103,6 +115,7 @@ public class DeleteDeployments {
         // optimistic DB operations
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
             List<DBItemDeploymentHistory> fileOrderSourceItems = entry.getValue().getOrDefault(DeployType.FILEORDERSOURCE, Collections.emptyList());
+
             if (fileOrderSourceItems.isEmpty() || entry.getValue().keySet().size() == 1) {
                 List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                 for (DeployType type : DELETE_ORDER) {
@@ -110,8 +123,8 @@ public class DeleteDeployments {
                 }
 
                 // send commands to controllers
-                UpdateItemUtils.updateItemsDelete(commitId, sortedItems, entry.getKey()).thenAccept(either -> processAfterDelete(either, entry
-                        .getKey(), account, commitId, accessToken, jocError, cancelOrderDate));
+                UpdateItemUtils.updateItemsDelete(commitId, sortedItems, proxyPerController.get(entry.getKey())).thenAccept(
+                        either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError, cancelOrderDate));
             } else {
                 List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                 for (DeployType type : DELETE_ORDER) {
@@ -122,8 +135,8 @@ public class DeleteDeployments {
 
                 // send commands to controllers
                 Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
-                UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, entry.getKey()).thenAccept(
-                        either -> processAfterDelete(either, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError,
+                UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, proxyPerController.get(entry.getKey()))
+                        .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError,
                                 cancelOrderDate, sortedItems, commitId, fileOrderSourceNames));
             }
         }
@@ -146,9 +159,8 @@ public class DeleteDeployments {
 
     public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds,
             DBLayerDeploy dbLayer, String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents, String cancelOrderDate) throws SOSHibernateException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+            boolean withEvents, String cancelOrderDate) {
+
 
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
             return Collections.emptySet();
@@ -161,10 +173,19 @@ public class DeleteDeployments {
         Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> itemsToDeletePerController = dbItems.stream().collect(Collectors.groupingBy(
                 DBItemDeploymentHistory::getControllerId, Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
 
+        Map<String, JControllerProxy> proxyPerController = new HashMap<>();
+        itemsToDeletePerController.keySet().forEach(controllerId -> {
+            try {
+                proxyPerController.put(controllerId, Proxy.of(controllerId));
+            } catch (ExecutionException e) {
+                throw new ProxyNotCoupledException(e);
+            }
+        });
+        
         // check older workflow versions
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : itemsToDeletePerController.entrySet()) {
-            checkIfWorkflowsHaveOrders(entry.getKey(), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
-                    DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
+            checkIfWorkflowsHaveOrders(proxyPerController.get(entry.getKey()), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections
+                    .emptyList()).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
         }
 
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
@@ -176,29 +197,29 @@ public class DeleteDeployments {
         deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
 
         // optimistic DB operations
-        for (String controllerId : itemsToDeletePerController.keySet()) {
-            if (!itemsToDeletePerController.get(controllerId).isEmpty()) {
-                List<DBItemDeploymentHistory> fileOrderSourceItems = itemsToDeletePerController.get(controllerId).getOrDefault(
+        for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : itemsToDeletePerController.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                List<DBItemDeploymentHistory> fileOrderSourceItems = entry.getValue().getOrDefault(
                         DeployType.FILEORDERSOURCE, Collections.emptyList());
                 if (fileOrderSourceItems.isEmpty() /* || itemsToDeletePerController.keySet().size() == 1 */) {
                     List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                     for (DeployType type : DELETE_ORDER) {
-                        sortedItems.addAll(itemsToDeletePerController.get(controllerId).getOrDefault(type, Collections.emptyList()));
+                        sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                     }
                     // send commands to controllers
-                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(either -> processAfterDelete(
-                            either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError, cancelOrderDate));
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, proxyPerController.get(entry.getKey())).thenAccept(either -> processAfterDelete(
+                            either, entry.getKey(), account, commitIdForDeleteFromFolder, accessToken, jocError, cancelOrderDate));
                 } else {
                     List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                     for (DeployType type : DELETE_ORDER) {
                         if (!type.equals(DeployType.FILEORDERSOURCE)) {
-                            sortedItems.addAll(itemsToDeletePerController.get(controllerId).getOrDefault(type, Collections.emptyList()));
+                            sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                         }
                     }
                     // send commands to controllers
                     Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
-                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, controllerId).thenAccept(either -> {
-                        processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSource, accessToken, jocError, cancelOrderDate,
+                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, proxyPerController.get(entry.getKey())).thenAccept(either -> {
+                        processAfterDelete(either, entry.getKey(), account, commitIdForDeleteFileOrderSource, accessToken, jocError, cancelOrderDate,
                                 sortedItems, commitIdForDeleteFromFolder, fileOrderSourceNames);
                     });
                 }
@@ -219,6 +240,7 @@ public class DeleteDeployments {
 
     public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, String accessToken,
             JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2, Set<String> fileOrderSourceNames) {
+
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
@@ -296,7 +318,7 @@ public class DeleteDeployments {
                         } catch (Exception e) {
                         }
                     }
-                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId).thenAccept(either2 -> processAfterDelete(either2,
+                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, proxy).thenAccept(either2 -> processAfterDelete(either2,
                             controllerId, account, commitId2, accessToken, jocError, cancelOrderDate, commitId));
                 }
             }
@@ -390,6 +412,7 @@ public class DeleteDeployments {
 
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, Set<DBItemInventoryConfiguration> itemsToDelete,
             String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents) {
+
         // add all elements from the folder(s)
         Set<String> foldersForEvent = new HashSet<>();
         List<Long> workflowInvIds = new ArrayList<>();
@@ -451,6 +474,7 @@ public class DeleteDeployments {
         item.setName(oldItem.getName());
         item.setDeployed(true);
         item.setReleased(false);
+
         item.setDeleted(false);
         item.setAuditLogId(auditLogId);
         item.setTitle(oldItem.getTitle());
@@ -493,7 +517,7 @@ public class DeleteDeployments {
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
                 @SuppressWarnings("unused")
-                Set<DBItemInventoryConfiguration> updated = new HashSet<>();
+
                 for (DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -520,7 +544,7 @@ public class DeleteDeployments {
                         } catch (Exception e) {
                         }
                     }
-                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, controllerId).thenAccept(either2 -> processAfterRevoke(either2,
+                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, proxy).thenAccept(either2 -> processAfterRevoke(either2,
                             controllerId, account, commitId2, accessToken, jocError));
                 }
                 DependencyResolver.updateDependencies(toUpdate.values());
@@ -532,9 +556,8 @@ public class DeleteDeployments {
         }
     }
 
-    public static void checkIfWorkflowsHaveOrders(String controllerId, Set<String> workflowNames) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+    public static void checkIfWorkflowsHaveOrders(JControllerProxy proxy, Set<String> workflowNames) {
+
         if (workflowNames != null && !workflowNames.isEmpty()) {
             // JOC-2158
             // wait approx. 3 times for 1 seconds to check for existing orders to make sure any previous order process has the chance to finish
@@ -545,7 +568,7 @@ public class DeleteDeployments {
                 } catch (InterruptedException e) {
                 }
                 try {
-                    checkIfWorkflowsHaveOrders(controllerId, Proxy.of(controllerId).currentState(), workflowNames);
+                    checkIfWorkflowsHaveOrders(proxy.currentState(), workflowNames);
                 } catch (Exception e) {
                     if (i < 2) {
                         continue;
@@ -557,8 +580,8 @@ public class DeleteDeployments {
         }
     }
 
-    private static void checkIfWorkflowsHaveOrders(String controllerId, JControllerState currentState, Set<String> workflowNames) {
-        currentState.idToOrder().values().stream().map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).filter(
+    private static void checkIfWorkflowsHaveOrders(JControllerState currentState, Set<String> workflowNames) {
+        String controllerId = currentState.asScala().controllerId().string();
                 workflowNames::contains).findAny().map(w -> String.format(
                         "Workflow '%s' on Controller '%s' still contains orders to process. Please check your agents.", w, controllerId)).map(
                                 JocBadRequestException::new).ifPresent(e -> {

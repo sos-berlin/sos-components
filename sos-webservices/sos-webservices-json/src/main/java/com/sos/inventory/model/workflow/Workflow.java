@@ -34,6 +34,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "version",
     "versionId",
     "timeZone",
+    "dayOffset",
     "title",
     "documentationName",
     "orderPreparation",
@@ -60,7 +61,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.1.0";
+    private String version = "1.7.2";
     /**
      * string without < and >
      * <p>
@@ -71,6 +72,13 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     private String versionId;
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
+    /**
+     * time in format HH:MM:SS
+     * 
+     */
+    @JsonProperty("dayOffset")
+    @JsonPropertyDescription("time in format HH:MM:SS")
+    private String dayOffset;
     /**
      * string without < and >
      * <p>
@@ -88,7 +96,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     @JsonProperty("documentationName")
     private String documentationName;
     /**
-     * order or job requirements
+     * OrderPreparation
      * <p>
      * 
      * 
@@ -114,7 +122,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * workflow jobs
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobs")
@@ -131,20 +138,21 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * 
      * @param instructions
      * @param versionId
+     * @param dayOffset
      * @param jobResourceNames
      * @param jobs
      * @param timeZone
      * @param documentationName
-     * 
      * @param title
      * @param version
      * @param orderPreparation
      */
-    public Workflow(String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(String version, String versionId, String timeZone, String dayOffset, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
         super();
         this.version = version;
         this.versionId = versionId;
         this.timeZone = timeZone;
+        this.dayOffset = dayOffset;
         this.title = title;
         this.documentationName = documentationName;
         this.orderPreparation = orderPreparation;
@@ -219,6 +227,24 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     }
 
     /**
+     * time in format HH:MM:SS
+     * 
+     */
+    @JsonProperty("dayOffset")
+    public String getDayOffset() {
+        return dayOffset;
+    }
+
+    /**
+     * time in format HH:MM:SS
+     * 
+     */
+    @JsonProperty("dayOffset")
+    public void setDayOffset(String dayOffset) {
+        this.dayOffset = dayOffset;
+    }
+
+    /**
      * string without < and >
      * <p>
      * 
@@ -263,7 +289,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     }
 
     /**
-     * order or job requirements
+     * OrderPreparation
      * <p>
      * 
      * 
@@ -274,7 +300,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     }
 
     /**
-     * order or job requirements
+     * OrderPreparation
      * <p>
      * 
      * 
@@ -318,7 +344,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * workflow jobs
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobs")
@@ -330,7 +355,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * workflow jobs
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("jobs")
@@ -340,12 +364,12 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("timeZone", timeZone).append("title", title).append("documentationName", documentationName).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("timeZone", timeZone).append("title", title).append("dayOffset", dayOffset).append("documentationName", documentationName).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(jobResourceNames).append(jobs).append(timeZone).append(documentationName).append(tYPE).append(title).append(orderPreparation).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(jobResourceNames).append(jobs).append(timeZone).append(dayOffset).append(documentationName).append(tYPE).append(title).append(orderPreparation).toHashCode();
     }
 
     @Override
@@ -357,9 +381,9 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderPreparation, rhs.orderPreparation).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dayOffset, rhs.dayOffset).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderPreparation, rhs.orderPreparation).isEquals();
     }
-
+    
     @Override
     public boolean sufficientlyEquals(Object other) {
         if (other == this) {

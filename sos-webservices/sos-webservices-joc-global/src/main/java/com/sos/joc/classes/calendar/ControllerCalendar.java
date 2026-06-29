@@ -27,21 +27,22 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
-public class DailyPlanCalendar {
+public class ControllerCalendar {
 
     public static final String dailyPlanCalendarName = "dailyPlan";
+    public static final String calendarNamePrefix = "dayOffset-";
     private static final CalendarPath dailyPlanCalendarPath = CalendarPath.of(dailyPlanCalendarName);
-    private static DailyPlanCalendar instance;
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
+    private static ControllerCalendar instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerCalendar.class);
     private boolean initIsCalled = false;
 
-    private DailyPlanCalendar() {
+    private ControllerCalendar() {
         EventBus.getInstance().register(this);
     }
 
-    public static synchronized DailyPlanCalendar getInstance() {
+    public static synchronized ControllerCalendar getInstance() {
         if (instance == null) {
-            instance = new DailyPlanCalendar();
+            instance = new ControllerCalendar();
         }
         return instance;
     }
@@ -153,11 +154,23 @@ public class DailyPlanCalendar {
     }
 
     private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
-        return getCalendar(convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
+        return getDailyPlanCalendar(convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
     }
 
-    private static JCalendar getCalendar(long dateOffset) {
-        return JCalendar.of(dailyPlanCalendarPath, Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
+    private static JCalendar getDailyPlanCalendar(long dateOffset) {
+        return getCalendar(dailyPlanCalendarPath, dateOffset);
+    }
+    
+    public static JCalendar getCalendar(String name, String hhmmss) {
+        return getCalendar(name, convertPeriodBeginToSeconds(hhmmss));
+    }
+    
+    private static JCalendar getCalendar(String name, long dateOffset) {
+        return getCalendar(CalendarPath.of(name), dateOffset);
+    }
+    
+    private static JCalendar getCalendar(CalendarPath name, long dateOffset) {
+        return JCalendar.of(name, Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");
     }
 
     public static long convertPeriodBeginToSeconds(String periodBegin) {

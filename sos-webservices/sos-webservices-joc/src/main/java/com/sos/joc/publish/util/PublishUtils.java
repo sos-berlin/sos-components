@@ -868,6 +868,7 @@ public abstract class PublishUtils {
             // TODO: get Version to set here
             clone.setVersion(null);
             clone.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
+            clone.writeUpdateableContent(depHistoryItem.readUpdateableContent());
             clone.setCommitId(commitId);
             clone.setControllerId(controllerId);
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?

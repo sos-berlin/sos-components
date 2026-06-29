@@ -230,6 +230,7 @@ public class StoreDeployments {
                 PublishUtils.resetDependenciesEnforcementAfterPublish(optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
                         .collect(Collectors.toSet()), newHibernateSession);
 
+
             } else if (either.isLeft()) {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
@@ -312,7 +313,7 @@ public class StoreDeployments {
             switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                        .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null);
+                        .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
 
                 BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                     if (e.isRight()) {
@@ -334,7 +335,7 @@ public class StoreDeployments {
                     if (!selfIssued) {
                         Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                        .getCertificate(), null);
+                                        .getCertificate(), null, proxy);
 
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
@@ -347,7 +348,7 @@ public class StoreDeployments {
                     } else {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
 
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
@@ -373,7 +374,7 @@ public class StoreDeployments {
                     if (!selfIssued) {
                         Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                        .getCertificate(), null);
+                                        .getCertificate(), null, proxy);
 
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
@@ -386,7 +387,7 @@ public class StoreDeployments {
                     } else {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
+                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
 
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {

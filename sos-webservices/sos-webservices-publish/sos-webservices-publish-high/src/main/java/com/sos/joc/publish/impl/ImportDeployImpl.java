@@ -38,7 +38,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.board.BoardConverter;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -67,6 +69,7 @@ import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.workflow.Workflow;
 
 import jakarta.ws.rs.Path;
 import js7.data_for_java.item.JUpdateItemOperation;
@@ -189,6 +192,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     objectsToCheckPathRenaming.add(workflowDbItem);
                     DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), signaturePath, account,
                             DeployType.WORKFLOW);
+                    Workflow workflow = (Workflow) config.getContent();
+                    if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
+                        workflow.setDayOffset(WorkflowConverter.convertInventoryWorkflow(workflowDbItem.getContent()).getDayOffset());
+                    }
                     importedObjects.put(config, workflowDbItemSignature);
                     break;
                 case JOBRESOURCE:
@@ -336,7 +343,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         switch (keyPair.getKeyAlgorithm()) {
         case SOSKeyConstants.PGP_ALGORITHM_NAME:
             Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
-                    toDeleteForRename, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null);
+                    toDeleteForRename, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
 
             BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                 if (e.isRight()) {
@@ -357,7 +364,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (!selfIssued) {
                 Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                         toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
-                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null);
+                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null, proxy);
                 
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
@@ -373,7 +380,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 signerDN = cert.getSubjectX500Principal().getName();
                 Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                         toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
-                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN);
+                                : SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
                 
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
@@ -395,7 +402,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
           if (!selfIssued) {
               Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                       toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
-                              : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null);
+                              : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate(), null, proxy);
               
               BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                   if (e.isRight()) {
@@ -411,7 +418,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 signerDN = cert.getSubjectX500Principal().getName();
                 Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
                         toDeleteForRename, filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm()
-                                : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN);
+                                : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
                 
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {

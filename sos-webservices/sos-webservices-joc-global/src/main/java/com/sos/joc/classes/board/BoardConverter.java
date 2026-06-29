@@ -263,18 +263,6 @@ public class BoardConverter {
         } catch (Throwable e) {
             return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
         }
-//        try {
-//            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromDepItems(depItems, proxy.currentState());
-//            return convert(proxy.api(), newOldBoards).thenApply(e -> {
-//                if (e.isRight()) {
-//                    return Either.right(newOldBoards.keySet().stream().map(JBoardItem::path).map(BoardPath::string).collect(Collectors.toSet()));
-//                } else {
-//                    return Either.left(e.getLeft());
-//                }
-//            });
-//        } catch (Throwable e) {
-//            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
-//        }
     }
     
     public static CompletableFuture<Either<Problem, Response>> convertToFromControllerObjs(JControllerProxy proxy, Collection<ControllerObject> depItems) {
@@ -283,18 +271,6 @@ public class BoardConverter {
         } catch (Throwable e) {
             return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
         }
-//        try {
-//            Map<JBoardItem, JBoardItem> newOldBoards = getNewOldBoardMapFromControllerObjs(depItems, proxy.currentState());
-//            return convert(proxy.api(), newOldBoards).thenApply(e -> {
-//                if (e.isRight()) {
-//                    return Either.right(newOldBoards.keySet().stream().map(JBoardItem::path).map(BoardPath::string).collect(Collectors.toSet()));
-//                } else {
-//                    return Either.left(e.getLeft());
-//                }
-//            });
-//        } catch (Throwable e) {
-//            return CompletableFuture.completedFuture(Either.left(Problem.of(e.toString())));
-//        }
     }
 
 }

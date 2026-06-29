@@ -1,11 +1,8 @@
 package com.sos.joc.publish.impl;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -23,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,10 +27,8 @@ import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.settings.ClusterSettings;
-import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
-import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -44,19 +37,11 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocNotImplementedException;
-import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -75,6 +60,8 @@ import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.sign.model.fileordersource.FileOrderSource;
+
+import js7.proxy.javaapi.JControllerProxy;
 
 public abstract class ADeploy extends JOCResourceImpl {
 
@@ -387,17 +374,18 @@ public abstract class ADeploy extends JOCResourceImpl {
             for (String controllerId : allowedControllerIds) {
                 // call updateRepo command via Proxy of given controllers
                 if(itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
+                    JControllerProxy proxy = Proxy.of(controllerId);
                     Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream()
                             .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
                    if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
-                       UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), controllerId)
+                       UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSources, allItemsToDelete.get(true), proxy)
                        .thenAccept(either -> {
                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFileOrderSources, xAccessToken, 
                                    getJocError(), deployFilter.getAddOrdersDateFrom(), allItemsToDelete.get(false), commitIdForDelete, 
                                    allItemsToDelete.get(true).stream().map(DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
                        });
                    } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
-                       UpdateItemUtils.updateItemsDelete(commitIdForDelete, allItemsToDelete.get(false), controllerId).thenAccept(either -> {
+                       UpdateItemUtils.updateItemsDelete(commitIdForDelete, allItemsToDelete.get(false), proxy).thenAccept(either -> {
                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError(),
                                    deployFilter.getAddOrdersDateFrom());
                        });

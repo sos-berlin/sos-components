@@ -21,7 +21,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
@@ -235,7 +235,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             if (updateControllerCalendar) {
                 // TODO: call for every known controller
-                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+                ControllerCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration
