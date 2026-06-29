@@ -516,8 +516,6 @@ public class DeleteDeployments {
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
-                @SuppressWarnings("unused")
-
                 for (DBItemDeploymentHistory optimistic : optimisticEntries) {
                     optimistic.setErrorMessage(either.getLeft().message());
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -582,6 +580,7 @@ public class DeleteDeployments {
 
     private static void checkIfWorkflowsHaveOrders(JControllerState currentState, Set<String> workflowNames) {
         String controllerId = currentState.asScala().controllerId().string();
+        currentState.idToOrder().values().stream().map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).filter(
                 workflowNames::contains).findAny().map(w -> String.format(
                         "Workflow '%s' on Controller '%s' still contains orders to process. Please check your agents.", w, controllerId)).map(
                                 JocBadRequestException::new).ifPresent(e -> {
