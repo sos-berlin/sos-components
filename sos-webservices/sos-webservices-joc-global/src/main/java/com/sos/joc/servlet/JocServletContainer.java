@@ -22,7 +22,7 @@ import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentClusterWatch;
 import com.sos.joc.classes.agent.AgentStoreUtils;
-import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.order.OrderTags;
@@ -86,7 +86,7 @@ public class JocServletContainer extends ServletContainer {
         DBMoveIamConfiguration.execute();
 
         ClusterWatch.getInstance();
-        DailyPlanCalendar.getInstance();
+        ControllerCalendar.getInstance();
         OrderTags.getInstance();
         AgentStoreUtils.getInstance();
         

@@ -5,7 +5,7 @@ import java.util.Date;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.resource.IDailyPlanCalendarResource;
 import com.sos.joc.model.audit.CategoryType;
@@ -25,7 +25,7 @@ public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDail
             if (response != null) {
                 return response;
             }
-            DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
+            ControllerCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
             return responseStatusJSOk(Date.from(Instant.now()));
             
         } catch (Exception e) {

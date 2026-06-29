@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.joc.classes.board.BoardConverter;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
@@ -33,12 +34,14 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.lock.Lock;
+import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.board.BoardPath;
+import js7.data.calendar.CalendarPath;
 import js7.data.item.VersionId;
 import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
@@ -46,6 +49,7 @@ import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 public class UpdateItemUtils {
@@ -165,12 +169,18 @@ public class UpdateItemUtils {
     }
     
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> toDelete,
-            String controllerId) {
-        Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
+            JControllerProxy proxy) {
+        Set<JUpdateItemOperation> updateItemOperations = new HashSet<>();
         if (toDelete != null) {
+            Set<JUpdateItemOperation> calendars = new HashSet<>();
+            Set<CalendarPath> controllerCalendars = proxy.currentState().pathToCalendar().keySet();
             updateItemOperations.addAll(toDelete.stream().filter(Objects::nonNull).map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
+                    CalendarPath cal = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName()); 
+                    if (controllerCalendars.contains(cal)) {
+                        calendars.add(JUpdateItemOperation.deleteSimple(cal));
+                    }
                     return JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()));
                 case JOBRESOURCE:
                     return JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()));
@@ -185,9 +195,10 @@ public class UpdateItemUtils {
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemOperations.addAll(calendars);
         }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(
-                Flux.fromIterable(updateItemOperations), Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId)))));
+        return proxy.api().updateItems(Flux.concat(Flux.fromIterable(updateItemOperations), Flux.just(JUpdateItemOperation.addVersion(VersionId.of(
+                commitId)))));
     }
     
     public static <T extends DBItem> Set<DBItemDeploymentHistory> checkRenamingForUpdate(Set<T> verifiedObjects,
@@ -328,14 +339,21 @@ public class UpdateItemUtils {
 //    }
     
     public static Set<JUpdateItemOperation> createUpdateAndDeleteItemOperations(Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            Set<DBItemDeploymentHistory> toDelete, String signatureAlgorithm, String certificate, String signerDN) {
-        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
+            Set<DBItemDeploymentHistory> toDelete, String signatureAlgorithm, String certificate, String signerDN, JControllerProxy proxy) {
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<>();
+        Set<JUpdateItemOperation> jCalendars = new HashSet<>();
         if (alreadyDeployed != null) {
             updateRepoOperations.addAll(alreadyDeployed.entrySet().stream().map(item -> {
                 IDeployObject content = item.getKey().readUpdateableContent();
                 try {
                     switch (item.getKey().getTypeAsEnum()) {
-                    case WORKFLOW: 
+                    case WORKFLOW:
+                        Workflow workflow = (Workflow) content;
+                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
+                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerCalendar.getCalendar(workflow.getCalendarPath(), workflow
+                                    .getDayOffset())));
+                        }
+                        // no break!!
                     case JOBRESOURCE:
                         try {
                             String json = JsonSerializer.serializeAsString(content);
@@ -377,12 +395,16 @@ public class UpdateItemUtils {
                     throw new JocDeployException(e);
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            
         }
         if(toDelete != null && !toDelete.isEmpty()) {
+            Set<CalendarPath> controllerCalendars = proxy.currentState().pathToCalendar().keySet();
             updateRepoOperations.addAll(toDelete.stream().map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
+                    CalendarPath controllerCalendar = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName());
+                    if (controllerCalendars.contains(controllerCalendar)) {
+                        jCalendars.add(JUpdateItemOperation.deleteSimple(controllerCalendar));
+                    }
                     return JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()));
                 case JOBRESOURCE:
                     return JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()));
@@ -398,18 +420,25 @@ public class UpdateItemUtils {
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
+        updateRepoOperations.addAll(jCalendars);
         return updateRepoOperations;
     }
     
     public static Set<JUpdateItemOperation> createUpdateAndDeleteItemOperationsFromImport(Map<ControllerObject, DBItemDepSignatures> alreadyDeployed,
-            Set<DBItemDeploymentHistory> toDeleteForRename, String signatureAlgorithm, String certificate, String signerDN)
+            Set<DBItemDeploymentHistory> toDeleteForRename, String signatureAlgorithm, String certificate, String signerDN, JControllerProxy proxy)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<>();
+        Set<JUpdateItemOperation> jCalendars = new HashSet<>();
         if (alreadyDeployed != null) {
             updateRepoOperations.addAll(alreadyDeployed.entrySet().stream().map(item -> {
                 try {
                     switch (item.getKey().getObjectType()) {
-                    case WORKFLOW: 
+                    case WORKFLOW:
+                        Workflow workflow = (Workflow) item.getKey().getContent();
+                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
+                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerCalendar.getCalendar(workflow.getCalendarPath(), workflow
+                                    .getDayOffset())));
+                        }
                     case JOBRESOURCE:
                         String json = item.getKey().getSignedContent();
                         if(signatureAlgorithm.equals(SOSKeyConstants.PGP_ALGORITHM_NAME)) {
@@ -449,9 +478,14 @@ public class UpdateItemUtils {
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         if(toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
+            Set<CalendarPath> controllerCalendars = proxy.currentState().pathToCalendar().keySet();
             updateRepoOperations.addAll(toDeleteForRename.stream().map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
+                    CalendarPath controllerCalendar = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName());
+                    if (controllerCalendars.contains(controllerCalendar)) {
+                        jCalendars.add(JUpdateItemOperation.deleteSimple(controllerCalendar));
+                    }
                     return JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()));
                 case JOBRESOURCE:
                     return JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()));
@@ -468,7 +502,7 @@ public class UpdateItemUtils {
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
             
         }
-
+        updateRepoOperations.addAll(jCalendars);
         return updateRepoOperations;
     }
     

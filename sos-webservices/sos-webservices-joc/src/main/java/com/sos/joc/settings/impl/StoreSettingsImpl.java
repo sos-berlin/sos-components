@@ -22,7 +22,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.calendar.ControllerCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.authentication.DBItemIamRole;
@@ -83,7 +83,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, hibernateSession);
                 if (dailyPlanHasChanged(newJsonObj, oldJsonObj)) {
                     // TODO: call for every known controller
-                    DailyPlanCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
+                    ControllerCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
                 }
             }
             jocConfigurationDBLayer.saveOrUpdateGlobalSettingsConfiguration(cfg, oldCfg);
@@ -149,13 +149,13 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 String curPeriodBegin = curDailyPlan.map(o -> o.getJsonObject("period_begin")).map(o -> o.getString("value", "")).orElse("");
                 String curStartTime = curDailyPlan.map(o -> o.getJsonObject("start_time")).map(o -> o.getString("value", "")).orElse("");
                 if (!curPeriodBegin.isEmpty()) {
-                    long periodBeginOffset = DailyPlanCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
+                    long periodBeginOffset = ControllerCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
                     if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
                     }
                 }
                 if (!curStartTime.isEmpty()) {
-                    long curStartTimeOffset = DailyPlanCalendar.convertTimeToSeconds(curStartTime, "start_time");
+                    long curStartTimeOffset = ControllerCalendar.convertTimeToSeconds(curStartTime, "start_time");
                     if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
                     }

@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,10 +29,12 @@ import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.RecallRevokeSemaphore;
 import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -47,6 +50,7 @@ import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
+import js7.proxy.javaapi.JControllerProxy;
 
 @Path("inventory/deployment")
 public class RevokeImpl extends JOCResourceImpl implements IRevoke {
@@ -170,8 +174,14 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                                 controllerId, dbAuditlog.getId(), account);
                         DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
                                 .getId(), account);
+                        JControllerProxy proxy;
+                        try {
+                            proxy = Proxy.of(controllerId);
+                        } catch (ExecutionException e) {
+                            throw new ProxyNotCoupledException(e);
+                        }
                         if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
-                            UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), controllerId)
+                            UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), proxy)
                             .thenAccept(either -> {
                                 DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevokeFileOrderSources, xAccessToken, 
                                         getJocError(), allItemsToDelete.get(false), commitIdForRevoke, 
@@ -179,7 +189,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                             });
                             
                         } else if(allItemsToDelete.get(false) != null && !allItemsToDelete.get(false).isEmpty()) {
-                            UpdateItemUtils.updateItemsDelete(commitIdForRevoke, allItemsToDelete.get(false), controllerId)
+                            UpdateItemUtils.updateItemsDelete(commitIdForRevoke, allItemsToDelete.get(false), proxy)
                             .thenAccept(either -> {
                                 DeleteDeployments.processAfterRevoke(either, controllerId, account, commitIdForRevoke, getAccessToken(), getJocError());
                             });
