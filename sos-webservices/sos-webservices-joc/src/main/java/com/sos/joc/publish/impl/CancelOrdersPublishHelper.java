@@ -60,23 +60,27 @@ public class CancelOrdersPublishHelper {
             }
             futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                 if (ccr.getException().isEmpty()) {
-                    DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
-                    localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
-                    localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    if(orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
-                        localOrderFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
-                    }
-                    if(orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-                        localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-                    }
-                    boolean successful = true;
+                    DailyPlanOrderFilterDef localOrderScheduleFilter = new DailyPlanOrderFilterDef();
+                    localOrderScheduleFilter.setControllerIds(Collections.singletonList(controllerId));
+                    localOrderScheduleFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
+                    localOrderScheduleFilter.setSchedulePaths(orderFilter.getSchedulePaths());
+                    
+                    DailyPlanOrderFilterDef localOrderWorkflowFilter = new DailyPlanOrderFilterDef();
+                    localOrderWorkflowFilter.setControllerIds(Collections.singletonList(controllerId));
+                    localOrderWorkflowFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
+                    localOrderWorkflowFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
+                    
+                    boolean successful1 = true;
+                    boolean successful2 = true;
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        if ((localOrderFilter.getWorkflowPaths() != null && !localOrderFilter.getWorkflowPaths().isEmpty()) ||
-                                (localOrderFilter.getSchedulePaths() != null && !localOrderFilter.getSchedulePaths().isEmpty())) {
-                            successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false);
+                        if (!orderFilter.getSchedulePaths().isEmpty()) {
+                            successful1 = deleteOrdersImpl.deleteOrders(localOrderScheduleFilter, xAccessToken, false, false, false); 
                         }
-                        if (!successful) {
+                        if (!orderFilter.getWorkflowPaths().isEmpty()) {
+                            successful2 = deleteOrdersImpl.deleteOrders(localOrderWorkflowFilter, xAccessToken, false, false, false);
+                        }
+                        if (!successful1 || !successful2) {
                             return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
                                     "Order delete failed due to missing permission.")));
                         }
