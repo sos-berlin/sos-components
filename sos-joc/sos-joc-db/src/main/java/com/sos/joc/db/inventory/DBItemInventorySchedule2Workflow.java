@@ -33,7 +33,7 @@ public class DBItemInventorySchedule2Workflow extends DBItem {
     @Column(name = "[WORKFLOW_NAME]", nullable = true)
     private String workflowName;
 
-    @Column(name = "[RELEASED]", nullable = false)
+    @Column(name = "[SCHEDULE_RELEASED]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean released;
 
