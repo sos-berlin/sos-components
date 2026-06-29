@@ -105,23 +105,14 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             JsonValidator.validate(filterBytes, DailyPlanModifyOrder.class);
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
-
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
-                    .getCreate()));
-            if (response != null) {
-                return response;
-            }
-
+            
             // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)
+            // TODO mabe exception if adhoc-order in the request: !orderIds.get(Boolean.TRUE).isEmpty()
             Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#T[0-9]+-.*"), Collectors
                     .toSet()));
             orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
             orderIds.putIfAbsent(Boolean.TRUE, Collections.emptySet());
-
-            // TODO mabe exception if adhoc-order in the request: !orderIds.get(Boolean.TRUE).isEmpty()
-
-            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
-
+            
             List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
                 dailyPlanOrderItems = getDailyPlanOrders(controllerId, DailyPlanUtils.getDistinctOrderIds(orderIds.get(Boolean.FALSE)));
@@ -129,6 +120,15 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
             if (dailyPlanOrderItems == null) {
                 dailyPlanOrderItems = Collections.emptyList();
             }
+
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getCreate()), dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet()));
+            if (response != null) {
+                return response;
+            }
+
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
+
             // boolean someDailyPlanOrdersAreSubmitted = dailyPlanOrderItems.stream().anyMatch(DBItemDailyPlanOrder::getSubmitted);
             // boolean onlyStarttimeModifications = hasOnlyStarttimeModifications(in);
 

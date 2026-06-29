@@ -92,8 +92,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
-                    .getOrders().getCreate()));
+            Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors
+                    .toSet());
+
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getOrders().getCreate()), workflows);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -109,17 +112,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId);
             
-            Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors.toSet());
-            
-            // TODO JOC-1453
-//            Set<String> workflowsWithLabels = Stream.of(
-//                    addOrders.getOrders().stream().filter(requestHasStartPositionSettings).filter(ao -> ao.getStartPosition() instanceof String)
-//                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
-//                    addOrders.getOrders().stream().filter(requestHasEndPositionSettings).filter(ao -> ao.getEndPositions().stream().filter(Objects::nonNull)
-//                        .anyMatch(o -> o instanceof String)).map(AddOrder::getWorkflowPath).map(JocInventory::pathToName), 
-//                    addOrders.getOrders().stream().filter(requestHasBlockPositionSettings)
-//                        .map(AddOrder::getWorkflowPath).map(JocInventory::pathToName)).flatMap(s -> s).collect(Collectors.toSet());
-
             Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
             Map<String, Set<BlockPosition>> workflowsWithBlockPositions = new HashMap<>();
             Map<String, Requirements> workflowOrderPreparations = new HashMap<>();
