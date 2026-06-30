@@ -38,9 +38,8 @@
     <inventory.schema.version>1.8.4-SNAPSHOT</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 
-    <jackson.version>2.21.1</jackson.version>
-    <jackson.databind.version>${jackson.version}</jackson.databind.version>
-    <jackson.annotation.version>2.21</jackson.annotation.version>
+    <jackson.version>2.22</jackson.version>
+    <jackson.databind.version>2.22.0</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
     <slf4j.version>2.0.18</slf4j.version>
@@ -430,7 +429,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson.databind.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -440,12 +439,12 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.annotation.version}</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-xml</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson.databind.version}</version>
       </dependency>
 
       <dependency>
