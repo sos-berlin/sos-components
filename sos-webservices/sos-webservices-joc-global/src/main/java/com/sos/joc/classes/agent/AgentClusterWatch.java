@@ -52,7 +52,7 @@ public class AgentClusterWatch {
         AgentClusterWatch.getInstance()._init(controllerId);
     }
     
-    public static String put(String controllerId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
+    public static String put(String controllerId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
         return AgentClusterWatch.getInstance()._put(controllerId, agentPath, problem);
     }
     
@@ -105,7 +105,7 @@ public class AgentClusterWatch {
     }
     
     private Optional<NodeId> _getLostNodeId(JAgentRefState agentRefState) {
-        Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(agentRefState.asScala()
+        Map<NodeId, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(agentRefState.asScala()
                 .nodeToLossNotConfirmedProblem());
         if (!lostNodeIds.isEmpty()) {
             return Optional.of(lostNodeIds.values().iterator().next().event().lostNodeId());
@@ -113,7 +113,7 @@ public class AgentClusterWatch {
         return Optional.empty();
     }
     
-    private String _put(String controllerId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
+    private String _put(String controllerId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
         lostNodes.putIfAbsent(controllerId, new ConcurrentHashMap<>());
         lostNodes.get(controllerId).put(agentPath, problem.event().lostNodeId());
         String message = String.format(logMessageFormat, agentPath.string(), controllerId, problem.messageWithCause());

@@ -18,6 +18,7 @@ import js7.cluster.watch.ClusterWatchService;
 import js7.data.cluster.ClusterState.HasNodes;
 import js7.data.cluster.ClusterWatchId;
 import js7.data.cluster.ClusterWatchProblems;
+import js7.data.cluster.Confirmer;
 import js7.data.node.NodeId;
 import js7.proxy.javaapi.JControllerApi;
 import scala.jdk.javaapi.OptionConverters;
@@ -42,7 +43,7 @@ public class ClusterWatchServiceContext {
         logClusterState(primaryId, backupId);
     }
     
-    private void onNodeLossNotConfirmedProblem(ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
+    private void onNodeLossNotConfirmedProblem(ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
         lossNode = problem.event().lostNodeId();
         message = problem.messageWithCause();
         Instant now = Instant.now();
@@ -79,7 +80,7 @@ public class ClusterWatchServiceContext {
 //            throw new ControllerConflictException("The cluster node with id '" + lossNodeId.string() + "' is not lost.");
 //        } else {
             LOGGER.info("[ClusterWatchService] send service.confirmNodeLoss(" + lossNodeId.string() + ")");
-            controllerApi.manuallyConfirmNodeLoss(lossNodeId, confirmer).thenAccept(either -> {
+            controllerApi.manuallyConfirmNodeLoss(lossNodeId, Confirmer.of(confirmer)).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                 if (either.isRight()) {
                     burstFilter = null;

@@ -733,7 +733,7 @@ public class EventService {
             } else if (evt instanceof AgentRefStateEvent.AgentClusterWatchConfirmationRequired) {
                 AgentPath agentPath = (AgentPath) key;
                 AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;
-                ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem = clusterWatchEvt.problem();
+                ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem = clusterWatchEvt.problem();
                 // TODO store lostNostId for confirm command and for repeated events
                 addEvent(createNodeLossProblem(eventId, agentPath, problem));
                 addEvent(createAgentEvent(eventId, agentPath.string()));
@@ -879,7 +879,7 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem) {
+    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
         String msg = AgentClusterWatch.put(controllerId, agentPath, problem);
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);

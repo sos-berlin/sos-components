@@ -3,7 +3,6 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -612,11 +611,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         if (jAgentRefState != null) {
             try {
                 clusterState = Globals.objectMapper.readValue(jAgentRefState.clusterState().toJson(), AgentDirectorClusterState.class);
-                Map<NodeId, ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(jAgentRefState.asScala()
+                Map<NodeId, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(jAgentRefState.asScala()
                         .nodeToLossNotConfirmedProblem());
                 if (!lostNodeIds.isEmpty()) {
                     clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
-                    ClusterWatchProblems.ClusterNodeLossNotConfirmedProblem problem = lostNodeIds.values().iterator().next();
+                    ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem = lostNodeIds.values().iterator().next();
                     clusterState.setLostNodeId(problem.event().lostNodeId().string());
                     clusterState.setLostNodeProblem(ProblemHelper.getErrorMessage(problem));
                 }
