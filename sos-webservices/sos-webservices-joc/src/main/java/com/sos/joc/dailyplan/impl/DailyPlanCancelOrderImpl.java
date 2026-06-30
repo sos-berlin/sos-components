@@ -53,6 +53,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -71,6 +72,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validateFailFast(filterBytes, "orderManagement/dailyplan/dailyPlanOrdersFilterDef-schema.json");
             DailyPlanOrderFilterDef in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilterDef.class);
             
+            in.setStates(Collections.singletonList(DailyPlanOrderStateText.SUBMITTED));
             Map<String, List<DBItemDailyPlanOrder>> ordersPerController = getOrdersPerController(in);
             
             JOCDefaultResponse response = null;
@@ -123,7 +125,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             final Set<String> orderIds = orders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
             final JControllerProxy proxy = Proxy.of(controllerId);
             
-            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds)
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
@@ -165,7 +167,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             
             final JControllerProxy proxy = Proxy.of(controllerId);
             
-            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds)
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
@@ -201,7 +203,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return futures.values();
     }
     
-    private Map<String, List<DBItemDailyPlanOrder>> getOrdersPerController(DailyPlanOrderFilterDef in) throws SOSHibernateException {
+    protected static Map<String, List<DBItemDailyPlanOrder>> getOrdersPerController(DailyPlanOrderFilterDef in) throws SOSHibernateException {
         Map<String, List<DBItemDailyPlanOrder>> ordersPerController = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, IMPL_PATH)
                 .stream().collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
         

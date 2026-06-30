@@ -74,6 +74,10 @@ public class DBLayerDailyPlannedOrders {
     public void setSession(SOSHibernateSession session) {
         this.session = session;
     }
+    
+    public SOSHibernateSession getSession() {
+        return session;
+    }
 
     public void deleteSingleCascading(DBItemDailyPlanOrder item) throws SOSHibernateException {
         // order

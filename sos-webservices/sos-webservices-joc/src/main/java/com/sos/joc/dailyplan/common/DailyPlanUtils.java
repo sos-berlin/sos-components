@@ -65,6 +65,9 @@ public class DailyPlanUtils {
         if (in.getDailyPlanDateTo() != null) {
             filter.setSubmissionForDateTo(JobSchedulerDate.getDateFrom(in.getDailyPlanDateTo() + "T00:00:00Z", "UTC"));
         }
+        filter.setLate(in.getLate());
+        filter.setSubmissionIds(in.getSubmissionHistoryIds());
+        filter.setStates(in.getStates());
         filter.setOrderCriteria(null);
         filter.setSortMode(null);
         return filter;

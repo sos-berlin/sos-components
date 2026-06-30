@@ -1647,14 +1647,14 @@ public class OrdersHelper {
             ExecutionException {
 
         return cancelFreshOrders(Proxy.of(controllerId), listOfDailyPlanOrders.stream().parallel().map(DBItemDailyPlanOrder::getOrderId).collect(
-                Collectors.toSet()), controllerId);
+                Collectors.toSet()));
     }
     
-    public static CompletableFuture<Either<Problem, Void>> cancelFreshOrders(JControllerProxy proxy, Set<String> orderIds, String controllerId) {
-        return cancelRecursively(proxy, orderIds, controllerId, Either.right(null), 0);
+    public static CompletableFuture<Either<Problem, Void>> cancelFreshOrders(JControllerProxy proxy, Set<String> orderIds) {
+        return cancelRecursively(proxy, orderIds, Either.right(null), 0);
     }
     
-    private static CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds, String controllerId,
+    private static CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds,
             Either<Problem, Void> either, int count) {
         if(count > 0) {
             LOGGER.info("error occurred. retry cancel order. " + count + " try. " + ProblemHelper.getErrorMessage(either.getLeft()));
@@ -1676,7 +1676,7 @@ public class OrdersHelper {
         return future.thenCompose(e -> {
             if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).matches(".*(" + ProblemHelper.UNKNOWN_ORDER +"|" 
                     + ProblemHelper.CANCEL_STARTED_ORDER + "):.*")) {
-                return cancelRecursively(proxy, orderIds, controllerId, e, newCount);
+                return cancelRecursively(proxy, orderIds, e, newCount);
             }
             return CompletableFuture.completedFuture(e);
         });
