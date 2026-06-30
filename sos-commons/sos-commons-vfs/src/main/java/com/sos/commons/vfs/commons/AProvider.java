@@ -465,17 +465,17 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         return String.format("%s[connect]%s ...", getLogPrefix(), accessInfo);
     }
 
-    public String getConnectFailedMsg() {
-        return getConnectedMsg(null);
+    public String getConfiguredConnectInfos() {
+        return getConfiguredConnectInfos(null);
     }
 
-    public String getConnectFailedMsg(List<String> additionalInfos) {
+    public String getConfiguredConnectInfos(List<String> additionalInfos) {
         List<String> msg = new ArrayList<>();
         msg.add("ConnectTimeout=" + getArguments().getConnectTimeout().getValue());
         if (!SOSCollection.isEmpty(additionalInfos)) {
             msg.addAll(additionalInfos);
         }
-        return String.format("%s[connect][%s][%s]failed", getLogPrefix(), accessInfo, Joiner.on(", ").join(msg));
+        return Joiner.on(", ").join(msg);
     }
 
     public String getConnectedMsg() {
@@ -510,7 +510,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         if (proxyConfig == null) {
             accessInfo = val;
         } else {
-            accessInfo = "[proxy " + proxyConfig.getAccessInfo() + "]" + val;
+            accessInfo = val + " via proxy " + proxyConfig.getAccessInfo();
         }
     }
 

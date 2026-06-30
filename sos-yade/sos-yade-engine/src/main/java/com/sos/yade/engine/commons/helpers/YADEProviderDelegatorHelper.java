@@ -96,7 +96,7 @@ public class YADEProviderDelegatorHelper {
             return new YADEEngineJumpHostConnectionException(ex.getMessage(), ex.getCause());
         }
         if (delegator instanceof YADESourceProviderDelegator) {
-            return new YADEEngineSourceConnectionException(ex.getCause());
+            return new YADEEngineSourceConnectionException(ex.getMessage(), ex.getCause());
         }
         return new YADEEngineTargetConnectionException(ex.getMessage(), ex.getCause());
     }
