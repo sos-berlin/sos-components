@@ -786,7 +786,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-            DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
 
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
             if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
@@ -810,20 +809,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             controllerId)));
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
-                            DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
-                            localOrderFilter.setControllerIds(Collections.singletonList(controllerId));
-                            localOrderFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                            localOrderFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-                            boolean successful = true;
                             try {
-                                // TODO create Method to transfer a set of order objects to delete instead of a filter
-                                if (!localOrderFilter.getSchedulePaths().isEmpty()) {
-                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false); 
-                                }
-                                if (!successful) {
-                                    return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
-                                            "Order delete failed due to missing permission.")));
-                                }
+                                DailyPlanDeleteOrdersImpl.deleteOrdersOfController(IMPL_PATH, controllerId, orderFilter.getDailyPlanDateFrom(), null,
+                                        orderFilter.getSchedulePaths());
+
                             } catch (Exception e) {
                                 return new ControllerCommandResponse(controllerId, Optional.of(e));
                             }

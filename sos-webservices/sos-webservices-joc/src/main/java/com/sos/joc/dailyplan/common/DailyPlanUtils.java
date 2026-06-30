@@ -19,11 +19,10 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 
 public class DailyPlanUtils {
 
-    public static List<DBItemDailyPlanOrder> getOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in,
-            DailyPlanSettings settings, String API_CALL) throws SOSHibernateException {
+    public static List<DBItemDailyPlanOrder> getOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in, String API_CALL) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
-            FilterDailyPlannedOrders filter = getFilterDailyPlannedOrders(in, settings);
+            FilterDailyPlannedOrders filter = getFilterDailyPlannedOrders(in);
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -45,7 +44,7 @@ public class DailyPlanUtils {
         }
     }
     
-    public static FilterDailyPlannedOrders getFilterDailyPlannedOrders(DailyPlanOrderFilterDef in, DailyPlanSettings settings) {
+    public static FilterDailyPlannedOrders getFilterDailyPlannedOrders(DailyPlanOrderFilterDef in) {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setControllerIds(in.getControllerIds());
         filter.setOrderIds(in.getOrderIds());
@@ -60,9 +59,6 @@ public class DailyPlanUtils {
         filter.setScheduleFolders(in.getScheduleFolders());
         filter.setWorkflowFolders(in.getWorkflowFolders());
         
-        // TODO not planned start time is relevant
-        //filter.setDailyPlanInterval(in.getDailyPlanDateFrom(), in.getDailyPlanDateTo(), settings.getTimeZone(), settings.getPeriodBegin());
-        // instead join to submissions
         if (in.getDailyPlanDateFrom() != null) {
             filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(in.getDailyPlanDateFrom() + "T00:00:00Z", "UTC"));
         }

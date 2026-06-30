@@ -347,7 +347,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected Date toUTCDate(String date) {
+    protected static Date toUTCDate(String date) {
         if (date == null) {
             return null;
         }

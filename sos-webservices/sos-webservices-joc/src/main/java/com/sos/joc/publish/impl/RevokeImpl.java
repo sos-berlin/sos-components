@@ -145,7 +145,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                         .filter(item -> !workflowsWithAlreadyCanceledOrders.contains(item.getName())).collect(Collectors.toSet());
                         
                 DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(filteredDepHistoryItemsforCancelOrders,
-                        Optional.ofNullable(null), "now", controllerId);
+                        Optional.empty(), "now", controllerId);
                 
                 List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
                         CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);

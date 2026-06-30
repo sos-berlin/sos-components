@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,10 +32,8 @@ import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.DailyPlanUtils;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
-import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanCancelOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -99,8 +96,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
-        setSettings(IMPL_PATH);
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), IMPL_PATH)
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, IMPL_PATH)
                 .stream().collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
 
         if (!ordersPerControllerIds.isEmpty()) {
@@ -111,8 +107,6 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             if (ordersPerControllerIds.keySet().isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
             }
-        } else {
-            initGetPermissions(accessToken);
         }
         return ordersPerControllerIds;
     }
@@ -133,7 +127,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
-                        updateDailyPlan(orderIds, false);
+                        updateDailyPlan(orders, orderIds);
                         return new ControllerCommandResponse(controllerId);
                     } catch (Exception ex) {
                         return new ControllerCommandResponse(controllerId, Optional.of(ex));
@@ -175,7 +169,10 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             .thenApply(either -> {
                 if (either.isRight()) {
                     try {
-                        updateDailyPlan(orderIds, true);
+                        updateDailyPlan(permittedOrders, orderIds);
+                        //events
+                        orderIds.stream().map(oId -> oId.substring(1, 11)).distinct().map(date -> new DailyPlanEvent(controllerId, date))
+                            .forEach(EventBus.getInstance()::post);
                         return new ControllerCommandResponse(controllerId);
                     } catch (Exception ex) {
                         return new ControllerCommandResponse(controllerId, Optional.of(ex));
@@ -205,8 +202,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     }
     
     private Map<String, List<DBItemDailyPlanOrder>> getOrdersPerController(DailyPlanOrderFilterDef in) throws SOSHibernateException {
-        setSettings(IMPL_PATH);
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), IMPL_PATH)
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, IMPL_PATH)
                 .stream().collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
         
         if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
@@ -223,7 +219,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 if (in.getDailyPlanDateTo() != null) {
                     dateTo = Arrays.asList(dateTo, in.getDailyPlanDateTo()).stream().sorted().toList().get(0);
                 }
-                FilterDailyPlannedOrders filter = DailyPlanUtils.getFilterDailyPlannedOrders(in, null); // TODO null: see TODO in method getFilterDailyPlannedOrders
+                FilterDailyPlannedOrders filter = DailyPlanUtils.getFilterDailyPlannedOrders(in);
                 filter.setOrderIds(null);
                 filter.setStartMode(1); // only all cyclic orders
                 filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(dateFrom + "T00:00:00Z", "UTC"));
@@ -258,45 +254,21 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         });
     }
 
-    private static void updateDailyPlan(Collection<String> orderIds, boolean withEvent) {
+    private static void updateDailyPlan(Collection<DBItemDailyPlanOrder> orders, Collection<String> orderIds) {
         SOSHibernateSession session = null;
-        if (!orderIds.isEmpty()) {
+        if (!orders.isEmpty()) {
             try {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format("[updateDailyPlan][caller=cancelOrders][orderIds=%s]%s", orderIds.size(), String.join(",", orderIds)));
                 }
-
-                DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH);
-
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setOrderIds(orderIds);
-                filter.setSubmitted(false);
-                filter.setSortMode(null);
-                filter.setOrderCriteria(null);
-
+                
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(cancelOrders)");
-                session.setAutoCommit(false);
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                Globals.beginTransaction(session);
-                dbLayer.setSubmitted(filter);
-                Globals.commit(session);
-                List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
-                Globals.disconnect(session);
-                session = null;
-
-                Set<String> days = new HashSet<String>();
-                for (DBItemDailyPlanOrder item : items) {
-                    String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
-                    if (!days.contains(date)) {
-                        days.add(date);
-                        if (withEvent) {
-                            EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
-                        }
-                    }
+                for (DBItemDailyPlanOrder order : orders) {
+                    order.setSubmitted(false);
+                    session.update(order);
                 }
 
             } catch (Exception e) {
-                Globals.rollback(session);
                 throw new JocSosHibernateException(e);
             } finally {
                 Globals.disconnect(session);

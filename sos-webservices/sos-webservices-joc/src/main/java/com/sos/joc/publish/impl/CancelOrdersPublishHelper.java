@@ -31,7 +31,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -48,7 +47,6 @@ public class CancelOrdersPublishHelper {
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-        DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
         Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
                 xAccessToken);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
@@ -60,30 +58,10 @@ public class CancelOrdersPublishHelper {
             }
             futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                 if (ccr.getException().isEmpty()) {
-                    DailyPlanOrderFilterDef localOrderScheduleFilter = new DailyPlanOrderFilterDef();
-                    localOrderScheduleFilter.setControllerIds(Collections.singletonList(controllerId));
-                    localOrderScheduleFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    localOrderScheduleFilter.setSchedulePaths(orderFilter.getSchedulePaths());
-                    
-                    DailyPlanOrderFilterDef localOrderWorkflowFilter = new DailyPlanOrderFilterDef();
-                    localOrderWorkflowFilter.setControllerIds(Collections.singletonList(controllerId));
-                    localOrderWorkflowFilter.setDailyPlanDateFrom(orderFilter.getDailyPlanDateFrom());
-                    localOrderWorkflowFilter.setWorkflowPaths(orderFilter.getWorkflowPaths());
-                    
-                    boolean successful1 = true;
-                    boolean successful2 = true;
                     try {
-                        // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        if (!orderFilter.getSchedulePaths().isEmpty()) {
-                            successful1 = deleteOrdersImpl.deleteOrders(localOrderScheduleFilter, xAccessToken, false, false, false); 
-                        }
-                        if (!orderFilter.getWorkflowPaths().isEmpty()) {
-                            successful2 = deleteOrdersImpl.deleteOrders(localOrderWorkflowFilter, xAccessToken, false, false, false);
-                        }
-                        if (!successful1 || !successful2) {
-                            return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(
-                                    "Order delete failed due to missing permission.")));
-                        }
+                        DailyPlanDeleteOrdersImpl.deleteOrdersOfController(null, controllerId, orderFilter.getDailyPlanDateFrom(), orderFilter
+                                .getWorkflowPaths(), orderFilter.getSchedulePaths());
+
                     } catch (Exception e) {
                         return new ControllerCommandResponse(controllerId, Optional.of(e));
                     }
