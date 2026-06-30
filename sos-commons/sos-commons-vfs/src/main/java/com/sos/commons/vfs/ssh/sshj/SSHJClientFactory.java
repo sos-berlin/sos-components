@@ -40,27 +40,7 @@ public class SSHJClientFactory {
 
     private static final String SSH_MSG_UNIMPLEMENTED = "SSH_MSG_UNIMPLEMENTED";
 
-    protected static SSHClient createAuthenticatedClient(SSHJProvider provider, String connectMsg) throws Exception {
-        /** 1) Create */
-        SSHClient client = create(provider);
-        /** 2) Connect */
-        provider.getLogger().info(connectMsg);
-        client.connect(provider.getArguments().getHost().getValue(), provider.getArguments().getPort().getValue());
-        /** 3) Authenticate */
-        authenticate(provider, client);
-        /** 4) Post-Connect Keep Alive */
-        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
-            client.getConnection().getKeepAlive().setKeepAliveInterval(provider.getArguments().getServerAliveIntervalAsSeconds());
-            if (!provider.getArguments().getServerAliveCountMax().isEmpty()) {
-                // NOTE - KeepAliveRunner - is only available if KeepAliveProvider.KEEP_ALIVE is used, otherwise it is an instance of SSHJ Heartbeater
-                ((KeepAliveRunner) client.getConnection().getKeepAlive()).setMaxAliveCount(provider.getArguments().getServerAliveCountMax().getValue()
-                        .intValue());
-            }
-        }
-        return client;
-    }
-
-    private static SSHClient create(SSHJProvider provider) throws Exception {
+    protected static SSHClient create(SSHJProvider provider) throws Exception {
         Config config = new DefaultConfig();
         SSHJConfigPostProcessor.apply(provider, config);
 
@@ -82,6 +62,23 @@ public class SSHJClientFactory {
             client.setSocketFactory(new ProxySocketFactory(provider.getProxyConfig()));
         }
         return client;
+    }
+
+    protected static void connectAndAuthenticate(SSHJProvider provider, String connectMsg, SSHClient client) throws Exception {
+        /** 1) Connect */
+        provider.getLogger().info(connectMsg);
+        client.connect(provider.getArguments().getHost().getValue(), provider.getArguments().getPort().getValue());
+        /** 2) Authenticate */
+        authenticate(provider, client);
+        /** 3) Post-Connect Keep Alive */
+        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
+            client.getConnection().getKeepAlive().setKeepAliveInterval(provider.getArguments().getServerAliveIntervalAsSeconds());
+            if (!provider.getArguments().getServerAliveCountMax().isEmpty()) {
+                // NOTE - KeepAliveRunner - is only available if KeepAliveProvider.KEEP_ALIVE is used, otherwise it is an instance of SSHJ Heartbeater
+                ((KeepAliveRunner) client.getConnection().getKeepAlive()).setMaxAliveCount(provider.getArguments().getServerAliveCountMax().getValue()
+                        .intValue());
+            }
+        }
     }
 
     private static void authenticate(SSHJProvider provider, SSHClient client) throws ProviderAuthenticationException {

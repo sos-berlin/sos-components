@@ -4,6 +4,10 @@ public class YADEEngineSourceConnectionException extends YADEEngineConnectionExc
 
     private static final long serialVersionUID = 1L;
 
+    public YADEEngineSourceConnectionException(String msg, Throwable ex) {
+        super(msg, ex);
+    }
+
     public YADEEngineSourceConnectionException(Throwable ex) {
         super(ex);
     }

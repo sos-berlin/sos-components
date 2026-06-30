@@ -114,7 +114,7 @@ public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> ext
     }
 
     @Override
-    public String getConnectFailedMsg() {
+    public String getConfiguredConnectInfos() {
         List<String> l = new ArrayList<>();
         l.add("SocketTimeout=" + getArguments().getSocketTimeout().getValue());
         if (!getArguments().getServerAliveInterval().isEmpty()) {
@@ -123,6 +123,6 @@ public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> ext
         if (!getArguments().getServerAliveCountMax().isEmpty()) {
             l.add("MaxAliveCount=" + getArguments().getServerAliveCountMax().getValue());
         }
-        return getConnectFailedMsg(l);
+        return getConfiguredConnectInfos(l);
     }
 }

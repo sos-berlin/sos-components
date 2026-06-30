@@ -157,22 +157,19 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
                 getLogger().info(getConnectedMsg(getConnectedInfos(client)));
             } catch (Exception e) {
-                // log on INFO level because on ERROR the output is combined with the exception (via stderr) and not printed immediately after [connect] ...
-                getLogger().info(getConnectFailedMsg());
-
                 // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
                 // error in methods executed after connect() - e.g. if retry, roll back...
                 // Call disconnect() in the application's finally block.
                 // if (isConnected()) {
                 // disconnect();
                 // }
-                throw new ProviderConnectException(String.format("[%s]", getAccessInfo()), e);
+                throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
             }
         }
     }
 
     @Override
-    public String getConnectFailedMsg() {
+    public String getConfiguredConnectInfos() {
         List<String> l = new ArrayList<>();
         if (!getArguments().getKeepAliveTimeout().isEmpty()) {
             l.add("KeepAliveTimeout=" + getArguments().getKeepAliveTimeout().getValue());
@@ -182,7 +179,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         }
         l.add(getArguments().getTransferMode().getName() + "=" + getArguments().getTransferModeValue());
 
-        return getConnectFailedMsg(l);
+        return getConfiguredConnectInfos(l);
     }
 
     /** Overrides {@link IProvider#isConnected()} */
