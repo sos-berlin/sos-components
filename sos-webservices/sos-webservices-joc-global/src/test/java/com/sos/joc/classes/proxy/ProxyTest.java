@@ -305,7 +305,7 @@ public class ProxyTest {
     public void testControllerWatch() {
             try {
                 JControllerApi api = ControllerApi.of(credential);
-                api.runClusterWatch(ClusterWatchId.of("joc#0"));
+                api.runClusterWatch(ClusterWatchId.of("joc#0"), false);
                 TimeUnit.SECONDS.sleep(5);
                 Either<Problem, JControllerState> stateE = api.controllerState().get();
                 if (stateE.isRight()) {

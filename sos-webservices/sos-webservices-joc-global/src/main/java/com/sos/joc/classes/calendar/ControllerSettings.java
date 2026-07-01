@@ -204,14 +204,14 @@ public class ControllerSettings {
         return s;
     }
 
-    public void updateRequiredFailoverConfirmation(String accessToken, JocError jocError) {
-        updateRequiredFailoverConfirmationForClusterWatch(accessToken, jocError);
+    public void updateRequireFailoverConfirmation(String accessToken, JocError jocError) {
+        updateRequireFailoverConfirmationForClusterWatch(accessToken, jocError);
         boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
-        Proxies.getControllerDbInstances().keySet().forEach(controllerId -> updateRequiredFailoverConfirmationForAgents(controllerId,
+        Proxies.getControllerDbInstances().keySet().forEach(controllerId -> updateRequireFailoverConfirmationForAgents(controllerId,
                 requireFailoverConfirmation, accessToken, jocError));
     }
     
-    private void updateRequiredFailoverConfirmationForClusterWatch(String accessToken, JocError jocError) {
+    private void updateRequireFailoverConfirmationForClusterWatch(String accessToken, JocError jocError) {
         Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey).forEach(controllerId -> {
             try {
                 ClusterWatch.getInstance().forcedRestart(controllerId);
@@ -221,7 +221,7 @@ public class ControllerSettings {
         });
     }
 
-    private void updateRequiredFailoverConfirmationForAgents(String controllerId, boolean requireFailoverConfirmation, String accessToken, JocError jocError) {
+    private void updateRequireFailoverConfirmationForAgents(String controllerId, boolean requireFailoverConfirmation, String accessToken, JocError jocError) {
         try {
             JControllerProxy proxy = Proxy.of(controllerId);
             Predicate<JAgentRef> hasDifferentFailoverSetting = aRef -> requireFailoverConfirmation != aRef.asScala().requireFailoverConfirmation();

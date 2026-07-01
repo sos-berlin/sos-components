@@ -227,14 +227,14 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         return oldObj;
     }
 
-    public static boolean requiredFailoverConfirmationHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
+    public static boolean requireFailoverConfirmationHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
             SOSHibernateSession hibernateSession) {
         String _default = "" + ConfigurationGlobalsJoc.requireFailoverConfirmationDefault;
-        String oldRequiredFailoverConfirmation = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                ConfigurationGlobalsJoc.requiredFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
-        String newRequiredFailoverConfirmation = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                ConfigurationGlobalsJoc.requiredFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
-        if (oldRequiredFailoverConfirmation.equalsIgnoreCase(newRequiredFailoverConfirmation)) {
+        String oldRequireFailoverConfirmation = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                ConfigurationGlobalsJoc.requireFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
+        String newRequireFailoverConfirmation = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                ConfigurationGlobalsJoc.requireFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
+        if (oldRequireFailoverConfirmation.equalsIgnoreCase(newRequireFailoverConfirmation)) {
             return false;
         }
         DBItemJocInstance activeInstance = new JocInstancesDBLayer(hibernateSession).getActiveInstance();

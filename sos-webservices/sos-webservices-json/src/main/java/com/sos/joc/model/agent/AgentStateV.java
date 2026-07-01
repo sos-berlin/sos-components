@@ -38,7 +38,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "errorMessage",
     "orders",
     "runningTasks",
-    "disabled"
+    "disabled",
+    "requireFailoverConfirmation"
 })
 public class AgentStateV {
 
@@ -145,6 +146,8 @@ public class AgentStateV {
     private Integer runningTasks;
     @JsonProperty("disabled")
     private Boolean disabled = false;
+    @JsonProperty("requireFailoverConfirmation")
+    private Boolean requireFailoverConfirmation;
 
     /**
      * controllerId
@@ -452,6 +455,19 @@ public class AgentStateV {
     @JsonProperty("disabled")
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
+    }
+    
+    @JsonProperty("requireFailoverConfirmation")
+    public Boolean getRequireFailoverConfirmation() {
+        if (requireFailoverConfirmation != Boolean.TRUE) {
+            return null;
+        }
+        return requireFailoverConfirmation;
+    }
+
+    @JsonProperty("requireFailoverConfirmation")
+    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
+        this.requireFailoverConfirmation = requireFailoverConfirmation;
     }
 
     @Override
