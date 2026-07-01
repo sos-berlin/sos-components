@@ -375,6 +375,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public boolean requireFailoverConfirmation() {
         return Optional.ofNullable(requireFailoverConfirmation.getValue()).map(v -> v.equalsIgnoreCase("true")).orElse(
                 requireFailoverConfirmationDefault);
+    }
     
     public List<String> getWorkflowsRequiringApprovalTags() {
         return Optional.ofNullable(workflowsRequiringApproval.getValues()).orElse(Collections.emptyList());
