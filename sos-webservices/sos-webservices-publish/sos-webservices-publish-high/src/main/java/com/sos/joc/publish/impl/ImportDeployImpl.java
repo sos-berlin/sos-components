@@ -38,7 +38,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.board.BoardConverter;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.proxy.Proxy;
@@ -193,7 +193,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), signaturePath, account,
                             DeployType.WORKFLOW);
                     Workflow workflow = (Workflow) config.getContent();
-                    if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
+                    if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerSettings.calendarNamePrefix)) {
                         workflow.setDayOffset(WorkflowConverter.convertInventoryWorkflow(workflowDbItem.getContent()).getDayOffset());
                     }
                     importedObjects.put(config, workflowDbItemSignature);

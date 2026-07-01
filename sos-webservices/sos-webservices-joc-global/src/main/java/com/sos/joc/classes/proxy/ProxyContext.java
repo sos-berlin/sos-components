@@ -18,7 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.board.PlanSchemas;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
@@ -197,7 +197,7 @@ public class ProxyContext {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 JControllerState currentState = p.currentState();
-                ControllerCalendar.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
+                ControllerSettings.getInstance().updateDailyPlanCalendar(p.api(), currentState, toString());
                 PlanSchemas.updatePlanSchemas(p.api(), currentState, toString());
                 
                 Map<AgentPath, JAgentRef> controllerKnownAgents = currentState.pathToAgentRef();

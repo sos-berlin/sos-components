@@ -94,6 +94,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
             
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
+            boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
             
             List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
@@ -139,7 +140,7 @@ public class SubAgentClusterDeployImpl extends JOCResourceImpl implements ISubAg
                             .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                     SubagentId::of).collect(Collectors.toList());
                     updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors, AgentHelper.getProcessLimit(dbAgent
-                            .getProcessLimit()))));
+                            .getProcessLimit()), requireFailoverConfirmation)));
                     updateSubagentIds.addAll(directors.stream().map(SubagentId::string).collect(Collectors.toList()));
                 }
             }

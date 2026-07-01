@@ -126,8 +126,9 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
         }
     }
     
+    //requireFailoverConfirmation always false, because it is standalone
     private static JAgentRef createAgent(DBItemInventoryAgentInstance a, SubagentId subagentId) {
-        return JAgentRef.of(AgentPath.of(a.getAgentId()), Collections.singleton(subagentId), AgentHelper.getProcessLimit(a.getProcessLimit()));
+        return JAgentRef.of(AgentPath.of(a.getAgentId()), Collections.singleton(subagentId), AgentHelper.getProcessLimit(a.getProcessLimit()), false);
     }
     
     private static JSubagentItem createSubagentDirector(DBItemInventoryAgentInstance a, SubagentId subagentId) {

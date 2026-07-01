@@ -71,7 +71,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
             List<String> updateAgentIds = new ArrayList<>();
             List<String> updateSubagentIds = new ArrayList<>();
 
-            
+            boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
             Set<String> agentIds = agentParameter.getClusterAgentIds();
             if (agentIds != null) {
                 for (String agentId : agentIds) {
@@ -89,7 +89,7 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                             .comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(DBItemInventorySubAgentInstance::getSubAgentId).map(
                                     SubagentId::of).collect(Collectors.toList());
                     updateItems.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(agentPath, directors, AgentHelper.getProcessLimit(dbAgent
-                            .getProcessLimit()))));
+                            .getProcessLimit()), requireFailoverConfirmation)));
                     updateAgentIds.add(agentId);
 
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s

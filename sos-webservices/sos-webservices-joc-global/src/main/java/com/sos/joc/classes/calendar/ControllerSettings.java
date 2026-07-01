@@ -2,13 +2,17 @@ package com.sos.joc.classes.calendar;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
@@ -20,6 +24,7 @@ import com.sos.joc.exceptions.JocError;
 
 import io.vavr.control.Either;
 import js7.data.calendar.CalendarPath;
+import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.calendar.JCalendar;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.item.JUpdateItemOperation;
@@ -27,22 +32,22 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
-public class ControllerCalendar {
+public class ControllerSettings {
 
     public static final String dailyPlanCalendarName = "dailyPlan";
     public static final String calendarNamePrefix = "dayOffset-";
     private static final CalendarPath dailyPlanCalendarPath = CalendarPath.of(dailyPlanCalendarName);
-    private static ControllerCalendar instance;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerCalendar.class);
+    private static ControllerSettings instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ControllerSettings.class);
     private boolean initIsCalled = false;
 
-    private ControllerCalendar() {
+    private ControllerSettings() {
         EventBus.getInstance().register(this);
     }
 
-    public static synchronized ControllerCalendar getInstance() {
+    public static synchronized ControllerSettings getInstance() {
         if (instance == null) {
-            instance = new ControllerCalendar();
+            instance = new ControllerSettings();
         }
         return instance;
     }
@@ -197,6 +202,41 @@ public class ControllerCalendar {
             return c.getDefault();
         }
         return s;
+    }
+
+    public void updateRequiredFailoverConfirmation(String accessToken, JocError jocError) {
+        updateRequiredFailoverConfirmationForClusterWatch(accessToken, jocError);
+        boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
+        Proxies.getControllerDbInstances().keySet().forEach(controllerId -> updateRequiredFailoverConfirmationForAgents(controllerId,
+                requireFailoverConfirmation, accessToken, jocError));
+    }
+    
+    private void updateRequiredFailoverConfirmationForClusterWatch(String accessToken, JocError jocError) {
+        Proxies.getControllerDbInstances().entrySet().stream().filter(e -> e.getValue().size() > 1).map(Map.Entry::getKey).forEach(controllerId -> {
+            try {
+                ClusterWatch.getInstance().forcedRestart(controllerId);
+            } catch (Exception e) {
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+            }
+        });
+    }
+
+    private void updateRequiredFailoverConfirmationForAgents(String controllerId, boolean requireFailoverConfirmation, String accessToken, JocError jocError) {
+        try {
+            JControllerProxy proxy = Proxy.of(controllerId);
+            Predicate<JAgentRef> hasDifferentFailoverSetting = aRef -> requireFailoverConfirmation != aRef.asScala().requireFailoverConfirmation();
+            Predicate<JAgentRef> hasCluster = aRef -> aRef.directors().size() > 1;
+            Function<JAgentRef, JAgentRef> mapper = aRef -> JAgentRef.of(aRef.path(), aRef.directors(), aRef.processLimit(),
+                    requireFailoverConfirmation);
+            List<JUpdateItemOperation> updateItems = proxy.currentState().pathToAgentRef().values().stream().filter(hasDifferentFailoverSetting)
+                    .filter(hasCluster).map(mapper).map(JUpdateItemOperation::addOrChangeSimple).toList();
+            if (!updateItems.isEmpty()) {
+                proxy.api().updateItems(Flux.fromIterable(updateItems)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
+                        jocError, controllerId));
+            }
+        } catch (Exception e) {
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+        }
     }
 
 }

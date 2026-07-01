@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.joc.classes.board.BoardConverter;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
@@ -177,7 +177,7 @@ public class UpdateItemUtils {
             updateItemOperations.addAll(toDelete.stream().filter(Objects::nonNull).map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
-                    CalendarPath cal = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName()); 
+                    CalendarPath cal = CalendarPath.of(ControllerSettings.calendarNamePrefix + item.getName()); 
                     if (controllerCalendars.contains(cal)) {
                         calendars.add(JUpdateItemOperation.deleteSimple(cal));
                     }
@@ -349,8 +349,8 @@ public class UpdateItemUtils {
                     switch (item.getKey().getTypeAsEnum()) {
                     case WORKFLOW:
                         Workflow workflow = (Workflow) content;
-                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
-                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerCalendar.getCalendar(workflow.getCalendarPath(), workflow
+                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerSettings.calendarNamePrefix)) {
+                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerSettings.getCalendar(workflow.getCalendarPath(), workflow
                                     .getDayOffset())));
                         }
                         // no break!!
@@ -401,7 +401,7 @@ public class UpdateItemUtils {
             updateRepoOperations.addAll(toDelete.stream().map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
-                    CalendarPath controllerCalendar = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName());
+                    CalendarPath controllerCalendar = CalendarPath.of(ControllerSettings.calendarNamePrefix + item.getName());
                     if (controllerCalendars.contains(controllerCalendar)) {
                         jCalendars.add(JUpdateItemOperation.deleteSimple(controllerCalendar));
                     }
@@ -435,8 +435,8 @@ public class UpdateItemUtils {
                     switch (item.getKey().getObjectType()) {
                     case WORKFLOW:
                         Workflow workflow = (Workflow) item.getKey().getContent();
-                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerCalendar.calendarNamePrefix)) {
-                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerCalendar.getCalendar(workflow.getCalendarPath(), workflow
+                        if (workflow.getCalendarPath() != null && workflow.getCalendarPath().startsWith(ControllerSettings.calendarNamePrefix)) {
+                            jCalendars.add(JUpdateItemOperation.addOrChangeSimple(ControllerSettings.getCalendar(workflow.getCalendarPath(), workflow
                                     .getDayOffset())));
                         }
                     case JOBRESOURCE:
@@ -482,7 +482,7 @@ public class UpdateItemUtils {
             updateRepoOperations.addAll(toDeleteForRename.stream().map(item -> {
                 switch(item.getTypeAsEnum()) {
                 case WORKFLOW:
-                    CalendarPath controllerCalendar = CalendarPath.of(ControllerCalendar.calendarNamePrefix + item.getName());
+                    CalendarPath controllerCalendar = CalendarPath.of(ControllerSettings.calendarNamePrefix + item.getName());
                     if (controllerCalendars.contains(controllerCalendar)) {
                         jCalendars.add(JUpdateItemOperation.deleteSimple(controllerCalendar));
                     }

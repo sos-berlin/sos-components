@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -266,6 +267,10 @@ public class ClusterWatch {
     private String toStringWithId() {
         return "JOC (" + clusterId + ")";
     }
+    
+    public String forcedRestart(String controllerId) throws InterruptedException, ExecutionException {
+        return restart(null, controllerId);
+    }
 
     private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, JocInstancesDBLayer dbLayer,
             boolean forceRestart) {
@@ -281,22 +286,28 @@ public class ClusterWatch {
                 return clusterId;
             } else {
                 try {
-                    Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(cws -> cws.stop());
-                    LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'");
-                    if (controllerApi == null) {
-                        controllerApi = ControllerApi.of(controllerId);
-                    }
-                    startedWatches.put(controllerId, new ClusterWatchServiceContext(controllerId, clusterId, controllerApi));
-                    //ClusterWatchService started = controllerApi.startClusterWatch(ClusterWatchId.of(clusterId), startEventbus()).get();
-                    //CompletableFuture<Void> started = controllerApi.runClusterWatch(ClusterWatchId.of(clusterId));
-                    //startedWatches.put(controllerId, started);
-                    return clusterId;
+                    return restart(controllerApi, controllerId);
                 } catch (Exception e) {
                     LOGGER.error("[ClusterWatch] starting " + toStringWithId() + " as watcher for '" + controllerId + "' failed", e);
                 }
             }
         }
         return null;
+    }
+    
+    private String restart(JControllerApi controllerApi, String controllerId) throws InterruptedException, ExecutionException {
+        Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(cws -> cws.stop());
+        LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'");
+        if (controllerApi == null) {
+            controllerApi = ControllerApi.of(controllerId);
+        }
+        startedWatches.put(controllerId, new ClusterWatchServiceContext(controllerId, clusterId, controllerApi,
+                requireFailoverConfirmation()));
+        return clusterId;
+    }
+    
+    private boolean requireFailoverConfirmation() {
+        return Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
     }
     
     private void stop(String controllerId) {

@@ -36,6 +36,7 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.data.agent.AgentPath;
+import js7.data.cluster.Confirmer;
 import js7.data.controller.ControllerCommand;
 import js7.data.node.NodeId;
 import js7.data.subagent.SubagentId;
@@ -223,7 +224,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                     user = Globals.getJocId();
                 }
                 proxy.api().executeCommand(JControllerCommand.confirmClusterNodeLoss(AgentPath.of(agentId), nodeId,
-                        user)).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
+                        Confirmer.of(user))).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             } else {
                 throw new JocBadRequestException("An Agent '" + agentId + "' is not deployed at the Controller '" + controllerId + "'");
             }

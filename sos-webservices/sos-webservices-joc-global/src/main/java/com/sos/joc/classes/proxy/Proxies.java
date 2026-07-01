@@ -516,6 +516,7 @@ public class Proxies {
             }
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false);
             if (dbAgents != null) {
+                boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
                 Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAgents.size());
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId), true);
@@ -552,7 +553,7 @@ public class Proxies {
                     List<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted(
                             Comparator.comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(
                                     DBItemInventorySubAgentInstance::getSubAgentId).map(SubagentId::of).collect(Collectors.toList());
-                    result.put(JAgentRef.of(agentPath, directors, processLimit), subRefs);
+                    result.put(JAgentRef.of(agentPath, directors, processLimit, requireFailoverConfirmation), subRefs);
                 }
                 return result;
             }
