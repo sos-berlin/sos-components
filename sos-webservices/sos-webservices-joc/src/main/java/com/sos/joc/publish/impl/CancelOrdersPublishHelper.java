@@ -74,10 +74,10 @@ public class CancelOrdersPublishHelper {
                     boolean successful2 = true;
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
-                        if (!orderFilter.getSchedulePaths().isEmpty()) {
+                        if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
                             successful1 = deleteOrdersImpl.deleteOrders(localOrderScheduleFilter, xAccessToken, false, false, false); 
                         }
-                        if (!orderFilter.getWorkflowPaths().isEmpty()) {
+                        if (orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
                             successful2 = deleteOrdersImpl.deleteOrders(localOrderWorkflowFilter, xAccessToken, false, false, false);
                         }
                         if (!successful1 || !successful2) {
