@@ -94,7 +94,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             String oldConfiguration = null;
             boolean updateControllerCalendar = false;
-            boolean updateRequiredFailoverConfirmation = false;
+            boolean updateRequireFailoverConfirmation = false;
 
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
@@ -137,7 +137,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 } else {
                     StoreSettingsImpl.approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, connection);
                     updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(newJsonObj, oldJsonObj);
-                    updateRequiredFailoverConfirmation = StoreSettingsImpl.requiredFailoverConfirmationHasChanged(newJsonObj, oldJsonObj, connection);
+                    updateRequireFailoverConfirmation = StoreSettingsImpl.requireFailoverConfirmationHasChanged(newJsonObj, oldJsonObj, connection);
                 }
                 break;
             case IAM:
@@ -239,8 +239,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // TODO: call for every known controller
                 ControllerSettings.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
-            if (updateRequiredFailoverConfirmation) {
-                ControllerSettings.getInstance().updateRequiredFailoverConfirmation(accessToken, getJocError()); 
+            if (updateRequireFailoverConfirmation) {
+                ControllerSettings.getInstance().updateRequireFailoverConfirmation(accessToken, getJocError()); 
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration

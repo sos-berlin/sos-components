@@ -297,17 +297,15 @@ public class ClusterWatch {
     
     private String restart(JControllerApi controllerApi, String controllerId) throws InterruptedException, ExecutionException {
         Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(cws -> cws.stop());
-        LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'");
+        boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
+        LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'" + (requireFailoverConfirmation
+                ? " with failover confirmation" : ""));
         if (controllerApi == null) {
             controllerApi = ControllerApi.of(controllerId);
         }
         startedWatches.put(controllerId, new ClusterWatchServiceContext(controllerId, clusterId, controllerApi,
-                requireFailoverConfirmation()));
+                requireFailoverConfirmation));
         return clusterId;
-    }
-    
-    private boolean requireFailoverConfirmation() {
-        return Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
     }
     
     private void stop(String controllerId) {
