@@ -49,7 +49,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.agent.AgentHelper;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -127,9 +127,9 @@ public class JsonConverter {
             }
             if (hasCycleInstruction.test(json)) {
                 if (invWorkflow.getDayOffset() != null && invWorkflow.getDayOffset().matches("(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]")) {
-                    signWorkflow.setCalendarPath(ControllerCalendar.calendarNamePrefix + JocInventory.pathToName(workflowPath));
+                    signWorkflow.setCalendarPath(ControllerSettings.calendarNamePrefix + JocInventory.pathToName(workflowPath));
                 } else {
-                    signWorkflow.setCalendarPath(ControllerCalendar.dailyPlanCalendarName);
+                    signWorkflow.setCalendarPath(ControllerSettings.dailyPlanCalendarName);
                 }
             }
         }

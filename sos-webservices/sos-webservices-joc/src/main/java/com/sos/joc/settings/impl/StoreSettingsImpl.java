@@ -22,12 +22,15 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.authentication.DBItemIamRole;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.security.IamRoleDBLayer;
 import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -83,7 +86,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, hibernateSession);
                 if (dailyPlanHasChanged(newJsonObj, oldJsonObj)) {
                     // TODO: call for every known controller
-                    ControllerCalendar.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
+                    ControllerSettings.getInstance().updateDailyPlanCalendar(null, accessToken, getJocError());
                 }
             }
             jocConfigurationDBLayer.saveOrUpdateGlobalSettingsConfiguration(cfg, oldCfg);
@@ -149,13 +152,13 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
                 String curPeriodBegin = curDailyPlan.map(o -> o.getJsonObject("period_begin")).map(o -> o.getString("value", "")).orElse("");
                 String curStartTime = curDailyPlan.map(o -> o.getJsonObject("start_time")).map(o -> o.getString("value", "")).orElse("");
                 if (!curPeriodBegin.isEmpty()) {
-                    long periodBeginOffset = ControllerCalendar.convertPeriodBeginToSeconds(curPeriodBegin);
+                    long periodBeginOffset = ControllerSettings.convertPeriodBeginToSeconds(curPeriodBegin);
                     if (periodBeginOffset < 0 || periodBeginOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.period_begin': " + curPeriodBegin);
                     }
                 }
                 if (!curStartTime.isEmpty()) {
-                    long curStartTimeOffset = ControllerCalendar.convertTimeToSeconds(curStartTime, "start_time");
+                    long curStartTimeOffset = ControllerSettings.convertTimeToSeconds(curStartTime, "start_time");
                     if (curStartTimeOffset < 0 || curStartTimeOffset >= TimeUnit.DAYS.toMillis(1)) {
                         throw new JocBadRequestException("Invalid 'dailyplan.start_time': " + curStartTime);
                     }
@@ -173,9 +176,9 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             SOSHibernateSession hibernateSession) throws SOSHibernateException {
         
         String oldApprovalRequestorRole = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                "approval_requestor_role")).map(o -> o.getString("value", "")).orElse("");
+                ConfigurationGlobalsJoc.approvalRequestorRoleKey)).map(o -> o.getString("value", "")).orElse("");
         String newApprovalRequestorRole = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                "approval_requestor_role")).map(o -> o.getString("value", "")).orElse("");
+                ConfigurationGlobalsJoc.approvalRequestorRoleKey)).map(o -> o.getString("value", "")).orElse("");
         if (oldApprovalRequestorRole.equals(newApprovalRequestorRole)) {
             return;
         }
@@ -189,7 +192,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
         List<DBItemIamRole> dbRoles = roleDbLayer.getIamRoleList(roleFilter, 0);
 
         if (dbRoles.isEmpty()) {
-            throw new JocBadRequestException("Unknown role in 'joc.approval_requestor_role'");
+            throw new JocBadRequestException("Unknown role in 'joc." + ConfigurationGlobalsJoc.approvalRequestorRoleKey + "'");
         }
 
         long numOfAccountsWithOnlyApprovalRequestorRole = roleDbLayer.getAccountIDsByRoleWithOnlyOneRole(dbRoles.stream().map(DBItemIamRole::getId)
@@ -222,6 +225,23 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             }
         }
         return oldObj;
+    }
+
+    public static boolean requiredFailoverConfirmationHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
+            SOSHibernateSession hibernateSession) {
+        String _default = "" + ConfigurationGlobalsJoc.requireFailoverConfirmationDefault;
+        String oldRequiredFailoverConfirmation = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                ConfigurationGlobalsJoc.requiredFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
+        String newRequiredFailoverConfirmation = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
+                ConfigurationGlobalsJoc.requiredFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
+        if (oldRequiredFailoverConfirmation.equalsIgnoreCase(newRequiredFailoverConfirmation)) {
+            return false;
+        }
+        DBItemJocInstance activeInstance = new JocInstancesDBLayer(hibernateSession).getActiveInstance();
+        if (activeInstance == null || !Globals.getMemberId().equals(activeInstance.getMemberId())) {
+            throw new JocBadRequestException("The setting for required failover confirmation can only be changed in the active JOC Cockpit.");
+        }
+        return true;
     }
     
 }

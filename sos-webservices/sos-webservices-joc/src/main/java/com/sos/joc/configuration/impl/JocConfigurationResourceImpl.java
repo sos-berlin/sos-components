@@ -21,7 +21,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.ControllerCalendar;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
@@ -94,6 +94,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             String oldConfiguration = null;
             boolean updateControllerCalendar = false;
+            boolean updateRequiredFailoverConfirmation = false;
 
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
@@ -136,6 +137,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 } else {
                     StoreSettingsImpl.approvalRequestorRoleHasChanged(newJsonObj, oldJsonObj, connection);
                     updateControllerCalendar = StoreSettingsImpl.dailyPlanHasChanged(newJsonObj, oldJsonObj);
+                    updateRequiredFailoverConfirmation = StoreSettingsImpl.requiredFailoverConfirmationHasChanged(newJsonObj, oldJsonObj, connection);
                 }
                 break;
             case IAM:
@@ -237,7 +239,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             if (updateControllerCalendar) {
                 // TODO: call for every known controller
-                ControllerCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+                ControllerSettings.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
+            }
+            if (updateRequiredFailoverConfirmation) {
+                ControllerSettings.getInstance().updateRequiredFailoverConfirmation(accessToken, getJocError()); 
             }
 
             if (configuration.getConfigurationType() != ConfigurationType.SETTING && configuration

@@ -35,11 +35,12 @@ public class ClusterWatchServiceContext {
     private NodeId lossNode = null;
     private String message = null;
     
-    protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi) throws InterruptedException,
-            ExecutionException {
+    protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi,
+            boolean requireFailoverConfirmation) throws InterruptedException, ExecutionException {
         this.controllerId = controllerId;
         this.controllerApi = controllerApi;
-        this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem).get();
+        this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem,
+                requireFailoverConfirmation).get();
         logClusterState(primaryId, backupId);
     }
     
