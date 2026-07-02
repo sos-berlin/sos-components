@@ -31,7 +31,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "version",
     "javaVersion",
     "os",
-    "timeZone"
+    "timeZone",
+    "requireFailoverConfirmation"
 })
 public class JobSchedulerP {
 
@@ -107,6 +108,8 @@ public class JobSchedulerP {
     private OperatingSystem os;
     @JsonProperty("timeZone")
     private String timeZone;
+    @JsonProperty("requireFailoverConfirmation")
+    private Boolean requireFailoverConfirmation;
 
     /**
      * non negative long
@@ -329,14 +332,24 @@ public class JobSchedulerP {
         this.timeZone = timeZone;
     }
 
+    @JsonProperty("requireFailoverConfirmation")
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+
+    @JsonProperty("requireFailoverConfirmation")
+    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
+        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("timeZone", timeZone).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).append(requireFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -348,7 +361,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
     }
 
 }
