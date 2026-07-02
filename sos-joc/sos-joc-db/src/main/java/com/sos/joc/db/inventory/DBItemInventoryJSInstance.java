@@ -73,7 +73,7 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
     @Convert(converter = NumericBooleanConverter.class)
-    private Boolean requireFailoverConfirmation = false;
+    private Boolean failoverConfirmation = false;
 
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
@@ -193,17 +193,17 @@ public class DBItemInventoryJSInstance extends DBItem {
         isPrimary = val;
     }
 
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    public Boolean getFailoverConfirmation() {
+        return failoverConfirmation;
     }
     
     @Transient
     public boolean getRequireFailoverConfirmationNonNull() {
-        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+        return failoverConfirmation == null ? false : failoverConfirmation;
     }
 
-    public void setRequireFailoverConfirmation(Boolean val) {
-        requireFailoverConfirmation = val;
+    public void setFailoverConfirmation(Boolean val) {
+        failoverConfirmation = val;
     }
 
     public LocalDateTime getModified() {

@@ -455,10 +455,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             } else {
                 instance.setClusterUri(controller.getUrl().toString());
             }
-            instance.setRequireFailoverConfirmation(requireFailoverConfirmation);
+            instance.setFailoverConfirmation(requireFailoverConfirmation);
         } else {
             instance.setClusterUri(null);
-            instance.setRequireFailoverConfirmation(null);
+            instance.setFailoverConfirmation(null);
         }
         return instance;
     }

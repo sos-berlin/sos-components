@@ -111,7 +111,7 @@ public class AgentsExportImpl extends JOCResourceImpl implements IAgentsExport {
         clAgent.setTitle(agentInstance.getTitle());
         clAgent.setUrl(agentInstance.getUri());
         clAgent.setVersion(agentInstance.getVersion());
-        clAgent.setRequireFailoverConfirmation(agentInstance.getRequireFailoverConfirmation());
+        clAgent.setRequireFailoverConfirmation(agentInstance.getFailoverConfirmation());
         subagents.stream().sorted(Comparator.comparingInt(DBItemInventorySubAgentInstance::getOrdering)).forEachOrdered(subagent -> {
             SubAgent subAgent = new SubAgent();
             subAgent.setAgentId(agentInstance.getAgentId());
