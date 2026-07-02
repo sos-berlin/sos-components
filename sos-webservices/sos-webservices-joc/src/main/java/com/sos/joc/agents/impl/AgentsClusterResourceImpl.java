@@ -126,7 +126,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                     agent.setDeployed(null); // deployed is obsolete, now part of syncState
                     agent.setSyncState(AgentHelper.getSyncState(agentsOnController.get(dbAgent.getControllerId()), dbAgent));
                     agent.setTitle(dbAgent.getTitle());
-                    agent.setRequireFailoverConfirmation(dbAgent.getRequireFailoverConfirmation());
+                    agent.setRequireFailoverConfirmation(dbAgent.getFailoverConfirmation());
                     agent.setOrdering(++position);
                     agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(dbAgent.getAgentId()), subagentsOnController.get(dbAgent.getControllerId())));
                     clusterAgents.add(agent);

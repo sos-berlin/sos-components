@@ -86,7 +86,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     
     @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
     @Convert(converter = NumericBooleanConverter.class)
-    private Boolean requireFailoverConfirmation = false;
+    private Boolean failoverConfirmation = false;
 
     /* 0=no, 1=yes */
     @Column(name = "[DEPLOYED]", nullable = false)
@@ -210,17 +210,17 @@ public class DBItemInventoryAgentInstance extends DBItem {
         isWatcher = val;
     }
 
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    public Boolean getFailoverConfirmation() {
+        return failoverConfirmation;
     }
     
     @Transient
     public boolean getRequireFailoverConfirmationNonNull() {
-        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+        return failoverConfirmation == null ? false : failoverConfirmation;
     }
 
-    public void setRequireFailoverConfirmation(Boolean val) {
-        requireFailoverConfirmation = val;
+    public void setFailoverConfirmation(Boolean val) {
+        failoverConfirmation = val;
     }
     
     public boolean getHidden() {
