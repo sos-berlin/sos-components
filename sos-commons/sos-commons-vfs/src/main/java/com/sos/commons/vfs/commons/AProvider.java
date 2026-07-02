@@ -462,7 +462,18 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     }
 
     public String getConnectMsg() {
-        return String.format("%s[connect]%s ...", getLogPrefix(), accessInfo);
+        return String.format("%s[connect/authenticate]%s ...", getLogPrefix(), accessInfo);
+    }
+
+    /** Log on INFO level because the ERROR output is combined with the exception (stderr) and may not appear immediately after the [connect/authenticate] ...
+     * log entry.<br />
+     * <p>
+     * This preserves the expected lifecycle order:<br />
+     * - [INFO][connect/authenticate] ... -> [INFO][connect/authenticate][failed] see exception below -> [INFO][disconnected]<br />
+     * instead of:<br />
+     * - [INFO][connect/authenticate] ... -> [INFO][disconnected] */
+    public void logConnectFailedMsg() {
+        getLogger().info("%s[connect/authenticate][failed]%s - see exception below", getLogPrefix(), accessInfo);
     }
 
     public String getConfiguredConnectInfos() {
