@@ -88,6 +88,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
 
                 getLogger().info(getConnectedMsg());
             } catch (Exception e) {
+                logConnectFailedMsg();
+
                 // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
                 // error in methods executed after connect() - e.g. if retry, roll back...
                 // Call disconnect() in the application's finally block.
