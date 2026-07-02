@@ -27,10 +27,8 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.authentication.DBItemIamRole;
-import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.security.IamRoleDBLayer;
 import com.sos.joc.db.security.IamRoleFilter;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -225,23 +223,6 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             }
         }
         return oldObj;
-    }
-
-    public static boolean requireFailoverConfirmationHasChanged(Optional<JsonObject> newJsonObj, Optional<JsonObject> oldJsonObj,
-            SOSHibernateSession hibernateSession) {
-        String _default = "" + ConfigurationGlobalsJoc.requireFailoverConfirmationDefault;
-        String oldRequireFailoverConfirmation = oldJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                ConfigurationGlobalsJoc.requireFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
-        String newRequireFailoverConfirmation = newJsonObj.map(o -> o.getJsonObject(DefaultSections.joc.name())).map(o -> o.getJsonObject(
-                ConfigurationGlobalsJoc.requireFailoverConfirmationKey)).map(o -> o.getString("value", _default)).orElse(_default);
-        if (oldRequireFailoverConfirmation.equalsIgnoreCase(newRequireFailoverConfirmation)) {
-            return false;
-        }
-        DBItemJocInstance activeInstance = new JocInstancesDBLayer(hibernateSession).getActiveInstance();
-        if (activeInstance == null || !Globals.getMemberId().equals(activeInstance.getMemberId())) {
-            throw new JocBadRequestException("The setting for required failover confirmation can only be changed in the active JOC Cockpit.");
-        }
-        return true;
     }
     
 }

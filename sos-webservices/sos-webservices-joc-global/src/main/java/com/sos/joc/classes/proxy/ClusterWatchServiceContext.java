@@ -34,11 +34,13 @@ public class ClusterWatchServiceContext {
     private Instant burstFilter = null;
     private NodeId lossNode = null;
     private String message = null;
+    private boolean requireFailoverConfirmation = false;
     
     protected ClusterWatchServiceContext(String controllerId, String clusterWatchId, JControllerApi controllerApi,
             boolean requireFailoverConfirmation) throws InterruptedException, ExecutionException {
         this.controllerId = controllerId;
         this.controllerApi = controllerApi;
+        this.requireFailoverConfirmation = requireFailoverConfirmation;
         this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem,
                 requireFailoverConfirmation).get();
         logClusterState(primaryId, backupId);
@@ -128,6 +130,10 @@ public class ClusterWatchServiceContext {
             }
         }
         return true;
+    }
+    
+    protected boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
     }
     
     private void logClusterState(NodeId... lossNodeIds) {

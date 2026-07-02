@@ -23,7 +23,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "controllerId",
     "controllers",
     "clusterWatcher",
-    "auditLog"
+    "auditLog",
+    "requireFailoverConfirmation"
 })
 public class RegisterParameters {
 
@@ -35,6 +36,8 @@ public class RegisterParameters {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("requireFailoverConfirmation")
+    private Boolean requireFailoverConfirmation = false;
     /**
      * 
      * (Required)
@@ -71,6 +74,16 @@ public class RegisterParameters {
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+    }
+    
+    @JsonProperty("requireFailoverConfirmation")
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+
+    @JsonProperty("requireFailoverConfirmation")
+    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
+        this.requireFailoverConfirmation = requireFailoverConfirmation;
     }
 
     /**
@@ -117,12 +130,12 @@ public class RegisterParameters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("auditLog", auditLog).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).append(requireFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -134,7 +147,7 @@ public class RegisterParameters {
             return false;
         }
         RegisterParameters rhs = ((RegisterParameters) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
     }
 
 }

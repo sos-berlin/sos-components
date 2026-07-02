@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
@@ -68,6 +69,10 @@ public class DBItemInventoryJSInstance extends DBItem {
     @Column(name = "[IS_PRIMARY]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean isPrimary;
+
+    @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean requireFailoverConfirmation = false;
 
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
@@ -187,6 +192,19 @@ public class DBItemInventoryJSInstance extends DBItem {
         isPrimary = val;
     }
 
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+    
+    @Transient
+    public boolean getRequireFailoverConfirmationNonNull() {
+        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+    }
+
+    public void setRequireFailoverConfirmation(Boolean val) {
+        requireFailoverConfirmation = val;
+    }
+    
     public void setModified(Date val) {
         modified = val;
     }

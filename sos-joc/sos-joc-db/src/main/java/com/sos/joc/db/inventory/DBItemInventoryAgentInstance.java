@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 
 @SuppressWarnings("deprecation")
@@ -82,6 +83,10 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[HIDDEN]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean hidden = false;
+    
+    @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean requireFailoverConfirmation = false;
 
     /* 0=no, 1=yes */
     @Column(name = "[DEPLOYED]", nullable = false)
@@ -205,6 +210,19 @@ public class DBItemInventoryAgentInstance extends DBItem {
         isWatcher = val;
     }
 
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+    
+    @Transient
+    public boolean getRequireFailoverConfirmationNonNull() {
+        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+    }
+
+    public void setRequireFailoverConfirmation(Boolean val) {
+        requireFailoverConfirmation = val;
+    }
+    
     public boolean getHidden() {
         return hidden;
     }

@@ -19,7 +19,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "subagents"
+    "subagents",
+    "requireFailoverConfirmation"
 })
 public class ClusterAgent
     extends Agent
@@ -32,6 +33,8 @@ public class ClusterAgent
      */
     @JsonProperty("subagents")
     private List<SubAgent> subagents = new ArrayList<SubAgent>();
+    @JsonProperty("requireFailoverConfirmation")
+    private Boolean requireFailoverConfirmation = false;
 
     /**
      * 
@@ -52,15 +55,25 @@ public class ClusterAgent
     public void setSubagents(List<SubAgent> subagents) {
         this.subagents = subagents;
     }
+    
+    @JsonProperty("requireFailoverConfirmation")
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+    
+    @JsonProperty("requireFailoverConfirmation")
+    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
+        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("subagents", subagents).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("subagents", subagents).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subagents).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subagents).append(requireFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -72,7 +85,7 @@ public class ClusterAgent
             return false;
         }
         ClusterAgent rhs = ((ClusterAgent) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
     }
 
 }

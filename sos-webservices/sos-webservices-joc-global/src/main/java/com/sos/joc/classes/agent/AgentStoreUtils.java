@@ -255,6 +255,10 @@ public class AgentStoreUtils {
                 dbAgent.setHidden(agent.getHidden());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setTitle(agent.getTitle());
+                if (!Optional.ofNullable(dbAgent.getRequireFailoverConfirmation()).equals(Optional.ofNullable(agent.getRequireFailoverConfirmation()))) {
+                    dbAgent.setDeployed(false);
+                }
+                dbAgent.setRequireFailoverConfirmation(agent.getRequireFailoverConfirmation());
                 if (!Optional.ofNullable(dbAgent.getProcessLimit()).equals(Optional.ofNullable(agent.getProcessLimit()))) {
                     dbAgent.setDeployed(false);
                 }
@@ -313,6 +317,7 @@ public class AgentStoreUtils {
             dbAgent.setTitle(agent.getTitle());
             dbAgent.setDeployed(false);
             dbAgent.setDisabled(false);
+            dbAgent.setRequireFailoverConfirmation(agent.getRequireFailoverConfirmation());
             dbAgent.setOrdering(++position);
             agentDbLayer.saveAgent(dbAgent);
             agentNamesAndAliases.add(dbAgent.getAgentName());

@@ -25,8 +25,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     }
     
     public static final String approvalRequestorRoleKey = "approval_requestor_role";
-    public static final boolean requireFailoverConfirmationDefault = false;
-    public static final String requireFailoverConfirmationKey = "require_failover_confirmation";
 
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
             "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of Controller object",
@@ -114,10 +112,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     // role of 4-eyes principle
     private ConfigurationEntry approvalRequestorRole = new ConfigurationEntry(approvalRequestorRoleKey, "", GlobalSettingsSectionValueType.STRING);
     
-    // confirm controller cluster fail-over (JS-2252)
-    private ConfigurationEntry requireFailoverConfirmation = new ConfigurationEntry(requireFailoverConfirmationKey, ""
-            + requireFailoverConfirmationDefault, GlobalSettingsSectionValueType.BOOLEAN);
-
     private Charset encodingCharset = null;
     private boolean encodingCharsetReaded = false;
 
@@ -177,8 +171,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         numOfWOrkflowTagsDisplayed.setOrdering(++index);
         
         approvalRequestorRole.setOrdering(++index);
-        
-        requireFailoverConfirmation.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -369,11 +361,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getApprovalRequestorRole() {
         return approvalRequestorRole;
-    }
-    
-    public boolean requireFailoverConfirmation() {
-        return Optional.ofNullable(requireFailoverConfirmation.getValue()).map(v -> v.equalsIgnoreCase("true")).orElse(
-                requireFailoverConfirmationDefault);
     }
 
 }

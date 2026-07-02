@@ -149,7 +149,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
 
             storeAuditLog(urlParameter.getAuditLog(), controllerId);
 
-            ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), null, accessToken, getJocError());
+            ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), null, accessToken, getJocError(), false);
 
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
