@@ -147,18 +147,7 @@ public class ClusterWatch {
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
         appointNodes(controllerId, api, null, null, null, null, force);
     }
-
-//    public void appointNodes(String controllerId, JControllerProxy proxy) throws DBMissingDataException, JocConfigurationException,
-//            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JocBadRequestException {
-//        appointNodes(controllerId, null, proxy, null, null, null);
-//    }
     
-    public void appointNodes(String controllerId, JControllerApi api, JControllerProxy proxy, JocInstancesDBLayer dbLayer, String accessToken,
-            JocError jocError) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, JocBadRequestException {
-        appointNodes(controllerId, api, proxy, dbLayer, accessToken, jocError, false);
-    }
-
     public void appointNodes(String controllerId, JControllerApi api, JControllerProxy proxy, JocInstancesDBLayer dbLayer, String accessToken,
             JocError jocError, boolean forceRestart) throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, JocBadRequestException {
@@ -172,9 +161,11 @@ public class ClusterWatch {
             throw new JocBadRequestException("There is no Controller cluster configured with the Id: " + controllerId);
         }
         
+        boolean requireFailoverConfirmation = controllerInstances.stream().anyMatch(i -> i.getRequireFailoverConfirmationNonNull());
+
         JControllerApi controllerApi = proxy == null ? api : proxy.api();
         
-        String watchId = start(controllerApi, controllerId, true, dbLayer, forceRestart);
+        String watchId = start(controllerApi, controllerId, requireFailoverConfirmation, true, dbLayer, forceRestart);
            
         ClusterState cState = getCurrentClusterState(controllerId, proxy);
 
@@ -267,26 +258,22 @@ public class ClusterWatch {
     private String toStringWithId() {
         return "JOC (" + clusterId + ")";
     }
-    
-    public String forcedRestart(String controllerId) throws InterruptedException, ExecutionException {
-        return restart(null, controllerId);
-    }
 
-    private String start(JControllerApi controllerApi, String controllerId, boolean checkWatchByJoc, JocInstancesDBLayer dbLayer,
-            boolean forceRestart) {
+    private String start(JControllerApi controllerApi, String controllerId, boolean requireFailoverConfirmation, boolean checkWatchByJoc,
+            JocInstancesDBLayer dbLayer, boolean forceRestart) {
         // LOGGER.info("[ClusterWatch] try to start " + toStringWithId() + " as watcher for '" + controllerId + "'");
         boolean jocIsActive = true;
         if (checkWatchByJoc) {
             jocIsActive = jocInstanceIsActive(dbLayer);
         }
         if (jocIsActive) {
-            if (!forceRestart && isWatched(controllerId)) {
+            if (!forceRestart && isWatched(controllerId) && unchangedRequireFailoverConfirmation(controllerId, requireFailoverConfirmation)) {
                 LOGGER.info("[ClusterWatch] Watcher by " + toStringWithId() + " is still running for '" + controllerId + "'");
                 // throw new JocServiceException("[ClusterWatch] " + controllerId + " is still running.");
                 return clusterId;
             } else {
                 try {
-                    return restart(controllerApi, controllerId);
+                    return restart(controllerApi, controllerId, requireFailoverConfirmation);
                 } catch (Exception e) {
                     LOGGER.error("[ClusterWatch] starting " + toStringWithId() + " as watcher for '" + controllerId + "' failed", e);
                 }
@@ -295,16 +282,15 @@ public class ClusterWatch {
         return null;
     }
     
-    private String restart(JControllerApi controllerApi, String controllerId) throws InterruptedException, ExecutionException {
-        Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(cws -> cws.stop());
-        boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
+    private String restart(JControllerApi controllerApi, String controllerId, boolean requireFailoverConfirmation) throws InterruptedException,
+            ExecutionException {
+        Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(ClusterWatchServiceContext::stop);
         LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'" + (requireFailoverConfirmation
                 ? " with failover confirmation" : ""));
         if (controllerApi == null) {
             controllerApi = ControllerApi.of(controllerId);
         }
-        startedWatches.put(controllerId, new ClusterWatchServiceContext(controllerId, clusterId, controllerApi,
-                requireFailoverConfirmation));
+        startedWatches.put(controllerId, new ClusterWatchServiceContext(controllerId, clusterId, controllerApi, requireFailoverConfirmation));
         return clusterId;
     }
     
@@ -347,6 +333,11 @@ public class ClusterWatch {
 ////            }
 //        }
 //        return isAlive;
+    }
+    
+    private boolean unchangedRequireFailoverConfirmation(String controllerId, boolean requireFailoverConfirmation) {
+        return Optional.ofNullable(startedWatches.get(controllerId)).map(cws -> cws.getRequireFailoverConfirmation() == requireFailoverConfirmation)
+                .orElse(false);
     }
     
     private boolean jocInstanceIsActive(JocInstancesDBLayer dbLayer) {

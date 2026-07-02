@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
@@ -15,10 +16,14 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_JS_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SECURITY_LEVEL]", "[URI]" }) })
+
 public class DBItemInventoryJSInstance extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -65,6 +70,10 @@ public class DBItemInventoryJSInstance extends DBItem {
     @Column(name = "[IS_PRIMARY]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean isPrimary;
+
+    @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean requireFailoverConfirmation = false;
 
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
@@ -182,6 +191,19 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     public void setIsPrimary(boolean val) {
         isPrimary = val;
+    }
+
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+    
+    @Transient
+    public boolean getRequireFailoverConfirmationNonNull() {
+        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+    }
+
+    public void setRequireFailoverConfirmation(Boolean val) {
+        requireFailoverConfirmation = val;
     }
 
     public LocalDateTime getModified() {

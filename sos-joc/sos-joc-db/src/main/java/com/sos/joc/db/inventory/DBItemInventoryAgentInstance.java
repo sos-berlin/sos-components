@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+
 import org.hibernate.type.NumericBooleanConverter;
 
 import com.sos.commons.hibernate.annotations.SOSCurrentTimestampUtc;
@@ -15,10 +16,14 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_AGENT_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[AGENT_ID]" }) })
+
 public class DBItemInventoryAgentInstance extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -79,6 +84,10 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[HIDDEN]", nullable = false)
     @Convert(converter = NumericBooleanConverter.class)
     private boolean hidden = false;
+    
+    @Column(name = "[FAILOVER_CONFIRMATION]", nullable = true)
+    @Convert(converter = NumericBooleanConverter.class)
+    private Boolean requireFailoverConfirmation = false;
 
     /* 0=no, 1=yes */
     @Column(name = "[DEPLOYED]", nullable = false)
@@ -202,6 +211,19 @@ public class DBItemInventoryAgentInstance extends DBItem {
         isWatcher = val;
     }
 
+    public Boolean getRequireFailoverConfirmation() {
+        return requireFailoverConfirmation;
+    }
+    
+    @Transient
+    public boolean getRequireFailoverConfirmationNonNull() {
+        return requireFailoverConfirmation == null ? false : requireFailoverConfirmation;
+    }
+
+    public void setRequireFailoverConfirmation(Boolean val) {
+        requireFailoverConfirmation = val;
+    }
+    
     public boolean getHidden() {
         return hidden;
     }

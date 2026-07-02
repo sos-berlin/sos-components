@@ -191,6 +191,7 @@ public class ControllerAnswer extends Controller {
 		setVersion(dbInstance.getVersion());
 		setJavaVersion(dbInstance.getJavaVersion());
         setSecurityLevel(Globals.getJocSecurityLevel());
+        setRequireFailoverConfirmation(getRequireFailoverConfirmation(dbInstance));
 	}
 	
 	@JsonIgnore
@@ -238,6 +239,14 @@ public class ControllerAnswer extends Controller {
             }
         } else {
             return Role.STANDALONE;
+        }
+    }
+	
+	public static Boolean getRequireFailoverConfirmation(DBItemInventoryJSInstance dbInstance) {
+        if (dbInstance.getIsCluster()) {
+            return dbInstance.getRequireFailoverConfirmationNonNull();
+        } else {
+            return null;
         }
     }
 

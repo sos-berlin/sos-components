@@ -516,7 +516,6 @@ public class Proxies {
             }
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false);
             if (dbAgents != null) {
-                boolean requireFailoverConfirmation = Globals.getConfigurationGlobalsJoc().requireFailoverConfirmation();
                 Map<JAgentRef, List<JSubagentItem>> result = new LinkedHashMap<>(dbAgents.size());
                 Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId), true);
@@ -549,11 +548,11 @@ public class Proxies {
                         continue;
                     }
                     List<JSubagentItem> subRefs = subs.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
-                            .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).collect(Collectors.toList());
+                            .getAgentId()), Uri.of(s.getUri()), s.getDisabled())).toList();
                     List<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted(
                             Comparator.comparingInt(DBItemInventorySubAgentInstance::getIsDirector)).map(
-                                    DBItemInventorySubAgentInstance::getSubAgentId).map(SubagentId::of).collect(Collectors.toList());
-                    result.put(JAgentRef.of(agentPath, directors, processLimit, requireFailoverConfirmation), subRefs);
+                                    DBItemInventorySubAgentInstance::getSubAgentId).map(SubagentId::of).toList();
+                    result.put(JAgentRef.of(agentPath, directors, processLimit, dbAgent.getRequireFailoverConfirmationNonNull()), subRefs);
                 }
                 return result;
             }

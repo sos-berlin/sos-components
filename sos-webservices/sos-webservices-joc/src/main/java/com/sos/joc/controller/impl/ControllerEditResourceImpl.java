@@ -80,6 +80,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             RegisterParameters body = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
             String controllerId = body.getControllerId();
+            Boolean requireFailoverConfirmation = body.getRequireFailoverConfirmation();
             if (controllerId == null) {
                 controllerId = ""; 
             }
@@ -163,10 +164,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 if (body.getControllers().size() == 1) {  // standalone
                     RegisterParameter controller = body.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
-                    instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
+                    instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
                 } else {
                     for (RegisterParameter controller : body.getControllers()) {
-                        instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
+                        instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
                     }
                 }
                 
@@ -181,10 +182,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         for (DBItemInventoryJSInstance dbController : dbControllers) {
                             instanceDBLayer.deleteInstance(dbController); 
                         }
-                        instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
+                        instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
                     } else {
                         boolean uriChanged = !dbControllers.get(0).getUri().equalsIgnoreCase(controller.getUrl().toString());
-                        DBItemInventoryJSInstance instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
+                        DBItemInventoryJSInstance instance = setInventoryInstance(dbControllers.get(0), controller, controllerId, requireFailoverConfirmation);
                         if (uriChanged) {
                             instances.add(instance);
                         }
@@ -200,7 +201,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     if (dbControllers.size() == 1) { // but standalone in DB
                         instanceDBLayer.deleteInstance(dbControllers.get(0));
                         for (RegisterParameter controller : body.getControllers()) {
-                            instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
+                            instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
                         }
                     } else {
                         DBItemInventoryJSInstance instance = null;
@@ -213,7 +214,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-                                instance = setInventoryInstance(dbControllers.get(0), controller, controllerId);
+                                instance = setInventoryInstance(dbControllers.get(0), controller, controllerId, requireFailoverConfirmation);
                             } else {
                                 if (!uriChanged) {
                                     uriChanged = !dbControllers.get(1).getUri().equalsIgnoreCase(controller.getUrl().toString());
@@ -221,7 +222,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                                 if (controller.getClusterUrl() == null) {
                                     controller.setClusterUrl(controller.getUrl());
                                 }
-                                instance = setInventoryInstance(dbControllers.get(1), controller, controllerId);
+                                instance = setInventoryInstance(dbControllers.get(1), controller, controllerId, requireFailoverConfirmation);
                             }
                             instances.add(instance);
                             osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
@@ -251,7 +252,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 try {
                     proxy = Proxy.of(controllerId);
                     ClusterWatch.getInstance().appointNodes(controllerId, null, proxy, new JocInstancesDBLayer(connection), accessToken,
-                            getJocError());
+                            getJocError(), false);
                 } catch (JocBadRequestException e) {
                 }
             }
@@ -410,9 +411,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     }
     
     private DBItemInventoryJSInstance storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
-            RegisterParameter controller, String controllerId) throws DBInvalidDataException, DBConnectionRefusedException,
-            JocObjectAlreadyExistException, ControllerInvalidResponseDataException {
-        DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, controllerId);
+            RegisterParameter controller, String controllerId, Boolean requireFailoverConfirmation) throws DBInvalidDataException,
+            DBConnectionRefusedException, JocObjectAlreadyExistException, ControllerInvalidResponseDataException {
+        DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, controllerId, requireFailoverConfirmation);
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
@@ -427,7 +428,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         return instance;
     }
     
-    private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String controllerId) {
+    private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String controllerId,
+            Boolean requireFailoverConfirmation) {
         if (instance == null) {
             instance = new DBItemInventoryJSInstance();
             instance.setId(null);
@@ -453,8 +455,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             } else {
                 instance.setClusterUri(controller.getUrl().toString());
             }
+            instance.setRequireFailoverConfirmation(requireFailoverConfirmation);
         } else {
             instance.setClusterUri(null);
+            instance.setRequireFailoverConfirmation(null);
         }
         return instance;
     }
