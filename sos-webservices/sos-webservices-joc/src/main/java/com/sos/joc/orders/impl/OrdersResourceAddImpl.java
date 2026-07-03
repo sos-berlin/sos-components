@@ -101,13 +101,20 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 return jocDefaultResponse;
             }
             
-            boolean hasManagePositionsPermission = getBasicControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
             Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
             Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
             Predicate<AddOrder> requestHasBlockPositionSettings = o -> o.getBlockPosition() != null;
-            if (!hasManagePositionsPermission && addOrders.getOrders().parallelStream().anyMatch(requestHasStartPositionSettings.or(
-                    requestHasEndPositionSettings).or(requestHasBlockPositionSettings))) {
-                return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
+            if (addOrders.getOrders().parallelStream().anyMatch(requestHasStartPositionSettings.or(requestHasEndPositionSettings).or(
+                    requestHasBlockPositionSettings))) {
+
+                setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
+                setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
+
+                jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                        .getManagePositions()), workflows);
+                if (jocDefaultResponse != null) {
+                    return jocDefaultResponse;
+                }
             }
             
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId);

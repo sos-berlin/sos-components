@@ -51,9 +51,11 @@ import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.data.controller.ControllerCommand;
 import js7.data.order.OrderId;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements IDailyPlanModifyPriority {
@@ -69,42 +71,62 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             DailyPlanChangePriority in = Globals.objectMapper.readValue(filterBytes, DailyPlanChangePriority.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
-                    .getModify()));
-            if (response != null) {
-                return response;
-            }
-
-            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
-
-            Map<Boolean, List<String>> orderIds = in.getOrderIds().stream().distinct().collect(Collectors.groupingBy(id -> id.matches(
-                    "#[^#]+#[PC][0-9]+-.*")));
-            orderIds.putIfAbsent(Boolean.TRUE, Collections.emptyList());
+            Map<Boolean, List<String>> orderIds = in.getOrderIds().stream().distinct().collect(Collectors.groupingBy(id -> id.matches(".*#[PC][0-9]+-.*")));
             orderIds.putIfAbsent(Boolean.FALSE, Collections.emptyList());
+            orderIds.putIfAbsent(Boolean.TRUE, Collections.emptyList());
 
-            Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio = new HashSet<>();
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Stream<AuditLogDetail> auditLogDetails = Stream.empty();
-            List<AuditLogDetail> auditLogDetails2 = Collections.emptyList();
+            List<JOrder> jOrders = Collections.emptyList();
+            List<DBItemDailyPlanOrder> dbOrders = Collections.emptyList();
+            Set<String> workflowNames = new HashSet<>();
+            
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
 
                 currentState = Proxy.of(controllerId).currentState();
-
-                auditLogDetails2 = OrdersHelper.getPermittedJOrdersFromOrderIds(orderIds.get(Boolean.FALSE).stream().map(OrderId::of),
-                        permittedFolders, currentState).map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
-                                .string(), controllerId)).toList();
-            }
-
+                
+                jOrders = OrdersHelper.getJOrdersFromOrderIds(orderIds.get(Boolean.FALSE).stream().map(OrderId::of), currentState).toList();
+                workflowNames.addAll(jOrders.stream().map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).distinct().toList());
+            }   
+            
             if (!orderIds.get(Boolean.TRUE).isEmpty()) {
 
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                dbOrders = getDailyPlanOrders(controllerId, orderIds.get(Boolean.TRUE), dbLayer);
+                workflowNames.addAll(dbOrders.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct().toList());
+            }
+            
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getModify()), workflowNames);
+            if (response != null) {
+                return response;
+            }
+            
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
+            
+            Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio = new HashSet<>();
+            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            List<AuditLogDetail> auditLogDetails = Collections.emptyList();
+            List<AuditLogDetail> auditLogDetails2 = Collections.emptyList();
+            
+            if (!orderIds.get(Boolean.FALSE).isEmpty()) {
+
+                Stream<JOrder> jOrdersStream = jOrders.stream();
+                if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                    jOrdersStream = jOrdersStream.filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
+                }
+                auditLogDetails2 = jOrdersStream.map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id().string(),
+                        controllerId)).toList();
+            }
+
+            
+            if (!orderIds.get(Boolean.TRUE).isEmpty()) {
+                
                 session.setAutoCommit(false);
                 Globals.beginTransaction(session);
 
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                auditLogDetails = getDailyPlanOrders(controllerId, orderIds.get(Boolean.TRUE), dbLayer).stream().filter(item -> folderIsPermitted(item
-                        .getWorkflowFolder(), permittedFolders)).map(setPriority(in.getPriority())).filter(Optional::isPresent).map(Optional::get)
+                auditLogDetails = dbOrders.stream().filter(item -> folderIsPermitted(item.getWorkflowFolder(), permittedFolders))
+                        .map(setPriority(in.getPriority())).filter(Optional::isPresent).map(Optional::get)
                         .map(item -> {
                             if (item.getSubmitted()) {
                                 submittedOrdersWithChangedPrio.add(item);
@@ -112,12 +134,12 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                                 dbLayer.updateOrderParameterisation(item);
                             }
                             return item;
-                        }).map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), controllerId));
+                        }).map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(), controllerId)).toList();
 
                 Globals.commit(session);
             }
 
-            List<AuditLogDetail> auditLogDetails3 = Stream.concat(auditLogDetails, auditLogDetails2.stream()).toList();
+            List<AuditLogDetail> auditLogDetails3 = Stream.concat(auditLogDetails.stream(), auditLogDetails2.stream()).toList();
 
             command(in, submittedOrdersWithChangedPrio, auditLogDetails2).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);

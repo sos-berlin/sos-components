@@ -65,6 +65,10 @@ public class JOCResourceImpl {
     // private String accessToken;
     private String headerAccessToken;
     private JocAuditTrail jocAuditLog = new JocAuditTrail();
+    private final String accessDeniedDefaultMessage = "Access denied";
+    private final String approvalRequestDefaultMessage = "4-eyes principle: Operation needs approval process";
+    private String accessDeniedMessage = accessDeniedDefaultMessage;
+    private String approvalRequestMessage = approvalRequestDefaultMessage;
 
     @HeaderParam("X-Approval-Request-Id")
     private String approvalRequestId;
@@ -326,11 +330,11 @@ public class JOCResourceImpl {
     }
 
     public JOCDefaultResponse accessDeniedResponse() {
-        return accessDeniedResponse("Access denied");
+        return accessDeniedResponse(getAccessDeniedMessage());
     }
 
     public JOCDefaultResponse approvalRequestResponse() {
-        return approvalRequestResponse("4-eyes principle: Operation needs approval process");
+        return approvalRequestResponse(getApprovalRequestMessage());
     }
 
     public JOCDefaultResponse approvalRequestResponse(String message) {
@@ -611,22 +615,27 @@ public class JOCResourceImpl {
     public JOCDefaultResponse initWorkflowPermissions(String controllerId, boolean permission, boolean fourEyesPermission, Set<String> workflowNames)
             throws JocException {
         // JOC-2196 check if workflows have requiring approval tags
-        if (fourEyesPermission && !workflowNames.isEmpty()) { // requestor role needs approval while workflows are processed
+        if (fourEyesPermission) { // requestor role needs approval while workflows are processed
             boolean perm = true;
             List<String> approvalTags = Globals.getConfigurationGlobalsJoc().getWorkflowsRequiringApprovalTags();
             if (!approvalTags.isEmpty()) {
-                SOSHibernateSession session = null;
-                try {
-                    session = Globals.createSosHibernateStatelessConnection("checkWorkflowsRequiringApprovalTags");
-                    InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
-                    perm = dbLayer.getWorkflowNamesHavingTags(approvalTags).stream().anyMatch(workflowNames::contains);
-                } catch (Exception e) {
-                    LOGGER.warn("Error at reading workflows with requiring approval tags", e);
-                } finally {
-                    Globals.disconnect(session);
+                if (workflowNames.isEmpty()) {
+                    perm = false;
+                } else {
+                    SOSHibernateSession session = null;
+                    try {
+                        session = Globals.createSosHibernateStatelessConnection("checkWorkflowsRequiringApprovalTags");
+                        InventoryTagDBLayer dbLayer = new InventoryTagDBLayer(session);
+                        perm = dbLayer.getWorkflowNamesHavingTags(approvalTags).stream().anyMatch(workflowNames::contains);
+                    } catch (Exception e) {
+                        LOGGER.warn("Error at reading workflows with requiring approval tags", e);
+                    } finally {
+                        Globals.disconnect(session);
+                    }
                 }
             }
             return initPermissions(controllerId, permission, perm, false);
+
         }
         return initPermissions(controllerId, permission, fourEyesPermission, false);
     }
@@ -777,6 +786,30 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
         return JOCDefaultResponse.responseStatus403(entity, jocAuditLog);
+    }
+
+    public String getAccessDeniedMessage() {
+        String msg = accessDeniedMessage;
+        if (!accessDeniedDefaultMessage.equals(accessDeniedMessage)) {
+            accessDeniedMessage = accessDeniedDefaultMessage;
+        }
+        return msg;
+    }
+
+    public void setAccessDeniedMessage(String accessDeniedMessage) {
+        this.accessDeniedMessage = accessDeniedMessage;
+    }
+
+    public String getApprovalRequestMessage() {
+        String msg = approvalRequestMessage;
+        if (!approvalRequestDefaultMessage.equals(approvalRequestMessage)) {
+            approvalRequestMessage = approvalRequestDefaultMessage;
+        }
+        return msg;
+    }
+
+    public void setApprovalRequestMessage(String approvalRequestMessage) {
+        this.approvalRequestMessage = approvalRequestMessage;
     }
 
 }

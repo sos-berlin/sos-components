@@ -124,73 +124,69 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
-                    .getModify()));
-            if (response != null) {
-                return response;
-            }
-
-            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
-                    .getManagePositions()).toList();
-            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) || in
-                    .getBlockPosition() != null)) {
-                if (!hasManagePositionsPermission.get(0)) {
-                    return accessDeniedResponse("Access denied for setting start-/end-/blockpositions");
-                }
-                if (hasManagePositionsPermission.get(1)) {
-                    response = approvalRequestResponse("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
-                    if (response != null) {
-                        return response;
-                    }
-                }
-            }
-
             JControllerProxy proxy = Proxy.of(controllerId);
             JControllerState currentState = proxy.currentState();
 
-            // DailyPlan Orders: orderIds.get(Boolean.FALSE), Adhoc Orders: orderIds.get(Boolean.TRUE)
-            Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#T[0-9]+-.*"), Collectors
+            // DailyPlan Orders: orderIds.get(Boolean.TRUE), Adhoc Orders: orderIds.get(Boolean.FALSE)
+            Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#[PC][0-9]+-.*"), Collectors
                     .toSet()));
-            orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
             orderIds.putIfAbsent(Boolean.TRUE, Collections.emptySet());
+            orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
 
-            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
-
+            Set<String> workflowNames = new HashSet<>();
+            
             List<DBItemDailyPlanOrder> dailyPlanOrderItems = null;
-            if (!orderIds.get(Boolean.FALSE).isEmpty()) {
-                dailyPlanOrderItems = getDailyPlanOrders(controllerId, DailyPlanUtils.getDistinctOrderIds(orderIds.get(Boolean.FALSE)));
+            if (!orderIds.get(Boolean.TRUE).isEmpty()) {
+                dailyPlanOrderItems = getDailyPlanOrders(controllerId, DailyPlanUtils.getDistinctOrderIds(orderIds.get(Boolean.TRUE)));
             }
             if (dailyPlanOrderItems == null) {
                 dailyPlanOrderItems = Collections.emptyList();
             }
+            
+            workflowNames.addAll(dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct().toList());
+            
+            if (!orderIds.get(Boolean.FALSE).isEmpty()) {
+                workflowNames.addAll(OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState).toList());
+            }
+            
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                    .getModify()), workflowNames);
+            if (response != null) {
+                return response;
+            }
+            
+            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) || in
+                    .getBlockPosition() != null)) {
+                setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
+                setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
+                
+                response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                        .getManagePositions()), workflowNames);
+                if (response != null) {
+                    return response;
+                }
+            }
+            
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
+            
             boolean someDailyPlanOrdersAreSubmitted = dailyPlanOrderItems.stream().anyMatch(DBItemDailyPlanOrder::getSubmitted);
             boolean onlyStarttimeModifications = hasOnlyStarttimeModifications(in);
 
-            Stream<String> workflowNames = Stream.empty();
-            if (!onlyStarttimeModifications) {
-                workflowNames = dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct();
-            }
-
             // some dailyplan orders are already submitted then these must be in state SCHEDULED
-            if (someDailyPlanOrdersAreSubmitted || !orderIds.get(Boolean.TRUE).isEmpty()) {
+            if (someDailyPlanOrdersAreSubmitted || !orderIds.get(Boolean.FALSE).isEmpty()) {
                 OrdersHelper.getNotFreshOrders(in.getOrderIds(), currentState).ifPresent(s -> {
                     throw new JocBadRequestException("Some orders are not in the state SCHEDULED or PLANNED: " + s.toString());
                 });
-
-                if (!onlyStarttimeModifications) {
-                    workflowNames = Stream.concat(workflowNames, OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState));
-                }
             }
 
             Map<String, List<Object>> labelMap = Collections.emptyMap();
             Set<BlockPosition> blockPositions = Collections.emptySet();
             if (!onlyStarttimeModifications) { // check that all orders belong to one workflow
-                Set<String> wNames = workflowNames.collect(Collectors.toSet());
-                if (wNames.size() > 1) {
+                if (workflowNames.size() > 1) {
                     throw new JocBadRequestException(
-                            "All orders must belong to the same workflow when variables or positions are modified. Involved workflows are " + wNames
+                            "All orders must belong to the same workflow when variables or positions are modified. Involved workflows are " + workflowNames
                                     .toString());
-                } else if (wNames.size() == 1) {
+                } else if (workflowNames.size() == 1) {
                     // JOC-1453
                     boolean withStartLabel = in.getStartPosition() != null && in.getStartPosition() instanceof String;
                     boolean withEndLabels = in.getEndPositions() != null && in.getEndPositions().stream().filter(Objects::nonNull).anyMatch(
@@ -198,7 +194,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     boolean withBlock = in.getBlockPosition() != null;
 
                     if (withStartLabel || withEndLabels || withBlock) {
-                        com.sos.inventory.model.workflow.Workflow workflow = getWorkflow(controllerId, wNames.iterator().next());
+                        com.sos.inventory.model.workflow.Workflow workflow = getWorkflow(controllerId, workflowNames.iterator().next());
                         if (withStartLabel || withEndLabels) {
                             labelMap = getLabelMap(workflow);
                         }
@@ -211,7 +207,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             setSettings(IMPL_PATH);
             ZoneId zoneId = getZoneId(IMPL_PATH);
-            Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.TRUE), in, accessToken,
+            Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.FALSE), in, accessToken,
                     getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, blockPositions, folderPermissions);
             OrderIdMap dailyPlanResult = null;
 
