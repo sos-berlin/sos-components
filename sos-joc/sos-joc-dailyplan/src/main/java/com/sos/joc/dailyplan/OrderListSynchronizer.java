@@ -261,6 +261,7 @@ public class OrderListSynchronizer {
             }
         } finally {
             Globals.disconnect(session);
+            JocClusterServiceLogger.removeLogger(ClusterServices.dailyplan.name());
         }
 
     }

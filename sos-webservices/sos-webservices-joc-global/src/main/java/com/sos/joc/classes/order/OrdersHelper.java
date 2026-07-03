@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
@@ -1661,18 +1662,31 @@ public class OrdersHelper {
     }
     
     public static CompletableFuture<Either<Problem, Void>> cancelFreshOrders(JControllerProxy proxy, Set<String> orderIds, String controllerId) {
-        return cancelRecursively(proxy, orderIds, controllerId, Either.right(null), 0);
+        return cancelRecursively(proxy, orderIds, controllerId, Either.right(null), 0, 0l);
     }
     
     private static CompletableFuture<Either<Problem, Void>> cancelRecursively(JControllerProxy proxy, Set<String> orderIds, String controllerId,
-            Either<Problem, Void> either, int count) {
+            Either<Problem, Void> either, int count, long eventId) {
         if(count > 0) {
             LOGGER.info("error occurred. retry cancel order. " + count + " try. " + ProblemHelper.getErrorMessage(either.getLeft()));
         }
         if (count >= 3) {
             return CompletableFuture.completedFuture(either);
         }
-        final JControllerState currentState = proxy.currentState();
+        if (eventId != 0l) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(300l);
+            } catch (InterruptedException e) {}
+        }
+        JControllerState currentState = proxy.currentState();
+        long csEventId = currentState.eventId();
+        if(eventId == csEventId) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(300l);
+            } catch (InterruptedException e) {}
+            currentState = proxy.currentState();
+            csEventId = currentState.eventId();
+        }
         Stream<JOrder> orderStream = Stream.empty();
         if (!orderIds.isEmpty()) {
             orderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> orderIds.contains(o
@@ -1683,10 +1697,11 @@ public class OrdersHelper {
             proxy.api().deleteOrdersWhenTerminated(Flux.fromIterable(oIds)).thenCompose(e -> proxy.api().cancelOrders(
                     oIds, JCancellationMode.freshOnly()));
         int newCount = count + 1;
+        final long evId = csEventId;
         return future.thenCompose(e -> {
             if (e.isLeft() && ProblemHelper.getErrorMessage(e.getLeft()).matches(".*(" + ProblemHelper.UNKNOWN_ORDER +"|" 
                     + ProblemHelper.CANCEL_STARTED_ORDER + "):.*")) {
-                return cancelRecursively(proxy, orderIds, controllerId, e, newCount);
+                return cancelRecursively(proxy, orderIds, controllerId, e, newCount, evId);
             }
             return CompletableFuture.completedFuture(e);
         });
