@@ -176,6 +176,54 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 mappedFutures.putIfAbsent(true, Collections.emptyList());
                 mappedFutures.putIfAbsent(false, Collections.emptyList());
                 
+                SOSHibernateSession futureSession = null;
+                List<Throwable> errors = new ArrayList<>();
+                try {
+                    // first update DB
+                    futureSession = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(release-deploy)");
+                    InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
+                    // TODD: should be removed from code
+                    if (in.getDelete() != null && !in.getDelete().isEmpty()) {
+                        futureSession.setAutoCommit(false);
+                        Globals.beginTransaction(futureSession);
+                        errors.addAll(delete(in.getDelete(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                                withDeletionOfEmptyFolders));
+                        if (!errors.isEmpty()) {
+                            Globals.rollback(futureSession);
+                        } else {
+                            Globals.commit(futureSession);
+                        }
+                        futureSession.setAutoCommit(true);
+                    }
+                    // call update for preDeploy
+                    if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
+                        errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                                withDeletionOfEmptyFolders, true));
+                    }
+                    releaseAndReaquireSemaphore(accessToken);
+                    // call update for postDeploy
+                    if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
+                        errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                                withDeletionOfEmptyFolders, false));
+                    }
+                    if (!errors.isEmpty()) {
+                        throw errors.get(0);
+                    }
+                    auditLogObjectsLogging.log();
+                    if (!mappedFutures.get(false).isEmpty()){
+                        // alle gegebenen controllerIds
+                            recreateOrders(in, schedulePaths, 
+                                    mappedFutures.get(false).stream().map(ControllerCommandResponse::getControllerId).collect(Collectors.toSet()), 
+                                    accessToken, futureDbLayer.getSession());
+                    }
+                } catch (InterruptedException e) {
+                    // releaseAndReaquireSemaphore failed, do nothing
+                } catch (Throwable e) {
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+                } finally {
+                    Globals.disconnect(futureSession);
+                    releaseSemaphoreFinal(accessToken);
+                }
                 if(!mappedFutures.get(true).isEmpty()) {
                     // contains futures with errors
                     String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
@@ -183,56 +231,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
                     }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
                     EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
-                }
-                if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){
-                    // alle gegebenen controllerIds
-                    SOSHibernateSession futureSession = null;
-                    List<Throwable> errors = new ArrayList<>();
-                    try {
-                        // first update DB
-                        futureSession = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(release-deploy)");
-                        InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
-                        // TODD: should be removed from code
-                        if (in.getDelete() != null && !in.getDelete().isEmpty()) {
-                            futureSession.setAutoCommit(false);
-                            Globals.beginTransaction(futureSession);
-                            errors.addAll(delete(in.getDelete(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
-                                    withDeletionOfEmptyFolders));
-                            if (!errors.isEmpty()) {
-                                Globals.rollback(futureSession);
-                            } else {
-                                Globals.commit(futureSession);
-                            }
-                            futureSession.setAutoCommit(true);
-                        }
-                        // call update for preDeploy
-                        if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                            errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
-                                    withDeletionOfEmptyFolders, true));
-                        }
-                        releaseAndReaquireSemaphore(accessToken);
-                        // call update for postDeploy
-                        if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                            errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
-                                    withDeletionOfEmptyFolders, false));
-                        }
-                        if (!errors.isEmpty()) {
-                            throw errors.get(0);
-                        }
-                        auditLogObjectsLogging.log();
-                        recreateOrders(in, schedulePaths, 
-                                mappedFutures.get(false).stream().map(ControllerCommandResponse::getControllerId).collect(Collectors.toSet()), 
-                                accessToken, futureDbLayer.getSession());
-                    } catch (InterruptedException e) {
-                        // releaseAndReaquireSemaphore failed, do nothing
-                    } catch (Throwable e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
-                    } finally {
-                        Globals.disconnect(futureSession);
-                        releaseSemaphoreFinal(accessToken);
-                    }
-                } else {
-                    releaseSemaphoreFinal(accessToken);
                 }
             });
         } catch(Throwable t) {
@@ -797,9 +795,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         xAccessToken);
                 Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                         ordersPerController, xAccessToken);
-                for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                    cancelOrderResponsePerController.putIfAbsent(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
-                            controllerId)));
+                for (String controllerId : cancelOrderResponsePerController.keySet()) {
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
                             DailyPlanOrderFilterDef localOrderFilter = new DailyPlanOrderFilterDef();
