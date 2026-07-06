@@ -1839,8 +1839,6 @@ public class Validator {
                 } catch (Exception e) {
                     //
                 }
-//                JSchedule.fromJson(position)
-//                JScheduleCalculator.checked(null, null, null)
             }
         }
     }
