@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.diagnosis;
+package com.sos.jitl.jobs.diagnostics;
 
 import java.io.IOException;
 import java.io.InputStream;
