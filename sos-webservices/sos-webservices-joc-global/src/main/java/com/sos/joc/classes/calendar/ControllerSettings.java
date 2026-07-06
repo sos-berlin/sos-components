@@ -208,4 +208,8 @@ public class ControllerSettings {
         return dailyplanOffset;
     }
 
+    public long getDailyplanOffset() {
+        return dailyplanOffset;
+    }
+
 }
