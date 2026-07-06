@@ -53,7 +53,7 @@ import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.WorkflowConverter;
-import com.sos.joc.classes.proxy.Proxies;
+
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
@@ -63,8 +63,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
+
 
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -232,11 +231,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
                 if(!mappedFutures.get(true).isEmpty()) {
                     // contains futures with errors
-                    String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                        LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                    }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                    EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                    ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), accessToken, jocError);
+
                 }
             });
 
@@ -785,6 +781,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
 
+
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
             if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -805,9 +802,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 for (String controllerId : cancelOrderResponsePerController.keySet()) {
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
+
                             try {
                                 DailyPlanDeleteOrdersImpl.deleteOrdersOfController(IMPL_PATH, controllerId, orderFilter.getDailyPlanDateFrom(), null,
                                         orderFilter.getSchedulePaths());
+
 
                             } catch (Exception e) {
                                 return new ControllerCommandResponse(controllerId, Optional.of(e));

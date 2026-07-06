@@ -25,6 +25,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.RecallRevokeSemaphore;
 import com.sos.joc.classes.inventory.RemoveSemaphore;
@@ -32,8 +33,6 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -157,11 +156,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     
                     if(!mappedFutures.get(true).isEmpty()) {
                         // contains futures with errors
-                        String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                            getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                            LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                        }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                        EventBus.getInstance().post(new ProblemEvent(xAccessToken, null, message));
+                        ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), xAccessToken, getJocError());
                     } else {
                         // if
                         //      no error occurred on cancelOrders 

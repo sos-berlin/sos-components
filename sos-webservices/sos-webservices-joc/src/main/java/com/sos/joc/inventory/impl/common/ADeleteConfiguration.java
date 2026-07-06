@@ -52,8 +52,6 @@ import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -377,11 +375,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             mappedFutures.putIfAbsent(false, Collections.emptyList());
             if(!mappedFutures.get(true).isEmpty()) {
                 // contains futures with errors
-                String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                    getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                    LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), accessToken, getJocError());
                 releaseAndReaquireSemaphore(accessToken);
             }
             if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){

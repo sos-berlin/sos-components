@@ -22,6 +22,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.PublishSemaphore;
@@ -35,8 +36,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -288,11 +287,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                             
                             if(!mappedFutures.get(true).isEmpty()) {
                                 // contains futures with errors
-                                String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                                    getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                                    LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                                }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                                EventBus.getInstance().post(new ProblemEvent(xAccessToken, null, message));
+                                ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), xAccessToken, getJocError());
                             } else {
                                 SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
                                         updateableAgentNamesFileOrderSources, dbAuditlog.getId());

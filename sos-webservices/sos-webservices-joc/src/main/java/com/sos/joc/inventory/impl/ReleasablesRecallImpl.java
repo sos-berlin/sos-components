@@ -37,8 +37,6 @@ import com.sos.joc.classes.inventory.RemoveSemaphore;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -182,12 +180,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                 JocError jocError = null;
                 
                 if(!mappedFutures.get(true).isEmpty()) {
-                    jocError = getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                    // contains futures with errors
-                    String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                        LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                    }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                    EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                    ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), accessToken, jocError);
                 }
                 if (!mappedFutures.get(false).isEmpty() || (mappedFutures.get(false).isEmpty() && mappedFutures.get(true).isEmpty())){
                     SOSHibernateSession futureSession = null;
