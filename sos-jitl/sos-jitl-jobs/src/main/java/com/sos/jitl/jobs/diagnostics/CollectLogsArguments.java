@@ -1,4 +1,4 @@
-package com.sos.jitl.jobs.diagnosis;
+package com.sos.jitl.jobs.diagnostics;
 
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.JobArgument;
