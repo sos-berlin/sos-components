@@ -52,7 +52,6 @@ import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.WorkflowConverter;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
@@ -62,8 +61,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -226,11 +223,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
                 if(!mappedFutures.get(true).isEmpty()) {
                     // contains futures with errors
-                    String message = mappedFutures.get(true).stream().peek(controllerCommandResult -> {
-                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                        LOGGER.error(controllerCommandResult.getControllerId(), controllerCommandResult.getException().get());
-                    }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-                    EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
+                    ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), accessToken, jocError);
                 }
             });
         } catch(Throwable t) {

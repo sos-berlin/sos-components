@@ -42,7 +42,6 @@ import com.sos.joc.dailyplan.resource.IDailyPlanCancelOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
-import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -238,14 +237,8 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 .getAuditLog());
 
         CompletableFuture.allOf(cancelOrderResponsePerController.toArray(CompletableFuture[]::new)).thenRun(() -> {
-            String message = cancelOrderResponsePerController.stream().map(CompletableFuture::join).filter(ControllerCommandResponse::hasException)
-                    .peek(ccr -> {
-                        getJocErrorWithPrintMetaInfoAndClear(LOGGER);
-                        LOGGER.error(ccr.getControllerId(), ccr.getException().get());
-                    }).map(c -> c.getControllerId() + ": " + c.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
-            if (!message.isEmpty()) {
-                EventBus.getInstance().post(new ProblemEvent(accessToken, null, message));
-            }
+            ProblemHelper.postExceptionsIfExist(cancelOrderResponsePerController.stream().map(CompletableFuture::join).filter(
+                    ControllerCommandResponse::hasException).toList(), accessToken, getJocError());
         });
     }
 

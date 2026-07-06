@@ -1,6 +1,8 @@
 package com.sos.joc.classes;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +10,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.ControllerConflictException;
@@ -146,6 +149,39 @@ public class ProblemHelper {
             if (logContext != null) {
                 MDC.put("clusterService", logContext); 
             }
+        }
+    }
+    
+    public static synchronized void postExceptionsIfExist(Collection<ControllerCommandResponse> exeptionPerControllers, String accessToken,
+            JocError err) throws JocException {
+        String logContext = MDC.get("clusterService");
+        if (exeptionPerControllers != null && !exeptionPerControllers.stream().anyMatch(ControllerCommandResponse::hasException)) {
+
+            if (err != null) {
+                if (logContext != null) {
+                    MDC.remove("clusterService");
+                }
+            }
+            if (err != null && !err.getMetaInfo().isEmpty()) {
+                LOGGER.info(err.printMetaInfo());
+                err.clearMetaInfo();
+            }
+
+            boolean withMarker = err != null && err.getApiCall() != null;
+            Marker m = withMarker ? MarkerFactory.getMarker(err.getApiCall()) : null;
+
+            String msg = exeptionPerControllers.stream().filter(ControllerCommandResponse::hasException).peek(ccr -> {
+                if (withMarker) {
+                    LOGGER.error(m, ccr.getControllerId(), ccr.getException().get());
+                } else {
+                    LOGGER.error(ccr.getControllerId(), ccr.getException().get());
+                }
+            }).map(ccr -> ccr.getControllerId() + ": " + ccr.getException().get().toString()).collect(Collectors.joining(System.lineSeparator()));
+
+            if (logContext != null) {
+                MDC.put("clusterService", logContext);
+            }
+            postMessageIfExist(msg, accessToken, err, null, false);
         }
     }
     
