@@ -35,6 +35,7 @@ public class ControllerSettings {
     private static ControllerSettings instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerSettings.class);
     private boolean initIsCalled = false;
+    private long dailyplanOffset = 0;
 
     private ControllerSettings() {
         EventBus.getInstance().register(this);
@@ -153,8 +154,9 @@ public class ControllerSettings {
         return false;
     }
 
-    private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
-        return getDailyPlanCalendar(convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin())));
+    private JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
+        dailyplanOffset = convertPeriodBeginToSeconds(getValue(conf.getPeriodBegin()));
+        return getDailyPlanCalendar(dailyplanOffset);
     }
 
     private static JCalendar getDailyPlanCalendar(long dateOffset) {
@@ -179,6 +181,9 @@ public class ControllerSettings {
 
     public static long convertTimeToSeconds(String timeField, String fieldname) {
 
+        if (timeField == null) {
+            return 0l;
+        }
         timeField = (timeField + ":00:00").substring(0, 8);
         if (!timeField.matches("\\d{2}:\\d{2}:\\d{2}")) {
             throw new IllegalArgumentException(fieldname + " (" + timeField + ") must have the format hh:mm:ss");
@@ -197,6 +202,10 @@ public class ControllerSettings {
             return c.getDefault();
         }
         return s;
+    }
+    
+    public long getDailyplanOffset() {
+        return dailyplanOffset;
     }
 
 }

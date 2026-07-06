@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,6 +63,7 @@ import com.sos.inventory.model.instruction.Sleep;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
+import com.sos.inventory.model.instruction.schedule.CycleSchedule;
 import com.sos.inventory.model.instruction.schedule.Scheme;
 import com.sos.inventory.model.job.AdmissionRestrictedScheme;
 import com.sos.inventory.model.job.AdmissionRestriction;
@@ -87,7 +90,9 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.common.StringSizeSanitizer;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.reporting.RunReport;
@@ -107,6 +112,8 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data_for_java.schedule.JSchedule;
+import js7.data_for_java.schedule.JScheduleCalculator;
 import js7.data_for_java.value.JExpression;
 
 public class Validator {
@@ -225,8 +232,9 @@ public class Validator {
                     Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
                     hasLicense = AgentHelper.hasClusterLicense();
                     Set<String> retryConfs = new HashSet<>();
+                    long dayOffsetSeconds = getDayOffsetSeconds(workflow);
                     validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(),
-                            new HashMap<String, String>(), invalidAgentRefs, boardNames, retryConfs, false, dbLayer);
+                            dayOffsetSeconds, new HashMap<String, String>(), invalidAgentRefs, boardNames, retryConfs, false, dbLayer);
                     validateRetries(retryConfs);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     // validateJobTags(jobs);
@@ -338,9 +346,10 @@ public class Validator {
                 Set<String> invalidAgentRefs = getInvalidAgentRefs(json, agentDBLayer, visibleAgentNames);
                 hasLicense = AgentHelper.hasClusterLicense();
                 Set<String> retryConfs = new HashSet<>();
-                validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), new HashMap<String, String>(),
-                        invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptySet()), retryConfs, false,
-                        workflowJsonsByName);
+                long dayOffsetSeconds = getDayOffsetSeconds(workflow);
+                validateInstructions(workflow.getInstructions(), "instructions", jobs, workflow.getOrderPreparation(), dayOffsetSeconds,
+                        new HashMap<String, String>(), invalidAgentRefs, invObjNames.getOrDefault(ConfigurationType.NOTICEBOARD, Collections
+                                .emptySet()), retryConfs, false, workflowJsonsByName);
                 validateRetries(retryConfs);
                 // validateJobTags(jobs);
                 validateAdmissionTime(jobs);
@@ -394,6 +403,14 @@ public class Validator {
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
         }
+    }
+    
+    private static long getDayOffsetSeconds(Workflow workflow) {
+        long dayOffsetSeconds = ControllerSettings.getInstance().getDailyplanOffset();
+        if (workflow.getDayOffset() != null && !workflow.getDayOffset().isEmpty()) {
+            dayOffsetSeconds = ControllerSettings.convertTimeToSeconds(workflow.getDayOffset(), "dayOffset");
+        }
+        return dayOffsetSeconds;
     }
     
     private static void validateRetries(Set<String> retryConfs) {
@@ -872,9 +889,9 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
-            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs, boolean forkListExist,
-            InventoryDBLayer dbLayer) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException,
-            SOSHibernateException {
+            long dayOffsetSeconds, Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs,
+            boolean forkListExist, InventoryDBLayer dbLayer) throws SOSJsonSchemaException, JsonProcessingException, IOException,
+            JocConfigurationException, SOSHibernateException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -973,7 +990,7 @@ public class Validator {
                             String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                             if (branch.getWorkflow() != null) {
                                 validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                        orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                        orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                             }
                             branchIndex++;
                         }
@@ -994,19 +1011,19 @@ public class Validator {
                     if (fl.getWorkflow() != null) {
                         firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, retryConfs, true, dbLayer);
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, true, dbLayer);
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
                     validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
-                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case CASE_WHEN:
@@ -1016,28 +1033,28 @@ public class Validator {
                         validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
                         if (when.getThen() != null) {
                             validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                    orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                         }
                         caseIndex++;
                     }
                     if (caseWhen.getElse() != null) {
-                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     if (tryCatch.getMaxTries() != null || tryCatch.getRetryDelays() != null) {
-                        //has retry configuration -> requires retry instruction in catch
+                        // has retry configuration -> requires retry instruction in catch
                         retryConfs.add(instPosition);
                     }
                     if (tryCatch.getTry() != null) {
-                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     if (tryCatch.getCatch() != null) {
                         validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case RETRY:
@@ -1047,7 +1064,7 @@ public class Validator {
                     Lock lock = inst.cast();
                     if (lock.getLockedWorkflow() != null) {
                         validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case PROMPT:
@@ -1097,7 +1114,7 @@ public class Validator {
                     }
                     if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case POST_NOTICE:
@@ -1141,10 +1158,10 @@ public class Validator {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
-                    validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
+                    validateSchedule(cycle.getSchedule(), dayOffsetSeconds, instPosition + "schedule");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case STICKY_SUBAGENT:
@@ -1160,22 +1177,22 @@ public class Validator {
                         firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions",
                                 "StickySubagent");
                         validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
-                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case ADMISSION_TIME:
                     AdmissionTime at = inst.cast();
                     validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
-                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
                 case SLEEP:
@@ -1191,8 +1208,8 @@ public class Validator {
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Jobs jobs, Requirements orderPreparation,
-            Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs, boolean forkListExist,
-            Map<String, String> allWorkflowJsonsByName) throws SOSJsonSchemaException, JsonProcessingException, IOException,
+            long dayOffsetSeconds, Map<String, String> labels, Set<String> invalidAgentRefs, Collection<String> boardNames, Set<String> retryConfs,
+            boolean forkListExist, Map<String, String> allWorkflowJsonsByName) throws SOSJsonSchemaException, JsonProcessingException, IOException,
             JocConfigurationException {
         if (instructions != null) {
             int index = 0;
@@ -1292,7 +1309,8 @@ public class Validator {
                             String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                             if (branch.getWorkflow() != null) {
                                 validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobs,
-                                        orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                        orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                        allWorkflowJsonsByName);
                             }
                             branchIndex++;
                         }
@@ -1313,19 +1331,19 @@ public class Validator {
                     if (fl.getWorkflow() != null) {
                         firstChildIsForkInstruction(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", "ForkList");
                         validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "workflow.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, retryConfs, true, allWorkflowJsonsByName);
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, true, allWorkflowJsonsByName);
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
                     validateExpression("$." + instPosition + "predicate: ", ifElse.getPredicate());
                     if (ifElse.getThen() != null) {
-                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case CASE_WHEN:
@@ -1335,28 +1353,29 @@ public class Validator {
                         validateExpression("$." + instPosition + "predicate[" + caseIndex + "]: ", when.getPredicate());
                         if (when.getThen() != null) {
                             validateInstructions(when.getThen().getInstructions(), instPosition + "then[" + caseIndex + "].instructions", jobs,
-                                    orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                    orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                    allWorkflowJsonsByName);
                         }
                         caseIndex++;
                     }
                     if (caseWhen.getElse() != null) {
-                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(caseWhen.getElse().getInstructions(), instPosition + "else.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     if (tryCatch.getMaxTries() != null || tryCatch.getRetryDelays() != null) {
-                        //has retry configuration -> requires retry instruction in catch
+                        // has retry configuration -> requires retry instruction in catch
                         retryConfs.add(instPosition);
                     }
                     if (tryCatch.getTry() != null) {
-                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     if (tryCatch.getCatch() != null) {
                         validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobs, orderPreparation,
-                                labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case RETRY:
@@ -1366,7 +1385,8 @@ public class Validator {
                     Lock lock = inst.cast();
                     if (lock.getLockedWorkflow() != null) {
                         validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                allWorkflowJsonsByName);
                     }
                     break;
                 case PROMPT:
@@ -1416,7 +1436,8 @@ public class Validator {
                     }
                     if (cns.getSubworkflow() != null && cns.getSubworkflow().getInstructions() != null) {
                         validateInstructions(cns.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                allWorkflowJsonsByName);
                     }
                     break;
                 case POST_NOTICE:
@@ -1460,10 +1481,11 @@ public class Validator {
                     break;
                 case CYCLE:
                     Cycle cycle = inst.cast();
-                    validateAdmissionTime(cycle.getSchedule().getSchemes(), instPosition + "schedule.");
+                    validateSchedule(cycle.getSchedule(), dayOffsetSeconds, instPosition + "schedule");
                     if (cycle.getCycleWorkflow() != null) {
                         validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                allWorkflowJsonsByName);
                     }
                     break;
                 case STICKY_SUBAGENT:
@@ -1479,22 +1501,23 @@ public class Validator {
                         firstChildIsForkInstruction(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions",
                                 "StickySubagent");
                         validateInstructions(sticky.getSubworkflow().getInstructions(), instPosition + "subworkflow.instructions", jobs,
-                                orderPreparation, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                                orderPreparation, dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist,
+                                allWorkflowJsonsByName);
                     }
                     break;
                 case OPTIONS:
                     Options opts = inst.cast();
                     if (opts.getBlock() != null) {
-                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(opts.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case ADMISSION_TIME:
                     AdmissionTime at = inst.cast();
                     validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
-                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation, labels,
-                                invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                        validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;
                 case SLEEP:
@@ -1791,6 +1814,11 @@ public class Validator {
     // }
     // }
 
+    private static void validateSchedule(CycleSchedule schedule, long dayOffsetSeconds, String position) throws SOSJsonSchemaException {
+        validateAdmissionTime(schedule.getSchemes(), position + ".");
+        validateMidnightOfSchedule(schedule, dayOffsetSeconds, position);
+    }
+    
     private static void validateAdmissionTime(Jobs jobs) throws SOSJsonSchemaException {
         if (jobs != null && jobs.getAdditionalProperties() != null) {
             for (Map.Entry<String, Job> job : jobs.getAdditionalProperties().entrySet()) {
@@ -1813,6 +1841,30 @@ public class Validator {
             validateAdmissionTimePeriods(ats.getPeriods(), position + "admissionTimeScheme.");
             validateAdmissionTimeRestrictionSchemes(ats.getRestrictedSchemes(), position + "admissionTimeScheme.");
         }
+    }
+    
+    private static void validateMidnightOfSchedule(CycleSchedule schedule, long seconds, String position) {
+        String message = null;
+        try {
+            JSchedule jSchedule = getOrThrowEither(JSchedule.fromJson(Globals.objectMapper.writeValueAsString(schedule)));
+            JScheduleCalculator calc = getOrThrowEither(JScheduleCalculator.checked(jSchedule, ZoneOffset.UTC, Duration.ofSeconds(seconds)));
+            // or
+            //ScheduleCalculator calc = ScheduleCalculator.apply(jSchedule.asScala(), ZoneOffset.UTC, DurationConverters.toScala(duration), false);
+
+            message = calc.check().stream().map(Problem::message).collect(Collectors.joining(";"));
+        } catch (JsonProcessingException | RuntimeException e) {
+            //LOGGER.warn("", e)
+        }
+        if (message != null && !message.isEmpty()) {
+            throw new JocConfigurationException(position + ": " + message);
+        }
+    }
+    
+    private static <T> T getOrThrowEither(Either<Problem, T> e) {
+        if (e.isLeft()) {
+            throw new RuntimeException(ProblemHelper.getErrorMessage(e.getLeft()));
+        }
+        return e.get();
     }
 
     private static void validateAdmissionTimePeriods(List<AdmissionTimePeriod> periods, String position) throws SOSJsonSchemaException {
