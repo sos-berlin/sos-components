@@ -38,6 +38,7 @@ import jakarta.ws.rs.Path;
 public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanDeleteOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDeleteOrdersImpl.class);
+    private static Object deleteLock = new Object(); 
 
     @Override
     public JOCDefaultResponse postDeleteOrders(String accessToken, byte[] filterBytes) {
@@ -69,7 +70,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
     }
 
     
-    public synchronized boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
             throws SOSHibernateException {
 
         boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
@@ -111,53 +112,54 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             filter.setSubmissionForDateFrom(toUTCDate(in.getDailyPlanDateFrom()));
             filter.setSubmissionForDateTo(toUTCDate(in.getDailyPlanDateTo()));
             filter.addState(DailyPlanOrderStateText.PLANNED);
-
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                
-                // without transactions
-                List<DBItemDailyPlanOrder> dpOrders = dbLayer.getDailyPlanList(filter, 0);
-                
-                for (DBItemDailyPlanOrder dpOrder : dpOrders) {
-                    session.delete(dpOrder);
-                }
-                
-                dbLayer.executeDeleteVariables(dpOrders.stream().map(DBItemDailyPlanOrder::getOrderId), controllerId);
-                
-                // with transactions
-//                session.setAutoCommit(false);
-//                dbLayer.deleteCascading(filter);
-                
-                if (withEvent) {
-                    if (in.getDailyPlanDateFrom() != null) {
-                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
-                        if (in.getDailyPlanDateTo() != null) {
-                            Instant from = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateFrom() + "T00:00:00Z");
-                            Instant to = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateTo() + "T00:00:00Z");
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
-                            if (from != null && to != null) {
-                                from = from.plusSeconds(86400); // plus one day
-                                int i = 0;
-                                while (from.isBefore(to) && i < 31) { // one month is max in GUI
-                                    i++;
-                                    try {
-                                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, formatter.format(from)));
-                                    } catch (Exception e) {
-                                        //
-                                    }
-                                    from = from.plusSeconds(86400); // plus one day
-                                }
-                            }
-                            EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
-                        }
-                    } else {
-                        EventBus.getInstance().post(new DailyPlanEvent(controllerId, null));
+            synchronized(deleteLock) {
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                    DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                    
+                    // without transactions
+                    List<DBItemDailyPlanOrder> dpOrders = dbLayer.getDailyPlanList(filter, 0);
+                    
+                    for (DBItemDailyPlanOrder dpOrder : dpOrders) {
+                        session.delete(dpOrder);
                     }
+                    
+                    dbLayer.executeDeleteVariables(dpOrders.stream().map(DBItemDailyPlanOrder::getOrderId), controllerId);
+                    
+                    // with transactions
+//                    session.setAutoCommit(false);
+//                    dbLayer.deleteCascading(filter);
+                    
+                    if (withEvent) {
+                        if (in.getDailyPlanDateFrom() != null) {
+                            EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateFrom()));
+                            if (in.getDailyPlanDateTo() != null) {
+                                Instant from = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateFrom() + "T00:00:00Z");
+                                Instant to = JobSchedulerDate.getInstantFromISO8601String(in.getDailyPlanDateTo() + "T00:00:00Z");
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+                                if (from != null && to != null) {
+                                    from = from.plusSeconds(86400); // plus one day
+                                    int i = 0;
+                                    while (from.isBefore(to) && i < 31) { // one month is max in GUI
+                                        i++;
+                                        try {
+                                            EventBus.getInstance().post(new DailyPlanEvent(controllerId, formatter.format(from)));
+                                        } catch (Exception e) {
+                                            //
+                                        }
+                                        from = from.plusSeconds(86400); // plus one day
+                                    }
+                                }
+                                EventBus.getInstance().post(new DailyPlanEvent(controllerId, in.getDailyPlanDateTo()));
+                            }
+                        } else {
+                            EventBus.getInstance().post(new DailyPlanEvent(controllerId, null));
+                        }
+                    }
+                } finally {
+                    Globals.disconnect(session);
                 }
-            } finally {
-                Globals.disconnect(session);
             }
         }
         

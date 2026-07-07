@@ -64,6 +64,7 @@ import js7.proxy.javaapi.JControllerProxy;
 public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements IDailyPlanCancelOrder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCancelOrderImpl.class);
+    private static Object lock = new Object();
 
     @Override
     public JOCDefaultResponse postCancelOrder(String accessToken, byte[] filterBytes) {
@@ -112,7 +113,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return ordersPerControllerIds;
     }
 
-    public synchronized Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(
+    public Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(
             Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -142,7 +143,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         return futures;
     }
 
-    private synchronized Collection<CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
+    private Collection<CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
             String accessToken, AuditParams auditLog) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
@@ -243,51 +244,54 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private static void updateDailyPlan(Collection<String> orderIds, boolean withEvent) {
-        SOSHibernateSession session = null;
-        if (!orderIds.isEmpty()) {
-            try {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[updateDailyPlan][caller=cancelOrders][orderIds=%s]%s", orderIds.size(), String.join(",", orderIds)));
-                }
+        synchronized (lock) {
+            SOSHibernateSession session = null;
+            if (!orderIds.isEmpty()) {
+                try {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[updateDailyPlan][caller=cancelOrders][orderIds=%s]%s", orderIds.size(), String.join(",",
+                                orderIds)));
+                    }
 
-                DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH);
+                    DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(IMPL_PATH);
 
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setOrderIds(orderIds);
-                filter.setSubmitted(false);
-                filter.setSortMode(null);
-                filter.setOrderCriteria(null);
+                    FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    filter.setOrderIds(orderIds);
+                    filter.setSubmitted(false);
+                    filter.setSortMode(null);
+                    filter.setOrderCriteria(null);
 
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(cancelOrders)");
-                session.setAutoCommit(false);
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                Globals.beginTransaction(session);
-                dbLayer.setSubmitted(filter);
-                Globals.commit(session);
-                List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
-                Globals.disconnect(session);
-                session = null;
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "(cancelOrders)");
+                    session.setAutoCommit(false);
+                    DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                    Globals.beginTransaction(session);
+                    dbLayer.setSubmitted(filter);
+                    Globals.commit(session);
+                    List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
+                    Globals.disconnect(session);
+                    session = null;
 
-                Set<String> days = new HashSet<String>();
-                for (DBItemDailyPlanOrder item : items) {
-                    String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
-                    if (!days.contains(date)) {
-                        days.add(date);
-                        if (withEvent) {
-                            EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
+                    Set<String> days = new HashSet<String>();
+                    for (DBItemDailyPlanOrder item : items) {
+                        String date = item.getDailyPlanDate(settings.getTimeZone(), settings.getPeriodBegin());
+                        if (!days.contains(date)) {
+                            days.add(date);
+                            if (withEvent) {
+                                EventBus.getInstance().post(new DailyPlanEvent(item.getControllerId(), date));
+                            }
                         }
                     }
-                }
 
-            } catch (Exception e) {
-                Globals.rollback(session);
-                throw new JocSosHibernateException(e);
-            } finally {
-                Globals.disconnect(session);
-            }
-        } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[updateDailyPlan][caller=cancelOrders]No orderIds to be updated in daily plan");
+                } catch (Exception e) {
+                    Globals.rollback(session);
+                    throw new JocSosHibernateException(e);
+                } finally {
+                    Globals.disconnect(session);
+                }
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[updateDailyPlan][caller=cancelOrders]No orderIds to be updated in daily plan");
+                }
             }
         }
     }
