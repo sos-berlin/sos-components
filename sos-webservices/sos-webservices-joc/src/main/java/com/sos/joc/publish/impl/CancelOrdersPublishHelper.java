@@ -69,6 +69,8 @@ public class CancelOrdersPublishHelper {
                 return ccr;
             }));
         }
+		Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId))
+				.map(ControllerCommandResponse::new).map(CompletableFuture::completedFuture).forEach(futures::add);
         return futures;
     }
     
