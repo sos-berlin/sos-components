@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
@@ -91,6 +92,8 @@ public class CancelOrdersPublishHelper {
                 return ccr;
             }));
         }
+		Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId))
+				.map(ControllerCommandResponse::new).map(CompletableFuture::completedFuture).forEach(futures::add);
         return futures;
     }
     

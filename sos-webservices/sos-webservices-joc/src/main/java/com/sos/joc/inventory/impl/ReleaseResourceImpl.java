@@ -52,6 +52,7 @@ import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.inventory.WorkflowConverter;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanDeleteOrdersImpl;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
@@ -811,9 +812,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         }
                         return ccr;
                     }));
-                }
-            }
+				}
+				Proxies.getControllerDbInstances().keySet().stream()
+						.filter(cId -> !ordersPerController.containsKey(cId)).map(ControllerCommandResponse::new)
+						.map(CompletableFuture::completedFuture).forEach(futures::add);
+			}
         }
+        
         return futures;
     }
 
