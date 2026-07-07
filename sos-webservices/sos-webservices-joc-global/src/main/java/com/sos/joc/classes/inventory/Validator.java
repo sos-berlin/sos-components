@@ -1803,7 +1803,7 @@ public class Validator {
             // or
             //ScheduleCalculator calc = ScheduleCalculator.apply(jSchedule.asScala(), ZoneOffset.UTC, DurationConverters.toScala(duration), false);
 
-            message = calc.check().stream().map(Problem::message).collect(Collectors.joining(";"));
+            message = calc.check().stream().map(Problem::message).map(s -> s.replaceFirst("\\s*\\$offsetTime", "")).collect(Collectors.joining("; "));
         } catch (JsonProcessingException | RuntimeException e) {
             //LOGGER.warn("", e)
         }
