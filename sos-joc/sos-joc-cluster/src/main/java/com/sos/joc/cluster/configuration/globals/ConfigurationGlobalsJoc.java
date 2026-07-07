@@ -368,8 +368,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         return approvalRequestorRole;
     }
 
-    public List<String> getWorkflowsRequiringApprovalTags() {
-        return Optional.ofNullable(workflowsRequiringApproval.getValue()).map(s -> s.split(";")).map(Arrays::asList).orElse(Collections.emptyList());
+    public Stream<String> getWorkflowsRequiringApprovalTags() {
+        return Optional.ofNullable(workflowsRequiringApproval.getValue()).map(s -> s.split(";")).map(Arrays::stream).orElse(Stream.empty());
     }
 
 }

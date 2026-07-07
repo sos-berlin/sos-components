@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.audit.JocAuditTrail;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.approval.ApprovalDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.joc.DBItemJocApprovalRequest;
@@ -617,7 +619,8 @@ public class JOCResourceImpl {
         // JOC-2196 check if workflows have requiring approval tags
         if (fourEyesPermission) { // requestor role needs approval while workflows are processed
             boolean perm = true;
-            List<String> approvalTags = Globals.getConfigurationGlobalsJoc().getWorkflowsRequiringApprovalTags();
+            List<String> approvalTags = Globals.getConfigurationGlobalsJoc().getWorkflowsRequiringApprovalTags().map(GroupedTag::new).map(
+                    GroupedTag::getTag).collect(Collectors.toList());
             if (!approvalTags.isEmpty()) {
                 if (workflowNames.isEmpty()) {
                     perm = false;
