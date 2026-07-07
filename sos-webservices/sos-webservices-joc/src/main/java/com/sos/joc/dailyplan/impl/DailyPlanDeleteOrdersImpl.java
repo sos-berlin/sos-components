@@ -31,6 +31,7 @@ import jakarta.ws.rs.Path;
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanDeleteOrderResource {
 
+    private static Object deleteLock = new Object(); 
 
     @Override
     public JOCDefaultResponse postDeleteOrders(String accessToken, byte[] filterBytes) {
@@ -65,55 +66,58 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    public synchronized void deleteOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController) throws SOSHibernateException {
+    public void deleteOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController) throws SOSHibernateException {
         
-        if (!ordersPerController.isEmpty()) {
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-                for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
-                    String controllerId = entry.getKey();
-                    final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
-                    List<DBItemDailyPlanOrder> permittedOrders = entry.getValue().stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(),
-                            permittedFolders)).distinct().toList();
-                    deleteOrders(controllerId, permittedOrders, dbLayer);
-                    
-                    //events
-                    permittedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).map(oId -> oId.substring(1, 11)).distinct().map(
-                            date -> new DailyPlanEvent(controllerId, date)).forEach(EventBus.getInstance()::post);
+        synchronized (deleteLock) {
+            if (!ordersPerController.isEmpty()) {
+                SOSHibernateSession session = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+                    DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                    for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
+                        String controllerId = entry.getKey();
+                        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
+                        List<DBItemDailyPlanOrder> permittedOrders = entry.getValue().stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(),
+                                permittedFolders)).distinct().toList();
+                        deleteOrders(controllerId, permittedOrders, dbLayer);
+
+                        //events
+                        permittedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).map(oId -> oId.substring(1, 11)).distinct().map(
+                                date -> new DailyPlanEvent(controllerId, date)).forEach(EventBus.getInstance()::post);
+                    }
+
+                } finally {
+                    Globals.disconnect(session);
                 }
-                
-            } finally {
-                Globals.disconnect(session);
             }
         }
     }
 
     // called by CancelOrdersPublishHelper, ReleaseResourceImpl, ADeleteConfiguration
     // without check of order permissions
-    public static synchronized void deleteOrdersOfController(String caller, String controllerId, String dailyPlanDateFrom, List<String> workflows,
+    public static void deleteOrdersOfController(String caller, String controllerId, String dailyPlanDateFrom, List<String> workflows,
             List<String> schedules) throws SOSHibernateException {
         
-        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setControllerId(controllerId);
-        filter.setSubmissionForDateFrom(toUTCDate(dailyPlanDateFrom));
-        filter.addState(DailyPlanOrderStateText.PLANNED);
-        
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(caller == null ? "deleteOrdersFromPlan" : caller);
-            if (schedules != null && !schedules.isEmpty()) {
-                filter.setScheduleNames(schedules.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()));
-                deleteOrders(filter, session);
-                filter.setScheduleNames(null);
+        synchronized (deleteLock) {
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(controllerId);
+            filter.setSubmissionForDateFrom(toUTCDate(dailyPlanDateFrom));
+            filter.addState(DailyPlanOrderStateText.PLANNED);
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection(caller == null ? "deleteOrdersFromPlan" : caller);
+                if (schedules != null && !schedules.isEmpty()) {
+                    filter.setScheduleNames(schedules.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()));
+                    deleteOrders(filter, session);
+                    filter.setScheduleNames(null);
+                }
+                if (workflows != null && !workflows.isEmpty()) {
+                    filter.setWorkflowNames(workflows.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()));
+                    deleteOrders(filter, session);
+                }
+            } finally {
+                Globals.disconnect(session);
             }
-            if (workflows != null && !workflows.isEmpty()) {
-                filter.setWorkflowNames(workflows.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()));
-                deleteOrders(filter, session);
-            }
-        } finally {
-            Globals.disconnect(session);
         }
     }
     

@@ -28,6 +28,7 @@ public class JocAuditLog {
 
     private static final Logger AUDIT_LOGGER = LoggerFactory.getLogger(WebserviceConstants.AUDIT_LOGGER);
     private static final Logger LOGGER = LoggerFactory.getLogger(JocAuditLog.class);
+    private static Object auditLock = new Object();
 
     @JsonProperty("account")
     private String user;
@@ -263,24 +264,25 @@ public class JocAuditLog {
         storeAuditLogDetails(details, connection, dbAuditItem.getId());
     }
 
-    public static synchronized void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId,
-            Date now) {
-        if (details != null && !details.isEmpty() && auditlogId != null && auditlogId != 0L) {
-            if (connection == null) {
-                SOSHibernateSession connection2 = null;
-                try {
-                    connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
-                    storeAuditLogDetails(details, connection2, auditlogId, now);
-                } catch (Exception e) {
-                    LOGGER.error("", e);
-                } finally {
-                    Globals.disconnect(connection2);
+    public static void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
+        synchronized (auditLock) {
+            if (details != null && !details.isEmpty() && auditlogId != null && auditlogId != 0L) {
+                if (connection == null) {
+                    SOSHibernateSession connection2 = null;
+                    try {
+                        connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
+                        storeAuditLogDetails(details, connection2, auditlogId, now);
+                    } catch (Exception e) {
+                        LOGGER.error("", e);
+                    } finally {
+                        Globals.disconnect(connection2);
+                    }
+                } else {
+                    storeAuditLogDetails(details.stream().peek(d -> d.setControllerId(null)).distinct(), connection, auditlogId);
+                    details.stream().filter(AuditLogDetail::hasControllerId).filter(d -> typesOfWorkflowEvent.contains(d.getConfigurationType()))
+                            .peek(d -> d.setOrderId(null)).distinct().forEach(d -> EventBus.getInstance().post(new AuditlogWorkflowEvent(d
+                                    .getControllerId(), d.getPath())));
                 }
-            } else {
-                storeAuditLogDetails(details.stream().peek(d -> d.setControllerId(null)).distinct(), connection, auditlogId);
-                details.stream().filter(AuditLogDetail::hasControllerId).filter(d -> typesOfWorkflowEvent.contains(d.getConfigurationType())).peek(
-                        d -> d.setOrderId(null)).distinct().forEach(d -> EventBus.getInstance().post(new AuditlogWorkflowEvent(d.getControllerId(), d
-                                .getPath())));
             }
         }
     }
