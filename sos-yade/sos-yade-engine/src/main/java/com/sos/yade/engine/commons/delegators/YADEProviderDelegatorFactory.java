@@ -55,6 +55,19 @@ public class YADEProviderDelegatorFactory {
                 targetArgs);
     }
 
+    public static AYADEProviderDelegator reassignDelegator(ISOSLogger logger, YADEArguments args, AYADEProviderDelegator delegator,
+            AProviderArguments providerArgs) throws YADEEngineInitializationException {
+        if (delegator.isSource()) {
+            YADESourceArguments sourceArgs = (YADESourceArguments) delegator.getArgs();
+            sourceArgs.setProvider(providerArgs);
+            return createSourceDelegator(logger, args, sourceArgs);
+        }
+
+        YADETargetArguments targetArgs = (YADETargetArguments) delegator.getArgs();
+        targetArgs.setProvider(providerArgs);
+        return createTargetDelegator(logger, args, targetArgs);
+    }
+
     private static AProvider<?, ?> initializeProvider(ISOSLogger logger, YADEArguments args, AProviderArguments providerArgs, String delegatorLabel,
             boolean isTarget) throws YADEEngineInitializationException {
 

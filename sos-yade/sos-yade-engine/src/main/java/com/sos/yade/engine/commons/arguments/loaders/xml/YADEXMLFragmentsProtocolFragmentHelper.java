@@ -2,7 +2,9 @@ package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -10,6 +12,7 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobStorageClientAuthMethod;
 import com.sos.commons.util.keystore.KeyStoreType;
+import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
@@ -27,16 +30,22 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVSProviderArguments;
 import com.sos.commons.xml.SOSXML;
+import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
 public class YADEXMLFragmentsProtocolFragmentHelper {
 
-    protected static AzureBlobStorageProviderArguments parseAzureBlobStorage(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
-            throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "AzureBlobStorage");
+    // Source/Target?
+    private static Set<String> VISITED_ALTERNATIVES = new HashSet<>();
+
+    protected static AzureBlobStorageProviderArguments parseAzureBlobStorage(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref,
+            boolean isSource) throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "AzureBlobStorage");
 
         AzureBlobStorageProviderArguments args = new AzureBlobStorageProviderArguments();
         args.applyDefaultIfNullQuietly();
         args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.PUBLIC);
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -45,28 +54,31 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
                 case "AzureBlobStorageConnection":
-                    parseAzureBlobStorageConnection(argsLoader, args, n);
+                    parseAzureBlobStorageConnection(logger, argsLoader, args, n);
                     break;
                 case "AzureBlobStorageAuthentication":
-                    parseAzureBlobStorageAuthentication(argsLoader, args, n);
+                    parseAzureBlobStorageAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForAzure":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(argsLoader, args, n);
+                    parseHTTPHeaders(logger, argsLoader, args, n);
                     break;
                 case "SSL": // JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSsl(), n);
+                    parseSSL(logger, argsLoader, args.getSsl(), n);
+                    break;
+                case "AzureBlobStorageFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -74,11 +86,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static FTPProviderArguments parseFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "FTP");
+    protected static FTPProviderArguments parseFTP(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "FTP");
 
         FTPProviderArguments args = new FTPProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -92,25 +107,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
                 case "BasicConnection":
-                    parseBasicConnection(argsLoader, args, n);
+                    parseBasicConnection(logger, argsLoader, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(argsLoader, args, n);
+                    parseBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForFTP":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
                 case "KeepAlive": // YADE JS7 - YADE 626
-                    parseFTPKeepAlive(argsLoader, args, n);
+                    parseFTPKeepAlive(logger, argsLoader, args, n);
                     break;
                 case "PassiveMode":
                     argsLoader.setBooleanArgumentValue(args.getPassiveMode(), n);
@@ -121,17 +136,23 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                         args.getTransferMode().setValue(transferMode);
                     }
                     break;
+                case "FTPFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
+                    break;
                 }
             }
         }
         return args;
     }
 
-    protected static FTPSProviderArguments parseFTPS(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "FTPS");
+    protected static FTPSProviderArguments parseFTPS(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "FTPS");
 
         FTPSProviderArguments args = new FTPSProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -140,7 +161,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 switch (n.getNodeName()) {
                 // YADE 1 - compatibility
                 case "FTPSClientSecurity":
-                    parseYADE1FTPSClientSecurity(argsLoader, args, n);
+                    parseYADE1FTPSClientSecurity(logger, argsLoader, args, n);
                     break;
                 case "FTPSProtocol":
                     args.getSsl().getEnabledProtocols().setValue(argsLoader.getValue(n));
@@ -151,25 +172,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
                 case "BasicConnection":
-                    parseBasicConnection(argsLoader, args, n);
+                    parseBasicConnection(logger, argsLoader, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(argsLoader, args, n);
+                    parseBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForFTPS":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
                 case "KeepAlive": // YADE JS7 - YADE-626
-                    parseFTPKeepAlive(argsLoader, args, n);
+                    parseFTPKeepAlive(logger, argsLoader, args, n);
                     break;
                 case "SecurityMode":// YADE JS7 - YADE-626
                     FTPSSecurityMode securityMode = FTPSSecurityMode.fromString(argsLoader.getValue(n));
@@ -178,7 +199,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     }
                     break;
                 case "SSL":// YADE JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSsl(), n);
+                    parseSSL(logger, argsLoader, args.getSsl(), n);
+                    break;
+                case "FTPFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -186,11 +210,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static HTTPProviderArguments parseHTTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "HTTP");
+    protected static HTTPProviderArguments parseHTTP(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "HTTP");
 
         HTTPProviderArguments args = new HTTPProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -198,25 +225,28 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
                 case "URLConnection":
-                    parseURLConnection(argsLoader, args, n);
+                    parseURLConnection(logger, argsLoader, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(argsLoader, args, n);
+                    parseBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForHTTP":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(argsLoader, args, n);
+                    parseHTTPHeaders(logger, argsLoader, args, n);
+                    break;
+                case "HTTPFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -224,11 +254,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static HTTPSProviderArguments parseHTTPS(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "HTTPS");
+    protected static HTTPSProviderArguments parseHTTPS(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "HTTPS");
 
         HTTPSProviderArguments args = new HTTPSProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -243,33 +276,36 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     argsLoader.setOppositeBooleanArgumentValue(args.getSsl().getUntrustedSslVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseYADE1KeyStore(argsLoader, args.getSsl(), n);
+                    parseYADE1KeyStore(logger, argsLoader, args.getSsl(), n);
                     break;
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
                 case "URLConnection":
-                    parseURLConnection(argsLoader, args, n);
+                    parseURLConnection(logger, argsLoader, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseBasicAuthentication(argsLoader, args, n);
+                    parseBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForHTTP":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
                 case "HTTPHeaders":
-                    parseHTTPHeaders(argsLoader, args, n);
+                    parseHTTPHeaders(logger, argsLoader, args, n);
                     break;
                 case "SSL": // JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSsl(), n);
+                    parseSSL(logger, argsLoader, args.getSsl(), n);
+                    break;
+                case "HTTPFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -277,11 +313,24 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static SSHProviderArguments parseSFTP(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "SFTP");
+    protected static SSHProviderArguments parseSFTP(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        return parseSFTP(logger, argsLoader, ref, isSource, false, VISITED_ALTERNATIVES);
+    }
+
+    protected static SSHProviderArguments parseSFTP(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, boolean isJump,
+            Set<String> visitedAlternatives) throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "SFTP");
 
         SSHProviderArguments args = new SSHProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, visitedAlternatives);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("[parseSFTP][" + args.getKey().getValue() + "][isJump=" + isJump + "][isSource=" + isSource + "]visitedAlternatives="
+                    + visitedAlternatives);
+        }
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -304,39 +353,42 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
 
                 case "BasicConnection":
-                    parseBasicConnection(argsLoader, args, n);
+                    parseBasicConnection(logger, argsLoader, args, n);
                     break;
                 case "SSHAuthentication":
-                    parseSFTPSSHAuthentication(argsLoader, args, n);
+                    parseSFTPSSHAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForSFTP":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
 
                 case "SocketTimeout": // JS7 - YADE-626
                     argsLoader.setStringArgumentValue(args.getSocketTimeout(), n);
                     break;
                 case "KeepAlive": // JS7 - YADE-626
-                    parseSFTPKeepAlive(argsLoader, args, n);
+                    parseSFTPKeepAlive(logger, argsLoader, args, n);
                     break;
                 case "StrictHostkeyChecking":
                     argsLoader.setBooleanArgumentValue(args.getStrictHostkeyChecking(), n);
                     break;
                 case "ConfigurationFiles":
-                    parseConfigurationFiles(argsLoader, args, n);
+                    parseConfigurationFiles(logger, argsLoader, args, n);
                     break;
                 case "DisableAutoDetectShell": // JS7 - YADE-632
                     argsLoader.setBooleanArgumentValue(args.getDisableAutoDetectShell(), n);
+                    break;
+                case "SFTPFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, isJump, visitedAlternatives);
                     break;
                 }
             }
@@ -344,11 +396,14 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static SMBProviderArguments parseSMB(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "SMB");
+    protected static SMBProviderArguments parseSMB(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "SMB");
 
         SMBProviderArguments args = new SMBProviderArguments();
         args.applyDefaultIfNullQuietly();
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -363,19 +418,22 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "SMBConnection": // JS7 - YADE-626
-                    parseSMBConnection(argsLoader, args, n);
+                    parseSMBConnection(logger, argsLoader, args, n);
                     break;
                 case "SMBAuthentication":
-                    parseSMBAuthentication(argsLoader, args, n);
+                    parseSMBAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ConfigurationFiles":
-                    parseConfigurationFiles(argsLoader, args, n);
+                    parseConfigurationFiles(logger, argsLoader, args, n);
+                    break;
+                case "SMBFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -383,9 +441,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static WebDAVProviderArguments parseWebDAV(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
+    protected static WebDAVProviderArguments parseWebDAV(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource)
+            throws Exception {
         // throws on exception if not found
-        Node fragment = getProtocolFragment(argsLoader, ref, isSource, "WebDAV");
+        Node fragment = getProtocolFragment(logger, argsLoader, ref, isSource, "WebDAV");
         // Node refRef = argsLoader.getXPath().selectNode(ref, "*[1]"); // first child
         Node urlConnectionURL = argsLoader.getXPath().selectNode(fragment, "URLConnection/URL");
         if (urlConnectionURL == null) {
@@ -398,6 +457,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 : new WebDAVProviderArguments();
         args.applyDefaultIfNullQuietly();
         args.getHost().setValue(url);
+        setFragmentKeyFromFragment(fragment, args, VISITED_ALTERNATIVES);
+        handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
         Node urlConnectionConnectTimeout = argsLoader.getXPath().selectNode(fragment, "URLConnection/ConnectTimeout");
         if (urlConnectionConnectTimeout != null) {
@@ -417,33 +478,36 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     argsLoader.setOppositeBooleanArgumentValue(args.getSsl().getUntrustedSslVerifyCertificateHostname(), n);
                     break;
                 case "KeyStore":
-                    parseYADE1KeyStore(argsLoader, args.getSsl(), n);
+                    parseYADE1KeyStore(logger, argsLoader, args.getSsl(), n);
                     break;
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, args);
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, args);
                     break;
                 case "JumpFragmentRef":
-                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(argsLoader, n, isSource);
+                    YADEXMLFragmentsProtocolFragmentJumpHelper.parse(logger, argsLoader, n, isSource);
                     break;
 
                 // URLConnection already set
                 case "BasicAuthentication":
-                    parseBasicAuthentication(argsLoader, args, n);
+                    parseBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 case "ProxyForWebDAV":
-                    parseProxy(argsLoader, args, n);
+                    parseProxy(logger, argsLoader, args, n);
                     break;
 
                 case "HTTPHeaders":
-                    parseHTTPHeaders(argsLoader, args, n);
+                    parseHTTPHeaders(logger, argsLoader, args, n);
                     break;
                 case "SSL": // JS7 - YADE-626
-                    parseSSL(argsLoader, args.getSsl(), n);
+                    parseSSL(logger, argsLoader, args.getSsl(), n);
+                    break;
+                case "WebDAVFragmentAlternatives":
+                    parseAlternativeFragments(logger, argsLoader, args, fragment, n, isSource, false, VISITED_ALTERNATIVES);
                     break;
                 }
             }
@@ -451,7 +515,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return args;
     }
 
-    protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node headers) throws Exception {
+    protected static void parseHTTPHeaders(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node headers)
+            throws Exception {
         NodeList nl = headers.getChildNodes();
         if (args.getHttpHeaders().getValue() == null) {
             args.getHttpHeaders().setValue(new ArrayList<>());
@@ -468,7 +533,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static void parseHTTPHeaders(YADEXMLArgumentsLoader argsLoader, HTTPProviderArguments args, Node headers) throws Exception {
+    protected static void parseHTTPHeaders(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, HTTPProviderArguments args, Node headers)
+            throws Exception {
         NodeList nl = headers.getChildNodes();
         if (args.getHttpHeaders().getValue() == null) {
             args.getHttpHeaders().setValue(new ArrayList<>());
@@ -485,7 +551,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static Node getProtocolFragment(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, String fragmentPrefix) throws Exception {
+    protected static Node getProtocolFragment(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource, String fragmentPrefix)
+            throws Exception {
         String exp = "Fragments/ProtocolFragments/" + fragmentPrefix + "Fragment[@name='" + SOSXML.getAttributeValue(ref, "ref") + "']";
         Node node = argsLoader.getXPath().selectNode(argsLoader.getRoot(), exp);
         if (node == null) {
@@ -495,7 +562,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         return node;
     }
 
-    protected static void parseBasicConnection(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node basicConnection) throws Exception {
+    protected static void parseBasicConnection(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node basicConnection)
+            throws Exception {
         NodeList nl = basicConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -514,7 +582,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static void parseConfigurationFiles(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node configurationFiles) {
+    protected static void parseConfigurationFiles(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args,
+            Node configurationFiles) {
         List<String> files = new ArrayList<>();
 
         NodeList nl = configurationFiles.getChildNodes();
@@ -530,7 +599,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static void parseProxy(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node proxy) throws Exception {
+    protected static void parseProxy(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
         int len = nl.getLength();
         if (len > 0) {
@@ -543,21 +612,21 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     // YADE 1 -compatibility
                     case "SOCKS4Proxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(argsLoader, proxyArgs, n);
+                        parseProxy(logger, argsLoader, proxyArgs, n);
                         break;
                     case "SOCKS5Proxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(argsLoader, proxyArgs, n);
+                        parseProxy(logger, argsLoader, proxyArgs, n);
                         break;
 
                     // YADE JS7
                     case "HTTPProxy":
                         proxyArgs.getType().setValue(java.net.Proxy.Type.HTTP);
-                        parseProxy(argsLoader, proxyArgs, n);
+                        parseProxy(logger, argsLoader, proxyArgs, n);
                         break;
                     case "SOCKSProxy": // YADE JS7 - YADE-626
                         proxyArgs.getType().setValue(java.net.Proxy.Type.SOCKS);
-                        parseProxy(argsLoader, proxyArgs, n);
+                        parseProxy(logger, argsLoader, proxyArgs, n);
                         break;
 
                     }
@@ -567,7 +636,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    protected static void parseSFTPSSHAuthentication(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node sshAuthentication) {
+    protected static void parseSFTPSSHAuthentication(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args,
+            Node sshAuthentication) {
         NodeList nl = sshAuthentication.getChildNodes();
 
         SSHAuthMethod authMethod = null;
@@ -579,11 +649,11 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     argsLoader.setStringArgumentValue(args.getUser(), n);
                     break;
                 case "AuthenticationMethodPassword":
-                    parseSFTPSSHAuthenticationMethodPassword(argsLoader, args, n);
+                    parseSFTPSSHAuthenticationMethodPassword(logger, argsLoader, args, n);
                     authMethod = SSHAuthMethod.PASSWORD;
                     break;
                 case "AuthenticationMethodPublickey":
-                    parseSFTPSSHAuthenticationMethodPublickey(argsLoader, args, n);
+                    parseSFTPSSHAuthenticationMethodPublickey(logger, argsLoader, args, n);
                     authMethod = SSHAuthMethod.PUBLICKEY;
                     break;
                 case "AuthenticationMethodKeyboardInteractive":
@@ -602,8 +672,61 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         args.getAuthMethod().setValue(authMethod);
     }
 
-    private static void parseBasicAuthentication(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node basicAuthentication)
-            throws Exception {
+    private static void parseAlternativeFragments(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node fragment,
+            Node alternativeFragmentRef, boolean isSource, boolean isJump, Set<String> visitedAlternatives) throws Exception {
+
+        NodeList nl = alternativeFragmentRef.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node ref = nl.item(i);
+            if (ref.getNodeType() == Node.ELEMENT_NODE) {
+                String refNodeName = ref.getNodeName();
+                String refId = getFragmentKeyFromRef(refNodeName, ref);
+
+                if (args.keyEquals(refId)) {
+                    continue;
+                }
+                if (!visitedAlternatives.add(refId)) {
+                    continue;
+                }
+
+                AProviderArguments alternative = null;
+                switch (refNodeName) {
+                case "AzureBlobStorageFragmentRef":
+                    alternative = parseAzureBlobStorage(logger, argsLoader, ref, isSource);
+                    break;
+                case "FTPFragmentRef":
+                    alternative = parseFTP(logger, argsLoader, ref, isSource);
+                    break;
+                case "FTPSFragmentRef":
+                    alternative = parseFTPS(logger, argsLoader, ref, isSource);
+                    break;
+                case "HTTPFragmentRef":
+                    alternative = parseHTTP(logger, argsLoader, ref, isSource);
+                    break;
+                case "HTTPSFragmentRef":
+                    alternative = parseHTTPS(logger, argsLoader, ref, isSource);
+                    break;
+                case "SFTPFragmentRef":
+                    alternative = parseSFTP(logger, argsLoader, ref, isSource, isJump, visitedAlternatives);
+                    break;
+                case "SMBFragmentRef":
+                    alternative = parseSMB(logger, argsLoader, ref, isSource);
+                    break;
+                case "WebDAVFragmentRef":
+                    alternative = parseWebDAV(logger, argsLoader, ref, isSource);
+                    break;
+                }
+
+                if (alternative != null) {
+                    alternative.getKey().setValue(refId);
+                    args.mergeNestedAlternatives(alternative);
+                }
+            }
+        }
+    }
+
+    private static void parseBasicAuthentication(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args,
+            Node basicAuthentication) throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -620,8 +743,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseAzureBlobStorageConnection(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node urlConnection)
-            throws Exception {
+    private static void parseAzureBlobStorageConnection(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args,
+            Node urlConnection) throws Exception {
         NodeList nl = urlConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -639,8 +762,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseAzureBlobStorageAuthentication(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args,
-            Node basicAuthentication) throws Exception {
+    private static void parseAzureBlobStorageAuthentication(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader,
+            AzureBlobStorageProviderArguments args, Node basicAuthentication) throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -656,18 +779,18 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     argsLoader.setStringArgumentValue(args.getApiVersion(), n);
                     break;
                 case "SharedKey":
-                    parseAzureSharedKey(argsLoader, args, n);
+                    parseAzureSharedKey(logger, argsLoader, args, n);
                     break;
                 case "SASToken":
-                    parseAzureSASToken(argsLoader, args, n);
+                    parseAzureSASToken(logger, argsLoader, args, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseAzureSharedKey(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node sharedKey)
-            throws Exception {
+    private static void parseAzureSharedKey(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args,
+            Node sharedKey) throws Exception {
         args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.SHARED_KEY);
         NodeList nl = sharedKey.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -682,8 +805,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseAzureSASToken(YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args, Node sasToken)
-            throws Exception {
+    private static void parseAzureSASToken(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AzureBlobStorageProviderArguments args,
+            Node sasToken) throws Exception {
         args.getAuthMethod().setValue(AzureBlobStorageClientAuthMethod.SAS_TOKEN);
         NodeList nl = sasToken.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -701,7 +824,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseURLConnection(YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node urlConnection) throws Exception {
+    private static void parseURLConnection(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, AProviderArguments args, Node urlConnection)
+            throws Exception {
         NodeList nl = urlConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -719,7 +843,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node ssl) throws Exception {
+    private static void parseSSL(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node ssl) throws Exception {
         if (args == null) {
             return;
         }
@@ -729,10 +853,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "TrustedSSL":
-                    parseTrustedSSL(argsLoader, args, n);
+                    parseTrustedSSL(logger, argsLoader, args, n);
                     break;
                 case "UntrustedSSL":
-                    parseUntrustedSSL(argsLoader, args, n);
+                    parseUntrustedSSL(logger, argsLoader, args, n);
                     break;
                 case "EnabledProtocols":
                     argsLoader.setStringArgumentValue(args.getEnabledProtocols(), n);
@@ -743,7 +867,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseTrustedSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustedSSL) throws Exception {
+    private static void parseTrustedSSL(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustedSSL) throws Exception {
         NodeList nl = trustedSSL.getChildNodes();
 
         for (int i = 0; i < nl.getLength(); i++) {
@@ -751,10 +875,10 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "TrustStore":
-                    parseTrustedSSLTrustStore(argsLoader, args, n);
+                    parseTrustedSSLTrustStore(logger, argsLoader, args, n);
                     break;
                 case "KeyStore":
-                    parseTrustedSSLKeyStore(argsLoader, args, n);
+                    parseTrustedSSLKeyStore(logger, argsLoader, args, n);
                     break;
                 }
             }
@@ -762,7 +886,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // JS7 - YADE-626
-    private static void parseTrustedSSLTrustStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustStore) {
+    private static void parseTrustedSSLTrustStore(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node trustStore) {
         NodeList nl = trustStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -786,7 +910,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // sets KeyStore arguments
-    private static void parseTrustedSSLKeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
+    private static void parseTrustedSSLKeyStore(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -810,7 +934,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // YADE 1 - compatibility - !!! sets TrustStore arguments
-    private static void parseYADE1KeyStore(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
+    private static void parseYADE1KeyStore(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node keyStore) {
         NodeList nl = keyStore.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -833,7 +957,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseUntrustedSSL(YADEXMLArgumentsLoader argsLoader, SslArguments args, Node untrustedSSL) throws Exception {
+    private static void parseUntrustedSSL(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SslArguments args, Node untrustedSSL)
+            throws Exception {
         args.getUntrustedSsl().setValue(true);
 
         NodeList nl = untrustedSSL.getChildNodes();
@@ -849,25 +974,25 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseProxy(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node proxy) throws Exception {
+    private static void parseProxy(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "BasicConnection":
-                    parseProxyBasicConnection(argsLoader, args, n);
+                    parseProxyBasicConnection(logger, argsLoader, args, n);
                     break;
                 case "BasicAuthentication":
-                    parseProxyBasicAuthentication(argsLoader, args, n);
+                    parseProxyBasicAuthentication(logger, argsLoader, args, n);
                     break;
                 }
             }
         }
     }
 
-    private static void parseProxyBasicConnection(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node basicConnection)
-            throws Exception {
+    private static void parseProxyBasicConnection(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args,
+            Node basicConnection) throws Exception {
         NodeList nl = basicConnection.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -884,8 +1009,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseProxyBasicAuthentication(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node basicAuthentication)
-            throws Exception {
+    private static void parseProxyBasicAuthentication(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args,
+            Node basicAuthentication) throws Exception {
         NodeList nl = basicAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -903,7 +1028,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     /** YADE JS7 */
-    private static void parseFTPKeepAlive(YADEXMLArgumentsLoader argsLoader, FTPProviderArguments args, Node keepAlive) {
+    private static void parseFTPKeepAlive(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, FTPProviderArguments args, Node keepAlive) {
         NodeList nl = keepAlive.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -918,7 +1043,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     /** YADE JS7 */
-    public static void parseSFTPKeepAlive(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node keepAlive) {
+    public static void parseSFTPKeepAlive(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node keepAlive) {
         NodeList nl = keepAlive.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -935,7 +1060,13 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseSFTPSSHAuthenticationMethodPassword(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args, Node methodPassword) {
+    public static void clear() {
+        VISITED_ALTERNATIVES.clear();
+        YADEXMLFragmentsProtocolFragmentJumpHelper.clear();
+    }
+
+    private static void parseSFTPSSHAuthenticationMethodPassword(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args,
+            Node methodPassword) {
         NodeList nl = methodPassword.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -949,7 +1080,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseSFTPSSHAuthenticationMethodPublickey(YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args,
+    private static void parseSFTPSSHAuthenticationMethodPublickey(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SSHProviderArguments args,
             Node methodPublickey) {
         NodeList nl = methodPublickey.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -967,7 +1098,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseYADE1FTPSClientSecurity(YADEXMLArgumentsLoader argsLoader, FTPSProviderArguments args, Node clientSecurity) {
+    private static void parseYADE1FTPSClientSecurity(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, FTPSProviderArguments args,
+            Node clientSecurity) {
         NodeList nl = clientSecurity.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -997,7 +1129,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
     }
 
     // YADE JS7
-    private static void parseSMBConnection(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
+    private static void parseSMBConnection(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
         NodeList nl = smbAuthentication.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -1017,7 +1149,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseSMBAuthentication(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node smbAuthentication) {
+    private static void parseSMBAuthentication(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args,
+            Node smbAuthentication) {
         NodeList nl = smbAuthentication.getChildNodes();
         boolean account = false;
         for (int i = 0; i < nl.getLength(); i++) {
@@ -1041,16 +1174,16 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                     args.getAuthMethod().setValue(SMBAuthMethod.ANONYMOUS);
                     break;
                 case "SMBAuthenticationMethodGuest":
-                    parseSMBAuthenticationMethodGuest(argsLoader, args, n);
+                    parseSMBAuthenticationMethodGuest(logger, argsLoader, args, n);
                     break;
                 case "SMBAuthenticationMethodNTLM":
-                    parseSMBAuthenticationMethodNTLM(argsLoader, args, n);
+                    parseSMBAuthenticationMethodNTLM(logger, argsLoader, args, n);
                     break;
                 case "SMBAuthenticationMethodKerberos":
-                    parseSMBAuthenticationMethodKerberos(argsLoader, args, n);
+                    parseSMBAuthenticationMethodKerberos(logger, argsLoader, args, n);
                     break;
                 case "SMBAuthenticationMethodSPNEGO":
-                    parseSMBAuthenticationMethodSPNEGO(argsLoader, args, n);
+                    parseSMBAuthenticationMethodSPNEGO(logger, argsLoader, args, n);
                     break;
                 }
             }
@@ -1068,7 +1201,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         }
     }
 
-    private static void parseSMBAuthenticationMethodGuest(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+    private static void parseSMBAuthenticationMethodGuest(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args,
+            Node node) {
         NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -1089,7 +1223,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         args.getAuthMethod().setValue(SMBAuthMethod.GUEST);
     }
 
-    private static void parseSMBAuthenticationMethodNTLM(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+    private static void parseSMBAuthenticationMethodNTLM(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
         NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -1110,7 +1244,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         args.getAuthMethod().setValue(SMBAuthMethod.NTLM);
     }
 
-    private static void parseSMBAuthenticationMethodKerberos(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+    private static void parseSMBAuthenticationMethodKerberos(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args,
+            Node node) {
         NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -1134,7 +1269,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         args.getAuthMethod().setValue(SMBAuthMethod.KERBEROS);
     }
 
-    private static void parseSMBAuthenticationMethodSPNEGO(YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args, Node node) {
+    private static void parseSMBAuthenticationMethodSPNEGO(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, SMBProviderArguments args,
+            Node node) {
         NodeList nl = node.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -1156,6 +1292,30 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
             }
         }
         args.getAuthMethod().setValue(SMBAuthMethod.SPNEGO);
+    }
+
+    protected static String getLocalFragmentKey() {
+        return "Local";
+    }
+
+    private static void setFragmentKeyFromFragment(Node fragment, AProviderArguments args, Set<String> visitedAlternatives) {
+        YADEArgumentsHelper.setFragmentKey(args, fragment.getNodeName(), SOSXML.getAttributeValue(fragment, "name"));
+        visitedAlternatives.add(args.getKey().getValue());
+    }
+
+    protected static String getFragmentKeyFromRef(String refNodeName, Node ref) {
+        if (refNodeName.endsWith("Ref")) {
+            return YADEArgumentsHelper.getFragmentKey(refNodeName.substring(0, refNodeName.length() - 3), SOSXML.getAttributeValue(ref, "ref"));
+        }
+        return getLocalFragmentKey();
+    }
+
+    private static void handleJumpHostProtocolFragments(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node fragment,
+            AProviderArguments args) {
+        if (argsLoader.getJumpHostArgs() == null) {
+            return;
+        }
+        argsLoader.getJumpHostArgs().addConfiguredProtocolFragment(fragment, args);
     }
 
 }

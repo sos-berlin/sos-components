@@ -132,7 +132,8 @@ public class YADEEngine {
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
                 /** 7) Source: connect */
-                YADEProviderDelegatorHelper.ensureConnected(logger, sourceDelegator, argsLoader.getArgs().getRetryOnConnectionError());
+                sourceDelegator = (YADESourceProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader.getArgs(),
+                        sourceDelegator);
 
                 /** 8) Source (test mode only): start connectivity fault simulation if enabled */
                 simulator.simulate(logger, sourceDelegator);
@@ -158,7 +159,8 @@ public class YADEEngine {
                 if (!SOSCollection.isEmpty(files)) {
                     hasSourceFiles = true;
                     /** 14) Target: connect */
-                    YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, argsLoader.getArgs().getRetryOnConnectionError());
+                    targetDelegator = (YADETargetProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader.getArgs(),
+                            targetDelegator);
 
                     /** 15) Target (test mode only): start connectivity fault simulation if enabled */
                     simulator.simulate(logger, targetDelegator);
@@ -201,7 +203,7 @@ public class YADEEngine {
                 sourcePolling.incrementCycleCounter();
                 try {
                     /** 7) Source: connect/reconnect */
-                    sourcePolling.ensureConnected(logger, sourceDelegator);
+                    sourceDelegator = sourcePolling.ensureConnectedOnStart(logger, sourceDelegator);
 
                     /** 8) Source (test mode only): start connectivity fault simulation if enabled */
                     simulator.simulate(logger, sourceDelegator);
@@ -229,7 +231,8 @@ public class YADEEngine {
                         hasSourceFiles = true;
 
                         /** 14) Target: connect */
-                        YADEProviderDelegatorHelper.ensureConnected(logger, targetDelegator, argsLoader.getArgs().getRetryOnConnectionError());
+                        targetDelegator = (YADETargetProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader
+                                .getArgs(), targetDelegator);
 
                         /** 15) Target (test mode only): start connectivity fault simulation if enabled */
                         simulator.simulate(logger, targetDelegator);
@@ -518,6 +521,7 @@ public class YADEEngine {
             String label) {
         try {
             SOSMail mail = new SOSMail(mailServerArgs.getMailSettings());
+
             mail.init();
             mail.setFrom(mailArgs.getHeaderFrom().getValue());
             for (String to : mailArgs.getHeaderTo().getValue()) {

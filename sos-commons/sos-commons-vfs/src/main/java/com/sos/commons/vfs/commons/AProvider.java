@@ -60,6 +60,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
     private String label;
+    private boolean logConnectFailedMsgDisabled;
 
     private boolean doneLogIfHostnameVerificationDisabled;
 
@@ -465,14 +466,18 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         return String.format("%s[connect/authenticate]%s ...", getLogPrefix(), accessInfo);
     }
 
-    /** Log on INFO level because the ERROR output is combined with the exception (stderr) and may not appear immediately after the [connect/authenticate] ...
+    /** Log connect/authenticate failed message on INFO level.<br />
+     * Log on INFO level because the ERROR output is combined with the exception (stderr) and may not appear immediately after the [connect/authenticate] ...
      * log entry.<br />
      * <p>
      * This preserves the expected lifecycle order:<br />
      * - [INFO][connect/authenticate] ... -> [INFO][connect/authenticate][failed] see exception below -> [INFO][disconnected]<br />
      * instead of:<br />
      * - [INFO][connect/authenticate] ... -> [INFO][disconnected] */
-    public void logConnectFailedMsg() {
+    public void logConnectFailedMsg(Throwable e) {
+        if (logConnectFailedMsgDisabled) {
+            return;
+        }
         getLogger().info("%s[connect/authenticate][failed]%s - see exception below", getLogPrefix(), accessInfo);
     }
 
@@ -568,6 +573,13 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
             logger.info("with the hostname of the server used by the client connection.");
             logger.info("**************************************************************************************************************");
         }
+    }
+
+    /** see {@link #logConnectFailedMsg(Throwable)}
+     * 
+     * @param val */
+    public void setLogConnectFailedMsgDisabled(boolean val) {
+        logConnectFailedMsgDisabled = val;
     }
 
     public void logNotImpementedMethod(String methodName, String add) {

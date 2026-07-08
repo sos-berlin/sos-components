@@ -9,6 +9,8 @@ public interface IYADEProviderDelegator {
 
     public YADESourceTargetArguments getArgs();
 
+    public boolean isSource();
+
     public String getLabel();
 
     /** Directory path without trailing path separator */

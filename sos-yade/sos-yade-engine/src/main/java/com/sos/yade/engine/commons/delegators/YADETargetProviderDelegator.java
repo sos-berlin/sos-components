@@ -8,7 +8,7 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 public class YADETargetProviderDelegator extends AYADEProviderDelegator {
 
     public YADETargetProviderDelegator(AProvider<?, ?> provider, YADETargetArguments args) {
-        super(provider, args);
+        super(provider, args, false);
 
         // set YADE specific ProviderContext
         final String label = getLabel();

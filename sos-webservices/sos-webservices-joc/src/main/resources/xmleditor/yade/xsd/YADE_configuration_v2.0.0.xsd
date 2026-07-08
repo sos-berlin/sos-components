@@ -1722,7 +1722,9 @@
 				        <xs:element ref="ProxyForAzure" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL" minOccurs="0"/>                
+                <xs:element ref="SSL" minOccurs="0"/>
+
+                <xs:element ref="AzureBlobStorageFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -1787,7 +1789,7 @@
       </xs:annotation>
 		    <xs:complexType>
 			      <xs:sequence>
-				        <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
+			         <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
                 <xs:element ref="DecryptionFragmentRef" minOccurs="0"/>
                 <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				
@@ -1798,6 +1800,8 @@
                 
 				        <xs:element ref="PassiveMode" minOccurs="0"/>
 				        <xs:element ref="TransferMode" minOccurs="0"/>
+                
+                <xs:element ref="FTPFragmentAlternatives" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -1900,9 +1904,11 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
-                <xs:element ref="SSL"/>                
-        	</xs:sequence>
-			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+                <xs:element ref="SSL"/>
+
+                <xs:element ref="FTPFragmentAlternatives" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
                   <div xmlns="http://www.w3.org/1999/xhtml">
@@ -1971,7 +1977,9 @@
 				        <xs:element ref="ProxyForHTTP" minOccurs="0"/>
 				
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-			      </xs:sequence>
+                
+                <xs:element ref="HTTPFragmentAlternatives" minOccurs="0"/>
+        	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2041,7 +2049,9 @@
                 <xs:element ref="ProxyForHTTP" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL"/>                
+                <xs:element ref="SSL"/>
+
+                <xs:element ref="HTTPFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2112,7 +2122,9 @@
 				        <xs:element ref="ProxyForWebDAV" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL" minOccurs="0"/>                
+                <xs:element ref="SSL" minOccurs="0"/>
+
+                <xs:element ref="WebDAVFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2247,6 +2259,7 @@
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
              	<xs:element ref="ConfigurationFiles" minOccurs="0"/>					
                 
+                <xs:element ref="SFTPFragmentAlternatives" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2318,8 +2331,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                 <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
                 <xs:element ref="ConfigurationFiles" minOccurs="0"/>
-                <xs:element ref="DisableAutoDetectShell" minOccurs="0"/>             				
-			      </xs:sequence>
+                <xs:element ref="DisableAutoDetectShell" minOccurs="0"/>
+
+                <xs:element ref="SFTPFragmentAlternatives" minOccurs="0"/>
+        	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2381,7 +2396,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="SMBAuthentication"/>
 				
                 <xs:element ref="ConfigurationFiles" minOccurs="0"/>
-			      </xs:sequence>
+                
+                <xs:element ref="SMBFragmentAlternatives" minOccurs="0"/>
+            </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2400,7 +2417,558 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:attribute>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="CredentialStoreFragmentRef">
+    <!-- ProtocolFragments alternative fragments -->
+    <xs:element name="AzureBlobStorageFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/AzureBlobStorageFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="AzureBlobStorageFragmentRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="FTPFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="FTPFragmentRef"/>
+                <xs:element ref="FTPSFragmentRef"/>
+           </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="HTTPFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="HTTPFragmentRef"/>
+                <xs:element ref="HTTPSFragmentRef"/>
+           </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="SFTPFragmentAlternatives">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p/>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="SFTPFragmentRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="SMBFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SMBFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="SMBFragmentRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="WebDAVFragmentAlternatives">
+         <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/WebDAVFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="WebDAVFragmentRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <!-- ProtocolFragments refs -->
+    <xs:element name="CredentialStoreFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/CredentialStoreFragments/Ref/CredentialStoreFragmentRef">
                 <Note include="CredentialStore-JumpHost"/>
@@ -9729,7 +10297,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <!-- Source - Local -->
+   <!-- Source - Local -->
 	  <xs:element name="LocalSource">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/Ref/LocalSource"/>
@@ -9960,7 +10528,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>
 	  <!-- HTTP -->
-	  <xs:element name="HTTPFragmentRef">
+    <xs:element name="HTTPFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPFragmentRef"/>
          <xs:documentation>

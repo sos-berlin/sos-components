@@ -44,6 +44,13 @@ public class YADESourceTargetArguments extends ASOSArguments {
         provider = val;
     }
 
+    public boolean hasProviderAlternatives() {
+        if (provider == null) {
+            return false;
+        }
+        return provider.hasAlternatives();
+    }
+
     public YADEProviderCommandArguments getCommands() {
         if (commands == null) {
             commands = new YADEProviderCommandArguments();

@@ -12,7 +12,7 @@ public class YADESourceProviderDelegator extends AYADEProviderDelegator {
     private final YADEDirectoryMapper directoryMapper;
 
     public YADESourceProviderDelegator(AProvider<?, ?> provider, YADESourceArguments args) {
-        super(provider, args);
+        super(provider, args, true);
 
         // set YADE specific ProviderContext
         final String label = getLabel();

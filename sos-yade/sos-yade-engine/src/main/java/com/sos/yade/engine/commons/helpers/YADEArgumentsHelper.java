@@ -1,5 +1,6 @@
 package com.sos.yade.engine.commons.helpers;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,10 +12,13 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 public class YADEArgumentsHelper {
+
+    private static final String FRAGMENT_KEY_DELIMITER = "-";
 
     public static boolean needTargetProvider(YADEArguments args) throws YADEEngineInitializationException {
         switch (args.getOperation().getValue()) {
@@ -32,6 +36,23 @@ public class YADEArgumentsHelper {
         default:
             return true;
         }
+    }
+
+    public static void setFragmentKey(AProviderArguments args, String fragmentElementName, String fragmentNameAttribute) {
+        args.getKey().setValue(getFragmentKey(fragmentElementName, fragmentNameAttribute));
+    }
+
+    public static String getFragmentKey(String fragmentElementName, String fragmentNameAttribute) {
+        return fragmentElementName + FRAGMENT_KEY_DELIMITER + fragmentNameAttribute;
+    }
+
+    public static String[] parseFragmentKey(AProviderArguments args) {
+        if (args.getKey().isEmpty()) {
+            return null;
+        }
+
+        String[] parts = args.getKey().getValue().split(FRAGMENT_KEY_DELIMITER, 2);
+        return parts.length == 2 ? parts : new String[] { parts[0], parts[0] };
     }
 
     public static String toString(String name, String value) {
@@ -81,15 +102,11 @@ public class YADEArgumentsHelper {
         sb.append("[").append(args.getClass().getSimpleName()).append("]");
         boolean add = false;
         try {
-            for (SOSArgument<?> arg : args.getArguments()) {
+            for (SOSArgument<?> arg : args.getArguments().stream().filter(arg -> arg.getName() != null).filter(arg -> !excluded.contains(arg
+                    .getName())).sorted(Comparator.comparing(SOSArgument::getName)).toList()) {
+
                 if (add) {
                     sb.append(", ");
-                }
-                if (arg.getName() == null) {
-                    continue;
-                }
-                if (excluded.contains(arg.getName())) {
-                    continue;
                 }
                 sb.append(toString(arg));
                 add = true;

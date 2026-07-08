@@ -1,19 +1,26 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
 public class YADEXMLFragmentsProtocolFragmentJumpHelper {
 
-    protected static void parse(YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
-        Node fragment = YADEXMLFragmentsProtocolFragmentHelper.getProtocolFragment(argsLoader, ref, isSource, YADEJumpHostArguments.LABEL);
+    private static Set<String> VISITED_ALTERNATIVES = new HashSet<>();
+
+    protected static void parse(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node ref, boolean isSource) throws Exception {
+        Node fragment = YADEXMLFragmentsProtocolFragmentHelper.getProtocolFragment(logger, argsLoader, ref, isSource, YADEJumpHostArguments.LABEL);
 
         argsLoader.initializeJumpHostArgsIfNull();
         argsLoader.getJumpHostArgs().getConfiguredOnSource().setValue(isSource);
-        setSourceOrTargetLabel(argsLoader, isSource);
+        setSourceOrTargetLabel(logger, argsLoader, isSource);
 
         // YADE1 - compatibility
         // Parse before Pre/Post-Processing because this value is used to split commands
@@ -65,17 +72,18 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
 
                 // YADE JS7
                 case "CredentialStoreFragmentRef":
-                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
+                    YADEXMLFragmentsCredentialStoreFragmentHelper.parse(logger, argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
                     break;
                 case "DecryptionFragmentRef":
-                    YADEXMLFragmentsDecryptionFragmentHelper.parse(argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
+                    YADEXMLFragmentsDecryptionFragmentHelper.parse(logger, argsLoader, n, isSource, argsLoader.getJumpHostArgs().getProvider());
                     break;
 
                 case "BasicConnection":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseBasicConnection(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseBasicConnection(logger, argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
                 case "SSHAuthentication":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseSFTPSSHAuthentication(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseSFTPSSHAuthentication(logger, argsLoader, argsLoader.getJumpHostArgs().getProvider(),
+                            n);
                     break;
 
                 case "YADEClientCommand": // JS7 - YADE-626
@@ -85,33 +93,41 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getTempDirectoryParent(), n);
                     break;
                 case "SFTPProcessing": // JS7 - YADE-626
-                    parseSFTPProcessing(argsLoader, n);
+                    parseSFTPProcessing(logger, argsLoader, argsLoader.getJumpHostArgs(), n);
                     break;
 
                 case "ProxyForSFTP":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseProxy(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseProxy(logger, argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
                 case "SocketTimeout": // JS7 - YADE-626
                     argsLoader.setStringArgumentValue(argsLoader.getJumpHostArgs().getProvider().getSocketTimeout(), n);
                     break;
                 case "KeepAlive": // JS7 - YADE-626
-                    YADEXMLFragmentsProtocolFragmentHelper.parseSFTPKeepAlive(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseSFTPKeepAlive(logger, argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
                     break;
                 case "StrictHostkeyChecking":
                     argsLoader.setBooleanArgumentValue(argsLoader.getJumpHostArgs().getProvider().getStrictHostkeyChecking(), n);
                     break;
                 case "ConfigurationFiles":
-                    YADEXMLFragmentsProtocolFragmentHelper.parseConfigurationFiles(argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    YADEXMLFragmentsProtocolFragmentHelper.parseConfigurationFiles(logger, argsLoader, argsLoader.getJumpHostArgs().getProvider(), n);
+                    break;
+                case "SFTPFragmentAlternatives":
+                    parseAlternativeSFTPFragments(logger, argsLoader, argsLoader.getJumpHostArgs(), fragment, n, isSource);
                     break;
                 }
             }
         }
     }
 
-    private static void parseSFTPProcessing(YADEXMLArgumentsLoader argsLoader, Node sftpProcessing) throws Exception {
+    protected static void clear() {
+        VISITED_ALTERNATIVES.clear();
+    }
+
+    private static void parseSFTPProcessing(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, YADEJumpHostArguments args, Node sftpProcessing)
+            throws Exception {
         // Parse before Pre/Post-Processing because this value is used to split commands
-        YADEXMLProfileHelper.parseProcessingCommandDelimiter(argsLoader, sftpProcessing, argsLoader.getJumpHostArgs().getCommands()
-                .getCommandDelimiter(), "ProcessingCommandDelimiter");
+        YADEXMLProfileHelper.parseProcessingCommandDelimiter(argsLoader, sftpProcessing, args.getCommands().getCommandDelimiter(),
+                "ProcessingCommandDelimiter");
 
         NodeList nl = sftpProcessing.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
@@ -119,23 +135,56 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
             if (n.getNodeType() == Node.ELEMENT_NODE) {
                 switch (n.getNodeName()) {
                 case "SFTPPreProcessing":
-                    YADEXMLProfileHelper.parsePreProcessing(argsLoader, argsLoader.getJumpHostArgs().getCommands(), n);
+                    YADEXMLProfileHelper.parsePreProcessing(logger, argsLoader, args.getCommands(), n);
                     break;
                 case "SFTPPostProcessing":
-                    YADEXMLProfileHelper.parsePostProcessing(argsLoader, argsLoader.getJumpHostArgs().getCommands(), n);
+                    YADEXMLProfileHelper.parsePostProcessing(logger, argsLoader, args.getCommands(), n);
                     break;
                 case "Platform":
-                    argsLoader.getJumpHostArgs().setPlatform(argsLoader.getValue(n));
+                    args.setPlatform(argsLoader.getValue(n));
                     break;
                 }
             }
         }
     }
 
-    private static void setSourceOrTargetLabel(YADEXMLArgumentsLoader argsLoader, boolean isSource) {
+    private static void setSourceOrTargetLabel(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, boolean isSource) {
         YADESourceTargetArguments args = isSource ? argsLoader.getSourceArgs() : argsLoader.getTargetArgs();
         if (args != null) {
             args.getLabel().setValue(args.getLabel().getValue() + " (via " + YADEJumpHostArguments.LABEL + ")");
         }
     }
+
+    private static void parseAlternativeSFTPFragments(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, YADEJumpHostArguments args, Node fragment,
+            Node alternativeFragmentRef, boolean isSource) throws Exception {
+
+        NodeList nl = alternativeFragmentRef.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node ref = nl.item(i);
+            if (ref.getNodeType() == Node.ELEMENT_NODE) {
+                String refNodeName = ref.getNodeName();
+                String refId = YADEXMLFragmentsProtocolFragmentHelper.getFragmentKeyFromRef(refNodeName, ref);
+
+                if (args.getProvider().keyEquals(refId)) {
+                    continue;
+                }
+                if (!VISITED_ALTERNATIVES.add(refId)) {
+                    continue;
+                }
+
+                SSHProviderArguments alternative = null;
+                switch (refNodeName) {
+                case "SFTPFragmentRef":
+                    alternative = YADEXMLFragmentsProtocolFragmentHelper.parseSFTP(logger, argsLoader, ref, isSource, true, VISITED_ALTERNATIVES);
+                    break;
+                }
+
+                if (alternative != null) {
+                    alternative.getKey().setValue(refId);
+                    args.getProvider().mergeNestedAlternatives(alternative);
+                }
+            }
+        }
+    }
+
 }

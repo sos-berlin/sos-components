@@ -141,6 +141,12 @@ public class YADESourceFilesPolling {
         return true;
     }
 
+    public YADESourceProviderDelegator ensureConnectedOnStart(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator)
+            throws YADEEngineSourcePollingException {
+        ensureConnected(logger, sourceDelegator, 0L);
+        return sourceDelegator;
+    }
+
     public void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws YADEEngineSourcePollingException {
         ensureConnected(logger, sourceDelegator, 0L);
     }

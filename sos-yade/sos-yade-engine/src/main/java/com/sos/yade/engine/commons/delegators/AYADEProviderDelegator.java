@@ -13,6 +13,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final AProvider<?, ?> provider;
     private final YADESourceTargetArguments args;
 
+    private final boolean source;
     private final String label;
 
     private final String directory;
@@ -22,9 +23,10 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isAzure;
     private final boolean isWindows;
 
-    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args) {
+    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) {
         this.provider = provider;
         this.args = args;
+        this.source = source;
         this.label = args.getLabel().getValue();
         this.isHTTP = isHTTPProvider();
         this.isAzure = isAzureProvider();
@@ -43,6 +45,12 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     @Override
     public YADESourceTargetArguments getArgs() {
         return args;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#isSource()} */
+    @Override
+    public boolean isSource() {
+        return source;
     }
 
     /** Overrides {@link IYADEProviderDelegator#getLabel()} */

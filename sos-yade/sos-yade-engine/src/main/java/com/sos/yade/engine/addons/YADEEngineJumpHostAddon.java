@@ -490,10 +490,10 @@ public class YADEEngineJumpHostAddon {
 
             switch (operation) {
             case GETLIST:
-                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostGETLIST(argsLoader, this);
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostGETLIST(logger, argsLoader, this);
                 break;
             case REMOVE:
-                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostREMOVE(argsLoader, this);
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostREMOVE(logger, argsLoader, this);
                 break;
             case MOVE:
                 argsLoader.getArgs().getOperation().setValue(TransferOperation.COPY);
@@ -502,13 +502,13 @@ public class YADEEngineJumpHostAddon {
                     this.sourceToJumpHost.setResultSetFile(argsLoader.getClientArgs().getResultSetFile(),
                             SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL.toLowerCase() + "_" + new Date().getTime() + ".sos.rs");
                 }
-                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
-                this.settingsXMLMoveRemoveSourceContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(argsLoader, this,
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(logger, argsLoader, this);
+                this.settingsXMLMoveRemoveSourceContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostMOVERemove(logger, argsLoader, this,
                         SOURCE_TO_JUMP_HOST_MOVE_OPERATION_REMOVE_SOURCE_LABEL);
                 break;
             case COPY:
             default:
-                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(argsLoader, this);
+                this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.sourceToJumpHostCOPY(logger, argsLoader, this);
                 break;
             }
         }
@@ -522,7 +522,7 @@ public class YADEEngineJumpHostAddon {
             }
 
             this.profileId = profileId;
-            this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.jumpHostToTargetCOPY(argsLoader, this);
+            this.settingsXMLContent = YADEXMLJumpHostSettingsWriter.jumpHostToTargetCOPY(logger, argsLoader, this);
 
         }
 

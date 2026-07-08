@@ -113,7 +113,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             } catch (Exception e) {
                 connected = false;
 
-                logConnectFailedMsg();
+                logConnectFailedMsg(e);
 
                 // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
                 // error in methods executed after connect() - e.g. if retry, roll back...

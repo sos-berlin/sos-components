@@ -98,7 +98,7 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
 
         } catch (Exception e) {
-            logConnectFailedMsg();
+            logConnectFailedMsg(e);
 
             // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
             // error in methods executed after connect() - e.g. if retry, roll back...

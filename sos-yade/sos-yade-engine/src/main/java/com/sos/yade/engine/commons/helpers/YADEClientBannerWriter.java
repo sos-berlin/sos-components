@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
+import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
@@ -33,6 +34,7 @@ import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADENotificationArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments.ZeroByteTransfer;
+import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLProfileHelper;
@@ -237,24 +239,10 @@ public class YADEClientBannerWriter {
         String label = sourceArgs.getLabel().isEmpty() ? YADESourceArguments.LABEL : sourceArgs.getLabel().getValue();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(label).append("]");
-        if (sourceArgs.getProvider() == null) {
-            sb.append("Missing Provider");
-            logger.info(sb);
-            return;
-        }
+        sb.append(getProtocolInfo(logger, label, sourceArgs));
 
-        sb.append(YADEArgumentsHelper.toString("Protocol", sourceArgs.getProvider().getProtocol()));
-        try {
-            sb.append("(");
-            sb.append(sourceArgs.getProvider().getAccessInfo());
-            if (!SOSString.isEmpty(sourceArgs.getProvider().getAdvancedAccessInfo())) {
-                sb.append(", ").append(sourceArgs.getProvider().getAdvancedAccessInfo());
-            }
-            sb.append(")");
-        } catch (ProviderInitializationException e) {
-            sb.append("[getAccessInfo]" + e);
-            logger.error("[getAccessInfo]" + e, e);
+        if (!SOSCollection.isEmpty(sourceArgs.getProvider().getAlternatives())) {
+            sb.append(", Protocol alternatives=").append(sourceArgs.getProvider().getAlternatives().size());
         }
         if (sourceArgs.getDirectory().getValue() != null) {
             sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getDirectory()));
@@ -340,13 +328,10 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            // Host Info
-            logger.debug(getHostInfo(logger, label, sourceArgs.getProvider()));
-            // Arguments
+            // Source Arguments
             logger.debug(YADEArgumentsHelper.toString(logger, label, sourceArgs, Collections.singleton(sourceArgs.getProvider().getClass()
                     .getSimpleName())));
-            logger.debug(YADEArgumentsHelper.toString(logger, label, sourceArgs.getProvider(), getExcludedArgumentNamesForProvider()));
-            debugProviderDetails(logger, label, sourceArgs.getProvider());
+            debugProviderDetails(logger, "", "", label, sourceArgs.getProvider(), false);
         }
     }
 
@@ -355,6 +340,50 @@ public class YADEClientBannerWriter {
             return;
         }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append(getProtocolInfo(logger, jumpHostArgs));
+        if (!SOSCollection.isEmpty(jumpHostArgs.getProvider().getAlternatives())) {
+            sb.append(", SFTP alternatives=").append(jumpHostArgs.getProvider().getAlternatives().size());
+        }
+
+        if (jumpHostArgs.getTempDirectoryParent().getValue() != null) {
+            sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getTempDirectoryParent()));
+        }
+        sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getYADEClientCommand()));
+        logger.info(sb);
+        if (logger.isDebugEnabled()) {
+            debugJumpHostDetails(logger, "", "", jumpHostArgs, false);
+        }
+    }
+
+    public static String getProtocolInfo(ISOSLogger logger, String label, YADESourceTargetArguments args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(label).append("]");
+        if (args == null) {
+            sb.append("Missing arguments");
+            return sb.toString();
+        }
+        if (args.getProvider() == null) {
+            sb.append("Missing provider arguments");
+            return sb.toString();
+        }
+
+        sb.append(YADEArgumentsHelper.toString("Protocol", args.getProvider().getProtocol()));
+        try {
+            sb.append("(");
+            sb.append(args.getProvider().getAccessInfo());
+            if (!SOSString.isEmpty(args.getProvider().getAdvancedAccessInfo())) {
+                sb.append(", ").append(args.getProvider().getAdvancedAccessInfo());
+            }
+            sb.append(")");
+        } catch (ProviderInitializationException e) {
+            sb.append("[getAccessInfo]" + e);
+            logger.error("[getAccessInfo]" + e, e);
+        }
+        return sb.toString();
+    }
+
+    public static String getProtocolInfo(ISOSLogger logger, YADEJumpHostArguments jumpHostArgs) {
         StringBuilder sb = new StringBuilder();
         sb.append("[ ").append(YADEJumpHostArguments.LABEL).append(" ]");
         sb.append(YADEArgumentsHelper.toString("Protocol", jumpHostArgs.getProvider().getProtocol()));
@@ -369,22 +398,7 @@ public class YADEClientBannerWriter {
             sb.append("[getAccessInfo]" + e);
             logger.error("[getAccessInfo]" + e, e);
         }
-        if (jumpHostArgs.getTempDirectoryParent().getValue() != null) {
-            sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getTempDirectoryParent()));
-        }
-        sb.append(", ").append(YADEArgumentsHelper.toString(jumpHostArgs.getYADEClientCommand()));
-
-        logger.info(sb);
-        if (logger.isDebugEnabled()) {
-            // Host Info
-            logger.debug(getHostInfo(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider()));
-            // Arguments
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs, Collections.singleton(jumpHostArgs
-                    .getProvider().getClass().getSimpleName())));
-            logger.debug(YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider(),
-                    getExcludedArgumentNamesForProvider()));
-            debugProviderDetails(logger, YADEJumpHostArguments.LABEL, jumpHostArgs.getProvider());
-        }
+        return sb.toString();
     }
 
     private static void writeTargetHeader(ISOSLogger logger, YADETargetArguments targetArgs) {
@@ -396,18 +410,9 @@ public class YADEClientBannerWriter {
         String label = targetArgs.getLabel().isEmpty() ? YADETargetArguments.LABEL : targetArgs.getLabel().getValue();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(label).append("]");
-        sb.append(YADEArgumentsHelper.toString("Protocol", targetArgs.getProvider().getProtocol()));
-        try {
-            sb.append("(");
-            sb.append(targetArgs.getProvider().getAccessInfo());
-            if (!SOSString.isEmpty(targetArgs.getProvider().getAdvancedAccessInfo())) {
-                sb.append(", ").append(targetArgs.getProvider().getAdvancedAccessInfo());
-            }
-            sb.append(")");
-        } catch (ProviderInitializationException e) {
-            sb.append("[getAccessInfo]" + e);
-            logger.error("[getAccessInfo]" + e, e);
+        sb.append(getProtocolInfo(logger, label, targetArgs));
+        if (!SOSCollection.isEmpty(targetArgs.getProvider().getAlternatives())) {
+            sb.append(", Protocol alternatives=").append(targetArgs.getProvider().getAlternatives().size());
         }
         if (targetArgs.getDirectory().getValue() != null) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));
@@ -457,13 +462,10 @@ public class YADEClientBannerWriter {
 
         logger.info(sb);
         if (logger.isDebugEnabled()) {
-            // Host Info
-            logger.debug(getHostInfo(logger, label, targetArgs.getProvider()));
-            // Arguments
+            // Target Arguments
             logger.debug(YADEArgumentsHelper.toString(logger, label, targetArgs, Collections.singleton(targetArgs.getProvider().getClass()
                     .getSimpleName())));
-            logger.debug(YADEArgumentsHelper.toString(logger, label, targetArgs.getProvider(), getExcludedArgumentNamesForProvider()));
-            debugProviderDetails(logger, label, targetArgs.getProvider());
+            debugProviderDetails(logger, "", "", label, targetArgs.getProvider(), false);
         }
     }
 
@@ -475,20 +477,49 @@ public class YADEClientBannerWriter {
         return set;
     }
 
-    private static void debugProviderDetails(ISOSLogger logger, String label, AProviderArguments args) {
+    private static void debugProviderDetails(ISOSLogger logger, String indent, String prefix, String label, AProviderArguments args,
+            boolean isAlternatives) {
+        indent = "    " + indent;
+        // Host Info
+        logger.debug(indent + prefix + getHostInfo(logger, label, args));
+        if (isAlternatives) {
+            indent = "    " + indent;
+        }
+        // Provider Arguments
+        logger.debug(indent + YADEArgumentsHelper.toString(logger, label, args, getExcludedArgumentNamesForProvider()));
+
         if (args.getProxy() != null) {
-            debugProviderDetail(logger, label, args, args.getProxy());
+            debugProviderDetail(logger, indent, prefix, label, args, args.getProxy());
         }
         if (args.isCredentialStoreEnabled()) {
-            debugProviderDetail(logger, label, args, args.getCredentialStore());
+            debugProviderDetail(logger, indent, label, prefix, args, args.getCredentialStore());
         }
         if (args.isEncryptionDecryptEnabled()) {
-            debugProviderDetail(logger, label, args, args.getEncryptionDecrypt());
+            debugProviderDetail(logger, indent, label, prefix, args, args.getEncryptionDecrypt());
+        }
+        if (!SOSCollection.isEmpty(args.getAlternatives())) {
+            logger.debug("%s[%s][%s]alternatives=%s", indent, label, args.getClass().getSimpleName(), args.getAlternatives().size());
+            int i = 0;
+            for (AProviderArguments aargs : args.getAlternatives()) {
+                i++;
+                debugProviderDetails(logger, indent + "    ", "[alternative][" + i + "][" + aargs.getKey().getValue() + "]", label, aargs, true);
+            }
         }
     }
 
-    private static void debugProviderDetail(ISOSLogger logger, String label, AProviderArguments args, ASOSArguments detailArgs) {
-        logger.debug("[%s][%s]%s", label, args.getClass().getSimpleName(), YADEArgumentsHelper.toString(logger, detailArgs));
+    private static void debugJumpHostDetails(ISOSLogger logger, String indent, String prefix, YADEJumpHostArguments args, boolean isAlternatives) {
+        indent = "    " + indent;
+
+        // JumpHost Arguments
+        logger.debug(indent + prefix + YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, args, Collections.singleton(args
+                .getProvider().getClass().getSimpleName())));
+
+        debugProviderDetails(logger, indent, prefix, YADEJumpHostArguments.LABEL, args.getProvider(), isAlternatives);
+    }
+
+    private static void debugProviderDetail(ISOSLogger logger, String indent, String prefix, String label, AProviderArguments args,
+            ASOSArguments detailArgs) {
+        logger.debug("%s%s[%s][%s]%s", indent, prefix, label, args.getClass().getSimpleName(), YADEArgumentsHelper.toString(logger, detailArgs));
     }
 
     private static String getLocalHostInfo() {
