@@ -213,7 +213,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
     }
     
     private Function<ControllerCommandResponse, ControllerCommandResponse> getApplyFunction (Set<String> workflowNames) {
-        Function<ControllerCommandResponse, ControllerCommandResponse> apply = ccr -> {
+        return ccr -> {
             if (ccr.hasException()) {
                 return ccr;
             }
@@ -230,7 +230,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             }
             return ccr;
         };
-        return apply;
     }
 
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (RevokeFilter revokeFilter) {
