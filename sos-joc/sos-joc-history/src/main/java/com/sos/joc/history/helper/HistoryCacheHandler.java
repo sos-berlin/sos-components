@@ -100,10 +100,7 @@ public class HistoryCacheHandler {
         // }
         // }
         // return sb.toString();
-        String add = "";
-        if (LOGGER.isDebugEnabled()) {
-            add = "[cached yade protocols=" + yadeHandler.getProtocolsSize() + "]";
-        }
+        String add = "[cached yade protocols=" + yadeHandler.getProtocolsSize() + "]";
 
         return String.format("[cached workflows=%s, orders=%s, steps=%s]%s", workflows.size(), coSize, cosSize, add);
     }

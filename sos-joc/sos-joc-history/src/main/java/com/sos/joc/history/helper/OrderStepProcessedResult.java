@@ -3,6 +3,9 @@ package com.sos.joc.history.helper;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
@@ -14,12 +17,15 @@ import js7.data.value.Value;
 
 public class OrderStepProcessedResult {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderStepProcessedResult.class);
     private Map<String, Value> returnValues;
 
     public OrderStepProcessedResult(FatEventOrderStepProcessed eos, String controllerId, CachedOrder co, CachedOrderStep cos,
             YADEHandler yadeHandler) {
         returnValues = eos.getOutcome() == null ? null : eos.getOutcome().getNamedValues();
         if (returnValues != null) {
+            debug(controllerId, co, cos);
+
             Value yadeReturnValues = returnValues.get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES);
             if (yadeReturnValues != null) {
                 // copy without YADE serialized value
@@ -38,6 +44,19 @@ public class OrderStepProcessedResult {
 
     public Map<String, Value> getReturnValues() {
         return returnValues;
+    }
+
+    private void debug(String controllerId, CachedOrder co, CachedOrderStep cos) {
+        if (LOGGER.isDebugEnabled()) {
+            try {
+                Map<String, String> m = returnValues.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue()
+                        .convertToString()));
+                LOGGER.debug(String.format("[%s][OrderStepProcessed][%s][%s][returnValues]%s", controllerId, co.getOrderId(), cos.getJobName(), m));
+            } catch (Exception e) {
+                LOGGER.debug(String.format("[%s][OrderStepProcessed][%s][%s][returnValues]%s", controllerId, co.getOrderId(), cos.getJobName(),
+                        returnValues));
+            }
+        }
     }
 
 }
