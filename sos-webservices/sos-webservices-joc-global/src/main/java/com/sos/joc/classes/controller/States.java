@@ -108,6 +108,7 @@ public class States {
         case PREPARED_TO_BE_COUPLED:
         case ACTIVE_NODE_IS_NOT_READY:
         case NODE_LOSS_TO_BE_CONFIRMED:
+        case FAILOVER_TO_BE_CONFIRMED:
         case EMPTY:
             clusterState.setSeverity(2);
             break;

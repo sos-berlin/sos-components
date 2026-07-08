@@ -18,6 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.event.EventServiceFactory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
@@ -66,6 +67,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getJobschedulerUser()),
                     folderPermissions.getListOfFolders(), accessToken);
             
+//            try { //add to new surveyDate instead deliveryDate
+//                entity.setDeliveryDate(Date.from(Proxy.of(controllerId).currentState().instant()));
+//            } catch (Exception e) {
+//            }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 

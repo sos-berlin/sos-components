@@ -101,8 +101,15 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 clusterState = new ClusterState(ClusterType.EMPTY, null);
             }
             
-            if (ClusterWatch.getInstance().getClusterNodeLoss(controllerId) != null) {
+            switch (ClusterWatch.getInstance().getNodeLossEventType(controllerId)) {
+            case Failover:
+                clusterState.setTYPE(ClusterType.FAILOVER_TO_BE_CONFIRMED);
+                break;
+            case NodeLoss:
                 clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
+                break;
+            case Unknown:
+                break;
             }
 
             // ask for coupled

@@ -80,7 +80,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             RegisterParameters body = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
             String controllerId = body.getControllerId();
-            Boolean requireFailoverConfirmation = body.getRequireFailoverConfirmation();
+            Boolean requireFailoverConfirmation = body.getForceFailoverConfirmation();
             if (controllerId == null) {
                 controllerId = ""; 
             }

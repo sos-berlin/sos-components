@@ -56,6 +56,8 @@ import com.sos.joc.event.bean.monitoring.NotificationCreated;
 import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
+import com.sos.joc.event.bean.proxy.ConfirmEvent;
+import com.sos.joc.event.bean.proxy.FailoverConfirmEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
@@ -555,12 +557,21 @@ public class EventService {
     
     @Subscribe({ ClusterNodeLossEvent.class })
     public void createEvent(ClusterNodeLossEvent evt) {
+        createEvent(evt, "Loss");
+    }
+    
+    @Subscribe({ FailoverConfirmEvent.class })
+    public void createEvent(FailoverConfirmEvent evt) {
+        createEvent(evt, "Failover");
+    }
+    
+    private void createEvent(ConfirmEvent evt, String reason) {
         if (!evt.onlyProblem()) {
             addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
         String message = evt.getMessage();
         if (evt.getNodeId() != null) {
-            String msg = "Loss of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId()
+            String msg = reason + " of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId()
                     + "' requires confirmation";
             if (message == null) {
                 message = msg;
