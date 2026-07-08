@@ -76,9 +76,7 @@ public class YADEHandler implements Closeable {
         closed.set(true);
 
         if (!initialized.get()) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.info(String.format("[%s][%s][%s][close][skip]no initialized", IDENTIFIER, controllerId, IDENTIFIER_YADE));
-            }
+            LOGGER.info(String.format("[%s][%s][%s][close][skip]no initialized", IDENTIFIER, controllerId, IDENTIFIER_YADE));
             return;
         }
 
@@ -89,8 +87,11 @@ public class YADEHandler implements Closeable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            dispatcherThread = null;
         }
         serializeQueue();
+        initialized.set(false);
+        LOGGER.info(String.format("[%s][%s][%s]closed", IDENTIFIER, controllerId, IDENTIFIER_YADE));
     }
 
     public void add(YADEHandlerEntry entry) {
@@ -124,6 +125,8 @@ public class YADEHandler implements Closeable {
             dispatcherThread = new Thread(this.threadGroup, this::dispatchLoop, IDENTIFIER_YADE);
             dispatcherThread.setDaemon(true); // does not block JVM shutdown
             dispatcherThread.start();
+
+            LOGGER.info(String.format("[%s][%s][%s]started", IDENTIFIER, controllerId, IDENTIFIER_YADE));
         }
     }
 
@@ -136,12 +139,12 @@ public class YADEHandler implements Closeable {
             try {
                 insertEntry(queue.take());
             } catch (InterruptedException e) {
-                // if "close" requested, exit loop cleanly
-                if (closed.get()) {
-                    break;
+                if (!closed.get()) {
+                    LOGGER.info(String.format("[%s][%s][%s][close=false]dispatchLoop interrupted", IDENTIFIER, controllerId, IDENTIFIER_YADE));
                 }
-                // otherwise, restore interrupt status
+                // restore interrupt status and exit loop cleanly
                 Thread.currentThread().interrupt();
+                break;
             }
         }
     }
@@ -155,7 +158,7 @@ public class YADEHandler implements Closeable {
                 LOGGER.info(String.format("[%s][%s][%s][close][%s][serialized]entries=%s", IDENTIFIER, controllerId, IDENTIFIER_YADE, jocVariableName,
                         size));
             } catch (Exception e) {
-                LOGGER.error(String.format("[%s][%s][%s][close][%s][serializeQueue]%s", IDENTIFIER, controllerId, IDENTIFIER_YADE, jocVariableName, e
+                LOGGER.warn(String.format("[%s][%s][%s][close][%s][serializeQueue]%s", IDENTIFIER, controllerId, IDENTIFIER_YADE, jocVariableName, e
                         .toString()), e);
             }
             queue.clear();
@@ -181,7 +184,7 @@ public class YADEHandler implements Closeable {
             }
             deserializeQueue(item);
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s][%s][start][%s][deserializeQueue]%s", IDENTIFIER, controllerId, IDENTIFIER_YADE, jocVariableName, e
+            LOGGER.warn(String.format("[%s][%s][%s][start][%s][deserializeQueue]%s", IDENTIFIER, controllerId, IDENTIFIER_YADE, jocVariableName, e
                     .toString()), e);
         } finally {
             deleteJocVariable(item);

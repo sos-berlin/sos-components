@@ -178,7 +178,6 @@ public class HistoryModel {
     private boolean closed = false;
 
     private boolean isDebugEnabled;
-    private boolean isTraceEnabled;
 
     private static final Map<EventType, String> messages = Collections.unmodifiableMap(new HashMap<EventType, String>() {
 
@@ -255,7 +254,6 @@ public class HistoryModel {
 
     private void initLogLevels() {
         isDebugEnabled = LOGGER.isDebugEnabled();
-        isTraceEnabled = LOGGER.isTraceEnabled();
 
         cacheHandler.initLogLevels();
     }
@@ -324,9 +322,6 @@ public class HistoryModel {
 
                 if (isDebugEnabled) {
                     LOGGER.debug("---[" + entry.getEventId() + "] " + entry.getType() + " ------------------------------------------");
-                    if (isTraceEnabled) {
-                        LOGGER.trace(String.format("[%s][%s][%s]%s", identifier, method, entry.getType(), SOSString.toString(entry)));
-                    }
                 }
 
                 transactionCounter++;
