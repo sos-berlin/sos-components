@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +40,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 
 public class CancelOrdersPublishHelper {
 
-    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter) 
+    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter, Function<ControllerCommandResponse, ControllerCommandResponse> apply) 
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
         
@@ -54,12 +55,8 @@ public class CancelOrdersPublishHelper {
                 xAccessToken);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                 ordersPerController, xAccessToken);
-        for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-            if (!cancelOrderResponsePerController.containsKey(controllerId)) {
-                cancelOrderResponsePerController.put(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
-                        controllerId)));
-            }
-            futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
+        for (String controllerId : cancelOrderResponsePerController.keySet()) {
+            CompletableFuture<ControllerCommandResponse> f = cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                 if (ccr.getException().isEmpty()) {
                     DailyPlanOrderFilterDef localOrderScheduleFilter = new DailyPlanOrderFilterDef();
                     localOrderScheduleFilter.setControllerIds(Collections.singletonList(controllerId));
@@ -90,18 +87,27 @@ public class CancelOrdersPublishHelper {
                     }
                 }
                 return ccr;
-            }));
+            });
+            if (apply != null) {
+                f.thenApply(apply);
+            }
+            futures.add(f);
         }
-		Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId))
-				.map(ControllerCommandResponse::new).map(CompletableFuture::completedFuture).forEach(futures::add);
+        Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId)).map(ControllerCommandResponse::new)
+                .map(CompletableFuture::completedFuture).forEach(futures::add);
         return futures;
     }
     
     // for Deploy and Revoke operations
     public static DailyPlanOrderFilterDef getDailyPlanOrderFilter(Set<DBItemDeploymentHistory> deployed, Optional<Set<DBItemDeploymentHistory>> renamed,
             String cancelOrdersDateFrom, String controllerId) {
+        return getDailyPlanOrderFilter(deployed, renamed, cancelOrdersDateFrom, Collections.singletonList(controllerId));
+    }
+    
+    public static DailyPlanOrderFilterDef getDailyPlanOrderFilter(Set<DBItemDeploymentHistory> deployed, Optional<Set<DBItemDeploymentHistory>> renamed,
+            String cancelOrdersDateFrom, List<String> controllerIds) {
         DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
-        orderFilter.setControllerIds(Collections.singletonList(controllerId));
+        orderFilter.setControllerIds(controllerIds);
         if("now".equals(cancelOrdersDateFrom.toLowerCase())) {
             SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
             orderFilter.setDailyPlanDateFrom(sdf.format(Date.from(Instant.now())));
