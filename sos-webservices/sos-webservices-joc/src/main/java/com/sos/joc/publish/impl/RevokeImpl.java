@@ -48,7 +48,9 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
+import js7.base.problem.Problem;
 import js7.proxy.javaapi.JControllerProxy;
 
 @Path("inventory/deployment")
@@ -155,26 +157,30 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     mappedFutures.putIfAbsent(false, Collections.emptyList());
                     
                     if(!mappedFutures.get(true).isEmpty()) {
-                        // contains futures with errors
+                        // post exception if futures with errors exist
                         ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), xAccessToken, getJocError());
-                    } else {
-                        // if
-                        //      no error occurred on cancelOrders 
-                        // then
-                        //      STORE optimistically and send commands to controllers
-                        
-                        Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
-                                fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources,
-                                controllerId, dbAuditlog.getId(), account);
-                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
-                                .getId(), account);
+                    } 
+                    if(!mappedFutures.get(false).isEmpty()) {
+                        //      STORE optimistically and send commands to controllers where no errors occurred, if no orders are still attached
                         JControllerProxy proxy;
                         try {
                             proxy = Proxy.of(controllerId);
                         } catch (ExecutionException e) {
                             throw new ProxyNotCoupledException(e);
                         }
+                        
+                        Stream<String> workflowNames = UpdateItemUtils.getWorkflowNamesWithOrders(proxy.currentState());
+                        Long workflowsWithOrdersCount = workflowNames.filter(workflowName -> mappedFutures.get(false).contains(workflowName)).count();
+                        if(workflowsWithOrdersCount > 0) {
+                            Problem problem = Problem.of("Orders still attached to workflows. Revoke operation canceled.");
+                            ProblemHelper.postProblemEventIfExist(Either.left(problem), xAccessToken, getJocError(), controllerId);
+                        }
+                        Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
+                                fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(true), commitIdForRevokeFileOrderSources,
+                                controllerId, dbAuditlog.getId(), account);
+                        DeleteDeployments.storeNewDepHistoryEntriesForRevoke(dbLayer, allItemsToDelete.get(false), commitIdForRevoke, controllerId, dbAuditlog
+                                .getId(), account);
                         if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
                             UpdateItemUtils.updateItemsDelete(commitIdForRevokeFileOrderSources, allItemsToDelete.get(true), proxy)
                             .thenAccept(either -> {
