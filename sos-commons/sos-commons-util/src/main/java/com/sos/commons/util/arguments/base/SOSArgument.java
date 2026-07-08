@@ -195,7 +195,7 @@ public class SOSArgument<T> {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(name);
+        StringBuilder sb = new StringBuilder(name == null ? "<internal>" : name);
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
         sb.append(" modified=").append(isDirty());
