@@ -518,7 +518,7 @@ public class YADEEngine {
             String label) {
         try {
             SOSMail mail = new SOSMail(mailServerArgs.getMailSettings());
-
+            mail.init();
             mail.setFrom(mailArgs.getHeaderFrom().getValue());
             for (String to : mailArgs.getHeaderTo().getValue()) {
                 mail.addRecipient(to);
