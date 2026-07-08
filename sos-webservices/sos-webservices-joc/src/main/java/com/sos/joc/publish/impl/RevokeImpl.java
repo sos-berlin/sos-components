@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +34,8 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocDeployException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -142,14 +145,18 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                                 .collect(Collectors.toList()));
                     }
                 }
+                
                 Set<DBItemDeploymentHistory> filteredDepHistoryItemsforCancelOrders = filteredDepHistoryItemsToRevoke.stream()
                         .filter(item -> !workflowsWithAlreadyCanceledOrders.contains(item.getName())).collect(Collectors.toSet());
                         
                 DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(filteredDepHistoryItemsforCancelOrders,
                         Optional.empty(), "now", controllerId);
+                Map<String, Set<String>> workflowsPerController = filteredDepHistoryItemsforCancelOrders.stream().filter(item -> DeployType.WORKFLOW.equals(item.getTypeAsEnum()))
+                    .collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.mapping(DBItemDeploymentHistory::getName, Collectors.toSet())));
                 
                 List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
-                        CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter);
+                        CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter, getApplyFunction(workflowsPerController.get(controllerId)));
+                
                 CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                     Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
                             .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
@@ -167,13 +174,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                             proxy = Proxy.of(controllerId);
                         } catch (ExecutionException e) {
                             throw new ProxyNotCoupledException(e);
-                        }
-                        
-                        Stream<String> workflowNames = UpdateItemUtils.getWorkflowNamesWithOrders(proxy.currentState());
-                        Long workflowsWithOrdersCount = workflowNames.filter(workflowName -> mappedFutures.get(false).contains(workflowName)).count();
-                        if(workflowsWithOrdersCount > 0) {
-                            Problem problem = Problem.of("Orders still attached to workflows. Revoke operation canceled.");
-                            ProblemHelper.postProblemEventIfExist(Either.left(problem), xAccessToken, getJocError(), controllerId);
                         }
                         Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToRevoke.stream().collect(Collectors.groupingBy(
                                 fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
@@ -210,6 +210,27 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             removeSemapohoreFinally(xAccessToken);
             Globals.disconnect(hibernateSession);
         }
+    }
+    
+    private Function<ControllerCommandResponse, ControllerCommandResponse> getApplyFunction (Set<String> workflowNames) {
+        Function<ControllerCommandResponse, ControllerCommandResponse> apply = ccr -> {
+            if (ccr.hasException()) {
+                return ccr;
+            }
+            Set<String> outerWorkflowNames = workflowNames;
+            String cId = ccr.getControllerId();
+            try {
+                JControllerProxy proxy = Proxy.of(cId);
+                Stream<String> workflows = UpdateItemUtils.getWorkflowNamesWithOrders(proxy.currentState());
+                if(workflows.anyMatch(outerWorkflowNames::contains)) {
+                    throw new JocDeployException("Orders still attached to workflows. Revoke operation canceled.");
+                }
+            } catch (Exception e) {
+                return new ControllerCommandResponse(cId, Optional.of(e));
+            }
+            return ccr;
+        };
+        return apply;
     }
 
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (RevokeFilter revokeFilter) {

@@ -561,10 +561,7 @@ public class DeleteDeployments {
             // wait approx. 3 times for 1 seconds to check for existing orders to make sure any previous order process has the chance to finish
             // if orders are still present after 3 checks throw exception
             for (int i = 0; i < 3; i++) {
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                }
+                try {TimeUnit.MILLISECONDS.sleep(300L);} catch (InterruptedException e) {}
                 try {
                     checkIfWorkflowsHaveOrders(proxy.currentState(), workflowNames);
                 } catch (Exception e) {

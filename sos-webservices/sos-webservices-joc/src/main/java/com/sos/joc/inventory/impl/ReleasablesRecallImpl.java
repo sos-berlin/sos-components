@@ -170,7 +170,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
         if(!keepOrders) {
             DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(releasedItems, new InventoryDBLayer(session));
             List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
-                    CancelOrdersPublishHelper.getCancelOrderFutures(accessToken, orderFilter);
+                    CancelOrdersPublishHelper.getCancelOrderFutures(accessToken, orderFilter, null);
 
             CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                 Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
