@@ -37,7 +37,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "componentState",
     "connectionState",
     "clusterNodeState",
-    "requireFailoverConfirmation"
+    "forceFailoverConfirmation"
 })
 public class Controller {
 
@@ -155,8 +155,8 @@ public class Controller {
      */
     @JsonProperty("clusterNodeState")
     private ClusterNodeState clusterNodeState;
-    @JsonProperty("requireFailoverConfirmation")
-    private Boolean requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    private Boolean forceFailoverConfirmation;
 
     /**
      * non negative long
@@ -487,24 +487,24 @@ public class Controller {
         this.clusterNodeState = clusterNodeState;
     }
     
-    @JsonProperty("requireFailoverConfirmation")
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public Boolean getForceFailoverConfirmation() {
+        return forceFailoverConfirmation;
     }
 
-    @JsonProperty("requireFailoverConfirmation")
-    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
-        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public void setForceFailoverConfirmation(Boolean forceFailoverConfirmation) {
+        this.forceFailoverConfirmation = forceFailoverConfirmation;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("securityLevel", securityLevel).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("securityLevel", securityLevel).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).append("forceFailoverConfirmation", forceFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(connectionState).append(clusterUrl).append(startedAt).append(title).append(version).append(url).append(securityLevel).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).append(requireFailoverConfirmation).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(connectionState).append(clusterUrl).append(startedAt).append(title).append(version).append(url).append(securityLevel).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).append(forceFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -516,7 +516,7 @@ public class Controller {
             return false;
         }
         Controller rhs = ((Controller) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(securityLevel, rhs.securityLevel).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(securityLevel, rhs.securityLevel).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).append(forceFailoverConfirmation, rhs.forceFailoverConfirmation).isEquals();
     }
 
 }

@@ -19,6 +19,7 @@ import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.IdToUri;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.ClusterWatchServiceContext.NodeLossEventType;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -205,6 +206,13 @@ public class ClusterWatch {
         }
         return null;
     }
+    
+    public NodeLossEventType getNodeLossEventType(String controllerId) {
+        if (isWatched(controllerId)) {
+            return startedWatches.get(controllerId).getEventType();
+        }
+        return NodeLossEventType.Unknown;
+    }
 
     public boolean hasClusterNodeLoss(String controllerId) {
         return getClusterNodeLoss(controllerId) != null;
@@ -269,7 +277,7 @@ public class ClusterWatch {
             ExecutionException {
         Optional.ofNullable(startedWatches.get(controllerId)).ifPresent(ClusterWatchServiceContext::stop);
         LOGGER.info("[ClusterWatch] start " + toStringWithId() + " as watcher for '" + controllerId + "'" + (requireFailoverConfirmation
-                ? " with failover confirmation" : ""));
+                ? " with required failover confirmation" : ""));
         if (controllerApi == null) {
             controllerApi = ControllerApi.of(controllerId);
         }

@@ -24,7 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "controllers",
     "clusterWatcher",
     "auditLog",
-    "requireFailoverConfirmation"
+    "forceFailoverConfirmation"
 })
 public class RegisterParameters {
 
@@ -36,8 +36,8 @@ public class RegisterParameters {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("requireFailoverConfirmation")
-    private Boolean requireFailoverConfirmation = false;
+    @JsonProperty("forceFailoverConfirmation")
+    private Boolean forceFailoverConfirmation = false;
     /**
      * 
      * (Required)
@@ -76,14 +76,14 @@ public class RegisterParameters {
         this.controllerId = controllerId;
     }
     
-    @JsonProperty("requireFailoverConfirmation")
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public Boolean getForceFailoverConfirmation() {
+        return forceFailoverConfirmation;
     }
 
-    @JsonProperty("requireFailoverConfirmation")
-    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
-        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public void setForceFailoverConfirmation(Boolean forceFailoverConfirmation) {
+        this.forceFailoverConfirmation = forceFailoverConfirmation;
     }
 
     /**
@@ -130,12 +130,12 @@ public class RegisterParameters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("auditLog", auditLog).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("auditLog", auditLog).append("forceFailoverConfirmation", forceFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).append(requireFailoverConfirmation).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).append(forceFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -147,7 +147,7 @@ public class RegisterParameters {
             return false;
         }
         RegisterParameters rhs = ((RegisterParameters) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(forceFailoverConfirmation, rhs.forceFailoverConfirmation).isEquals();
     }
 
 }

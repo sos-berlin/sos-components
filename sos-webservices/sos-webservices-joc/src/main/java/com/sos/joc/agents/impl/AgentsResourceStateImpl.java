@@ -332,7 +332,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 JAgentRef::asScala).map(AgentRef::requireFailoverConfirmation).orElse(false);
                         AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam
                                 .getStates());
-                        agent.setRequireFailoverConfirmation(requireFailoverConfirmation);
+                        agent.setForceFailoverConfirmation(requireFailoverConfirmation);
                         if (agent.getSubagents() == null) { // only for standalone agent, cluster agents has no state (but its subagents)
                             if (Proxies.isCoupled(controllerId)) {
                                 if (jAgentRefState != null) {

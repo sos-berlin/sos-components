@@ -32,7 +32,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "javaVersion",
     "os",
     "timeZone",
-    "requireFailoverConfirmation"
+    "forceFailoverConfirmation"
 })
 public class JobSchedulerP {
 
@@ -108,8 +108,8 @@ public class JobSchedulerP {
     private OperatingSystem os;
     @JsonProperty("timeZone")
     private String timeZone;
-    @JsonProperty("requireFailoverConfirmation")
-    private Boolean requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    private Boolean forceFailoverConfirmation;
 
     /**
      * non negative long
@@ -332,24 +332,24 @@ public class JobSchedulerP {
         this.timeZone = timeZone;
     }
 
-    @JsonProperty("requireFailoverConfirmation")
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public Boolean getForceFailoverConfirmation() {
+        return forceFailoverConfirmation;
     }
 
-    @JsonProperty("requireFailoverConfirmation")
-    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
-        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public void setForceFailoverConfirmation(Boolean forceFailoverConfirmation) {
+        this.forceFailoverConfirmation = forceFailoverConfirmation;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("timeZone", timeZone).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("timeZone", timeZone).append("forceFailoverConfirmation", forceFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).append(requireFailoverConfirmation).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).append(forceFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -361,7 +361,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).append(forceFailoverConfirmation, rhs.forceFailoverConfirmation).isEquals();
     }
 
 }

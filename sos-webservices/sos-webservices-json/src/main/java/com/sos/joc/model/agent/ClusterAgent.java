@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "subagents",
-    "requireFailoverConfirmation"
+    "forceFailoverConfirmation"
 })
 public class ClusterAgent
     extends Agent
@@ -33,8 +33,8 @@ public class ClusterAgent
      */
     @JsonProperty("subagents")
     private List<SubAgent> subagents = new ArrayList<SubAgent>();
-    @JsonProperty("requireFailoverConfirmation")
-    private Boolean requireFailoverConfirmation = false;
+    @JsonProperty("forceFailoverConfirmation")
+    private Boolean forceFailoverConfirmation = false;
 
     /**
      * 
@@ -56,24 +56,24 @@ public class ClusterAgent
         this.subagents = subagents;
     }
     
-    @JsonProperty("requireFailoverConfirmation")
-    public Boolean getRequireFailoverConfirmation() {
-        return requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public Boolean getForceFailoverConfirmation() {
+        return forceFailoverConfirmation;
     }
     
-    @JsonProperty("requireFailoverConfirmation")
-    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
-        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public void setForceFailoverConfirmation(Boolean forceFailoverConfirmation) {
+        this.forceFailoverConfirmation = forceFailoverConfirmation;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("subagents", subagents).append("requireFailoverConfirmation", requireFailoverConfirmation).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("subagents", subagents).append("forceFailoverConfirmation", forceFailoverConfirmation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subagents).append(requireFailoverConfirmation).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(subagents).append(forceFailoverConfirmation).toHashCode();
     }
 
     @Override
@@ -85,7 +85,7 @@ public class ClusterAgent
             return false;
         }
         ClusterAgent rhs = ((ClusterAgent) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).append(requireFailoverConfirmation, rhs.requireFailoverConfirmation).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(subagents, rhs.subagents).append(forceFailoverConfirmation, rhs.forceFailoverConfirmation).isEquals();
     }
 
 }

@@ -39,7 +39,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "orders",
     "runningTasks",
     "disabled",
-    "requireFailoverConfirmation"
+    "forceFailoverConfirmation"
 })
 public class AgentStateV {
 
@@ -146,8 +146,8 @@ public class AgentStateV {
     private Integer runningTasks;
     @JsonProperty("disabled")
     private Boolean disabled = false;
-    @JsonProperty("requireFailoverConfirmation")
-    private Boolean requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    private Boolean forceFailoverConfirmation;
 
     /**
      * controllerId
@@ -457,17 +457,17 @@ public class AgentStateV {
         this.disabled = disabled;
     }
     
-    @JsonProperty("requireFailoverConfirmation")
-    public Boolean getRequireFailoverConfirmation() {
-        if (requireFailoverConfirmation != Boolean.TRUE) {
+    @JsonProperty("forceFailoverConfirmation")
+    public Boolean getForceFailoverConfirmation() {
+        if (forceFailoverConfirmation != Boolean.TRUE) {
             return null;
         }
-        return requireFailoverConfirmation;
+        return forceFailoverConfirmation;
     }
 
-    @JsonProperty("requireFailoverConfirmation")
-    public void setRequireFailoverConfirmation(Boolean requireFailoverConfirmation) {
-        this.requireFailoverConfirmation = requireFailoverConfirmation;
+    @JsonProperty("forceFailoverConfirmation")
+    public void setForceFailoverConfirmation(Boolean forceFailoverConfirmation) {
+        this.forceFailoverConfirmation = forceFailoverConfirmation;
     }
 
     @Override

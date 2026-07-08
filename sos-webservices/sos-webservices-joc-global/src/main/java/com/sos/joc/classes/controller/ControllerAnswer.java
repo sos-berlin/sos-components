@@ -120,8 +120,11 @@ public class ControllerAnswer extends Controller {
             if (dbInstance.getIsCluster()) {
                 lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
                 if (lossNode != null) {
-                    clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
-//                    EventBus.getInstance().post(new ClusterNodeLossEvent(dbInstance.getControllerId(), lossNodes, null, true));
+                    if (getRequireFailoverConfirmation(dbInstance)) {
+                        clusterState = ClusterType.FAILOVER_TO_BE_CONFIRMED;
+                    } else {
+                        clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
+                    }
                     currentNodeIsLoss = ((lossNode.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNode.string().equals("Backup")
                             && !dbInstance.getIsPrimary()));
 
@@ -134,6 +137,8 @@ public class ControllerAnswer extends Controller {
 			} else if (isActive && clusterState == ClusterType.ACTIVE_NODE_IS_NOT_READY) {
                 setComponentState(States.getComponentState(ComponentStateText.inoperable));
             } else if (currentNodeIsLoss && clusterState == ClusterType.NODE_LOSS_TO_BE_CONFIRMED) {
+                setComponentState(States.getComponentState(ComponentStateText.inoperable));
+            } else if (currentNodeIsLoss && clusterState == ClusterType.FAILOVER_TO_BE_CONFIRMED) {
                 setComponentState(States.getComponentState(ComponentStateText.inoperable));
             } else {
 			    setComponentState(States.getComponentState(ComponentStateText.operational));
@@ -191,7 +196,7 @@ public class ControllerAnswer extends Controller {
 		setVersion(dbInstance.getVersion());
 		setJavaVersion(dbInstance.getJavaVersion());
         setSecurityLevel(Globals.getJocSecurityLevel());
-        setRequireFailoverConfirmation(getRequireFailoverConfirmation(dbInstance));
+        setForceFailoverConfirmation(getRequireFailoverConfirmation(dbInstance));
 	}
 	
 	@JsonIgnore
