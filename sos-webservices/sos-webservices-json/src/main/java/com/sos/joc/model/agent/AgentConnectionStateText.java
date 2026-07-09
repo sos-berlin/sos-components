@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum AgentConnectionStateText {
 
     NODE_LOSS("NODE_LOSS"),
+    UNCONFIRMED_FAILOVER("UNCONFIRMED_FAILOVER"),
     NOT_DEDICATED("NOT_DEDICATED"),
     WITH_PERMANENT_ERROR("WITH_PERMANENT_ERROR"),
     WITH_TEMPORARY_ERROR("WITH_TEMPORARY_ERROR");

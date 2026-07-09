@@ -248,7 +248,7 @@ public class ClusterWatch {
         }
     }
     
-    public Optional<String> getAndCleanLastMessage(String controllerId) {
+    public Optional<List<String>> getAndCleanLastMessage(String controllerId) {
         if (isWatched(controllerId)) {
             return startedWatches.get(controllerId).getAndCleanLastMessage();
         }

@@ -30,7 +30,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "eventsFromOrderMonitoring",
     "eventsFromApprovalRequests",
     "eventsFromNotes",
-    "deliveryDate"
+    "deliveryDate",
+    "surveyDate"
 })
 public class Event {
 
@@ -84,6 +85,16 @@ public class Event {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date surveyDate;
 
     /**
      * controllerId
@@ -236,15 +247,39 @@ public class Event {
     public void setDeliveryDate(Date deliveryDate) {
         this.deliveryDate = deliveryDate;
     }
+    
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("surveyDate")
+    public Date getSurveyDate() {
+        return surveyDate;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("surveyDate")
+    public void setSurveyDate(Date surveyDate) {
+        this.surveyDate = surveyDate;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("eventsFromSystemMonitoring", eventsFromSystemMonitoring).append("eventsFromOrderMonitoring", eventsFromOrderMonitoring).append("eventsFromApprovalRequests", eventsFromApprovalRequests).append("eventsFromNotes", eventsFromNotes).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("eventsFromSystemMonitoring", eventsFromSystemMonitoring).append("eventsFromOrderMonitoring", eventsFromOrderMonitoring).append("eventsFromApprovalRequests", eventsFromApprovalRequests).append("eventsFromNotes", eventsFromNotes).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(eventsFromApprovalRequests).append(controllerId).append(eventsFromSystemMonitoring).append(error).append(eventSnapshots).append(deliveryDate).append(eventsFromOrderMonitoring).append(eventsFromNotes).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(eventsFromApprovalRequests).append(controllerId).append(eventsFromSystemMonitoring).append(error).append(eventSnapshots).append(deliveryDate).append(surveyDate).append(eventsFromOrderMonitoring).append(eventsFromNotes).toHashCode();
     }
 
     @Override
@@ -256,7 +291,7 @@ public class Event {
             return false;
         }
         Event rhs = ((Event) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(eventsFromApprovalRequests, rhs.eventsFromApprovalRequests).append(controllerId, rhs.controllerId).append(eventsFromSystemMonitoring, rhs.eventsFromSystemMonitoring).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).append(eventsFromOrderMonitoring, rhs.eventsFromOrderMonitoring).append(eventsFromNotes, rhs.eventsFromNotes).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(eventsFromApprovalRequests, rhs.eventsFromApprovalRequests).append(controllerId, rhs.controllerId).append(eventsFromSystemMonitoring, rhs.eventsFromSystemMonitoring).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(eventsFromOrderMonitoring, rhs.eventsFromOrderMonitoring).append(eventsFromNotes, rhs.eventsFromNotes).isEquals();
     }
 
 }

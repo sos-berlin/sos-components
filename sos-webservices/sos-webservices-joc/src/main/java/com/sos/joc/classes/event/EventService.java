@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.JOCEvent;
+import com.sos.joc.event.bean.agent.AgentClusterFailoverConfirmEvent;
 import com.sos.joc.event.bean.agent.AgentClusterNodeLossEvent;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.event.bean.approval.ApprovalUpdatedEvent;
@@ -87,6 +89,8 @@ import js7.data.board.BoardPath;
 import js7.data.board.NoticeEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.cluster.ClusterWatchProblems;
+import js7.data.cluster.ClusterWatchProblems.ClusterFailoverNotConfirmedProblem;
+import js7.data.cluster.ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem;
 import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
@@ -173,13 +177,14 @@ public class EventService {
     private volatile CopyOnWriteArraySet<String> uncoupledSubagents = new CopyOnWriteArraySet<>();
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
     private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
+    private static Predicate<ClusterNodeLostEventNotConfirmedProblem> isFailOver = e -> (e instanceof ClusterFailoverNotConfirmedProblem);
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
         EventBus.getInstance().register(this);
         startEventService();
         ClusterWatch.getInstance().getAndCleanLastMessage(controllerId).ifPresent(m -> addEvent(createNodeLossProblem(Instant.now().toEpochMilli()
-                / 1000, controllerId, m)));
+                / 1000, controllerId, m.get(0), m.get(1))));
         
         //TODO init lostNodeIds
         AgentClusterWatch.init(controllerId);
@@ -579,7 +584,8 @@ public class EventService {
                 message = msg + ": " + message;
             }
         }
-        addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), message));
+        String key = "Failover".equals(reason) ? "FailoverProblemEvent" : "NodeLossProblemEvent";
+        addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), key, message));
     }
     
     @Subscribe({ AgentClusterNodeLossEvent.class })
@@ -588,7 +594,17 @@ public class EventService {
             // if (!evt.onlyProblem()) {
             // addEvent(createControllerEvent(evt.getEventId() / 1000));
             // }
-            addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), evt.getMessage()));
+            addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), "NodeLossProblemEvent", evt.getMessage()));
+        }
+    }
+    
+    @Subscribe({ AgentClusterFailoverConfirmEvent.class })
+    public void createEvent(AgentClusterFailoverConfirmEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            // if (!evt.onlyProblem()) {
+            // addEvent(createControllerEvent(evt.getEventId() / 1000));
+            // }
+            addEvent(createNodeLossProblem(evt.getEventId() / 1000, evt.getControllerId(), "FailoverProblemEvent", evt.getMessage()));
         }
     }
     
@@ -880,21 +896,27 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, String controllerId, String message) {
+    private EventSnapshot createNodeLossProblem(long eventId, String controllerId, String evtType, String message) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("NodeLossProblemEvent");
+        //evt.setEventType("NodeLossProblemEvent");
+        evt.setEventType(evtType);
         evt.setObjectType(EventType.PROBLEM);
         evt.setPath(controllerId);
         evt.setMessage(message);
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
+    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath,
+            ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
         String msg = AgentClusterWatch.put(controllerId, agentPath, problem);
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("NodeLossProblemEvent");
+        if (isFailOver.test(problem)) {
+            evt.setEventType("FailoverProblemEvent");
+        } else {
+            evt.setEventType("NodeLossProblemEvent");
+        }
         evt.setObjectType(EventType.PROBLEM);
         evt.setPath(controllerId);
         evt.setMessage(msg);
