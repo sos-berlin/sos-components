@@ -54,6 +54,7 @@ public class ClusterWatchServiceContext {
     }
     
     private void onNodeLossNotConfirmedProblem(ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
+        LOGGER.info("[ClusterWatchService][" + controllerId+ "]ClusterWatch receives problem: " + problem.toString());
         lossNode = problem.event().lostNodeId();
         message = problem.messageWithCause();
         Instant now = Instant.now();

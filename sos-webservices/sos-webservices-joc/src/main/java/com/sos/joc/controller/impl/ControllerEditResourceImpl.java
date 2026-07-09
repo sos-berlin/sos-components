@@ -21,6 +21,7 @@ import com.sos.joc.classes.controller.ControllerAnswer;
 import com.sos.joc.classes.controller.ControllerCallable;
 import com.sos.joc.classes.controller.States;
 import com.sos.joc.classes.proxy.ClusterWatch;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -55,7 +56,6 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
-import js7.proxy.javaapi.JControllerProxy;
 
 @Path("controller")
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
@@ -164,7 +164,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 if (body.getControllers().size() == 1) {  // standalone
                     RegisterParameter controller = body.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
-                    instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
+                    instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, false));
                 } else {
                     for (RegisterParameter controller : body.getControllers()) {
                         instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId, requireFailoverConfirmation));
@@ -206,6 +206,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     } else {
                         DBItemInventoryJSInstance instance = null;
                         boolean uriChanged = false;
+                        boolean hasRequireFailoverConfirmation = dbControllers.stream().anyMatch(i -> i.getRequireFailoverConfirmationNonNull());
+                        boolean requireFailoverConfirmationIsChanged = hasRequireFailoverConfirmation != requireFailoverConfirmation;
+                                
                         for (RegisterParameter controller : body.getControllers()) {
                             if (Role.PRIMARY.equals(controller.getRole())) {
                                 if (!uriChanged) {
@@ -233,6 +236,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             
                             instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
                         }
+                        if (requireFailoverConfirmationIsChanged) {
+                            Proxies.getControllerDbInstances().get(controllerId).clear();
+                            Proxies.getControllerDbInstances().get(controllerId).addAll(instances);
+                        }
                         if (!uriChanged) {
                             instances.clear();
                         }
@@ -246,13 +253,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 ProxiesEdit.update(instances);
             }
             
-            JControllerProxy proxy = null;
-            
             if (dbControllers.size() == 2) {
                 try {
-                    proxy = Proxy.of(controllerId);
-                    ClusterWatch.getInstance().appointNodes(controllerId, null, proxy, new JocInstancesDBLayer(connection), accessToken,
-                            getJocError(), false);
+                    ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), new JocInstancesDBLayer(connection),
+                            accessToken, getJocError(), false);
                 } catch (JocBadRequestException e) {
                 }
             }
