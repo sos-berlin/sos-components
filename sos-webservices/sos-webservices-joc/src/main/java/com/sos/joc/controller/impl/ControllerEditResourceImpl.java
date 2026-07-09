@@ -57,6 +57,7 @@ import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
 
+
 @Path("controller")
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
 
@@ -255,10 +256,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 ProxiesEdit.update(instances);
             }
             
+
             if (dbControllers.size() == 2) {
                 try {
                     ClusterWatch.getInstance().appointNodes(controllerId, null, Proxy.of(controllerId), new JocInstancesDBLayer(connection),
                             accessToken, getJocError(), false);
+
                 } catch (JocBadRequestException e) {
                 }
             }
