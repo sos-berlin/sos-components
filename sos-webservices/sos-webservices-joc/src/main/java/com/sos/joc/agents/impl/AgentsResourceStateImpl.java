@@ -117,6 +117,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                 {
                     put(AgentConnectionStateText.NODE_LOSS, RED_SEVERITY);
+                    put(AgentConnectionStateText.UNCONFIRMED_FAILOVER, RED_SEVERITY);
                     put(AgentConnectionStateText.NOT_DEDICATED, ORANGE_SEVERITY);
                     put(AgentConnectionStateText.WITH_PERMANENT_ERROR, RED_SEVERITY);
                     put(AgentConnectionStateText.WITH_TEMPORARY_ERROR, OLIVGREEN_SEVERITY);
@@ -269,8 +270,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                                         Optional<SubagentDirectorType> subagentIsLost = Optional.empty();
                                         if (clusterState != null) {
-                                            if (ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState.getTYPE()) && clusterState
-                                                    .getLostNodeId() != null) {
+                                            if (clusterState.getLostNodeId() != null && (ClusterType.NODE_LOSS_TO_BE_CONFIRMED.equals(clusterState
+                                                    .getTYPE()) || ClusterType.FAILOVER_TO_BE_CONFIRMED.equals(clusterState.getTYPE()))) {
                                                 if (subagent.getIsDirector().equals(subagentDirectors.get(clusterState.getLostNodeId()
                                                         .toLowerCase()))) {
                                                     subagentIsLost = Optional.of(subagent.getIsDirector());
@@ -606,6 +607,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 return getConnectionState(AgentConnectionStateText.WITH_PERMANENT_ERROR, errorMessage);
             }
         } else if (subagentIsLost.isPresent()) {
+            ClusterType clusterType = clusterState.map(AgentDirectorClusterState::getTYPE).orElse(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
+            if (ClusterType.FAILOVER_TO_BE_CONFIRMED.equals(clusterType)) {
+                return getConnectionState(AgentConnectionStateText.UNCONFIRMED_FAILOVER, clusterState.flatMap(
+                        AgentDirectorClusterState::getLostNodeProblem).orElse("FailoverNotConfirmed: Requires user confirmation"));
+            }
             return getConnectionState(AgentConnectionStateText.NODE_LOSS, clusterState.flatMap(AgentDirectorClusterState::getLostNodeProblem).orElse(
                     "ClusterNodeLossNotConfirmed: This director is lost. Requires user confirmation"));
         }
@@ -620,8 +626,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 Map<NodeId, ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem> lostNodeIds = JavaConverters.asJava(jAgentRefState.asScala()
                         .nodeToLossNotConfirmedProblem());
                 if (!lostNodeIds.isEmpty()) {
-                    clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED);
                     ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem = lostNodeIds.values().iterator().next();
+                    if (problem instanceof ClusterWatchProblems.ClusterFailoverNotConfirmedProblem) {
+                        clusterState.setTYPE(ClusterType.FAILOVER_TO_BE_CONFIRMED);
+                    } else {
+                        clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED); 
+                    }
                     clusterState.setLostNodeId(problem.event().lostNodeId().string());
                     clusterState.setLostNodeProblem(ProblemHelper.getErrorMessage(problem));
                 }
