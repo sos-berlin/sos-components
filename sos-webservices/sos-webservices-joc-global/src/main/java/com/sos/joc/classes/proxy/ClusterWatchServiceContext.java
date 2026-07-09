@@ -50,6 +50,7 @@ public class ClusterWatchServiceContext {
         this.requireFailoverConfirmation = requireFailoverConfirmation;
         this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem,
                 requireFailoverConfirmation).get();
+        LOGGER.info("clusterWatchId: " + service.clusterWatchId().string());
         logClusterState(primaryId, backupId);
     }
     
