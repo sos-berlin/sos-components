@@ -237,8 +237,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
                         }
                         if (requireFailoverConfirmationIsChanged) {
-                            Proxies.getControllerDbInstances().get(controllerId).clear();
-                            Proxies.getControllerDbInstances().get(controllerId).addAll(instances);
+                            if (Proxies.getControllerDbInstances().containsKey(controllerId)) {
+                                Proxies.getControllerDbInstances().get(controllerId).clear();
+                                Proxies.getControllerDbInstances().get(controllerId).addAll(instances);
+                            }
                         }
                         if (!uriChanged) {
                             instances.clear();
