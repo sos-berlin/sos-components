@@ -1,6 +1,7 @@
 package com.sos.joc.classes.proxy;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -80,10 +81,10 @@ public class ClusterWatchServiceContext {
         return eventType;
     }
     
-    protected Optional<String> getAndCleanLastMessage() {
+    protected Optional<List<String>> getAndCleanLastMessage() {
         final String m = message;
         message = null;
-        return m == null ? Optional.empty() : Optional.of(m);
+        return m == null ? Optional.empty() : Optional.of(List.of(NodeLossEventType.Failover.equals(eventType) ? "FailoverProblemEvent" : "NodeLossProblemEvent", m));
     }
     
     protected void confirmNodeLoss(NodeId lossNodeId, String confirmer, String accessToken, JocError jocError)

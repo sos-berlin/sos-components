@@ -120,7 +120,7 @@ public class ControllerAnswer extends Controller {
             if (dbInstance.getIsCluster()) {
                 lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
                 if (lossNode != null) {
-                    if (getRequireFailoverConfirmation(dbInstance)) {
+                    if (getRequireFailoverConfirmation(dbInstance)) { // TODO better ask Controller instead of db
                         clusterState = ClusterType.FAILOVER_TO_BE_CONFIRMED;
                     } else {
                         clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;

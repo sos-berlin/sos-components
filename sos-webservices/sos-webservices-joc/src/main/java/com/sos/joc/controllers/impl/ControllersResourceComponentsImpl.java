@@ -29,6 +29,7 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
+import com.sos.joc.event.bean.proxy.FailoverConfirmEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.audit.CategoryType;
@@ -328,9 +329,14 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             }
         }
         ClusterState clusterState = States.getClusterState(clusterType);
+        boolean isFailOverToBeConfirmed = ClusterType.FAILOVER_TO_BE_CONFIRMED.equals(clusterType);
         lossNode.ifPresent(n -> {
             clusterState.setLossNode(n);
-            EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n, null, true));
+            if (isFailOverToBeConfirmed) {
+                EventBus.getInstance().post(new FailoverConfirmEvent(controllerId, n, null, true));
+            } else {
+                EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n, null, true));
+            }
         });
         return clusterState;
     }
