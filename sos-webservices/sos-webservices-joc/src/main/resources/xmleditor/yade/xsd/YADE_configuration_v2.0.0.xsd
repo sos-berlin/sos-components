@@ -9180,16 +9180,23 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			A container element that holds a collection of <em>MailSetting elements.</em>
-                  <br/> 
-            It allows multiple advanced configuration settings for the mail server to be specified.
-        </p>
+               <ul>
+                  <li>A container element that holds arbitrary JavaMail (<em>javax.mail</em>) properties as name/value pairs.</li>
+                  <li>Each <em>MailSetting</em> is passed unchanged to the underlying JavaMail implementation.</li>
+                  <li>For the complete list of supported <em>mail.smtp.*</em> properties, see the official JavaMail SMTP Provider documentation:
+                <ul>
+                        <li>
+                           <a target="_blank"
+                              href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html"
+                              shape="rect">https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html</a>
+                        </li>
+                     </ul>
+                  </li>
+               </ul>
                <p/>
                <p>
                   <b>Note:</b> 
-                  <em>mail.smtp.user</em> and <em>mail.smtp.password</em> can be configured via the <em>BasicAuthentication</em> element instead of as <em>MailSetting</em> entries.
-        </p>
+                  <em>mail.smtp.user</em> and <em>mail.smtp.password</em> can be configured via the <em>BasicAuthentication</em> element instead of as <em>MailSetting</em> entries.</p>
             </div>
          </xs:documentation>
       </xs:annotation>
