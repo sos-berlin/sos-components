@@ -2,11 +2,9 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.apache.pekko.actor.FSM.CurrentState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
