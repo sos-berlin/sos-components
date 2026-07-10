@@ -74,7 +74,6 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
 
     @Override
     public JOCDefaultResponse postRecall(String accessToken, byte[] filter) {
-        SOSHibernateSession hibernateSession = null;
         try {
             filter = initLogging(API_CALL, filter, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, ReleasableRecallFilter.class, true);
@@ -83,40 +82,51 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if (response != null) {
                 return response;
             }
-            if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
-                recallFilter.setTransactionId(UUID.randomUUID().toString());
-            }
-            if(!recallFilter.getKeepOrders()) {
-                RemoveSemaphore.tryAcquire(recallFilter.getTransactionId(), SEMAPHORE_ID);
-                LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
-            }
             
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            Optional<JocBadRequestException> optException = recallFilter.getReleasables().stream().filter(released -> !JocInventory.isReleasable(
-                    released.getObjectType())).findAny().map(r -> new JocBadRequestException(String.format(
-                            "The object '%s' of type '%s' is not a releasable object.", r.getPath(), r.getObjectType().value().toLowerCase())));
-            if (optException.isPresent()) {
-                throw optException.get();
-            }
-            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
-            Long dbAuditLogId = dbAuditLog.getId();
+            Thread recallThread = new Thread(() -> {
+                Logger logger = LoggerFactory.getLogger("recallThread");
+                SOSHibernateSession hibernateSession = null;
+                try {
+                    if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
+                        recallFilter.setTransactionId(UUID.randomUUID().toString());
+                    }
+                    if(!recallFilter.getKeepOrders()) {
+                        RemoveSemaphore.tryAcquire(recallFilter.getTransactionId(), SEMAPHORE_ID);
+                        LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
+                    }
+                    
+                    hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+                    Optional<JocBadRequestException> optException = recallFilter.getReleasables().stream().filter(released -> !JocInventory.isReleasable(
+                            released.getObjectType())).findAny().map(r -> new JocBadRequestException(String.format(
+                                    "The object '%s' of type '%s' is not a releasable object.", r.getPath(), r.getObjectType().value().toLowerCase())));
+                    if (optException.isPresent()) {
+                        throw optException.get();
+                    }
+                    DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
+                    Long dbAuditLogId = dbAuditLog.getId();
 
-            Set<DBItemInventoryReleasedConfiguration> releasedItems = recallFilter.getReleasables().stream()
-                    .map(r -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType()))
-                    .filter(Objects::nonNull).collect(Collectors.toSet());
-            Set<String> workflownames = getSchedulesWithWorkflowNames(releasedItems).entrySet()
-                    .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
+                    Set<DBItemInventoryReleasedConfiguration> releasedItems = recallFilter.getReleasables().stream()
+                            .map(r -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType()))
+                            .filter(Objects::nonNull).collect(Collectors.toSet());
+                    Set<String> workflownames = getSchedulesWithWorkflowNames(releasedItems).entrySet()
+                            .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
 
-            RemoveSemaphore.getInstance().getSemaphore(recallFilter.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(workflownames));
-            LOGGER.debug("add workflownames to Semaphore from " + SEMAPHORE_ID + ".");
+                    RemoveSemaphore.getInstance().getSemaphore(recallFilter.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(workflownames));
+                    LOGGER.debug("add workflownames to Semaphore from " + SEMAPHORE_ID + ".");
 
-            recallItems(releasedItems, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbLayer, dbAuditLogId, recallFilter.getTransactionId());
+                    recallItems(releasedItems, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbLayer, dbAuditLogId, recallFilter.getTransactionId());
+                } catch (Exception e) {
+                    logger.error("", e);
+                } finally {
+                    Globals.disconnect(hibernateSession);
+                }
+            }, "recall");
+            recallThread.start();
+            
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);
-        } finally {
-            Globals.disconnect(hibernateSession);
         }
     }
     

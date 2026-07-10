@@ -89,7 +89,7 @@ import jakarta.ws.rs.Path;
 @Path(JocInventory.APPLICATION_PATH)
 public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(ReleaseResourceImpl.class);
     private static final Set<ConfigurationType> preDeployReleasables = Collections.unmodifiableSet(new HashSet<ConfigurationType>(
             Arrays.asList(ConfigurationType.INCLUDESCRIPT, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.NONWORKINGDAYSCALENDAR, 
                     ConfigurationType.JOBTEMPLATE, ConfigurationType.REPORT)));
@@ -104,21 +104,32 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             JsonValidator.validate(inBytes, ReleaseFilter.class, true);
             ReleaseFilter in = Globals.objectMapper.readValue(inBytes, ReleaseFilter.class);
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
-            if (response == null) {
-                response = getReleaseResponse(in, true, accessToken);
+            if (response != null) {
+                return response;
             }
+            JocError jocError = getJocError();
+            Thread deployThread = new Thread(() -> {
+                Logger logger = LoggerFactory.getLogger("releaseThread");
+                try {
+                    release(in, jocError, true, accessToken, logger);
+                } catch (Throwable e) {
+                    logger.error("", e);
+                }
+            }, "release");
+            deployThread.start();
+
             return response;
         } catch (Throwable e) {
             return responseStatusJSError(e);
         }
     }
 
-    private JOCDefaultResponse getReleaseResponse(ReleaseFilter in, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
-        release(in, getJocError(), withDeletionOfEmptyFolders, accessToken);
-        return responseStatusJSOk(Date.from(Instant.now()));
-    }
+//    private JOCDefaultResponse getReleaseResponse(ReleaseFilter in, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
+//        release(in, getJocError(), withDeletionOfEmptyFolders, accessToken);
+//        return responseStatusJSOk(Date.from(Instant.now()));
+//    }
     
-    private void release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken) throws Throwable {
+    private void release(ReleaseFilter in, JocError jocError, boolean withDeletionOfEmptyFolders, String accessToken, Logger logger) throws Throwable {
         /* 
          * - acquire semaphore
          * - cancel orders of renamed schedules (orders related to old schedule name) 
@@ -135,7 +146,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             in.setTransactionId(UUID.randomUUID().toString());
         }
         PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID);
-        LOGGER.debug("acquire semaphore from release with transactionId " + in.getTransactionId());
+        logger.debug("acquire semaphore from release with transactionId " + in.getTransactionId());
 
         try {
             SOSHibernateSession session = null;
@@ -202,7 +213,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, true));
                     }
-                    releaseAndReaquireSemaphore(in.getTransactionId());
+                    releaseAndReaquireSemaphore(in.getTransactionId(), logger);
                     // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
@@ -216,7 +227,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         // alle gegebenen controllerIds
                             recreateOrders(in, schedulePaths, 
                                     mappedFutures.get(false).stream().map(ControllerCommandResponse::getControllerId).collect(Collectors.toSet()), 
-                                    accessToken, futureDbLayer.getSession());
+                                    accessToken, futureDbLayer.getSession(), logger);
                     }
                 } catch (InterruptedException e) {
                     // releaseAndReaquireSemaphore failed, do nothing
@@ -224,7 +235,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
                 } finally {
                     Globals.disconnect(futureSession);
-                    releaseSemaphoreFinal(in.getTransactionId());
+                    releaseSemaphoreFinal(in.getTransactionId(), logger);
                 }
                 if(!mappedFutures.get(true).isEmpty()) {
                     // contains futures with errors
@@ -232,29 +243,29 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             });
         } catch(Throwable t) {
-            releaseSemaphoreFinal(accessToken);
+            releaseSemaphoreFinal(accessToken, logger);
             throw t;
         }
     }
     
-    private static void releaseSemaphoreFinal(String transactionId) {
+    private static void releaseSemaphoreFinal(String transactionId, Logger logger) {
         try {
             PublishSemaphore.release(transactionId);
-            LOGGER.debug("final release semaphore from release with transactionId " + transactionId);
+            logger.debug("final release semaphore from release with transactionId " + transactionId);
             if (PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
                     .equals(SEMAPHORE_ID)).isPresent()) {
                 PublishSemaphore.remove(transactionId);
-                LOGGER.debug("final remove semaphore from release with transactionId " + transactionId);
+                logger.debug("final remove semaphore from release with transactionId " + transactionId);
             }
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
     }
     
-    private static void releaseAndReaquireSemaphore(String transactionId) throws InterruptedException {
+    private static void releaseAndReaquireSemaphore(String transactionId, Logger logger) throws InterruptedException {
         try {
             PublishSemaphore.release(transactionId);
-            LOGGER.debug("release semaphore from release with transactionId " + transactionId);
+            logger.debug("release semaphore from release with transactionId " + transactionId);
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
@@ -264,7 +275,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             } catch (InterruptedException e) {}
         }
         PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
-        LOGGER.debug("acquire again semaphore from release with transactionId " + transactionId);
+        logger.debug("acquire again semaphore from release with transactionId " + transactionId);
     }
 
     private static List<Throwable> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
@@ -816,17 +827,17 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         }
                         return ccr;
                     }));
-				}
-				Proxies.getControllerDbInstances().keySet().stream()
-						.filter(cId -> !ordersPerController.containsKey(cId)).map(ControllerCommandResponse::new)
-						.map(CompletableFuture::completedFuture).forEach(futures::add);
-			}
+                }
+                Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId)).map(
+                        ControllerCommandResponse::new).map(CompletableFuture::completedFuture).forEach(futures::add);
+            }
         }
         
         return futures;
     }
 
-    private void recreateOrders(ReleaseFilter filter, List<String> schedulePaths, Set<String> controllerIds, String xAccessToken, SOSHibernateSession session) {
+    private void recreateOrders(ReleaseFilter filter, List<String> schedulePaths, Set<String> controllerIds, String xAccessToken, SOSHibernateSession session,
+            Logger logger) {
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
             boolean successful = false;
@@ -863,11 +874,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             successful = ordersGenerate.generateOrders(requests, xAccessToken, false, filter.getIncludeLate(), IMPL_PATH);
                         }
                         if (!successful) {
-                            LOGGER.warn("generate orders failed due to missing permission.");
+                            logger.warn("generate orders failed due to missing permission.");
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.warn(e.getMessage());
+                    logger.warn(e.getMessage());
                 }
             }
         }
