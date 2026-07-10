@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,7 @@ public class ClusterWatchServiceContext {
         this.requireFailoverConfirmation = requireFailoverConfirmation;
         this.service = controllerApi.startClusterWatch(ClusterWatchId.of(clusterWatchId), this::onNodeLossNotConfirmedProblem,
                 requireFailoverConfirmation).get();
+        LOGGER.info("clusterWatchId: " + service.clusterWatchId().string());
         logClusterState(primaryId, backupId);
     }
     
@@ -141,10 +144,13 @@ public class ClusterWatchServiceContext {
     
     protected boolean stop() {
         if (service != null) {
+            LOGGER.info("[ClusterWatchService] Watch is stopping for '" + controllerId + "'");
             try {
-                controllerApi.stopClusterWatch().get();
+                controllerApi.stopClusterWatch().get(3l, TimeUnit.SECONDS);
                 LOGGER.info("[ClusterWatchService] Watch is stopped for '" + controllerId + "'");
-            } catch (Exception e) {
+            } catch (TimeoutException e) {
+                LOGGER.info("[ClusterWatchService] Watch is stopped for '" + controllerId + "'");
+            }catch (Exception e) {
                 LOGGER.error("[ClusterWatchService] stopping watch for '" + controllerId + "' failed", e);
                 return false;
             }

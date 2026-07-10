@@ -7,7 +7,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -220,21 +220,21 @@ public class AgentClusterWatch {
     
     private Optional<String> getMessage(String controllerId,
             Stream<Map.Entry<AgentPath, ClusterNodeLostEventNotConfirmedProblem>> lostNodesPerController, boolean failover) {
-        AtomicBoolean exists = new AtomicBoolean(false);
-        lostNodesPerController = lostNodesPerController.peek(e -> exists.set(true));
-        if (exists.get()) {
-            if (failover) {
-                return Optional.of(lostNodesPerController.map(e -> String.format(eventMessageFragmentFormat, e.getValue().event().lostNodeId()
-                        .string(), e.getKey().string(), controllerId)).collect(Collectors.joining(", ",
-                                "[AgentClusterWatchService] FailoverNotConfirmedProblem: Failover of ", " requires user confirmation")));
-            } else {
-                return Optional.of(lostNodesPerController.map(e -> String.format(eventMessageFragmentFormat, e.getValue().event().lostNodeId()
-                        .string(), e.getKey().string(), controllerId)).collect(Collectors.joining(", ",
-                                "[AgentClusterWatchService] ClusterNodeLossNotConfirmedProblem: Loss of ", " requires user confirmation")));
-            }
+        AtomicInteger exists = new AtomicInteger(0);
+        Optional<String> o = Optional.empty();
+        if (failover) {
+            o = Optional.of(lostNodesPerController.peek(e -> exists.getAndIncrement()).map(e -> String.format(eventMessageFragmentFormat, e.getValue().event()
+                    .lostNodeId().string(), e.getKey().string(), controllerId)).collect(Collectors.joining(", ",
+                            "[AgentClusterWatchService] FailoverNotConfirmedProblem: Failover of ", " requires user confirmation")));
         } else {
+            o = Optional.of(lostNodesPerController.peek(e -> exists.getAndIncrement()).map(e -> String.format(eventMessageFragmentFormat, e.getValue().event()
+                    .lostNodeId().string(), e.getKey().string(), controllerId)).collect(Collectors.joining(", ",
+                            "[AgentClusterWatchService] ClusterNodeLossNotConfirmedProblem: Loss of ", " requires user confirmation")));
+        }
+        if (exists.get() == 0) {
             return Optional.empty();
         }
+        return o;
     }
     
 }
