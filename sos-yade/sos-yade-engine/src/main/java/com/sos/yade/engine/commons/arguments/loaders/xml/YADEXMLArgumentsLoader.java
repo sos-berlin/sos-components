@@ -53,7 +53,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             throw new YADEEngineSettingsLoadException("missing profile");
         }
         try {
-            getArgs().getStart().setValue(Instant.now());
+            getArgs().programStart();
 
             getArgs().getSettings().setValue((Path) params[0]);
             getArgs().getProfile().setValue((String) params[1]);
@@ -74,8 +74,8 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             YADEXMLProfileHelper.parse(logger, this, profile);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getStart()
-                        .getValue(), Instant.now()));
+                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getProgramStart(),
+                        Instant.now()));
             }
         } catch (YADEEngineSettingsLoadException e) {
             throw e;

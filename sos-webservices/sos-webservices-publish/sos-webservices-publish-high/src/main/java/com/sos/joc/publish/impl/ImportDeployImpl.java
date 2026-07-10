@@ -349,10 +349,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 if (e.isRight()) {
                     UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations1).thenAccept(either -> StoreDeployments
                             .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                    false));
+                                    false, null));
                 } else {
                     StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                            false);
+                            false, null);
                 }
             });
             break;
@@ -370,10 +370,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations2).thenAccept(either -> StoreDeployments
                                 .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                        false));
+                                        false, null));
                     } else {
                         StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                false);
+                                false, null);
                     }
                 });
             } else {
@@ -386,10 +386,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations3).thenAccept(either -> StoreDeployments
                                 .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                        false));
+                                        false, null));
                     } else {
                         StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                false);
+                                false, null);
                     }
                 });
             }
@@ -408,10 +408,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                   if (e.isRight()) {
                       UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations4).thenAccept(either -> StoreDeployments
                               .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                      false));
+                                      false, null));
                   } else {
                       StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                              false);
+                              false, null);
                   }
               });
             } else {
@@ -424,10 +424,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations5).thenAccept(either -> StoreDeployments
                                 .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                        false));
+                                        false, null));
                     } else {
                         StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
-                                false);
+                                false, null);
                     }
                 });
             }

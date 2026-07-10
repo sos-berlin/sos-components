@@ -764,13 +764,13 @@ public class YADEXMLProfileHelper {
                         argsLoader.setStringArgumentValue(pollingArgs.getPollInterval(), n);
                         break;
                     case "PollTimeout":
-                        argsLoader.setStringArgumentValue(pollingArgs.getPollTimeout(), n);
+                        pollingArgs.setPollTimeoutValue(argsLoader.getValue(n));
                         break;
                     case "MinFiles":
                         argsLoader.setIntegerArgumentValue(pollingArgs.getPollMinFiles(), n);
                         break;
                     case "WaitForSourceFolder":
-                        argsLoader.setBooleanArgumentValue(pollingArgs.getWaitingForLateComers(), n);
+                        argsLoader.setBooleanArgumentValue(pollingArgs.getWaitForSourceFolder(), n);
                         break;
                     case "PollErrorState":
                         // YADE 1 - YADE Job API

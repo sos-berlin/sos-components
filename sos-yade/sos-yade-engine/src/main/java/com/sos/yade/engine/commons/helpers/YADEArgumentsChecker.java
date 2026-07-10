@@ -76,10 +76,21 @@ public class YADEArgumentsChecker {
         if (sourceArgs == null) {
             throw new YADEEngineInitializationException("Missing Source Arguments");
         }
-        if (sourceArgs.isPollingEnabled()) {
-            if (sourceArgs.getPolling().getPollingWait4SourceFolder().getValue() && sourceArgs.getDirectory() == null) {
-                throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "]" + sourceArgs.getPolling()
-                        .getPollingWait4SourceFolder().getName() + "=true, but \"" + sourceArgs.getDirectory().getName() + "\" is not set");
+        if (sourceArgs.isPollingEnabled() || sourceArgs.getPolling() != null) {
+            if (sourceArgs.isPollingEnabled()) {
+                if (sourceArgs.getPolling().getWaitForSourceFolder().isTrue() && sourceArgs.getDirectory() == null) {
+                    throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "]" + sourceArgs.getPolling()
+                            .getWaitForSourceFolder().getName() + "=true, but \"" + sourceArgs.getDirectory().getName() + "\" is not set");
+                }
+            } else {
+                if (sourceArgs.getPolling().getPollTimeoutAsSeconds().getValue() <= 0) {
+                    if (sourceArgs.getPolling().getPollTimeoutValue() == null) {
+                        logger.info("[%s]Polling ignored because PollTimeout is not set", YADESourceArguments.LABEL);
+                    } else {
+                        logger.info("[%s]Polling ignored because PollTimeout is %s", YADESourceArguments.LABEL, sourceArgs.getPolling()
+                                .getPollTimeoutValue());
+                    }
+                }
             }
         }
         // adjust

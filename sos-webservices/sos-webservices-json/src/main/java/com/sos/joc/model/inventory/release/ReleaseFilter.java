@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "update",
     "delete",
     "addOrdersDateFrom",
+    "transactionId",
     "includeLate",
     "auditLog"
 })
@@ -41,6 +42,14 @@ public class ReleaseFilter {
      */
     @JsonProperty("addOrdersDateFrom")
     private String addOrdersDateFrom;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    private String transactionId;
     @JsonProperty("includeLate")
     private Boolean includeLate = false;
     /**
@@ -94,6 +103,28 @@ public class ReleaseFilter {
         this.addOrdersDateFrom = addOrdersDateFrom;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
     @JsonProperty("includeLate")
     public Boolean getIncludeLate() {
         return includeLate;
@@ -128,12 +159,12 @@ public class ReleaseFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("update", update).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("includeLate", includeLate).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("update", update).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("transactionId", transactionId).append("includeLate", includeLate).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(update).append(includeLate).append(auditLog).append(delete).append(addOrdersDateFrom).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(addOrdersDateFrom).append(update).append(includeLate).append(delete).append(transactionId).toHashCode();
     }
 
     @Override
@@ -145,7 +176,7 @@ public class ReleaseFilter {
             return false;
         }
         ReleaseFilter rhs = ((ReleaseFilter) other);
-        return new EqualsBuilder().append(update, rhs.update).append(includeLate, rhs.includeLate).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(addOrdersDateFrom, rhs.addOrdersDateFrom).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(addOrdersDateFrom, rhs.addOrdersDateFrom).append(update, rhs.update).append(includeLate, rhs.includeLate).append(delete, rhs.delete).append(transactionId, rhs.transactionId).isEquals();
     }
 
 }

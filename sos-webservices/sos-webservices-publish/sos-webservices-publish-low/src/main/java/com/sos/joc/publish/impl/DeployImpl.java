@@ -3,6 +3,9 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -34,8 +37,16 @@ public class DeployImpl extends ADeploy implements IDeploy {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
-            
-            deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
+
+            Thread deployThread = new Thread(() -> {
+                Logger logger = LoggerFactory.getLogger("deployThread");
+                try {
+                    deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
+            }, "deploy");
+            deployThread.start();
 
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

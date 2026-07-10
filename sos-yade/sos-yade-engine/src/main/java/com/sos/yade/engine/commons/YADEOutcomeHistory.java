@@ -38,8 +38,8 @@ public class YADEOutcomeHistory {
         result.setProfile(argsLoader.getArgs().getProfile().getValue());
         result.setOperation(getOperation(argsLoader.getArgs().getOperation()));
 
-        result.setStart(argsLoader.getArgs().getStart().getValue());
-        result.setEnd(argsLoader.getArgs().getEnd().getValue());
+        result.setStart(argsLoader.getArgs().getExecutionStart());
+        result.setEnd(argsLoader.getArgs().getExecutionEnd());
 
         result.setEntries(getEntries(argsLoader, files));
 

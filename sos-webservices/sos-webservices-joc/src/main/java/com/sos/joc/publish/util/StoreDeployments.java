@@ -170,7 +170,7 @@ public class StoreDeployments {
     }
 
     public static void processAfterAdd(Either<Problem, ?> either, String account, String commitId, String controllerId, String accessToken,
-            JocError jocError, String wsIdentifier, String dailyPlanDate, boolean includeLate) {
+            JocError jocError, String wsIdentifier, String dailyPlanDate, boolean includeLate, String transactionId) {
         // asynchronous processing: this method is called from a CompletableFuture and therefore
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
@@ -247,15 +247,17 @@ public class StoreDeployments {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
         } finally {
             Globals.disconnect(newHibernateSession);
-            try {
-                PublishSemaphore.release(accessToken);
-                if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(
-                        SEMAPHORE_ID)).isPresent()) {
-                    PublishSemaphore.remove(accessToken);
-                    LOGGER.debug("final remove semaphore from deploy with AT " + accessToken);
+            if(transactionId != null) {
+                try {
+                    PublishSemaphore.release(transactionId);
+                    if(PublishSemaphore.getInstance().getSemaphore(transactionId)
+                            .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                        PublishSemaphore.remove(transactionId);
+                        LOGGER.debug("final remove semaphore from deploy with transactionId " + transactionId);
+                    }
+                } catch (Exception e) {
+                    // DO NOTHING if semaphore release failed
                 }
-            } catch (Exception e) {
-                // DO NOTHING if semaphore release failed
             }
         }
     }
@@ -284,15 +286,23 @@ public class StoreDeployments {
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) throws SOSException,
-            IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
         callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier, null,
-                false);
+                false, null);
+    }
+
+    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String transactionId)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier, null,
+                false, transactionId);
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String dailyPlanDate,
-            boolean includeLate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+            boolean includeLate, String transactionId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+        
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically
@@ -318,9 +328,9 @@ public class StoreDeployments {
                 BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations1).thenAccept(either -> processAfterAdd(either, account,
-                                commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                                commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                     } else {
-                        processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                        processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                     }
                 });
                 break;
@@ -340,9 +350,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations2).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     } else {
@@ -353,9 +363,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations3).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     }
@@ -379,9 +389,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations4).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     } else {
@@ -392,9 +402,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations5).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate));
+                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate);
+                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     }

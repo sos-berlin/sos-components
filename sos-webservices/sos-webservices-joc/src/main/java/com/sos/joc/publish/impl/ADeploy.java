@@ -70,7 +70,7 @@ public abstract class ADeploy extends JOCResourceImpl {
     private static final String SEMAPHORE_ID = "DEPLOY";
 
 
-    public void deploy(String xAccessToken,DeployFilter deployFilter, DBItemJocAuditLog dbAuditlog, JocSecurityLevel secLvl, String apiCall)
+    public void deploy(String xAccessToken, DeployFilter deployFilter, DBItemJocAuditLog dbAuditlog, JocSecurityLevel secLvl, String apiCall)
             throws Exception {
         String account;
         SOSHibernateSession session = null;
@@ -86,11 +86,14 @@ public abstract class ADeploy extends JOCResourceImpl {
                 JocError error = new JocError("cannot determine account for signing.");
                 throw new JocException(error);
             }
-            if (PublishSemaphore.availablePermits(xAccessToken) == 1) {
+            if(deployFilter.getTransactionId() == null || deployFilter.getTransactionId().isEmpty()) {
+                deployFilter.setTransactionId(UUID.randomUUID().toString());
+            }
+            if (PublishSemaphore.availablePermits(deployFilter.getTransactionId()) == 1) {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
-            LOGGER.debug("acquire semaphore from deploy with AT " + xAccessToken);
-            PublishSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
+            LOGGER.debug("acquire semaphore from deploy with AT " + deployFilter.getTransactionId());
+            PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID);
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
@@ -274,7 +277,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(verifiedDeployables.keySet(), 
                                 Optional.of(renamedOriginalHistoryEntries), deployFilter.getAddOrdersDateFrom(), controllerId);
 
-                        PublishSemaphore.getInstance().getSemaphore(xAccessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
+                        PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
                             .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
                         
                         List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter, null);
@@ -296,7 +299,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                                 try {
                                     sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
                                     StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                            getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
+                                            getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
                                 } catch (Exception e) {
                                     throw new JocDeployException(e);
                                 } finally {
@@ -312,7 +315,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         try {
                             sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy"); 
                             StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                    getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate());
+                                    getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         } finally {

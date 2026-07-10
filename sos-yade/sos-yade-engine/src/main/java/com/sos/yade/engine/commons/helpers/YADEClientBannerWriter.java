@@ -1,7 +1,6 @@
 package com.sos.yade.engine.commons.helpers;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,6 +43,7 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 public class YADEClientBannerWriter {
 
     public static final String SEPARATOR_LINE = "****************************************************************************************";
+    public static final String SEPARATOR_LINE_DETAILS = "----------------------------------------------------------------------------------------";
 
     private static final String NEW_LINE = "\n";
     private static final boolean STATE_TO_LOWERCASE = true;
@@ -75,7 +75,6 @@ public class YADEClientBannerWriter {
     public static void writeSummary(ISOSLogger logger, YADEArguments args, Duration operationDuration, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, YADEEngineJumpHostAddon jumpHostAddon, List<ProviderFile> files, Throwable error) {
 
-        args.getEnd().setValue(Instant.now());
         int totalFiles = files == null ? 0 : files.size();
 
         // Start Calculation
@@ -114,12 +113,13 @@ public class YADEClientBannerWriter {
                 }
             }
         }
+
         StringBuilder summaryLine = new StringBuilder();
         summaryLine.append("Files=").append(totalFiles);
         if (summaryLineFilesSummary != null) {
             summaryLine.append(summaryLineFilesSummary);
         }
-        summaryLine.append(", Duration=").append(SOSDate.getDuration(args.getStart().getValue(), args.getEnd().getValue()));
+        summaryLine.append(", Duration=").append(SOSDate.getDuration(args.getExecutionStart(), args.getExecutionEnd()));
         if (operationDuration != null) {
             summaryLine.append("(Operation=").append(SOSDate.getDuration(operationDuration)).append(")");
         }
@@ -293,21 +293,17 @@ public class YADEClientBannerWriter {
             if (sourceArgs.getPolling().getPollingServerPollForever().isTrue()) {
                 sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingServerPollForever()));
             }
-            if (sourceArgs.getPolling().getPollingWait4SourceFolder().isTrue()) {
-                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollingWait4SourceFolder()));
+            if (sourceArgs.getPolling().getWaitForSourceFolder().isTrue()) {
+                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getWaitForSourceFolder()));
             }
-            if (sourceArgs.getPolling().getWaitingForLateComers().isTrue()) {
-                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getWaitingForLateComers()));
+            if (!SOSString.isEmpty(sourceArgs.getPolling().getPollTimeoutValue())) {
+                sb.append(", ").append("PollTimeout=").append(sourceArgs.getPolling().getPollTimeoutValue());
             }
-
             if (!sourceArgs.getPolling().getPollInterval().isEmpty()) {
                 sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollInterval()));
             }
             if (!sourceArgs.getPolling().getPollMinFiles().isEmpty()) {
                 sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollMinFiles()));
-            }
-            if (!sourceArgs.getPolling().getPollTimeout().isEmpty()) {
-                sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getPolling().getPollTimeout()));
             }
         }
         if (sourceArgs.isCheckSteadyStateEnabled()) {
