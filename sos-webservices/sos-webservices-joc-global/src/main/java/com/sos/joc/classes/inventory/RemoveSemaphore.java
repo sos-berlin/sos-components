@@ -27,30 +27,37 @@ public class RemoveSemaphore {
         return instance;
     }
     
-    public static boolean tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
-        return getInstance()._tryAcquire(accessToken, initialCaller);
+    public static boolean tryAcquire(String transactionId, String initialCaller) throws InterruptedException {
+        return getInstance()._tryAcquire(transactionId, initialCaller);
     }
     
-    public static int getQueueLength(String accessToken) {
-        return getInstance()._getQueueLength(accessToken);
+    public static int getQueueLength(String transactionId) {
+        return getInstance()._getQueueLength(transactionId);
     }
     
-    public static void release(String accessToken) {
-        getInstance()._release(accessToken);
+    public static void release(String transactionId) {
+        getInstance()._release(transactionId);
     }
     
-    public static void remove (String accessToken) {
-        getInstance()._remove(accessToken);
+    public static void remove (String transactionId) {
+        getInstance()._remove(transactionId);
     }
     
     
-    public static int availablePermits(String accessToken) {
-        return getInstance()._availablePermits(accessToken);
+    public static int availablePermits(String transactionId) {
+        return getInstance()._availablePermits(transactionId);
     }
     
-    private boolean _tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
-        semaphores.putIfAbsent(accessToken, new RecallRevokeSemaphore(1, initialCaller));
-        return semaphores.get(accessToken).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
+    private boolean _tryAcquire(String transactionId, String initialCaller) throws InterruptedException {
+        // only one semaphore allowed in map
+        if(semaphores.keySet().size() == 0) {
+            semaphores.putIfAbsent(transactionId, new RecallRevokeSemaphore(1, initialCaller));
+        }
+        if(semaphores.get(transactionId) != null) {
+            return semaphores.get(transactionId).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
+        } else {
+            return false;
+        }
     }
     
     private void _release(String accessToken) {

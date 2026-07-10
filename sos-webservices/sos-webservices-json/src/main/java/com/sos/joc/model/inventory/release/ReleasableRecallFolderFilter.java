@@ -18,7 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "keepOrders"
+    "keepOrders",
+    "transactionId"
 })
 public class ReleasableRecallFolderFilter
     extends RequestFolder
@@ -26,6 +27,14 @@ public class ReleasableRecallFolderFilter
 
     @JsonProperty("keepOrders")
     private Boolean keepOrders = false;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    private String transactionId;
 
     @JsonProperty("keepOrders")
     public Boolean getKeepOrders() {
@@ -37,14 +46,36 @@ public class ReleasableRecallFolderFilter
         this.keepOrders = keepOrders;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("keepOrders", keepOrders).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("keepOrders", keepOrders).append("transactionId", transactionId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(keepOrders).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(keepOrders).append(transactionId).toHashCode();
     }
 
     @Override
@@ -56,7 +87,7 @@ public class ReleasableRecallFolderFilter
             return false;
         }
         ReleasableRecallFolderFilter rhs = ((ReleasableRecallFolderFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(keepOrders, rhs.keepOrders).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(keepOrders, rhs.keepOrders).append(transactionId, rhs.transactionId).isEquals();
     }
 
 }

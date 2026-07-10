@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -82,9 +83,12 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if (response != null) {
                 return response;
             }
+            if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
+                recallFilter.setTransactionId(UUID.randomUUID().toString());
+            }
             if(!recallFilter.getKeepOrders()) {
-                RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-                LOGGER.debug("acquire semaphore from recall with AT " + accessToken);
+                RemoveSemaphore.tryAcquire(recallFilter.getTransactionId(), SEMAPHORE_ID);
+                LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
             }
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -103,10 +107,11 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                     .filter(Objects::nonNull).collect(Collectors.toSet());
             Set<String> workflownames = getSchedulesWithWorkflowNames(releasedItems).entrySet()
                     .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
-            RemoveSemaphore.getInstance().getSemaphore(accessToken).ifPresent(sem -> sem.setWorkflowNames(workflownames));
+
+            RemoveSemaphore.getInstance().getSemaphore(recallFilter.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(workflownames));
             LOGGER.debug("add workflownames to Semaphore from " + SEMAPHORE_ID + ".");
 
-            recallItems(releasedItems, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbLayer, dbAuditLogId);
+            recallItems(releasedItems, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbLayer, dbAuditLogId, recallFilter.getTransactionId());
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -135,8 +140,11 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                 throw new JocFolderPermissionsException("Access denied: " + recallFilter.getPath());
             }
             
+            if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
+                recallFilter.setTransactionId(UUID.randomUUID().toString());
+            }
             if(!recallFilter.getKeepOrders()) {
-                LOGGER.debug("acquire semaphore from recall with AT " + accessToken);
+                LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
                 RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
             }
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), recallFilter.getAuditLog());
@@ -150,9 +158,9 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                     objectTypes.collect(Collectors.toSet()));
             Set<String> workflownames = getSchedulesWithWorkflowNames(releasables).entrySet()
                     .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
-            RemoveSemaphore.getInstance().getSemaphore(accessToken).ifPresent(sem -> sem.setWorkflowNames(workflownames));
+            RemoveSemaphore.getInstance().getSemaphore(recallFilter.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(workflownames));
             LOGGER.debug("add workflownames to Semaphore from " + SEMAPHORE_ID + ".");
-            recallItems(releasables, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbDepLayer, dbAuditLogId);
+            recallItems(releasables, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbDepLayer, dbAuditLogId, recallFilter.getTransactionId());
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -162,9 +170,9 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
     }
 
     public void recallItems (Collection<DBItemInventoryReleasedConfiguration> releasedItems, SOSHibernateSession session, boolean keepOrders, 
-            String accessToken, DBLayerDeploy dbLayer, Long dbAuditLogId) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-                DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, 
-                SOSHibernateException, ExecutionException {
+            String accessToken, DBLayerDeploy dbLayer, Long dbAuditLogId, String transactionId) throws ControllerConnectionResetException,
+                ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+                DBConnectionRefusedException, SOSHibernateException, ExecutionException {
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
         Set<String> events = new HashSet<>();
         if(!keepOrders) {
@@ -196,16 +204,16 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
                         JocAuditLog.storeAuditLogDetails(auditLogDetails, futureDbLayer.getSession(), dbAuditLogId);
                         events.stream().forEach(JocInventory::postEvent);
                         try {
-                            releaseAndReaquireSemaphore(accessToken);
+                            releaseAndReaquireSemaphore(transactionId);
                         } catch (InterruptedException e) {}
                     } catch (Throwable e) {
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
                     } finally {
                         Globals.disconnect(futureSession);
-                        removeSemapohoreFinally(accessToken);
+                        removeSemapohoreFinally(transactionId);
                     }
                 } else {
-                    removeSemapohoreFinally(accessToken);
+                    removeSemapohoreFinally(transactionId);
                 }
             });
         } else {
@@ -217,33 +225,34 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             });
             JocAuditLog.storeAuditLogDetails(auditLogDetails, dbLayer.getSession(), dbAuditLogId);
             events.stream().forEach(JocInventory::postEvent);
+            removeSemapohoreFinally(transactionId);
         }
     }
 
-    private static void removeSemapohoreFinally(String accessToken) {
-        RemoveSemaphore.release(accessToken);
-        LOGGER.debug("release semaphore from recall with AT " + accessToken);
-        if (RemoveSemaphore.getInstance().getSemaphore(accessToken).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
+    private static void removeSemapohoreFinally(String transactionId) {
+        RemoveSemaphore.release(transactionId);
+        LOGGER.debug("release semaphore from recall with transactionId " + transactionId);
+        if (RemoveSemaphore.getInstance().getSemaphore(transactionId).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
                 .isPresent()) {
-            RemoveSemaphore.remove(accessToken);
+            RemoveSemaphore.remove(transactionId);
             LOGGER.debug("Semaphore from " + SEMAPHORE_ID + " finally removed.");
         }
     }
 
-    private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
+    private static void releaseAndReaquireSemaphore(String transactionId) throws InterruptedException {
         try {
-            RemoveSemaphore.release(accessToken);
-            LOGGER.debug("release semaphore from recall with AT " + accessToken);
+            RemoveSemaphore.release(transactionId);
+            LOGGER.debug("release semaphore from recall with transactionId " + transactionId);
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
-        if (RemoveSemaphore.availablePermits(accessToken) == 1) {
+        if (RemoveSemaphore.availablePermits(transactionId) == 1) {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {}
         }
-        RemoveSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-        LOGGER.debug("acquire again semaphore from recall with AT " + accessToken);
+        RemoveSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
+        LOGGER.debug("acquire again semaphore from recall with transactionId " + transactionId);
     }
 
     private static Map<String, Collection<String>> getSchedulesWithWorkflowNames (Collection<DBItemInventoryReleasedConfiguration> releasables) {

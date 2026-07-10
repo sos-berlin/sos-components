@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -130,8 +131,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - recreate orders 
          * - release semaphore final time and remove it
          * */
-        PublishSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-        LOGGER.debug("acquire semaphore from release with AT " + accessToken);
+        if(in.getTransactionId()== null || in.getTransactionId().isEmpty()) {
+            in.setTransactionId(UUID.randomUUID().toString());
+        }
+        PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID);
+        LOGGER.debug("acquire semaphore from release with transactionId " + in.getTransactionId());
 
         try {
             SOSHibernateSession session = null;
@@ -160,7 +164,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             Stream<String> workflowNamesStream = schedulePathsWithWorkflowNames.values().stream().flatMap(List::stream);
             Stream<String> workflowNamesRenamedStream = renamedOldSchedulePathsWithWorkflowNames.values().stream().flatMap(List::stream);
             
-            PublishSemaphore.getInstance().getSemaphore(accessToken).ifPresent(sem -> sem.setWorkflowNames(
+            PublishSemaphore.getInstance().getSemaphore(in.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(
                     Stream.concat(workflowNamesStream, workflowNamesRenamedStream).collect(Collectors.toSet())));
             
             // JOC-2173, JOC-2224
@@ -198,7 +202,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, true));
                     }
-                    releaseAndReaquireSemaphore(accessToken);
+                    releaseAndReaquireSemaphore(in.getTransactionId());
                     // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
@@ -220,7 +224,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
                 } finally {
                     Globals.disconnect(futureSession);
-                    releaseSemaphoreFinal(accessToken);
+                    releaseSemaphoreFinal(in.getTransactionId());
                 }
                 if(!mappedFutures.get(true).isEmpty()) {
                     // contains futures with errors
@@ -233,34 +237,34 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
     
-    private static void releaseSemaphoreFinal(String accessToken) {
+    private static void releaseSemaphoreFinal(String transactionId) {
         try {
-            PublishSemaphore.release(accessToken);
-            LOGGER.debug("final release semaphore from release with AT " + accessToken);
-            if (PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
+            PublishSemaphore.release(transactionId);
+            LOGGER.debug("final release semaphore from release with transactionId " + transactionId);
+            if (PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
                     .equals(SEMAPHORE_ID)).isPresent()) {
-                PublishSemaphore.remove(accessToken);
-                LOGGER.debug("final remove semaphore from release with AT " + accessToken);
+                PublishSemaphore.remove(transactionId);
+                LOGGER.debug("final remove semaphore from release with transactionId " + transactionId);
             }
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
     }
     
-    private static void releaseAndReaquireSemaphore(String accessToken) throws InterruptedException {
+    private static void releaseAndReaquireSemaphore(String transactionId) throws InterruptedException {
         try {
-            PublishSemaphore.release(accessToken);
-            LOGGER.debug("release semaphore from release with AT " + accessToken);
+            PublishSemaphore.release(transactionId);
+            LOGGER.debug("release semaphore from release with transactionId " + transactionId);
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
-        if (PublishSemaphore.availablePermits(accessToken) == 1) {
+        if (PublishSemaphore.availablePermits(transactionId) == 1) {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {}
         }
-        PublishSemaphore.tryAcquire(accessToken, SEMAPHORE_ID);
-        LOGGER.debug("acquire again semaphore from release with AT " + accessToken);
+        PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
+        LOGGER.debug("acquire again semaphore from release with transactionId " + transactionId);
     }
 
     private static List<Throwable> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,

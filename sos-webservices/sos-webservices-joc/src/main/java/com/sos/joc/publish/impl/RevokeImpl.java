@@ -35,7 +35,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocDeployException;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -51,9 +50,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
-import js7.base.problem.Problem;
 import js7.proxy.javaapi.JControllerProxy;
 
 @Path("inventory/deployment")
@@ -68,6 +65,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
     public JOCDefaultResponse postRevoke(String xAccessToken, byte[] filter) throws Exception {
 
         SOSHibernateSession hibernateSession = null;
+        String transactionId = "";
         try {
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** revoke started ***" + started);
@@ -78,14 +76,19 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            LOGGER.debug("acquire semaphore from deploy with AT " + xAccessToken);
-            if (RemoveSemaphore.availablePermits(xAccessToken) == 1) {
+            transactionId = revokeFilter.getTransactionId();
+            if (revokeFilter.getTransactionId() == null || revokeFilter.getTransactionId().isEmpty()) {
+                transactionId = UUID.randomUUID().toString();
+                revokeFilter.setTransactionId(transactionId);
+            }
+            LOGGER.debug("acquire semaphore from deploy with transactionId " + transactionId);
+            if (RemoveSemaphore.availablePermits(transactionId) == 1) {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
-            RemoveSemaphore.tryAcquire(xAccessToken, SEMAPHORE_ID);
-            LOGGER.debug("acquire semaphore from revoke with AT " + xAccessToken);
+            RemoveSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
+            LOGGER.debug("acquire semaphore from revoke with transactionId " + transactionId);
             // if semaphore already contains workflownames from potential recall operation, remove those workflow from cancel order call
-            Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(xAccessToken)
+            Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(transactionId)
                     .map(RecallRevokeSemaphore::getWorkflowNames).orElse(Collections.emptySet());
             DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog());
             Set<String> allowedControllerIds = Collections.emptySet();
@@ -207,7 +210,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
-            removeSemapohoreFinally(xAccessToken);
+            removeSemapohoreFinally(transactionId);
             Globals.disconnect(hibernateSession);
         }
     }
@@ -252,12 +255,12 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         }
     }
     
-    private static void removeSemapohoreFinally(String accessToken) {
-        RemoveSemaphore.release(accessToken);
-        LOGGER.debug("release semaphore from revoke with AT " + accessToken);
-        if (RemoveSemaphore.getInstance().getSemaphore(accessToken).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
+    private static void removeSemapohoreFinally(String transactionId) {
+        RemoveSemaphore.release(transactionId);
+        LOGGER.debug("release semaphore from revoke with transactionId " + transactionId);
+        if (RemoveSemaphore.getInstance().getSemaphore(transactionId).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
                 .isPresent()) {
-            RemoveSemaphore.remove(accessToken);
+            RemoveSemaphore.remove(transactionId);
             LOGGER.debug("Semaphore from " + SEMAPHORE_ID + " finally removed.");
         }
     }
