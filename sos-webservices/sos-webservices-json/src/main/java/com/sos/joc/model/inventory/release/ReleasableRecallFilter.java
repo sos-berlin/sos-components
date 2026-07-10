@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "releasables",
     "keepOrders",
+    "transactionId",
     "auditLog"
 })
 public class ReleasableRecallFilter {
@@ -35,6 +36,14 @@ public class ReleasableRecallFilter {
     private List<Releasable> releasables = new ArrayList<Releasable>();
     @JsonProperty("keepOrders")
     private Boolean keepOrders = false;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    private String transactionId;
     /**
      * auditParams
      * <p>
@@ -75,6 +84,28 @@ public class ReleasableRecallFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -98,12 +129,12 @@ public class ReleasableRecallFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("releasables", releasables).append("keepOrders", keepOrders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("releasables", releasables).append("keepOrders", keepOrders).append("transactionId", transactionId).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(keepOrders).append(releasables).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(keepOrders).append(releasables).append(transactionId).toHashCode();
     }
 
     @Override
@@ -115,7 +146,7 @@ public class ReleasableRecallFilter {
             return false;
         }
         ReleasableRecallFilter rhs = ((ReleasableRecallFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(keepOrders, rhs.keepOrders).append(releasables, rhs.releasables).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(keepOrders, rhs.keepOrders).append(releasables, rhs.releasables).append(transactionId, rhs.transactionId).isEquals();
     }
 
 }

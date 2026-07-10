@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "store",
     "delete",
     "addOrdersDateFrom",
+    "transactionId",
     "includeLate",
     "auditLog"
 })
@@ -55,6 +56,14 @@ public class DeployFilter {
      */
     @JsonProperty("addOrdersDateFrom")
     private String addOrdersDateFrom;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    private String transactionId;
     @JsonProperty("includeLate")
     private Boolean includeLate = false;
     /**
@@ -142,6 +151,28 @@ public class DeployFilter {
         this.addOrdersDateFrom = addOrdersDateFrom;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("transactionId")
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
     @JsonProperty("includeLate")
     public Boolean getIncludeLate() {
         return includeLate;
@@ -176,12 +207,12 @@ public class DeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("includeLate", includeLate).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("addOrdersDateFrom", addOrdersDateFrom).append("transactionId", transactionId).append("includeLate", includeLate).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(controllerIds).append(addOrdersDateFrom).append(store).append(includeLate).append(delete).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(controllerIds).append(addOrdersDateFrom).append(store).append(includeLate).append(delete).append(transactionId).toHashCode();
     }
 
     @Override
@@ -193,7 +224,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(addOrdersDateFrom, rhs.addOrdersDateFrom).append(store, rhs.store).append(includeLate, rhs.includeLate).append(delete, rhs.delete).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(addOrdersDateFrom, rhs.addOrdersDateFrom).append(store, rhs.store).append(includeLate, rhs.includeLate).append(delete, rhs.delete).append(transactionId, rhs.transactionId).isEquals();
     }
 
 }

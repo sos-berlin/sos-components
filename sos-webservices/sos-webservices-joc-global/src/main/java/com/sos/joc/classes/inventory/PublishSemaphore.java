@@ -27,59 +27,66 @@ public class PublishSemaphore {
         return instance;
     }
     
-    public static boolean tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
-        return getInstance()._tryAcquire(accessToken, initialCaller);
+    public static boolean tryAcquire(String transactionId, String initialCaller) throws InterruptedException {
+        return getInstance()._tryAcquire(transactionId, initialCaller);
     }
     
     public static int getQueueLength(String accessToken) {
         return getInstance()._getQueueLength(accessToken);
     }
     
-    public static void release(String accessToken) {
-        getInstance()._release(accessToken);
+    public static void release(String transactionId) {
+        getInstance()._release(transactionId);
     }
     
-    public static void remove (String accessToken) {
-        getInstance()._remove(accessToken);
+    public static void remove (String transactionId) {
+        getInstance()._remove(transactionId);
     }
     
     
-    public static int availablePermits(String accessToken) {
-        return getInstance()._availablePermits(accessToken);
+    public static int availablePermits(String transactionId) {
+        return getInstance()._availablePermits(transactionId);
     }
     
-    private boolean _tryAcquire(String accessToken, String initialCaller) throws InterruptedException {
-        semaphores.putIfAbsent(accessToken, new ReleaseDeploySemaphore(1, initialCaller));
-        return semaphores.get(accessToken).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
-    }
-    
-    private void _release(String accessToken) {
-        if(semaphores.containsKey(accessToken)) {
-            semaphores.get(accessToken).release();
+    private boolean _tryAcquire(String transactionId, String initialCaller) throws InterruptedException {
+        // only one semaphore allowed in map
+        if(semaphores.keySet().size() == 0) {
+            semaphores.putIfAbsent(transactionId, new ReleaseDeploySemaphore(1, initialCaller));
+        }
+        if(semaphores.get(transactionId) != null) {
+            return semaphores.get(transactionId).tryAcquire(WAIT_TIMEOUT, TimeUnit.SECONDS);
+        } else {
+            return false;
         }
     }
     
-    private void _remove(String accessToken) {
-        if(semaphores.containsKey(accessToken)) {
+    private void _release(String transactionId) {
+        if(semaphores.containsKey(transactionId)) {
+            semaphores.get(transactionId).release();
+        }
+    }
+    
+    private void _remove(String transactionId) {
+        if(semaphores.containsKey(transactionId)) {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    semaphores.remove(accessToken);
+                    semaphores.remove(transactionId);
                 }
             }, TimeUnit.SECONDS.toMillis(2));
         }
     }
     
-    private int _availablePermits(String accessToken) {
-        if (semaphores.containsKey(accessToken)) {
-            return semaphores.get(accessToken).availablePermits();
+    private int _availablePermits(String transactionId) {
+        if (semaphores.containsKey(transactionId)) {
+            return semaphores.get(transactionId).availablePermits();
         }
         return -1;
     }
     
-    private int _getQueueLength(String accessToken) {
-        if(semaphores.containsKey(accessToken)) {
-            return semaphores.get(accessToken).getQueueLength();
+    private int _getQueueLength(String transactionId) {
+        if(semaphores.containsKey(transactionId)) {
+            return semaphores.get(transactionId).getQueueLength();
         } else {
             return 0;
         }
@@ -90,8 +97,8 @@ public class PublishSemaphore {
         return semaphores;
     }
     
-    public Optional<ReleaseDeploySemaphore> getSemaphore(String accessToken) {
-        return Optional.ofNullable(semaphores.get(accessToken));
+    public Optional<ReleaseDeploySemaphore> getSemaphore(String transactionId) {
+        return Optional.ofNullable(semaphores.get(transactionId));
     }
     
 }
