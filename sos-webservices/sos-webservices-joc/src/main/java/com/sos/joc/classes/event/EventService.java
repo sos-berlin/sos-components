@@ -2,9 +2,11 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import org.apache.pekko.actor.FSM.CurrentState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +87,7 @@ import com.sos.joc.model.event.EventType;
 import com.sos.monitoring.notification.NotificationType;
 
 import js7.data.agent.AgentPath;
+import js7.data.agent.AgentRefState;
 import js7.data.agent.AgentRefStateEvent;
 import js7.data.board.BoardPath;
 import js7.data.board.NoticeEvent;
@@ -145,6 +149,7 @@ import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.instructions.NoticeInstruction;
+import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -766,9 +771,14 @@ public class EventService {
                 addEvent(createAgentEvent(eventId, agentPath.string()));
                 uncoupledAgents.remove(agentPath.string());
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                String agentPath = ((AgentPath) key).string();
-                addEvent(createAgentEvent(eventId, agentPath));
-                uncoupledAgents.remove(agentPath);
+                AgentPath agentPath = (AgentPath) key;
+                if (!Optional.ofNullable(currentState.pathToAgentRefState().get(agentPath)).map(JAgentRefState::asScala).map(
+                        AgentRefState::nodeToLossNotConfirmedProblem).map(JavaConverters::asJava).map(m -> m.values().iterator().hasNext()).orElse(
+                                true)) {
+                    AgentClusterWatch.clean(controllerId, agentPath);
+                }
+                addEvent(createAgentEvent(eventId, agentPath.string()));
+                uncoupledAgents.remove(agentPath.string());
             } else if (evt instanceof SubagentItemStateEvent.SubagentCouplingFailed) {
                 String subagentPath = ((SubagentId) key).string();
                 if (!uncoupledSubagents.contains(subagentPath)) {
