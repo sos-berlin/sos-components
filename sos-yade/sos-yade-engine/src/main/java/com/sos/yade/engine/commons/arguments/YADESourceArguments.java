@@ -99,7 +99,7 @@ public class YADESourceArguments extends YADESourceTargetArguments {
     }
 
     public boolean isPollingEnabled() {
-        return polling != null && polling.getPollTimeout().getValue() != null;
+        return polling != null && polling.getPollTimeoutAsSeconds().getValue() > 0L;
     }
 
     public boolean isDirectivesEnabled() {

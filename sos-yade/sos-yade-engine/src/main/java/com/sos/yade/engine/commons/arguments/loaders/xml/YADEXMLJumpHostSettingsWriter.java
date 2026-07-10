@@ -7,6 +7,7 @@ import java.util.Map;
 import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
@@ -795,9 +796,9 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append(cdata(sourceArgs.getPolling().getPollInterval().getValue()));
                 sb.append("</PollInterval>");
             }
-            if (sourceArgs.getPolling().getPollTimeout().isDirty()) {
+            if (!SOSString.isEmpty(sourceArgs.getPolling().getPollTimeoutValue())) {
                 sb.append("<PollTimeout>");
-                sb.append(sourceArgs.getPolling().getPollTimeout().getValue());
+                sb.append(sourceArgs.getPolling().getPollTimeoutValue());
                 sb.append("</PollTimeout>");
             }
             if (sourceArgs.getPolling().getPollMinFiles().isDirty()) {
@@ -805,9 +806,9 @@ public class YADEXMLJumpHostSettingsWriter {
                 sb.append(sourceArgs.getPolling().getPollMinFiles().getValue());
                 sb.append("</MinFiles>");
             }
-            if (sourceArgs.getPolling().getWaitingForLateComers().isDirty()) {
+            if (sourceArgs.getPolling().getWaitForSourceFolder().isTrue()) {
                 sb.append("<WaitForSourceFolder>");
-                sb.append(sourceArgs.getPolling().getWaitingForLateComers().getValue());
+                sb.append(sourceArgs.getPolling().getWaitForSourceFolder().getValue());
                 sb.append("</WaitForSourceFolder>");
             }
             if (sourceArgs.getPolling().getPollingServer().isDirty()) {

@@ -96,8 +96,12 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<String> connectionErrorRetryInterval = new SOSArgument<>("RetryInterval", false, "1s");
 
     /** internal usage */
-    private SOSArgument<Instant> start = new SOSArgument<>(null, false);
-    private SOSArgument<Instant> end = new SOSArgument<>(null, false);
+    // total YADE start/end - starting from parse etc - inclusive entire polling duration
+    private Instant programStart = null;
+    private Instant programEnd = null;
+    // start/end of a transfer execution
+    private Instant executionStart = null;
+    private Instant executionEnd = null;
 
     public boolean isOperationGETLIST() {
         return TransferOperation.GETLIST.equals(operation.getValue());
@@ -139,12 +143,36 @@ public class YADEArguments extends ASOSArguments {
         return bufferSize;
     }
 
-    public SOSArgument<Instant> getStart() {
-        return start;
+    public void programStart() {
+        programStart = Instant.now();
     }
 
-    public SOSArgument<Instant> getEnd() {
-        return end;
+    public Instant getProgramStart() {
+        return programStart;
+    }
+
+    public void programEnd() {
+        programEnd = Instant.now();
+    }
+
+    public Instant getProgramEnd() {
+        return programEnd;
+    }
+
+    public void executionStart() {
+        executionStart = Instant.now();
+    }
+
+    public Instant getExecutionStart() {
+        return executionStart;
+    }
+
+    public void executionEnd() {
+        executionEnd = Instant.now();
+    }
+
+    public Instant getExecutionEnd() {
+        return executionEnd;
     }
 
     public SOSArgument<Integer> getConnectionErrorRetryCountMax() {

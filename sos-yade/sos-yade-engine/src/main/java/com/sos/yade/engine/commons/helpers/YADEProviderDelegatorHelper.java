@@ -21,6 +21,10 @@ public class YADEProviderDelegatorHelper {
     public static AYADEProviderDelegator ensureConnectedOnStart(ISOSLogger logger, YADEArguments args, AYADEProviderDelegator delegator)
             throws YADEEngineConnectionException {
 
+        if (delegator == null) { // target
+            return null;
+        }
+
         boolean hasAlternatives = delegator.getProvider().getArguments().hasAlternatives();
         try {
             delegator.getProvider().setLogConnectFailedMsgDisabled(hasAlternatives);
@@ -52,14 +56,15 @@ public class YADEProviderDelegatorHelper {
                         }
                         logger.info(ee);
                     } catch (Exception ee) {
+                        if (newDelegator != null) {
+                            newDelegator.getProvider().disconnect();
+                        }
+
                         if (i >= max) {
                             throw ee;
                         }
 
                         logger.info(ee);
-                        if (newDelegator != null) {
-                            newDelegator.getProvider().disconnect();
-                        }
                     }
                 }
             }

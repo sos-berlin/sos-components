@@ -2,6 +2,7 @@ package com.sos.yade.engine;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -131,63 +133,66 @@ public class YADEEngine {
         // All steps may trigger an exception
         if (!argsLoader.getSourceArgs().isPollingEnabled()) {
             try {
-                /** 7) Source: connect */
+                /** 7) Start */
+                argsLoader.getArgs().executionStart();
+
+                /** 8) Source: connect */
                 sourceDelegator = (YADESourceProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader.getArgs(),
                         sourceDelegator);
 
-                /** 8) Source (test mode only): start connectivity fault simulation if enabled */
+                /** 9) Source (test mode only): start connectivity fault simulation if enabled */
                 simulator.simulate(logger, sourceDelegator);
 
-                /** 9) Invoke a JumpHost add-on when Jump configuration is enabled */
+                /** 10) Invoke a JumpHost add-on when Jump configuration is enabled */
                 if (jumpHostAddon != null) {
                     jumpHostAddon.onAfterSourceDelegatorConnected(sourceDelegator);
                 }
 
-                /** 10) Source: execute commands before operation */
+                /** 11) Source: execute commands before operation */
                 onBeforeOperation(logger, argsLoader, sourceDelegator, jumpHostAddon);
 
                 if (selectFiles) {
-                    /** 11) Source: select files */
+                    /** 12) Source: select files */
                     files = YADESourceFilesSelector.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                    /** 12) Source: check files steady state */
+                    /** 13) Source: check files steady state */
                     YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                    /** 13) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                    /** 14) Source: check zeroByteFiles, forceFiles, resultSet conditions */
                     YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
                 }
                 if (!SOSCollection.isEmpty(files)) {
                     hasSourceFiles = true;
-                    /** 14) Target: connect */
+                    /** 15) Target: connect */
                     targetDelegator = (YADETargetProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader.getArgs(),
                             targetDelegator);
 
-                    /** 15) Target (test mode only): start connectivity fault simulation if enabled */
+                    /** 16) Target (test mode only): start connectivity fault simulation if enabled */
                     simulator.simulate(logger, targetDelegator);
 
-                    /** 16) Invoke a JumpHost add-on when Jump configuration is enabled */
+                    /** 17) Invoke a JumpHost add-on when Jump configuration is enabled */
                     if (jumpHostAddon != null) {
                         jumpHostAddon.onAfterTargetDelegatorConnected(targetDelegator);
                     }
 
-                    /** 17) Target: execute commands before operation */
+                    /** 18) Target: execute commands before operation */
                     onBeforeOperation(logger, argsLoader, targetDelegator);
 
-                    /** 18) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                    /** 19) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
                     operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
                             targetDelegator, files, cancel);
                 }
 
-                /** 19) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
+                /** 20) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
                 onOperationSuccess(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles);
             } catch (Exception e) {
                 onOperationError(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles, exception);
                 exception = e;
             } finally {
-                /** 20) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
+                /** 21) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
                 simulator.shutdown(logger);
 
-                /** 21) Finalize */
+                /** 22) Finalize */
                 onOperationFinal(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, hasSourceFiles, jumpHostAddon, files,
                         exception, true);
             }
@@ -195,79 +200,90 @@ public class YADEEngine {
             YADESourceFilesPolling sourcePolling = new YADESourceFilesPolling(sourceDelegator);
             boolean jumpHostAddonExecutedAfterSourceDelegatorConnected = false;
             boolean jumpHostAddonExecutedAfterTargetDelegatorConnected = false;
-            pl: while (true) {
-                exception = null;
-                operationDuration = null;
-                hasSourceFiles = false;
 
-                sourcePolling.incrementCycleCounter();
-                try {
-                    /** 7) Source: connect/reconnect */
-                    sourceDelegator = sourcePolling.ensureConnectedOnStart(logger, sourceDelegator);
+            logger.info(sourcePolling.getMainLogPrefix() + "start ...");
 
-                    /** 8) Source (test mode only): start connectivity fault simulation if enabled */
-                    simulator.simulate(logger, sourceDelegator);
+            try {
+                pl: while (true) {
+                    exception = null;
+                    operationDuration = null;
+                    hasSourceFiles = false;
 
-                    /** 9) Invoke a JumpHost add-on when Jump configuration is enabled */
-                    if (jumpHostAddon != null && !jumpHostAddonExecutedAfterSourceDelegatorConnected) {
-                        jumpHostAddon.onAfterSourceDelegatorConnected(sourceDelegator);
-                        jumpHostAddonExecutedAfterSourceDelegatorConnected = true;
-                    }
+                    sourcePolling.incrementCycleCounter();
+                    try {
+                        /** 7) Start */
+                        argsLoader.getArgs().executionStart();
 
-                    /** 10) Source: execute commands before operation */
-                    onBeforeOperation(logger, argsLoader, sourceDelegator, jumpHostAddon);
+                        /** 8) Source: connect/reconnect */
+                        sourceDelegator = sourcePolling.ensureConnectedOnStart(logger, argsLoader.getArgs(), sourceDelegator);
 
-                    if (selectFiles) {
-                        /** 11) Source: select files */
-                        files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
+                        /** 9) Source (test mode only): start connectivity fault simulation if enabled */
+                        simulator.simulate(logger, sourceDelegator);
 
-                        /** 12) Source: check files steady state */
-                        YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
-
-                        /** 13) Source: check zeroByteFiles, forceFiles, resultSet conditions */
-                        YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
-                    }
-                    if (!SOSCollection.isEmpty(files)) {
-                        hasSourceFiles = true;
-
-                        /** 14) Target: connect */
-                        targetDelegator = (YADETargetProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader
-                                .getArgs(), targetDelegator);
-
-                        /** 15) Target (test mode only): start connectivity fault simulation if enabled */
-                        simulator.simulate(logger, targetDelegator);
-
-                        /** 16) Invoke a JumpHost add-on when Jump configuration is enabled */
-                        if (jumpHostAddon != null && !jumpHostAddonExecutedAfterTargetDelegatorConnected) {
-                            jumpHostAddon.onAfterTargetDelegatorConnected(targetDelegator);
-                            jumpHostAddonExecutedAfterTargetDelegatorConnected = true;
+                        /** 10) Invoke a JumpHost add-on when Jump configuration is enabled */
+                        if (jumpHostAddon != null && !jumpHostAddonExecutedAfterSourceDelegatorConnected) {
+                            jumpHostAddon.onAfterSourceDelegatorConnected(sourceDelegator);
+                            jumpHostAddonExecutedAfterSourceDelegatorConnected = true;
                         }
 
-                        /** 17) Target: execute commands before operation */
-                        onBeforeOperation(logger, argsLoader, targetDelegator);
+                        /** 11) Source: execute commands before operation */
+                        onBeforeOperation(logger, argsLoader, sourceDelegator, jumpHostAddon);
 
-                        /** 18) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
-                        operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(), sourceDelegator,
-                                targetDelegator, files, cancel);
-                    }
+                        if (selectFiles) {
+                            /** 12) Source: select files */
+                            files = sourcePolling.selectFiles(logger, sourceDelegator, sourceExcludedFileExtension);
 
-                    /** 19) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
-                    onOperationSuccess(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles);
-                } catch (Exception e) {
-                    onOperationError(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles, exception);
-                    exception = e;
-                } finally {
-                    /** 20) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
-                    simulator.shutdown(logger);
+                            /** 13) Source: check files steady state */
+                            YADESourceFilesSteadyStateChecker.check(logger, sourceDelegator, files);
 
-                    /** 21) Finalize */
-                    boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
-                    onOperationFinal(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, hasSourceFiles, jumpHostAddon, files,
-                            exception, !startNextPollingCycle);
-                    if (!startNextPollingCycle) {
-                        break pl;
+                            /** 14) Source: check zeroByteFiles, forceFiles, resultSet conditions */
+                            YADESourceFilesSelector.checkSelectionResult(logger, sourceDelegator, argsLoader.getClientArgs(), files);
+                        }
+                        if (!SOSCollection.isEmpty(files)) {
+                            hasSourceFiles = true;
+
+                            /** 15) Target: connect */
+                            targetDelegator = (YADETargetProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, argsLoader
+                                    .getArgs(), targetDelegator);
+
+                            /** 16) Target (test mode only): start connectivity fault simulation if enabled */
+                            simulator.simulate(logger, targetDelegator);
+
+                            /** 17) Invoke a JumpHost add-on when Jump configuration is enabled */
+                            if (jumpHostAddon != null && !jumpHostAddonExecutedAfterTargetDelegatorConnected) {
+                                jumpHostAddon.onAfterTargetDelegatorConnected(targetDelegator);
+                                jumpHostAddonExecutedAfterTargetDelegatorConnected = true;
+                            }
+
+                            /** 18) Target: execute commands before operation */
+                            onBeforeOperation(logger, argsLoader, targetDelegator);
+
+                            /** 19) Source/Target: process operation(COPY,MOVE,GETLIST,REMOVE) */
+                            operationDuration = YADEOperationsManager.process(logger, argsLoader.getArgs(), argsLoader.getClientArgs(),
+                                    sourceDelegator, targetDelegator, files, cancel);
+                        }
+
+                        /** 20) Source(always)/Target(only if hasSourceFiles = true): execute commands after operation on success */
+                        onOperationSuccess(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles);
+                    } catch (Exception e) {
+                        onOperationError(logger, argsLoader, sourceDelegator, targetDelegator, hasSourceFiles, exception);
+                        exception = e;
+                    } finally {
+                        /** 21) Source/Target (test mode only) - stop connectivity fault simulation if enabled */
+                        simulator.shutdown(logger);
+
+                        /** 22) Finalize */
+                        boolean startNextPollingCycle = sourcePolling.startNextPollingCycle(logger);
+                        onOperationFinal(logger, argsLoader, operationDuration, sourceDelegator, targetDelegator, hasSourceFiles, jumpHostAddon,
+                                files, exception, !startNextPollingCycle);
+                        if (!startNextPollingCycle) {
+                            break pl;
+                        }
                     }
                 }
+            } finally {
+                logger.info(sourcePolling.getMainLogPrefix() + "[Total duration=" + SOSDate.getDuration(sourcePolling.getStart(), Instant.now())
+                        + "]end");
             }
         }
         return files;
@@ -397,6 +413,8 @@ public class YADEEngine {
         }
 
         sendNotifications(logger, argsLoader, files, exceptions);
+
+        argsLoader.getArgs().executionEnd();
         YADEClientBannerWriter.writeSummary(logger, argsLoader.getArgs(), operationDuration, sourceDelegator, targetDelegator, jumpHostAddon, files,
                 exception);
 
