@@ -57,7 +57,7 @@ import js7.proxy.javaapi.JControllerProxy;
 public class RevokeImpl extends JOCResourceImpl implements IRevoke {
 
     private static final String API_CALL = "./inventory/deployment/revoke";
-//    private static final Logger LOGGER = LoggerFactory.getLogger(RevokeImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RevokeImpl.class);
     private DBLayerDeploy dbLayer = null;
     private static final String SEMAPHORE_ID = "REVOKE";
 
@@ -72,23 +72,21 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Thread deployThread = new Thread(() -> {
-                Logger logger = LoggerFactory.getLogger("revokeThread");
+            if (revokeFilter.getTransactionId() == null || revokeFilter.getTransactionId().isEmpty()) {
+                revokeFilter.setTransactionId(UUID.randomUUID().toString());
+            }
+
+            new Thread(() -> {
                 SOSHibernateSession hibernateSession = null;
-                String transactionId = revokeFilter.getTransactionId();
-                if (revokeFilter.getTransactionId() == null || revokeFilter.getTransactionId().isEmpty()) {
-                    transactionId = UUID.randomUUID().toString();
-                    revokeFilter.setTransactionId(transactionId);
-                }
                 try {
-                    logger.debug("acquire semaphore from deploy with transactionId " + transactionId);
-                    if (RemoveSemaphore.availablePermits(transactionId) == 1) {
+                    LOGGER.debug("acquire semaphore from deploy with transactionId " + revokeFilter.getTransactionId());
+                    if (RemoveSemaphore.availablePermits(revokeFilter.getTransactionId()) == 1) {
                         TimeUnit.MILLISECONDS.sleep(100);
                     }
-                    RemoveSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
-                    logger.debug("acquire semaphore from revoke with transactionId " + transactionId);
+                    RemoveSemaphore.tryAcquire(revokeFilter.getTransactionId(), SEMAPHORE_ID);
+                    LOGGER.debug("acquire semaphore from revoke with transactionId " + revokeFilter.getTransactionId());
                     // if semaphore already contains workflownames from potential recall operation, remove those workflow from cancel order call
-                    Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(transactionId)
+                    Set<String> workflowsWithAlreadyCanceledOrders = RemoveSemaphore.getInstance().getSemaphore(revokeFilter.getTransactionId())
                             .map(RecallRevokeSemaphore::getWorkflowNames).orElse(Collections.emptySet());
                     DBItemJocAuditLog dbAuditlog = storeAuditLog(revokeFilter.getAuditLog());
                     Set<String> allowedControllerIds = Collections.emptySet();
@@ -122,8 +120,6 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                     Map<String, List<DBItemDeploymentHistory>> itemsPerControllerToRevokeFromFolder = 
                             itemsFromFolderToRevoke.collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
-                    Date collectingItemsFinished = Date.from(Instant.now());
-                    logger.trace("*** collecting items finished ***" + collectingItemsFinished);
                     // Delete from all allowed controllers from filter
                     final String commitIdForRevoke = UUID.randomUUID().toString();
                     final String commitIdForRevokeFileOrderSources = UUID.randomUUID().toString();
@@ -203,13 +199,12 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                         });
                     }
                 } catch (Exception e) {
-                    logger.error(e.toString());
+                    LOGGER.error(e.toString());
                 } finally {
-                    removeSemapohoreFinally(transactionId, logger);
+                    removeSemapohoreFinally(revokeFilter.getTransactionId());
                     Globals.disconnect(hibernateSession);
                 }
-            }, "revoke");
-            deployThread.start();
+            }, "revoke-" + revokeFilter.getTransactionId()).start();
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
@@ -257,13 +252,13 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
         }
     }
     
-    private static void removeSemapohoreFinally(String transactionId, Logger logger) {
+    private static void removeSemapohoreFinally(String transactionId) {
         RemoveSemaphore.release(transactionId);
-        logger.debug("release semaphore from revoke with transactionId " + transactionId);
+        LOGGER.debug("release semaphore from revoke with transactionId " + transactionId);
         if (RemoveSemaphore.getInstance().getSemaphore(transactionId).map(RecallRevokeSemaphore::getInitialCaller).filter(SEMAPHORE_ID::equals)
                 .isPresent()) {
             RemoveSemaphore.remove(transactionId);
-            logger.debug("Semaphore from " + SEMAPHORE_ID + " finally removed.");
+            LOGGER.debug("Semaphore from " + SEMAPHORE_ID + " finally removed.");
         }
     }
 

@@ -2,6 +2,7 @@ package com.sos.joc.publish.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import jakarta.ws.rs.Path;
 public class DeployImpl extends ADeploy implements IDeploy {
     
     public static final JocSecurityLevel SEC_LVL = JocSecurityLevel.LOW; 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class); 
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) {
@@ -38,15 +40,16 @@ public class DeployImpl extends ADeploy implements IDeploy {
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
 
-            Thread deployThread = new Thread(() -> {
-                Logger logger = LoggerFactory.getLogger("deployThread");
+            if(deployFilter.getTransactionId() == null || deployFilter.getTransactionId().isEmpty()) {
+                deployFilter.setTransactionId(UUID.randomUUID().toString());
+            }
+            new Thread(() -> {
                 try {
                     deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
                 } catch (Exception e) {
-                    logger.error(e.toString());
+                    LOGGER.error(e.toString());
                 }
-            }, "deploy");
-            deployThread.start();
+            }, "deploy-" + deployFilter.getTransactionId()).start();
 
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

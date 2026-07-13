@@ -82,14 +82,13 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if (response != null) {
                 return response;
             }
-            
-            Thread recallThread = new Thread(() -> {
-                Logger logger = LoggerFactory.getLogger("recallThread");
+            if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
+                recallFilter.setTransactionId(UUID.randomUUID().toString());
+            }
+           
+            new Thread(() -> {
                 SOSHibernateSession hibernateSession = null;
                 try {
-                    if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
-                        recallFilter.setTransactionId(UUID.randomUUID().toString());
-                    }
                     if(!recallFilter.getKeepOrders()) {
                         RemoveSemaphore.tryAcquire(recallFilter.getTransactionId(), SEMAPHORE_ID);
                         LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
@@ -117,12 +116,11 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
 
                     recallItems(releasedItems, hibernateSession, recallFilter.getKeepOrders(), accessToken, dbLayer, dbAuditLogId, recallFilter.getTransactionId());
                 } catch (Exception e) {
-                    logger.error("", e);
+                    LOGGER.error("", e);
                 } finally {
                     Globals.disconnect(hibernateSession);
                 }
-            }, "recall");
-            recallThread.start();
+            }, "recall-" + recallFilter.getTransactionId()).start();
             
             return responseStatusJSOk(new Date());
         } catch (Exception e) {

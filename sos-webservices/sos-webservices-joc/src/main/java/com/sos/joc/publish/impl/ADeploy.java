@@ -86,9 +86,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                 JocError error = new JocError("cannot determine account for signing.");
                 throw new JocException(error);
             }
-            if(deployFilter.getTransactionId() == null || deployFilter.getTransactionId().isEmpty()) {
-                deployFilter.setTransactionId(UUID.randomUUID().toString());
-            }
             if (PublishSemaphore.availablePermits(deployFilter.getTransactionId()) == 1) {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
