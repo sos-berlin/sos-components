@@ -249,7 +249,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
         } catch(Throwable t) {
             releaseSemaphoreFinal(in.getTransactionId());
-            throw t;
+            ProblemHelper.postExceptionEventIfExist(Either.left(t), accessToken, getJocError(), null);
         }
     }
     

@@ -50,6 +50,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 import js7.proxy.javaapi.JControllerProxy;
 
@@ -200,6 +201,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                     }
                 } catch (Exception e) {
                     LOGGER.error(e.toString());
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), xAccessToken, getJocError(), null);
                 } finally {
                     removeSemapohoreFinally(revokeFilter.getTransactionId());
                     Globals.disconnect(hibernateSession);

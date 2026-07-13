@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -16,6 +17,7 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
 import jakarta.ws.rs.Path;
 
 @Path("inventory/deployment")
@@ -48,6 +50,7 @@ public class DeployImpl extends ADeploy implements IDeploy {
                     deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
                 } catch (Exception e) {
                     LOGGER.error(e.toString());
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), xAccessToken, getJocError(), null);
                 }
             }, "deploy-" + deployFilter.getTransactionId()).start();
 
