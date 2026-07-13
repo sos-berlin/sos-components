@@ -127,7 +127,6 @@ public class ControllerAnswer extends Controller {
                     }
                     currentNodeIsLoss = ((lossNode.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNode.string().equals("Backup")
                             && !dbInstance.getIsPrimary()));
-
                 }
             }
 			if (clusterState == null) {
