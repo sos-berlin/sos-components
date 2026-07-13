@@ -19,6 +19,7 @@ import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
 import js7.cluster.watch.ClusterWatchService;
+import js7.data.cluster.ClusterEvent.ClusterNodeLostEvent;
 import js7.data.cluster.ClusterState.HasNodes;
 import js7.data.cluster.ClusterWatchId;
 import js7.data.cluster.ClusterWatchProblems;
@@ -77,6 +78,13 @@ public class ClusterWatchServiceContext {
     }
     
     protected NodeId getClusterNodeLoss() {
+        Optional<ClusterNodeLostEvent> opt = OptionConverters.toJava(service.clusterNodeLossEventToBeConfirmed(lossNode));
+        if (opt.isEmpty() && NodeLossEventType.Failover.equals(eventType)) {
+            burstFilter = null;
+            lossNode = null;
+            message = null;
+            eventType = NodeLossEventType.Unknown;
+        }
         return lossNode;
     }
     
