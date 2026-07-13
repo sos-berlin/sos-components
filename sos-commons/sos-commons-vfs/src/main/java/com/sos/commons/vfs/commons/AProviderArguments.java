@@ -9,6 +9,7 @@ import java.util.Set;
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
 import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
@@ -183,6 +184,10 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public List<AProviderArguments> getAlternatives() {
         return alternatives;
+    }
+
+    public String getAlternativesAsString() {
+        return SOSCollection.isEmpty(alternatives) ? "" : SOSString.join(alternatives, n -> n.getKey().getValue());
     }
 
     public boolean hasAlternatives() {

@@ -39,6 +39,7 @@
             <xsl:copy-of select="KeepAlive"/>
             <xsl:copy-of select="PassiveMode"/>
             <xsl:copy-of select="TransferMode"/>
+            <xsl:copy-of select="FTPFragmentAlternatives"/>
              
         </FTPFragment>        
     </xsl:template>
@@ -113,6 +114,7 @@
             </xsl:if> 
             
             <xsl:copy-of select="HTTPHeaders"/>
+            <xsl:copy-of select="HTTPFragmentAlternatives"/>
         </HTTPFragment>        
     </xsl:template>
     
@@ -302,6 +304,7 @@
             <xsl:copy-of select="StrictHostkeyChecking"/>
             <xsl:copy-of select="ConfigurationFiles"/>
             <xsl:copy-of select="DisableAutoDetectShell"/>
+            <xsl:copy-of select="SFTPFragmentAlternatives"/>
              
         </SFTPFragment>        
     </xsl:template>
@@ -409,7 +412,8 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:otherwise>
-            </xsl:choose>    
+            </xsl:choose>
+            <xsl:copy-of select="WebDAVFragmentAlternatives"/>
         </WebDAVFragment>            
     </xsl:template> 
            

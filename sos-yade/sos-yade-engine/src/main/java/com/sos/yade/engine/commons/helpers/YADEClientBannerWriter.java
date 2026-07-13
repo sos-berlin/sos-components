@@ -39,6 +39,7 @@ import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLProfileHelper;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 
 public class YADEClientBannerWriter {
 
@@ -69,6 +70,12 @@ public class YADEClientBannerWriter {
         writeJumpHostHeader(logger, argsLoader.getJumpHostArgs());
         writeTargetHeader(logger, argsLoader.getTargetArgs());
 
+        logger.info(SEPARATOR_LINE);
+    }
+
+    public static void writeExecuteAlternativeProfile(ISOSLogger logger, AYADEArgumentsLoader argsLoader) {
+        logger.info(SEPARATOR_LINE);
+        logger.info("* Execute alternative profile - " + argsLoader.getArgs().getAlternativeProfile().getValue());
         logger.info(SEPARATOR_LINE);
     }
 
@@ -132,7 +139,11 @@ public class YADEClientBannerWriter {
         }
         // Error
         if (error != null) {
-            logger.error("[Error]" + error.toString());
+            if (error instanceof YADEEngineConnectionException && ((YADEEngineConnectionException) error).needsAlternativeProfile()) {
+                logger.info("[Error]" + error.toString());
+            } else {
+                logger.error("[Error]" + error.toString());
+            }
         }
     }
 
@@ -143,6 +154,9 @@ public class YADEClientBannerWriter {
         sb.append(", ").append(YADEArgumentsHelper.toString(args.getTransactional()));
         if (!args.getProfile().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
+        }
+        if (!args.getAlternativeProfile().isEmpty()) {
+            sb.append(" (").append("alternative profile - ").append(args.getAlternativeProfile().getValue()).append(")");
         }
         if (!args.getSettings().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));

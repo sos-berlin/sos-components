@@ -258,6 +258,7 @@
             
             <!-- v2 -->
             <xsl:copy-of select="ConfigurationFiles"/>
+            <xsl:copy-of select="SMBFragmentAlternatives"/>
         </xsl:copy>
     </xsl:template>
     

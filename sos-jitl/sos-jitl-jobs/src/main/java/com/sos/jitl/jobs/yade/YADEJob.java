@@ -28,7 +28,7 @@ public class YADEJob extends Job<YADEJobArguments> {
         }
 
         YADEJobArguments args = step.getDeclaredArguments();
-        AYADEArgumentsLoader argsLoader = null;
+        YADEXMLArgumentsLoader argsLoader = null;
         List<ProviderFile> files = null;
         Throwable exception = null;
         try {
@@ -63,6 +63,11 @@ public class YADEJob extends Job<YADEJobArguments> {
     }
 
     private void applyOverrides(AYADEArgumentsLoader argsLoader, YADEJobArguments args) {
+        // Transfer
+        if (!args.getAlternativeProfile().isEmpty()) {
+            argsLoader.getArgs().getAlternativeProfile().setValue(args.getAlternativeProfile().getValue());
+        }
+
         // Source
         if (!args.getSourceDir().isEmpty()) {
             argsLoader.getSourceArgs().getDirectory().setValue(args.getSourceDir().getValue());

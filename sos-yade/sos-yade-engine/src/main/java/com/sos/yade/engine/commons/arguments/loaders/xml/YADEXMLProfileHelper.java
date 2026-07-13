@@ -20,6 +20,7 @@ import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.commons.vfs.webdav.commons.WebDAVProviderArguments;
 import com.sos.commons.xml.SOSXML;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADENotificationMailArguments;
 import com.sos.yade.engine.commons.arguments.YADEProviderCommandArguments;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
@@ -30,6 +31,22 @@ public class YADEXMLProfileHelper {
     public static final String ELEMENT_NAME_NOTIFICATION_TRIGGERS = "NotificationTriggers";
 
     protected static void parse(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node profile) throws Exception {
+        String alternativeProfile = SOSXML.getAttributeValue(profile, YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
+        if (!SOSString.isEmpty(alternativeProfile)) {
+            if (argsLoader.profileEqualsAlternativeProfile(alternativeProfile)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[parse][profile=" + argsLoader.getArgs().getProfile().getValue() + "][skip alternative profile="
+                            + alternativeProfile + "]same profile_id/alternative_profile");
+                }
+            } else {
+                argsLoader.getArgs().getAlternativeProfile().setValue(alternativeProfile);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[parse][profile=" + argsLoader.getArgs().getProfile().getValue() + "][added]alternative_profile="
+                            + alternativeProfile);
+                }
+            }
+        }
+
         NodeList nl = profile.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);

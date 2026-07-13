@@ -62,7 +62,7 @@ public class YADEEngineMain {
         logger = new SLF4JLogger();
 
         String historyReturnValuesFile = null;
-        AYADEArgumentsLoader argsLoader = null;
+        YADEXMLArgumentsLoader argsLoader = null;
         List<ProviderFile> files = null;
         Throwable exception = null;
         try {
@@ -152,6 +152,9 @@ public class YADEEngineMain {
     }
 
     private void applyOverrides(AYADEArgumentsLoader argsLoader, Map<String, String> args) {
+        // Transfer
+        setOptionalStringArgument(argsLoader.getArgs().getAlternativeProfile(), args, YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
+
         // Source
         setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_SOURCE_DIR);
         setOptionalStringArgument(argsLoader.getSourceArgs().getExcludedDirectories(), args, YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES);
@@ -160,6 +163,7 @@ public class YADEEngineMain {
         setOptionalSourceFileSpec(argsLoader.getSourceArgs(), args, YADEArguments.STARTUP_ARG_SOURCE_FILE_SPEC);
         setOptionalBooleanArgument(argsLoader.getSourceArgs().getRecursive(), args, YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE);
         setOptionalStringArgument(argsLoader.getSourceArgs().getSimConnFaults(), args, YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS);
+
         // Target
         if (argsLoader.getTargetArgs() != null) {
             setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);

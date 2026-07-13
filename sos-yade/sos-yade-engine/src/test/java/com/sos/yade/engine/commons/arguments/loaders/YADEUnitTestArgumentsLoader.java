@@ -17,7 +17,11 @@ public class YADEUnitTestArgumentsLoader extends AYADEArgumentsLoader {
 
     @Override
     public YADEUnitTestArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException {
+        return this;
+    }
 
+    @Override
+    public AYADEArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException {
         return this;
     }
 

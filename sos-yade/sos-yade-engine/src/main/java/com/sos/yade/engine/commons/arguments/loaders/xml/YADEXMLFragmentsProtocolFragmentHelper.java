@@ -327,11 +327,6 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
         setFragmentKeyFromFragment(fragment, args, visitedAlternatives);
         handleJumpHostProtocolFragments(logger, argsLoader, fragment, args);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("[parseSFTP][" + args.getKey().getValue() + "][isJump=" + isJump + "][isSource=" + isSource + "]visitedAlternatives="
-                    + visitedAlternatives);
-        }
-
         NodeList nl = fragment.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
@@ -683,9 +678,16 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 String refId = getFragmentKeyFromRef(refNodeName, ref);
 
                 if (args.keyEquals(refId)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[parseAlternativeFragments][" + args.getKey().getValue() + "][skip " + refId + "]same fragment/alternative");
+                    }
                     continue;
                 }
                 if (!visitedAlternatives.add(refId)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[parseAlternativeFragments][" + args.getKey().getValue() + "][skip " + refId + "][already visited]" + args
+                                .getAlternativesAsString());
+                    }
                     continue;
                 }
 
@@ -720,6 +722,11 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 if (alternative != null) {
                     alternative.getKey().setValue(refId);
                     args.mergeNestedAlternatives(alternative);
+
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[parseAlternativeFragments][" + args.getKey().getValue() + "][merge " + alternative.getKey().getValue() + "]"
+                                + args.getAlternativesAsString());
+                    }
                 }
             }
         }

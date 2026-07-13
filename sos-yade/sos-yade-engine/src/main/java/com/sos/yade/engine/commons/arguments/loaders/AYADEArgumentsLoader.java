@@ -1,5 +1,8 @@
 package com.sos.yade.engine.commons.arguments.loaders;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -18,6 +21,8 @@ public abstract class AYADEArgumentsLoader {
     private YADETargetArguments targetArgs;
     private YADEJumpHostArguments jumpHostArgs;
     private YADENotificationArguments notificationArgs;
+
+    private Set<String> visitedProfiles = new HashSet<>();
 
     public AYADEArgumentsLoader() {
         this.args = new YADEArguments();
@@ -40,6 +45,8 @@ public abstract class AYADEArgumentsLoader {
     }
 
     public abstract AYADEArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException;
+
+    public abstract AYADEArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException;
 
     public YADEArguments getArgs() {
         return args;
@@ -95,5 +102,30 @@ public abstract class AYADEArgumentsLoader {
         if (notificationArgs == null) {
             notificationArgs = new YADENotificationArguments();
         }
+    }
+
+    public boolean profileEqualsAlternativeProfile(String alternativeProfile) {
+        try {
+            return getArgs().getProfile().getValue().equals(alternativeProfile);
+        } catch (Exception e) {
+            // NPE
+            return false;
+        }
+    }
+
+    public boolean profileEqualsAlternativeProfile() {
+        return profileEqualsAlternativeProfile(getArgs().getAlternativeProfile().getValue());
+    }
+
+    public boolean isNullOrVisitedProfile(String profile) {
+        return profile == null ? true : visitedProfiles.contains(profile);
+    }
+
+    public void setVisitedProfile(String profile) {
+        visitedProfiles.add(profile);
+    }
+
+    public void clearVisitedProfiles() {
+        visitedProfiles.clear();
     }
 }

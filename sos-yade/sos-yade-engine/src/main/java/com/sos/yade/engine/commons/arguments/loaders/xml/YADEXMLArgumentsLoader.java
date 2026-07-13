@@ -15,6 +15,7 @@ import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
+import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
@@ -52,11 +53,14 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         if (params[1] == null || !(params[1] instanceof String)) {
             throw new YADEEngineSettingsLoadException("missing profile");
         }
+
         try {
             getArgs().programStart();
 
             getArgs().getSettings().setValue((Path) params[0]);
             getArgs().getProfile().setValue((String) params[1]);
+            setVisitedProfile(getArgs().getProfile().getValue());
+
             // params[2],params[3],params[4] see below varReplacer
 
             root = SOSXML.parse(getArgs().getSettings().getValue()).getDocumentElement();
@@ -68,7 +72,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
                         + "]not found");
             }
 
-            // Map<String, String> map = System.getenv();
+            // params[2] map e.g. System.getenv();
             varReplacer = new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]);
             YADEXMLGeneralHelper.parse(logger, this, xpath.selectNode(root, "General"));
             YADEXMLProfileHelper.parse(logger, this, profile);
@@ -82,9 +86,59 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         } catch (Exception e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e);
         } finally {
-            root = null;
-            xpath = null;
-            varReplacer = null;
+            clear();
+        }
+        return this;
+    }
+
+    /** Re-parses the XML configuration to load alternative profile. <br />
+     * Reasons:
+     * <ul>
+     * <li>The DOM tree is released after the initial parsing to minimize memory usage.</li>
+     * <li>Alternative profile(s) is only required if a connection error occurs for the current source or target profile.</li>
+     * <li>Re-parsing is inexpensive because the XML file is local and remains small (even with around 1.000 profiles it is approximately 1 MB).</li>
+     * <li>This avoids keeping the complete DOM tree in memory during normal execution.</li>
+     * </ul>
+     */
+    public YADEXMLArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException {
+        if (getArgs().getAlternativeProfile().isEmpty()) {
+            throw new YADEEngineSettingsLoadException("Missing " + YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
+        }
+        if (profileEqualsAlternativeProfile()) {
+            getArgs().getAlternativeProfile().setValue(null);
+            throw new YADEEngineSettingsLoadException("The profile and the alternative profile are identical - " + getArgs().getProfile().getValue());
+        }
+
+        getArgs().getProfile().setValue(getArgs().getAlternativeProfile().getValue());
+        getArgs().getAlternativeProfile().setValue(null);
+        setVisitedProfile(getArgs().getProfile().getValue());
+
+        try {
+            getArgs().programStart();
+
+            root = SOSXML.parse(getArgs().getSettings().getValue()).getDocumentElement();
+            xpath = SOSXML.newXPath();
+
+            Node profile = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
+            if (profile == null) {
+                throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
+                        + "]not found");
+            }
+
+            // YADEXMLGeneralHelper.parse(logger, this, xpath.selectNode(root, "General"));
+            YADEXMLProfileHelper.parse(logger, this, profile);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getProgramStart(),
+                        Instant.now()));
+            }
+
+        } catch (YADEEngineSettingsLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new YADEEngineSettingsLoadException(e.toString(), e);
+        } finally {
+            clear();
         }
         return this;
     }
@@ -162,5 +216,14 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             return;
         }
         arg.setValue(Path.of(getValue(node)));
+    }
+
+    private void clear() {
+        root = null;
+        xpath = null;
+        if (getArgs().getAlternativeProfile().isEmpty()) {
+            varReplacer = null;
+            clearVisitedProfiles();
+        }
     }
 }

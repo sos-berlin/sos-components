@@ -79,6 +79,10 @@
 			      <xs:selector xpath=".//DecryptionFragment"/>
 			      <xs:field xpath="@name"/>
 		    </xs:key>
+        <xs:key name="ProfileKey">
+			      <xs:selector xpath=".//Profile"/>
+			      <xs:field xpath="@profile_id"/>
+		    </xs:key>
         <xs:keyref name="AzureBlobStorageFragmentKeyRef"
                  refer="AzureBlobStorageFragmentKey">
 			      <xs:selector xpath=".//AzureBlobStorageFragmentRef"/>
@@ -132,7 +136,11 @@
 			      <xs:selector xpath=".//DecryptionFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
-	  </xs:element>
+        <xs:keyref name="ProfileKeyRef" refer="ProfileKey">
+			      <xs:selector xpath=".//Profile"/>
+			      <xs:field xpath="@alternative_profile"/>
+		    </xs:keyref>
+    </xs:element>
 	  <!-- ################## -->
 	  <!-- # 1st-Level ###### -->
 	  <!-- ################## -->
@@ -1642,12 +1650,27 @@
 			A <em>Profile</em> specifies the operation and the settings that are used for a file transfer. 
 			Multiple profiles can be included in a YADE configuration.
 		</p>
-               <p>
-			Profiles are distinguished by YADE based on their <em>profile_id</em>.
-		</p>
-               <p>
-			When invoking YADE the respective <em>Profile</em> for the file transfer operation is specified. 
-		</p>
+               <p/>
+               <p>Profiles are distinguished by YADE based on their <em>
+                     <strong>profile_id</strong>
+                  </em>.</p>
+               <p>When invoking YADE the respective <em>Profile</em> for the file transfer operation is specified.</p>
+               <p/>
+               <p>The <em>
+                     <strong>alternative_profile</strong>
+                  </em> attribute defines a fallback profile that is considered only during the initial connection establishment. 
+        They are not used for reconnect attempts or for failures that occur after a connection has already been established, including failures during data transfer.</p>
+               <ul>
+                  <li>Alternative profiles are evaluated only if the current profile cannot establish either the source or the target connection.</li>
+                  <li>If the source or target protocol fragment defines protocol-specific alternatives (such as <em>SFTPProtocolAlternatives</em>), those alternatives are tried first.
+                <ul>
+                        <li>The <em>alternative_profile</em> is considered only after all protocol-specific alternatives have been exhausted without successfully establishing a connection.</li>
+                     </ul>
+                  </li>
+                  <li>If an alternative profile defines its own <em>alternative_profile</em>, it is evaluated recursively.</li>
+                  <li>To prevent circular references and duplicate processing, each referenced profile is evaluated at most once during the resolution process. If a profile has already been processed, it is skipped.</li>
+                  <li>The profile that successfully establishes the connection is used for the subsequent file transfer.</li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -1664,9 +1687,30 @@
                   <div xmlns="http://www.w3.org/1999/xhtml">
                      <p>
 		A profile is identified by this attribute value that is specified when invoking YADE. 
-		As multiple profiles can be stored in a YADE configuration this value is a unique identifier 
-		for the settings that are grouped in a profile.
+		As multiple profiles can be stored in a YADE configuration this value is a unique identifier for the settings that are grouped in a profile.
 		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="alternative_profile" type="xs:NMTOKEN">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The <em>alternative_profile</em> attribute defines a fallback profile that is considered only during the initial connection establishment.</p>
+                     <p>They are not used for reconnect attempts or for failures that occur after a connection has already been established, including failures during data transfer.</p>
+                     <ul>
+                        <li>Alternative profiles are evaluated only if the current profile cannot establish either the source or the target connection.</li>
+                        <li>If the source or target protocol fragment defines protocol-specific alternatives (such as <em>SFTPProtocolAlternatives</em>), those alternatives are tried first.
+                <ul>
+                              <li>The <em>alternative_profile</em> is considered only after all protocol-specific alternatives have been exhausted without successfully establishing a connection.</li>
+                           </ul>
+                        </li>
+                        <li>If an alternative profile defines its own <em>alternative_profile</em>, it is evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced profile is evaluated at most once during the resolution process. If a profile has already been processed, it is skipped.</li>
+                        <li>The profile that successfully establishes the connection is used for the subsequent file transfer.</li>
+                     </ul>
                   </div>
                </xs:documentation>
             </xs:annotation>
@@ -11501,7 +11545,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollInterval" default="60" type="DurationSecondsOrVarType">
+	  <xs:element name="PollInterval" default="1m" type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollInterval">
                 <Note include="Duration-Seconds-Values"/>
@@ -11541,7 +11585,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>		
 	  </xs:element>
-	  <xs:element name="PollTimeout" default="0" type="DurationMinutesOrVarType">
+	  <xs:element name="PollTimeout" default="1m" type="DurationMinutesOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollTimeout">
                 <Note include="Duration-Minutes-Values"/>
@@ -11603,11 +11647,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			This parameter specifies the minimum number of files that have to be found during the polling period in order to
-			cause the transfer to start. This parameter becomes effective with the 
-			<em>PollTimeout</em> parameter.
-		</p>
+               <ul>
+                  <li>This parameter specifies the minimum number of files that have to be found during the polling period in order to cause the transfer to start.</li>
+                  <li>This parameter becomes effective with the <em>PollTimeout</em> parameter.</li>
+                  <li>If the minimum number of files is not reached in any polling period, all files currently available are transferred when the polling server run ends.</li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -11672,7 +11716,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="PollingServerDuration" default="0">
+	  <xs:element name="PollingServerDuration" default="1m">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollingServerDuration"/>
          <xs:documentation>

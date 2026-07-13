@@ -16,6 +16,7 @@ public class YADEArguments extends ASOSArguments {
     /** Required */
     public static final String STARTUP_ARG_SETTINGS = "settings";
     public static final String STARTUP_ARG_PROFILE = "profile";
+    public static final String STARTUP_ARG_ALTERNATIVE_PROFILE = "alternative_profile";
     /** see {@link #parallelism} argument description */
     public static final String STARTUP_ARG_PARALLELISM = "parallelism";
     public static final int STARTUP_ARG_PARALLELISM_DEFAULT = 1;
@@ -57,6 +58,7 @@ public class YADEArguments extends ASOSArguments {
     /** - Fragment ------- */
     private SOSArgument<Path> settings = new SOSArgument<>(STARTUP_ARG_SETTINGS, false);
     private SOSArgument<String> profile = new SOSArgument<>(STARTUP_ARG_PROFILE, false);
+    private SOSArgument<String> alternativeProfile = new SOSArgument<>(STARTUP_ARG_ALTERNATIVE_PROFILE, false);
 
     /** - Meta info ------- */
     /** COPY/MOVE/GETLIST/REMOVE */
@@ -121,6 +123,10 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<String> getProfile() {
         return profile;
+    }
+
+    public SOSArgument<String> getAlternativeProfile() {
+        return alternativeProfile;
     }
 
     public SOSArgument<TransferOperation> getOperation() {

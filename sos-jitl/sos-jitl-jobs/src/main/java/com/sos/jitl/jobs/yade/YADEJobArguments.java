@@ -15,6 +15,9 @@ public class YADEJobArguments extends JobArguments {
     private JobArgument<Path> settings = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS, true);
     private JobArgument<String> profile = new JobArgument<>(YADEArguments.STARTUP_ARG_PROFILE, true);
 
+    /** Not required */
+    private JobArgument<String> alternativeProfile = new JobArgument<>(YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE, false);
+
     /** see {@link YADEArguments#STARTUP_ARG_PARALLELISM} */
     private JobArgument<Integer> parallelism = new JobArgument<>(YADEArguments.STARTUP_ARG_PARALLELISM, false,
             YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
@@ -56,6 +59,10 @@ public class YADEJobArguments extends JobArguments {
 
     public JobArgument<String> getProfile() {
         return profile;
+    }
+
+    public JobArgument<String> getAlternativeProfile() {
+        return alternativeProfile;
     }
 
     public JobArgument<Integer> getParallelism() {

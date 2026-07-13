@@ -21,7 +21,7 @@ public class YADEProviderDelegatorHelper {
     public static AYADEProviderDelegator ensureConnectedOnStart(ISOSLogger logger, YADEArguments args, AYADEProviderDelegator delegator)
             throws YADEEngineConnectionException {
 
-        if (delegator == null) { // target
+        if (delegator == null) { // target can be null
             return null;
         }
 
@@ -31,44 +31,65 @@ public class YADEProviderDelegatorHelper {
             ensureConnected(logger, delegator, null, args.getRetryOnConnectionError());
             delegator.getProvider().setLogConnectFailedMsgDisabled(false);
         } catch (Exception e) {
-            if (hasAlternatives) {
-                logger.info(e);
-                delegator.getProvider().disconnect();
+            try {
+                if (!hasAlternatives) {
+                    throw e;
+                }
 
-                int i = 0;
-                int max = delegator.getProvider().getArguments().getAlternatives().size();
-                for (AProviderArguments a : delegator.getProvider().getArguments().getAlternatives()) {
-                    i++;
-                    AYADEProviderDelegator newDelegator = null;
-                    try {
-                        newDelegator = YADEProviderDelegatorFactory.reassignDelegator(logger, args, delegator, a);
-                        logger.info("[try alternative][" + i + "][" + a.getKey().getValue() + "]" + YADEClientBannerWriter.getProtocolInfo(logger,
-                                newDelegator.getLabel(), newDelegator.getArgs()));
+                if (hasAlternatives) {
+                    logger.info(e);
+                    delegator.getProvider().disconnect();
 
-                        newDelegator.getProvider().setLogConnectFailedMsgDisabled(true);
-                        ensureConnected(logger, newDelegator, null, args.getRetryOnConnectionError());
-                        newDelegator.getProvider().setLogConnectFailedMsgDisabled(false);
-                        return newDelegator;
-                    } catch (YADEEngineInitializationException ee) {
-                        // credential store file not found etc...
-                        if (i >= max) {
-                            throw new YADEEngineConnectionException(ee);
+                    int i = 0;
+                    int max = delegator.getProvider().getArguments().getAlternatives().size();
+
+                    for (AProviderArguments a : delegator.getProvider().getArguments().getAlternatives()) {
+                        i++;
+                        AYADEProviderDelegator newDelegator = null;
+                        try {
+                            newDelegator = YADEProviderDelegatorFactory.reassignDelegator(logger, args, delegator, a);
+                            logger.info("[try alternative][" + i + "][" + a.getKey().getValue() + "]" + YADEClientBannerWriter.getProtocolInfo(logger,
+                                    newDelegator.getLabel(), newDelegator.getArgs()));
+
+                            newDelegator.getProvider().setLogConnectFailedMsgDisabled(true);
+                            ensureConnected(logger, newDelegator, null, args.getRetryOnConnectionError());
+                            newDelegator.getProvider().setLogConnectFailedMsgDisabled(false);
+                            return newDelegator;
+                        } catch (YADEEngineInitializationException ee) {
+                            // credential store file not found etc...
+                            if (i >= max) {
+                                throw new YADEEngineConnectionException(ee);
+                            }
+                            logger.info(ee);
+                        } catch (Exception ee) {
+                            if (newDelegator != null) {
+                                newDelegator.getProvider().disconnect();
+                            }
+
+                            if (i >= max) {
+                                throw ee;
+                            }
+
+                            logger.info(ee);
                         }
-                        logger.info(ee);
-                    } catch (Exception ee) {
-                        if (newDelegator != null) {
-                            newDelegator.getProvider().disconnect();
-                        }
-
-                        if (i >= max) {
-                            throw ee;
-                        }
-
-                        logger.info(ee);
                     }
                 }
+            } catch (YADEEngineConnectionException ex) {
+                if (args.getAlternativeProfile().isEmpty()) {
+                    throw ex;
+                }
+                ex.setNeedsAlternativeProfile();
+                throw ex;
+            } catch (Exception ex) {
+                if (args.getAlternativeProfile().isEmpty()) {
+                    throw ex;
+                }
+                YADEEngineConnectionException exx = new YADEEngineConnectionException(ex);
+                exx.setNeedsAlternativeProfile();
+                throw exx;
             }
         }
+
         return delegator;
     }
 
@@ -79,7 +100,8 @@ public class YADEProviderDelegatorHelper {
 
     public static void ensureConnected(ISOSLogger logger, AYADEProviderDelegator delegator, String action, final RetryOnConnectionError retry)
             throws YADEEngineConnectionException {
-        if (delegator == null) {
+
+        if (delegator == null) { // target can be null
             return;
         }
 

@@ -20,4 +20,9 @@ public class YADECLIArgumentsLoader extends AYADEArgumentsLoader {
         return this;
     }
 
+    @Override
+    public AYADEArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException {
+        return this;
+    }
+
 }

@@ -166,9 +166,17 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 String refId = YADEXMLFragmentsProtocolFragmentHelper.getFragmentKeyFromRef(refNodeName, ref);
 
                 if (args.getProvider().keyEquals(refId)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[jump][parseAlternativeSFTPFragments][" + args.getProvider().getKey().getValue() + "][skip " + refId
+                                + "]same fragment/alternative");
+                    }
                     continue;
                 }
                 if (!VISITED_ALTERNATIVES.add(refId)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[jump][parseAlternativeSFTPFragments][" + args.getProvider().getKey().getValue() + "][skip " + refId
+                                + "][already visited]" + args.getProvider().getAlternativesAsString());
+                    }
                     continue;
                 }
 
@@ -182,6 +190,11 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
                 if (alternative != null) {
                     alternative.getKey().setValue(refId);
                     args.getProvider().mergeNestedAlternatives(alternative);
+
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[jump][parseAlternativeSFTPFragments][" + args.getProvider().getKey().getValue() + "][merge " + alternative
+                                .getKey().getValue() + "]" + args.getProvider().getAlternativesAsString());
+                    }
                 }
             }
         }
