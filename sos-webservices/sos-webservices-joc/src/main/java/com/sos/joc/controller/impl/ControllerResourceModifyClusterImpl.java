@@ -17,6 +17,7 @@ import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ClusterWatchServiceContext.NodeLossEventType;
 import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -169,13 +170,18 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
         try {
             filterBytes = initLogging(API_CALL_CONFIRM_LOSS_NODES, filterBytes, accessToken, CategoryType.CONTROLLER);
             
-            if (!StateImpl.isActive(API_CALL_CONFIRM_LOSS_NODES, null)) {
-                throw new JocServiceException("Confirming the Controller cluster loss node is possible only in the active JOC node.");
-            }
-            
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter body = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = body.getControllerId();
+            
+            if (!StateImpl.isActive(API_CALL_CONFIRM_LOSS_NODES, null)) {
+                if (NodeLossEventType.Failover.equals(ClusterWatch.getInstance().getNodeLossEventType(controllerId))) {
+                    throw new JocServiceException("Confirming the Controller cluster fail-over is only possible in the active JOC node.");
+                } else {
+                    throw new JocServiceException("Confirming the Controller cluster loss node is only possible in the active JOC node.");
+                }
+            }
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
                     .getSwitchOver()));
             if (jocDefaultResponse != null) {
