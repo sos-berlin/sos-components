@@ -10,6 +10,7 @@ import com.sos.controller.model.command.Overview;
 import com.sos.controller.model.command.overview.SystemProperties;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ClusterWatch;
+import com.sos.joc.classes.proxy.ClusterWatchServiceContext.NodeLossEventType;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -120,7 +121,7 @@ public class ControllerAnswer extends Controller {
             if (dbInstance.getIsCluster()) {
                 lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
                 if (lossNode != null) {
-                    if (getRequireFailoverConfirmation(dbInstance)) { // TODO better ask Controller instead of db
+                    if (NodeLossEventType.Failover.equals(ClusterWatch.getInstance().getNodeLossEventType(dbInstance.getControllerId()))) {
                         clusterState = ClusterType.FAILOVER_TO_BE_CONFIRMED;
                     } else {
                         clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
