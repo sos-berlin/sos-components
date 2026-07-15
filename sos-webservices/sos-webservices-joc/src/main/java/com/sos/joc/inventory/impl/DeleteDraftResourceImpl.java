@@ -224,7 +224,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(item.getId());
             if (lastDeployment == null) {
                 // never deployed before or deleted or without content
-                throw new DBMissingDataException("Cannot revert draft. No previous deployed version found.");
+                throw new DBMissingDataException("Cannot revert draft. No previously deployed version found.");
             } else {
                 // deployed
                 item.setValid(true);
@@ -239,8 +239,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(item.getId());
             if (releasedItem == null || releasedItem.getContent() == null) {
                 // never released before or without content
-                JocInventory.deleteConfiguration(dbLayer, item);
-                deleted.add(r);
+                throw new DBMissingDataException("Cannot revert draft. No previously released version found.");
             } else {
                 // released
                 item.setValid(true);
