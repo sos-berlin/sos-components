@@ -77,31 +77,22 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public InventoryDeploymentItem getLastDeployedContent(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select controllerId, max(deploymentDate) from ").append(
-                DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId = :configId");
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
+        hql.append("(");
+        hql.append("id as deploymentId,commitId,version,operation,deploymentDate, invContent,path,controllerId");
+        hql.append(") ");
+        hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where inventoryConfigurationId = :configId ");
         hql.append(" and state = :state ");
-        hql.append(" group by controllerId");
-        Query<Object[]> query = getSession().createQuery(hql.toString());
+        Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
-        List<Object[]> result = getSession().getResultList(query);
-
+        List<InventoryDeploymentItem> result = getSession().getResultList(query);
         if (result != null && !result.isEmpty()) {
-            hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
-            hql.append("(operation, deploymentDate, invContent)");
-            hql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where deploymentDate in (:deploymentDates)");
-            Query<InventoryDeploymentItem> query2 = getSession().createQuery(hql.toString());
-            query2.setParameterList("deploymentDates", result.stream().map(o -> (Date)o[1]).collect(Collectors.toSet()));
-            List<InventoryDeploymentItem> result2 = getSession().getResultList(query2);
-
-            if (result2 != null && !result2.isEmpty()) {
-                Optional<InventoryDeploymentItem> lastItem = result2.stream().filter(item -> OperationType.UPDATE.value().equals(item.getOperation())
-                        && item.getContent() != null).max(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate));
-                if (lastItem.isPresent()) {
-                    return lastItem.get();
-                }
+            Optional<InventoryDeploymentItem> lastItem = result.stream().filter(item -> OperationType.UPDATE.value().equals(item.getOperation())
+                    && item.getContent() != null).max(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate));
+            if (lastItem.isPresent()) {
+                return lastItem.get();
             }
         }
         return null;
