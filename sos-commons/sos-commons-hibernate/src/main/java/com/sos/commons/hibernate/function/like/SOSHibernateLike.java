@@ -84,7 +84,6 @@ public class SOSHibernateLike extends StandardSQLFunction {
         sqlAppender.appendSql(" like ");
         arguments.get(1).accept(translator);
         switch (this.factory.getDbms()) {
-        case H2:
         case MYSQL:
             sqlAppender.appendSql(" escape '\\\\'");
             break;
