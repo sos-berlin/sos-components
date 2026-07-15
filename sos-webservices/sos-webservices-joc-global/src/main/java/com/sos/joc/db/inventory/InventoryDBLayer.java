@@ -89,11 +89,11 @@ public class InventoryDBLayer extends DBLayer {
 
         if (result != null && !result.isEmpty()) {
             hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
-            hql.append("(operation,deploymentDate,invContent)");
+            hql.append("(operation, deploymentDate, invContent)");
             hql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where deploymentDate in (:deploymentDates)");
             Query<InventoryDeploymentItem> query2 = getSession().createQuery(hql.toString());
-            query2.setParameterList("deploymentDates", result.stream().map(o -> o[1]).collect(Collectors.toSet()));
+            query2.setParameterList("deploymentDates", result.stream().map(o -> (Date)o[1]).collect(Collectors.toSet()));
             List<InventoryDeploymentItem> result2 = getSession().getResultList(query2);
 
             if (result2 != null && !result2.isEmpty()) {
