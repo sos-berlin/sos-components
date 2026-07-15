@@ -30,6 +30,7 @@ import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -223,8 +224,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(item.getId());
             if (lastDeployment == null) {
                 // never deployed before or deleted or without content
-                JocInventory.deleteConfiguration(dbLayer, item);
-                deleted.add(r);
+                throw new DBMissingDataException("Cannot revert draft. No previous deployed version found.");
             } else {
                 // deployed
                 item.setValid(true);
