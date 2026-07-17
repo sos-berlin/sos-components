@@ -15,20 +15,57 @@ package com.sos.commons.vfs.commons;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.commons.vfs.exceptions.ProviderException;
 
 public final class ProviderReusableResourcePool<R extends AProviderReusableResource<C>, C> {
 
+    /** Functional interface for creating a new reusable provider resource.
+     *
+     * @param <R> the reusable provider resource type */
+    @FunctionalInterface
+    public interface ResourceFactory<R> {
+
+        R create(Long id) throws Exception;
+    }
+
+    /** Functional interface for executing an operation with a provider resource that returns a result.
+     *
+     * @param <C> the underlying provider-specific resource type
+     * @param <T> the result type */
+    @FunctionalInterface
+    public interface ResourceFunction<C, T> {
+
+        /** Executes the operation.
+         *
+         * @param resource the provider-specific resource
+         * @return the operation result
+         * @throws Exception if the operation fails */
+        T apply(C resource) throws Exception;
+    }
+
+    /** Functional interface for executing an operation with a provider resource that does not return a result.
+     *
+     * @param <C> the underlying provider-specific resource type */
+    @FunctionalInterface
+    public interface ResourceConsumer<C> {
+
+        /** Executes the operation.
+         *
+         * @param resource the provider-specific resource
+         * @throws Exception if the operation fails */
+        void accept(C resource) throws Exception;
+    }
+
     private final AtomicLong sequence = new AtomicLong(0);
     private final ConcurrentLinkedQueue<R> idle = new ConcurrentLinkedQueue<>();
-    private final Function<Long, R> factory;
+    private final ResourceFactory<R> factory;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private int minResources = 1;
 
-    public ProviderReusableResourcePool(Function<Long, R> factory) {
+    public ProviderReusableResourcePool(ResourceFactory<R> factory) {
         this.factory = factory;
     }
 
@@ -37,17 +74,23 @@ public final class ProviderReusableResourcePool<R extends AProviderReusableResou
      * If an idle resource is available, it is reused. Otherwise, a new resource is created using the configured factory.
      *
      * @return a reusable provider resource
-     * @throws IllegalStateException if the pool has already been closed */
-    public R borrow() {
+     * @throws ProviderException if the pool has already been closed or can't be created */
+    public R borrow() throws ProviderException {
         if (closed.get()) {
-            throw new IllegalStateException("Reusable resource pool already closed");
+            throw new ProviderException("Reusable resource pool already closed");
         }
 
         R resource = idle.poll();
         if (resource != null) {
             return resource;
         }
-        return factory.apply(sequence.incrementAndGet());
+        try {
+            return factory.create(sequence.incrementAndGet());
+        } catch (ProviderException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ProviderException(e);
+        }
     }
 
     /** Releases a previously borrowed resource back to the pool.
@@ -91,25 +134,6 @@ public final class ProviderReusableResourcePool<R extends AProviderReusableResou
         while ((resource = idle.poll()) != null) {
             SOSClassUtil.closeQuietly(resource);
         }
-    }
-
-    /** Functional interface for executing an operation with a provider resource that returns a result.
-     *
-     * @param <C> the underlying provider-specific resource type
-     * @param <T> the result type */
-    @FunctionalInterface
-    public interface ResourceFunction<C, R> {
-
-        R apply(C resource) throws Exception;
-    }
-
-    /** Functional interface for executing an operation with a provider resource that does not return a result.
-     *
-     * @param <C> the underlying provider-specific resource type */
-    @FunctionalInterface
-    public interface ResourceConsumer<C> {
-
-        void accept(C resource) throws Exception;
     }
 
     /** Executes an operation using a borrowed resource and automatically releases the resource back to the pool.

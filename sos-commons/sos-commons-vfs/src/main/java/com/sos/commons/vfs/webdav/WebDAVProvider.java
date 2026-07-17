@@ -18,6 +18,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
@@ -42,6 +43,8 @@ public class WebDAVProvider extends HTTPProvider {
             List<ProviderFile> result = new ArrayList<>();
             WebDAVProviderUtils.selectFiles(this, selection, directory, result);
             return result;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory), e);
         }
@@ -59,6 +62,8 @@ public class WebDAVProvider extends HTTPProvider {
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -102,6 +107,8 @@ public class WebDAVProvider extends HTTPProvider {
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -125,12 +132,19 @@ public class WebDAVProvider extends HTTPProvider {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
                 }
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
+                if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(source + "->" + target) + BaseHttpClient.formatExecutionResult(
+                            result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(source + "->" + target) + BaseHttpClient.formatExecutionResult(result));
+                }
             }
             return true;
         } catch (IOException e) {
             throwProviderConnectException(source + "->" + target, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
@@ -148,6 +162,8 @@ public class WebDAVProvider extends HTTPProvider {
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }

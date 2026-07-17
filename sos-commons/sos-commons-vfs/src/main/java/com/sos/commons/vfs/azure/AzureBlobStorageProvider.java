@@ -35,6 +35,7 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
@@ -120,18 +121,23 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 String accountName = getArguments().getUser().getValue();
                 String accountKey = getArguments().getAccountKey().getValue();
                 String apiVersion = getArguments().getApiVersion().getValue();
-                switch (getArguments().getAuthMethod().getValue()) {
-                case SAS_TOKEN:
-                    builder = builder.withAuthProvider(new AzureBlobSASAuthProvider(getLogger(), accountName, accountKey, apiVersion, getArguments()
-                            .getSASToken().getValue()));
-                    break;
-                case SHARED_KEY:
-                    builder = builder.withAuthProvider(new AzureBlobSharedKeyAuthProvider(getLogger(), accountName, accountKey, apiVersion));
-                    break;
-                case PUBLIC:
-                default:
-                    builder = builder.withAuthProvider(new AzureBlobPublicAuthProvider(getLogger(), accountName, accountKey, apiVersion));
-                    break;
+
+                try {
+                    switch (getArguments().getAuthMethod().getValue()) {
+                    case SAS_TOKEN:
+                        builder = builder.withAuthProvider(new AzureBlobSASAuthProvider(getLogger(), accountName, accountKey, apiVersion,
+                                getArguments().getSASToken().getValue()));
+                        break;
+                    case SHARED_KEY:
+                        builder = builder.withAuthProvider(new AzureBlobSharedKeyAuthProvider(getLogger(), accountName, accountKey, apiVersion));
+                        break;
+                    case PUBLIC:
+                    default:
+                        builder = builder.withAuthProvider(new AzureBlobPublicAuthProvider(getLogger(), accountName, accountKey, apiVersion));
+                        break;
+                    }
+                } catch (Exception e) {
+                    throw new ProviderAuthenticationException(e);
                 }
                 logIfHostnameVerificationDisabled(getArguments().getSsl());
 
@@ -147,7 +153,12 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                         if (HttpUtils.isNotFound(code) && client.getAuthProvider().isPublic()) {
 
                         } else {
-                            throw new Exception(client.formatExecutionResultForException(result));
+                            // isBadRequest - blob.core.windows.net returns 400 - sharedkey - if account etc is wrong
+                            if (HttpUtils.isUnauthorized(code) || HttpUtils.isBadRequest(code)) {
+                                throw new ProviderAuthenticationException(client.formatExecutionResultForException(result));
+                            } else {
+                                throw new Exception(client.formatExecutionResultForException(result));
+                            }
                         }
                     }
                 }
@@ -158,19 +169,26 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 }
                 getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
                 debugServiceProperties();
+            } catch (ProviderConnectException e) {
+                throwConnectException(e);
             } catch (Exception e) {
-                connected = false;
-
-                logConnectFailedMsg(e);
-
-                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-                // error in methods executed after connect() - e.g. if retry, roll back...
-                // Call disconnect() in the application's finally block.
-
-                // disconnectInternal();
-                throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+                throwConnectException(e);
             }
         }
+    }
+
+    /** Overrides {@link AProvider#throwConnectException(ProviderConnectException)} */
+    @Override
+    public void throwConnectException(ProviderConnectException e) throws ProviderConnectException {
+        connected = false;
+        super.throwConnectException(e);
+    }
+
+    /** Overrides {@link AProvider#throwConnectException(Exception)} */
+    @Override
+    public void throwConnectException(Exception e) throws ProviderConnectException {
+        connected = false;
+        super.throwConnectException(e);
     }
 
     /** Overrides {@link IProvider#isConnected()} */
@@ -209,7 +227,6 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 getLogger().info(getInjectConnectivityFaultMsg());
             } catch (Exception e) {
                 getLogger().info(getInjectConnectivityFaultMsg(e));
-                e.printStackTrace();
             }
         }
     }
@@ -229,6 +246,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(directory, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory), e);
         }
@@ -250,13 +269,18 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
                 }
-                throw new Exception(client.formatExecutionResultForException(result));
             }
             return true;
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -281,6 +305,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -328,7 +354,13 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             resultSource.formatWithResponseBody(true);
             int code = resultSource.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new Exception(client.formatExecutionResultForException(resultSource));
+                if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(source + "->" + target) + client
+                            .formatExecutionResultForException(resultSource));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(source + "->" + target) + client.formatExecutionResultForException(
+                            resultSource));
+                }
             }
             is = getInputStream(source, sourceContainerName, sourceBlobPath, 0L);
 
@@ -336,7 +368,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             deleteIfExists(target, targetContainerName, targetBlobPath);
             // 3) create Target
             @SuppressWarnings("unused")
-            Long targetFileSize = upload(is, targetContainerName, targetBlobPath);
+            Long targetFileSize = upload(target, is, targetContainerName, targetBlobPath);
 
             // 4) delete Source
             deleteIfExists(source, sourceContainerName, sourceBlobPath);
@@ -346,6 +378,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(source + "->" + target, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         } finally {
@@ -366,6 +400,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -390,13 +426,18 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
                 }
-                throw new Exception(client.formatExecutionResultForException(result));
             }
             return result.response().body();
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -418,10 +459,16 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             result.formatWithResponseBody(true);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new Exception(client.formatExecutionResultForException(result));
+                if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+                }
             }
         } catch (IOException e) {
             throwProviderConnectException(path, e);
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -463,6 +510,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -487,6 +536,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -501,10 +552,12 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
-            return upload(source, containerName, blobPath);
+            return upload(path, source, containerName, blobPath);
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return -1L;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -616,8 +669,11 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
                 return false;
+            } else if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+            } else {
+                throw new Exception(client.formatExecutionResultForException(result));
             }
-            throw new Exception(client.formatExecutionResultForException(result));
         }
         return true;
     }
@@ -631,8 +687,11 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         if (!HttpUtils.isSuccessful(code)) {
             if (HttpUtils.isNotFound(code)) {
                 throw new SOSNoSuchFileException(path, new Exception(client.formatExecutionResultForException(result)));
+            } else if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+            } else {
+                throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
             }
-            throw new Exception(client.formatExecutionResultForException(result));
         }
         InputStream is = result.response().body();
         if (is == null) {
@@ -662,24 +721,32 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         return is;
     }
 
-    private long upload(InputStream source, String targetContainerName, String targetBlobPath) throws Exception {
+    private long upload(String path, InputStream source, String targetContainerName, String targetBlobPath) throws Exception {
         // 1) PUT file
         AzureBlobStorageClient client = requireAzureClient();
         HttpExecutionResult<String> result = client.executePUTBlob(targetContainerName, targetBlobPath, source, HttpUtils.HEADER_CONTENT_TYPE_BINARY);
         result.formatWithResponseBody(true);
         int code = result.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            throw new Exception(client.formatExecutionResultForException(result));
+            if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+            } else {
+                throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(result));
+            }
         }
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug("%s[upload]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
+            getLogger().debug("%s[%s][upload]%s", getLogPrefix(), path, AzureBlobStorageClient.formatExecutionResult(result));
         }
         // 2) get uploaded file size (PUT not returns file size)
         client = requireAzureClient();// refresh client state - maybe disconnected
         HttpExecutionResult<Void> resultExists = client.executeHEADBlob(targetContainerName, targetBlobPath);
         code = resultExists.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            throw new Exception(client.formatExecutionResultForException(resultExists));
+            if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(getPathOperationPrefix(path) + client.formatExecutionResultForException(resultExists));
+            } else {
+                throw new ProviderException(getPathOperationPrefix(path) + client.formatExecutionResultForException(resultExists));
+            }
         }
         return client.getFileSize(resultExists.response());
     }

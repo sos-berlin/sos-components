@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.hierynomus.mserref.NtStatus;
 import com.hierynomus.msfscc.fileinformation.FileAllInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2Dialect;
@@ -66,7 +67,14 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
         getArguments().tryRedefineHostPort();
     }
 
-    /** Overrides {@link IProvider#connect()} */
+    /** Authentication step:
+     * <ul>
+     * <li>invalid password fails during smbj connection.authenticate()</li>
+     * <li>other authentication errors (e.g. invalid username) may only surface later when opening the share, depending on the server configuration.</li>
+     * </ul>
+     * See {@link #connectShare(String)}<br />
+     * 
+     * Overrides {@link IProvider#connect()} */
     @Override
     public void connect() throws ProviderConnectException {
         if (SOSString.isEmpty(getArguments().getHost().getValue())) {
@@ -87,14 +95,10 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 }
 
                 getLogger().info(getConnectedMsg());
+            } catch (ProviderConnectException e) {
+                throwConnectException(e);
             } catch (Exception e) {
-                logConnectFailedMsg(e);
-
-                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-                // error in methods executed after connect() - e.g. if retry, roll back...
-                // Call disconnect() in the application's finally block.
-                // disconnect();
-                throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+                throwConnectException(e);
             }
         }
     }
@@ -126,17 +130,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
     /** Overrides {@link AProvider#createClientPool()} */
     @Override
     public ProviderReusableResourcePool<SMBJProviderReusableResource, DiskShare> createResourcePool(String path) throws ProviderException {
-        try {
-            return new ProviderReusableResourcePool<>(id -> {
-                try {
-                    return new SMBJProviderReusableResource(id, this, path);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (Exception e) {
-            throw new ProviderException(e);
-        }
+        return new ProviderReusableResourcePool<>(id -> new SMBJProviderReusableResource(id, this, path));
     }
 
     /** Overrides {@link IProvider#injectConnectivityFault()} */
@@ -168,6 +162,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 SMBJProviderUtils.selectFiles(this, share, finalSelection, getSMBPath(directory), result, 0);
                 return result;
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory), e);
         }
@@ -182,6 +178,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 return share.fileExists(getSMBPath(path)) || share.folderExists(getSMBPath(path));
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -201,6 +199,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 }
                 return true;
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -216,6 +216,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 return SMBJProviderUtils.deleteIfExists(share, smbPath);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
@@ -231,6 +233,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 return SMBJProviderUtils.deleteFileIfExists(share, smbPath);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
@@ -248,6 +252,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(source).withResource(share -> {
                 return SMBJProviderUtils.renameFileIfSourceExists(share, smbSourcePath, smbTargetPath, accessMaskMaximumAllowed);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
@@ -267,6 +273,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     return null;
                 }
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -288,6 +296,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     return null;
                 }
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -305,6 +315,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     os.write(content.getBytes(StandardCharsets.UTF_8));
                 }
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -322,6 +334,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             requireResourcePool(path).withResource(share -> {
                 SMBJProviderUtils.setFileLastModifiedFromMillis(share, smbPath, milliseconds, accessMaskMaximumAllowed);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -350,6 +364,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 return new SMBJInputStream(accessMaskMaximumAllowed, share, getSMBPath(path), offset);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -367,6 +383,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 return new SMBJOutputStream(accessMaskMaximumAllowed, share, getSMBPath(path), append);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -385,7 +403,12 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
         return createProviderFile(fullPath, info.getEndOfFile(), info.getLastWriteTime().toEpochMillis());
     }
 
-    /** Can throw a SMBRuntimeException
+    /** Can throw:
+     * <ul>
+     * <li>ProviderAuthenticationException - see explanation {@link #connect()}</li>
+     * <li>ProviderClientNotInitializedException, ProviderConnectException</li>
+     * <li>SMBRuntimeException, SMBApiException (extends SMBRuntimeException)</li>
+     * </ul>
      * 
      * @param path
      * @return connected DiskShare */
@@ -397,7 +420,29 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 // 2 - caller
                 throw new ProviderClientNotInitializedException(getLogPrefix(), Session.class, SOSClassUtil.getMethodName(2));
             }
-            return (DiskShare) session.connectShare(getShareName(path));
+            try {
+                return (DiskShare) session.connectShare(getShareName(path));
+            } catch (SMBApiException e) {
+                NtStatus s = e.getStatus();
+                if (s != null) { // null check not necessary, but ...
+                    switch (s) {
+                    case STATUS_ACCESS_DENIED:
+                    case STATUS_ACCOUNT_DISABLED:
+                    case STATUS_LOGON_FAILURE:
+                    case STATUS_LOGON_TYPE_NOT_GRANTED:
+                    case STATUS_PASSWORD_EXPIRED:
+                        throw new ProviderAuthenticationException(e);
+                    case STATUS_CONNECTION_DISCONNECTED:
+                    case STATUS_CONNECTION_RESET:
+                    case STATUS_NETWORK_SESSION_EXPIRED:
+                    case STATUS_IO_TIMEOUT:
+                        throw new ProviderConnectException(e);
+                    default:
+                        break;
+                    }
+                }
+                throw e;
+            }
         }
     }
 

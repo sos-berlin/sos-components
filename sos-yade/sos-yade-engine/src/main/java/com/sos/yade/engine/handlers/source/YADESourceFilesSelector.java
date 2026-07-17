@@ -17,6 +17,7 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
@@ -99,14 +100,15 @@ public class YADESourceFilesSelector {
 
     private static List<ProviderFile> selectFiles(YADESourceProviderDelegator sourceDelegator, ProviderFileSelection selection)
             throws YADEEngineSourceFilesSelectorException {
-
         // TODO HTTP Provider
         // if(sourceProvider instanceof HTTPProvider) {
         // throw new SOSYADEEngineSourceFilesSelectorException("a file spec selection is not supported with http(s) protocol");
         // }
-
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
+
+        } catch (ProviderException e) {
+            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
         } catch (Exception e) {
             throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
         }
@@ -193,9 +195,12 @@ public class YADESourceFilesSelector {
             ProviderFile file = null;
             try {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
+            } catch (ProviderException e) {
+                Throwable ex = e.getCause() == null ? e : e.getCause();
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex);
             } catch (Exception e) {
                 Throwable ex = e.getCause() == null ? e : e.getCause();
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), e);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex);
             }
             if (file == null) {
                 if (selection.getConfig().isPolling()) {

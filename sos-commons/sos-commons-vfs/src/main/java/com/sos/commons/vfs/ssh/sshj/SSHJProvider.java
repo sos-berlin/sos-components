@@ -97,16 +97,10 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
 
             getLogger().info(getConnectedMsg(SSHJProviderUtils.getConnectedInfos(sshClient)));
 
+        } catch (ProviderConnectException e) {
+            throwConnectException(e);
         } catch (Exception e) {
-            logConnectFailedMsg(e);
-
-            // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-            // error in methods executed after connect() - e.g. if retry, roll back...
-            // Call disconnect() in the application's finally block.
-            // if (isConnected()) {
-            // disconnect();
-            // }
-            throw new ProviderConnectException(String.format("%s[%s][%s]", getLogPrefix(), getAccessInfo(), getConfiguredConnectInfos()), e);
+            throwConnectException(e);
         }
     }
 
@@ -132,17 +126,7 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
     /** Overrides {@link AProvider#createResourcePool()} */
     @Override
     public ProviderReusableResourcePool<SSHJProviderReusableResource, SFTPClient> createResourcePool() throws ProviderException {
-        try {
-            return new ProviderReusableResourcePool<>((id) -> {
-                try {
-                    return new SSHJProviderReusableResource(id, this);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (Exception e) {
-            throw new ProviderException(e);
-        }
+        return new ProviderReusableResourcePool<>(id -> new SSHJProviderReusableResource(id, this));
     }
 
     /** Overrides {@link IProvider#injectConnectivityFault()} */
@@ -181,6 +165,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                 SSHJProviderUtils.selectFiles(this, sftp, finalSelection, directory, result);
                 return result;
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory), e);
         }
@@ -195,6 +181,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             return requireResourcePool().withResource(sftp -> {
                 return SSHJProviderUtils.exists(sftp, path);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -216,6 +204,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                 }
                 return true;
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -235,6 +225,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             });
         } catch (SOSNoSuchFileException e) {
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
@@ -252,6 +244,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             });
         } catch (SOSNoSuchFileException e) {
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e.getCause() == null ? e : e.getCause());
         }
@@ -271,6 +265,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                 }
                 return false;
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
@@ -287,6 +283,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             });
         } catch (NoSuchFileException e) {
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) { // IOException| IllegalStateException
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -302,6 +300,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             return requireResourcePool().withResource(sftp -> {
                 return SSHJProviderUtils.getFileContentIfExists(sftp, path);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -316,6 +316,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             requireResourcePool().withResource(sftp -> {
                 SSHJProviderUtils.uploadContent(sftp, path, content);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -331,6 +333,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             requireResourcePool().withResource(sftp -> {
                 SSHJProviderUtils.setFileLastModifiedFromMillis(sftp, path, milliseconds);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -577,6 +581,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                 SSHJProviderUtils.put(sftp, source, target);
                 sftp.chmod(target, perm);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "][perm=" + perm + "]", e);
         }
@@ -589,6 +595,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             requireResourcePool().withResource(sftp -> {
                 SSHJProviderUtils.put(sftp, source, target);
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }
@@ -601,6 +609,8 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
             requireResourcePool().withResource(sftp -> {
                 sftp.get(sftp.canonicalize(source), new FileSystemFile(target));
             });
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source) + "[" + target + "]", e);
         }

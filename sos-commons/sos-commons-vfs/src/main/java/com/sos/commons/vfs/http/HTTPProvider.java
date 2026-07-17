@@ -35,6 +35,7 @@ import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderException;
@@ -110,19 +111,26 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
                 connected = true;
 
                 getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
+            } catch (ProviderConnectException e) {
+                throwConnectException(e);
             } catch (Exception e) {
-                connected = false;
-
-                logConnectFailedMsg(e);
-
-                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-                // error in methods executed after connect() - e.g. if retry, roll back...
-                // Call disconnect() in the application's finally block.
-
-                // disconnectInternal();
-                throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+                throwConnectException(e);
             }
         }
+    }
+
+    /** Overrides {@link AProvider#throwConnectException(ProviderConnectException)} */
+    @Override
+    public void throwConnectException(ProviderConnectException e) throws ProviderConnectException {
+        connected = false;
+        super.throwConnectException(e);
+    }
+
+    /** Overrides {@link AProvider#throwConnectException(Exception)} */
+    @Override
+    public void throwConnectException(Exception e) throws ProviderConnectException {
+        connected = false;
+        super.throwConnectException(e);
     }
 
     /** Overrides {@link IProvider#isConnected()} */
@@ -180,14 +188,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
                 }
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -218,14 +231,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
                 }
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return true;
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -285,8 +303,12 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return false;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(source + "->" + target) + BaseHttpClient.formatExecutionResult(
+                            result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(source + "->" + target) + BaseHttpClient.formatExecutionResult(result));
                 }
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             deleteIfExists(source);
@@ -296,6 +318,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
         } catch (IOException e) {
             throwProviderConnectException(source + "->" + target, e);
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         } finally {
@@ -318,14 +342,19 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
                 }
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
             }
 
             return createProviderFile(client, uri, result.response());
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -351,6 +380,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -386,12 +417,14 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             BaseHttpClient client = requireHTTPClient();
             InputStream is = client.getHTTPInputStream(uri);
             if (is == null) {
-                throw new Exception("InputStream is null");
+                throw new ProviderException(getPathOperationPrefix(path, uri) + "InputStream is null");
             }
             return is;
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -421,7 +454,7 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             BaseHttpClient client = requireHTTPClient();
             InputStream is = client.getHTTPInputStream(uri, offset);
             if (is == null) {
-                throw new Exception("InputStream is null");
+                throw new ProviderException(getPathOperationPrefix(path, uri) + "InputStream is null");
             }
 
             if (getArguments().isConnectivityFaultSimulationEnabled()) {
@@ -444,6 +477,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -472,6 +507,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
             return null;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -510,7 +547,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, sourceSupplier, sourceSize, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
+                if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                }
             }
 
             // additional call if the simulation of a connection error is enabled
@@ -520,11 +561,17 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
                 result = client.executeHEADOrGETNoResponseBody(uri);
                 code = result.response().statusCode();
                 if (!HttpUtils.isSuccessful(code)) {
-                    throw new Exception(BaseHttpClient.formatExecutionResult(result));
+                    if (HttpUtils.isUnauthorized(code)) {
+                        throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                    } else {
+                        throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                    }
                 }
             }
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -541,10 +588,16 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
             HttpExecutionResult<Void> result = client.executePUTNoResponseBody(uri, content, isWebDAV);
             int code = result.response().statusCode();
             if (!HttpUtils.isSuccessful(code)) {
-                throw new Exception(BaseHttpClient.formatExecutionResult(result));
+                if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                } else {
+                    throw new ProviderException(getPathOperationPrefix(path, uri) + BaseHttpClient.formatExecutionResult(result));
+                }
             }
         } catch (IOException e) {
             throwProviderConnectException(path, uri, e);
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path, uri), e);
         }
@@ -586,8 +639,9 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
         int code = result.response().statusCode();
         if (HttpUtils.isServerError(code)) {
             throw new Exception(BaseHttpClient.formatExecutionResult(result));
-        }
-        if (HttpUtils.isNotFound(code)) {
+        } else if (HttpUtils.isUnauthorized(code)) {
+            throw new ProviderAuthenticationException(BaseHttpClient.formatExecutionResult(result));
+        } else if (HttpUtils.isNotFound(code)) {
             notFoundMsg = BaseHttpClient.formatExecutionResult(result);
         }
 

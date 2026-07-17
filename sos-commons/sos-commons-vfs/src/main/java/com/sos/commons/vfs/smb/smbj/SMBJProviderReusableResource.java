@@ -9,7 +9,7 @@ public class SMBJProviderReusableResource extends AProviderReusableResource<Disk
 
     private DiskShare diskShare;
 
-    public SMBJProviderReusableResource(long id, SMBJProvider provider, String path) throws Exception {
+    public SMBJProviderReusableResource(long id, SMBJProvider provider, String path) throws ProviderException {
         super(id, provider, DiskShare.class);
         tryConnectShare(path);
         logOnCreated();

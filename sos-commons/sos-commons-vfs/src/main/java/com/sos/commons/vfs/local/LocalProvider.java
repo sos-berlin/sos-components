@@ -111,6 +111,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                 result = selectFilesNonRecursive(selection, directory);
             }
             return result;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory.toString()), e);
         }

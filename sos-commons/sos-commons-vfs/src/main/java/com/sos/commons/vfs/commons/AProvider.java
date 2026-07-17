@@ -600,6 +600,31 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         return additionalSecretArgs;
     }
 
+    /** Do not call disconnect() here.<br />
+     * It sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection error in methods executed after connect() -
+     * e.g. if retry, roll back...<br />
+     * Call disconnect() in the application's finally block.
+     * 
+     * @param e
+     * @throws ProviderConnectException */
+    public void throwConnectException(ProviderConnectException e) throws ProviderConnectException {
+        // Do not call throwConnectException(Exception e) to avoid StackOverflowException
+        logConnectFailedMsg(e);
+        throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+    }
+
+    /** Do not call disconnect() here.<br />
+     * It sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection error in methods executed after connect() -
+     * e.g. if retry, roll back...<br />
+     * Call disconnect() in the application's finally block.
+     * 
+     * @param e
+     * @throws ProviderConnectException */
+    public void throwConnectException(Exception e) throws ProviderConnectException {
+        logConnectFailedMsg(e);
+        throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+    }
+
     private void resolveSecrets(SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {
         if (arguments == null) {
             return;
