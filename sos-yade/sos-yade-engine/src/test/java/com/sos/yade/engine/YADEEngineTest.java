@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
 
 public class YADEEngineTest {
@@ -36,7 +37,7 @@ public class YADEEngineTest {
             ISOSLogger logger = new SLF4JLogger();
 
             // Load Arguments from Settings XML
-            YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
+            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
                     settingsReplacerKeepUnresolved);
 
             // Set YADE parallelism from the Job Argument
@@ -104,7 +105,6 @@ public class YADEEngineTest {
         args.add("--file-spec=xyz");
         args.add("--recursive=true");
         // args.add("-h");
-
         YADEEngineMain.main(args.toArray(new String[0]));
     }
 
