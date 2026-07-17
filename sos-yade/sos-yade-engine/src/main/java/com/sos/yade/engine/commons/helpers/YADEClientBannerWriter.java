@@ -140,7 +140,9 @@ public class YADEClientBannerWriter {
         // Error
         if (error != null) {
             if (error instanceof YADEEngineConnectionException && ((YADEEngineConnectionException) error).needsAlternativeProfile()) {
-                logger.info("[Error]" + error.toString());
+                if (jumpHostAddon == null) { // jump host error already written to stderr
+                    logger.info("[Error]" + error.toString());
+                }
             } else {
                 logger.error("[Error]" + error.toString());
             }
@@ -156,7 +158,7 @@ public class YADEClientBannerWriter {
             sb.append(", ").append(YADEArgumentsHelper.toString("Profile", args.getProfile()));
         }
         if (!args.getAlternativeProfile().isEmpty()) {
-            sb.append(" (").append("alternative profile - ").append(args.getAlternativeProfile().getValue()).append(")");
+            sb.append(" (").append("alternative=").append(args.getAlternativeProfile().getValue()).append(")");
         }
         if (!args.getSettings().isEmpty()) {
             sb.append(", ").append(YADEArgumentsHelper.toString("Settings", args.getSettings()));
@@ -256,7 +258,7 @@ public class YADEClientBannerWriter {
         sb.append(getProtocolInfo(logger, label, sourceArgs));
 
         if (!SOSCollection.isEmpty(sourceArgs.getProvider().getAlternatives())) {
-            sb.append(", Protocol alternatives=").append(sourceArgs.getProvider().getAlternatives().size());
+            sb.append(" alternatives(").append(sourceArgs.getProvider().getAlternativesAsString()).append(")");
         }
         if (sourceArgs.getDirectory().getValue() != null) {
             sb.append(", ").append(YADEArgumentsHelper.toString(sourceArgs.getDirectory()));
@@ -353,7 +355,7 @@ public class YADEClientBannerWriter {
         StringBuilder sb = new StringBuilder();
         sb.append(getProtocolInfo(logger, jumpHostArgs));
         if (!SOSCollection.isEmpty(jumpHostArgs.getProvider().getAlternatives())) {
-            sb.append(", SFTP alternatives=").append(jumpHostArgs.getProvider().getAlternatives().size());
+            sb.append(" SFTP alternatives(").append(jumpHostArgs.getProvider().getAlternativesAsString()).append(")");
         }
 
         if (jumpHostArgs.getTempDirectoryParent().getValue() != null) {
@@ -422,7 +424,7 @@ public class YADEClientBannerWriter {
         StringBuilder sb = new StringBuilder();
         sb.append(getProtocolInfo(logger, label, targetArgs));
         if (!SOSCollection.isEmpty(targetArgs.getProvider().getAlternatives())) {
-            sb.append(", Protocol alternatives=").append(targetArgs.getProvider().getAlternatives().size());
+            sb.append(" alternatives(").append(targetArgs.getProvider().getAlternativesAsString()).append(")");
         }
         if (targetArgs.getDirectory().getValue() != null) {
             sb.append(", ").append(YADEArgumentsHelper.toString(targetArgs.getDirectory()));

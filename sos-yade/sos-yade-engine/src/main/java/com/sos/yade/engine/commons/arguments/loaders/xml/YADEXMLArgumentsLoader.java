@@ -1,5 +1,7 @@
 package com.sos.yade.engine.commons.arguments.loaders.xml;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.Map;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
@@ -15,6 +18,8 @@ import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
+import com.sos.commons.xml.exception.SOSXMLDoctypeException;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
@@ -27,7 +32,6 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
 
     private SOSXMLXPath xpath;
     private Element root;
-    private SOSMapVariableReplacer varReplacer;
 
     public YADEXMLArgumentsLoader() {
         super();
@@ -44,14 +48,14 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
      */
     public YADEXMLArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException {
         if (params == null || params.length != 5) {
-            throw new YADEEngineSettingsLoadException(
-                    "missing settingsFile,profile,replacerMap,replaceCaseSensitive,replacerKeepUnresolvedVariables");
+            throw new YADEEngineSettingsLoadException("missing settingsFile,profile,replacerMap,replaceCaseSensitive,replacerKeepUnresolvedVariables",
+                    YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
         if (params[0] == null || !(params[0] instanceof Path)) {
-            throw new YADEEngineSettingsLoadException("missing settingsFile");
+            throw new YADEEngineSettingsLoadException("missing settingsFile", YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
         if (params[1] == null || !(params[1] instanceof String)) {
-            throw new YADEEngineSettingsLoadException("missing profile");
+            throw new YADEEngineSettingsLoadException("missing profile", YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
 
         try {
@@ -69,11 +73,11 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             Node profile = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
             if (profile == null) {
                 throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
-                        + "]not found");
+                        + "]not found", YADEReturnCode.PROFILE_NOT_FOUND);
             }
 
             // params[2] map e.g. System.getenv();
-            varReplacer = new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]);
+            setVarReplacer(new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]));
             YADEXMLGeneralHelper.parse(logger, this, xpath.selectNode(root, "General"));
             YADEXMLProfileHelper.parse(logger, this, profile);
 
@@ -83,8 +87,12 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             }
         } catch (YADEEngineSettingsLoadException e) {
             throw e;
+        } catch (FileNotFoundException e) {
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND);
+        } catch (SOSXMLDoctypeException | SAXException | IOException e) {
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_PARSE_ERROR);
         } catch (Exception e) {
-            throw new YADEEngineSettingsLoadException(e.toString(), e);
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_ERROR);
         } finally {
             clear();
         }
@@ -100,47 +108,59 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
      * <li>This avoids keeping the complete DOM tree in memory during normal execution.</li>
      * </ul>
      */
-    public YADEXMLArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException {
-        if (getArgs().getAlternativeProfile().isEmpty()) {
-            throw new YADEEngineSettingsLoadException("Missing " + YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
+    public static YADEXMLArgumentsLoader loadAlternativeProfile(ISOSLogger logger, AYADEArgumentsLoader previousArgsLoader)
+            throws YADEEngineSettingsLoadException {
+        if (previousArgsLoader.getArgs().getAlternativeProfile().isEmpty()) {
+            throw new YADEEngineSettingsLoadException("Missing " + YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE,
+                    YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
-        if (profileEqualsAlternativeProfile()) {
-            getArgs().getAlternativeProfile().setValue(null);
-            throw new YADEEngineSettingsLoadException("The profile and the alternative profile are identical - " + getArgs().getProfile().getValue());
+        if (previousArgsLoader.profileEqualsAlternativeProfile()) {
+            previousArgsLoader.getArgs().getAlternativeProfile().setValue(null);
+            throw new YADEEngineSettingsLoadException("The profile and the alternative profile are identical - " + previousArgsLoader.getArgs()
+                    .getProfile().getValue(), YADEReturnCode.CONFIGURATION_ERROR);
         }
 
-        getArgs().getProfile().setValue(getArgs().getAlternativeProfile().getValue());
-        getArgs().getAlternativeProfile().setValue(null);
-        setVisitedProfile(getArgs().getProfile().getValue());
+        YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader();
+
+        argsLoader.getArgs().getSettings().setValue(previousArgsLoader.getArgs().getSettings().getValue());
+        argsLoader.getArgs().getProfile().setValue(previousArgsLoader.getArgs().getAlternativeProfile().getValue());
+        argsLoader.getArgs().getAlternativeProfile().setValue(null);
+        argsLoader.setVisitedProfile(previousArgsLoader, argsLoader.getArgs().getProfile().getValue());
 
         try {
-            getArgs().programStart();
+            argsLoader.getArgs().programStart();
 
-            root = SOSXML.parse(getArgs().getSettings().getValue()).getDocumentElement();
-            xpath = SOSXML.newXPath();
+            argsLoader.root = SOSXML.parse(argsLoader.getArgs().getSettings().getValue()).getDocumentElement();
+            argsLoader.xpath = SOSXML.newXPath();
 
-            Node profile = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
+            Node profile = argsLoader.xpath.selectNode(argsLoader.root, "Profiles/Profile[@profile_id='" + argsLoader.getArgs().getProfile()
+                    .getValue() + "']");
             if (profile == null) {
-                throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
-                        + "]not found");
+                throw new YADEEngineSettingsLoadException("[" + argsLoader.getArgs().getSettings().getValue() + "][profile=" + argsLoader.getArgs()
+                        .getProfile().getValue() + "]not found", YADEReturnCode.PROFILE_NOT_FOUND);
             }
 
-            // YADEXMLGeneralHelper.parse(logger, this, xpath.selectNode(root, "General"));
-            YADEXMLProfileHelper.parse(logger, this, profile);
+            argsLoader.setVarReplacer(previousArgsLoader.getVarReplacer());
+            YADEXMLGeneralHelper.parse(logger, argsLoader, argsLoader.xpath.selectNode(argsLoader.root, "General"));
+            YADEXMLProfileHelper.parse(logger, argsLoader, profile);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getProgramStart(),
-                        Instant.now()));
+                logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(argsLoader.getArgs()
+                        .getProgramStart(), Instant.now()));
             }
 
         } catch (YADEEngineSettingsLoadException e) {
             throw e;
+        } catch (FileNotFoundException e) {
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND);
+        } catch (SOSXMLDoctypeException | SAXException | IOException e) {
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_PARSE_ERROR);
         } catch (Exception e) {
-            throw new YADEEngineSettingsLoadException(e.toString(), e);
+            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_ERROR);
         } finally {
-            clear();
+            argsLoader.clear();
         }
-        return this;
+        return argsLoader;
     }
 
     protected Element getRoot() {
@@ -159,14 +179,14 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         if (attrValue == null) {
             return null;
         }
-        return varReplacer.replaceAllVars(attrValue);
+        return getVarReplacer().replaceAllVars(attrValue);
     }
 
     protected String getValue(Node node) {
         if (node == null) {
             return null;
         }
-        return varReplacer.replaceAllVars(SOSXML.getTrimmedValue(node));
+        return getVarReplacer().replaceAllVars(SOSXML.getTrimmedValue(node));
     }
 
     protected void setIntegerArgumentValue(SOSArgument<Integer> arg, Node node) {
@@ -222,7 +242,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         root = null;
         xpath = null;
         if (getArgs().getAlternativeProfile().isEmpty()) {
-            varReplacer = null;
+            setVarReplacer(null);
             clearVisitedProfiles();
         }
     }

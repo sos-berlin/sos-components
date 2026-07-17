@@ -40,8 +40,11 @@ public class YADEProviderDelegatorFactory {
             throws YADEEngineInitializationException {
 
         sourceArgs.getProvider().setConnectivityFaultSimulationEnabled(!sourceArgs.getSimConnFaults().isEmpty());
-        return new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), sourceArgs.getLabel().getValue(), false),
-                sourceArgs);
+
+        YADESourceProviderDelegator delegator = new YADESourceProviderDelegator(initializeProvider(logger, args, sourceArgs.getProvider(), sourceArgs
+                .getLabel().getValue(), false), sourceArgs);
+        delegator.useJumpInitialSourceTargetConnectionErrorCode(args.useJumpInitialSourceTargetConnectionErrorCode());
+        return delegator;
     }
 
     // TODO alternate connections ... + see YADEEngineSourcePollingHandler.ensureConnected
@@ -51,20 +54,23 @@ public class YADEProviderDelegatorFactory {
             return null;
         }
         targetArgs.getProvider().setConnectivityFaultSimulationEnabled(!targetArgs.getSimConnFaults().isEmpty());
-        return new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), targetArgs.getLabel().getValue(), true),
-                targetArgs);
+
+        YADETargetProviderDelegator delegator = new YADETargetProviderDelegator(initializeProvider(logger, args, targetArgs.getProvider(), targetArgs
+                .getLabel().getValue(), true), targetArgs);
+        delegator.useJumpInitialSourceTargetConnectionErrorCode(args.useJumpInitialSourceTargetConnectionErrorCode());
+        return delegator;
     }
 
     public static AYADEProviderDelegator reassignDelegator(ISOSLogger logger, YADEArguments args, AYADEProviderDelegator delegator,
             AProviderArguments providerArgs) throws YADEEngineInitializationException {
         if (delegator.isSource()) {
             YADESourceArguments sourceArgs = (YADESourceArguments) delegator.getArgs();
-            sourceArgs.setProvider(providerArgs);
+            sourceArgs.reassign(providerArgs);
             return createSourceDelegator(logger, args, sourceArgs);
         }
 
         YADETargetArguments targetArgs = (YADETargetArguments) delegator.getArgs();
-        targetArgs.setProvider(providerArgs);
+        targetArgs.reassign(providerArgs);
         return createTargetDelegator(logger, args, targetArgs);
     }
 

@@ -59,7 +59,7 @@ public class YADESourceFilesSteadyStateChecker {
         }
         if (!steady) {
             throw new YADEEngineSourceSteadyFilesException("[not all files are steady][not steady]" + sourceFiles.stream().filter(
-                    f -> !((YADEProviderFile) f).getSteady().isSteady()).map(f -> f.getFullPath()).collect(Collectors.joining(";")));
+                    f -> !((YADEProviderFile) f).getSteady().isSteady()).map(f -> f.getFullPath()).collect(Collectors.joining(";")), sourceDelegator);
         }
     }
 
@@ -73,7 +73,7 @@ public class YADESourceFilesSteadyStateChecker {
             String path = providerFile.getFullPath();
             providerFile = sourceDelegator.getProvider().rereadFileIfExists(providerFile);
             if (providerFile == null) {
-                throw new YADEEngineSourceSteadyFilesException("[" + path + "]not found");
+                throw new YADEEngineSourceSteadyFilesException("[" + path + "]not found", sourceDelegator);
             }
             file = (YADEProviderFile) providerFile;
             file.getSteady().checkIfSteady();
@@ -82,7 +82,7 @@ public class YADESourceFilesSteadyStateChecker {
         } catch (YADEEngineSourceSteadyFilesException e) {
             throw e;
         } catch (Exception e) {
-            throw new YADEEngineSourceSteadyFilesException(e);
+            throw new YADEEngineSourceSteadyFilesException(e, sourceDelegator);
         }
     }
 

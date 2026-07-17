@@ -5,6 +5,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 
@@ -22,6 +23,9 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isHTTP;
     private final boolean isAzure;
     private final boolean isWindows;
+
+    /** see {@link YADEReturnCode#JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR} */
+    private boolean useJumpInitialSourceTargetConnectionErrorCode = false;
 
     public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) {
         this.provider = provider;
@@ -51,6 +55,12 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     @Override
     public boolean isSource() {
         return source;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#isJumpHost()} */
+    @Override
+    public boolean isJumpHost() {
+        return YADEJumpHostArguments.LABEL.equals(label);
     }
 
     /** Overrides {@link IYADEProviderDelegator#getLabel()} */
@@ -95,8 +105,19 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return isWindows;
     }
 
-    public boolean isJumpHost() {
-        return YADEJumpHostArguments.LABEL.equals(label);
+    public YADEReturnCode getConnectionErrorReturnCode() {
+        if (isJumpHost()) {
+            return YADEReturnCode.JUMP_CONNECTION_ERROR;
+        }
+        return isSource() ? YADEReturnCode.SOURCE_CONNECTION_ERROR : YADEReturnCode.TARGET_CONNECTION_ERROR;
+    }
+
+    public void useJumpInitialSourceTargetConnectionErrorCode(boolean val) {
+        useJumpInitialSourceTargetConnectionErrorCode = val;
+    }
+
+    public boolean useJumpInitialSourceTargetConnectionErrorCode() {
+        return useJumpInitialSourceTargetConnectionErrorCode;
     }
 
     private boolean isHTTPProvider() {

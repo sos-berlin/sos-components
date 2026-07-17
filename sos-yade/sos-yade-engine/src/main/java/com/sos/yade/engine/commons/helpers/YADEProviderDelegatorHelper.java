@@ -4,6 +4,8 @@ import java.util.concurrent.Callable;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
@@ -58,7 +60,7 @@ public class YADEProviderDelegatorHelper {
                         } catch (YADEEngineInitializationException ee) {
                             // credential store file not found etc...
                             if (i >= max) {
-                                throw new YADEEngineConnectionException(ee);
+                                throw new YADEEngineConnectionException(ee, delegator.getConnectionErrorReturnCode(), delegator);
                             }
                             logger.info(ee);
                         } catch (Exception ee) {
@@ -75,16 +77,24 @@ public class YADEProviderDelegatorHelper {
                     }
                 }
             } catch (YADEEngineConnectionException ex) {
+                if (delegator.useJumpInitialSourceTargetConnectionErrorCode()) {
+                    ex.setReturnCode(YADEReturnCode.JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR);
+                }
+
                 if (args.getAlternativeProfile().isEmpty()) {
                     throw ex;
                 }
                 ex.setNeedsAlternativeProfile();
                 throw ex;
             } catch (Exception ex) {
+                YADEReturnCode rc = delegator.useJumpInitialSourceTargetConnectionErrorCode()
+                        ? YADEReturnCode.JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR : delegator.getConnectionErrorReturnCode();
+
+                YADEEngineConnectionException exx = new YADEEngineConnectionException(ex, rc, delegator);
                 if (args.getAlternativeProfile().isEmpty()) {
                     throw ex;
                 }
-                YADEEngineConnectionException exx = new YADEEngineConnectionException(ex);
+
                 exx.setNeedsAlternativeProfile();
                 throw exx;
             }
@@ -113,7 +123,7 @@ public class YADEProviderDelegatorHelper {
         if (!retry.isEnabled()) {
             try {
                 delegator.getProvider().ensureConnected();
-            } catch (Exception e) {
+            } catch (ProviderConnectException e) {
                 throwConnectionException(delegator, e);
             }
             return;
@@ -123,7 +133,7 @@ public class YADEProviderDelegatorHelper {
             try {
                 delegator.getProvider().ensureConnected();
                 return;
-            } catch (Exception e) {
+            } catch (ProviderConnectException e) {
                 if (retryCounter == retry.getMaxRetries()) {
                     throwConnectionException(delegator, e);
                 }
@@ -161,27 +171,28 @@ public class YADEProviderDelegatorHelper {
         }
     }
 
-    private static void throwConnectionException(AYADEProviderDelegator delegator, Throwable e) throws YADEEngineConnectionException {
+    private static void throwConnectionException(AYADEProviderDelegator delegator, ProviderConnectException e) throws YADEEngineConnectionException {
         YADEEngineConnectionException ex = getConnectionException(delegator, e);
         if (ex != null) {
             throw ex;
         }
     }
 
-    public static YADEEngineConnectionException getConnectionException(AYADEProviderDelegator delegator, Throwable ex) {
+    public static YADEEngineConnectionException getConnectionException(AYADEProviderDelegator delegator, ProviderConnectException ex) {
         if (delegator == null) {
             return null;
         }
         if (delegator.isJumpHost()) {
-            return new YADEEngineJumpHostConnectionException(ex.getMessage(), ex.getCause());
+            return new YADEEngineJumpHostConnectionException(ex, delegator);
         }
         if (delegator instanceof YADESourceProviderDelegator) {
-            return new YADEEngineSourceConnectionException(ex.getMessage(), ex.getCause());
+            return new YADEEngineSourceConnectionException(ex, delegator);
         }
-        return new YADEEngineTargetConnectionException(ex.getMessage(), ex.getCause());
+        return new YADEEngineTargetConnectionException(ex, delegator);
     }
 
-    public static boolean isConnectionException(Throwable cause) {
+    @SuppressWarnings("unused")
+    private static boolean isConnectionException(Throwable cause) {
         if (cause == null) {
             return false;
         }
@@ -195,7 +206,19 @@ public class YADEProviderDelegatorHelper {
         return false;
     }
 
-    public static boolean isSourceOrTargetNotConnected(IYADEProviderDelegator sourceDelegator, IYADEProviderDelegator targetDelegator) {
+    public static boolean isSourceConnected(IYADEProviderDelegator sourceDelegator) {
+        return sourceDelegator.getProvider().isConnected();
+    }
+
+    public static boolean isTargetConnected(IYADEProviderDelegator targetDelegator) {
+        if (targetDelegator == null) {
+            return true;
+        }
+        return targetDelegator.getProvider().isConnected();
+    }
+
+    @SuppressWarnings("unused")
+    private static boolean isSourceOrTargetNotConnected(IYADEProviderDelegator sourceDelegator, IYADEProviderDelegator targetDelegator) {
         return !sourceDelegator.getProvider().isConnected() || (targetDelegator != null && !targetDelegator.getProvider().isConnected());
     }
 

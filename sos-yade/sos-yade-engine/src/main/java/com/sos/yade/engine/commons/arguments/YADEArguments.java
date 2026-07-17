@@ -8,6 +8,7 @@ import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.engine.commons.YADEReturnCode;
 
 public class YADEArguments extends ASOSArguments {
 
@@ -59,6 +60,9 @@ public class YADEArguments extends ASOSArguments {
     private SOSArgument<Path> settings = new SOSArgument<>(STARTUP_ARG_SETTINGS, false);
     private SOSArgument<String> profile = new SOSArgument<>(STARTUP_ARG_PROFILE, false);
     private SOSArgument<String> alternativeProfile = new SOSArgument<>(STARTUP_ARG_ALTERNATIVE_PROFILE, false);
+
+    /** see {@link YADEReturnCode#JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR} */
+    private boolean useJumpInitialSourceTargetConnectionErrorCode = false;
 
     /** - Meta info ------- */
     /** COPY/MOVE/GETLIST/REMOVE */
@@ -179,6 +183,14 @@ public class YADEArguments extends ASOSArguments {
 
     public Instant getExecutionEnd() {
         return executionEnd;
+    }
+
+    public void useJumpInitialSourceTargetConnectionErrorCode(boolean val) {
+        useJumpInitialSourceTargetConnectionErrorCode = val;
+    }
+
+    public boolean useJumpInitialSourceTargetConnectionErrorCode() {
+        return useJumpInitialSourceTargetConnectionErrorCode;
     }
 
     public SOSArgument<Integer> getConnectionErrorRetryCountMax() {

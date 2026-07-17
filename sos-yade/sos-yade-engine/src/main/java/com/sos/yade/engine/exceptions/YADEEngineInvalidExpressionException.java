@@ -9,6 +9,6 @@ public class YADEEngineInvalidExpressionException extends YADEEngineException {
     }
 
     public YADEEngineInvalidExpressionException(String msg, YADEEngineInvalidExpressionException ex) {
-        super(msg + ex.getMessage() + ex.getCause());
+        super(msg + ex.getMessage() + ex.getCause(), ex.getDelegator());
     }
 }

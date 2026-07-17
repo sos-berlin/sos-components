@@ -18,12 +18,14 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
 
@@ -108,9 +110,11 @@ public class YADESourceFilesSelector {
             return sourceDelegator.getProvider().selectFiles(selection);
 
         } catch (ProviderException e) {
-            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
+            YADEReturnCode returnCode = getReturnCode(sourceDelegator, e);
+            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause(), returnCode, sourceDelegator);
         } catch (Exception e) {
-            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
+            throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause(), YADEReturnCode.SOURCE_FILES_ERROR,
+                    sourceDelegator);
         }
     }
 
@@ -139,7 +143,7 @@ public class YADESourceFilesSelector {
             builder.minFileSize(sourceArgs.getMinFileSize().getValue());
             builder.maxFileSize(sourceArgs.getMaxFileSize().getValue());
         } catch (Exception e) {
-            throw new YADEEngineSourceFilesSelectorException(e);
+            throw new YADEEngineSourceFilesSelectorException(e, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
         }
         return new ProviderFileSelection(builder.build(sourceDelegator.getProvider().getLogger()));
     }
@@ -159,13 +163,13 @@ public class YADESourceFilesSelector {
             arg = args.getFileList();
             if (!Files.exists(args.getFileList().getValue())) {
                 throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]doesn't exist", lp, args.getFileList().getName(), args
-                        .getFileList().getValue()));
+                        .getFileList().getValue()), YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
             }
             try {
                 singleFiles = SOSPath.readFileNonEmptyLines(args.getFileList().getValue());
             } catch (IOException e) {
                 throw new YADEEngineSourceFilesSelectorException(String.format("%s[%s=%s]error reading from file", lp, args.getFileList().getName(),
-                        args.getFileList().getValue()), e);
+                        args.getFileList().getValue()), e, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
             }
         }
         if (SOSCollection.isEmpty(singleFiles)) {
@@ -197,10 +201,11 @@ public class YADESourceFilesSelector {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
             } catch (ProviderException e) {
                 Throwable ex = e.getCause() == null ? e : e.getCause();
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex);
+                YADEReturnCode returnCode = getReturnCode(sourceDelegator, e);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, returnCode, sourceDelegator);
             } catch (Exception e) {
                 Throwable ex = e.getCause() == null ? e : e.getCause();
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
             }
             if (file == null) {
                 if (selection.getConfig().isPolling()) {
@@ -252,7 +257,7 @@ public class YADESourceFilesSelector {
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format(
-                        "[TransferZeroByteFiles=NO]All %s file(s) have zero byte size, transfer aborted", zeroSizeFiles.size()));
+                        "[TransferZeroByteFiles=NO]All %s file(s) have zero byte size, transfer aborted", zeroSizeFiles.size()), sourceDelegator);
             }
             break;
         case RELAXED:  // not transfer zero byte files
@@ -268,7 +273,7 @@ public class YADESourceFilesSelector {
                     i++;
                 }
                 throw new YADEEngineSourceZeroByteFilesException(String.format("[TransferZeroByteFiles=STRICT]%s zero byte size file(s) detected",
-                        zeroSizeFiles.size()));
+                        zeroSizeFiles.size()), sourceDelegator);
             }
             break;
         default:
@@ -295,7 +300,7 @@ public class YADESourceFilesSelector {
 
         if (size == 0 && sourceDelegator.getArgs().getErrorOnNoFilesFound().getValue()) {
             throw new YADEEngineSourceFilesSelectorException(String.format("[%s][%s=true]No files found", sourceDelegator.getLabel(), sourceDelegator
-                    .getArgs().getErrorOnNoFilesFound().getName()));
+                    .getArgs().getErrorOnNoFilesFound().getName()), YADEReturnCode.SOURCE_NO_FILES_FOUND_ERROR, sourceDelegator);
         }
 
         // ResultSet
@@ -307,12 +312,21 @@ public class YADESourceFilesSelector {
             int expectedSize = clientArgs.getExpectedResultSetCount().getValue();
             if (op.compare(size, expectedSize)) {
                 throw new YADEEngineSourceFilesSelectorException(String.format("[%s][files found=%s][%s]%s %s", sourceDelegator.getLabel(), size,
-                        clientArgs.getRaiseErrorIfResultSetIs().getName(), op.getFirstAlias(), expectedSize));
+                        clientArgs.getRaiseErrorIfResultSetIs().getName(), op.getFirstAlias(), expectedSize),
+                        YADEReturnCode.SOURCE_FILES_EXPECTED_RESULTSET_ERROR, sourceDelegator);
             }
             logger.info("[%s][%s=%s %s][files found=%s]ok", sourceDelegator.getLabel(), clientArgs.getRaiseErrorIfResultSetIs().getName(), op
                     .getFirstAlias(), expectedSize, size);
         }
         return size;
+    }
+
+    private static YADEReturnCode getReturnCode(YADESourceProviderDelegator sourceDelegator, ProviderException e) {
+        YADEReturnCode returnCode = YADEEngineException.getConnectionErrorReturnCode(sourceDelegator, e);
+        if (returnCode == null) {
+            returnCode = YADEReturnCode.SOURCE_FILES_ERROR;
+        }
+        return returnCode;
     }
 
 }

@@ -20,6 +20,7 @@ import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.addons.YADEEngineJumpHostAddon.JumpHostConfig.ConfigFile;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
@@ -27,11 +28,16 @@ import com.sos.yade.engine.commons.arguments.YADETargetArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLJumpHostSettingsWriter;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
+import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.exceptions.YADEEngineCommandException;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
+import com.sos.yade.engine.exceptions.YADEEngineJumpHostCommandException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
+import com.sos.yade.engine.handlers.command.YADECommandExecutor.YADECommandResult;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsHandler;
 
 /** SOURCE_TO_JUMP_HOST_...: Source(Any Provider) -> Jump(SSHProvider) -> Target(Any Provider) - old name - FROM INTERNET<br/>
@@ -212,7 +218,8 @@ public class YADEEngineJumpHostAddon {
                     upload(sourceDelegator, config.sourceToJumpHost.fileList);
                 } catch (Exception e) {
                     throw new YADEEngineJumpHostException(String.format("[%s][upload][%s=%s]%s", YADEClientArguments.LABEL,
-                            config.sourceToJumpHost.fileList.configurationName, config.sourceToJumpHost.fileList.localFile, e.toString()), e);
+                            config.sourceToJumpHost.fileList.configurationName, config.sourceToJumpHost.fileList.localFile, e.toString()), e,
+                            sourceDelegator);
                 }
             }
             isReady = true;
@@ -257,7 +264,7 @@ public class YADEEngineJumpHostAddon {
                         } catch (Exception e) {
                             throw new YADEEngineJumpHostException(String.format("[%s][download][%s=%s]%s", YADEClientArguments.LABEL,
                                     config.sourceToJumpHost.resultSetFile.configurationName, config.sourceToJumpHost.resultSetFile.localFile, e
-                                            .toString()), e);
+                                            .toString()), e, sourceDelegator);
                         }
                     }
                 } else {
@@ -276,7 +283,7 @@ public class YADEEngineJumpHostAddon {
         } catch (YADEEngineJumpHostException e) {
             throw e;
         } catch (Exception e) {
-            throw new YADEEngineJumpHostException(e.toString(), e);
+            throw new YADEEngineJumpHostException(e.toString(), e, (IYADEProviderDelegator) null);
         } finally {
             deleteJumpHostTempDirectory(jumpHostDelegator, isSourceDisconnectingEnabled);
         }
@@ -284,6 +291,37 @@ public class YADEEngineJumpHostAddon {
 
     public boolean isConfiguredOnSource() {
         return argsLoader.getJumpHostArgs().isConfiguredOnSource();
+    }
+
+    public void handleAlternativeProfileOnSourceConnectionException(AYADEProviderDelegator delegator, YADEEngineJumpHostCommandException e)
+            throws YADEEngineConnectionException {
+        if (argsLoader.getArgs().getAlternativeProfile().isEmpty()) {
+            return;
+        }
+        handleConnectionExceptionExitCode(delegator, e);
+    }
+
+    // Source -> JUMP -> TO INTERNET
+    public void handleAlternativeProfileOnTargetConnectionException(YADETargetProviderDelegator targetDelegator, YADECommandResult r)
+            throws YADEEngineConnectionException {
+        if (argsLoader.getArgs().getAlternativeProfile().isEmpty()) {
+            return;
+        }
+
+        handleConnectionExceptionExitCode(targetDelegator, r.getTargetException());
+    }
+
+    private void handleConnectionExceptionExitCode(AYADEProviderDelegator delegator, YADEEngineCommandException e)
+            throws YADEEngineConnectionException {
+        if (e == null || e.getExitCode() == null) {
+            return;
+        }
+
+        if (e.getExitCode() == YADEReturnCode.JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR.getCode()) {
+            YADEEngineConnectionException ex = new YADEEngineConnectionException(e, YADEReturnCode.fromCode(e.getExitCode()), delegator);
+            ex.setNeedsAlternativeProfile();
+            throw ex;
+        }
     }
 
     private void setFailed(List<ProviderFile> sourceFiles) {
@@ -345,7 +383,7 @@ public class YADEEngineJumpHostAddon {
                     logger.info("[%s][deleteSourceFiles][%s]deleted", delegator.getLabel(), f.getFullPath());
                 }
             } catch (Exception e) {
-                throw new YADEEngineJumpHostException(String.format("[%s][deleteSourceFiles]%s", delegator.getLabel(), e.toString()), e);
+                throw new YADEEngineJumpHostException(String.format("[%s][deleteSourceFiles]%s", delegator.getLabel(), e.toString()), e, delegator);
             }
         }
     }
@@ -359,7 +397,7 @@ public class YADEEngineJumpHostAddon {
             logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsXML);
         } catch (Exception e) {
             throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(), config.settingsXML,
-                    e), e);
+                    e), e, delegator);
         }
     }
 
@@ -370,7 +408,7 @@ public class YADEEngineJumpHostAddon {
             logger.info("[%s][upload][Settings][%s=%s]uploaded", label, delegator.getLabel(), config.settingsXMLMoveRemoveSource);
         } catch (Exception e) {
             throw new YADEEngineJumpHostException(String.format("[%s][upload][Settings][%s=%s]%s", label, delegator.getLabel(),
-                    config.settingsXMLMoveRemoveSource, e), e);
+                    config.settingsXMLMoveRemoveSource, e), e, delegator);
         }
     }
 

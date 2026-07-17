@@ -21,10 +21,12 @@ import com.sos.commons.util.loggers.impl.SLF4JLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.engine.commons.YADEOutcomeHistory;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineSettingsLoadException;
 
 public class YADEEngineMain {
@@ -33,8 +35,6 @@ public class YADEEngineMain {
     private static final String STARTUP_SWITCH_HELP_2 = "help";
     // the standard names uses '_' see normalizeArguments(...)
     private static final String STARTUP_ARG_RETURN_VALUES = "return_values";
-
-    private static final int ERROR_EXIT_CODE = 99;
 
     private YADEEngine engine;
     private ISOSLogger logger;
@@ -74,7 +74,7 @@ public class YADEEngineMain {
                 logger.debug("[normalizedArgs]" + normalizedArgs);
             }
             if (!checkArguments(normalizedArgs)) {
-                return 0;
+                return YADEReturnCode.SUCCESS.getCode();
             }
 
             historyReturnValuesFile = normalizedArgs.get(STARTUP_ARG_RETURN_VALUES);
@@ -99,11 +99,17 @@ public class YADEEngineMain {
             YADEEngine engine = new YADEEngine();
             files = engine.execute(logger, argsLoader, true);
 
-            return 0;
+            return YADEReturnCode.SUCCESS.getCode();
+        } catch (YADEEngineException e) {
+            exception = e;
+            int rt = ((YADEEngineException) e).getReturnCode().getCode();
+            logger.error("[returnCode=" + rt + "]" + e.toString(), e);
+            return rt;
         } catch (Exception e) {
             exception = e;
-            logger.error(e.toString(), e);
-            return ERROR_EXIT_CODE;
+            int rt = new YADEEngineException(e).getReturnCode().getCode();
+            logger.error("[returnCode=" + rt + "]" + e.toString(), e);
+            return rt;
         } finally {
             if (historyReturnValuesFile != null) {
                 writeHistoryToReturnValuesFile(logger, historyReturnValuesFile, argsLoader, files, exception);
@@ -127,7 +133,8 @@ public class YADEEngineMain {
         }
         if (missingRequired.size() > 0) {
             printUsage();
-            throw new YADEEngineSettingsLoadException("[missing required arguments]" + String.join(",", missingRequired));
+            throw new YADEEngineSettingsLoadException("[missing required arguments]" + String.join(",", missingRequired),
+                    YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
         return true;
     }
@@ -252,7 +259,7 @@ public class YADEEngineMain {
     private String getRequiredArgumentValue(Map<String, String> args, String name) throws YADEEngineSettingsLoadException {
         String val = args.get(name);
         if (SOSString.isEmpty(val)) {
-            throw new YADEEngineSettingsLoadException("missing -" + name);
+            throw new YADEEngineSettingsLoadException("missing -" + name, YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
         return val;
     }

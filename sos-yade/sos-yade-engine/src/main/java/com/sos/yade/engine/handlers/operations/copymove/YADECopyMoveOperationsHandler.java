@@ -12,7 +12,9 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
@@ -40,7 +42,8 @@ public class YADECopyMoveOperationsHandler {
     public static void process(TransferOperation operation, ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator,
             YADETargetProviderDelegator targetDelegator, List<ProviderFile> sourceFiles, AtomicBoolean cancel) throws Exception {
         if (targetDelegator == null) {
-            throw new YADEEngineOperationException("TargetDelegator is required but missing");
+            throw new YADEEngineOperationException("TargetDelegator is required but missing", YADEReturnCode.CONFIGURATION_ERROR,
+                    (IYADEProviderDelegator) null);
         }
 
         // 1) Source/Target: initialize transfer configuration(cumulative file,compress,atomic etc.)
@@ -105,8 +108,16 @@ public class YADECopyMoveOperationsHandler {
                 }
             });
             executor.awaitAndShutdown();
+        } catch (YADEEngineTransferFileException e) {
+            throw e;
+        } catch (YADEEngineOperationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new YADEEngineOperationException(getTransferFileException(e));
+            YADEEngineTransferFileException tfe = getTransferFileException(e);
+            if (tfe == null) {
+                throw new YADEEngineOperationException(e, YADEReturnCode.DEFAULT_ERROR, (IYADEProviderDelegator) null);
+            }
+            throw new YADEEngineOperationException(tfe, tfe.getReturnCode(), tfe.getDelegator());
         } finally {
             YADEParallelExecutorFactory.cleanup(sourceDelegator, targetDelegator);
         }
@@ -339,18 +350,18 @@ public class YADECopyMoveOperationsHandler {
         rollbackFile(logger, config, targetDelegator, targetDelegator.isJumpHost(), f);
     }
 
-    private static Throwable getTransferFileException(Throwable ex) {
+    private static YADEEngineTransferFileException getTransferFileException(Throwable ex) {
         if (ex == null) {
-            return ex;
+            return null;
         }
         Throwable e = ex;
         while (e != null) {
             if (e instanceof YADEEngineTransferFileException) {
-                return e;
+                return (YADEEngineTransferFileException) e;
             }
             e = e.getCause();
         }
-        return e;
+        return new YADEEngineTransferFileException(e, YADEReturnCode.DEFAULT_ERROR, (IYADEProviderDelegator) null);
     }
 
 }

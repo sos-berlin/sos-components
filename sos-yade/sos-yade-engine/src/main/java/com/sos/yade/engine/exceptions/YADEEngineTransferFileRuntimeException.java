@@ -4,7 +4,7 @@ public class YADEEngineTransferFileRuntimeException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public YADEEngineTransferFileRuntimeException(Throwable ex) {
+    public YADEEngineTransferFileRuntimeException(YADEEngineException ex) {
         super(ex);
     }
 

@@ -79,7 +79,7 @@ public class YADEXMLJumpHostSettingsWriter {
         YADESourceArguments sourceArgs = argsLoader.getSourceArgs();
 
         StringBuilder fragments = generateFragments(logger, argsLoader.getJumpHostArgs(), sourceArgs);
-        StringBuilder profile = generateProfileSourceToJumpHostMOVERemove(sourceArgs, config, profileId);
+        StringBuilder profile = generateProfileSourceToJumpHostMOVERemove(argsLoader.getArgs(), sourceArgs, config, profileId);
         return generateConfiguration(fragments, profile).toString();
     }
 
@@ -711,7 +711,9 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProfileSourceToJumpHost(YADEArguments args, YADEClientArguments clientArgs, YADESourceArguments sourceArgs,
             YADETargetArguments targetArgs, JumpHostConfig config, String operation, boolean useTarget) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
+        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId()));
+        sb.append(generateUseJumpInitialSourceTargetConnectionErrorCode(args));
+        sb.append(">");
         sb.append("<Operation>");
         sb.append("<").append(operation).append(">");
 
@@ -871,9 +873,12 @@ public class YADEXMLJumpHostSettingsWriter {
         return sb;
     }
 
-    private static StringBuilder generateProfileSourceToJumpHostMOVERemove(YADESourceArguments sourceArgs, JumpHostConfig config, String profileId) {
+    private static StringBuilder generateProfileSourceToJumpHostMOVERemove(YADEArguments args, YADESourceArguments sourceArgs, JumpHostConfig config,
+            String profileId) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<Profile profile_id=").append(attrValue(profileId)).append(">");
+        sb.append("<Profile profile_id=").append(attrValue(profileId));
+        sb.append(generateUseJumpInitialSourceTargetConnectionErrorCode(args));
+        sb.append(">");
         sb.append("<Operation>");
         sb.append("<Remove>");
         sb.append("<RemoveSource>");
@@ -912,7 +917,9 @@ public class YADEXMLJumpHostSettingsWriter {
     private static StringBuilder generateProfileJumpHostToTargetCOPY(YADEArguments args, YADESourceArguments sourceArgs,
             YADETargetArguments targetArgs, JumpHostConfig config) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId())).append(">");
+        sb.append("<Profile profile_id=").append(attrValue(config.getProfileId()));
+        sb.append(generateUseJumpInitialSourceTargetConnectionErrorCode(args));
+        sb.append(">");
         sb.append("<Operation>");
         sb.append("<Copy>");
 
@@ -1152,6 +1159,13 @@ public class YADEXMLJumpHostSettingsWriter {
         }
         sb.append("</").append(name).append(">");
         return sb.toString();
+    }
+
+    private static String generateUseJumpInitialSourceTargetConnectionErrorCode(YADEArguments args) {
+        if (args.getAlternativeProfile().isEmpty()) {
+            return "";
+        }
+        return " " + YADEXMLProfileHelper.ATTR_NAME_USE_JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR_CODE + "=" + attrValue("true");
     }
 
     private static String attrValue(String val) {

@@ -39,7 +39,7 @@ public class YADEChecksumFileHelper {
             logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(),
                     currentTransferChecksum, sourceFile.getTarget().getFullPath());
             throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceFile
-                    .getIntegrityHash(), currentTransferChecksum));
+                    .getIntegrityHash(), currentTransferChecksum), targetDelegator);
         }
     }
 

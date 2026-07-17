@@ -9,6 +9,8 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.exceptions.YADEEngineSourceInputStreamException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetOutputStreamException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADETargetProviderFile;
 
@@ -17,18 +19,25 @@ public class YADEFileStreamHelper {
 
     /** Source: InputStream */
     public static InputStream getSourceInputStream(YADECopyMoveOperationsConfig config, YADESourceProviderDelegator sourceDelegator,
-            YADEProviderFile sourceFile, long sourceFileReadOffset) throws ProviderException {
-        return sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath(), sourceFileReadOffset);
+            YADEProviderFile sourceFile, long sourceFileReadOffset) throws YADEEngineSourceInputStreamException {
+        try {
+            return sourceDelegator.getProvider().getInputStream(sourceFile.getFullPath(), sourceFileReadOffset);
+        } catch (Exception e) {
+            throw new YADEEngineSourceInputStreamException(e, sourceDelegator);
+        }
     }
 
     /** Target: OutputStream */
     public static OutputStream getTargetOutputStream(YADECopyMoveOperationsConfig config, YADETargetProviderDelegator targetDelegator,
-            YADETargetProviderFile targetFile, boolean isAppendEnabled, boolean isCompress) throws ProviderException {
-        OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), isAppendEnabled);
+            YADETargetProviderFile targetFile, boolean isAppendEnabled, boolean isCompress) throws YADEEngineTargetOutputStreamException {
         try {
+            OutputStream os = targetDelegator.getProvider().getOutputStream(targetFile.getFullPath(), isAppendEnabled);
             return isCompress ? new GZIPOutputStream(os) : os;
+        } catch (ProviderException e) {
+            throw new YADEEngineTargetOutputStreamException(e, targetDelegator);
         } catch (Exception e) {
-            throw new ProviderException("[" + targetDelegator.getLabel() + "][" + targetFile.getFullPath() + "]" + e, e);
+            throw new YADEEngineTargetOutputStreamException(new ProviderException("[" + targetDelegator.getLabel() + "][" + targetFile.getFullPath()
+                    + "]" + e, e), targetDelegator);
         }
     }
 

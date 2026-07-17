@@ -7,6 +7,8 @@ import java.util.List;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
 import com.sos.yade.engine.commons.arguments.YADESourcePollingArguments;
@@ -15,6 +17,7 @@ import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
+import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
 import com.sos.yade.engine.exceptions.YADEEngineSourcePollingException;
 
 public class YADESourceFilesPolling {
@@ -50,7 +53,7 @@ public class YADESourceFilesPolling {
     }
 
     public YADESourceProviderDelegator ensureConnectedOnStart(ISOSLogger logger, YADEArguments args, YADESourceProviderDelegator sourceDelegator)
-            throws YADEEngineSourcePollingException {
+            throws YADEEngineConnectionException {
         if (ensureConnectedOnStartExecuted) {
             ensureConnected(logger, sourceDelegator);
         } else {
@@ -60,7 +63,10 @@ public class YADESourceFilesPolling {
                 try {
                     sourceDelegator = (YADESourceProviderDelegator) YADEProviderDelegatorHelper.ensureConnectedOnStart(logger, args, sourceDelegator);
                     ensureConnectedOnStartExecuted = true;
-                } catch (Exception e) {
+                } catch (YADEEngineConnectionException e) {
+                    if (e.needsAlternativeProfile()) {
+                        throw e;
+                    }
                     handleConnectException(logger, sourceDelegator, count, e);
                 }
             }
@@ -96,9 +102,10 @@ public class YADESourceFilesPolling {
             }
 
             if (!shouldSelectFiles && args.getPolling().getWaitForSourceFolder().isTrue()) {
-                // sourceDir!=null is already checked on method begin
-                ensureConnected(logger, sourceDelegator, currentPollingTime);
                 try {
+                    // sourceDir!=null is already checked on method begin
+                    ensureConnected(logger, sourceDelegator, currentPollingTime);
+
                     if (sourceDelegator.getProvider().exists(sourceDelegator.getDirectory())) {
                         shouldSelectFiles = true;
                     } else {
@@ -107,7 +114,7 @@ public class YADESourceFilesPolling {
                         shouldSelectFiles = false;
                     }
                 } catch (Exception e) {
-                    throw new YADEEngineSourcePollingException(e);
+                    throw new YADEEngineSourcePollingException(e, sourceDelegator);
                 }
             } else {
                 shouldSelectFiles = true;
@@ -157,55 +164,63 @@ public class YADESourceFilesPolling {
         return result;
     }
 
-    public boolean startNextPollingCycle(ISOSLogger logger) {
+    public boolean startNextPollingCycle(ISOSLogger logger, Throwable e) {
+        // alternative profile needed - break current polling loop
+        if (e != null && needsAlternativeProfile(e)) {
+            return false;
+        }
+
         if (!isPollingServer() || isPollingServerDurationElapsed(logger)) {
             return false;
         }
         return true;
     }
 
-    private void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws YADEEngineSourcePollingException {
+    private boolean needsAlternativeProfile(Throwable e) {
+        if (e == null || !(e instanceof YADEEngineConnectionException)) {
+            return false;
+        }
+        return ((YADEEngineConnectionException) e).needsAlternativeProfile();
+    }
+
+    private void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator) throws YADEEngineConnectionException {
         ensureConnected(logger, sourceDelegator, -1L);
     }
 
     private void ensureConnected(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, long currentPollingTime)
-            throws YADEEngineSourcePollingException {
-        try {
-            int count = 0;
-            while (true) {
-                count++;
-                try {
-                    sourceDelegator.getProvider().ensureConnected();
-                    return;
-                } catch (Exception e) {
-                    handleConnectException(logger, sourceDelegator, currentPollingTime, count, e);
-                }
+            throws YADEEngineConnectionException {
+        int count = 0;
+        while (true) {
+            count++;
+            try {
+                sourceDelegator.getProvider().ensureConnected();
+                return;
+            } catch (ProviderConnectException e) {
+                handleConnectException(logger, sourceDelegator, currentPollingTime, count, e);
             }
-        } catch (Exception e) {
-            throw new YADEEngineSourcePollingException(YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e));
         }
     }
 
-    private void handleConnectException(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, int count, Exception e)
-            throws YADEEngineSourcePollingException {
-        handleConnectException(logger, sourceDelegator, -1L, count, e);
+    private void handleConnectException(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, int count, YADEEngineConnectionException e)
+            throws YADEEngineConnectionException {
+        handleConnectException(logger, sourceDelegator, -1L, count, new ProviderConnectException(e.getCause()));
     }
 
     private void handleConnectException(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, long currentPollingTime, int count,
-            Exception e) throws YADEEngineSourcePollingException {
+            ProviderConnectException e) throws YADEEngineConnectionException {
 
         switch (method) {
         case Forever:
             if (count >= POLLING_MAX_RETRIES_ON_CONNECTION_ERROR) {
                 Exception ex = sourceDelegator == null ? e : YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e);
-                throw new YADEEngineSourcePollingException(String.format("Maximum reconnect retries(%s) reached",
-                        POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), ex);
+                throw new YADEEngineConnectionException(String.format("Maximum reconnect retries(%s) reached",
+                        POLLING_MAX_RETRIES_ON_CONNECTION_ERROR), ex, YADEReturnCode.SOURCE_CONNECTION_ERROR, sourceDelegator);
             }
             break;
         case ServerDuration:
             if (isPollingServerDurationElapsed()) {
                 Exception ex = sourceDelegator == null ? e : YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e);
-                throw new YADEEngineSourcePollingException(ex);
+                throw new YADEEngineConnectionException(ex, YADEReturnCode.SOURCE_CONNECTION_ERROR, sourceDelegator);
             }
             break;
         case Timeout:
@@ -214,7 +229,7 @@ public class YADESourceFilesPolling {
             long duration = currentTime - pollingTime;
             if (duration >= pollTimeout) {
                 Exception ex = sourceDelegator == null ? e : YADEProviderDelegatorHelper.getConnectionException(sourceDelegator, e);
-                throw new YADEEngineSourcePollingException(ex);
+                throw new YADEEngineConnectionException(ex, YADEReturnCode.SOURCE_CONNECTION_ERROR, sourceDelegator);
             }
             break;
         }

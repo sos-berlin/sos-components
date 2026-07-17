@@ -48,7 +48,7 @@ public class YADECommandExecutor {
         try {
             YADEProviderDelegatorHelper.ensureConnected(logger, delegator, arg.getName(), retry);
         } catch (YADEEngineConnectionException e) {
-            throw new YADEEngineCommandException(e.toString(), e);
+            throw new YADEEngineCommandException(e.toString(), e, delegator);
         }
 
         String argumentName = arg.getName();
@@ -59,13 +59,13 @@ public class YADECommandExecutor {
             if (isJumpHostClientCommand) {
                 logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
                 try {
-                    checkCommandResult(delegator, argumentName, result);
+                    checkCommandResult(delegator, null, argumentName, result);
                 } catch (YADEEngineCommandException e) {
-                    throw new YADEEngineJumpHostCommandException(e);
+                    throw new YADEEngineJumpHostCommandException(e, delegator);
                 }
             } else {
                 logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
-                checkCommandResult(delegator, argumentName, result);
+                checkCommandResult(delegator, null, argumentName, result);
             }
         }
     }
@@ -233,9 +233,9 @@ public class YADECommandExecutor {
         SOSCommandResult result = jumpHostDelegator.getProvider().executeCommand(command);
         logCommandResult(logger, "[" + jumpHostDelegator.getLabel() + "]", result, false);
         try {
-            checkCommandResult("[" + jumpHostDelegator.getLabel() + "]", result);
+            checkCommandResult(jumpHostDelegator, null, null, result);
         } catch (YADEEngineCommandException e) {
-            throw new YADEEngineJumpHostCommandException(e);
+            throw new YADEEngineJumpHostCommandException(e, jumpHostDelegator);
         }
     }
 
@@ -247,7 +247,7 @@ public class YADECommandExecutor {
         try {
             YADEProviderDelegatorHelper.ensureConnected(logger, delegator, argumentName, retry);
         } catch (YADEEngineConnectionException e) {
-            throw new YADEEngineCommandException(e.toString(), e);
+            throw new YADEEngineCommandException(e.toString(), e, delegator);
         }
 
         logIfMultipleCommands(logger, delegator.getLabel(), arg, delegator.getArgs().getCommands().getCommandDelimiter());
@@ -266,13 +266,13 @@ public class YADECommandExecutor {
                         }
                     } catch (Exception e) {
                         throw new YADEEngineCommandException(String.format("[%s][%s][%s]%s", delegator.getLabel(), argumentName, command, delegator
-                                .getDirectory()), e);
+                                .getDirectory()), e, delegator);
                     }
                 }
             } else {
                 SOSCommandResult result = delegator.getProvider().executeCommand(command);
                 logCommandResult(logger, "[" + delegator.getLabel() + "][" + argumentName + "]", result);
-                checkCommandResult(delegator, argumentName, result);
+                checkCommandResult(delegator, null, argumentName, result);
             }
         }
     }
@@ -306,7 +306,7 @@ public class YADECommandExecutor {
 
             SOSCommandResult result = delegator.getProvider().executeCommand(resolved, env);
             logCommandResult(logger, prefix, result);
-            checkCommandResult(prefix, result);
+            checkCommandResult(delegator, prefix, null, result);
         }
     }
 
@@ -367,16 +367,13 @@ public class YADECommandExecutor {
         }
     }
 
-    private static void checkCommandResult(AYADEProviderDelegator delegator, String argumentName, SOSCommandResult result)
+    private static void checkCommandResult(IYADEProviderDelegator delegator, String prefix, String argumentName, SOSCommandResult result)
             throws YADEEngineCommandException {
-        checkCommandResult("[" + delegator.getLabel() + "][" + argumentName + "]", result);
-    }
-
-    private static void checkCommandResult(String prefix, SOSCommandResult result) throws YADEEngineCommandException {
         if (result == null) {
             return;
         }
         if (result.hasError(THROW_ERROR_ON_STDERR)) {
+
             String std;
             String stdErr = result.getStdErr().trim();
             if (SOSString.isEmpty(stdErr)) {
@@ -392,7 +389,14 @@ public class YADECommandExecutor {
                     std = "[" + exception + "]" + std;
                 }
             }
-            throw new YADEEngineCommandException(prefix, result.getExitCode(), std);
+            String px = prefix;
+            if (px == null) {
+                px = "[" + delegator.getLabel() + "]";
+            }
+            if (argumentName != null) {
+                px += "[" + argumentName + "]";
+            }
+            throw new YADEEngineCommandException(px, result.getExitCode(), std, delegator);
         }
     }
 
@@ -401,6 +405,7 @@ public class YADECommandExecutor {
 
         YADEEngineCommandException source;
         YADEEngineCommandException target;
+        Integer errorCode;
 
         private static YADECommandResult createInstance() {
             return new YADECommandExecutor().new YADECommandResult();
@@ -423,6 +428,14 @@ public class YADECommandExecutor {
             }
         }
 
+        public YADEEngineCommandException getSourceException() {
+            return source;
+        }
+
+        public YADEEngineCommandException getTargetException() {
+            return target;
+        }
+
         private void logExceptionIfPresentAsInfo(ISOSLogger logger, YADEEngineCommandException error) {
             if (error != null) {
                 logger.info(error);
@@ -434,6 +447,7 @@ public class YADECommandExecutor {
                 logger.error(error);
             }
         }
+
     }
 
 }

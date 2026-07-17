@@ -4,6 +4,7 @@ import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
@@ -99,7 +100,7 @@ public class YADEFileActionsExecuter {
             targetFile = (YADETargetProviderFile) delegator.getProvider().rereadFileIfExists(targetFile);
             if (targetFile == null) {
                 // ???? sourceFile.resetTarget();
-                throw new YADEEngineTransferFileException(new SOSNoSuchFileException(filePath, null));
+                throw new YADEEngineTransferFileException(new SOSNoSuchFileException(filePath, null), YADEReturnCode.TARGET_FILES_ERROR, delegator);
             }
         } else {
             targetFile.finalizeFileSize();
@@ -120,7 +121,7 @@ public class YADEFileActionsExecuter {
             sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
             logger.error("%s[file size does not match]target file deleted", msg);
 
-            throw new YADEEngineTransferFileSizeException(msg + "file size does not match");
+            throw new YADEEngineTransferFileSizeException(msg + "file size does not match", targetDelegator);
         }
     }
 

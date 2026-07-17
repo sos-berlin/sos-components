@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons.arguments.loaders;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -21,6 +22,8 @@ public abstract class AYADEArgumentsLoader {
     private YADETargetArguments targetArgs;
     private YADEJumpHostArguments jumpHostArgs;
     private YADENotificationArguments notificationArgs;
+
+    private SOSMapVariableReplacer varReplacer;
 
     private Set<String> visitedProfiles = new HashSet<>();
 
@@ -45,8 +48,6 @@ public abstract class AYADEArgumentsLoader {
     }
 
     public abstract AYADEArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException;
-
-    public abstract AYADEArgumentsLoader loadAlternativeProfile(ISOSLogger logger) throws YADEEngineSettingsLoadException;
 
     public YADEArguments getArgs() {
         return args;
@@ -104,6 +105,14 @@ public abstract class AYADEArgumentsLoader {
         }
     }
 
+    public SOSMapVariableReplacer getVarReplacer() {
+        return varReplacer;
+    }
+
+    public void setVarReplacer(SOSMapVariableReplacer val) {
+        varReplacer = val;
+    }
+
     public boolean profileEqualsAlternativeProfile(String alternativeProfile) {
         try {
             return getArgs().getProfile().getValue().equals(alternativeProfile);
@@ -121,8 +130,15 @@ public abstract class AYADEArgumentsLoader {
         return profile == null ? true : visitedProfiles.contains(profile);
     }
 
-    public void setVisitedProfile(String profile) {
+    public void setVisitedProfile(AYADEArgumentsLoader argsLoader, String profile) {
+        if (argsLoader != null) {
+            visitedProfiles.addAll(argsLoader.visitedProfiles);
+        }
         visitedProfiles.add(profile);
+    }
+
+    public void setVisitedProfile(String profile) {
+        setVisitedProfile(null, profile);
     }
 
     public void clearVisitedProfiles() {

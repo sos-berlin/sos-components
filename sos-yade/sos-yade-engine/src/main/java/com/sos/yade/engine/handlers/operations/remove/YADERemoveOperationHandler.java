@@ -9,12 +9,14 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.commons.YADEProviderFile;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
+import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEParallelExecutorFactory;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
-import com.sos.yade.engine.exceptions.YADEEngineRemoveFileException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceRemoveFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
 
 /** Remove files on Source */
@@ -31,8 +33,10 @@ public class YADERemoveOperationHandler {
             } else {
                 processFilesInParallel(logger, sourceDelegator, sourceFiles, parallelism, sourceFilesSize, cancel);
             }
+        } catch (YADEEngineOperationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new YADEEngineOperationException(e.getCause());
+            throw new YADEEngineOperationException(e.getCause(), YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
         }
     }
 
@@ -56,15 +60,18 @@ public class YADERemoveOperationHandler {
             });
             executor.awaitAndShutdown();
         } catch (Exception e) {
-            throw new YADEEngineOperationException(getRemoveFileException(e.getCause()));
-        }
-        finally {
+            YADEEngineSourceRemoveFileException rfe = getRemoveFileException(e.getCause());
+            if (rfe == null) {
+                throw new YADEEngineOperationException(e, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
+            }
+            throw new YADEEngineOperationException(rfe, rfe.getReturnCode(), sourceDelegator);
+        } finally {
             YADEParallelExecutorFactory.cleanup(sourceDelegator);
         }
     }
 
     private static void run(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile, boolean isParallelismEnabled)
-            throws YADEEngineRemoveFileException {
+            throws YADEEngineSourceRemoveFileException {
         sourceFile.resetSteady();
 
         String fileTransferLogPrefix = !isParallelismEnabled ? String.valueOf(sourceFile.getIndex()) : sourceFile.getIndex() + "][" + Thread
@@ -90,22 +97,22 @@ public class YADERemoveOperationHandler {
             String msg = String.format("[%s][%s][%s][%s]%s", fileTransferLogPrefix, YADEClientBannerWriter.formatState(sourceFile.getState()),
                     sourceDelegator.getLabel(), sourceFile.getFullPath(), e);
             logger.error(msg);
-            throw new YADEEngineRemoveFileException(msg, e);
+            throw new YADEEngineSourceRemoveFileException(msg, e, sourceDelegator);
 
         }
     }
 
-    private static Throwable getRemoveFileException(Throwable ex) {
+    private static YADEEngineSourceRemoveFileException getRemoveFileException(Throwable ex) {
         if (ex == null) {
-            return ex;
+            return null;
         }
         Throwable e = ex;
         while (e != null) {
-            if (e instanceof YADEEngineRemoveFileException) {
-                return e;
+            if (e instanceof YADEEngineSourceRemoveFileException) {
+                return (YADEEngineSourceRemoveFileException) e;
             }
             e = e.getCause();
         }
-        return e;
+        return new YADEEngineSourceRemoveFileException(e, (IYADEProviderDelegator) null);
     }
 }

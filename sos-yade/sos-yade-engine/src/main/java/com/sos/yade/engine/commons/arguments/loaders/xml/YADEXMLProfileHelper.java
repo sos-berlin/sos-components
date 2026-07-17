@@ -29,6 +29,8 @@ import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 public class YADEXMLProfileHelper {
 
     public static final String ELEMENT_NAME_NOTIFICATION_TRIGGERS = "NotificationTriggers";
+    public static final String ATTR_NAME_USE_JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR_CODE =
+            "use_jump_initial_source_target_connection_error_code";
 
     protected static void parse(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node profile) throws Exception {
         String alternativeProfile = SOSXML.getAttributeValue(profile, YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
@@ -45,6 +47,11 @@ public class YADEXMLProfileHelper {
                             + alternativeProfile);
                 }
             }
+        }
+
+        String uji = SOSXML.getAttributeValue(profile, ATTR_NAME_USE_JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR_CODE);
+        if (!SOSString.isEmpty(uji) && "true".equals(uji)) {
+            argsLoader.getArgs().useJumpInitialSourceTargetConnectionErrorCode(true);
         }
 
         NodeList nl = profile.getChildNodes();

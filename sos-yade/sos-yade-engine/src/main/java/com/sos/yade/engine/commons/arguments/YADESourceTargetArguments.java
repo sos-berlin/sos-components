@@ -32,6 +32,10 @@ public class YADESourceTargetArguments extends ASOSArguments {
     /** Internal Argument - Source/Target/Jump */
     private SOSArgument<String> label = new SOSArgument<>(null, false);
 
+    public void reassign(AProviderArguments provider) {
+        setProvider(provider);
+    }
+
     public boolean isReplacementEnabled() {
         return !replacing.isEmpty() && !replacement.isEmpty();
     }
