@@ -1411,6 +1411,7 @@ public class OrderProcessStep<A extends JobArguments> {
         return JOutcome.failed(fm, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 
+        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     private String getJOutcomeFailed(final String msg, Throwable e) {
         if (e == null) {
             return msg;
