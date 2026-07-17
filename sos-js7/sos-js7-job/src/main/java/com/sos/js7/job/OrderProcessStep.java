@@ -1031,8 +1031,8 @@ public class OrderProcessStep<A extends JobArguments> {
 
         logger.failed2slf4j(getStepInfo(), eToString, ex);
         logger.error(logger.throwable2String(fm, ex));
-        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
-                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(getReturnCodeSucceeded(outcome
+                .getReturnCode()))));
     }
 
     protected void checkAndLogParameterization(List<JobArgumentException> exceptions, String mockMessage) throws Exception {
@@ -1411,7 +1411,6 @@ public class OrderProcessStep<A extends JobArguments> {
         return JOutcome.failed(fm, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 
-        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     private String getJOutcomeFailed(final String msg, Throwable e) {
         if (e == null) {
             return msg;
