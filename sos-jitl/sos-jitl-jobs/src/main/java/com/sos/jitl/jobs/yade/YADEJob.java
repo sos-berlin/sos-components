@@ -10,6 +10,7 @@ import com.sos.yade.engine.YADEEngine;
 import com.sos.yade.engine.commons.YADEOutcomeHistory;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 
 public class YADEJob extends Job<YADEJobArguments> {
 
@@ -46,7 +47,14 @@ public class YADEJob extends Job<YADEJobArguments> {
             // Execute YADE Transfer
             YADEEngine engine = new YADEEngine();
             files = engine.execute(step.getLogger(), argsLoader, false);
+        } catch (YADEEngineException e) {
+            step.getOutcome().setReturnCode(e.getReturnCode().getCode());
+
+            exception = e;
+            throw e;
         } catch (Exception e) {
+            step.getOutcome().setReturnCode(new YADEEngineException(e).getReturnCode().getCode());
+
             exception = e;
             throw e;
         } finally {
