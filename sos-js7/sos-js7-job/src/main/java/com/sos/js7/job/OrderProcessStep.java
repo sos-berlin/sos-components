@@ -764,8 +764,7 @@ public class OrderProcessStep<A extends JobArguments> {
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(getStepInfo(), e.toString(), ex);
         logger.error(logger.throwable2String(fm, ex));
-        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(
-                JobHelper.DEFAULT_RETURN_CODE_FAILED)));
+        return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 
     private String getJOutcomeFailed(final String msg, Throwable e) {
