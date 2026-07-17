@@ -139,7 +139,7 @@ public class FTPProviderUtils {
                         provider.getLogger().debug(provider.getPathOperationPrefix(fullPath) + "[skip]" + resource);
                     }
                 } else {
-                    if (selection.checkProviderFileMinMaxSize(file)) {
+                    if (selection.checkProviderFile(provider, file)) {
                         counterAdded++;
 
                         file.setIndex(counterAdded);

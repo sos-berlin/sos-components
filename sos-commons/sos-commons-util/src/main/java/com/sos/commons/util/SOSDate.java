@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -405,11 +406,49 @@ public class SOSDate {
         return Date.from(input.plus(amountToAdd, unit));
     }
 
-    /** @param range e.g.: m - minutes,s -seconds, ms - milliseconds
-     * @param age , e.g.: 1w 2h 45s
-     * @return age in minutes, seconds or milliseconds
-     * @throws SOSInvalidDataException */
     public static Long resolveAge(String range, String age) throws SOSInvalidDataException {
+        return parseAge(range, age);
+    }
+
+    /** Parses a human-readable duration string into a numeric value in the requested target unit.
+     *
+     * <p>
+     * The input string may contain multiple time components separated by whitespace. Each component consists of a numeric value followed by a unit suffix.
+     *
+     * <p>
+     * Supported input units (case-insensitive):
+     * <ul>
+     * <li>{@code w} - weeks</li>
+     * <li>{@code d} - days</li>
+     * <li>{@code h} - hours</li>
+     * <li>{@code m} - minutes</li>
+     * <li>{@code s} - seconds</li>
+     * </ul>
+     *
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code "1w"} - 1 week</li>
+     * <li>{@code "2h 30m"} - 2 hours and 30 minutes</li>
+     * <li>{@code "45s"} - 45 seconds</li>
+     * </ul>
+     *
+     * <p>
+     * The {@code range} parameter defines the output unit:
+     * <ul>
+     * <li>{@code "ms"} - result in milliseconds</li>
+     * <li>{@code "s"} - result in seconds</li>
+     * <li>{@code "m"} (or default) - result in minutes</li>
+     * </ul>
+     *
+     * <p>
+     * All values are internally converted via milliseconds for consistent computation.
+     *
+     * @param range the target output unit (e.g. {@code "m"}, {@code "s"}, {@code "ms"})
+     * @param age the input duration string (e.g. {@code "1w 2h 45s"})
+     * @return the parsed duration in the requested unit
+     * @throws SOSInvalidDataException if the input is empty or contains invalid formats */
+    public static Long parseAge(String range, String age) throws SOSInvalidDataException {
         if (SOSString.isEmpty(age)) {
             throw new SOSInvalidDataException("age is empty");
         }
@@ -434,7 +473,7 @@ public class SOSDate {
         }
 
         Long result = Long.valueOf(0);
-        String[] parts = age.trim().toLowerCase().split(" ");
+        String[] parts = age.trim().toLowerCase(Locale.ROOT).split("\\s+");
         for (String part : parts) {
             if (!SOSString.isEmpty(part)) {
                 String numericalPart = part;
@@ -457,7 +496,7 @@ public class SOSDate {
                         break;
                     case "s":
                         if (range.equals("m")) {
-                            LOGGER.warn("[ignored][" + part + "]");
+                            LOGGER.warn("[range=" + range + ", age=" + age + "][ignored][" + part + "]");
                             continue;
                         }
                         result += multiplicatorMilliseconds * Long.parseLong(numericalPart);

@@ -16,6 +16,7 @@ import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
 
@@ -48,8 +49,11 @@ public class AzureBlobStorageProviderUtils {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(client.formatExecutionResultForException(result));
+                } else {
+                    throw new Exception(client.formatExecutionResultForException(result));
                 }
-                throw new Exception(client.formatExecutionResultForException(result));
             }
             List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
             return resources.isEmpty() ? null : resources.get(0);
@@ -63,8 +67,11 @@ public class AzureBlobStorageProviderUtils {
             if (!HttpUtils.isSuccessful(code)) {
                 if (HttpUtils.isNotFound(code)) {
                     return null;
+                } else if (HttpUtils.isUnauthorized(code)) {
+                    throw new ProviderAuthenticationException(client.formatExecutionResultForException(result));
+                } else {
+                    throw new Exception(client.formatExecutionResultForException(result));
                 }
-                throw new Exception(client.formatExecutionResultForException(result));
             }
             return new AzureBlobStorageResource(containerName, blobPath, false, provider.requireAzureClient().getFileSize(result.response()), client
                     .getLastModifiedInMillis(result.response()));
@@ -86,7 +93,12 @@ public class AzureBlobStorageProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 // return 0;
             }
-            throw new Exception(client.formatExecutionResultForException(executeResult));
+
+            if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(client.formatExecutionResultForException(executeResult));
+            } else {
+                throw new Exception(client.formatExecutionResultForException(executeResult));
+            }
         }
 
         Set<String> subDirectories = new HashSet<>();
@@ -119,7 +131,7 @@ public class AzureBlobStorageProviderUtils {
                                     .getFullPath());
                         }
                     } else {
-                        if (selection.checkProviderFileMinMaxSize(file)) {
+                        if (selection.checkProviderFile(provider, file)) {
                             counterAdded++;
 
                             file.setIndex(counterAdded);

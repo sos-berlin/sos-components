@@ -11,10 +11,12 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -24,6 +26,7 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSTimeoutExeededException;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
@@ -39,6 +42,8 @@ public class SOSShell {
     public static final String OS_VERSION = System.getProperty("os.version");
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
+
+    private static final Pattern BYTE_SIZE_PATTERN = Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*(GB|MB|KB|B)", Pattern.CASE_INSENSITIVE);
 
     private static Charset consoleEncoding;
     private static String hostname;
@@ -342,14 +347,132 @@ public class SOSShell {
         }
     }
 
+    /** Formats a byte value into a human-readable string representation.
+     *
+     * <p>
+     * The method converts the given number of bytes into the largest appropriate unit using binary multiples (base 1024).
+     *
+     * <p>
+     * Supported units:
+     * <ul>
+     * <li>B - bytes</li>
+     * <li>KB - kilobytes (1024 bytes)</li>
+     * <li>MB - megabytes (1024 KB)</li>
+     * <li>GB - gigabytes (1024 MB)</li>
+     * <li>TB - terabytes (1024 GB)</li>
+     * </ul>
+     *
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code 512} - {@code "512 B"}</li>
+     * <li>{@code 2048} - {@code "2 KB"}</li>
+     * <li>{@code 1310720} - {@code "1.25 MB"}</li>
+     * <li>{@code 1572864} - {@code "1.5 MB"}</li>
+     * </ul>
+     *
+     * <p>
+     * The output is formatted using a fixed US locale to ensure the decimal separator is always a dot (.) regardless of system locale settings.
+     *
+     * @param bytes the size in bytes
+     * @return a formatted human-readable string representation of the byte size */
     public static String formatBytes(long bytes) {
         if (bytes < 1024) {
             return bytes + " B";
         }
-        int unit = 1024;
         String[] units = { "KB", "MB", "GB", "TB" };
+        int unit = 1024;
+
         int exp = (int) (Math.log(bytes) / Math.log(unit));
-        return new DecimalFormat("#,##0.00").format(bytes / Math.pow(unit, exp)) + " " + units[exp - 1];
+        if (exp >= units.length) {
+            exp = units.length - 1;
+        }
+
+        double value = bytes / Math.pow(unit, exp);
+        double rounded = Math.round(value * 100.0) / 100.0;
+        long asLong = (long) rounded;
+
+        String number;
+        if (rounded == asLong) {
+            number = String.format(java.util.Locale.US, "%.0f", rounded);
+        } else if (Math.round(rounded * 10) == rounded * 10) {
+            number = String.format(java.util.Locale.US, "%.1f", rounded);
+        } else {
+            number = String.format(java.util.Locale.US, "%.2f", rounded);
+        }
+        return number + " " + units[exp - 1];
+    }
+
+    /** Parses a human-readable byte size string into a byte value.
+     *
+     * <p>
+     * The input may contain one or more size components. Each component consists of a numeric value and a unit, optionally separated by whitespace.
+     *
+     * <p>
+     * Supported formats:
+     * <ul>
+     * <li>Plain numbers (interpreted as bytes), e.g. {@code "123"}</li>
+     * <li>Composite values with units, e.g. {@code "1GB 200MB 5KB 10B"}</li>
+     * <li>Decimal values using dot or comma, e.g. {@code "1.5GB"} or {@code "1,5GB"}</li>
+     * </ul>
+     *
+     * <p>
+     * Decimal values may use either dot or comma as separator (e.g. {@code "1.5GB"} or {@code "1,5GB"}).
+     *
+     * <p>
+     * Supported units (case-insensitive):
+     * <ul>
+     * <li>B - bytes</li>
+     * <li>KB - kilobytes (1024 bytes)</li>
+     * <li>MB - megabytes (1024 KB)</li>
+     * <li>GB - gigabytes (1024 MB)</li>
+     * </ul>
+     *
+     * <p>
+     * The entire input must conform to the expected format. Any invalid tokens or unexpected characters will result in an {@link IllegalArgumentException}.
+     *
+     * @param input the byte size string to parse
+     * @return the total number of bytes
+     * @throws NullPointerException if input is null
+     * @throws SOSInvalidDataException if the input is invalid or partially malformed */
+    public static long parseByteSize(String input) throws SOSInvalidDataException {
+        if (input == null) {
+            throw new SOSInvalidDataException("input");
+        }
+
+        input = input.trim();
+        if (input.matches("\\d+")) {
+            return Long.parseLong(input);
+        }
+
+        Matcher matcher = BYTE_SIZE_PATTERN.matcher(input);
+        double total = 0;
+        while (matcher.find()) {
+            double value = Double.parseDouble(matcher.group(1).replace(',', '.'));
+            String unit = matcher.group(2).toUpperCase(Locale.ROOT);
+
+            switch (unit) {
+            case "GB":
+                total += value * 1024d * 1024d * 1024d;
+                break;
+            case "MB":
+                total += value * 1024d * 1024d;
+                break;
+            case "KB":
+                total += value * 1024d;
+                break;
+            case "B":
+                total += value;
+                break;
+            }
+        }
+
+        // 1GB MB abc
+        if (!matcher.replaceAll("").trim().isEmpty()) {
+            throw new SOSInvalidDataException("Invalid byte size: " + input);
+        }
+
+        return Math.round(total);
     }
 
     public static void printCpuLoad() {

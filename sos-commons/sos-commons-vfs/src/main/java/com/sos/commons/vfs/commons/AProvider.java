@@ -60,6 +60,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     /** For Connect/Disconnect logging e.g. LocalProvider=null, SSH/FTP Provider=user@server:port */
     private String accessInfo;
     private String label;
+    private boolean logConnectFailedMsgDisabled;
 
     private boolean doneLogIfHostnameVerificationDisabled;
 
@@ -394,7 +395,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
 
     /** Provider (non-YADE) method */
     public List<ProviderFile> selectFiles(String directory) throws ProviderException {
-        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build()));
+        return selectFiles(new ProviderFileSelection(new ProviderFileSelectionConfig.Builder().directory(directory).build(getLogger())));
     }
 
     public String getLabel() {
@@ -465,14 +466,18 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         return String.format("%s[connect/authenticate]%s ...", getLogPrefix(), accessInfo);
     }
 
-    /** Log on INFO level because the ERROR output is combined with the exception (stderr) and may not appear immediately after the [connect/authenticate] ...
+    /** Log connect/authenticate failed message on INFO level.<br />
+     * Log on INFO level because the ERROR output is combined with the exception (stderr) and may not appear immediately after the [connect/authenticate] ...
      * log entry.<br />
      * <p>
      * This preserves the expected lifecycle order:<br />
      * - [INFO][connect/authenticate] ... -> [INFO][connect/authenticate][failed] see exception below -> [INFO][disconnected]<br />
      * instead of:<br />
      * - [INFO][connect/authenticate] ... -> [INFO][disconnected] */
-    public void logConnectFailedMsg() {
+    public void logConnectFailedMsg(Throwable e) {
+        if (logConnectFailedMsgDisabled) {
+            return;
+        }
         getLogger().info("%s[connect/authenticate][failed]%s - see exception below", getLogPrefix(), accessInfo);
     }
 
@@ -570,6 +575,13 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         }
     }
 
+    /** see {@link #logConnectFailedMsg(Throwable)}
+     * 
+     * @param val */
+    public void setLogConnectFailedMsgDisabled(boolean val) {
+        logConnectFailedMsgDisabled = val;
+    }
+
     public void logNotImpementedMethod(String methodName, String add) {
         logger.info("[%s][%s][%s][not implemented yet]%s", getLabel(), getClass().getSimpleName(), methodName, add);
     }
@@ -586,6 +598,31 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
      * This method can be overridden by subclasses to set additional arguments before encryption have been resolved. */
     public List<SOSArgument<?>> onBeforeEncryptionResolver(List<SOSArgument<?>> additionalSecretArgs) throws Exception {
         return additionalSecretArgs;
+    }
+
+    /** Do not call disconnect() here.<br />
+     * It sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection error in methods executed after connect() -
+     * e.g. if retry, roll back...<br />
+     * Call disconnect() in the application's finally block.
+     * 
+     * @param e
+     * @throws ProviderConnectException */
+    public void throwConnectException(ProviderConnectException e) throws ProviderConnectException {
+        // Do not call throwConnectException(Exception e) to avoid StackOverflowException
+        logConnectFailedMsg(e);
+        throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+    }
+
+    /** Do not call disconnect() here.<br />
+     * It sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection error in methods executed after connect() -
+     * e.g. if retry, roll back...<br />
+     * Call disconnect() in the application's finally block.
+     * 
+     * @param e
+     * @throws ProviderConnectException */
+    public void throwConnectException(Exception e) throws ProviderConnectException {
+        logConnectFailedMsg(e);
+        throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
     }
 
     private void resolveSecrets(SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {

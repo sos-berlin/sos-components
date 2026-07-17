@@ -239,7 +239,7 @@ public class SSHJProviderUtils {
                                 .getAttributes()));
                     }
                 } else {
-                    if (selection.checkProviderFileMinMaxSize(file)) {
+                    if (selection.checkProviderFile(provider, file)) {
                         counterAdded++;
 
                         file.setIndex(counterAdded);

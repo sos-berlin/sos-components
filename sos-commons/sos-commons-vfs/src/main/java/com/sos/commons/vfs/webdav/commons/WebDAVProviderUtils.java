@@ -110,7 +110,7 @@ public class WebDAVProviderUtils {
                             provider.getLogger().debug(provider.getPathOperationPrefix(resource.getURI()) + "[skip]" + resource);
                         }
                     } else {
-                        if (selection.checkProviderFileMinMaxSize(file)) {
+                        if (selection.checkProviderFile(provider, file)) {
                             counterAdded++;
 
                             file.setIndex(counterAdded);

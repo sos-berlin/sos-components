@@ -1,10 +1,15 @@
 package com.sos.commons.vfs.commons;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.encryption.arguments.EncryptionDecryptArguments;
+import com.sos.commons.util.SOSCollection;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
@@ -60,6 +65,11 @@ public abstract class AProviderArguments extends ASOSArguments {
     // JS7
     private SOSArgument<EnumSet<FileType>> validFileTypes = new SOSArgument<>("valid_file_types", false, EnumSet.of(FileType.REGULAR,
             FileType.SYMLINK));
+
+    // Arguments identifier - can be set to handle YADE alternatives (protocol fragment name)
+    private SOSArgument<String> key = new SOSArgument<>(null, false);
+    private List<AProviderArguments> alternatives;
+    private Set<String> visitedAlternatives;
 
     private Boolean isHTTP = null;
     private Boolean isFTP = null;
@@ -159,6 +169,69 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     public boolean isConnectivityFaultSimulationEnabled() {
         return connectivityFaultSimulationEnabled;
+    }
+
+    public SOSArgument<String> getKey() {
+        return key;
+    }
+
+    public boolean keyEquals(String key) {
+        if (this.key.getValue() == null || key == null) {
+            return false;
+        }
+        return this.key.getValue().equals(key);
+    }
+
+    public List<AProviderArguments> getAlternatives() {
+        return alternatives;
+    }
+
+    public String getAlternativesAsString() {
+        return SOSCollection.isEmpty(alternatives) ? "" : SOSString.join(alternatives, n -> n.getKey().getValue());
+    }
+
+    public boolean hasAlternatives() {
+        return !SOSCollection.isEmpty(alternatives);
+    }
+
+    public void mergeNestedAlternatives(AProviderArguments args) {
+        if (alternatives == null) {
+            alternatives = new ArrayList<>();
+        }
+        if (visitedAlternatives == null) {
+            visitedAlternatives = new HashSet<>();
+        }
+        appendAlternaties(args, alternatives, visitedAlternatives);
+    }
+
+    private void appendAlternaties(AProviderArguments node, List<AProviderArguments> target, Set<String> visited) {
+        if (node.getKey().getValue() == null) {
+            return;
+        }
+        if (visited.add(node.getKey().getValue())) {
+            target.add(node);
+        } else {
+            return;
+        }
+
+        // if (node.getKey().getValue() == null || visited.add(node.getKey().getValue())) {
+        // target.add(node);
+        // } else {
+        // return;
+        // }
+
+        if (node.getAlternatives() != null) {
+            List<AProviderArguments> children = new ArrayList<>(node.getAlternatives());
+            for (AProviderArguments child : children) {
+                appendAlternaties(child, target, visited);
+            }
+            node.clearAlternatives();
+        }
+    }
+
+    private void clearAlternatives() {
+        alternatives = null;
+        visitedAlternatives = null;
     }
 
     private void evaluateIsProtocol() {

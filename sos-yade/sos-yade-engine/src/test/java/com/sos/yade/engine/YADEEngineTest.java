@@ -23,6 +23,9 @@ public class YADEEngineTest {
     @Ignore
     @Test
     public void test() {
+        resetSystemProperties();
+        // System.setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.TRUE.toString());
+
         Path settings = Path.of("xyz");
         String profile = "xyz";
 
@@ -40,6 +43,50 @@ public class YADEEngineTest {
             // Set YADE parallelism from the Job Argument
             argsLoader.getArgs().getParallelism().setValue(parallelism);
 
+            // argsLoader.getSourceArgs().applyFileList(Path.of("xyz"));
+
+            // Execute YADE Transfer
+            YADEEngine engine = new YADEEngine();
+            List<ProviderFile> files = engine.execute(logger, argsLoader, true);
+            LOGGER.info("[files]" + files);
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testConnectivityFault() {
+        resetSystemProperties();
+        // System.setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.TRUE.toString());
+
+        Path settings = Path.of("xyz");
+        String profile = "xyz";
+
+        Map<String, String> map = System.getenv();
+        boolean settingsReplacerCaseSensitive = true;
+        boolean settingsReplacerKeepUnresolved = true;
+        int parallelism = 1;// calculateParallelism();
+        boolean simulateConnectivityFault = true;
+        try {
+            ISOSLogger logger = new SLF4JLogger();
+
+            // Load Arguments from Settings XML
+            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
+                    settingsReplacerKeepUnresolved);
+
+            argsLoader.getArgs().getParallelism().setValue(parallelism);
+            // argsLoader.getArgs().getBufferSize().setValue(128 * 1_024);
+
+            if (simulateConnectivityFault) {
+                // argsLoader.getSourceArgs().getSimConnFaults().setValue("5");
+                argsLoader.getSourceArgs().getSimConnFaults().setValue("0.5;1;1;1");
+                if (argsLoader.getTargetArgs() != null) {
+                    // argsLoader.getTargetArgs().getSimConnFaults().setValue("0.600;1;1;1;1");
+                    argsLoader.getTargetArgs().getSimConnFaults().setValue("5");
+                }
+            }
+
             // Execute YADE Transfer
             YADEEngine engine = new YADEEngine();
             List<ProviderFile> files = engine.execute(logger, argsLoader, true);
@@ -52,12 +99,29 @@ public class YADEEngineTest {
     @Ignore
     @Test
     public void testMain() {
+        resetSystemProperties();
+
         List<String> args = new ArrayList<>();
-        args.add("--SETTINGS=xyz");
-        args.add("--profile=xyz");
         args.add("--file-spec=xyz");
+        args.add("--recursive=true");
         // args.add("-h");
         YADEEngineMain.main(args.toArray(new String[0]));
+    }
+
+    private static void resetSystemProperties() {
+        System.setProperty("javax.net.ssl.keyStore", "");
+        System.setProperty("javax.net.ssl.keyStorePassword", "");
+
+        System.setProperty("javax.net.ssl.trustStore", "");
+        System.setProperty("javax.net.ssl.trustStorePassword", "");
+    }
+
+    @SuppressWarnings("unused")
+    private static int calculateParallelism() {
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        int parallelism = Math.min(4, Math.max(1, cpuCores / 2));
+        LOGGER.info("CpuCores=" + cpuCores + ", Parallelism=" + parallelism);
+        return parallelism;
     }
 
 }

@@ -146,7 +146,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 }
                 reply = new FTPProtocolReply(client);
                 if (!reply.isPositiveReply()) {
-                    throw new Exception(String.format("%s[login]%s", getLogPrefix(), reply));
+                    throw new ProviderAuthenticationException(String.format("%s[login]%s", getLogPrefix(), reply));
                 }
 
                 postLoginOperations(client);
@@ -156,16 +156,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 }
 
                 getLogger().info(getConnectedMsg(getConnectedInfos(client)));
+            } catch (ProviderConnectException e) {
+                throwConnectException(e);
             } catch (Exception e) {
-                logConnectFailedMsg();
-
-                // Do not call disconnect() here. it sets the client to null and may cause a ProviderClientNotInitializedException instead of a real connection
-                // error in methods executed after connect() - e.g. if retry, roll back...
-                // Call disconnect() in the application's finally block.
-                // if (isConnected()) {
-                // disconnect();
-                // }
-                throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
+                throwConnectException(e);
             }
         }
     }
@@ -239,7 +233,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        selection = ProviderFileSelection.createIfNull(getLogger(), selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
                 return false;
@@ -258,6 +252,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             List<ProviderFile> result = new ArrayList<>();
             FTPProviderUtils.selectFiles(this, selection, directory, result);
             return result;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory), e);
         }
@@ -281,10 +277,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             }
             if (!reply.isFileUnavailableReply()) {
                 if (!reply.isPositiveReply()) {
-                    throw new Exception(String.format("%s[exists]%s", getLogPrefix(), reply));
+                    throw new ProviderException(getPathOperationPrefix(path) + reply);
                 }
             }
             return false;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -325,6 +323,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             // create given directory
             createDirectory(path);
             return true;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -340,7 +340,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             FTPFile[] files = client.listFiles(path);
             FTPProtocolReply reply = new FTPProtocolReply(client);
             if (!reply.isPositiveReply()) {
-                throw new IOException(reply.toString());
+                throw new ProviderException(getPathOperationPrefix(path) + reply.toString());
             }
             if (SOSCollection.isEmpty(files)) {
                 return false;
@@ -352,15 +352,17 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 FTPProviderUtils.deleteDirectoryFilesRecursively(client, getPathSeparator(), path);
                 deleted = client.removeDirectory(path);
                 if (!deleted) {
-                    throw new Exception(String.format("[failed to remove directory][%s]%s", path, new FTPProtocolReply(client)));
+                    throw new ProviderException(getPathOperationPrefix(path) + "[failed to remove directory]" + new FTPProtocolReply(client));
                 }
             } else if (file.isFile()) {
                 deleted = client.deleteFile(path);
                 if (!deleted) {
-                    throw new Exception(String.format("[failed to delete file][%s]%s", path, new FTPProtocolReply(client)));
+                    throw new ProviderException(getPathOperationPrefix(path) + "[failed to delete file]" + new FTPProtocolReply(client));
                 }
             }
             return deleted;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -378,10 +380,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 if (isReplyBasedOnFileNotFound(reply, path)) {
                     return false;
                 } else {
-                    throw new Exception(String.format("[failed]%s", reply));
+                    throw new ProviderException(getPathOperationPrefix(path) + "[failed]" + reply);
                 }
             }
             return true;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -400,10 +404,12 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 if (isReplyBasedOnFileNotFound(reply, target)) {
                     return false;
                 } else {
-                    throw new Exception(String.format("[failed]%s", reply));
+                    throw new ProviderException(getPathOperationPrefix(source + "->" + target) + "[failed]" + reply);
                 }
             }
             return true;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(source + "->" + target), e);
         }
@@ -417,6 +423,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         try {
             FTPClient client = requireFTPClient();
             return createProviderFile(path, FTPProviderUtils.getFTPFileIfExists("getFileIfExists", client, path));
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }
@@ -634,6 +642,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                     }
                 }
             };
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(path), e);
         }

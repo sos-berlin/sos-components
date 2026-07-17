@@ -348,6 +348,10 @@ public class HttpUtils {
         return code >= 500;
     }
 
+    public static boolean isBadRequest(int code) {
+        return code == 400;
+    }
+
     public static boolean isUnauthorized(int code) {
         return code == 401;
     }

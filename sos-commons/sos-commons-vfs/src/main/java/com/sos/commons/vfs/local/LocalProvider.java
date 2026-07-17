@@ -89,7 +89,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        selection = ProviderFileSelection.createIfNull(selection);
+        selection = ProviderFileSelection.createIfNull(getLogger(), selection);
         selection.setFileTypeChecker(fileRepresentator -> {
             if (fileRepresentator == null) {
                 return false;
@@ -111,6 +111,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                 result = selectFilesNonRecursive(selection, directory);
             }
             return result;
+        } catch (ProviderException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProviderException(getPathOperationPrefix(directory.toString()), e);
         }
@@ -387,7 +389,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                         if (selection.isValidFileType(attr)) {
                             ProviderFile file = createProviderFile(path, attr);
                             if (file != null) {
-                                if (selection.checkProviderFileMinMaxSize(file)) {
+                                if (selection.checkProviderFile(getProvider(), file)) {
                                     counterAdded++;
                                     file.setIndex(counterAdded);
                                     result.add(file);
@@ -437,7 +439,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                         if (selection.isValidFileType(attr)) {
                             ProviderFile file = createProviderFile(path, attr);
                             if (file != null) {
-                                if (selection.checkProviderFileMinMaxSize(file)) {
+                                if (selection.checkProviderFile(getProvider(), file)) {
                                     counterAdded++;
                                     file.setIndex(counterAdded);
                                     result.add(file);
@@ -453,5 +455,9 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
             }
         }
         return result;
+    }
+
+    private LocalProvider getProvider() {
+        return this;
     }
 }
