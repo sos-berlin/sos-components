@@ -1,6 +1,8 @@
 package com.sos.yade.engine.commons.arguments.loaders;
 
+import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.sos.commons.util.SOSMapVariableReplacer;
@@ -47,7 +49,9 @@ public abstract class AYADEArgumentsLoader {
         this.jumpHostArgs = jumpHostArgs;
     }
 
-    public abstract AYADEArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException;
+    public abstract AYADEArgumentsLoader load(ISOSLogger logger, Path settings, String profile, String alternativeProfile,
+            Map<String, String> replacerMap, boolean replaceCaseSensitive, boolean replacerKeepUnresolvedVariables)
+            throws YADEEngineSettingsLoadException;
 
     public YADEArguments getArgs() {
         return args;

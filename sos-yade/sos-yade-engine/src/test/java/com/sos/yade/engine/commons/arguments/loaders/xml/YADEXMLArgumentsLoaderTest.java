@@ -24,10 +24,11 @@ public class YADEXMLArgumentsLoaderTest {
         try {
             String settingsFile = "xyz";
             String profile = "xyz";
+            String alternativeProfile = "";
 
             Instant start = Instant.now();
             YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader();
-            argsLoader.load(new SLF4JLogger(), Path.of(settingsFile), profile, System.getenv(), true, true);
+            argsLoader.load(new SLF4JLogger(), Path.of(settingsFile), profile, alternativeProfile, System.getenv(), true, true);
             LOGGER.info("[duration]" + SOSDate.getDuration(start, Instant.now()));
 
             ISOSLogger logger = new SLF4JLogger();

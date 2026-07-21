@@ -23,8 +23,8 @@ public class YADEJobTest {
     public void testJob() throws Exception {
 
         Map<String, Object> args = new HashMap<>();
-        args.put("settings", Path.of("xyz"));
-        args.put("profile", "xyz");
+        args.put("settings", Path.of("x"));
+        args.put("profile", "y");
 
         // overrides settings
         boolean overrides = false;

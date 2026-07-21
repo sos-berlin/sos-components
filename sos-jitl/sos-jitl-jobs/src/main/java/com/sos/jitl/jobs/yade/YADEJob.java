@@ -34,9 +34,9 @@ public class YADEJob extends Job<YADEJobArguments> {
         Throwable exception = null;
         try {
             // Load Arguments from Settings XML
-            argsLoader = new YADEXMLArgumentsLoader().load(step.getLogger(), args.getSettings().getValue(), args.getProfile().getValue(), step
-                    .getAllArgumentsAsNameStringValueMap(), args.getSettingsReplacerCaseSensitive().getValue(), args
-                            .getSettingsReplacerKeepUnresolved().getValue());
+            argsLoader = new YADEXMLArgumentsLoader().load(step.getLogger(), args.getSettings().getValue(), args.getProfile().getValue(), args
+                    .getAlternativeProfile().getValue(), step.getAllArgumentsAsNameStringValueMap(), args.getSettingsReplacerCaseSensitive()
+                            .getValue(), args.getSettingsReplacerKeepUnresolved().getValue());
 
             // Set YADE parallelism from the Job Argument
             argsLoader.getArgs().getParallelism().setValue(args.getParallelism().getValue());
@@ -52,7 +52,7 @@ public class YADEJob extends Job<YADEJobArguments> {
 
             exception = e;
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable e) { // any unexpected errors, e.g. OutOfMemoryError
             step.getOutcome().setReturnCode(new YADEEngineException(e).getReturnCode().getCode());
 
             exception = e;
@@ -71,10 +71,7 @@ public class YADEJob extends Job<YADEJobArguments> {
     }
 
     private void applyOverrides(AYADEArgumentsLoader argsLoader, YADEJobArguments args) {
-        // Transfer
-        if (!args.getAlternativeProfile().isEmpty()) {
-            argsLoader.getArgs().getAlternativeProfile().setValue(args.getAlternativeProfile().getValue());
-        }
+        // Transfer - the alternative profile override has already been processed
 
         // Source
         if (!args.getSourceDir().isEmpty()) {

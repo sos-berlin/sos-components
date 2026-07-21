@@ -81,14 +81,15 @@ public class YADEEngineMain {
 
             Path settings = SOSPath.toAbsoluteNormalizedPath(getRequiredArgumentValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS));
             String profile = getRequiredArgumentValue(normalizedArgs, YADEArguments.STARTUP_ARG_PROFILE);
+            String alternativeProfile = normalizedArgs.get(YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
             Boolean settingsReplacerCaseSensitive = getBooleanValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE,
                     YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE_DEFAULT);
             Boolean settingsReplacerKeepUnresolved = getBooleanValue(normalizedArgs, YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED,
                     YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT);
 
             // Load XML Settings file configuration
-            argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, System.getenv(), settingsReplacerCaseSensitive,
-                    settingsReplacerKeepUnresolved);
+            argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, alternativeProfile, System.getenv(),
+                    settingsReplacerCaseSensitive, settingsReplacerKeepUnresolved);
 
             argsLoader.getArgs().getParallelism().setValue(getIntegerValue(normalizedArgs, YADEArguments.STARTUP_ARG_PARALLELISM, String.valueOf(
                     YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT)));
@@ -105,7 +106,7 @@ public class YADEEngineMain {
             int rt = ((YADEEngineException) e).getReturnCode().getCode();
             logger.error("[returnCode=" + rt + "]" + e.toString(), e);
             return rt;
-        } catch (Exception e) {
+        } catch (Throwable e) { // any unexpected errors, e.g. OutOfMemoryError
             exception = e;
             int rt = new YADEEngineException(e).getReturnCode().getCode();
             logger.error("[returnCode=" + rt + "]" + e.toString(), e);
@@ -159,8 +160,7 @@ public class YADEEngineMain {
     }
 
     private void applyOverrides(AYADEArgumentsLoader argsLoader, Map<String, String> args) {
-        // Transfer
-        setOptionalStringArgument(argsLoader.getArgs().getAlternativeProfile(), args, YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE);
+        // Transfer - the alternative profile override has already been processed
 
         // Source
         setOptionalStringArgument(argsLoader.getSourceArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_SOURCE_DIR);
@@ -208,6 +208,7 @@ public class YADEEngineMain {
         printArgumentUsage(YADEArguments.STARTUP_ARG_PROFILE, "<profile id>", "");
 
         System.out.println("    Transfer Options:");
+        printArgumentUsage(YADEArguments.STARTUP_ARG_ALTERNATIVE_PROFILE, "<alternative profile id>", "");
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_DIR, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_EXCLUDED_DIRECTORIES, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_PATH, "<...>", null);

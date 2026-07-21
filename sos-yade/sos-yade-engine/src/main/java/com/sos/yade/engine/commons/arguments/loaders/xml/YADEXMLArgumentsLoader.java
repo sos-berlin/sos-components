@@ -13,6 +13,7 @@ import org.xml.sax.SAXException;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -37,49 +38,44 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         super();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    /** Parameters:<br/>
-     * - 1) Path settings<br/>
-     * - 2) String profile<br/>
-     * - 3) Map<String,String> replacerMap<br/>
-     * - 4) boolean replacerCaseSensitive<br/>
-     * - 5) boolean replacerKeepUnresolved<br/>
-     */
-    public YADEXMLArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException {
-        if (params == null || params.length != 5) {
-            throw new YADEEngineSettingsLoadException("missing settingsFile,profile,replacerMap,replaceCaseSensitive,replacerKeepUnresolvedVariables",
-                    YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
+    public YADEXMLArgumentsLoader load(ISOSLogger logger, Path settings, String profile, String alternativeProfile, Map<String, String> replacerMap,
+            boolean replaceCaseSensitive, boolean replacerKeepUnresolvedVariables) throws YADEEngineSettingsLoadException {
+        if (settings == null) {
+            throw new YADEEngineSettingsLoadException("missing settings file", YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
-        if (params[0] == null || !(params[0] instanceof Path)) {
-            throw new YADEEngineSettingsLoadException("missing settingsFile", YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
-        }
-        if (params[1] == null || !(params[1] instanceof String)) {
+        if (SOSString.isEmpty(profile)) {
             throw new YADEEngineSettingsLoadException("missing profile", YADEReturnCode.MISSING_REQUIRED_ARGUMENT);
         }
 
         try {
             getArgs().programStart();
 
-            getArgs().getSettings().setValue((Path) params[0]);
-            getArgs().getProfile().setValue((String) params[1]);
+            getArgs().getSettings().setValue(settings);
+            getArgs().getProfile().setValue(profile);
             setVisitedProfile(getArgs().getProfile().getValue());
-
-            // params[2],params[3],params[4] see below varReplacer
 
             root = SOSXML.parse(getArgs().getSettings().getValue()).getDocumentElement();
             xpath = SOSXML.newXPath();
 
-            Node profile = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
+            Node profileNode = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
             if (profile == null) {
                 throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
                         + "]not found", YADEReturnCode.PROFILE_NOT_FOUND);
             }
 
-            // params[2] map e.g. System.getenv();
-            setVarReplacer(new SOSMapVariableReplacer((Map<String, String>) params[2], (Boolean) params[3], (Boolean) params[4]));
+            setVarReplacer(new SOSMapVariableReplacer(replacerMap, replaceCaseSensitive, replacerKeepUnresolvedVariables));
             YADEXMLGeneralHelper.parse(logger, this, xpath.selectNode(root, "General"));
-            YADEXMLProfileHelper.parse(logger, this, profile);
+            YADEXMLProfileHelper.parse(logger, this, profileNode);
+
+            // overrides the xml alternative profile if enables
+            if (!SOSString.isEmpty(alternativeProfile)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[%s][load][alternative profile][configured=%s]use from argument=%s", YADEXMLArgumentsLoader.class.getSimpleName(),
+                            getArgs().getAlternativeProfile().getValue(), alternativeProfile);
+                }
+                getArgs().getAlternativeProfile().setValue(alternativeProfile);
+            }
 
             if (logger.isDebugEnabled()) {
                 logger.debug("[%s][load][duration]%s", YADEXMLArgumentsLoader.class.getSimpleName(), SOSDate.getDuration(getArgs().getProgramStart(),

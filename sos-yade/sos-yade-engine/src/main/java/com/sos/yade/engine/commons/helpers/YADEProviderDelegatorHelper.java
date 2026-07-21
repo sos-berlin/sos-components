@@ -80,16 +80,15 @@ public class YADEProviderDelegatorHelper {
                 if (delegator.useJumpInitialSourceTargetConnectionErrorCode()) {
                     ex.setReturnCode(YADEReturnCode.JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR);
                 }
-
                 if (args.getAlternativeProfile().isEmpty()) {
                     throw ex;
                 }
+
                 ex.setNeedsAlternativeProfile();
                 throw ex;
             } catch (Exception ex) {
                 YADEReturnCode rc = delegator.useJumpInitialSourceTargetConnectionErrorCode()
                         ? YADEReturnCode.JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR : delegator.getConnectionErrorReturnCode();
-
                 YADEEngineConnectionException exx = new YADEEngineConnectionException(ex, rc, delegator);
                 if (args.getAlternativeProfile().isEmpty()) {
                     throw ex;

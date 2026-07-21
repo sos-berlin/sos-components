@@ -29,6 +29,7 @@ public class YADEEngineTest {
         Path settings = Path.of("xyz");
         String profile = "xyz";
 
+        String alternativeProfile = "";
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
@@ -37,8 +38,8 @@ public class YADEEngineTest {
             ISOSLogger logger = new SLF4JLogger();
 
             // Load Arguments from Settings XML
-            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
-                    settingsReplacerKeepUnresolved);
+            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, alternativeProfile, map,
+                    settingsReplacerCaseSensitive, settingsReplacerKeepUnresolved);
 
             // Set YADE parallelism from the Job Argument
             argsLoader.getArgs().getParallelism().setValue(parallelism);
@@ -63,6 +64,7 @@ public class YADEEngineTest {
         Path settings = Path.of("xyz");
         String profile = "xyz";
 
+        String alternativeProfile = "";
         Map<String, String> map = System.getenv();
         boolean settingsReplacerCaseSensitive = true;
         boolean settingsReplacerKeepUnresolved = true;
@@ -72,8 +74,8 @@ public class YADEEngineTest {
             ISOSLogger logger = new SLF4JLogger();
 
             // Load Arguments from Settings XML
-            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
-                    settingsReplacerKeepUnresolved);
+            AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, alternativeProfile, map,
+                    settingsReplacerCaseSensitive, settingsReplacerKeepUnresolved);
 
             argsLoader.getArgs().getParallelism().setValue(parallelism);
             // argsLoader.getArgs().getBufferSize().setValue(128 * 1_024);
@@ -102,9 +104,10 @@ public class YADEEngineTest {
         resetSystemProperties();
 
         List<String> args = new ArrayList<>();
-        args.add("--file-spec=xyz");
-        args.add("--recursive=true");
-        // args.add("-h");
+        // args.add("--settings=x");
+        // 7args.add("--profile=y");
+        // args.add("--alternative_profile=z");
+        args.add("-h");
         YADEEngineMain.main(args.toArray(new String[0]));
     }
 

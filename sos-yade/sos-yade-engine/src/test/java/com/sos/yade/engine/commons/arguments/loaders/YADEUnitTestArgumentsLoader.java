@@ -1,5 +1,8 @@
 package com.sos.yade.engine.commons.arguments.loaders;
 
+import java.nio.file.Path;
+import java.util.Map;
+
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 import com.sos.yade.engine.commons.arguments.YADEClientArguments;
@@ -16,7 +19,9 @@ public class YADEUnitTestArgumentsLoader extends AYADEArgumentsLoader {
     }
 
     @Override
-    public YADEUnitTestArgumentsLoader load(ISOSLogger logger, Object... params) throws YADEEngineSettingsLoadException {
+    public YADEUnitTestArgumentsLoader load(ISOSLogger logger, Path settings, String profile, String alternativeProfile,
+            Map<String, String> replacerMap, boolean replaceCaseSensitive, boolean replacerKeepUnresolvedVariables)
+            throws YADEEngineSettingsLoadException {
         return this;
     }
 
