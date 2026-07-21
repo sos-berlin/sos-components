@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
+import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
@@ -91,6 +92,7 @@ public abstract class CAUtils {
         try {
             PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(createX500NameWithReverseOrder(userDN),
                     issuerKeyPair.getPublic());
+            
             JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorithm);
             jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
             ContentSigner contentSigner = jcaBuilder.build(issuerKeyPair.getPrivate());
@@ -101,18 +103,34 @@ public abstract class CAUtils {
         }
     }
 
-    public static X509Certificate signCSR(String algorithm, PrivateKey caPrivateKey, KeyPair subjectKeyPair, PKCS10CertificationRequest csr,
-            X509Certificate rootCaCert, String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException,
-            NoSuchAlgorithmException {
-        return signCSR(algorithm, caPrivateKey, subjectKeyPair, csr, rootCaCert, subjectAlternativeName, null);
+    public static PKCS10CertificationRequest createCSR(String algorithm, KeyPair signerKeyPair, String userDN)
+            throws CertException {
+        try {
+            PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(createX500NameWithReverseOrder(userDN),
+                    signerKeyPair.getPublic());
+            
+            JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(signerKeyPair.getPrivate().getAlgorithm());
+            jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
+            ContentSigner contentSigner = jcaBuilder.build(signerKeyPair.getPrivate());
+            PKCS10CertificationRequest certificationRequest = builder.build(contentSigner);
+            return certificationRequest;
+        } catch (Exception e) {
+            throw new CertException("createCSR failed", e);
+        }
     }
 
     public static X509Certificate signCSR(String algorithm, PrivateKey caPrivateKey, KeyPair subjectKeyPair, PKCS10CertificationRequest csr,
-            X509Certificate rootCaCert, String subjectAlternativeName, Date validUntil) throws OperatorCreationException, IOException,
+            X509Certificate caCert, String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException,
+            NoSuchAlgorithmException {
+        return signCSR(algorithm, caPrivateKey, subjectKeyPair, csr, caCert, subjectAlternativeName, null);
+    }
+
+    public static X509Certificate signCSR(String algorithm, PrivateKey caPrivateKey, KeyPair subjectKeyPair, PKCS10CertificationRequest csr,
+            X509Certificate caCert, String subjectAlternativeName, Date validUntil) throws OperatorCreationException, IOException,
             CertificateException, NoSuchAlgorithmException {
         AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
-        X500Name issuerName = X500Name.getInstance(rootCaCert.getSubjectX500Principal().getEncoded());
+        X500Name issuerName = X500Name.getInstance(caCert.getSubjectX500Principal().getEncoded());
 //        X500Name subName = CaUtils.getX509Name(subject);
         Date validFrom = Date.from(Instant.now());
         // Using the current timestamp as the certificate serial number
@@ -153,8 +171,8 @@ public abstract class CAUtils {
         certgen.addExtension(Extension.extendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeId[] { KeyPurposeId.id_kp_serverAuth,
                 KeyPurposeId.id_kp_clientAuth, KeyPurposeId.id_kp_codeSigning }));
         
-        AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCaCert.getPublicKey(),
-                rootCaCert.getSubjectX500Principal(), certSerialNumber);
+        AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(caCert.getPublicKey(),
+                caCert.getSubjectX500Principal(), certSerialNumber);
         certgen.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
         SubjectKeyIdentifier subjectKeyIdentifier = new JcaX509ExtensionUtils().createSubjectKeyIdentifier(subjectKeyPair.getPublic());
         certgen.addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier);
@@ -342,5 +360,17 @@ public abstract class CAUtils {
             buf.append(RDN[i]);
         }
         return new X500Name(buf.toString());
+    }
+
+    private static X500Principal createX500PrincipalWithReverseOrder(String dn) {
+        String[] RDN = dn.split(",");
+        StringBuffer buf = new StringBuffer(dn.length());
+        for (int i = RDN.length - 1; i >= 0; i--) {
+            if (i != RDN.length - 1) {
+                buf.append(',');
+            }
+            buf.append(RDN[i]);
+        }
+        return new X500Principal(buf.toString());
     }
 }

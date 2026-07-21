@@ -10,7 +10,13 @@ public class SOSKeyConstants {
     public static final String RSA_SIGNER_ALGORITHM     = "SHA256WithRSA";
     public static final String PGP_ALGORITHM_NAME       = "PGP";
     public static final String ECDSA_ALGORITHM_NAME     = "ECDSA";
+    public static final String MLDSA_ALGORITHM_NAME     = "MLDSA";
     public static final String ECDSA_SIGNER_ALGORITHM   = "SHA512WithECDSA";
+    public static final String MLDSA_SIGNER_ALGORITHM   = "SHA512withMLDSA";
+    public static final String MLKEM_SIGNER_ALGORITHM   = "ML-KEM";
+    public static final String MLKEM_KYB_SIGN_ALGORITHM = "Kyber";
+    public static final String MLKEM_KYB_PROVIDER       = "BCPQC";
+    public static final String DEFAULT_BC_PROVIDER      = "BC";
     public static final String EC_ALGORITHM_NAME        = "EC";
     public static final String PRIVATE_KEY_HEADER       = "-----BEGIN PRIVATE KEY-----";
     public static final String PRIVATE_KEY_FOOTER       = "-----END PRIVATE KEY-----";
@@ -20,6 +26,8 @@ public class SOSKeyConstants {
     public static final String PRIVATE_EC_KEY_FOOTER    = "-----END EC PRIVATE KEY-----";
     public static final String PRIVATE_ECDSA_KEY_HEADER = "-----BEGIN ECDSA PRIVATE KEY-----";
     public static final String PRIVATE_ECDSA_KEY_FOOTER = "-----END ECDSA PRIVATE KEY-----";
+    public static final String PRIVATE_DSA_KEY_HEADER   = "-----BEGIN DSA PRIVATE KEY-----";
+    public static final String PRIVATE_DSA_KEY_FOOTER   = "-----END DSA PRIVATE KEY-----";
     public static final String PRIVATE_PGP_KEY_HEADER   = "-----BEGIN PGP PRIVATE KEY BLOCK-----";
     public static final String PRIVATE_PGP_KEY_FOOTER   = "-----END PGP PRIVATE KEY BLOCK-----";
     public static final String PUBLIC_KEY_HEADER        = "-----BEGIN PUBLIC KEY-----";
@@ -30,6 +38,8 @@ public class SOSKeyConstants {
     public static final String PUBLIC_EC_KEY_FOOTER     = "-----END EC PUBLIC KEY-----";
     public static final String PUBLIC_ECDSA_KEY_HEADER  = "-----BEGIN ECDSA PUBLIC KEY-----";
     public static final String PUBLIC_ECDSA_KEY_FOOTER  = "-----END ECDSA PUBLIC KEY-----";
+    public static final String PUBLIC_DSA_KEY_HEADER    = "-----BEGIN DSA PUBLIC KEY-----";
+    public static final String PUBLIC_DSA_KEY_FOOTER    = "-----END DSA PUBLIC KEY-----";
     public static final String PUBLIC_PGP_KEY_HEADER    = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
     public static final String PUBLIC_PGP_KEY_FOOTER    = "-----END PGP PUBLIC KEY BLOCK-----";
     public static final String CERTIFICATE_HEADER       = "-----BEGIN CERTIFICATE-----";

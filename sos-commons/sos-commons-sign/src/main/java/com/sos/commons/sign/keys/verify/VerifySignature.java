@@ -20,6 +20,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.jcajce.interfaces.MLDSAPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -111,6 +112,8 @@ public class VerifySignature {
             sig = Signature.getInstance(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM);
         } else if (publicKey instanceof RSAPublicKey) {
             sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        } else if (publicKey instanceof MLDSAPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM);
         }
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
@@ -193,5 +196,23 @@ public class VerifySignature {
         String normalizedSignature = signature.replace(SOSKeyConstants.SIGNATURE_HEADER, "").replace(SOSKeyConstants.SIGNATURE_FOOTER, "");
         return normalizedSignature.replaceAll("[\\r\\n]", "");
     }
+    
+    public static final Boolean verifyMLDSA(PublicKey pubKey, String original, String signature) throws NoSuchAlgorithmException, 
+            NoSuchProviderException, InvalidKeyException, SignatureException, IOException {
+        Security.addProvider(new BouncyCastleProvider());
+        Signature sig = Signature.getInstance(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
+        sig.initVerify(pubKey);
+        sig.update(original.getBytes());
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
 
+    public static final Boolean verifyBC(String signerAlgorithm, PublicKey pubKey, String original, String signature) throws NoSuchAlgorithmException,
+            NoSuchProviderException, InvalidKeyException, SignatureException, IOException {
+        Security.addProvider(new BouncyCastleProvider());
+        Signature sig = Signature.getInstance(signerAlgorithm, BouncyCastleProvider.PROVIDER_NAME);
+        sig.initVerify(pubKey);
+        sig.update(original.getBytes());
+        return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
+    
 }

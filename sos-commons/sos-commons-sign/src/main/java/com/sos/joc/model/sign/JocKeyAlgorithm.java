@@ -10,7 +10,9 @@ public enum JocKeyAlgorithm {
 
     PGP(0),
     RSA(1),
-    ECDSA(2);
+    ECDSA(2),
+    MLDSA(3),
+    MLKEM(4);
     private final Integer value;
     private final static Map<Integer, JocKeyAlgorithm> CONSTANTS = new HashMap<Integer, JocKeyAlgorithm>();
 
