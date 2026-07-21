@@ -22,8 +22,8 @@ import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.log.AgentLogRequest;
+import com.sos.joc.model.log.KeyedLogRequest;
 import com.sos.joc.model.log.LogResponse;
-import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -49,6 +49,8 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
     private static final String LOG_API_CALL = "./agent/log";
     private static final String LOG_DOWNLOAD_API_CALL = "./agent/log/download";
     private static final String LOG_RUNNING_API_CALL = "./agent/log/running";
+    private static final String LOG_PREV_API_CALL = "./agent/log/prev";
+    private static final String LOG_NEXT_API_CALL = "./agent/log/next";
 
     @Override
     public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
@@ -147,9 +149,9 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
     }
     
     @Override
-    public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+    public JOCDefaultResponse getPrevLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
+            KeyedLogRequest in = init(LOG_PREV_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
@@ -158,7 +160,50 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
                 return jocDefaultResponse;
             }
             ControllerLogImpl.checkAndGetDBInstances(controllerId);
-            LogResponse entity = LogHelper.getRunningResponse(logSession, in);
+            
+            return JOCDefaultResponse.responseNotYetImplemented();
+            
+//            LogResponse entity = LogHelper.getNextResponse(logSession, in);
+//
+//            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getNextLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            KeyedLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            String controllerId = logSession.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            ControllerLogImpl.checkAndGetDBInstances(controllerId);
+            LogResponse entity = LogHelper.getNextResponse(logSession, in);
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            KeyedLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            String controllerId = logSession.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+                    .getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            ControllerLogImpl.checkAndGetDBInstances(controllerId);
+            LogResponse entity = LogHelper.getNextResponse(logSession, in);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {

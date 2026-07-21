@@ -23,7 +23,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "logLines",
     "timeZone",
     "logToken",
-    "isComplete"
+    "dateToReached",
+    "numOfLinesReached",
+    "lastLogLineReached",
+    "firstLogLineReached"
 })
 public class LogResponse {
 
@@ -33,7 +36,7 @@ public class LogResponse {
      * 
      */
     @JsonProperty("logLines")
-    private List<String> logLines = new ArrayList<String>();
+    private List<LogLine> logLines = new ArrayList<LogLine>();
     /**
      * string without < and >
      * <p>
@@ -47,12 +50,33 @@ public class LogResponse {
     @JsonProperty("logToken")
     private String logToken;
     /**
-     * 
-     * (Required)
+     * Is true if 'dateTo' is reached
      * 
      */
-    @JsonProperty("isComplete")
-    private Boolean isComplete = false;
+    @JsonProperty("dateToReached")
+    @JsonPropertyDescription("Is true if 'dateTo' is reached")
+    private Boolean dateToReached;
+    /**
+     * Is true if 'numOfLines' is reached
+     * 
+     */
+    @JsonProperty("numOfLinesReached")
+    @JsonPropertyDescription("Is true if 'numOfLines' is reached")
+    private Boolean numOfLinesReached;
+    /**
+     * Is sent with ./log and ./log/next api if currently no more further log lines are available but neither 'dateTo' nor 'numOfLines' are reached
+     * 
+     */
+    @JsonProperty("lastLogLineReached")
+    @JsonPropertyDescription("Is sent with ./log and ./log/next api if currently no more further log lines are available but neither 'dateTo' nor 'numOfLines' are reached")
+    private Boolean lastLogLineReached;
+    /**
+     * It sent with ./log/prev api if the first line from the 'dateTo' parameter is reached
+     * 
+     */
+    @JsonProperty("firstLogLineReached")
+    @JsonPropertyDescription("It sent with ./log/prev api if the first line from the 'dateTo' parameter is reached")
+    private Boolean firstLogLineReached;
 
     /**
      * 
@@ -60,7 +84,7 @@ public class LogResponse {
      * 
      */
     @JsonProperty("logLines")
-    public List<String> getLogLines() {
+    public List<LogLine> getLogLines() {
         return logLines;
     }
 
@@ -70,7 +94,7 @@ public class LogResponse {
      * 
      */
     @JsonProperty("logLines")
-    public void setLogLines(List<String> logLines) {
+    public void setLogLines(List<LogLine> logLines) {
         this.logLines = logLines;
     }
 
@@ -109,33 +133,85 @@ public class LogResponse {
     }
 
     /**
-     * 
-     * (Required)
+     * Is true if 'dateTo' is reached
      * 
      */
-    @JsonProperty("isComplete")
-    public Boolean getIsComplete() {
-        return isComplete;
+    @JsonProperty("dateToReached")
+    public Boolean getDateToReached() {
+        return dateToReached;
     }
 
     /**
-     * 
-     * (Required)
+     * Is true if 'dateTo' is reached
      * 
      */
-    @JsonProperty("isComplete")
-    public void setIsComplete(Boolean isComplete) {
-        this.isComplete = isComplete;
+    @JsonProperty("dateToReached")
+    public void setDateToReached(Boolean dateToReached) {
+        this.dateToReached = dateToReached;
+    }
+
+    /**
+     * Is true if 'numOfLines' is reached
+     * 
+     */
+    @JsonProperty("numOfLinesReached")
+    public Boolean getNumOfLinesReached() {
+        return numOfLinesReached;
+    }
+
+    /**
+     * Is true if 'numOfLines' is reached
+     * 
+     */
+    @JsonProperty("numOfLinesReached")
+    public void setNumOfLinesReached(Boolean numOfLinesReached) {
+        this.numOfLinesReached = numOfLinesReached;
+    }
+
+    /**
+     * Is sent with ./log and ./log/next api if currently no more further log lines are available but neither 'dateTo' nor 'numOfLines' are reached
+     * 
+     */
+    @JsonProperty("lastLogLineReached")
+    public Boolean getLastLogLineReached() {
+        return lastLogLineReached;
+    }
+
+    /**
+     * Is sent with ./log and ./log/next api if currently no more further log lines are available but neither 'dateTo' nor 'numOfLines' are reached
+     * 
+     */
+    @JsonProperty("lastLogLineReached")
+    public void setLastLogLineReached(Boolean lastLogLineReached) {
+        this.lastLogLineReached = lastLogLineReached;
+    }
+
+    /**
+     * It sent with ./log/prev api if the first line from the 'dateTo' parameter is reached
+     * 
+     */
+    @JsonProperty("firstLogLineReached")
+    public Boolean getFirstLogLineReached() {
+        return firstLogLineReached;
+    }
+
+    /**
+     * It sent with ./log/prev api if the first line from the 'dateTo' parameter is reached
+     * 
+     */
+    @JsonProperty("firstLogLineReached")
+    public void setFirstLogLineReached(Boolean firstLogLineReached) {
+        this.firstLogLineReached = firstLogLineReached;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("logLines", logLines).append("timeZone", timeZone).append("logToken", logToken).append("isComplete", isComplete).toString();
+        return new ToStringBuilder(this).append("logLines", logLines).append("timeZone", timeZone).append("logToken", logToken).append("dateToReached", dateToReached).append("numOfLinesReached", numOfLinesReached).append("lastLogLineReached", lastLogLineReached).append("firstLogLineReached", firstLogLineReached).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(logToken).append(logLines).append(isComplete).toHashCode();
+        return new HashCodeBuilder().append(dateToReached).append(numOfLinesReached).append(firstLogLineReached).append(timeZone).append(logToken).append(logLines).append(lastLogLineReached).toHashCode();
     }
 
     @Override
@@ -147,7 +223,7 @@ public class LogResponse {
             return false;
         }
         LogResponse rhs = ((LogResponse) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(logToken, rhs.logToken).append(logLines, rhs.logLines).append(isComplete, rhs.isComplete).isEquals();
+        return new EqualsBuilder().append(dateToReached, rhs.dateToReached).append(numOfLinesReached, rhs.numOfLinesReached).append(firstLogLineReached, rhs.firstLogLineReached).append(timeZone, rhs.timeZone).append(logToken, rhs.logToken).append(logLines, rhs.logLines).append(lastLogLineReached, rhs.lastLogLineReached).isEquals();
     }
 
 }
