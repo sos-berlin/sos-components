@@ -300,7 +300,7 @@ public class LogHelper {
         AtomicLong chunkLinesCounter = new AtomicLong(0);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
         KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).skip(skip)
-                .takeWhile(dateToIsReached(dateTo, zoneId, entity).and(numOfLinesIsReached(ls, startNextLineCount, nextLinesCounter, entity)))
+                .takeWhile(numOfLinesIsReached(ls, startNextLineCount, nextLinesCounter, entity).and(dateToIsReached(dateTo, zoneId, entity)))
                 .doOnNext(keyedLogLine -> {
                     long row = linesCounter.getAndIncrement();
                     if (row < chunk) {
@@ -315,9 +315,11 @@ public class LogHelper {
         if (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE && preLastKeyOpt.isPresent() && lastKeyOpt.map(
                 LogLineKey::asString).equals(preLastKeyOpt.map(LogLineKey::asString))) {
             entity.setLastLogLineReached(true);
+            ls.addResponsedNumOfLines(nextLinesCounter.get());
+        } else {
+            ls.addResponsedNumOfLines(nextLinesCounter.get() - 1l);
         }
         ls.setLastKey(lastChunkKey.get());
-        ls.addResponsedNumOfLines(chunkLinesCounter.get());
         if (entity.getDateToReached() != Boolean.TRUE) {
             entity.setDateToReached(null);
         }

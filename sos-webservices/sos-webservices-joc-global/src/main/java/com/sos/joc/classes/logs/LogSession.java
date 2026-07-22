@@ -92,7 +92,9 @@ public class LogSession {
     }
     
     public void addResponsedNumOfLines(long responsedNumOfLines) {
-        this.responsedNumOfLines += responsedNumOfLines;
+        if (requestedNumOfLines != null && responsedNumOfLines > 0) {
+            this.responsedNumOfLines += responsedNumOfLines;
+        }
     }
     
     public Long getNewRequestedNumOfLines(Long runningChunkSize) {
@@ -129,7 +131,7 @@ public class LogSession {
     }
     
     public void setLastKey(LogLineKey key) {
-        if (key != null) {
+        if (requestedNumOfLines != null && key != null) {
             if (lastKey.isEmpty()) {
                 this.lastKey = Optional.of(key);
             } else {
