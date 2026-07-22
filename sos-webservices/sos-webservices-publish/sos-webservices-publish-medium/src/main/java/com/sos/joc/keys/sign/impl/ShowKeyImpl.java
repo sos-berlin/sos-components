@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.jcajce.interfaces.MLDSAPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
@@ -84,6 +85,13 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                                     new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
                                     SOSKeyConstants.PUBLIC_EC_KEY_HEADER, 
                                     SOSKeyConstants.PUBLIC_EC_KEY_FOOTER));
+                        } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
+                            keyPair = KeyUtil.getKeyPairFromMLDSAPrivatKeyString(KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
+                            publicKey = keyPair.getPublic();
+                            jocKeyPair.setPublicKey(KeyUtil.formatEncodedDataString(
+                                    new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
+                                    SOSKeyConstants.PUBLIC_KEY_HEADER, 
+                                    SOSKeyConstants.PUBLIC_KEY_FOOTER));
                         } else {
                             // restore public key from private key
                             keyPair = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
@@ -106,6 +114,9 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                             } else if (pub instanceof ECPublicKey) {
                                 jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
                                 jocKeyPair.setValidUntil(null);
+                            } else if (pub instanceof MLDSAPublicKey) {
+                                jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
+                                jocKeyPair.setValidUntil(null);
                             }
                         }
                     }
@@ -117,7 +128,10 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         publicKey = (PublicKey)KeyUtil.getSubjectPublicKeyInfo(jocKeyPair.getPublicKey());
                     } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
-                        publicKey = KeyUtil.convertToRSAPublicKey(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+                        publicKey = KeyUtil.getECPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+                    } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
+                        publicKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, 
+                                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
                     }
                 }
                 if(publicPGPKey != null) {
@@ -131,6 +145,9 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                         jocKeyPair.setValidUntil(null);
                     } else if (publicKey instanceof ECPublicKey) {
                         jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
+                        jocKeyPair.setValidUntil(null);
+                    } else if (publicKey instanceof MLDSAPublicKey) {
+                        jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
                         jocKeyPair.setValidUntil(null);
                     }
                 } 

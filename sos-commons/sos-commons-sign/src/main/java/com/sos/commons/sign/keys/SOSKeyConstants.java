@@ -11,6 +11,7 @@ public class SOSKeyConstants {
     public static final String PGP_ALGORITHM_NAME       = "PGP";
     public static final String ECDSA_ALGORITHM_NAME     = "ECDSA";
     public static final String MLDSA_ALGORITHM_NAME     = "MLDSA";
+    public static final String MLDSA_DEFAULT_ALGORITHM  = "ML-DSA-87";
     public static final String ECDSA_SIGNER_ALGORITHM   = "SHA512WithECDSA";
     public static final String MLDSA_SIGNER_ALGORITHM   = "SHA512withMLDSA";
     public static final String MLKEM_SIGNER_ALGORITHM   = "ML-KEM";

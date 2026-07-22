@@ -1375,7 +1375,7 @@ public class KeyTests {
         JocKeyPair keyPair = null;
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
-            keyPair = KeyUtil.createMLDSAJocKeyPairBC(MLDSAParameterSpec.ml_dsa_65_with_sha512, username, null);
+            keyPair = KeyUtil.createMLDSAJocKeyPairBC(MLDSAParameterSpec.ml_dsa_87_with_sha512, username, null);
             assertNotNull(keyPair.getPrivateKey());
             assertNotNull(keyPair.getPublicKey());
             assertNotEquals(keyPair.getPrivateKey(), "");
@@ -1390,7 +1390,7 @@ public class KeyTests {
         try {
             LOGGER.info("****************  Sign  ************************************************************************");
             signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM,KeyUtil.stripFormatFromMLDSAPrivateKey(keyPair.getPrivateKey())), 
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(keyPair.getPrivateKey())), 
                     ORIGINAL_STRING);
             assertNotNull(signature);
             assertNotEquals(signature, "");
@@ -1531,7 +1531,7 @@ public class KeyTests {
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
             // create new KeyPair for user
-            signerkeyPair = KeyUtil.createMLDSAKeyPairBC(MLDSAParameterSpec.ml_dsa_87_with_sha512);
+            signerkeyPair = KeyUtil.createMLDSAKeyPairBC(MLDSAParameterSpec.ml_dsa_87);
             // create new JocKeyPair from the java KeyPair
             jocKeyPair = KeyUtil.createMLDSAJocKeyPairBC(signerkeyPair, username, null);
             assertNotNull(jocKeyPair.getPrivateKey());
@@ -1582,7 +1582,7 @@ public class KeyTests {
             LOGGER.info("****************  Sign  ************************************************************************");
             // sign the test string with the users private (MLDSA) key
             signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM,KeyUtil.stripFormatFromMLDSAPrivateKey(jocKeyPair.getPrivateKey())), 
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey())), 
                     ORIGINAL_STRING);
             assertNotNull(signature);
             assertNotEquals(signature, "");
@@ -1636,6 +1636,14 @@ public class KeyTests {
         
     }
 
+    @Ignore
+    @Test
+    public void test38ParseMLDSAKeyFromFile() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+        String key = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_private.key")));
+        assertNotNull(KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(key)));
+        LOGGER.info("parsing key from file user_private.key was successful.");
+        
+    }
     private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert, String filename)
             throws IOException {
         ZipOutputStream zipOut = null;

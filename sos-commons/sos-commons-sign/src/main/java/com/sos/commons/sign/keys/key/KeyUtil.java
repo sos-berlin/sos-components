@@ -69,6 +69,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
+import org.bouncycastle.jcajce.interfaces.MLDSAPrivateKey;
 import org.bouncycastle.jcajce.spec.MLDSAParameterSpec;
 import org.bouncycastle.jcajce.spec.MLKEMParameterSpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -716,6 +717,15 @@ public abstract class KeyUtil {
         ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(ecdsaPrivateKey.getParams().getGenerator(), ecdsaPrivateKey.getParams());
         KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.EC_ALGORITHM_NAME);
         PublicKey publicKey = kf.generatePublic(ecPublicKeySpec);
+        return new KeyPair(publicKey, privKey);
+    }
+
+    public static KeyPair getKeyPairFromMLDSAPrivatKeyString(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException,
+            IOException {
+        Security.addProvider(new BouncyCastleProvider());
+        PrivateKey privKey = getPrivateKeyFromStringBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, privateKey);
+        MLDSAPrivateKey mldsaPrivateKey = (MLDSAPrivateKey) privKey;
+        PublicKey publicKey =  mldsaPrivateKey.getPublicKey();
         return new KeyPair(publicKey, privKey);
     }
 
@@ -1624,8 +1634,8 @@ public abstract class KeyUtil {
         String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
         byte[] encodedPublic = keyPairMLDSA.getPublic().getEncoded();
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateMLDSAKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicMLDSAKey(encodedPublicToString));
+        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
         keyPair.setKeyType(JocKeyType.PRIVATE.name());
         try {
