@@ -24,15 +24,15 @@ public class LogSession {
     private final Long chunkSize;
     private long responsedNumOfLines = 0;
     private final ZoneId zoneId;
-    private final boolean instantToIsInPast;
     private Optional<LogLineKey> lastKey = Optional.empty();
     private Optional<LogLineKey> firstKey = Optional.empty();
-    private Optional<LogLineKey> finalKey = Optional.empty();
+    private Optional<LogLineKey> finalNumOfLinesKey = Optional.empty();
+    private Optional<LogLineKey> finalDateToKey = Optional.empty();
     
     private final String token;
     
     public LogSession(String controllerId, Js7ServerId serverId, LogLevel logLevel, Instant dateFrom, Optional<Instant> dateTo,
-            Long requestedNumOfLines, ZoneId zoneId, Long chunkSize, boolean instantToIsInPast, String token) {
+            Long requestedNumOfLines, ZoneId zoneId, Long chunkSize, String token) {
         this.controllerId = controllerId;
         this.serverId = serverId;
         this.logLevel = logLevel;
@@ -41,27 +41,8 @@ public class LogSession {
         this.requestedNumOfLines = requestedNumOfLines;
         this.chunkSize = chunkSize;
         this.zoneId = zoneId;
-        this.instantToIsInPast = instantToIsInPast;
         this.token = token;
     }
-
-//    public LogSession(String controllerId, Js7ServerId serverId, LogLevel logLevel, Instant dateFrom, Optional<Instant> dateTo,
-//            Long requestedNumOfLines, long responsedNumOfLines, ZoneId zoneId, Long chunkSize, List<Optional<LogLineKey>> keyedLogLines,
-//            boolean instantToIsInPast, String token) {
-//        this.controllerId = controllerId;
-//        this.serverId = serverId;
-//        this.logLevel = logLevel;
-//        this.dateFrom = dateFrom;
-//        this.dateTo = dateTo;
-//        this.requestedNumOfLines = requestedNumOfLines;
-//        this.responsedNumOfLines = responsedNumOfLines;
-//        this.chunkSize = chunkSize;
-//        this.zoneId = zoneId;
-//        this.instantToIsInPast = instantToIsInPast;
-//        this.firstKey = keyedLogLines.get(0);
-//        this.lastKey = keyedLogLines.get(1);
-//        this.token = token;
-//    }
 
     public String getControllerId() {
         return controllerId;
@@ -146,22 +127,34 @@ public class LogSession {
         }
     }
     
-    public Optional<LogLineKey> getFinalKey() {
-        return finalKey;
+    public Optional<LogLineKey> getFinalNumOfLinesKey() {
+        return finalNumOfLinesKey;
     }
     
-    public void setFinalKey(LogLineKey key) {
+    public void setFinalNumOfLinesKey(LogLineKey key) {
         if (key != null) {
-            this.finalKey = Optional.of(key);
+            this.finalNumOfLinesKey = Optional.of(key);
+        }
+    }
+    
+    public void setFinalNumOfLinesKey(Optional<LogLineKey> key) {
+        if (key.isPresent()) {
+            this.finalNumOfLinesKey = key;
+        }
+    }
+    
+    public Optional<LogLineKey> getFinalDateToKey() {
+        return finalDateToKey;
+    }
+    
+    public void setFinalDateToKey(LogLineKey key) {
+        if (key != null) {
+            this.finalDateToKey = Optional.of(key);
         }
     }
 
     public ZoneId getZoneId() {
         return zoneId;
-    }
-
-    public boolean isInstantToIsInPast() {
-        return instantToIsInPast;
     }
     
     public Flux<List<KeyedLogLine>> getLogLineFlux(JControllerProxy proxy, JLogSelection selection, String key) {
