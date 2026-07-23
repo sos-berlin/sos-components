@@ -28,11 +28,12 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.model.log.KeyedLogRequest;
 import com.sos.joc.model.log.LogBaseRequest;
 import com.sos.joc.model.log.LogLine;
 import com.sos.joc.model.log.LogResponse;
+import com.sos.joc.model.log.NextLogRequest;
 import com.sos.joc.model.log.RequestLevel;
+import com.sos.joc.model.log.RunningLogRequest;
 
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
@@ -48,6 +49,7 @@ public class LogHelper {
     
     private static DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss,SSS").withZone(ZoneId.of("UTC"));
     private static long maxChunkSize = 2500L;
+    public static int timeout = 57;
     //private static final Logger LOGGER = LoggerFactory.getLogger(LogHelper.class);
     
     public static LogResponse getResponse(JControllerProxy proxy, String accessToken, LogBaseRequest in, Js7ServerId serverId, String timezone) {
@@ -148,21 +150,21 @@ public class LogHelper {
 //        };
 //    }
     
-    public static Predicate<KeyedLogLine> dateToIsReached(LogSession ls, LogResponse entity) {
+    public static Predicate<KeyedLogLine> dateToIsReached(LogSession ls, LogResponse entity, boolean force) {
         return keyedLogLine -> {
             if (ls.getDateTo().isPresent()) {
                 try {
                     if (ls.getFinalDateToKey().isPresent()) {
                         if (ls.getFinalDateToKey().get().asString().equals(keyedLogLine.key().asString())) {
                             entity.setDateToReached(true);
-                            return false;
+                            return force;
                         }
                     } else {
                         Instant instant = JobSchedulerDate.getInstantOfZoneId(keyedLogLine.line().substring(0, 35), ls.getZoneId());
                         if (!instant.isBefore(ls.getDateTo().get())) {
                             entity.setDateToReached(true);
                             ls.setFinalDateToKey(keyedLogLine.key());
-                            return false;
+                            return force;
                         }
                     }
                 } catch (Exception e) {
@@ -173,10 +175,10 @@ public class LogHelper {
         };
     }
     
-    public static Predicate<KeyedLogLine> numOfLinesIsReached(LogSession ls, AtomicBoolean startNextLineCount, LogResponse entity) {
+    public static Predicate<KeyedLogLine> numOfLinesIsReached(LogSession ls, AtomicBoolean startNextLineCount, LogResponse entity, boolean force) {
         return keyedLogLine -> {
             if (entity.getNumOfLinesReached() == Boolean.TRUE) {
-                return false;
+                return force;
             }
             if (ls.getRequestedNumOfLines() != null) {
                 if (ls.getFinalNumOfLinesKey().isPresent()) {
@@ -191,7 +193,7 @@ public class LogHelper {
                             entity.setNumOfLinesReached(true);
                             ls.setFinalNumOfLinesKey(keyedLogLine.key());
                         } else if (ls.getResponsedNumOfLines() > ls.getRequestedNumOfLines()) {
-                            return false;
+                            return force;
                         }
                     }
                     if (!startNextLineCount.get() && ls.getLastKey().isPresent() && keyedLogLine.key().asString().equals(ls.getLastKey().get()
@@ -258,7 +260,7 @@ public class LogHelper {
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
         
         KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity())
-                .takeWhile(dateToIsReached(ls, entity)).doOnNext(keyedLogLine -> {
+                .takeWhile(dateToIsReached(ls, entity, false)).doOnNext(keyedLogLine -> {
                     long row = linesCounter.getAndIncrement();
                     if (row == 1l) {
                         ls.setFirstKey(keyedLogLine.key());
@@ -284,15 +286,17 @@ public class LogHelper {
         }
     }
     
-    private static void setNextLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, boolean exactlyNextChunk, LogResponse entity) {
+    private static void setNextLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, boolean force, boolean exactlyNextChunk,
+            Duration timeoutDuration, LogResponse entity) {
         long skip = 1l;
         int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
         AtomicBoolean startNextLineCount = new AtomicBoolean(exactlyNextChunk);
         AtomicLong linesCounter = new AtomicLong(1l);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
+        
         KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).skip(skip)
-                .take(Duration.ofSeconds(57))
-                .takeWhile(numOfLinesIsReached(ls, startNextLineCount, entity).and(dateToIsReached(ls, entity)))
+                .take(timeoutDuration)
+                .takeWhile(numOfLinesIsReached(ls, startNextLineCount, entity, force).and(dateToIsReached(ls, entity, force)))
                 .doOnNext(keyedLogLine -> {
                     long row = linesCounter.getAndIncrement();
                     if (row < chunk) {
@@ -386,15 +390,15 @@ public class LogHelper {
         return logSession;
     }
     
-    public static LogResponse getNextResponse(LogSession logSession, KeyedLogRequest in) throws ControllerConnectionResetException,
+    public static LogResponse getNextResponse(LogSession logSession, NextLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
-        return getNextResponse(logSession, in, false);
+        return getNextResponse(logSession, in, null);
     }
 
-    public static LogResponse getNextResponse(LogSession logSession, KeyedLogRequest in, boolean running) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+    public static LogResponse getNextResponse(LogSession logSession, NextLogRequest in, Integer timeout)
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         JControllerProxy proxy = Proxy.of(logSession.getControllerId());
 
@@ -411,18 +415,20 @@ public class LogHelper {
             entity.setDateToReached(true);
         } else {
             boolean exactlyNextChunk = logSession.getLastKey().isPresent() && inKey.asString().equals(logSession.getLastKey().get().asString());
-            JLogSelection selection = JLogSelection.empty().withLineLimit(chunk + 1l).withGrowing(running);
-            setNextLogLines(logSession.getLogLineFlux(proxy, selection, inKey), logSession, chunk, exactlyNextChunk, entity);
+            JLogSelection selection = JLogSelection.empty().withLineLimit(chunk + 1l).withGrowing(timeout != null);
+            Duration timeoutDuration = timeout == null ? Duration.ofSeconds(LogHelper.timeout) : Duration.ofSeconds(timeout);
+            setNextLogLines(logSession.getLogLineFlux(proxy, selection, inKey), logSession, chunk, in.getForce() == Boolean.TRUE, exactlyNextChunk,
+                    timeoutDuration, entity);
         }
 
         return entity;
     }
 
-    public static LogResponse getRunningResponse(LogSession logSession, KeyedLogRequest in) throws ControllerConnectionResetException,
+    public static LogResponse getRunningResponse(LogSession logSession, RunningLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
-        return getNextResponse(logSession, in, true);
+        return getNextResponse(logSession, in, in.getTimeout());
     }
     
     private static LogResponse initLogResponse(String timezone) {

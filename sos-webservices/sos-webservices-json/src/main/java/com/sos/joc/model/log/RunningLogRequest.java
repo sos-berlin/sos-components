@@ -3,6 +3,7 @@ package com.sos.joc.model.log;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -17,77 +18,46 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "logToken",
-    "limit"
+    "timeout"
 })
-public class RunningLogRequest {
+public class RunningLogRequest
+    extends NextLogRequest
+{
 
     /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("logToken")
-    private String logToken;
-    /**
-     * non negative long
-     * <p>
-     * 
+     * the result is sent when the 'timeout' (in seconds) or the 'limit' is reached.
      * 
      */
-    @JsonProperty("limit")
-    private Long limit;
+    @JsonProperty("timeout")
+    @JsonPropertyDescription("the result is sent when the 'timeout' (in seconds) or the 'limit' is reached.")
+    private Integer timeout = 57;
 
     /**
-     * 
-     * (Required)
+     * the result is sent when the 'timeout' (in seconds) or the 'limit' is reached.
      * 
      */
-    @JsonProperty("logToken")
-    public String getLogToken() {
-        return logToken;
+    @JsonProperty("timeout")
+    public Integer getTimeout() {
+        return timeout;
     }
 
     /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("logToken")
-    public void setLogToken(String logToken) {
-        this.logToken = logToken;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
+     * the result is sent when the 'timeout' (in seconds) or the 'limit' is reached.
      * 
      */
-    @JsonProperty("limit")
-    public Long getLimit() {
-        return limit;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("limit")
-    public void setLimit(Long limit) {
-        this.limit = limit;
+    @JsonProperty("timeout")
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("logToken", logToken).append("limit", limit).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("timeout", timeout).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(logToken).append(limit).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(timeout).toHashCode();
     }
 
     @Override
@@ -99,7 +69,7 @@ public class RunningLogRequest {
             return false;
         }
         RunningLogRequest rhs = ((RunningLogRequest) other);
-        return new EqualsBuilder().append(logToken, rhs.logToken).append(limit, rhs.limit).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(timeout, rhs.timeout).isEquals();
     }
 
 }

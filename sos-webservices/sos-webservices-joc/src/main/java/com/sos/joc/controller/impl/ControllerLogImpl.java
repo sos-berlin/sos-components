@@ -28,6 +28,8 @@ import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.log.ControllerLogRequest;
 import com.sos.joc.model.log.KeyedLogRequest;
 import com.sos.joc.model.log.LogResponse;
+import com.sos.joc.model.log.NextLogRequest;
+import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -133,7 +135,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     @Override
     public JOCDefaultResponse getNextLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            KeyedLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
+            NextLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
@@ -153,7 +155,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     @Override
     public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            KeyedLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
+            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
@@ -162,6 +164,9 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
                 return jocDefaultResponse;
             }
             checkAndGetDBInstances(controllerId);
+            if (in.getTimeout() == null) {
+                in.setTimeout(LogHelper.timeout);
+            }
             LogResponse entity = LogHelper.getRunningResponse(logSession, in);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
