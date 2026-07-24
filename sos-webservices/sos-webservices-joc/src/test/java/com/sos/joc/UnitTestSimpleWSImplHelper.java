@@ -26,19 +26,28 @@ import com.sos.auth.sosintern.SOSInternAuthSession;
 import com.sos.auth.sosintern.classes.SOSInternAuthSubject;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
+import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
+import com.sos.joc.classes.agent.AgentClusterWatch;
+import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.quicksearch.QuickSearchStore;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
+import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.log4j2.NotificationAppender;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+import com.sos.joc.servlet.JocServletContainer;
 
 import jakarta.ws.rs.core.StreamingOutput;
 
@@ -85,21 +94,34 @@ public class UnitTestSimpleWSImplHelper {
         this.hibernateConfigurationFile = hibernateConfigurationFile;
     }
 
-    /** see com.sos.joc.servlet.JocServletContainer */
+    /** see {@link JocServletContainer#init()} */
     public void init() {
         // System Properties
         Globals.setSystemProperties();
+        Globals.readUnmodifiables();
+        ClusterWatch.getInstance();
 
         initJOCProperties();
         initConfigurationGlobals();
         setControllerIds();
-        // Globals.readUnmodifiables();
-
         // TODO Proxy etc
     }
 
+    /** see {@link JocServletContainer#destroy()} */
     public void destroy() {
         waitForAllTasksToComplete();
+
+        NotificationAppender.doNotify = false;
+        QuickSearchStore.close();
+        AgentClusterWatch.close();
+
+        // 1 - stop cluster: boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat
+        JocClusterService.getInstance().stop(StartupMode.automatic, true, true);
+        JocClusterServiceLogger.clearAllLoggers();
+        // 2 - close proxies
+        Proxies.closeAll();
+        DependencyUpdate.getInstance().close();
+
         Globals.closeFactory();
     }
 
