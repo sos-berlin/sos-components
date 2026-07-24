@@ -1,5 +1,7 @@
 package com.sos.joc.xmleditor.commons.standard.yade;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -11,6 +13,7 @@ import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.StoreConfigurationResourceImpl;
 import com.sos.joc.model.common.Err;
@@ -25,6 +28,8 @@ import com.sos.joc.model.xmleditor.deploy.DeployConfiguration;
 import com.sos.joc.publish.impl.ADeploy;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.impl.StandardYADEDeployResourceImpl;
+
+import io.vavr.control.Either;
 
 public class StandardYADEJobResourceHandler {
 
@@ -135,7 +140,16 @@ public class StandardYADEJobResourceHandler {
             LOGGER.debug("[deploy]" + Globals.objectMapper.writeValueAsString(filter));
         }
         DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
-        impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
+
+        filter.setTransactionId(UUID.randomUUID().toString());
+        new Thread(() -> {
+            try {
+                impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
+            } catch (Exception e) {
+                LOGGER.error(e.toString());
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, impl.getJocError(), null);
+            }
+        }, "deploy-" + filter.getTransactionId()).start();
     }
 
     private static void checkResponse(JOCDefaultResponse response) throws Exception {
