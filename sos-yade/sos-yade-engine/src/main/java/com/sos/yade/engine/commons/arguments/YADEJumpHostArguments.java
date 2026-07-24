@@ -110,6 +110,10 @@ public class YADEJumpHostArguments extends ASOSArguments {
         }
         return configuredProtocolFragments.get(key);
     }
+    
+    public Map<String, Node> getConfiguredProtocolFragments() {
+        return configuredProtocolFragments;
+    }
 
     public void addConfiguredCsFragment(Node fragment, String name) {
         if (fragment == null || name == null) {

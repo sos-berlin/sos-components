@@ -693,28 +693,28 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
                 AProviderArguments alternative = null;
                 switch (refNodeName) {
-                case "AzureBlobStorageFragmentRef":
+                case "AzureBlobStorageFragmentAlternativeRef":
                     alternative = parseAzureBlobStorage(logger, argsLoader, ref, isSource);
                     break;
-                case "FTPFragmentRef":
+                case "FTPFragmentAlternativeRef":
                     alternative = parseFTP(logger, argsLoader, ref, isSource);
                     break;
-                case "FTPSFragmentRef":
+                case "FTPSFragmentAlternativeRef":
                     alternative = parseFTPS(logger, argsLoader, ref, isSource);
                     break;
-                case "HTTPFragmentRef":
+                case "HTTPFragmentAlternativeRef":
                     alternative = parseHTTP(logger, argsLoader, ref, isSource);
                     break;
-                case "HTTPSFragmentRef":
+                case "HTTPSFragmentAlternativeRef":
                     alternative = parseHTTPS(logger, argsLoader, ref, isSource);
                     break;
-                case "SFTPFragmentRef":
+                case "SFTPFragmentAlternativeRef":
                     alternative = parseSFTP(logger, argsLoader, ref, isSource, isJump, visitedAlternatives);
                     break;
-                case "SMBFragmentRef":
+                case "SMBFragmentAlternativeRef":
                     alternative = parseSMB(logger, argsLoader, ref, isSource);
                     break;
-                case "WebDAVFragmentRef":
+                case "WebDAVFragmentAlternativeRef":
                     alternative = parseWebDAV(logger, argsLoader, ref, isSource);
                     break;
                 }
@@ -1312,7 +1312,8 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     protected static String getFragmentKeyFromRef(String refNodeName, Node ref) {
         if (refNodeName.endsWith("Ref")) {
-            return YADEArgumentsHelper.getFragmentKey(refNodeName.substring(0, refNodeName.length() - 3), SOSXML.getAttributeValue(ref, "ref"));
+            int se = refNodeName.endsWith("AlternativeRef") ? 14 : 3;
+            return YADEArgumentsHelper.getFragmentKey(refNodeName.substring(0, refNodeName.length() - se), SOSXML.getAttributeValue(ref, "ref"));
         }
         return getLocalFragmentKey();
     }

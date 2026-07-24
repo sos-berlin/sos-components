@@ -87,21 +87,42 @@
                  refer="AzureBlobStorageFragmentKey">
 			      <xs:selector xpath=".//AzureBlobStorageFragmentRef"/>
 			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="AzureBlobStorageFragmentAlternativeKeyRef"
+                 refer="AzureBlobStorageFragmentKey">
+			      <xs:selector xpath=".//AzureBlobStorageFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
 		    </xs:keyref>        
 		    <xs:keyref name="FTPFragmentKeyRef" refer="FTPFragmentKey">
 			      <xs:selector xpath=".//FTPFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="FTPFragmentAlternativeKeyRef" refer="FTPFragmentKey">
+			      <xs:selector xpath=".//FTPFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="FTPSFragmentKeyRef" refer="FTPSFragmentKey">
 			      <xs:selector xpath=".//FTPSFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="FTPSFragmentAlternativeKeyRef" refer="FTPSFragmentKey">
+			      <xs:selector xpath=".//FTPSFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="HTTPFragmentKeyRef" refer="HTTPFragmentKey">
 			      <xs:selector xpath=".//HTTPFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="HTTPFragmentAlternativeKeyRef" refer="HTTPFragmentKey">
+			      <xs:selector xpath=".//HTTPFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="HTTPSFragmentKeyRef" refer="HTTPSFragmentKey">
 			      <xs:selector xpath=".//HTTPSFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="HTTPSFragmentAlternativeKeyRef" refer="HTTPSFragmentKey">
+			      <xs:selector xpath=".//HTTPSFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="JumpFragmentKeyRef" refer="JumpFragmentKey">
@@ -112,12 +133,24 @@
 			      <xs:selector xpath=".//SFTPFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="SFTPFragmentAlternativeKeyRef" refer="SFTPFragmentKey">
+			      <xs:selector xpath=".//SFTPFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="SMBFragmentKeyRef" refer="SMBFragmentKey">
 			      <xs:selector xpath=".//SMBFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="SMBFragmentAlternativeKeyRef" refer="SMBFragmentKey">
+			      <xs:selector xpath=".//SMBFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="WebDAVFragmentKeyRef" refer="WebDAVFragmentKey">
 			      <xs:selector xpath=".//WebDAVFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="WebDAVFragmentAlternativeKeyRef" refer="WebDAVFragmentKey">
+			      <xs:selector xpath=".//WebDAVFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="MailFragmentKeyRef" refer="MailFragmentKey">
@@ -2549,7 +2582,7 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:sequence>
-                <xs:element ref="AzureBlobStorageFragmentRef" maxOccurs="unbounded"/>
+                <xs:element ref="AzureBlobStorageFragmentAlternativeRef" maxOccurs="unbounded"/>
            </xs:sequence>
         </xs:complexType>
 	  </xs:element>
@@ -2640,8 +2673,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:choice maxOccurs="unbounded">
-                <xs:element ref="FTPFragmentRef"/>
-                <xs:element ref="FTPSFragmentRef"/>
+                <xs:element ref="FTPFragmentAlternativeRef"/>
+                <xs:element ref="FTPSFragmentAlternativeRef"/>
            </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -2732,8 +2765,8 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:choice maxOccurs="unbounded">
-                <xs:element ref="HTTPFragmentRef"/>
-                <xs:element ref="HTTPSFragmentRef"/>
+                <xs:element ref="HTTPFragmentAlternativeRef"/>
+                <xs:element ref="HTTPSFragmentAlternativeRef"/>
            </xs:choice>
         </xs:complexType>
     </xs:element>
@@ -2825,7 +2858,7 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:sequence>
-                <xs:element ref="SFTPFragmentRef" maxOccurs="unbounded"/>
+                <xs:element ref="SFTPFragmentAlternativeRef" maxOccurs="unbounded"/>
            </xs:sequence>
         </xs:complexType>
 	  </xs:element>
@@ -2916,7 +2949,7 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:sequence>
-                <xs:element ref="SMBFragmentRef" maxOccurs="unbounded"/>
+                <xs:element ref="SMBFragmentAlternativeRef" maxOccurs="unbounded"/>
            </xs:sequence>
         </xs:complexType>
 	  </xs:element>
@@ -3007,7 +3040,7 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 		    <xs:complexType>
             <xs:sequence>
-                <xs:element ref="WebDAVFragmentRef" maxOccurs="unbounded"/>
+                <xs:element ref="WebDAVFragmentAlternativeRef" maxOccurs="unbounded"/>
            </xs:sequence>
         </xs:complexType>
 	  </xs:element>
@@ -5535,8 +5568,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
-	  </xs:element>
-    
+	  </xs:element>    
     <xs:element name="SharedKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/SharedKey"/>
@@ -5911,8 +5943,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
-	  </xs:element>
-    
+	  </xs:element>    
     <xs:element name="AccountKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/AccountKey">
@@ -10379,7 +10410,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>    
     <!-- AZURE -->
-	  <xs:element name="AzureBlobStorageFragmentRef">
+    <xs:element name="AzureBlobStorageFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Ref/AzureBlobStorageFragmentRef"/>
          <xs:documentation>
@@ -10425,9 +10456,52 @@ A fragment is referenced via this attribute value by a transfer profile.
                 
             </xs:attribute>
 		    </xs:complexType>
-	  </xs:element>    
+	  </xs:element>
+    <xs:element name="AzureBlobStorageFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Ref/AzureBlobStorageFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an Azure Blob Storage file transfer operation.
+		</p>
+               <p>
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+AzureBlobStorageFragment"
+                     shape="rect">AzureBlobStorageFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>AzureBlobStorageFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the Azure Blob Storage.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- FTP -->
-	  <xs:element name="FTPFragmentRef">
+    <xs:element name="FTPFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPFragmentRef"/>
          <xs:documentation>
@@ -10530,8 +10604,51 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="FTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTP file transfer operation.
+		</p>
+               <p>
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FTPFragment"
+                     shape="rect">FTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>FTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the FTP protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>	
 	  <!-- FTPS -->
-	  <xs:element name="FTPSFragmentRef">
+   <xs:element name="FTPSFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPSFragmentRef"/>
          <xs:documentation>
@@ -10564,6 +10681,47 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="ProcessingCommandDelimiter" minOccurs="0"/>
 				        <xs:element ref="Rename" minOccurs="0"/>
 			      </xs:sequence>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the FTPS protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    <xs:element name="FTPSFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPSFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTPS file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FTPSFragment"
+                     shape="rect">FTPSFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>FTPSFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
 			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -10624,6 +10782,47 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:attribute>
 		    </xs:complexType>
 	  </xs:element>
+    <xs:element name="HTTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an HTTP file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPFragment"
+                     shape="rect">HTTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>HTTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the HTTP protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- HTTPS -->
 	  <xs:element name="HTTPSFragmentRef">
 		    <xs:annotation>
@@ -10656,6 +10855,47 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="Rename" minOccurs="0"/>
 				        <xs:element ref="HTTPHeaders" minOccurs="0"/>
 			      </xs:sequence>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the HTTPS protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    <xs:element name="HTTPSFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPSFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTPS file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPSFragment"
+                     shape="rect">HTTPSFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>HTTPSFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
 			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -10753,6 +10993,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="SFTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/Ref/SFTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an SFTP file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+SFTPFragment"
+                     shape="rect">SFTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>SFTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the SFTP protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- SMB -->
 	  <xs:element name="SMBFragmentRef">
 		    <xs:annotation>
@@ -10841,6 +11122,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="SMBFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SMB/Ref/SMBFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an SMB file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+SMBFragment"
+                     shape="rect">SMBFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>SMBFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the SMB protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- WEBDAV -->
 	  <xs:element name="WebDAVFragmentRef">
 		    <xs:annotation>
@@ -10918,7 +11240,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-
+    <xs:element name="WebDAVFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/WEBDAV/Ref/WebDAVFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an WebDAV file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+WebDAVFragment"
+                     shape="rect">WebDAVFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>WebDAVFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the WebDAV protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- SourceFileOptions -->
 	  <xs:element name="SourceFileOptions">
 		    <xs:annotation>

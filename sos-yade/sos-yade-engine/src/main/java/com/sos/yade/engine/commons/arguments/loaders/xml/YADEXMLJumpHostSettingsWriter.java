@@ -128,6 +128,7 @@ public class YADEXMLJumpHostSettingsWriter {
             List<String[]> protocolFragmentAlternatives = null;
             if (providerArgs.hasAlternatives()) {
                 protocolFragmentAlternatives = new ArrayList<>();
+
                 for (AProviderArguments a : providerArgs.getAlternatives()) {
                     String[] key = YADEArgumentsHelper.parseFragmentKey(a);
                     if (key == null) {
@@ -1155,7 +1156,7 @@ public class YADEXMLJumpHostSettingsWriter {
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(name).append(">");
         for (String[] key : protocolFragmentAlternatives) {
-            sb.append("<").append(key[0]).append("Ref ref=").append(attrValue(key[1])).append(" />");
+            sb.append("<").append(key[0]).append("AlternativeRef ref=").append(attrValue(key[1])).append(" />");
         }
         sb.append("</").append(name).append(">");
         return sb.toString();

@@ -182,7 +182,7 @@ public class YADEXMLFragmentsProtocolFragmentJumpHelper {
 
                 SSHProviderArguments alternative = null;
                 switch (refNodeName) {
-                case "SFTPFragmentRef":
+                case "SFTPFragmentAlternativeRef":
                     alternative = YADEXMLFragmentsProtocolFragmentHelper.parseSFTP(logger, argsLoader, ref, isSource, true, VISITED_ALTERNATIVES);
                     break;
                 }
