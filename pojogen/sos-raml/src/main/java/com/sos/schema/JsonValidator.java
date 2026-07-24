@@ -441,6 +441,8 @@ public class JsonValidator {
             put("com.sos.joc.model.log.ControllerLogRequest", "logManagement/controller-log-request-schema.json");
             put("com.sos.joc.model.log.AgentLogRequest", "logManagement/agent-log-request-schema.json");
             put("com.sos.joc.model.log.KeyedLogRequest", "logManagement/next-prev-log-request-schema.json");
+            put("com.sos.joc.model.log.NextLogRequest", "logManagement/next-log-request-schema.json");
+            put("com.sos.joc.model.log.RunningLogRequest", "logManagement/running-log-request-schema.json");
             
             // TODO complete the map
         }
