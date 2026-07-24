@@ -162,12 +162,9 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
                 return jocDefaultResponse;
             }
             ControllerLogImpl.checkAndGetDBInstances(controllerId);
-            
-            return JOCDefaultResponse.responseNotYetImplemented();
-            
-//            LogResponse entity = LogHelper.getNextResponse(logSession, in);
-//
-//            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+            LogResponse entity = LogHelper.getPrevResponse(logSession, in);
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }

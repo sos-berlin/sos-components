@@ -78,7 +78,7 @@ public class LogSession {
         }
     }
     
-    public Long getNewRequestedNumOfLines(Long runningChunkSize) {
+    public Long getNextChunkSize(Long runningChunkSize, boolean force) {
         //+1 because first line is skipped later (otherwise line is double)
         Long rChunkSize = runningChunkSize;
         if (runningChunkSize == null) {
@@ -87,10 +87,20 @@ public class LogSession {
             rChunkSize = Long.MAX_VALUE - 2l;
         }
         //first is skipped, otherwise double -> + 1l
-        if (requestedNumOfLines == null) {
+        if (requestedNumOfLines == null || force) {
            return rChunkSize + 1l; 
         }
         return Math.min(requestedNumOfLines, rChunkSize) + 1l;
+    }
+    
+    public Long getPrevChunkSize(Long runningChunkSize) {
+        Long rChunkSize = runningChunkSize;
+        if (runningChunkSize == null) {
+            rChunkSize = chunkSize;
+        } else if (runningChunkSize < 0) {
+            rChunkSize = Long.MAX_VALUE - 2l;
+        }
+        return rChunkSize; 
     }
 
     public String getToken() {
@@ -157,12 +167,17 @@ public class LogSession {
         return zoneId;
     }
     
-    public Flux<List<KeyedLogLine>> getLogLineFlux(JControllerProxy proxy, JLogSelection selection, String key) {
+    public Flux<List<KeyedLogLine>> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, String key) {
         return proxy.keyedLogLineFlux(serverId, logLevel, createLogLineKey(key), selection);
     }
     
-    public Flux<List<KeyedLogLine>> getLogLineFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
+    public Flux<List<KeyedLogLine>> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
         return proxy.keyedLogLineFlux(serverId, logLevel, key, selection);
+    }
+    
+    // It's a fake until proxy has a better API
+    public Flux<List<KeyedLogLine>> getPrevLogLinesFlux(JControllerProxy proxy, JLogSelection selection, Instant instantFrom) {
+        return proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection);
     }
 
     public Long getChunkSize() {
