@@ -49,12 +49,13 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         return postImportKey(xAccessToken, body, auditLog, importKeyFilter);
     }
 
-    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
+    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter)
+            throws Exception {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
             checkRequiredParameter("importKeyFilter", importKeyFilter);
-            importKeyFilter = importKeyFilter.trim().replaceFirst("}$", "\"filename\":\"" + PublishUtils.getImportFilename(body) + "\"}");
+            importKeyFilter = importKeyFilter.trim().replaceFirst("}$", ",\n\"filename\":\"" + PublishUtils.getImportFilename(body) + "\"}");
             initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
@@ -122,6 +123,17 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid private ECDSA key!");
                     }
+                } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm()) 
+                        && !keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
+                    try {
+                        KeyPair kp = KeyUtil.getKeyPairFromMLDSAPrivatKeyString(KeyUtil.stripFormatFromPrivateKey(keyFromFile));
+                        if (kp != null) {
+                            keyPair.setPrivateKey(keyFromFile);
+                            reason = String.format("new Private Key imported for profile - %1$s -", account);
+                        }
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid private ECDSA key!");
+                    }
                 } else if (keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
@@ -136,17 +148,15 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)
                         || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_KEY_HEADER)
                         || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_EC_KEY_HEADER)
-                        || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER)) {
+                        || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSKeyConstants.PUBLIC_DSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                 } else {
                     throw new JocKeyNotValidException(
                             "The provided file does not contain a valid PGP, RSA or ECDSA Private Key nor a X.509 certificate!");
                 }
             }
-            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
-//            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), reason);
-//            logAuditMessage(importAudit);
-//            storeAuditLogEntry(importAudit);
+            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);

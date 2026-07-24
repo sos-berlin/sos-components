@@ -13,6 +13,7 @@ import java.util.Date;
 import javax.naming.InvalidNameException;
 
 import org.bouncycastle.cert.CertException;
+import org.bouncycastle.jcajce.spec.MLDSAParameterSpec;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
@@ -48,6 +49,14 @@ public class SigningCertificateUtil {
         if(SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
             signerAlgorithm = keyAlgorithm;
             newClientKeyPair = KeyUtil.createRSAKeyPair();
+            KeyPair rootKeyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocRootKeyPair.getPrivateKey());
+            PKCS10CertificationRequest csr = CAUtils.createCSR(signerAlgorithm, newClientKeyPair, rootKeyPair, userDN);
+            clientCert = CAUtils.signCSR(signerAlgorithm, rootKeyPair.getPrivate(), newClientKeyPair, csr, rootCert,
+                    null, validUntil);
+            signingKeyPair = KeyUtil.createJOCKeyPair(newClientKeyPair);
+        } else if(SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
+            signerAlgorithm = keyAlgorithm;
+            newClientKeyPair = KeyUtil.createMLDSAKeyPairBC(MLDSAParameterSpec.ml_dsa_87);
             KeyPair rootKeyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocRootKeyPair.getPrivateKey());
             PKCS10CertificationRequest csr = CAUtils.createCSR(signerAlgorithm, newClientKeyPair, rootKeyPair, userDN);
             clientCert = CAUtils.signCSR(signerAlgorithm, rootKeyPair.getPrivate(), newClientKeyPair, csr, rootCert,

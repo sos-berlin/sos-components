@@ -1,7 +1,10 @@
 package com.sos.joc.keys.sign.impl;
 
+import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+
+import org.bouncycastle.jcajce.spec.MLDSAParameterSpec;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
@@ -88,8 +91,10 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                     if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                         // default
                         keyPair = KeyUtil.createRSAJocKeyPair(accountName, filter.getDn());
-                    } else {
+                    } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                         keyPair = KeyUtil.createECDSAJOCKeyPair(accountName, filter.getDn());
+                    } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
+                        keyPair = KeyUtil.createMLDSAJocKeyPairBC(MLDSAParameterSpec.ml_dsa_87, accountName, filter.getDn());
                     }
                 }
             }

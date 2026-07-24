@@ -118,6 +118,17 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public ECDSA key!");
                     }
+                } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                        && !keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
+                    try {
+                        PublicKey pubKey = KeyUtil.getMLDSAPublicKeyFromStringBC(KeyUtil.stripFormatFromMLDSAPublicKey(keyFromFile).getBytes());
+                        if (pubKey != null) {
+                            keyPair.setPublicKey(keyFromFile);
+                            reason = String.format("new Public Key imported for profile - %1$s -", account);
+                        }
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid public ECDSA key!");
+                    }
                 } else if (keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
@@ -136,7 +147,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     }
                 } else {
                     throw new JocKeyNotValidException(
-                            "The provided file does not contain a valid public PGP, RSA or ECDSA key nor a valid X.509 certificate!");
+                            "The provided file does not contain a valid public PGP, RSA, ECDSA or MLDSA key nor a valid X.509 certificate!");
                 }
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

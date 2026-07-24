@@ -69,12 +69,18 @@ public class DBLayerKeys {
             certificate = keyPair.getCertificate();
         } else {
             try {
-                if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
-                    certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromECDSAPrivatKeyString(
-                            keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn));
-                } else {
-                    certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromRSAPrivatKeyString(
-                            keyPair.getPrivateKey()), account, SOSKeyConstants.RSA_SIGNER_ALGORITHM, dn));
+                if(keyPair.getCertificate() == null || keyPair.getCertificate().isEmpty()) {
+                    // generate self sign default certificate
+                    if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.ECDSA.name())) {
+                        certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromECDSAPrivatKeyString(
+                                keyPair.getPrivateKey()), account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn));
+                    } else if(keyPair.getKeyAlgorithm().equals(JocKeyAlgorithm.MLDSA.name())) {
+                        certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromMLDSAPrivatKeyString(
+                                keyPair.getPrivateKey()), account, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, dn));
+                    } else {
+                        certificate = CertificateUtils.asPEMString(KeyUtil.generateCertificateFromKeyPair(KeyUtil.getKeyPairFromRSAPrivatKeyString(
+                                keyPair.getPrivateKey()), account, SOSKeyConstants.RSA_SIGNER_ALGORITHM, dn));
+                    }
                 }
             } catch (CertificateEncodingException | NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
                 LOGGER.warn("could not extract certificate from key pair. cause: ", e);
@@ -91,6 +97,8 @@ public class DBLayerKeys {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                existingKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             session.update(existingKey);
         } else {
@@ -104,6 +112,8 @@ public class DBLayerKeys {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                newKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             newKey.setAccount(account);
             newKey.setSecLvl(secLvl.intValue());
@@ -131,6 +141,8 @@ public class DBLayerKeys {
                             SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_ECDSA_KEY_HEADER)))
                             || (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm) && (existingKey.getKey().startsWith(
                                     SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)))
+                            || (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorythm) && (existingKey.getKey().startsWith(
+                                    SOSKeyConstants.PUBLIC_PGP_KEY_HEADER) || existingKey.getKey().startsWith(SOSKeyConstants.PUBLIC_RSA_KEY_HEADER)))
                             || (JocKeyType.fromValue(existingKey.getKeyType()).equals(JocKeyType.PRIVATE))) {
                         existingKey.setKey(null);
                     }
@@ -144,6 +156,8 @@ public class DBLayerKeys {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                existingKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             session.update(existingKey);
         } else {
@@ -160,6 +174,8 @@ public class DBLayerKeys {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                newKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             newKey.setAccount(account);
             newKey.setSecLvl(secLvl.intValue());
@@ -189,6 +205,8 @@ public class DBLayerKeys {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 existingKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
+                existingKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             session.update(existingKey);
         } else {
@@ -202,6 +220,8 @@ public class DBLayerKeys {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.RSA.value());
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.value());
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
+                newKey.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.value());
             }
             newKey.setAccount(account);
             newKey.setSecLvl(secLvl.intValue());

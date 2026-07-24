@@ -254,7 +254,7 @@ public abstract class KeyUtil {
         kpg.initialize(ecSpec, new SecureRandom());
         return kpg.generateKeyPair();
     }
-
+    
     public static JocKeyPair createJOCKeyPair(KeyPair keyPair) throws NoSuchAlgorithmException, NoSuchProviderException {
         JocKeyPair jocKeyPair = new JocKeyPair();
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
@@ -456,7 +456,7 @@ public abstract class KeyUtil {
                 }
             } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
-                    KeyPair kp = getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
+                    KeyPair kp = getKeyPairFromMLDSAPrivatKeyString(KeyUtil.stripFormatFromPrivateKey(keyPair.getPrivateKey()));
                     if (kp != null && kp.getPrivate() != null) {
                         return true;
                     } else {
@@ -495,6 +495,18 @@ public abstract class KeyUtil {
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
                     PublicKey pub = getECDSAPublicKeyFromString(keyPair.getPublicKey());
+                    if (pub != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    storedExceptions.add(e);
+                    return false;
+                }
+            } else if (SOSKeyConstants.MLDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                try {
+                    PublicKey pub = getMLDSAPublicKeyFromStringBC(KeyUtil.stripFormatFromPublicKey(keyPair.getPublicKey()).getBytes());
                     if (pub != null) {
                         return true;
                     } else {
@@ -1598,7 +1610,7 @@ public abstract class KeyUtil {
     }
 
     public static PrivateKey getPrivateKeyFromStringBC(String signerAlgorithm, String privateKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        Security.addProvider(new BouncyCastleProvider());
+         Security.addProvider(new BouncyCastleProvider());
         KeyFactory kf = KeyFactory.getInstance(signerAlgorithm);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(privateKey)));
         return privKey;

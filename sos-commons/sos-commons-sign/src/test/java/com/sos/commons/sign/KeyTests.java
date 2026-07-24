@@ -1642,8 +1642,19 @@ public class KeyTests {
         String key = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_private.key")));
         assertNotNull(KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(key)));
         LOGGER.info("parsing key from file user_private.key was successful.");
-        
+    }    
+
+    @Ignore
+    @Test
+    public void test39KeyPairValidMLDSA() throws IOException {
+        JocKeyPair keyPair = new JocKeyPair();
+        keyPair.setPrivateKey(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_private.key"))));
+        keyPair.setCertificate(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_certificate.crt"))));
+        keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
+        keyPair.setKeyType(JocKeyType.PRIVATE.name());
+        assertTrue(KeyUtil.isKeyPairValid(keyPair));
     }
+    
     private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert, String filename)
             throws IOException {
         ZipOutputStream zipOut = null;

@@ -48,24 +48,28 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
-                        PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-                        reason = String.format("new Private Key stored for profile - %1$s -", account);
-                    } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
-                        PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-                        reason = String.format("new X.509 Certificate stored for profile - %1$s -", account);
-                    } else if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
+                    if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
-                    } 
+                    } else {
+                        if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
+                            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
+                            reason = String.format("new Private Key stored for profile - %1$s -", account);
+                        }
+                        if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
+                            if(reason == null) {
+                                reason = String.format("new X.509 Certificate stored for profile - %1$s -", account);
+                            } else {
+                                reason += " with new X.509 Certificate";
+                            }
+                        }
+                    }
                 } else {
                     throw new JocKeyNotValidException("key data is not a known key type!");
                 }
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-//            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
-//            logAuditMessage(audit);
-//            storeAuditLogEntry(audit);
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
             return responseStatusJSError(e);
