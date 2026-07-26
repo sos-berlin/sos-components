@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxy;
@@ -299,25 +298,22 @@ public class LogHelper {
     
     private static void setPrevLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, LogLineKey inKey, LogResponse entity) {
         int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
-        
-        //KeyedLogLine lastLine = 
-        List<LogLine> logLines = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity())
-                .takeWhile(keyIsReached(inKey))
-//                .doOnNext(keyedLogLine -> {
-//                        //entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
-//                        logLines.add(getLogLine(keyedLogLine, skipLogLevelFromKey));
-//                })
-                .map(keyedLogLine -> getLogLine(keyedLogLine, skipLogLevelFromKey))
-                .toStream().collect(Collectors.toList());
-        
-        if (!logLines.isEmpty()) {
-            int size = logLines.size();
-            logLines = logLines.subList(Math.max(0, size - chunk.intValue()), size);
-            if (ls.getFirstKey().isPresent() && ls.createLogLineKey(logLines.get(0).getKey()).asString().equals(ls.getFirstKey().get().asString())) {
+
+        AtomicLong linesCounter = new AtomicLong(1l);
+        flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).takeWhile(keyIsReached(inKey))
+                .doOnNext(keyedLogLine -> {
+                    long row = linesCounter.getAndIncrement();
+                    entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+                    if (row > chunk) {
+                        entity.getLogLines().remove(0);
+                    }
+                }).count().block();
+
+        if (!entity.getLogLines().isEmpty()) {
+            if (ls.getFirstKey().isPresent() && ls.createLogLineKey(entity.getLogLines().get(0).getKey()).asString().equals(ls.getFirstKey().get()
+                    .asString())) {
                 entity.setFirstLogLineReached(true);
             }
-//            Collections.reverse(logLines);
-            entity.getLogLines().addAll(logLines);
         }
     }
     
