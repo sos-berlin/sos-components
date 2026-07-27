@@ -140,16 +140,9 @@ public class StandardYADEJobResourceHandler {
             LOGGER.debug("[deploy]" + Globals.objectMapper.writeValueAsString(filter));
         }
         DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
-        
+
         filter.setTransactionId(UUID.randomUUID().toString());
-        new Thread(() -> {
-            try {
-                impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
-            } catch (Exception e) {
-                LOGGER.error(e.toString());
-                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, impl.getJocError(), null);
-            }
-        }, "deploy-" + filter.getTransactionId()).start();
+        impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
     }
 
     private static void checkResponse(JOCDefaultResponse response) throws Exception {
