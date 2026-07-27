@@ -140,7 +140,7 @@ public class StandardYADEJobResourceHandler {
             LOGGER.debug("[deploy]" + Globals.objectMapper.writeValueAsString(filter));
         }
         DBItemJocAuditLog dbAuditlog = impl.storeAuditLog(filter.getAuditLog());
-
+        
         filter.setTransactionId(UUID.randomUUID().toString());
         new Thread(() -> {
             try {
