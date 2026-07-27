@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
-import com.sos.joc.bean.JOCMBeanServer;
 import com.sos.joc.classes.DBMoveIamConfiguration;
 import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JocCertificate;
@@ -104,7 +103,6 @@ public class JocServletContainer extends ServletContainer {
                 InventorySubagentClustersDBLayer.fillEmptyControllerIds();
                 WorkflowPaths.init();
                 WorkflowRefs.init();
-                JOCMBeanServer.register();
                 DeploymentHistoryMoveListener.getInstance();
                 JitlDocumentation.saveOrUpdate();
                 SOSShell.printSystemInfos();
@@ -127,7 +125,6 @@ public class JocServletContainer extends ServletContainer {
         NotificationAppender.doNotify = false;
         QuickSearchStore.close();
         AgentClusterWatch.close();
-        //JOCMBeanServer.unregister();
 
         // 1 - stop cluster: boolean deleteActiveCurrentMember, boolean resetCurrentInstanceHeartBeat
         JocClusterService.getInstance().stop(StartupMode.automatic, true, true);

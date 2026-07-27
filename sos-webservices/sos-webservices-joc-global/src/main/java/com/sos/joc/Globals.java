@@ -548,12 +548,12 @@ public class Globals {
             String[] versions = versionsComplete[0].split("\\.");
             String curVersionsStr = curVersions[0];
             String versionsStr = versions[0];
-            for (int i = 1; i < Math.min(3, curVersions.length); i++) {
+            for (int i = 1; i < curVersions.length; i++) {
                 curVersionsStr += curVersions[i].replaceFirst("^(\\d)$", "0$1");
             }
             curVersionsStr += curVersionsComplete[1].replaceFirst("SNAPSHOT", "00").replaceFirst("RC(\\d)", "$1").replaceFirst(" ", "99")
                     .replaceFirst("^(\\d)$", "0$1");
-            for (int i = 1; i < Math.min(3, versions.length); i++) {
+            for (int i = 1; i < versions.length; i++) {
                 versionsStr += versions[i].replaceFirst("^(\\d)$", "0$1");
             }
             versionsStr += versionsComplete[1].replaceFirst("SNAPSHOT", "00").replaceFirst("RC(\\d)", "$1").replaceFirst(" ", "99").replaceFirst(
