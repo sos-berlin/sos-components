@@ -17,6 +17,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "agentId",
     "subagentId"
 })
@@ -24,6 +25,15 @@ public class AgentLogRequest
     extends LogBaseRequest
 {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -41,6 +51,30 @@ public class AgentLogRequest
      */
     @JsonProperty("subagentId")
     private String subagentId;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * string without < and >
@@ -90,12 +124,12 @@ public class AgentLogRequest
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentId", agentId).append("subagentId", subagentId).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("controllerId", controllerId).append("agentId", agentId).append("subagentId", subagentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentId).append(subagentId).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentId).append(subagentId).append(controllerId).toHashCode();
     }
 
     @Override
@@ -107,7 +141,7 @@ public class AgentLogRequest
             return false;
         }
         AgentLogRequest rhs = ((AgentLogRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

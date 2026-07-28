@@ -1,99 +1,143 @@
 package com.sos.joc.joc.impl;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.WebserviceConstants;
-import com.sos.joc.classes.logs.IJocLog;
-import com.sos.joc.classes.logs.RunningJocLog;
-import com.sos.joc.joc.resource.ILogResource;
-import com.sos.joc.model.JOClog;
-import com.sos.joc.model.JOClogs;
+import com.sos.joc.classes.logs.FutureStreamingOutput;
+import com.sos.joc.classes.logs.JOCLogProxyContext;
+import com.sos.joc.classes.logs.LogHelper;
+import com.sos.joc.classes.logs.LogSession;
+import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.joc.RunningLogEvents;
-import com.sos.joc.model.joc.RunningLogFilter;
+import com.sos.joc.model.log.JOCLogRequest;
+import com.sos.joc.model.log.KeyedLogRequest;
+import com.sos.joc.model.log.LogResponse;
+import com.sos.joc.model.log.NextLogRequest;
+import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.Path;
+import js7.base.log.LogLevel;
+import js7.proxy.javaapi.log.JLogSelection;
 
-@jakarta.ws.rs.Path("joc")
-public class LogImpl extends JOCResourceImpl implements ILogResource, IJocLog {
+@Path("joc")
+public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogImpl.class);
-    
-    private static final String API_CALL = "./joc/log";
-    private static final String API_CALL_RUNNING = API_CALL + "/running";
-    private static final String logDirectory = "logs";
-    private static final String currentLogFileName = "joc.log";
-    
-    private Lock lock = new ReentrantLock();
-    private Condition condition = null;
-    private volatile AtomicBoolean eventArrived = new AtomicBoolean(false);
-    private static final Marker NOT_NOTIFY_LOGGER = WebserviceConstants.NOT_NOTIFY_LOGGER;
+    private static final String LOG_API_CALL = "./joc/log";
+    private static final String LOG_RUNNING_API_CALL = "./joc/log/running";
+    private static final String LOG_DOWNLOAD_API_CALL = "./joc/log/download";
+    private static final String LOG_NEXT_API_CALL = "./joc/log/next";
+    private static final String LOG_PREV_API_CALL = "./joc/log/prev";
 
     @Override
-    public JOCDefaultResponse postLog(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
         try {
-            filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
-            JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
+            JOCLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes, JOCLogRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            return postLog(accessToken, jocLog);
+            ZoneId zoneId = JOCLogProxyContext.zoneId;
+            Instant instantFrom = LogHelper.getInstantFromZoneId(in, zoneId, false);
+            Optional<Instant> instantTo = Optional.ofNullable(LogHelper.getInstantFromZoneId(in, zoneId, true));
+            OptionalLong numOfLines = in.getNumOfLines() != null ? OptionalLong.of(in.getNumOfLines()) : OptionalLong.empty();
+            Instant now = Instant.now();
+            LogLevel logLevel = LogHelper.getLogLevel(in.getLevel());
+
+            String targetFilename = LogHelper.getJOCDownloadFilename(in.getServiceId().logPrefix(), in.getLevel(), instantFrom, instantTo, now,
+                    numOfLines, true);
+            // TODO create Header line
+            byte[] header = null;
+
+            JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
+
+            CompletableFuture<List<byte[]>> future = JOCLogProxyContext.getJResource(in.getServiceId().logPrefix(), logLevel).use(
+                    logDirectoryIndex -> {
+                        return logDirectoryIndex.keyedByteLogLineFlux(instantFrom, selection)
+                                //.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                                .map(kbll -> kbll.lineAsString().getBytes(StandardCharsets.UTF_8))
+                                .collectList().toFuture();
+                    });
+
+            return responseOctetStreamDownloadStatus200(new FutureStreamingOutput(true, future, header), targetFilename);
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
 
     @Override
-    public JOCDefaultResponse postLogs(String accessToken) {
+    public JOCDefaultResponse getLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + "s", "{}".getBytes(), accessToken, CategoryType.OTHERS);
-
-            Path logDir = Paths.get(logDirectory);
-            if (!Files.exists(logDir)) {
-                throw new FileNotFoundException("Couldn't find JOC Cockpit logs directory:" + toAbsolutePath(logDir));
+            JOCLogRequest in = init(LOG_API_CALL, accessToken, filterBytes, JOCLogRequest.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
             }
 
-            List<String> filenames = new ArrayList<String>();
-            Predicate<String> pattern = Pattern.compile("^(joc.log|joc-.*\\.log\\.gz)$").asPredicate();
-            for (Path logFile : getFileListStream(logDir, pattern)) {
-                filenames.add(logFile.getFileName().toString());
+            LogResponse entity = LogHelper.getResponse(accessToken, in);
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getPrevLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            KeyedLogRequest in = init(LOG_PREV_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
             }
-            filenames.sort(Comparator.reverseOrder());
-            JOClogs entity = new JOClogs();
-            entity.setFilenames(filenames);
+            LogResponse entity = LogHelper.getPrevResponse(logSession, in);
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getNextLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            NextLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, NextLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            LogResponse entity = LogHelper.getNextResponse(logSession, in);
+
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
+        try {
+            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
+            LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            if (in.getTimeout() == null) {
+                in.setTimeout(LogHelper.timeout);
+            }
+            LogResponse entity = LogHelper.getRunningResponse(logSession, in);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
@@ -101,234 +145,28 @@ public class LogImpl extends JOCResourceImpl implements ILogResource, IJocLog {
         }
     }
 
-    @Override
-    public JOCDefaultResponse getLog(String accessToken, String queryAccessToken, String filename) {
-        try {
-            if (accessToken == null) {
-                accessToken = queryAccessToken;
-            }
-            if (filename != null) {
-                String s = "{\"filename\":\"" + filename + "\"}";
-                initLogging(API_CALL, s.getBytes(StandardCharsets.UTF_8), accessToken, CategoryType.CONTROLLER);
-            } else {
-                initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
-            }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-
-            JOClog jocLog = new JOClog();
-            jocLog.setFilename(filename);
-            return postLog(accessToken, jocLog);
-        } catch (Exception e) {
-            return responseStatusJSError(e);
-        }
+    private <T> T init(String apiCall, String accessToken, byte[] filterBytes, Class<T> clazz) throws Exception {
+        filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.CONTROLLER);
+        JsonValidator.validateFailFast(filterBytes, clazz);
+        return Globals.objectMapper.readValue(filterBytes, clazz);
     }
 
-    @Override
-    public JOCDefaultResponse postRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
-        RunningJocLog runnigJocLog = RunningJocLog.getInstance();
-        try {
-            filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
-            JsonValidator.validateFailFast(filterBytes, RunningLogFilter.class);
-            RunningLogEvents jocLog = Globals.objectMapper.readValue(filterBytes, RunningLogEvents.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-
-            jocLog.setLogEvents(Collections.emptyList());
-
-            if (runnigJocLog.hasEvents(jocLog.getEventId())) {
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e1) {
-                }
-                jocLog = runnigJocLog.getRunningLog(jocLog);
-            } else {
-                runnigJocLog.register(this);
-                condition = lock.newCondition();
-                waitingForEvents(TimeUnit.SECONDS.toMillis(57)); // < 1min to avoid gateway error behind reverse proxy
-
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(NOT_NOTIFY_LOGGER, "[end of waiting events]eventArrived=" + eventArrived.get());
-                }
-                if (eventArrived.get()) {
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(500);
-                    } catch (InterruptedException e1) {
-                    }
-                    jocLog = runnigJocLog.getRunningLog(jocLog);
-                }
-            }
-            
-            if (jocLog.getLogEvents().size() < 100) {
-                return responseStatus200(Globals.objectMapper.writeValueAsBytes(jocLog));
-            }
-            
-            return responseRunningLog(acceptEncoding, jocLog); //with StreamingOutput for big responses
-        } catch (Exception e) {
-            return responseStatusJSError(e);
-        } finally {
-            runnigJocLog.unRegister(this);
-        }
-    }
-    
-    private JOCDefaultResponse responseRunningLog(String acceptEncoding, RunningLogEvents jocLog) {
-
-        boolean withGzipEncoding = acceptEncoding != null && acceptEncoding.contains("gzip");
-        StreamingOutput entityStream = new StreamingOutput() {
-
-            @Override
-            public void write(OutputStream output) throws IOException {
-                if (withGzipEncoding) {
-                    output = new GZIPOutputStream(output);
-                }
-                try {
-                    Globals.objectMapper.writeValue(output, jocLog);
-                } finally {
-                    try {
-                        output.close();
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        };
-        return JOCDefaultResponse.responseStatus200(entityStream, MediaType.APPLICATION_JSON, getGzipHeaders(withGzipEncoding), getJocAuditTrail());
-    }
-    
-    private Map<String, Object> getGzipHeaders(boolean withGzipEncoding) {
-        Map<String, Object> headers = new HashMap<String, Object>();
-        if (withGzipEncoding) {
-            headers.put("Content-Encoding", "gzip");
-        }
-        headers.put("Transfer-Encoding", "chunked");
-        return headers;
-    }
-
-    private JOCDefaultResponse postLog(String accessToken, JOClog jocLog) throws FileNotFoundException {
-        Path logDir = Paths.get(logDirectory);
-        if (!Files.exists(logDir)) {
-            throw new FileNotFoundException("Couldn't find JOC Cockpit logs directory:" + toAbsolutePath(logDir));
-        }
-
-        String logFilename = (jocLog.getFilename() != null && !jocLog.getFilename().isEmpty()) ? jocLog.getFilename() : currentLogFileName;
-        final Path log = logDir.resolve(logFilename);
-        if (!Files.isReadable(log)) {
-            throw new FileNotFoundException("JOC Cockpit log is not readable: " + toAbsolutePath(log));
-        }
-
-        StreamingOutput fileStream = new StreamingOutput() {
-
-            @Override
-            public void write(OutputStream output) throws IOException {
-                InputStream in = null;
-                try {
-                    in = Files.newInputStream(log);
-                    byte[] buffer = new byte[4096];
-                    int length;
-                    while ((length = in.read(buffer)) > 0) {
-                        output.write(buffer, 0, length);
-                    }
-                    output.flush();
-                } finally {
-                    try {
-                        output.close();
-                    } catch (Exception e) {
-                    }
-                    if (in != null) {
-                        try {
-                            in.close();
-                        } catch (Exception e) {
-                        }
-                    }
-                }
-            }
-        };
-
-        // log file could be already compressed
-        if (logFilename.endsWith(".gz")) {
-            return responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
-        }
-        return responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
-    }
-
-    private static String toAbsolutePath(Path p) {
-        return p.toString().replace('\\', '/');
-    }
-
-    private static DirectoryStream<Path> getFileListStream(final Path folder, final Predicate<String> pattern) throws IOException {
-
-        if (folder == null) {
-            throw new FileNotFoundException("JOC Cockpit logs directory is not specified!!");
-        }
-        if (!Files.isDirectory(folder)) {
-            throw new FileNotFoundException("JOC Cockpit logs directory does not exist: " + folder);
-        }
-
-        return Files.newDirectoryStream(folder, path -> {
-            if (Files.isDirectory(path)) {
-                return false;
-            }
-            if (Files.size(path) == 0) {
-                return false;
-            }
-            if (!Files.isReadable(path)) {
-                return false;
-            }
-            return pattern.test(path.getFileName().toString());
-        });
-    }
-    
-    public void signalArrivedEvent() {
-        eventArrived.set(true);
-        signalEvent();
-    }
-    
-    private void waitingForEvents(long maxDelay) {
-        try {
-            if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
-                try {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(NOT_NOTIFY_LOGGER, "[waitingForEvents]await " + condition.hashCode());
-                    }
-                    condition.await(maxDelay, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e1) {
-                } finally {
-                    try {
-                        lock.unlock();
-                    } catch (IllegalMonitorStateException e) {
-                        LOGGER.warn(NOT_NOTIFY_LOGGER, "IllegalMonitorStateException at unlock lock after await");
-                    }
-                }
-            }
-        } catch (InterruptedException e) {
-        }
-    }
-    
-    private synchronized void signalEvent() {
-        try {
-            LOGGER.debug(NOT_NOTIFY_LOGGER, "[signalEvent]" + (condition != null));
-            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
-                try {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(NOT_NOTIFY_LOGGER, "[signalEvent]signalAll" + condition.hashCode());
-                    }
-                    condition.signalAll();
-                } finally {
-                    try {
-                        lock.unlock();
-                    } catch (IllegalMonitorStateException e) {
-                        LOGGER.warn(NOT_NOTIFY_LOGGER, "IllegalMonitorStateException at unlock lock after signal");
-                    }
-                }
-            } else {
-                LOGGER.warn(NOT_NOTIFY_LOGGER, "signalEvent failed");
-            }
-        } catch (InterruptedException e) {
-            LOGGER.warn(NOT_NOTIFY_LOGGER, "[signalEvent]" + e.toString());
-        }
-    }
+//    private static Optional<DBItemInventoryOperatingSystem> getOSItem(Long osId) {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = Globals.createSosHibernateStatelessConnection(LOG_DOWNLOAD_API_CALL);
+//            InventoryOperatingSystemsDBLayer dbLayer = new InventoryOperatingSystemsDBLayer(session);
+//            return Optional.ofNullable(dbLayer.getInventoryOperatingSystem(osId));
+//        } catch (Exception e) {
+//            return Optional.empty();
+//        } finally {
+//            Globals.disconnect(session);
+//        }
+//    }
+//    
+//    private static String getPlatformInfo(Optional<DBItemInventoryOperatingSystem> osItem) {
+//        return osItem.map(os -> String.format("%s (%s) · %s · host=%s", os.getName(), os.getDistribution(), os.getArchitecture(), os.getHostname()))
+//                .orElse("");
+//    }
 
 }

@@ -47,6 +47,7 @@ import jakarta.servlet.ServletException;
 public class JocServletContainer extends ServletContainer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocServletContainer.class);
+    private static final Logger StartUpLOGGER = LoggerFactory.getLogger("com.sos.joc.StartUp");
 
     private static final long serialVersionUID = 1L;
 
@@ -56,6 +57,7 @@ public class JocServletContainer extends ServletContainer {
 
     @Override
     public void init() throws ServletException {
+        StartUpLOGGER.info("START");
         LOGGER.debug("----> init on starting JOC");
         super.init();
         
@@ -79,6 +81,7 @@ public class JocServletContainer extends ServletContainer {
             }
             LOGGER.error("", e);
             CheckInstance.stopJOC();
+            StartUpLOGGER.info("STOP");
             throw new ServletException(e);
         }
         
@@ -150,6 +153,7 @@ public class JocServletContainer extends ServletContainer {
 
         super.destroy();
         cleanupAllTempDirSubFolders();
+        StartUpLOGGER.info("STOP");
     }
 
     private void cleanupOldLogFiles(int retainDays) {

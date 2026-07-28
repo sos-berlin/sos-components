@@ -101,7 +101,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             Js7ServerId serverId = dbItem.getIsPrimary() ? Js7ServerId.primaryController : Js7ServerId.backupController;
             String timezone = proxy.currentState().asScala().controllerMetaState().timezone().string();
 
-            LogResponse entity = LogHelper.getResponse(proxy, accessToken, in, serverId, timezone);
+            LogResponse entity = LogHelper.getResponse(proxy, accessToken, in.getControllerId(), in, serverId, timezone);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {

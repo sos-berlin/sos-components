@@ -18,12 +18,22 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "role"
 })
 public class ControllerLogRequest
     extends LogBaseRequest
 {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * Controller cluster role
      * <p>
@@ -32,6 +42,30 @@ public class ControllerLogRequest
      */
     @JsonProperty("role")
     private Role role;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * Controller cluster role
@@ -57,12 +91,12 @@ public class ControllerLogRequest
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("role", role).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("controllerId", controllerId).append("role", role).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(role).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(controllerId).append(role).toHashCode();
     }
 
     @Override
@@ -74,7 +108,7 @@ public class ControllerLogRequest
             return false;
         }
         ControllerLogRequest rhs = ((ControllerLogRequest) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(role, rhs.role).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(controllerId, rhs.controllerId).append(role, rhs.role).isEquals();
     }
 
 }

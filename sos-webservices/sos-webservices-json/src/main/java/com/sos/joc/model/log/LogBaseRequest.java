@@ -18,7 +18,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "level",
     "dateFrom",
     "dateTo",
@@ -29,15 +28,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class LogBaseRequest {
 
     /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
+     * ERROR: WARN + ERROR | WARN: WARN + ERROR | INFO: INFO + WARN + ERROR | DEBUG: all (incl. TRACE)
      * 
      */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("level")
+    @JsonPropertyDescription("ERROR: WARN + ERROR | WARN: WARN + ERROR | INFO: INFO + WARN + ERROR | DEBUG: all (incl. TRACE)")
     private RequestLevel level = RequestLevel.fromValue("INFO");
     /**
      * string for dateFrom and dateTo as search filter
@@ -85,34 +80,18 @@ public class LogBaseRequest {
     private Long limit;
 
     /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
+     * ERROR: WARN + ERROR | WARN: WARN + ERROR | INFO: INFO + WARN + ERROR | DEBUG: all (incl. TRACE)
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
     @JsonProperty("level")
     public RequestLevel getLevel() {
         return level;
     }
 
+    /**
+     * ERROR: WARN + ERROR | WARN: WARN + ERROR | INFO: INFO + WARN + ERROR | DEBUG: all (incl. TRACE)
+     * 
+     */
     @JsonProperty("level")
     public void setLevel(RequestLevel level) {
         this.level = level;
@@ -232,12 +211,12 @@ public class LogBaseRequest {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("level", level).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("numOfLines", numOfLines).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("level", level).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("numOfLines", numOfLines).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfLines).append(controllerId).append(level).append(dateTo).append(limit).append(timeZone).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(numOfLines).append(level).append(dateTo).append(limit).append(timeZone).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -249,7 +228,7 @@ public class LogBaseRequest {
             return false;
         }
         LogBaseRequest rhs = ((LogBaseRequest) other);
-        return new EqualsBuilder().append(numOfLines, rhs.numOfLines).append(controllerId, rhs.controllerId).append(level, rhs.level).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(numOfLines, rhs.numOfLines).append(level, rhs.level).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

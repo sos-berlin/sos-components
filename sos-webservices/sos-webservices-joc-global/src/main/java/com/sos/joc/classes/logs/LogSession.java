@@ -4,19 +4,27 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Function;
+
+import com.sos.joc.model.log.JOCServiceId;
 
 import js7.base.log.LogLevel;
 import js7.base.log.reader.KeyedLogLine;
 import js7.base.log.reader.LogLineKey;
 import js7.data.node.Js7ServerId;
 import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.JResource;
+import js7.proxy.javaapi.log.JLogDirectoryIndex;
 import js7.proxy.javaapi.log.JLogSelection;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 public class LogSession {
 
     private final String controllerId;
     private final Js7ServerId serverId;
+    private final JOCServiceId serviceId;
     private final LogLevel logLevel;
     private final Instant dateFrom;
     private final Optional<Instant> dateTo;
@@ -42,14 +50,33 @@ public class LogSession {
         this.chunkSize = chunkSize;
         this.zoneId = zoneId;
         this.token = token;
+        this.serviceId = null;
+    }
+    
+    public LogSession(JOCServiceId serviceId, LogLevel logLevel, Instant dateFrom, Optional<Instant> dateTo, Long requestedNumOfLines, ZoneId zoneId,
+            Long chunkSize, String token) {
+        this.controllerId = null;
+        this.serverId = null;
+        this.logLevel = logLevel;
+        this.dateFrom = dateFrom;
+        this.dateTo = dateTo;
+        this.requestedNumOfLines = requestedNumOfLines;
+        this.chunkSize = chunkSize;
+        this.zoneId = zoneId;
+        this.token = token;
+        this.serviceId = serviceId;
     }
 
     public String getControllerId() {
         return controllerId;
     }
 
-    public Js7ServerId getServerId() {
-        return serverId;
+//    public Js7ServerId getServerId() {
+//        return serverId;
+//    }
+
+    public JOCServiceId getServiceId() {
+        return serviceId;
     }
 
     public LogLevel getLogLevel() {
@@ -167,17 +194,19 @@ public class LogSession {
         return zoneId;
     }
     
-    public Flux<List<KeyedLogLine>> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, String key) {
-        return proxy.keyedLogLineFlux(serverId, logLevel, createLogLineKey(key), selection);
+    public JResource<JLogDirectoryIndex> getResource() {
+        return JOCLogProxyContext.getJResource(serviceId.logPrefix(), logLevel);
     }
     
-    public Flux<List<KeyedLogLine>> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
-        return proxy.keyedLogLineFlux(serverId, logLevel, key, selection);
+    public Flux<KeyedLogLine> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
+        return proxy.keyedLogLineFlux(serverId, logLevel, key, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                .flatMapIterable(Function.identity());
     }
-    
+
     // It's a fake until proxy has a better API
-    public Flux<List<KeyedLogLine>> getPrevLogLinesFlux(JControllerProxy proxy, JLogSelection selection, Instant instantFrom) {
-        return proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection);
+    public Flux<KeyedLogLine> getPrevLogLinesFlux(JControllerProxy proxy, JLogSelection selection, Instant instantFrom) {
+        return proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                .flatMapIterable(Function.identity());
     }
 
     public Long getChunkSize() {

@@ -5,10 +5,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +28,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.model.log.JOCLogRequest;
+import com.sos.joc.model.log.JOCServiceId;
 import com.sos.joc.model.log.KeyedLogRequest;
 import com.sos.joc.model.log.LogBaseRequest;
 import com.sos.joc.model.log.LogLine;
@@ -53,7 +55,8 @@ public class LogHelper {
     public static int timeout = 57;
     //private static final Logger LOGGER = LoggerFactory.getLogger(LogHelper.class);
     
-    public static LogResponse getResponse(JControllerProxy proxy, String accessToken, LogBaseRequest in, Js7ServerId serverId, String timezone) {
+    public static LogResponse getResponse(JControllerProxy proxy, String accessToken, String controllerId, LogBaseRequest in, Js7ServerId serverId,
+            JOCServiceId serviceId, String timezone) throws InterruptedException, ExecutionException {
         Long chunkSize = in.getLimit();
         if (in.getLimit() == null) { // default
             chunkSize = maxChunkSize;
@@ -80,13 +83,38 @@ public class LogHelper {
         JLogSelection selection = JLogSelection.empty().withLineLimit(chunk);//.withEnd(instantTo);
         
         entity.setLogToken(UUID.randomUUID().toString());
-        LogSession ls = new LogSession(in.getControllerId(), serverId, logLevel, instantFrom, instantTo, in.getNumOfLines(), zoneId, chunkSize,
-                entity.getLogToken());
+        
+        if (proxy != null) { // Controller/Agent logs
 
-        setLogLines(proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection), ls, chunk - 1, entity);
+            LogSession ls = new LogSession(controllerId, serverId, logLevel, instantFrom, instantTo, in.getNumOfLines(), zoneId, chunkSize, entity
+                    .getLogToken());
 
-        LogSessions.addSession(accessToken, entity.getLogToken(), ls);
+            setLogLines(proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
+                    .commonPool())).flatMapIterable(Function.identity()), ls, chunk - 1, entity);
+            
+            LogSessions.addSession(accessToken, entity.getLogToken(), ls);
+
+        } else { // JOC logs
+            LogSession ls = new LogSession(serviceId, logLevel, instantFrom, instantTo, in.getNumOfLines(), zoneId, chunkSize, entity.getLogToken());
+
+            JOCLogProxyContext.getJResource(serviceId.logPrefix(), logLevel).use(logDirectoryIndex -> {
+                setLogLines(logDirectoryIndex.keyedLogLineFlux(instantFrom, selection), ls, chunk - 1, entity);
+                return CompletableFuture.completedFuture(null);
+            }).get();
+            
+            LogSessions.addSession(accessToken, entity.getLogToken(), ls);
+        }
+
         return entity;
+    }
+    
+    public static LogResponse getResponse(String accessToken, JOCLogRequest in) throws InterruptedException, ExecutionException {
+        return getResponse(null, accessToken, null, in, null, in.getServiceId(), JOCLogProxyContext.zoneId.getId());
+    }
+    
+    public static LogResponse getResponse(JControllerProxy proxy, String accessToken, String controllerId, LogBaseRequest in, Js7ServerId serverId,
+            String timezone) throws InterruptedException, ExecutionException {
+        return getResponse(proxy, accessToken, controllerId, in, serverId, null, timezone);
     }
     
     public static LogLevel getLogLevel(RequestLevel level) {
@@ -102,6 +130,11 @@ public class LogHelper {
         default:
             return LogLevel.info();
         }
+    }
+    
+    public static String getJOCDownloadFilename(String serviceId, RequestLevel level, Instant dateFrom,
+            Optional<Instant> dateTo, Instant now, OptionalLong numOfLines, boolean compressed) {
+        return getDownloadFilename(serviceId + "-", level, dateFrom, dateTo, now, numOfLines, compressed);
     }
 
     public static String getControllerDownloadFilename(DBItemInventoryJSInstance dbItem, RequestLevel level, Instant dateFrom,
@@ -263,25 +296,24 @@ public class LogHelper {
         return instant.toString().replaceAll("[^0-9]", "").substring(0, 14);
     }
     
-    private static void setLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, LogResponse entity) {
+    private static void setLogLines(Flux<KeyedLogLine> flux, LogSession ls, Long chunk, LogResponse entity) {
         int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
         AtomicLong linesCounter = new AtomicLong(1l);
         AtomicLong chunkLinesCounter = new AtomicLong(0);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
         
-        KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity())
-                .takeWhile(dateToIsReached(ls, entity, false)).doOnNext(keyedLogLine -> {
-                    long row = linesCounter.getAndIncrement();
-                    if (row == 1l) {
-                        ls.setFirstKey(keyedLogLine.key());
-                    }
-                    if (row <= chunk) {
-                        lastChunkKey.set(keyedLogLine.key());
-                        entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
-                        chunkLinesCounter.incrementAndGet();
-                    }
-                }).blockLast();
-        
+        KeyedLogLine lastLine = flux.takeWhile(dateToIsReached(ls, entity, false)).doOnNext(keyedLogLine -> {
+            long row = linesCounter.getAndIncrement();
+            if (row == 1l) {
+                ls.setFirstKey(keyedLogLine.key());
+            }
+            if (row <= chunk) {
+                lastChunkKey.set(keyedLogLine.key());
+                entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+                chunkLinesCounter.incrementAndGet();
+            }
+        }).blockLast();
+
         Optional<LogLineKey> lastKeyOpt = Optional.ofNullable(lastLine).map(KeyedLogLine::key);
         Optional<LogLineKey> preLastKeyOpt = Optional.ofNullable(lastChunkKey.get());
         if (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE && preLastKeyOpt.isPresent() && lastKeyOpt.map(
@@ -296,18 +328,17 @@ public class LogHelper {
         }
     }
     
-    private static void setPrevLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, LogLineKey inKey, LogResponse entity) {
+    private static void setPrevLogLines(Flux<KeyedLogLine> flux, LogSession ls, Long chunk, LogLineKey inKey, LogResponse entity) {
         int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
 
         AtomicLong linesCounter = new AtomicLong(1l);
-        flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).takeWhile(keyIsReached(inKey))
-                .doOnNext(keyedLogLine -> {
-                    long row = linesCounter.getAndIncrement();
-                    entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
-                    if (row > chunk) {
-                        entity.getLogLines().remove(0);
-                    }
-                }).count().block();
+        flux.takeWhile(keyIsReached(inKey)).doOnNext(keyedLogLine -> {
+            long row = linesCounter.getAndIncrement();
+            entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+            if (row > chunk) {
+                entity.getLogLines().remove(0);
+            }
+        }).count().block();
 
         if (!entity.getLogLines().isEmpty()) {
             if (ls.getFirstKey().isPresent() && ls.createLogLineKey(entity.getLogLines().get(0).getKey()).asString().equals(ls.getFirstKey().get()
@@ -317,7 +348,7 @@ public class LogHelper {
         }
     }
     
-    private static void setNextLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, boolean force, boolean exactlyNextChunk,
+    private static void setNextLogLines(Flux<KeyedLogLine> flux, LogSession ls, Long chunk, boolean force, boolean exactlyNextChunk,
             Duration timeoutDuration, LogResponse entity) {
         long skip = 1l;
         int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
@@ -325,7 +356,7 @@ public class LogHelper {
         AtomicLong linesCounter = new AtomicLong(1l);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
         
-        KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).skip(skip)
+        KeyedLogLine lastLine = flux.skip(skip)
                 .take(timeoutDuration)
                 .takeWhile(numOfLinesIsReached(ls, startNextLineCount, entity, force).and(dateToIsReached(ls, entity, force)))
                 .doOnNext(keyedLogLine -> {
@@ -338,8 +369,8 @@ public class LogHelper {
 
         Optional<LogLineKey> lastKeyOpt = Optional.ofNullable(lastLine).map(KeyedLogLine::key);
         Optional<LogLineKey> preLastKeyOpt = Optional.ofNullable(lastChunkKey.get());
-        if ((force || (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE)) && preLastKeyOpt.isPresent() && lastKeyOpt.map(
-                LogLineKey::asString).equals(preLastKeyOpt.map(LogLineKey::asString))) {
+        if ((force || (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE)) && preLastKeyOpt.isPresent()
+                && lastKeyOpt.map(LogLineKey::asString).equals(preLastKeyOpt.map(LogLineKey::asString))) {
             entity.setLastLogLineReached(true);
         }
         ls.setLastKey(lastChunkKey.get());
@@ -423,15 +454,13 @@ public class LogHelper {
     
     public static LogResponse getNextResponse(LogSession logSession, NextLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+            DBConnectionRefusedException, ExecutionException, InterruptedException {
         return getNextResponse(logSession, in, null);
     }
 
     public static LogResponse getNextResponse(LogSession logSession, NextLogRequest in, Integer timeout)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
-
-        JControllerProxy proxy = Proxy.of(logSession.getControllerId());
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, InterruptedException {
 
         LogResponse entity = initLogResponse(logSession.getZoneId().getId());
         entity.setLogToken(in.getLogToken());
@@ -452,8 +481,18 @@ public class LogHelper {
             boolean exactlyNextChunk = logSession.getLastKey().isPresent() && inKey.asString().equals(logSession.getLastKey().get().asString());
             JLogSelection selection = JLogSelection.empty().withLineLimit(chunk + 1l).withGrowing(timeout != null);
             Duration timeoutDuration = timeout == null ? Duration.ofSeconds(LogHelper.timeout) : Duration.ofSeconds(timeout);
-            setNextLogLines(logSession.getNextLogLinesFlux(proxy, selection, inKey), logSession, chunk, forced, exactlyNextChunk,
-                    timeoutDuration, entity);
+            
+            if (logSession.getControllerId() != null) { // Controller/Agent logs
+                JControllerProxy proxy = Proxy.of(logSession.getControllerId());
+                setNextLogLines(logSession.getNextLogLinesFlux(proxy, selection, inKey), logSession, chunk, forced, exactlyNextChunk, timeoutDuration,
+                        entity);
+            } else { // JOC logs
+                logSession.getResource().use(logDirectoryIndex -> {
+                    setNextLogLines(logDirectoryIndex.keyedLogLineFlux(inKey, selection), logSession, chunk, forced, exactlyNextChunk,
+                            timeoutDuration, entity);
+                    return CompletableFuture.completedFuture(null);
+                }).get();
+            }
         }
 
         return entity;
@@ -461,27 +500,34 @@ public class LogHelper {
 
     public static LogResponse getRunningResponse(LogSession logSession, RunningLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
-
+            DBConnectionRefusedException, ExecutionException, InterruptedException {
         return getNextResponse(logSession, in, in.getTimeout());
     }
     
     public static LogResponse getPrevResponse(LogSession logSession, KeyedLogRequest in) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
-        
-        JControllerProxy proxy = Proxy.of(logSession.getControllerId());
+            DBConnectionRefusedException, ExecutionException, InterruptedException {
 
         LogResponse entity = initLogResponse(logSession.getZoneId().getId());
         entity.setLogToken(in.getLogToken());
-        
+
         Long chunk = logSession.getPrevChunkSize(in.getLimit());
         LogLineKey inKey = logSession.createLogLineKey(in.getKey());
-        
+
         if (logSession.getFirstKey().isPresent() && isBeforeOrEqual(inKey, logSession.getFirstKey().get())) {
             entity.setFirstLogLineReached(true);
         } else {
-            setPrevLogLines(logSession.getPrevLogLinesFlux(proxy, JLogSelection.empty(), logSession.getDateFrom()), logSession, chunk, inKey, entity);
+            if (logSession.getControllerId() != null) { // Controller/Agent logs
+                JControllerProxy proxy = Proxy.of(logSession.getControllerId());
+                setPrevLogLines(logSession.getPrevLogLinesFlux(proxy, JLogSelection.empty(), logSession.getDateFrom()), logSession, chunk, inKey,
+                        entity);
+            } else { // JOC logs
+                logSession.getResource().use(logDirectoryIndex -> {
+                    setPrevLogLines(logDirectoryIndex.keyedLogLineFlux(logSession.getDateFrom(), JLogSelection.empty()), logSession, chunk, inKey,
+                            entity);
+                    return CompletableFuture.completedFuture(null);
+                }).get();
+            }
         }
         return entity;
     }

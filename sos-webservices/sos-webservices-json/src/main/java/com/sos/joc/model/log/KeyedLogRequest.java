@@ -10,7 +10,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * next or previous log chunk
+ * previous log chunk
  * <p>
  * 
  * 

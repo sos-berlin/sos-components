@@ -113,7 +113,7 @@ public class AgentLogImpl extends JOCResourceImpl implements IControllerLogResou
 //                
 //            }
             
-            LogResponse entity = LogHelper.getResponse(proxy, accessToken, in, serverId, timeZone);
+            LogResponse entity = LogHelper.getResponse(proxy, accessToken, in.getControllerId(), in, serverId, timeZone);
             
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
         } catch (Exception e) {
