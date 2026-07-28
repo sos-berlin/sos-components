@@ -338,7 +338,7 @@ public class LogHelper {
 
         Optional<LogLineKey> lastKeyOpt = Optional.ofNullable(lastLine).map(KeyedLogLine::key);
         Optional<LogLineKey> preLastKeyOpt = Optional.ofNullable(lastChunkKey.get());
-        if (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE && preLastKeyOpt.isPresent() && lastKeyOpt.map(
+        if ((force || (entity.getDateToReached() != Boolean.TRUE && entity.getNumOfLinesReached() != Boolean.TRUE)) && preLastKeyOpt.isPresent() && lastKeyOpt.map(
                 LogLineKey::asString).equals(preLastKeyOpt.map(LogLineKey::asString))) {
             entity.setLastLogLineReached(true);
         }
