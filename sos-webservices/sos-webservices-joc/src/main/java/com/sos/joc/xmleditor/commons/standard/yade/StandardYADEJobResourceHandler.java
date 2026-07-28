@@ -13,7 +13,6 @@ import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.StoreConfigurationResourceImpl;
 import com.sos.joc.model.common.Err;
@@ -28,8 +27,6 @@ import com.sos.joc.model.xmleditor.deploy.DeployConfiguration;
 import com.sos.joc.publish.impl.ADeploy;
 import com.sos.joc.xmleditor.commons.JocXmlEditor;
 import com.sos.joc.xmleditor.impl.StandardYADEDeployResourceImpl;
-
-import io.vavr.control.Either;
 
 public class StandardYADEJobResourceHandler {
 
