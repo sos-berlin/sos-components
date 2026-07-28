@@ -122,7 +122,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             }, "release-" + in.getTransactionId()).start();
 
-            return response;
+            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             return responseStatusJSError(e);
         }
