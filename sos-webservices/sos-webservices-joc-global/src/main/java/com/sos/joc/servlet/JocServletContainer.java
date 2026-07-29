@@ -25,6 +25,7 @@ import com.sos.joc.classes.agent.AgentStoreUtils;
 import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.documentation.JitlDocumentation;
+import com.sos.joc.classes.logs.JOCLogProxyContext;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
@@ -133,6 +134,7 @@ public class JocServletContainer extends ServletContainer {
         JocClusterService.getInstance().stop(StartupMode.automatic, true, true);
         JocClusterServiceLogger.clearAllLoggers();
         // 2 - close proxies
+        JOCLogProxyContext.release();
         Proxies.closeAll();
         DependencyUpdate.getInstance().close();
         if (Globals.sosHibernateFactory != null) {

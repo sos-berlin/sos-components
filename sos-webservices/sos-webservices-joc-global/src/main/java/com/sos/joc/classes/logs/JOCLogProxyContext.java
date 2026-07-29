@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +27,7 @@ public class JOCLogProxyContext {
     private static JOCLogProxyContext instance;
     private JProxyContext proxyContext;
     private static Path logDir = Paths.get("logs");
+    private ConcurrentMap<LogLevel, ConcurrentMap<String, JResource<JLogDirectoryIndex>>> resources = new ConcurrentHashMap<>();
     public static ZoneId zoneId = ZoneId.of("UTC");
     //for tests
     //private static Path logDir = Paths.get("C:\\ProgramData\\sos-berlin.com\\js7\\joc.2.9\\jetty_base\\logs");
@@ -53,8 +56,10 @@ public class JOCLogProxyContext {
     
     public void _release() throws InterruptedException, ExecutionException, TimeoutException {
         if (proxyContext != null) {
-            proxyContext.release().get(3, TimeUnit.SECONDS);
+            proxyContext.release().get(1, TimeUnit.SECONDS);
         }
+        resources.clear();
+        instance = null;
     }
     
     public static JResource<JLogDirectoryIndex> getJResource(String logPrefix, LogLevel logLevel) {
@@ -63,6 +68,10 @@ public class JOCLogProxyContext {
     
     private JResource<JLogDirectoryIndex> _getJResource(String logPrefix, LogLevel logLevel) {
         // logging with js7.base.log.reader.LogDirectoryIndex
-        return JLogDirectoryIndex.directory(logDir, logPrefix, logLevel, true, zoneId, proxyContext);
+        resources.putIfAbsent(logLevel, new ConcurrentHashMap<>());
+        if (!resources.get(logLevel).containsKey(logPrefix)) {
+            resources.get(logLevel).put(logPrefix, JLogDirectoryIndex.directory(logDir, logPrefix, logLevel, true, zoneId, proxyContext));
+        }
+        return resources.get(logLevel).get(logPrefix);
     }
 }
