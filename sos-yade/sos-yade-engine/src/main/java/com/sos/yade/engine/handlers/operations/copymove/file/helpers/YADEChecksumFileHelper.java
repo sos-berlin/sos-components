@@ -33,14 +33,25 @@ public class YADEChecksumFileHelper {
         String currentTransferChecksum = toHexString(messageDigest.getUncompressed());
         if (sourceFile.getIntegrityHash().equals(currentTransferChecksum)) {
             logger.info("[%s]matches", msg);
-        } else {
-            targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
-            sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
-            logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(),
-                    currentTransferChecksum, sourceFile.getTarget().getFullPath());
-            throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceFile
-                    .getIntegrityHash(), currentTransferChecksum), targetDelegator);
+
+            // Jump case - only if jump is target
+            // 1) TO INTERNET -> target on the current YADE client
+            // 2) FROM INTERNET -> target on the Jump YADE client
+            if (targetDelegator.isJumpHost()) {
+                if (!sourceFile.getTarget().isIntegrityHashFileWritten()) {
+                    YADEFileActionsExecuter.writeTargetIntegrityHashFile(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator,
+                            sourceFile.getTarget(), currentTransferChecksum);
+                }
+            }
+            return;
         }
+
+        targetDelegator.getProvider().deleteFileIfExists(sourceFile.getTarget().getFullPath());
+        sourceFile.getTarget().setState(TransferEntryState.ROLLED_BACK);
+        logger.info("[%s][%s][calculated=%s][integrity hash does not match]target file %s deleted", msg, sourceFile.getIntegrityHash(),
+                currentTransferChecksum, sourceFile.getTarget().getFullPath());
+        throw new YADEEngineTransferFileIntegrityHashViolationException(String.format("[%s][%s][calculated]%s", msg, sourceFile.getIntegrityHash(),
+                currentTransferChecksum), targetDelegator);
     }
 
     public static void setTargetIntegrityHash(YADECopyMoveOperationsConfig config, YADEProviderFile sourceFile, YADEMessageDigest messageDigest) {

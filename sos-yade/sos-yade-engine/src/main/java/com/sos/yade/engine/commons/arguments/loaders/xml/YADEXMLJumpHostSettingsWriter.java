@@ -898,7 +898,9 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append("<FileListSelection>");
         sb.append("<FileList>").append(cdata(config.getSourceToJumpHost().getResultSetFile().getJumpHostFile())).append("</FileList>");
         // sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
-        sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
+        if (!sourceArgs.getDirectory().isEmpty()) {
+            sb.append("<Directory>").append(cdata(sourceArgs.getDirectory().getValue())).append("</Directory>");
+        }
         sb.append("</FileListSelection>");
         sb.append("</Selection>");
         sb.append("<Directives>");
@@ -966,6 +968,11 @@ public class YADEXMLJumpHostSettingsWriter {
         sb.append(sourceArgs.getErrorOnNoFilesFound().isTrue() ? "false" : "true"); // opposite value
         sb.append("</DisableErrorOnNoFilesFound>");
         sb.append("</Directives>");
+        if (sourceArgs.getCheckIntegrityHash().isTrue()) {
+            sb.append("<CheckIntegrityHash>");
+            sb.append("<HashAlgorithm>").append(cdata(sourceArgs.getIntegrityHashAlgorithm().getValue())).append("</HashAlgorithm>");
+            sb.append("</CheckIntegrityHash>");
+        }
         sb.append("</SourceFileOptions>");
 
         sb.append("</CopySource>");

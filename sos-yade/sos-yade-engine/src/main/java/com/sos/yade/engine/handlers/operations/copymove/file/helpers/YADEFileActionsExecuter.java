@@ -65,18 +65,12 @@ public class YADEFileActionsExecuter {
                 }
                 // 3) Target - CreateIntegrityHashFile
                 if (config.getTarget().isCreateIntegrityHashFileEnabled() && targetFile.getIntegrityHash() != null) {
-                    String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
-
-                    YADEProviderDelegatorHelper.executeOperation(logger, targetDelegator, retry, () -> {
-                        targetDelegator.getProvider().writeFile(path, targetFile.getIntegrityHash());
-                        targetFile.setIntegrityHashFileWritten();
-                        logger.info("[%s][%s][%s][%s]written", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
-                                .getCreateIntegrityHashFile().getName(), path);
-                        return null;
-                    });
+                    writeTargetIntegrityHashFile(logger, fileTransferLogPrefix, config, sourceDelegator, targetDelegator, targetFile, targetFile
+                            .getIntegrityHash());
                 }
             }
         }
+
         // 2) Source - individual operations
         if (config.getSource().needsFilePostProcessing()) {
             executeAfterFile = true;
@@ -105,6 +99,20 @@ public class YADEFileActionsExecuter {
         } else {
             targetFile.finalizeFileSize();
         }
+    }
+
+    public static void writeTargetIntegrityHashFile(ISOSLogger logger, String fileTransferLogPrefix, YADECopyMoveOperationsConfig config,
+            YADESourceProviderDelegator sourceDelegator, YADETargetProviderDelegator targetDelegator, YADETargetProviderFile targetFile,
+            String integrityHash) throws Exception {
+
+        String path = targetFile.getFinalFullPath() + config.getIntegrityHashFileExtensionWithDot();
+        YADEProviderDelegatorHelper.executeOperation(logger, targetDelegator, config.getRetry(), () -> {
+            targetDelegator.getProvider().writeFile(path, integrityHash);
+            targetFile.setIntegrityHashFileWritten();
+            logger.info("[%s][%s][%s][%s]written", fileTransferLogPrefix, targetDelegator.getLabel(), targetDelegator.getArgs()
+                    .getCreateIntegrityHashFile().getName(), path);
+            return null;
+        });
     }
 
     public static void checkTargetFileSize(ISOSLogger logger, String fileTransferLogPrefix, YADECopyMoveOperationsConfig config,

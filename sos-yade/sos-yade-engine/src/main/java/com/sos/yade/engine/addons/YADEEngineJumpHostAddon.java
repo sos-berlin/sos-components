@@ -163,6 +163,7 @@ public class YADEEngineJumpHostAddon {
 
             newSourceArgs.getDirectory().setValue(config.dataDirectory);
             newSourceArgs.getRecursive().setValue(Boolean.valueOf(true));
+            newSourceArgs.getCheckIntegrityHash().setValue(argsLoader.getSourceArgs().getCheckIntegrityHash().getValue());
 
             // Only set getErrorOnNoFilesFound (because YADESourceFilesSelector.checkFileListSize will be executed with this client).
             // Client arguments, e.g., getExpectedResultSetCount, remain unchanged and must not be redefined.
