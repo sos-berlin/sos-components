@@ -24,10 +24,10 @@ public class YADEChecksumFileHelper {
         String sourceIntegrityHashFile = sourceFile.getFullPath() + config.getIntegrityHashFileExtensionWithDot();
         sourceFile.setIntegrityHash(sourceDelegator.getProvider().getFileContentIfExists(sourceIntegrityHashFile));
 
-        String msg = String.format("%s][%s][%s][%s", fileTransferLogPrefix, sourceDelegator.getLabel(), sourceDelegator.getArgs()
-                .getCheckIntegrityHash().getName(), sourceIntegrityHashFile);
+        String msg = String.format("%s][%s/%s][%s][%s", fileTransferLogPrefix, sourceDelegator.getLabel(), targetDelegator.getLabel(), sourceDelegator
+                .getArgs().getCheckIntegrityHash().getName(), sourceIntegrityHashFile);
         if (sourceFile.getIntegrityHash() == null) {
-            logger.info("[%s]file not found", msg);
+            logger.info("[%s]source integrity hash file not found", msg);
             return;
         }
         String currentTransferChecksum = toHexString(messageDigest.getUncompressed());
