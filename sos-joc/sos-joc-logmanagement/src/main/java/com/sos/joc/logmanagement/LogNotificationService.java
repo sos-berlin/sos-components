@@ -3,6 +3,7 @@ package com.sos.joc.logmanagement;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.common.JocClusterServiceActivity;
@@ -33,6 +34,7 @@ public class LogNotificationService extends AJocActiveMemberService {
             stopOnStart(mode);
 
             closed.set(false);
+            Globals.StartUpLOGGER.info("START");
             if (serviceSettingsSection != null && serviceSettingsSection instanceof ConfigurationGlobalsLogNotification) {
                 udpServer = new UDPServer((ConfigurationGlobalsLogNotification) serviceSettingsSection);
             } else {
@@ -49,6 +51,7 @@ public class LogNotificationService extends AJocActiveMemberService {
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         udpServer.stop();
         closed.set(true);
+        Globals.StartUpLOGGER.info("STOP");
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 

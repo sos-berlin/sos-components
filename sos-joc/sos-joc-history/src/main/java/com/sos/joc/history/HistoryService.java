@@ -95,6 +95,7 @@ public class HistoryService extends AJocActiveMemberService {
             setLogger();
             stopOnStart(mode);
 
+            Globals.StartUpLOGGER.info("START");
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted.set(true);
@@ -155,6 +156,7 @@ public class HistoryService extends AJocActiveMemberService {
             processingStarted.set(false);
         }
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
+        Globals.StartUpLOGGER.info("STOP");
 
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);

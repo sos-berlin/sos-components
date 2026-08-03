@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.common.JocClusterServiceActivity;
@@ -51,6 +52,7 @@ public class DailyPlanService extends AJocActiveMemberService {
             lastActivityStart = Instant.now();
 
             JocClusterServiceLogger.setLogger(IDENTIFIER);
+            Globals.StartUpLOGGER.info("START");
             LOGGER.info(String.format("[%s][%s]start", getIdentifier(), mode));
 
             DailyPlanSettings settings = getSettings(StartupMode.automatic, controllers, serviceSettingsSection);
@@ -74,6 +76,7 @@ public class DailyPlanService extends AJocActiveMemberService {
         JocClusterServiceLogger.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s]stop", getIdentifier(), mode));
         reset(mode);
+        Globals.StartUpLOGGER.info("STOP");
         JocClusterServiceLogger.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }

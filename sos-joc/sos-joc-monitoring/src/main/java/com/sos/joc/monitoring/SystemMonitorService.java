@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.Globals;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.common.JocClusterServiceActivity;
@@ -36,6 +37,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
             stopOnStart(mode);
 
             closed.set(false);
+            Globals.StartUpLOGGER.info("START");
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             model = new SystemMonitoringModel(this);
@@ -56,6 +58,7 @@ public class SystemMonitorService extends AJocEmbeddedService {
             model.close(mode);
         }
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
+        Globals.StartUpLOGGER.info("STOP");
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
 

@@ -114,6 +114,7 @@ public class JocClusterService {
                 @Override
                 public void run() {
                     JocClusterServiceLogger.setLogger();
+                    Globals.StartUpLOGGER.info("START");
                     LOGGER.info(String.format("[%s][start][run]...", mode));
                     try {
                         createFactory(config.getHibernateConfiguration());
@@ -129,8 +130,10 @@ public class JocClusterService {
                             cluster.doProcessing(mode, Globals.getConfigurationGlobals(), onJocStart);
                         }
                         LOGGER.info(String.format("[%s][start][end]", mode));
+                        Globals.StartUpLOGGER.info("STOP");
                     } catch (Throwable e) {
                         LOGGER.error(String.format("[%s][start][end]%s", mode, e.toString()), e);
+                        Globals.StartUpLOGGER.info("STOP");
                     }
                     JocClusterServiceLogger.removeLogger();
                 }
@@ -161,6 +164,7 @@ public class JocClusterService {
             ThreadHelper.tryStop(mode, tg);
         }
         ThreadHelper.print(mode, String.format("after stop %s", JocClusterConfiguration.IDENTIFIER));
+        Globals.StartUpLOGGER.info("STOP");
         JocClusterServiceLogger.removeLogger();
         return answer;
     }

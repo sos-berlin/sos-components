@@ -63,7 +63,8 @@ public class Globals {
     public static Version curVersion = new Version();
     public static boolean isApiServer = false;
     public static Boolean prevWasApiServer = null;
-
+    public static final Logger StartUpLOGGER = LoggerFactory.getLogger("com.sos.joc.StartUp");
+    
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;

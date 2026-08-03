@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.Globals;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -58,11 +59,13 @@ public class CleanupService extends AJocActiveMemberService {
 
             setConfig((ConfigurationGlobalsCleanup) serviceSettingsSection);
 
+            Globals.StartUpLOGGER.info("START");
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             // LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.info(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
                         ConfigurationGlobalsCleanup.ENTRY_NAME_PERIOD));
+                Globals.StartUpLOGGER.info("STOP");
                 return JocCluster.getOKAnswer(JocClusterState.MISSING_CONFIGURATION);
             } else {
                 threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-start"));
@@ -93,6 +96,7 @@ public class CleanupService extends AJocActiveMemberService {
                                 closed.set(true);
                                 setServiceLogger();
                                 LOGGER.error(String.format("[%s][%s][start][stopped]%s", getIdentifier(), mode, e.toString()));
+                                Globals.StartUpLOGGER.info("STOP");
                             } catch (SOSHibernateException e) {
                                 setServiceLogger();
                                 LOGGER.error(e.toString(), e);
@@ -105,6 +109,7 @@ public class CleanupService extends AJocActiveMemberService {
                                     closed.set(true);
                                     setServiceLogger();
                                     LOGGER.error(String.format("[%s][%s][start][stopped]max errors(%s) reached", getIdentifier(), mode, current));
+                                    Globals.StartUpLOGGER.info("STOP");
                                 } else {
                                     errors.set(current + 1);
                                     waitFor(60);
@@ -129,6 +134,7 @@ public class CleanupService extends AJocActiveMemberService {
         closed.set(true);
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
+        Globals.StartUpLOGGER.info("STOP");
         removeServiceLogger();
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
     }
