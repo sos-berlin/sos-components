@@ -2,7 +2,9 @@ package com.sos.joc.classes.logs;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -16,6 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxy;
@@ -153,9 +156,20 @@ public class LogHelper {
             if (in.getDateTo() == null) {
                 return null;
             }
-            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), to, in.getTimeZone());
+            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateTo()), false, in.getTimeZone());
+            LocalDateTime ldt = LocalDateTime.ofInstant(instant, JobSchedulerDate.UTC);
+            if (in.getDateTo().contains("y") && !Pattern.compile("[Mwdhms]").asPredicate().test(in.getDateTo())) {
+                ldt = ldt.plusYears(1);  
+            } else if (in.getDateTo().contains("M") && !Pattern.compile("[wdhms]").asPredicate().test(in.getDateTo())) {
+                ldt = ldt.plusMonths(1);
+            } else if (in.getDateTo().contains("w") && !Pattern.compile("[dhms]").asPredicate().test(in.getDateTo())) {
+                ldt = ldt.plusWeeks(1);
+            } else if (in.getDateTo().contains("d") && !Pattern.compile("[hms]").asPredicate().test(in.getDateTo())) {
+                ldt = ldt.plusDays(1);
+            }
+            instant = ldt.toInstant(ZoneOffset.UTC);
         } else {
-            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), to, in.getTimeZone());
+            instant = JobSchedulerDate.getInstantFromDateStr(JobSchedulerDate.setRelativeDateIntoPast(in.getDateFrom()), false, in.getTimeZone());
             Instant now = Instant.now();
             if (now.isBefore(instant)) {
                 instant = now;

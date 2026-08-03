@@ -35,7 +35,7 @@ public class JobSchedulerDate {
     // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
     public static final Long NEVER_MILLIS = 253402300799000L;
     public static final Instant NEVER = Instant.ofEpochMilli(NEVER_MILLIS);
-    private static final ZoneId UTC = ZoneId.of("UTC");
+    public static final ZoneId UTC = ZoneId.of("UTC");
     private static final Pattern dateTimePattern = Pattern.compile(
             "^(?<timestamp>\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2})(?<nanos>[.,]\\d{3,9})?(?:(?<offset>Z|[+-]\\d{2})(?<offset2>:?\\d{2})?)?.*$",
             Pattern.DOTALL);
@@ -226,7 +226,7 @@ public class JobSchedulerDate {
             while (m.find()) {
                 dateTimeIsRelative = true;
                 Integer number = Integer.valueOf(m.group(1));
-                relativeDateTimes.put(m.group(2), number);
+                relativeDateTimes.putIfAbsent(m.group(2), number);
             }
             if (!dateTimeIsRelative) {
                 dateStr = dateStr.replace(' ', 'T');
@@ -314,31 +314,12 @@ public class JobSchedulerDate {
     
     public static String setRelativeDateIntoPast(String dateToFrom) {
         if (dateToFrom != null) {
-            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
-                return "-" + dateToFrom.trim().replaceAll("\\+", "");
+            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy].*")) { //is positive relative date
+                return "-" + dateToFrom.trim().replaceAll("\\+", "").replaceAll(" ", "");
             }
         }
         return dateToFrom;
     }
-    
-    public static String setFutureRelativeDateToToday(String dateToFrom) {
-        if (dateToFrom != null) {
-            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
-                return "0";
-            }
-        }
-        return dateToFrom;
-    }
-    
-    public static String deleteFutureRelativeDate(String dateToFrom) {
-        if (dateToFrom != null) {
-            if (dateToFrom.trim().matches("\\+?[0-9]+\\s*[smhdwMy]")) { //is positive relative date
-                return null;
-            }
-        }
-        return dateToFrom;
-    }
-    
     
     public static Instant convertUTCDate(String dateWithoutTime, Instant utcDateTime, String timezone) {
         ZoneId utcZoneId = ZoneId.of(SOSDate.TIMEZONE_UTC);
