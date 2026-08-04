@@ -36,6 +36,7 @@ public class LogSession {
     private Optional<LogLineKey> firstKey = Optional.empty();
     private Optional<LogLineKey> finalNumOfLinesKey = Optional.empty();
     private Optional<LogLineKey> finalDateToKey = Optional.empty();
+    private Optional<LogLineKey> currentLastLinesKey = Optional.empty();
     
     private final String token;
     
@@ -180,6 +181,16 @@ public class LogSession {
         }
     }
     
+    public Optional<LogLineKey> getCurrentLastLogLineKey() {
+        return currentLastLinesKey;
+    }
+
+    public void setCurrentLastLogLineKey(Optional<LogLineKey> key) {
+        if (key.isPresent()) {
+            this.currentLastLinesKey = key;
+        }
+    }
+    
     public Optional<LogLineKey> getFinalDateToKey() {
         return finalDateToKey;
     }
@@ -216,4 +227,5 @@ public class LogSession {
     public LogLineKey createLogLineKey(String key) {
         return LogLineKey.parse(logLevel.toString() + "/" + key).toOption().get();
     }
+
 }
