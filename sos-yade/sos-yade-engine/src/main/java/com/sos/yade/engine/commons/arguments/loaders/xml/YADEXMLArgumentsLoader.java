@@ -59,9 +59,9 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             xpath = SOSXML.newXPath();
 
             Node profileNode = xpath.selectNode(root, "Profiles/Profile[@profile_id='" + getArgs().getProfile().getValue() + "']");
-            if (profile == null) {
+            if (profileNode == null) {
                 throw new YADEEngineSettingsLoadException("[" + getArgs().getSettings().getValue() + "][profile=" + getArgs().getProfile().getValue()
-                        + "]not found", YADEReturnCode.PROFILE_NOT_FOUND);
+                        + "]profile not found", YADEReturnCode.PROFILE_NOT_FOUND);
             }
 
             setVarReplacer(new SOSMapVariableReplacer(replacerMap, replaceCaseSensitive, replacerKeepUnresolvedVariables));

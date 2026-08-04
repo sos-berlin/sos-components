@@ -9,12 +9,11 @@ public class YADEEngineJumpHostCommandException extends YADEEngineCommandExcepti
     private static final long serialVersionUID = 1L;
 
     public YADEEngineJumpHostCommandException(YADEEngineCommandException cause, IYADEProviderDelegator delegator) {
-        super(getTruncatedError(cause), delegator);
+        super(getTruncatedError(cause), cause.getReturnCode(), delegator);
         setExitCode(cause.getExitCode());
     }
 
     private static String getTruncatedError(YADEEngineCommandException cause) {
         return cause.getPrefix() + "exitCode=" + cause.getExitCode();
     }
-
 }

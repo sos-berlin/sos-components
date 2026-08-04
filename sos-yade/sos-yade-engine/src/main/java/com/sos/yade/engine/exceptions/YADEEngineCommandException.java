@@ -1,5 +1,6 @@
 package com.sos.yade.engine.exceptions;
 
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
 
 public class YADEEngineCommandException extends YADEEngineException {
@@ -11,14 +12,14 @@ public class YADEEngineCommandException extends YADEEngineException {
     private String std;
 
     public YADEEngineCommandException(String prefix, Integer exitCode, String std, IYADEProviderDelegator delegator) {
-        super(prefix + (exitCode == null ? "" : "[exitCode=" + exitCode + "]") + std, delegator);
+        super(prefix + (exitCode == null ? "" : "[exitCode=" + exitCode + "]") + std, getReturnCodeFromExitCode(exitCode, delegator), delegator);
         this.prefix = prefix;
         this.exitCode = exitCode;
         this.std = std;
     }
 
-    public YADEEngineCommandException(String msg, IYADEProviderDelegator delegator) {
-        super(msg, delegator);
+    public YADEEngineCommandException(String msg, YADEReturnCode returnCode, IYADEProviderDelegator delegator) {
+        super(msg, returnCode, delegator);
     }
 
     public YADEEngineCommandException(String msg, Throwable cause, IYADEProviderDelegator delegator) {
@@ -26,7 +27,7 @@ public class YADEEngineCommandException extends YADEEngineException {
     }
 
     public YADEEngineCommandException(YADEEngineCommandException cause) {
-        super(cause, cause.getDelegator());
+        super(cause, cause.getReturnCode(), cause.getDelegator());
         if (cause != null) {
             this.prefix = cause.prefix;
             this.exitCode = cause.exitCode;
@@ -44,6 +45,21 @@ public class YADEEngineCommandException extends YADEEngineException {
 
     public Integer getExitCode() {
         return exitCode;
+    }
+
+    private static YADEReturnCode getReturnCodeFromExitCode(Integer exitCode, IYADEProviderDelegator delegator) {
+        if (exitCode == null || delegator == null) {
+            return null;
+        }
+        YADEReturnCode rc = YADEReturnCode.fromCode(exitCode);
+        if (YADEReturnCode.DEFAULT_ERROR.equals(rc)) {
+            if (delegator.isSource()) {
+                rc = YADEReturnCode.SOURCE_FILES_ERROR;
+            } else {
+                rc = YADEReturnCode.TARGET_FILES_ERROR;
+            }
+        }
+        return rc;
     }
 
 }

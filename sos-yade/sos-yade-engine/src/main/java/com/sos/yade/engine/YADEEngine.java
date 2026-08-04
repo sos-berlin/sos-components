@@ -449,6 +449,8 @@ public class YADEEngine {
                 Throwable e = exceptions.get(0);
                 if (e instanceof YADEEngineException) {
                     throw (YADEEngineException) e;
+                } else if (e.getCause() != null && e.getCause() instanceof YADEEngineException) {
+                    throw (YADEEngineException) e.getCause();
                 } else {
                     throw new YADEEngineException(e);
                 }

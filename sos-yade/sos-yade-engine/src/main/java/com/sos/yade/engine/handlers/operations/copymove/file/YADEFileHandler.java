@@ -500,7 +500,11 @@ public class YADEFileHandler {
 
         // if (!config.getRetry().isEnabled() || !YADEProviderDelegatorHelper.isSourceOrTargetNotConnected(sourceDelegator, targetDelegator)) {
         if (!config.getRetry().isEnabled() || (isSourceConnected && isTargetConnected)) {
-            throwException(YADEReturnCode.DEFAULT_ERROR, fileTransferLogPrefix, targetFile, e, "");
+            YADEReturnCode rt = YADEReturnCode.DEFAULT_ERROR;
+            if (e != null && e instanceof YADEEngineException) {
+                rt = ((YADEEngineException) e).getReturnCode();
+            }
+            throwException(rt, fileTransferLogPrefix, targetFile, e, "");
         }
 
         if (targetFile.getAttempt() > config.getRetry().getMaxRetries()) { // > because attempt increased before retry

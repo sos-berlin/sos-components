@@ -21,6 +21,7 @@ import com.sos.yade.engine.commons.helpers.YADEClientBannerWriter;
 import com.sos.yade.engine.commons.helpers.YADEParallelExecutorFactory;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineOperationException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.operations.copymove.file.YADEFileHandler;
@@ -171,7 +172,12 @@ public class YADECopyMoveOperationsHandler {
         if (nonTransactionalErrorCounter <= 0 || nonTransactionalErrorCounter != sourceFiles.size()) {
             return;
         }
-        throw new Exception("Processing of all files failed. Last exception: " + lastNonTransactionalError, lastNonTransactionalError);
+        YADEReturnCode rt = YADEReturnCode.DEFAULT_ERROR;
+        if (lastNonTransactionalError != null && lastNonTransactionalError instanceof YADEEngineException) {
+            rt = ((YADEEngineException) lastNonTransactionalError).getReturnCode();
+        }
+
+        throw new YADEEngineException("Processing of all files failed. Last exception: " + lastNonTransactionalError, lastNonTransactionalError, rt);
     }
 
     private static void finalizeTransactionIfNeeded(ISOSLogger logger, YADECopyMoveOperationsConfig config,
