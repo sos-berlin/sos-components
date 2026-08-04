@@ -67,7 +67,7 @@ public class Proxies {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
-    private static JProxyContext proxyContext = null;
+    public static JProxyContext proxyContext = null;
     private volatile ConcurrentMap<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();

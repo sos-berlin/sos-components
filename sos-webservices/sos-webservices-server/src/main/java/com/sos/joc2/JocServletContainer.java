@@ -13,7 +13,6 @@ import com.sos.joc.classes.JocCertificate;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.classes.logs.JOCLogProxyContext;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.ClusterWatch;
 import com.sos.joc.classes.proxy.Proxies;
@@ -106,7 +105,6 @@ public class JocServletContainer extends ServletContainer {
         }
         // 2 - close proxies
         QuickSearchStore.close(); //insert
-        JOCLogProxyContext.release();
         Proxies.closeAll();
         DependencyUpdate.getInstance().close();
 

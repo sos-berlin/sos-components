@@ -21,7 +21,6 @@ import com.sos.joc.model.log.JOCLogRequest;
 import com.sos.joc.model.log.KeyedLogRequest;
 import com.sos.joc.model.log.LogResponse;
 import com.sos.joc.model.log.NextLogRequest;
-import com.sos.joc.model.log.RunningLogRequest;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -128,14 +127,11 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
     @Override
     public JOCDefaultResponse getRunningLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
-            RunningLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, RunningLogRequest.class);
+            NextLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
-            }
-            if (in.getTimeout() == null) {
-                in.setTimeout(LogHelper.timeout);
             }
             LogResponse entity = LogHelper.getRunningResponse(logSession, in);
 
