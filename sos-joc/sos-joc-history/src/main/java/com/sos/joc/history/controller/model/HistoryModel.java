@@ -1197,8 +1197,9 @@ public class HistoryModel {
 
                 if (terminateOrder) {
                     if (isStartTimeAfterEndTime(hob.getStartTime(), hob.getEndTime())) {
-                        LOGGER.warn(String.format("[%s][%s][%s][startTime=%s > endTime=%s]%s", identifier, eventType, orig.getOrderId(), SOSDate
-                                .getDateTimeAsString(hob.getStartTime()), SOSDate.getDateTimeAsString(hob.getEndTime()), SOSString.toString(hob)));
+                        LOGGER.warn(String.format("[%s][%s][%s][Invalid order timing: order start time=%s is later than end time=%s]Context: %s",
+                                identifier, eventType, orig.getOrderId(), SOSDate.getDateTimeAsString(hob.getStartTime()), SOSDate
+                                        .getDateTimeAsString(hob.getEndTime()), SOSString.toString(hob, true)));
                     }
                 }
 
