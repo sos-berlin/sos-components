@@ -133,9 +133,12 @@ public class YADEProviderDelegatorHelper {
                 delegator.getProvider().ensureConnected();
                 return;
             } catch (ProviderConnectException e) {
+                delegator.getProvider().disconnect();
+
                 if (retryCounter == retry.getMaxRetries()) {
                     throwConnectionException(delegator, e);
                 }
+
                 String actionLog = action == null ? "" : "[" + action + "]";
                 logger.info("[%s]%s[Retry=%s/%s starts in %ss]due to %s", delegator.getLabel(), actionLog, (retryCounter + 1), retry.getMaxRetries(),
                         retry.getInterval(), e.toString());
