@@ -94,6 +94,11 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     throw new ProviderAuthenticationException(e);
                 }
 
+                if (!getArguments().getShareName().isEmpty()) {
+                    requireResourcePool(setAndGetShareName(getArguments().getShareName())).withResource(share -> {
+                    });
+                }
+
                 getLogger().info(getConnectedMsg());
             } catch (ProviderConnectException e) {
                 throwConnectException(e);

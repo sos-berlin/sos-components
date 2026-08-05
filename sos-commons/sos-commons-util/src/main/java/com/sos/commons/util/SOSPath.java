@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -683,6 +684,17 @@ public class SOSPath {
             return new TreeSet<>();
         }
         return SOSPathUtils.selectDeepestLevelPaths(paths).stream().map(Path::of).collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    public static boolean isFileNotFoundException(Throwable cause) {
+        Throwable e = cause;
+        while (e != null) {
+            if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
+                return true;
+            }
+            e = e.getCause();
+        }
+        return false;
     }
 
     public class SOSPathResult {

@@ -13,6 +13,7 @@ import org.xml.sax.SAXException;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
+import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
@@ -86,7 +87,9 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         } catch (FileNotFoundException e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND);
         } catch (SOSXMLDoctypeException | SAXException | IOException e) {
-            throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_PARSE_ERROR);
+            YADEReturnCode rt = SOSPath.isFileNotFoundException(e) ? YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND
+                    : YADEReturnCode.CONFIGURATION_FILE_PARSE_ERROR;
+            throw new YADEEngineSettingsLoadException(e.toString(), e, rt);
         } catch (Exception e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_ERROR);
         } finally {

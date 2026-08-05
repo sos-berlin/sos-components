@@ -86,4 +86,9 @@ public abstract class SMBProvider<R extends AProviderReusableResource<C>, C> ext
         }
         return shareName;
     }
+
+    public String setAndGetShareName(SOSArgument<String> shareNameArg) {
+        shareName = shareNameArg.getValue();
+        return shareName;
+    }
 }

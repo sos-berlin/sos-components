@@ -75,9 +75,9 @@ public class YADEDirectoryMapper {
                     if (targetDirs.size() == 1) {
                         String targetDir = targetDirs.iterator().next();
                         if (!targetDelegator.getProvider().exists(targetDir)) {
-                            throw new ProviderException("[" + targetDelegator.getLabel() + "][" + YADEArgumentsHelper.toStringAsOppositeValue(
+                            throw new YADEEngineException("[" + targetDelegator.getLabel() + "][" + YADEArgumentsHelper.toStringAsOppositeValue(
                                     targetDelegator.getArgs().getCreateDirectories()) + "][" + targetDir
-                                    + "]directory does not exist and automatic creation is disabled");
+                                    + "]directory does not exist and automatic creation is disabled", YADEReturnCode.TARGET_FILES_ERROR);
                         }
                     }
                     if (isDebugEnabled) {
@@ -89,6 +89,8 @@ public class YADEDirectoryMapper {
                     logger.debug("[prepareTargetDirectories][skip]targetDirs is empty");
                 }
             }
+        } catch (YADEEngineException e) {
+            throw e;
         } catch (ProviderException e) {
             throw new YADEEngineException(e, targetDelegator);
         }
