@@ -152,6 +152,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 import scala.collection.JavaConverters;
+import scala.jdk.javaapi.OptionConverters;
 
 public class EventService {
 
@@ -806,9 +807,9 @@ public class EventService {
     }
 
     private static Optional<Set<BoardPath>> orderPositionToBoardPaths(JOrder order, JControllerState controllerState) {
-        Optional<JOrder> orderOpt = order == null ? Optional.empty() : Optional.of(order);
-        return orderOpt.map(o -> controllerState.asScala().instruction(o.asScala().workflowPosition())).flatMap(instruction -> tryCast(
-                NoticeInstruction.class, instruction)).map(postNotice -> JavaConverters.asJava(postNotice.referencedBoardPaths()));
+        return OptionConverters.toJava(controllerState.asScala().instruction(order.asScala().workflowPosition()).toOption()).flatMap(
+                instruction -> tryCast(NoticeInstruction.class, instruction)).map(postNotice -> JavaConverters.asJava(postNotice
+                        .referencedBoardPaths()));
     }
 
     @SuppressWarnings("unchecked")

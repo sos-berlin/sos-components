@@ -583,21 +583,18 @@ public class OrdersHelper {
         if (isInRetryInstruction || isRetryState(jOrder)) {
             OrderRetryState rs = new OrderRetryState();
             rs.setNext(oItem.getState().getUntil());
-            // rollback JOC-1922
-            if (positionsSize > 2) {
-                try {
-                    String lastPosition = (String) origPos.toList().get(positionsSize - 2);
-                    if (lastPosition.startsWith("try+")) {
-                        rs.setAttempt(Integer.valueOf(lastPosition.substring(4)) + 1);
-                    } else if (lastPosition.startsWith("catch+")) {
-                        rs.setAttempt(Integer.valueOf(lastPosition.substring(6)) + 1);
-                    }
-                } catch (Exception e) {
-                    //
-                }
-            }
-            //rs.setAttempt(origPos.asScala().catchCount());
-            // end  of rollback
+//                try {
+//                    String lastPosition = (String) origPos.toList().get(positionsSize - 2);
+//                    if (lastPosition.startsWith("try+")) {
+//                        rs.setAttempt(Integer.valueOf(lastPosition.substring(4)) + 1);
+//                    } else if (lastPosition.startsWith("catch+")) {
+//                        rs.setAttempt(Integer.valueOf(lastPosition.substring(6)) + 1);
+//                    }
+//                } catch (Exception e) {
+//                    //
+//                }
+//            }
+            rs.setAttempt(origPos.asScala().catchCount());
             o.setRetryState(rs);
             if (outcomes != null && outcomes.size() > 1) { // ignore last outcome from catch instruction; always caught
                 o.setLastOutcome(outcomes.get(outcomes.size() - 2).getOutcome());
@@ -721,8 +718,8 @@ public class OrdersHelper {
     }
 
     private static boolean isInRetryInstruction(JOrder jOrder, JControllerState controllerState) {
-        return js7.data.workflow.instructions.Retry.class.isAssignableFrom(controllerState.asScala().instruction(jOrder.asScala().workflowPosition())
-                .getClass());
+        return OptionConverters.toJava(controllerState.asScala().instruction(jOrder.asScala().workflowPosition()).toOption()).map(Object::getClass)
+                .map(js7.data.workflow.instructions.Retry.class::isAssignableFrom).orElse(false);
     }
     
     private static PlanId getPlanId(js7.data.plan.PlanId planId) {
