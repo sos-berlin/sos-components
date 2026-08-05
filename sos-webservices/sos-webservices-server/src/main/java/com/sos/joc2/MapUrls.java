@@ -81,6 +81,7 @@ public class MapUrls {
 //            put("http://sp:11112", "http://sp:11112");
 //            put("http://sp:1113", "http://sp:1113");
             put("http://sp.sos:1113", "http://sp.sos:1113");
+            put("http://sp.sos:4111", "http://sp.sos:4111");
         }
     });
 
