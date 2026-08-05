@@ -2,6 +2,7 @@ package com.sos.yade.engine.commons.arguments.loaders.xml;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
@@ -84,7 +85,7 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             }
         } catch (YADEEngineSettingsLoadException e) {
             throw e;
-        } catch (FileNotFoundException e) {
+        } catch (NoSuchFileException | FileNotFoundException e) {
             throw new YADEEngineSettingsLoadException(e.toString(), e, YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND);
         } catch (SOSXMLDoctypeException | SAXException | IOException e) {
             YADEReturnCode rt = SOSPath.isFileNotFoundException(e) ? YADEReturnCode.CONFIGURATION_FILE_NOT_FOUND

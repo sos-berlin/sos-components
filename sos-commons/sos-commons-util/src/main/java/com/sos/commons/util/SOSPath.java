@@ -689,7 +689,7 @@ public class SOSPath {
     public static boolean isFileNotFoundException(Throwable cause) {
         Throwable e = cause;
         while (e != null) {
-            if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
+            if (e instanceof NoSuchFileException || e instanceof FileNotFoundException) {
                 return true;
             }
             e = e.getCause();
