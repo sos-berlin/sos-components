@@ -123,6 +123,8 @@ public class YADEProviderDelegatorHelper {
             try {
                 delegator.getProvider().ensureConnected();
             } catch (ProviderConnectException e) {
+                delegator.getProvider().disconnect();
+
                 throwConnectionException(delegator, e);
             }
             return;
