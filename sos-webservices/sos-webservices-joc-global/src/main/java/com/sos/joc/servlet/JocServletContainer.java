@@ -158,22 +158,22 @@ public class JocServletContainer extends ServletContainer {
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
         try {
-            String jettyBase = System.getProperty("jetty.base");
-            if (jettyBase != null) {
-                Path logDir = Paths.get(jettyBase, "logs");
-                LOGGER.info("cleanup log files: " + logDir.toString());
-                Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
-                if (Files.exists(logDir)) {
-                    Files.list(logDir).filter(jettyLogFilter).forEach(p -> {
-                        try {
-                            Files.deleteIfExists(p);
-                        } catch (IOException e) {
-                            LOGGER.warn("cleanup log files: " + e.toString());
-                        }
-                    });
-                } else {
-                    LOGGER.warn("Couldn't find the log files: " + logDir.toString());
-                }
+            Path logDir = Paths.get("logs");
+            LOGGER.info("cleanup log directory: " + logDir.toAbsolutePath().toString());
+            Predicate<String> jettyLogFilter1 = Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate();
+            Predicate<String> logIndexes1 = Pattern.compile("-indexed\\.tmp$").asPredicate();
+            Predicate<Path> jettyLogFilter = p -> jettyLogFilter1.test(p.getFileName().toString());
+            Predicate<Path> logIndexes = p -> logIndexes1.test(p.getFileName().toString());
+            if (Files.exists(logDir)) {
+                Files.list(logDir).filter(jettyLogFilter.or(logIndexes)).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (IOException e) {
+                        LOGGER.warn("cleanup log files: " + e.toString());
+                    }
+                });
+            } else {
+                LOGGER.warn("Couldn't find the log directory: " + logDir.toAbsolutePath().toString());
             }
         } catch (Exception e) {
             LOGGER.warn("cleanup log files: " + e.toString());
