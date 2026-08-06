@@ -67,10 +67,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getJobschedulerUser()),
                     folderPermissions.getListOfFolders(), accessToken);
             
-//            try { //add to new surveyDate instead deliveryDate
-//                entity.setDeliveryDate(Date.from(Proxy.of(controllerId).currentState().instant()));
-//            } catch (Exception e) {
-//            }
+            try {
+                entity.setSurveyDate(Date.from(Proxy.of(controllerId).currentState().instant()));
+            } catch (Exception e) {
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
