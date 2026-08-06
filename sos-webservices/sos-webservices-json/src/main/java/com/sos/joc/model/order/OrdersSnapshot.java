@@ -21,7 +21,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "deliveryDate",
     "surveyDate",
-    "orders"
+    "orders",
+    "proxyIsCoupled"
 })
 public class OrdersSnapshot {
 
@@ -53,6 +54,8 @@ public class OrdersSnapshot {
      */
     @JsonProperty("orders")
     private OrdersSummary orders;
+    @JsonProperty("proxyIsCoupled")
+    private Boolean proxyIsCoupled;
 
     /**
      * timestamp
@@ -123,15 +126,25 @@ public class OrdersSnapshot {
     public void setOrders(OrdersSummary orders) {
         this.orders = orders;
     }
+    
+    @JsonProperty("proxyIsCoupled")
+    public Boolean getProxyIsCoupled() {
+        return proxyIsCoupled;
+    }
+
+    @JsonProperty("proxyIsCoupled")
+    public void setProxyIsCoupled(Boolean proxyIsCoupled) {
+        this.proxyIsCoupled = proxyIsCoupled;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orders", orders).append("proxyIsCoupled", proxyIsCoupled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orders).append(deliveryDate).append(surveyDate).toHashCode();
+        return new HashCodeBuilder().append(orders).append(deliveryDate).append(surveyDate).append(proxyIsCoupled).toHashCode();
     }
 
     @Override
@@ -143,7 +156,7 @@ public class OrdersSnapshot {
             return false;
         }
         OrdersSnapshot rhs = ((OrdersSnapshot) other);
-        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(proxyIsCoupled, rhs.proxyIsCoupled).isEquals();
     }
 
 }
