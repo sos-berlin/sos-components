@@ -94,9 +94,6 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
                             .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
-
-
-
                 }
 
             }
@@ -115,6 +112,9 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                             dbLayer1.setAgentsDeployed(updateAgentIds);
                             Globals.commit(connection1);
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
+                            
+                            // JOC-2261: check healthstate after deploy
+                            AgentsResourceStateImpl.checkClusterHealthState(controllerId, updateAgentIds, accessToken, getJocError());
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);

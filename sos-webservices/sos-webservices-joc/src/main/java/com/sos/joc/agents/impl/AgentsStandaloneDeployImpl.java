@@ -108,6 +108,9 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
                             dbLayer1.setAgentsDeployed(updateAgentIds);
                             Globals.commit(connection1);
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
+                            
+                            // JOC-2261: check healthstate after deploy
+                            AgentsResourceStateImpl.checkStandaloneHealthState(controllerId, updateAgentIds, accessToken, getJocError());
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);
