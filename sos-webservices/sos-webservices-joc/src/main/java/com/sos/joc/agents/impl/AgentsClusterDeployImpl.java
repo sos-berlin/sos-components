@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,13 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.agent.AgentClusterState;
+import com.sos.joc.model.agent.AgentClusterStateText;
+import com.sos.joc.model.agent.AgentV;
+import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.DeployClusterAgents;
+import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -94,9 +101,6 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                     updateItems.addAll(subAgents.stream().map(s -> JSubagentItem.of(SubagentId.of(s.getSubAgentId()), agentPath, Uri.of(s.getUri()), s
                             .getDisabled())).map(JUpdateItemOperation::addOrChangeSimple).collect(Collectors.toList()));
                     updateSubagentIds.addAll(subAgents.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList()));
-
-
-
                 }
 
             }
@@ -115,6 +119,9 @@ public class AgentsClusterDeployImpl extends JOCResourceImpl implements IAgentsC
                             dbLayer1.setAgentsDeployed(updateAgentIds);
                             Globals.commit(connection1);
                             EventBus.getInstance().post(new AgentInventoryEvent(controllerId, updateAgentIds));
+                            
+                            // JOC-2261: check healthstate after deploy
+                            AgentsResourceStateImpl.checkClusterHealthState(controllerId, updateAgentIds, accessToken, getJocError());
                         } catch (Exception e1) {
                             Globals.rollback(connection1);
                             ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), null);

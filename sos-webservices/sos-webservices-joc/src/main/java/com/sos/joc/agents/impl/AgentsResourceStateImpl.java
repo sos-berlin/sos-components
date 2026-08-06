@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -22,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
@@ -41,6 +43,13 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.agent.AgentClusterState;
 import com.sos.joc.model.agent.AgentClusterStateText;
 import com.sos.joc.model.agent.AgentConnectionState;
@@ -174,7 +183,23 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
 
-            boolean withClusterLicense = AgentHelper.hasClusterLicense();
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getAgentStates(agentsParam, folderPermissions.getListOfFolders())));
+        } catch (Exception e) {
+            return responseStatusJSError(e);
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T getAgentStates(ReadAgentsV agentsParam, Set<Folder> permittedFolders)
+            throws ControllerConnectionResetException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSHibernateException {
+        boolean withClusterLicense = AgentHelper.hasClusterLicense();
+        
+        SOSHibernateSession connection = null;
+        try {
+            String controllerId = agentsParam.getControllerId();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId), agentsParam
@@ -226,7 +251,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         }
 
                     } else {
-                        Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(jOrders.stream().map(JOrder::id).collect(Collectors
                                 .toSet()), currentState);
                         Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, jOrders, connection);
@@ -418,19 +442,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 agents.setSurveyDate(currentStateMoment == null ? null : Date.from(currentStateMoment));
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 agents.setAgents(Stream.concat(agentsList.stream(), subagentsPerAgentId.values().stream().flatMap(List::stream)).sorted(Comparator
-                        .comparingInt(AgentStateV::getRunningTasks).reversed()).collect(Collectors.toList()));
-
-                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
+                      .comparingInt(AgentStateV::getRunningTasks).reversed()).collect(Collectors.toList()));
+                return (T) agents;
             } else {
                 AgentsV agents = new AgentsV();
                 agents.setSurveyDate(currentStateMoment == null ? null : Date.from(currentStateMoment));
                 agents.setDeliveryDate(Date.from(Instant.now()));
                 agents.setAgents(agentsList);
-
-                return responseStatus200(Globals.objectMapper.writeValueAsBytes(agents));
+                return (T) agents;
             }
-        } catch (Exception e) {
-            return responseStatusJSError(e);
+            
         } finally {
             Globals.disconnect(connection);
         }
@@ -710,6 +731,41 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             agent.setStateTextFilter(AgentStateTextFilter.INITIALISED);
         } else if (AgentStateText.RESETTING.equals(agentState.get_text())) {
             agent.setStateTextFilter(AgentStateTextFilter.RESETTING);
+        }
+    }
+    
+    protected static void checkClusterHealthState(String controllerId, List<String> agentIds, String accessToken, JocError jocError) {
+        if (isUnHealthy(controllerId, agentIds)) {
+            ProblemHelper.postMessageAsHintIfExist("Not all subagents are coupled or enabled; see 'Resources->Agents' view", accessToken,
+                    jocError, null);
+        }
+    }
+    
+    protected static void checkStandaloneHealthState(String controllerId, List<String> agentIds, String accessToken, JocError jocError) {
+        if (isUnHealthy(controllerId, agentIds)) {
+            if (agentIds != null && agentIds.size() == 1) {
+                ProblemHelper.postMessageAsHintIfExist("The agents is not coupled; see 'Resources->Agents' view", accessToken,
+                        jocError, null);
+            } else {
+                ProblemHelper.postMessageAsHintIfExist("Not all agents are coupled; see 'Resources->Agents' view", accessToken,
+                        jocError, null);
+            }
+        }
+    }
+    
+    private static boolean isUnHealthy(String controllerId, List<String> agentIds) {
+        ReadAgentsV paramForCheck = new ReadAgentsV();
+        paramForCheck.setControllerId(controllerId);
+        paramForCheck.setAgentIds(agentIds);
+        paramForCheck.setCompact(true);
+        paramForCheck.setOnlyVisibleAgents(true);
+        try {
+            AgentsV agents = getAgentStates(paramForCheck, null);
+            return agents.getAgents().stream().map(AgentV::getHealthState).filter(Objects::nonNull).map(AgentClusterState::get_text).filter(
+                    Objects::nonNull).anyMatch(s -> s.equals(AgentClusterStateText.ALL_SUBAGENTS_ARE_COUPLED_AND_ENABLED));
+        } catch (Exception e) {
+            LOGGER.warn("Error at health check after deploy", e);
+            return false;
         }
     }
 
