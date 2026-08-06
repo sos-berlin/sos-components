@@ -56,7 +56,6 @@ public class LogHelper {
     private static long maxChunkSize = 2500l;
     private static Duration timeout = Duration.ofSeconds(57);
     private static long runningWaitingTime = 2000l; // 2 seconds
-    private static long debugRunningWaitingTime = 4000l; // 4 seconds
 //    private static final Logger LOGGER = LoggerFactory.getLogger(LogHelper.class);
     
     public static LogResponse getResponse(JControllerProxy proxy, String accessToken, String controllerId, LogBaseRequest in, Js7ServerId serverId,
@@ -403,8 +402,7 @@ public class LogHelper {
                 });
 
         if (running) {
-            //Duration bufferTimeout = Duration.ofMillis(ls.getLogLevel().equals(LogLevel.debug()) ? debugRunningWaitingTime : runningWaitingTime);
-            Duration bufferTimeout = Duration.ofMillis(debugRunningWaitingTime);
+            Duration bufferTimeout = Duration.ofMillis(runningWaitingTime);
             KeyedLogLine lastLine = flux.bufferTimeout(chunk.intValue(), bufferTimeout)
                     .takeUntil(l -> !l.isEmpty())
                     .flatMapIterable(Function.identity()).blockLast();
