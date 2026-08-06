@@ -744,7 +744,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     protected static void checkStandaloneHealthState(String controllerId, List<String> agentIds, String accessToken, JocError jocError) {
         if (isUnHealthy(controllerId, agentIds)) {
             if (agentIds != null && agentIds.size() == 1) {
-                ProblemHelper.postMessageAsHintIfExist("The agents is not coupled; see 'Resources->Agents' view", accessToken,
+                ProblemHelper.postMessageAsHintIfExist("The agent is not coupled; see 'Resources->Agents' view", accessToken,
                         jocError, null);
             } else {
                 ProblemHelper.postMessageAsHintIfExist("Not all agents are coupled; see 'Resources->Agents' view", accessToken,
