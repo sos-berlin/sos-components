@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,13 +23,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentInventoryEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocError;
-import com.sos.joc.model.agent.AgentClusterState;
-import com.sos.joc.model.agent.AgentClusterStateText;
-import com.sos.joc.model.agent.AgentV;
-import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.DeployAgents;
-import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 

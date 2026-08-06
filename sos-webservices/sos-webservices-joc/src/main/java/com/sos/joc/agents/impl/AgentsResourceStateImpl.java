@@ -192,7 +192,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     }
     
     @SuppressWarnings("unchecked")
-    public static <T> T getAgentStates(ReadAgentsV agentsParam, Set<Folder> permittedFolders)
+    private static <T> T getAgentStates(ReadAgentsV agentsParam, Set<Folder> permittedFolders)
             throws ControllerConnectionResetException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSHibernateException {
         boolean withClusterLicense = AgentHelper.hasClusterLicense();
