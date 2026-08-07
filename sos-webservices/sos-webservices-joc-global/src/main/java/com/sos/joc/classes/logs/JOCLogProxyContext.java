@@ -25,6 +25,7 @@ public class JOCLogProxyContext {
     private JOCLogProxyContext() {
         //Config config = ConfigFactory.parseMap(Map.of("js7.log.index.recompress", "lz4")); //lz4/java, lz4, deflate
         //proxyContext = JProxyContext.start().join(); //JProxyContext.start(config).join();
+        logDir = logDir.toAbsolutePath();
     }
     
     public static JOCLogProxyContext getInstance() {
