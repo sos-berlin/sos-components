@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.bean.JOCMBeanServer;
 import com.sos.joc.classes.DBMoveIamConfiguration;
 import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JocCertificate;
@@ -56,12 +57,11 @@ public class JocServletContainer extends ServletContainer {
 
     @Override
     public void init() throws ServletException {
-        Globals.StartUpLOGGER.info("START");
-        LOGGER.debug("----> init on starting JOC");
         super.init();
         
         Globals.setSystemProperties();
         Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.StartUpLOGGER.info("START");
         cleanupOldLogFiles(0);
 
         Globals.readUnmodifiables();
