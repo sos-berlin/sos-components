@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
+import com.sos.joc.bean.JOCMBeanServer;
 import com.sos.joc.classes.DependencyUpdate;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCertificate;
@@ -89,6 +90,7 @@ public class JocServletContainer extends ServletContainer {
             if (withClusterService) {
                 JocClusterService.getInstance().start(StartupMode.automatic, true);
             }
+            JOCMBeanServer.register();
             DependencyUpdate.getInstance().updateThreaded();
         }, "servlet-init").start();
         
@@ -103,8 +105,10 @@ public class JocServletContainer extends ServletContainer {
             JocClusterService.getInstance().stop(StartupMode.automatic, true, true);
             JocClusterServiceLogger.clearAllLoggers();
         }
+        
         // 2 - close proxies
         QuickSearchStore.close(); //insert
+        JOCMBeanServer.unregister();
         Proxies.closeAll();
         DependencyUpdate.getInstance().close();
 

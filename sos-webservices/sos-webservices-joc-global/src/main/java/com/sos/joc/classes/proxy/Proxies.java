@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.bean.JOCMBeanServer;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
@@ -225,6 +226,9 @@ public class Proxies {
                         loadApi(newCredentials);
                     }
                     EventBus.getInstance().post(new ProxyStarted(account.name(), controllerId));
+                    if (account == ProxyUser.JOC) {
+                       JOCMBeanServer.update(controllerId); 
+                    }
                 } else {
                     if ((account == ProxyUser.JOC && restart(newCredentials, force)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
                         EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId));
@@ -467,7 +471,7 @@ public class Proxies {
         } catch (InterruptedException e) {
             //
         } catch (Exception e) {
-            LOGGER.warn("", e);
+            LOGGER.warn(e.toString());
         }
     }
     

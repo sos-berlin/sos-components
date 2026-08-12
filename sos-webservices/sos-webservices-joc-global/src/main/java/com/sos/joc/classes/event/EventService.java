@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
@@ -181,6 +182,7 @@ public class EventService {
     private AtomicBoolean burstFilter = new AtomicBoolean(true);
     private static final EnumSet<NotificationType> notificationFailureTypes = EnumSet.of(NotificationType.ERROR, NotificationType.WARNING);
     private static Predicate<ClusterNodeLostEventNotConfirmedProblem> isFailOver = e -> (e instanceof ClusterFailoverNotConfirmedProblem);
+    private AtomicBoolean hasOrderEvent = new AtomicBoolean(false);
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -832,7 +834,17 @@ public class EventService {
     }
 
     private EventSnapshot createWorkflowEventOfOrder(long eventId, WorkflowId workflowId) {
+        hasOrderEvent();
         return createWorkflowEvent(eventId, workflowId, "WorkflowStateChanged");
+    }
+    
+    private void hasOrderEvent() {
+        if (!hasOrderEvent.getAndSet(true)) {
+            Executors.newScheduledThreadPool(1).schedule(() -> {
+                EventBus.getInstance().post(new com.sos.joc.event.bean.order.OrderEvent(controllerId));
+                hasOrderEvent.set(false);
+            }, 5, TimeUnit.SECONDS);
+        }
     }
     
     private EventSnapshot createWorkflowPlanEvent(Event evt, long eventId, WorkflowId workflowId, JOrder jOrder) {

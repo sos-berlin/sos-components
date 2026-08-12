@@ -11,6 +11,10 @@ public class OrderEvent extends JOCEvent {
      */
     public OrderEvent() {
     }
+    
+    public OrderEvent(String controllerId) {
+        super("OrderEvent", controllerId, null);
+    }
 
     public OrderEvent(String key, String controllerId, String orderId) {
         super(key, controllerId, null);

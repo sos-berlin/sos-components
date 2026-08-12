@@ -11,13 +11,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
+import org.glassfish.grizzly.servlet.ServletRegistration;
+import org.glassfish.grizzly.servlet.WebappContext;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ServerProperties;
 
  
 public class Main {
     // Base URI the Grizzly HTTP server will listen on
-    private static final String BASE_URI = "http://localhost:8090/rest/";
+    private static final String BASE_URI = "http://localhost:8090/";
     // init parameters
     private static final Map<String, String> initParams = Collections.unmodifiableMap(new HashMap<String, String>(3) {
 
@@ -36,12 +38,30 @@ public class Main {
      * @return Grizzly HTTP server.
      * @throws IOException 
      */
-    public static HttpServer startServer() throws IOException {
+    public static HttpServer startServer() {
         
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
         
-        return GrizzlyWebContainerFactory.create(URI.create(BASE_URI), JocServletContainer.class, initParams);
+        //return GrizzlyWebContainerFactory.create(URI.create(BASE_URI), JocServletContainer.class, initParams);
+        
+        HttpServer httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI));
+        
+        // Initialize and register Jersey Servlet and Metrics
+        WebappContext context = new WebappContext("JS7 JOC", "");
+        
+        ServletRegistration jocApi = context.addServlet("Jersey REST Service", JocServletContainer.class);
+        jocApi.setInitParameters(initParams);
+        jocApi.addMapping("/rest/*");
+        jocApi.setLoadOnStartup(0);
+        
+//        ServletRegistration metrics = context.addServlet("Metrics Service", ProxyMetricsServlet.class);
+//        metrics.addMapping("/metrics");
+//        metrics.setLoadOnStartup(1);
+        
+        context.deploy(httpServer);
+        
+        return httpServer;
     }
 
     public static void setLogger() {

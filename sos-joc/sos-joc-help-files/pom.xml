@@ -43,7 +43,7 @@
                                 <artifactItem>
                                     <groupId>com.sos-berlin</groupId>
                                     <artifactId>joc-gui</artifactId>
-                                    <version>${project.version}</version>
+                                    <version>${joc.cockpit.version}</version>
                                     <type>war</type>
                                 </artifactItem>
                             </artifactItems>

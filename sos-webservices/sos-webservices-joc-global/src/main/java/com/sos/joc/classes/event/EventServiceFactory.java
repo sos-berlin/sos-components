@@ -123,7 +123,11 @@ public class EventServiceFactory {
         return EventServiceFactory.getInstance()._getEvents(controllerId, evtIdIsEmpty, eventId, session, user);
     }
     
-    public EventService getEventService(String controllerId) {
+    public static void startEventService(String controllerId) {
+        EventServiceFactory.getInstance().getEventService(controllerId);
+    }
+    
+    private EventService getEventService(String controllerId) {
         synchronized (eventServices) {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
