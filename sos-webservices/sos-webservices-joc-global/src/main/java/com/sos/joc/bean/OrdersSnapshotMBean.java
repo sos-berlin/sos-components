@@ -2,14 +2,14 @@ package com.sos.joc.bean;
 
 public interface OrdersSnapshotMBean {
 
-    public int getBlockedOrders();
-    public int getPendingOrders();
-    public int getScheduledOrdersForNext24Hours();
-    public int getInProgessOrders();
-    public int getRunningOrders();
-    public int getFailedOrders();
-    public int getSuspendedOrders();
-    public int getWaitingOrders();
-    public int getTerminatedOrders();
-    public int getPromptingOrders();
+    public int getblocked();
+    public int getpending();
+    public int getscheduled_for_next_24_hours();
+    public int getin_progess();
+    public int getrunning();
+    public int getfailed();
+    public int getsuspended();
+    public int getwaiting();
+    public int getterminated();
+    public int getprompting();
 }

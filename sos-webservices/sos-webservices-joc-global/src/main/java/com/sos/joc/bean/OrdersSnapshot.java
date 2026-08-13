@@ -103,7 +103,8 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
 
     @Override
     public String objectName() {
-        return getClass().getSimpleName();
+        //return getClass().getSimpleName();
+        return "orders";
     }
     
     private static OrdersSummary init() {
@@ -201,52 +202,52 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
     }
 
     @Override
-    public int getBlockedOrders() {
+    public int getblocked() {
         return summary.getBlocked();
     }
 
     @Override
-    public int getPendingOrders() {
+    public int getpending() {
         return summary.getPending();
     }
     
     @Override
-    public int getInProgessOrders() {
+    public int getin_progess() {
         return summary.getInProgress();
     }
 
     @Override
-    public int getScheduledOrdersForNext24Hours() {
+    public int getscheduled_for_next_24_hours() {
         return summary.getScheduled();
     }
 
     @Override
-    public int getRunningOrders() {
+    public int getrunning() {
         return summary.getRunning();
     }
 
     @Override
-    public int getFailedOrders() {
+    public int getfailed() {
         return summary.getFailed();
     }
 
     @Override
-    public int getWaitingOrders() {
-        return summary.getWaiting();
-    }
-    
-    @Override
-    public int getSuspendedOrders() {
+    public int getsuspended() {
         return summary.getSuspended();
     }
 
     @Override
-    public int getTerminatedOrders() {
+    public int getwaiting() {
+        return summary.getWaiting();
+    }
+
+    @Override
+    public int getterminated() {
         return summary.getTerminated();
     }
 
     @Override
-    public int getPromptingOrders() {
+    public int getprompting() {
         return summary.getPrompting();
     }
 

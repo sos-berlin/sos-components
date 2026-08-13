@@ -71,7 +71,8 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
 
     @Override
     public String objectName() {
-        return getClass().getSimpleName();
+        //return getClass().getSimpleName();
+        return "history";
     }
     
     private HistoryFilter initOrderHistoryFilter() {
@@ -122,22 +123,22 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
     }
 
     @Override
-    public long getSuccessfulOrdersOfLast24Hours() {
+    public long getsuccessful_orders_of_last_24_hours() {
         return successfulOrders.get();
     }
 
     @Override
-    public long getFailedOrdersOfLast24Hours() {
+    public long getfailed_orders_of_last_24_hours() {
         return failedOrders.get();
     }
 
     @Override
-    public long getSuccessfulJobsOfLast24Hours() {
+    public long getsuccessful_jobs_of_last_24_hours() {
         return successfulJobs.get();
     }
 
     @Override
-    public long getFailedJobsOfLast24Hours() {
+    public long getfailed_jobs_of_last_24_hours() {
         return failedJobs.get();
     }
 

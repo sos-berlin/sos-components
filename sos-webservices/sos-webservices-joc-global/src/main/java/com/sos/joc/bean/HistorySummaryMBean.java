@@ -2,8 +2,8 @@ package com.sos.joc.bean;
 
 public interface HistorySummaryMBean {
 
-    public long getSuccessfulOrdersOfLast24Hours();
-    public long getFailedOrdersOfLast24Hours();
-    public long getSuccessfulJobsOfLast24Hours();
-    public long getFailedJobsOfLast24Hours();
+    public long getsuccessful_orders_of_last_24_hours();
+    public long getfailed_orders_of_last_24_hours();
+    public long getsuccessful_jobs_of_last_24_hours();
+    public long getfailed_jobs_of_last_24_hours();
 }
