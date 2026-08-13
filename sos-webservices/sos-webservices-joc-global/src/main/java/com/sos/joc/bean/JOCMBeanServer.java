@@ -23,7 +23,7 @@ public class JOCMBeanServer {
 
     private static JOCMBeanServer instance;
     private static final String namespace = "joc:type=";
-    private static final List<Class<? extends IJocMBean>> mBeansControllerSpecific = Arrays.asList(OrdersSnapshot.class);
+    private static final List<Class<? extends IJocMBean>> mBeansControllerSpecific = Arrays.asList(OrdersSnapshot.class, HistorySummary.class);
     private static final List<Class<? extends IJocMBean>> mBeans = Collections.emptyList();
     private static final MBeanServer beanServer = ManagementFactory.getPlatformMBeanServer();
     private Set<ObjectName> registered = new HashSet<>();

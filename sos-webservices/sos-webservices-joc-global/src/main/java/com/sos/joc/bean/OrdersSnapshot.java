@@ -68,7 +68,7 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
                 try {
                     setSnapshot(controllerState);
                 } catch (Exception e) {
-                    LOGGER.warn("Error at updating OrdersSnapshot metrics: ", e);
+                    LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
                 }
             }
         }
@@ -95,7 +95,7 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
                     EventServiceFactory.startEventService(controllerId);
                     initialized = true;
                 } catch (Exception e) {
-                    LOGGER.warn("Error at updating OrdersSnapshot metrics: ", e);
+                    LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
                 }
             }
         }
@@ -209,10 +209,15 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
     public int getPendingOrders() {
         return summary.getPending();
     }
-
+    
     @Override
     public int getInProgessOrders() {
         return summary.getInProgress();
+    }
+
+    @Override
+    public int getScheduledOrdersForNext24Hours() {
+        return summary.getScheduled();
     }
 
     @Override
