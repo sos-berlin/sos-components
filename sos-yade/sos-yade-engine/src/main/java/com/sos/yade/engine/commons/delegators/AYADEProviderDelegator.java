@@ -6,6 +6,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
 import com.sos.commons.vfs.exceptions.ProviderException;
+import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
@@ -27,10 +28,9 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isAzure;
     private final boolean isWindows;
 
-    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) throws YADEEngineInitializationException {
     private boolean useJumpInitialSourceTargetConnectionErrorCode = false;
 
-    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) {
+    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) throws YADEEngineInitializationException {
         this.provider = provider;
         this.args = args;
         this.source = source;
@@ -112,6 +112,8 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return isWindows;
     }
 
+    public YADEReturnCode getConnectionErrorReturnCode() {
+        if (isJumpHost()) {
             return YADEReturnCode.JUMP_CONNECTION_ERROR;
         }
         return isSource() ? YADEReturnCode.SOURCE_CONNECTION_ERROR : YADEReturnCode.TARGET_CONNECTION_ERROR;
@@ -123,6 +125,8 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     public boolean useJumpInitialSourceTargetConnectionErrorCode() {
         return useJumpInitialSourceTargetConnectionErrorCode;
+    }
+
     private boolean isHTTPProvider() {
         switch (getArgs().getProvider().getProtocol().getValue()) {
         case AZURE_BLOB_STORAGE:

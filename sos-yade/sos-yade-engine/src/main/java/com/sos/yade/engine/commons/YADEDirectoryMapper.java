@@ -16,6 +16,7 @@ import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryCreationException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryNotFoundException;
@@ -66,32 +67,32 @@ public class YADEDirectoryMapper {
             Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
             if (targetDirs.size() > 0) {
                 if (config.getTarget().isCreateDirectoriesEnabled()) {
-                try {
-                    if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
-                        if (isDebugEnabled) {
-                            logger.debug("[prepareTargetDirectories][targetDirs=%s]created", targetDirs);
+                    try {
+                        if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
+                            if (isDebugEnabled) {
+                                logger.debug("[prepareTargetDirectories][targetDirs=%s]created", targetDirs);
+                            }
+                        } else {
+                            if (isDebugEnabled) {
+                                logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]already exist", targetDirs);
+                            }
                         }
-                    } else {
-                        if (isDebugEnabled) {
-                            logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]already exist", targetDirs);
-                        }
+                    } catch (ProviderDirectoryCreationException e) {
+                        throw new YADEEngineTargetDirectoryCreationException(e);
                     }
-                } catch (ProviderDirectoryCreationException e) {
-                    throw new YADEEngineTargetDirectoryCreationException(e);
-                }
                 } else {
                     if (targetDirs.size() == 1) {
                         String targetDir = targetDirs.iterator().next();
-                    try {
-                        if (!targetDelegator.getProvider().directoryExists(targetDir)) {
-                            throw new YADEEngineTargetDirectoryNotFoundException("[" + targetDelegator.getLabel() + "][Directory=" + targetDir
-                                    + "]directory does not exist and automatic creation is disabled (" + YADEArgumentsHelper.toStringAsOppositeValue(
-                                            targetDelegator.getArgs().getCreateDirectories()) + ")");
-                        }
-                    } catch (YADEEngineTargetDirectoryNotFoundException e) {
-                        throw e;
-                    } catch (ProviderException e) {
-                        throw new YADEEngineTargetDirectoryException(e);
+                        try {
+                            if (!targetDelegator.getProvider().directoryExists(targetDir)) {
+                                throw new YADEEngineTargetDirectoryNotFoundException("[" + targetDelegator.getLabel() + "][Directory=" + targetDir
+                                        + "]directory does not exist and automatic creation is disabled (" + YADEArgumentsHelper
+                                                .toStringAsOppositeValue(targetDelegator.getArgs().getCreateDirectories()) + ")");
+                            }
+                        } catch (YADEEngineTargetDirectoryNotFoundException e) {
+                            throw e;
+                        } catch (ProviderException e) {
+                            throw new YADEEngineTargetDirectoryException(e);
                         }
                     }
                     if (isDebugEnabled) {
@@ -105,9 +106,10 @@ public class YADEDirectoryMapper {
             }
         } catch (YADEEngineException e) {
             throw e;
-        } catch (ProviderException e) {
-            throw new YADEEngineException(e, targetDelegator);
         }
+        // } catch (ProviderException e) {
+        // throw new YADEEngineTargetDirectoryException(e, targetDelegator);
+        // }
     }
 
     public synchronized void tryCreateSourceDirectory(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, YADEProviderFile sourceFile,
@@ -387,18 +389,18 @@ public class YADEDirectoryMapper {
         try {
             if (!target.contains(targetDirectory)) {
                 if (createDirectory) {
-                try {
-                    if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
+                    try {
+                        if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
+                            }
+                        } else {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("[tryCreateTargetDirectory][directory=%s][skip]already exists", targetDirectory);
+                            }
                         }
-                    } else {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("[tryCreateTargetDirectory][directory=%s][skip]already exists", targetDirectory);
-                        }
-                    }
-                } catch (ProviderDirectoryCreationException e) {
-                    throw new YADEEngineTargetDirectoryCreationException(e);
+                    } catch (ProviderDirectoryCreationException e) {
+                        throw new YADEEngineTargetDirectoryCreationException(e);
                     }
                 } else {
                     if (logger.isDebugEnabled()) {
@@ -408,7 +410,7 @@ public class YADEDirectoryMapper {
                 target.add(targetDirectory);
             }
         } catch (Exception e) {
-            throw new YADEEngineException(e, targetDelegator);
+            // throw new YADEEngineTargetDirectoryCreationException(e, targetDelegator);
         }
     }
 
