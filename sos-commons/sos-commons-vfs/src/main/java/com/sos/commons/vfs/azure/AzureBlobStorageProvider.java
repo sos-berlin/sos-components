@@ -4,6 +4,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
@@ -61,6 +63,8 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
     private volatile boolean connectivityFaultSimulationActive;
 
     private String containerName;
+    /** see {@link AzureBlobStorageClient#isHnsEnabled()} */
+    private boolean hnsEnabled;
 
     public AzureBlobStorageProvider(ISOSLogger logger, AzureBlobStorageProviderArguments args) throws ProviderInitializationException {
         super(logger, args, args == null ? null : args.getContainerName(), args == null ? null : args.getAccountKey(), args == null ? null : args
@@ -87,17 +91,21 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        if (SOSString.isEmpty(path)) {
-            return path;
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            if (SOSString.isEmpty(path)) {
+                return path;
+            }
+            String containerName = getContainerName(path);
+            String blobPath = getBlobPath(path, containerName);
+            String p = containerName;
+            if (!SOSString.isEmpty(blobPath)) {
+                p = p + getPathSeparator() + blobPath;
+            }
+            return p;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        String containerName = getContainerName(path);
-        String blobPath = getBlobPath(path, containerName);
-        String p = containerName;
-        if (!SOSString.isEmpty(blobPath)) {
-            p = p + getPathSeparator() + blobPath;
-        }
-        return p;
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -167,7 +175,10 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug("%s[connected][container(s)]%s", getLogPrefix(), AzureBlobStorageClient.formatExecutionResult(result));
                 }
-                getLogger().info(getConnectedMsg(client.getServerInfo(result.response())));
+
+                setHnsEnabled();
+
+                getLogger().info(getConnectedMsg(getConnectedInfo(result.response())));
                 debugServiceProperties();
             } catch (ProviderConnectException e) {
                 throwConnectException(e);
@@ -286,9 +297,33 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
         }
     }
 
+    /** Overrides {@link IProvider#directoryExists(String)} */
+    @Override
+    public boolean directoryExists(String path) throws ProviderException {
+        validateArgument("directoryExists", path, "path");
+
+        try {
+            if (hnsEnabled) { // TODO check it
+                return exists(path);
+            }
+
+            String containerName = getContainerName(path);
+            String blobPath = getBlobFilePath(path, containerName);
+            return AzureBlobStorageProviderUtils.directoryExistsIfHnsDisabled(this, requireAzureClient(), containerName, blobPath);
+        } catch (IOException e) {
+            throwProviderConnectException(path, e);
+            return false;
+        } catch (ProviderException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
+    }
+
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
+        // TODO check with HNS=true
         return true;
     }
 
@@ -396,7 +431,7 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             String containerName = getContainerName(path);
             String blobPath = getBlobFilePath(path, containerName);
 
-            return createProviderFile(AzureBlobStorageProviderUtils.getResource(this, containerName, blobPath, false, false));
+            return createProviderFile(AzureBlobStorageProviderUtils.getResource(this, containerName, blobPath, false, false, 0));
         } catch (IOException e) {
             throwProviderConnectException(path, e);
             return null;
@@ -581,6 +616,28 @@ public class AzureBlobStorageProvider extends AProvider<AzureBlobStorageProvider
             return null;
         }
         return createProviderFile(resource.getFullPath(), resource.getSize(), resource.getLastModifiedInMillis());
+    }
+
+    public boolean isHnsEnabled() {
+        return hnsEnabled;
+    }
+
+    private String getConnectedInfo(HttpResponse<String> response) {
+        String serverInfo = client.getServerInfo(response);
+        String accountInfo = hnsEnabled ? "Hierarchical Namespace (HNS) enabled" : "Hierarchical Namespace (HNS) disabled";
+        if (SOSString.isEmpty(serverInfo)) {
+            return accountInfo;
+        }
+
+        return serverInfo + ", " + accountInfo;
+    }
+
+    private void setHnsEnabled() {
+        try {
+            hnsEnabled = requireAzureClient().isHnsEnabled();
+        } catch (Exception e) {
+            getLogger().warn("[setHnsEnabled]" + e.toString());
+        }
     }
 
     // without logging
