@@ -271,9 +271,9 @@ public class YADECommandExecutor {
                         YADEEngineDirectoryException de = null;
                         String demsg = String.format("[%s][%s][%s]%s", delegator.getLabel(), argumentName, command, delegator.getDirectory());
                         if (delegator.isSource()) {
-                            de = new YADEEngineSourceDirectoryException(demsg, e);
+                            de = new YADEEngineSourceDirectoryException(demsg, e, delegator);
                         } else {
-                            de = new YADEEngineTargetDirectoryException(demsg, e);
+                            de = new YADEEngineTargetDirectoryException(demsg, e, delegator);
                         }
                         throw new YADEEngineCommandException(de);
                     }

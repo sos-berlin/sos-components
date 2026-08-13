@@ -14,15 +14,21 @@ public enum YADEReturnCode {
 
     // Source files related: 30-39
     // 30+ - specialized source file errors
+    // 35+ - specialized source directory errors
+    // 38 - generic source directory error
     // 39 - generic source files error
     // -- read/write/delete/access denied etc. and fallback for all other unqualified source file related errors
-    SOURCE_NO_FILES_FOUND_ERROR(30), SOURCE_FILES_EXPECTED_RESULTSET_ERROR(31), SOURCE_FILES_ZERO_BYTES_ERROR(32), SOURCE_FILES_ERROR(39),
+    SOURCE_NO_FILES_FOUND_ERROR(30), SOURCE_FILES_EXPECTED_RESULTSET_ERROR(31), SOURCE_FILES_ZERO_BYTES_ERROR(32), SOURCE_DIRECTORY_NOT_FOUND(
+            35), SOURCE_DIRECTORY_ERROR(38), SOURCE_FILES_ERROR(39),
 
     // Target related : 40-49
     // 40+ - specialized target file errors
+    // 45+ - specialized target directory errors
+    // 48 - generic target directory error
     // 49 - generic target files error
     // -- read/write/delete/access denied etc. during transfer and fallback for all other unqualified target file related errors
-    TARGET_FILESIZE_MISMATCH_ERROR(40), TARGET_FILE_CHECKSUM_ERROR(41), TARGET_FILE_MAX_UPLOAD_FILESIZE_ERROR(42), TARGET_FILES_ERROR(49),
+    TARGET_FILESIZE_MISMATCH_ERROR(40), TARGET_FILE_CHECKSUM_ERROR(41), TARGET_FILE_MAX_UPLOAD_FILESIZE_ERROR(42), TARGET_DIRECTORY_NOT_FOUND(
+            45), TARGET_DIRECTORY_CREATION_ERROR(46), TARGET_DIRECTORY_ERROR(48), TARGET_FILES_ERROR(49),
 
     // Configuration related: 80-89
     // 80 - settings file not found

@@ -145,8 +145,8 @@ public class YADESourceFilesSelector {
         }
         try {
             builder.maxFiles(sourceArgs.getMaxFiles().getValue());
-            builder.minFileSize(sourceArgs.getMinFileSize().getValue() == null ? null : sourceArgs.getMinFileSize().getValue() + "");
-            builder.maxFileSize(sourceArgs.getMaxFileSize().getValue() == null ? null : sourceArgs.getMaxFileSize().getValue() + "");
+            builder.minFileAge(sourceArgs.getMinFileAge().getValue());
+            builder.maxFileAge(sourceArgs.getMaxFileAge().getValue());
             builder.minFileSize(sourceArgs.getMinFileSize().getValue());
             builder.maxFileSize(sourceArgs.getMaxFileSize().getValue());
         } catch (Exception e) {

@@ -28,6 +28,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isAzure;
     private final boolean isWindows;
 
+    /** see {@link YADEReturnCode#JUMP_INITIAL_SOURCE_TARGET_CONNECTION_ERROR} */
     private boolean useJumpInitialSourceTargetConnectionErrorCode = false;
 
     public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) throws YADEEngineInitializationException {
