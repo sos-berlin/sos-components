@@ -78,13 +78,17 @@ public abstract class SSHProvider<R extends AProviderReusableResource<C>, C> ext
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(path)) {
-            String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
-            return toPathStyle(n);
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            if (SOSPathUtils.isAbsoluteWindowsOpenSSHPath(path)) {
+                String n = getPathSeparator() + Path.of(path.substring(1)).normalize().toString();
+                return toPathStyle(n);
+            }
+            // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
+            return toPathStyle(Path.of(path).normalize().toString());
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
-        return toPathStyle(Path.of(path).normalize().toString());
     }
 
     public SSHServerInfo getServerInfo() {

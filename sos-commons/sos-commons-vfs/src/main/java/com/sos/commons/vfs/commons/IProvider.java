@@ -13,6 +13,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 
 public interface IProvider {
@@ -33,7 +34,7 @@ public interface IProvider {
      * 
      * @param path the path to normalize
      * @return the normalized absolute path */
-    public String normalizePath(String path);
+    public String normalizePath(String path) throws ProviderException;
 
     /** Converts the given path to the provider-specific path style by replacing path separators.<br/>
      * For example, it replaces backslashes with forward slashes or vice versa depending on the provider's conventions.
@@ -79,6 +80,9 @@ public interface IProvider {
     /** Tests whether a file/directory exists. **/
     public boolean exists(String path) throws ProviderException;
 
+    /** Tests whether a directory exists. **/
+    boolean directoryExists(String path) throws ProviderException;
+
     /** Creates a directory by creating all nonexistent parent directories first.<br/>
      * No exception is thrown if the directory could not be created because it already exists.
      * 
@@ -86,7 +90,7 @@ public interface IProvider {
      * @return {@code true} created<br/>
      *         {@code false} already exist
      * @throws ProviderException */
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException;
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException;
 
     /** Creates all nonexistent directories from the given collection of paths.<br/>
      * No exception is thrown if a directory already exists.
@@ -95,7 +99,7 @@ public interface IProvider {
      * @return {@code true} if at least one directory was created<br/>
      *         {@code false} if all directories already existed
      * @throws ProviderException */
-    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws ProviderException;
+    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws ProviderDirectoryCreationException;
 
     /** Deletes a file/directory if it exists.<br/>
      * If the path is a directory - deletes empty and not empty directories.

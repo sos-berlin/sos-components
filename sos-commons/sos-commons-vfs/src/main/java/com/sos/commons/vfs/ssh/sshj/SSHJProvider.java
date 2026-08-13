@@ -35,6 +35,7 @@ import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.ssh.SSHProvider;
@@ -190,10 +191,10 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validateArgument("createDirectoriesIfNotExists", path, "path");
-
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
         try {
+            validateArgument("createDirectoriesIfNotExists", path, "path");
+
             return requireResourcePool().withResource(sftp -> {
                 if (SSHJProviderUtils.exists(sftp, path)) {
                     return false;
@@ -204,12 +205,12 @@ public class SSHJProvider extends SSHProvider<SSHJProviderReusableResource, SFTP
                 }
                 return true;
             });
-        } catch (ProviderException e) {
+        } catch (ProviderDirectoryCreationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throwDirectoryCreationException(path, e);
+            return false;
         }
-
     }
 
     // TODO test if not exists ....

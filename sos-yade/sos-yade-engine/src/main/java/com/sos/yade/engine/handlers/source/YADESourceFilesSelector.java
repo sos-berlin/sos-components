@@ -17,6 +17,8 @@ import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryNotFoundException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
@@ -26,18 +28,20 @@ import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.exceptions.YADEEngineException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceDirectoryException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceDirectoryNotFoundException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceFilesSelectorException;
 import com.sos.yade.engine.exceptions.YADEEngineSourceZeroByteFilesException;
 
 public class YADESourceFilesSelector {
 
     public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension)
-            throws YADEEngineSourceFilesSelectorException {
+            throws YADEEngineException {
         return selectFiles(logger, sourceDelegator, excludedFileExtension, false);
     }
 
     public static List<ProviderFile> selectFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String excludedFileExtension,
-            boolean polling) throws YADEEngineSourceFilesSelectorException {
+            boolean polling) throws YADEEngineException {
         if (sourceDelegator.getArgs().isSingleFilesSelection()) {
             return selectSingleFiles(logger, sourceDelegator, createProviderFileSelection(sourceDelegator, polling, true, null));
         } else {
@@ -101,14 +105,17 @@ public class YADESourceFilesSelector {
     }
 
     private static List<ProviderFile> selectFiles(YADESourceProviderDelegator sourceDelegator, ProviderFileSelection selection)
-            throws YADEEngineSourceFilesSelectorException {
+            throws YADEEngineException {
         // TODO HTTP Provider
         // if(sourceProvider instanceof HTTPProvider) {
         // throw new SOSYADEEngineSourceFilesSelectorException("a file spec selection is not supported with http(s) protocol");
         // }
         try {
             return sourceDelegator.getProvider().selectFiles(selection);
-
+        } catch (ProviderDirectoryNotFoundException e) {
+            throw new YADEEngineSourceDirectoryNotFoundException(e);
+        } catch (ProviderDirectoryException e) {
+            throw new YADEEngineSourceDirectoryException(e);
         } catch (ProviderException e) {
             YADEReturnCode returnCode = getReturnCode(sourceDelegator, e);
             throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause(), returnCode, sourceDelegator);
@@ -138,8 +145,8 @@ public class YADESourceFilesSelector {
         }
         try {
             builder.maxFiles(sourceArgs.getMaxFiles().getValue());
-            builder.minFileAge(sourceArgs.getMinFileAge().getValue());
-            builder.maxFileAge(sourceArgs.getMaxFileAge().getValue());
+            builder.minFileSize(sourceArgs.getMinFileSize().getValue() == null ? null : sourceArgs.getMinFileSize().getValue() + "");
+            builder.maxFileSize(sourceArgs.getMaxFileSize().getValue() == null ? null : sourceArgs.getMaxFileSize().getValue() + "");
             builder.minFileSize(sourceArgs.getMinFileSize().getValue());
             builder.maxFileSize(sourceArgs.getMaxFileSize().getValue());
         } catch (Exception e) {

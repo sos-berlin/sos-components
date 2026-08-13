@@ -18,6 +18,9 @@ import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
+import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderException;
 
 public class SMBJProviderUtils {
 
@@ -26,7 +29,10 @@ public class SMBJProviderUtils {
         try {
             info = share.getFileInformation(smbPath);
         } catch (SMBApiException e) {
-            return false;// not exists
+            if (isNotFoundException(e)) {
+                return false;
+            }
+            throw e;
         }
         if (SMBJProviderUtils.isDirectory(info)) {
             share.rmdir(smbPath, true);
@@ -149,8 +155,18 @@ public class SMBJProviderUtils {
     }
 
     protected static int selectFiles(SMBJProvider provider, DiskShare share, ProviderFileSelection selection, String directoryPath,
-            List<ProviderFile> result, int counterAdded) throws Exception {
-        List<FileIdBothDirectoryInformation> infos = share.list(directoryPath);
+            List<ProviderFile> result, int level, int counterAdded) throws Exception {
+        List<FileIdBothDirectoryInformation> infos = null;
+
+        try {
+            infos = share.list(directoryPath);
+        } catch (SMBApiException e) {
+            if (isNotFoundException(e)) {
+                provider.throwDirectoryNotFoundException(directoryPath, e);
+            }
+            throw e;
+        }
+
         for (FileIdBothDirectoryInformation info : infos) {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
@@ -164,7 +180,7 @@ public class SMBJProviderUtils {
             if (isDirectory(info)) {
                 if (selection.getConfig().isRecursive()) {
                     if (selection.checkDirectory(fullPath)) {
-                        counterAdded = selectFiles(provider, share, selection, fullPath, result, counterAdded);
+                        counterAdded = selectFiles(provider, share, selection, fullPath, result, level++, counterAdded);
                     }
                 }
             } else {
@@ -193,6 +209,38 @@ public class SMBJProviderUtils {
 
     protected static boolean isDirectory(FileAllInformation info) {
         return info.getStandardInformation().isDirectory();
+    }
+
+    protected static boolean isNotFoundException(SMBApiException e) {
+        switch (e.getStatus()) {
+        case STATUS_NOT_FOUND:
+        case STATUS_NO_SUCH_FILE:
+        case STATUS_OBJECT_NAME_NOT_FOUND:
+        case STATUS_OBJECT_PATH_NOT_FOUND:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    protected static void onConnectShareException(SMBApiException e) throws ProviderException {
+        switch (e.getStatus()) {
+        case STATUS_ACCESS_DENIED:
+        case STATUS_ACCOUNT_DISABLED:
+        case STATUS_LOGON_FAILURE:
+        case STATUS_LOGON_TYPE_NOT_GRANTED:
+        case STATUS_PASSWORD_EXPIRED:
+            throw new ProviderAuthenticationException(e);
+        case STATUS_CONNECTION_DISCONNECTED:
+        case STATUS_CONNECTION_RESET:
+        case STATUS_NETWORK_SESSION_EXPIRED:
+        case STATUS_IO_TIMEOUT:
+        case STATUS_BAD_NETWORK_NAME:
+        case STATUS_BAD_NETWORK_PATH:
+            throw new ProviderConnectException(e);
+        default:
+            throw new ProviderException(e);
+        }
     }
 
 }

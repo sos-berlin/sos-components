@@ -5,13 +5,14 @@ import com.sos.commons.vfs.commons.AProviderContext;
 import com.sos.yade.engine.commons.YADEDirectoryMapper;
 import com.sos.yade.engine.commons.YADEProviderFile;
 import com.sos.yade.engine.commons.arguments.YADESourceArguments;
+import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 
 /** @apiNote all operations */
 public class YADESourceProviderDelegator extends AYADEProviderDelegator {
 
     private final YADEDirectoryMapper directoryMapper;
 
-    public YADESourceProviderDelegator(AProvider<?, ?> provider, YADESourceArguments args) {
+    public YADESourceProviderDelegator(AProvider<?, ?> provider, YADESourceArguments args) throws YADEEngineInitializationException {
         super(provider, args, true);
 
         // set YADE specific ProviderContext

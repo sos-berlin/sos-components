@@ -20,7 +20,10 @@ import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineCommandException;
 import com.sos.yade.engine.exceptions.YADEEngineConnectionException;
+import com.sos.yade.engine.exceptions.YADEEngineDirectoryException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostCommandException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceDirectoryException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryException;
 
 public class YADECommandExecutor {
 
@@ -265,8 +268,14 @@ public class YADECommandExecutor {
                             logger.info("[%s][%s][%s][skip]Directory does not exist", delegator.getLabel(), argumentName, command);
                         }
                     } catch (Exception e) {
-                        throw new YADEEngineCommandException(String.format("[%s][%s][%s]%s", delegator.getLabel(), argumentName, command, delegator
-                                .getDirectory()), e, delegator);
+                        YADEEngineDirectoryException de = null;
+                        String demsg = String.format("[%s][%s][%s]%s", delegator.getLabel(), argumentName, command, delegator.getDirectory());
+                        if (delegator.isSource()) {
+                            de = new YADEEngineSourceDirectoryException(demsg, e);
+                        } else {
+                            de = new YADEEngineTargetDirectoryException(demsg, e);
+                        }
+                        throw new YADEEngineCommandException(de);
                     }
                 }
             } else {

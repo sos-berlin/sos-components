@@ -3,7 +3,7 @@ package com.sos.yade.engine.commons.helpers;
 import java.util.concurrent.Callable;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.vfs.commons.AProviderArguments;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.yade.engine.commons.YADEReturnCode;
 import com.sos.yade.engine.commons.arguments.YADEArguments;

@@ -34,6 +34,9 @@ import com.sos.commons.vfs.commons.file.ProviderFileBuilder;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelectionConfig;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryNotFoundException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 
@@ -145,9 +148,15 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         }
     }
 
+    /** Overrides {@link IProvider#directoryExists(String)} */
+    @Override
+    public boolean directoryExists(String path) throws ProviderException {
+        return exists(path);
+    }
+
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(Collection)} */
     @Override
-    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws ProviderException {
+    public boolean createDirectoriesIfNotExists(Collection<String> paths) throws ProviderDirectoryCreationException {
         if (SOSCollection.isEmpty(paths)) {
             return false;
         }
@@ -530,8 +539,28 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         }
     }
 
-    public String getDirectoryNotFoundMsg(String directory) {
-        return getLogPrefix() + "[Directory]" + directory;
+    public void throwDirectoryException(String directory, String msg) throws ProviderDirectoryException {
+        throw new ProviderDirectoryException(getLogPrefix() + "[Directory=" + directory + "]" + msg);
+    }
+
+    public void throwDirectoryNotFoundException(String directory) throws ProviderDirectoryNotFoundException {
+        throw new ProviderDirectoryNotFoundException(getLogPrefix() + "[Directory=" + directory + "]does not exist");
+    }
+
+    public void throwDirectoryNotFoundException(String directory, String msg) throws ProviderDirectoryNotFoundException {
+        throw new ProviderDirectoryNotFoundException(getLogPrefix() + "[Directory=" + directory + "]" + msg);
+    }
+
+    public void throwDirectoryNotFoundException(String directory, Throwable e) throws ProviderDirectoryNotFoundException {
+        throw new ProviderDirectoryNotFoundException(getLogPrefix() + "Directory=" + directory, e);
+    }
+
+    public void throwDirectoryCreationException(String directory, String msg) throws ProviderDirectoryCreationException {
+        throw new ProviderDirectoryCreationException(getLogPrefix() + "[Directory=" + directory + "]" + msg);
+    }
+
+    public void throwDirectoryCreationException(String directory, Throwable e) throws ProviderDirectoryCreationException {
+        throw new ProviderDirectoryCreationException(getLogPrefix() + "Directory=" + directory, e);
     }
 
     public static String millis2string(int val) {

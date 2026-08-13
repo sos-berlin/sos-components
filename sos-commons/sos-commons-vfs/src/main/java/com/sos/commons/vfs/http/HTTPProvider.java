@@ -11,7 +11,6 @@ import java.net.URI;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -38,8 +37,10 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
+import com.sos.commons.vfs.exceptions.ProviderUnsupportedOperationException;
 import com.sos.commons.vfs.http.commons.HTTPProviderArguments;
 import com.sos.commons.vfs.webdav.WebDAVProvider;
 
@@ -81,8 +82,12 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        return HttpUtils.normalizePath(getArguments().getBaseURI(), path);
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            return HttpUtils.normalizePath(getArguments().getBaseURI(), path);
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -169,8 +174,8 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
     /** Overrides {@link IProvider#selectFiles(ProviderFileSelection)} */
     @Override
     public List<ProviderFile> selectFiles(ProviderFileSelection selection) throws ProviderException {
-        throw new ProviderException(getPathOperationPrefix(SOSString.toString(selection, Collections.singletonList("result"), true))
-                + "not supported via " + getArguments().getProtocol().getValue());
+        throw new ProviderUnsupportedOperationException(getLogPrefix() + "[Directory=" + selection.getConfig().getDirectory()
+                + "]selecting specific files from an " + getArguments().getProtocol().getValue() + " directory is not supported");
     }
 
     /** Overrides {@link IProvider#exists(String)} */
@@ -208,12 +213,17 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        if (exists(SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(path))) {
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
+        try {
+            if (exists(SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(path))) {
+                return false;
+            }
+        } catch (ProviderException e) {
+            throwDirectoryCreationException(path, e);
             return false;
         }
-        throw new ProviderException(getPathOperationPrefix(path) + "[does not exist]a directory cannot be created via " + getArguments().getProtocol()
-                .getValue());
+        throwDirectoryCreationException(path, "[does not exist]a directory cannot be created via " + getArguments().getProtocol().getValue());
+        return false;
     }
 
     /** Overrides {@link IProvider#deleteIfExists(String)} */
@@ -629,7 +639,11 @@ public class HTTPProvider extends AProvider<HTTPProviderArguments, Object> {
     }
 
     public String getPathOperationPrefix(String path, URI uri) {
-        return super.getPathOperationPrefix(uri == null ? path : uri.toString());
+        return super.getPathOperationPrefix(getUriOrPath(path, uri));
+    }
+
+    public String getUriOrPath(String path, URI uri) {
+        return uri == null ? path : uri.toString();
     }
 
     private HttpExecutionResult<Void> connect(BaseHttpClient client, URI uri) throws Exception {
