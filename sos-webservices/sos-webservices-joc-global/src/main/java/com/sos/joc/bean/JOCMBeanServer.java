@@ -1,8 +1,6 @@
 package com.sos.joc.bean;
 
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -13,7 +11,6 @@ import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
@@ -43,11 +40,7 @@ public class JOCMBeanServer {
     }
 
     public static void register() {
-        try {
-            JOCMBeanServer.getInstance()._register();
-        } catch (Exception e) {
-            LOGGER.error("Error at register JOC metrics: ", e);
-        }
+        JOCMBeanServer.getInstance()._register();
     }
     
     public static void update(String controllerId) {
@@ -61,60 +54,69 @@ public class JOCMBeanServer {
             LOGGER.warn("Error at unregister JOC metrics: " + e.toString());
         }
     }
-
-    public static void registerOrThrow() throws MalformedObjectNameException, InstanceAlreadyExistsException, MBeanRegistrationException,
-            NotCompliantMBeanException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-            NoSuchMethodException, SecurityException {
-        JOCMBeanServer.getInstance()._register();
-    }
-
-    public static void unregisterOrThrow() throws MBeanRegistrationException, MalformedObjectNameException {
-        JOCMBeanServer.getInstance()._unregister();
-    }
     
     private void _update(String controllerId) {
         for (Class<? extends IJocMBean> clazz : mBeansControllerSpecific) {
+//            try {
+//                Method m = clazz.getDeclaredMethod("getInstance", String.class);
+//                registerPerController(controllerId, m);
+//            } catch (Exception e) {
+//                LOGGER.error("Error at register Mbean " + clazz.getSimpleName() + "(" + controllerId + "): ", e);
+//            }
+            registerPerController(controllerId, clazz);
+        }
+    }
+
+    private void _register() {
+        
+        for (Class<? extends IJocMBean> clazz : mBeans) {
             try {
-                Method m = clazz.getDeclaredMethod("getInstance", String.class);
-                registerPerController(controllerId, m);
+                // Method m = clazz.getDeclaredMethod("getInstance");
+                // IJocMBean obj = (IJocMBean) m.invoke(null);
+                IJocMBean obj = clazz.getDeclaredConstructor().newInstance();
+                ObjectName oName = new ObjectName(namespace + obj.objectName());
+                if (registered.contains(oName)) {
+                    continue;
+                }
+                LOGGER.debug("try register Mbean " + obj.objectName());
+                registerMBean(obj, oName);
             } catch (Exception e) {
-                LOGGER.error("Error at register Mbean " + clazz.getSimpleName() + "(" + controllerId + "): ", e);
+                LOGGER.error("Error at register Mbean " + clazz.getSimpleName(), e);
+            }
+        }
+        for (Class<? extends IJocMBean> clazz : mBeansControllerSpecific) {
+            // Method m = clazz.getDeclaredMethod("getInstance", String.class);
+            for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+                // registerPerController(controllerId, m);
+                registerPerController(controllerId, clazz);
             }
         }
     }
 
-    private void _register() throws MalformedObjectNameException, InstanceAlreadyExistsException, MBeanRegistrationException,
-            NotCompliantMBeanException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-            NoSuchMethodException, SecurityException {
-        
-        for (Class<? extends IJocMBean> clazz : mBeans) {
-            Method m = clazz.getDeclaredMethod("getInstance");
-            IJocMBean obj = (IJocMBean) m.invoke(null);
-            ObjectName oName = new ObjectName(namespace + obj.objectName());
+    private void registerPerController(String controllerId, Class<? extends IJocMBean> clazz) {
+        try {
+            IJocMBean obj = clazz.getDeclaredConstructor(String.class).newInstance(controllerId);
+            ObjectName oName = new ObjectName(namespace + obj.objectName() + ",controllerId=" + controllerId);
             if (registered.contains(oName)) {
-                continue;
+                return;
             }
-            LOGGER.debug("try register Mbean " + obj.objectName());
+            LOGGER.debug("try register Mbean " + obj.objectName() + "(" + controllerId + ")");
             registerMBean(obj, oName);
-        }
-        for (Class<? extends IJocMBean> clazz : mBeansControllerSpecific) {
-            Method m = clazz.getDeclaredMethod("getInstance", String.class);
-            for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                registerPerController(controllerId, m);
-            }
+        } catch (Exception e) {
+            LOGGER.error("Error at register Mbean " + clazz.getSimpleName() + "(" + controllerId + "): ", e);
         }
     }
-    
-    private void registerPerController(String controllerId, Method m) throws IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, MalformedObjectNameException, MBeanRegistrationException, NotCompliantMBeanException {
-        IJocMBean obj = (IJocMBean) m.invoke(null, controllerId);
-        ObjectName oName = new ObjectName(namespace + obj.objectName() + ",controllerId=" + controllerId);
-        if (registered.contains(oName)) {
-            return;
-        }
-        LOGGER.debug("try register Mbean " + obj.objectName() + "(" + controllerId + ")");
-        registerMBean(obj, oName);
-    }
+
+//    private void registerPerController(String controllerId, Method m) throws IllegalAccessException, IllegalArgumentException,
+//            InvocationTargetException, MalformedObjectNameException, MBeanRegistrationException, NotCompliantMBeanException {
+//        IJocMBean obj = (IJocMBean) m.invoke(null, controllerId);
+//        ObjectName oName = new ObjectName(namespace + obj.objectName() + ",controllerId=" + controllerId);
+//        if (registered.contains(oName)) {
+//            return;
+//        }
+//        LOGGER.debug("try register Mbean " + obj.objectName() + "(" + controllerId + ")");
+//        registerMBean(obj, oName);
+//    }
     
     private boolean registerMBean(IJocMBean obj, ObjectName oName) throws MBeanRegistrationException, NotCompliantMBeanException {
         try {

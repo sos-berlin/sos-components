@@ -1,13 +1,16 @@
 package com.sos.joc.bean;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.event.EventServiceFactory;
@@ -30,34 +33,43 @@ import scala.Function1;
 
 public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
 
-    private static Map<String, OrdersSnapshot> instances = new HashMap<>();
+//    private static Map<String, OrdersSnapshot> instances = new HashMap<>();
     private final String controllerId;
-    private final OrdersSummary summary;
+    private OrdersSummary summary = init();
     private boolean initialized = false;
+    private static final boolean onlyNext24hours = true;
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersSnapshotMBean.class);
     
-    private OrdersSnapshot(String controllerId) {
+    public OrdersSnapshot(String controllerId) {
         this.controllerId = controllerId;
-        this.summary = init();
         EventBus.getInstance().register(this);
         if (Proxies.isCoupled(controllerId)) {
             update();
         }
     }
 
-    public static OrdersSnapshot getInstance(String controllerId) {
-        if (!instances.containsKey(controllerId)) {
-            instances.putIfAbsent(controllerId, new OrdersSnapshot(controllerId));
-        }
-        return instances.get(controllerId);
-    }
+//    public static OrdersSnapshot getInstance(String controllerId) {
+//        if (!instances.containsKey(controllerId)) {
+//            instances.putIfAbsent(controllerId, new OrdersSnapshot(controllerId));
+//        }
+//        return instances.get(controllerId);
+//    }
 
     @Subscribe({ OrderEvent.class })
     public void update(OrderEvent evt) {
-        if (controllerId.equals(evt.getControllerId())) {
+        if ("OrderEvent".equals(evt.getKey()) && controllerId.equals(evt.getControllerId())) {
+            JControllerState controllerState = null;
             try {
-                setSnapshot(Proxy.of(controllerId).currentState());
+                controllerState = Proxy.of(controllerId).currentState();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
+                // Proxy-Connection-Problems
+            }
+            if (controllerState != null) {
+                try {
+                    setSnapshot(controllerState);
+                } catch (Exception e) {
+                    LOGGER.warn("Error at updating OrdersSnapshot metrics: ", e);
+                }
             }
         }
     }
@@ -71,27 +83,30 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
     
     private void update() {
         if (!initialized) {
+            JControllerState controllerState = null;
             try {
-                setSnapshot(Proxy.of(controllerId).currentState());
-                EventServiceFactory.startEventService(controllerId);
-                initialized = true;
+                controllerState = Proxy.of(controllerId).currentState();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
+                // Proxy-Connection-Problems
+            }
+            if (controllerState != null) {
+                try {
+                    setSnapshot(controllerState);
+                    EventServiceFactory.startEventService(controllerId);
+                    initialized = true;
+                } catch (Exception e) {
+                    LOGGER.warn("Error at updating OrdersSnapshot metrics: ", e);
+                }
             }
         }
     }
 
     @Override
     public String objectName() {
-        return "OrdersSnapshot";
-    }
-
-    @Override
-    public boolean isControllerSpecific() {
-        return true;
+        return getClass().getSimpleName();
     }
     
-    private OrdersSummary init() {
+    private static OrdersSummary init() {
         OrdersSummary summary = new OrdersSummary();
         summary.setBlocked(0);
         summary.setPending(0);
@@ -150,8 +165,17 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
                     return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue();
                 }).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(item -> 1).sum();
 
-                numOfFreshOrders = freshOrderSet.stream().map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(e -> 1)
-                        .sum() - numOfPendingOrders;
+                Stream<JOrder> freshOrderStream = freshOrderSet.stream();
+                if (onlyNext24hours) {
+                    final Instant until = now.plusSeconds(60 * 60 * 24);
+                    Predicate<JOrder> dateToFilter = o -> {
+                        Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                        return scheduledFor == null || scheduledFor.isBefore(until);
+                    };
+                    freshOrderStream = freshOrderSet.stream().filter(dateToFilter);
+                }
+                numOfFreshOrders = freshOrderStream.map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(
+                        e -> 1).sum() - numOfPendingOrders;
 
             }
 
