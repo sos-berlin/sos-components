@@ -31,12 +31,12 @@ public class AzureBlobStorageProviderUtils {
             String directoryPath, List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
 
-        list(provider, provider.requireAzureClient(), selection, containerName, directoryPath, result, counterAdded);
+        list(provider, provider.requireAzureClient(), selection, containerName, directoryPath, result, 0, counterAdded);
         return result;
     }
 
     public static AzureBlobStorageResource getResource(AzureBlobStorageProvider provider, String containerName, String blobPath, boolean directory,
-            boolean recursive) throws Exception {
+            boolean recursive, int level) throws Exception {
 
         AzureBlobStorageClient client = provider.requireAzureClient();
         if (directory) {
@@ -55,7 +55,7 @@ public class AzureBlobStorageProviderUtils {
                     throw new Exception(client.formatExecutionResultForException(result));
                 }
             }
-            List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive);
+            List<AzureBlobStorageResource> resources = parseAzureBlobResources(provider, containerName, blobPath, result, recursive, level);
             return resources.isEmpty() ? null : resources.get(0);
         } else {
             HttpExecutionResult<Void> result = provider.requireAzureClient().executeHEADBlob(containerName, blobPath);
@@ -78,8 +78,54 @@ public class AzureBlobStorageProviderUtils {
         }
     }
 
+    public static boolean directoryExistsIfHnsDisabled(AzureBlobStorageProvider provider, AzureBlobStorageClient client, String containerName,
+            String directoryPath) throws Exception {
+
+        directoryPath = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(directoryPath);
+        HttpExecutionResult<String> executeResult = client.executeGETBlobList(containerName, directoryPath, false);
+        executeResult.formatWithResponseBody(true);
+        int code = executeResult.response().statusCode();
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug("%s[directoryExistsIfHnsDisabled][directoryPath=%s]%s", provider.getLogPrefix(), directoryPath,
+                    AzureBlobStorageClient.formatExecutionResult(executeResult));
+        }
+        if (!HttpUtils.isSuccessful(code)) {
+            // HttpUtils.isNotFound:
+            // 1) HNS=false - does not work because Azure Blob Storage uses virtual directories and does not return HTTP 404 when a directory does not exist.
+            // Instead, it returns code=200 and an empty <Blobs /> response
+            // see parseAzureBlobResources for HNS=false handling
+            // 2) HNS=true - TODO check it
+            if (HttpUtils.isNotFound(code)) {
+                provider.throwDirectoryNotFoundException(directoryPath, client.formatExecutionResultForException(executeResult));
+            }
+
+            if (HttpUtils.isUnauthorized(code)) {
+                throw new ProviderAuthenticationException(client.formatExecutionResultForException(executeResult));
+            } else {
+                throw new Exception(client.formatExecutionResultForException(executeResult));
+            }
+        }
+
+        String body = SOSXML.removeBOMIfExists(executeResult.response().body().trim());
+        NodeList directoryNodes = SOSXML.parse(body, false).getElementsByTagName("BlobPrefix");
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug("%s[directoryExistsIfHnsDisabled][directoryPath=%s][directoryNodes(BlobPrefix)]size=%s", provider
+                    .getLogPrefix(), directoryPath, directoryNodes.getLength());
+        }
+        if (directoryNodes.getLength() > 0) {
+            return true;
+        }
+
+        NodeList fileNodes = SOSXML.parse(body, false).getElementsByTagName("Blob");
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug("%s[directoryExistsIfHnsDisabled][directoryPath=%s][fileNodes(Blob)]size=%s", provider.getLogPrefix(),
+                    directoryPath, fileNodes.getLength());
+        }
+        return fileNodes.getLength() > 0;
+    }
+
     private static int list(AzureBlobStorageProvider provider, AzureBlobStorageClient client, ProviderFileSelection selection, String containerName,
-            String directoryPath, List<ProviderFile> result, int counterAdded) throws Exception {
+            String directoryPath, List<ProviderFile> result, int level, int counterAdded) throws Exception {
 
         directoryPath = SOSPathUtils.getUnixStyleDirectoryWithTrailingSeparator(directoryPath);
         HttpExecutionResult<String> executeResult = client.executeGETBlobList(containerName, directoryPath, false);
@@ -90,7 +136,15 @@ public class AzureBlobStorageProviderUtils {
                     .formatExecutionResult(executeResult));
         }
         if (!HttpUtils.isSuccessful(code)) {
+            // HttpUtils.isNotFound:
+            // 1) HNS=false - does not work because Azure Blob Storage uses virtual directories and does not return HTTP 404 when a directory does not exist.
+            // Instead, it returns code=200 and an empty <Blobs /> response
+            // see parseAzureBlobResources for HNS=false handling
+            // 2) HNS=true - TODO check it
             if (HttpUtils.isNotFound(code)) {
+                if (level == 0) {
+                    provider.throwDirectoryNotFoundException(directoryPath, client.formatExecutionResultForException(executeResult));
+                }
                 // return 0;
             }
 
@@ -104,7 +158,7 @@ public class AzureBlobStorageProviderUtils {
         Set<String> subDirectories = new HashSet<>();
         int i = 0;
         for (AzureBlobStorageResource resource : parseAzureBlobResources(provider, containerName, directoryPath, executeResult, selection.getConfig()
-                .isRecursive())) {
+                .isRecursive(), level)) {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
@@ -150,19 +204,33 @@ public class AzureBlobStorageProviderUtils {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
-            counterAdded = list(provider, provider.requireAzureClient(), selection, containerName, subDirectory, result, counterAdded);
+            counterAdded = list(provider, provider.requireAzureClient(), selection, containerName, subDirectory, result, level++, counterAdded);
         }
         return counterAdded;
     }
 
     private static List<AzureBlobStorageResource> parseAzureBlobResources(AzureBlobStorageProvider provider, String containerName, String blobPath,
-            HttpExecutionResult<String> result, boolean recursive) throws Exception {
+            HttpExecutionResult<String> result, boolean recursive, int level) throws Exception {
         boolean isDebugEnabled = provider.getLogger().isDebugEnabled();
 
         String body = SOSXML.removeBOMIfExists(result.response().body().trim());
         NodeList fileNodes = SOSXML.parse(body, false).getElementsByTagName("Blob");
         if (isDebugEnabled) {
-            provider.getLogger().debug("%s[parseAzureBlobResources][blobPath=%s]size=%s", provider.getLogPrefix(), blobPath, fileNodes.getLength());
+            provider.getLogger().debug("%s[parseAzureBlobResources][blobPath=%s][fileNodes(Blob)]size=%s", provider.getLogPrefix(), blobPath,
+                    fileNodes.getLength());
+        }
+
+        // HNS=false: virtual directories
+        // - if no blobs exist under the prefix, the directory does not exist
+        if (level == 0 && !provider.isHnsEnabled() && fileNodes.getLength() == 0) {
+            NodeList directoryNodes = SOSXML.parse(body, false).getElementsByTagName("BlobPrefix");
+            if (isDebugEnabled) {
+                provider.getLogger().debug("%s[parseAzureBlobResources][blobPath=%s][directoryNodes(BlobPrefix))]size=%s", provider.getLogPrefix(),
+                        blobPath, directoryNodes.getLength());
+            }
+            if (directoryNodes.getLength() == 0) {
+                provider.throwDirectoryNotFoundException(containerName + "/" + blobPath);
+            }
         }
 
         List<AzureBlobStorageResource> resources = new ArrayList<>();

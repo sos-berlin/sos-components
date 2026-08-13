@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
@@ -28,6 +29,13 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 public class AzureBlobStorageClient extends ABaseHttpClient {
 
     public static final String HEADER_X_MS_BLOB_TYPE = "x-ms-blob-type";
+    /** Azure Blob Storage header indicating whether Hierarchical Namespace (HNS) is enabled.
+     * <ul>
+     * <li>HNS enabled: real directories, hierarchical namespace, directory operations.</li>
+     * <li>HNS disabled: flat namespace, directories are virtual blob-name prefixes.</li>
+     * </ul>
+     */
+    public static final String HEADER_X_MS_IS_HNS_ENABLED = "x-ms-is-hns-enabled";
 
     private final String serviceEndpoint;
     private final AAzureStorageAuthProvider authProvider;
@@ -109,6 +117,36 @@ public class AzureBlobStorageClient extends ABaseHttpClient {
 
         Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getDefaultHeaders(), 0);
         return executeWithResponseBody(createRequestBuilder(URI.create(url), authHeaders).GET().build());
+    }
+
+    /** Retrieves the storage account properties, including the HNS status. */
+    public HttpExecutionResult<String> executeGETStorageAccountPropertiers() throws Exception {
+        LinkedHashMap<String, String> queryParams = new LinkedHashMap<>();
+        queryParams.put("restype", "account");
+        queryParams.put("comp", "properties");
+
+        String canonicalizedQuery = toCanonicalizedQuery(queryParams);
+        String canonicalizedResource = canonicalize(null, null, canonicalizedQuery);
+
+        String path = "?restype=account&comp=properties";
+        String rawUrl = buildUrl(path);
+        String url = authProvider.appendToUrl(rawUrl);
+
+        Map<String, String> authHeaders = authProvider.createAuthHeaders("GET", url, canonicalizedResource, getDefaultHeaders(), 0);
+        return executeWithResponseBody(createRequestBuilder(URI.create(url), authHeaders).GET().build());
+    }
+
+    /** Returns whether Hierarchical Namespace (HNS) is enabled for the storage account.
+     * 
+     * <ul>
+     * <li>HNS enabled: real directories, hierarchical namespace, directory operations.</li>
+     * <li>HNS disabled: flat namespace, directories are virtual blob-name prefixes.</li>
+     * </ul>
+     */
+    public boolean isHnsEnabled() throws Exception {
+        HttpExecutionResult<String> result = executeGETStorageAccountPropertiers();
+        Optional<String> header = result.response().headers().firstValue("x-ms-is-hns-enabled");
+        return header.isPresent() ? Boolean.parseBoolean(header.get()) : false;
     }
 
     public HttpExecutionResult<Void> executeHEADBlob(String containerName, String blobPath) throws Exception {
