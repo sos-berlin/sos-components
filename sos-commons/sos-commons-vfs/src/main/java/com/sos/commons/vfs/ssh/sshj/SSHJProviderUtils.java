@@ -26,7 +26,6 @@ import net.schmizz.sshj.sftp.OpenMode;
 import net.schmizz.sshj.sftp.RemoteFile;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.RenameFlags;
-import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.xfer.FileSystemFile;
@@ -48,11 +47,8 @@ public class SSHJProviderUtils {
     }
 
     protected static void throwException(SFTPException e, String msg) throws Exception {
-        StatusCode sc = e.getStatusCode();
-        if (sc != null) {
-            if (sc.equals(StatusCode.NO_SUCH_FILE) || sc.equals(StatusCode.NO_SUCH_PATH)) {
-                throw new SOSNoSuchFileException(msg, e);
-            }
+        if (isNotFoundException(e)) {
+            throw new SOSNoSuchFileException(msg, e);
         }
         throw e;
     }
@@ -139,7 +135,7 @@ public class SSHJProviderUtils {
     protected static List<ProviderFile> selectFiles(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath,
             List<ProviderFile> result) throws Exception {
         int counterAdded = 0;
-        list(provider, sftp, selection, directoryPath, result, counterAdded);
+        list(provider, sftp, selection, directoryPath, result, 0, counterAdded);
         return result;
     }
 
@@ -211,23 +207,31 @@ public class SSHJProviderUtils {
     }
 
     private static int list(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result,
-            int counterAdded) throws Exception {
-        List<RemoteResourceInfo> subDirInfos = sftp.ls(directoryPath);
+            int level, int counterAdded) throws Exception {
+        List<RemoteResourceInfo> subDirInfos = null;
+        try {
+            subDirInfos = sftp.ls(directoryPath);
+        } catch (SFTPException e) {
+            if (isNotFoundException(e)) {
+                provider.throwDirectoryNotFoundException(directoryPath, e);
+            }
+            throw e;
+        }
         for (RemoteResourceInfo subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
             }
-            counterAdded = processListEntry(provider, sftp, selection, subResource, result, counterAdded);
+            counterAdded = processListEntry(provider, sftp, selection, subResource, result, level, counterAdded);
         }
         return counterAdded;
     }
 
     private static int processListEntry(SSHJProvider provider, SFTPClient sftp, ProviderFileSelection selection, RemoteResourceInfo resource,
-            List<ProviderFile> result, int counterAdded) throws Exception {
+            List<ProviderFile> result, int level, int counterAdded) throws Exception {
         if (resource.isDirectory()) {
             if (selection.getConfig().isRecursive()) {
                 if (selection.checkDirectory(resource.getPath())) {
-                    counterAdded = list(provider, sftp, selection, resource.getPath(), result, counterAdded);
+                    counterAdded = list(provider, sftp, selection, resource.getPath(), result, level++, counterAdded);
                 }
             }
         } else {
@@ -253,6 +257,16 @@ public class SSHJProviderUtils {
             }
         }
         return counterAdded;
+    }
+
+    protected static boolean isNotFoundException(SFTPException e) {
+        switch (e.getStatusCode()) {
+        case NO_SUCH_FILE:
+        case NO_SUCH_PATH:
+            return true;
+        default:
+            return false;
+        }
     }
 
 }

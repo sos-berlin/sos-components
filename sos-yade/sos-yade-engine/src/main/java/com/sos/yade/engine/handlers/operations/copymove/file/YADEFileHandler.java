@@ -28,6 +28,7 @@ import com.sos.yade.engine.commons.helpers.YADEClientHelper;
 import com.sos.yade.engine.commons.helpers.YADEProviderDelegatorHelper;
 import com.sos.yade.engine.exceptions.YADEEngineException;
 import com.sos.yade.engine.exceptions.YADEEngineInvalidExpressionException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryException;
 import com.sos.yade.engine.exceptions.YADEEngineTargetOutputStreamException;
 import com.sos.yade.engine.exceptions.YADEEngineTransferFileException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
@@ -394,7 +395,7 @@ public class YADEFileHandler {
         }
     }
 
-    private void initializeTarget() throws ProviderException, YADEEngineInvalidExpressionException {
+    private void initializeTarget() throws ProviderException, YADEEngineInvalidExpressionException, YADEEngineTargetDirectoryException {
         YADEFileNameInfo fileNameInfo = getTargetFinalFilePathInfo();
 
         /** finalFileName: the final name of the file after transfer (compressed/replaced name...) */

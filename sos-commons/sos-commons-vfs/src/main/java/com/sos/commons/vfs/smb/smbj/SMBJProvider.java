@@ -16,7 +16,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.hierynomus.mserref.NtStatus;
 import com.hierynomus.msfscc.fileinformation.FileAllInformation;
 import com.hierynomus.msfscc.fileinformation.FileIdBothDirectoryInformation;
 import com.hierynomus.mssmb2.SMB2Dialect;
@@ -48,6 +47,7 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.SMBProvider;
@@ -92,6 +92,11 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                     session = connection.authenticate(SMBAuthenticationContextFactory.create(getArguments()));
                 } catch (Exception e) {
                     throw new ProviderAuthenticationException(e);
+                }
+
+                if (!getArguments().getShareName().isEmpty()) {
+                    requireResourcePool(setAndGetShareName(getArguments().getShareName())).withResource(share -> {
+                    });
                 }
 
                 getLogger().info(getConnectedMsg());
@@ -159,7 +164,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
         try {
             return requireResourcePool(directory).withResource(share -> {
                 List<ProviderFile> result = new ArrayList<>();
-                SMBJProviderUtils.selectFiles(this, share, finalSelection, getSMBPath(directory), result, 0);
+                SMBJProviderUtils.selectFiles(this, share, finalSelection, getSMBPath(directory), result, 0, 0);
                 return result;
             });
         } catch (ProviderException e) {
@@ -187,10 +192,10 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validateArgument("createDirectoriesIfNotExists", path, "path");
-
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
         try {
+            validateArgument("createDirectoriesIfNotExists", path, "path");
+
             String smbPath = getSMBPath(path);
             return requireResourcePool(path).withResource(share -> {
                 new SmbFiles().mkdirs(share, smbPath);
@@ -199,10 +204,11 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
                 }
                 return true;
             });
-        } catch (ProviderException e) {
+        } catch (ProviderDirectoryCreationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throwDirectoryCreationException(path, e);
+            return false;
         }
     }
 
@@ -269,8 +275,11 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             return requireResourcePool(path).withResource(share -> {
                 try {
                     return createProviderFile(smbPath, share.getFileInformation(smbPath));
-                } catch (SMBApiException e) {// not exists
-                    return null;
+                } catch (SMBApiException e) {
+                    if (SMBJProviderUtils.isNotFoundException(e)) {
+                        return null;
+                    }
+                    throw e;
                 }
             });
         } catch (ProviderException e) {
@@ -423,25 +432,8 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
             try {
                 return (DiskShare) session.connectShare(getShareName(path));
             } catch (SMBApiException e) {
-                NtStatus s = e.getStatus();
-                if (s != null) { // null check not necessary, but ...
-                    switch (s) {
-                    case STATUS_ACCESS_DENIED:
-                    case STATUS_ACCOUNT_DISABLED:
-                    case STATUS_LOGON_FAILURE:
-                    case STATUS_LOGON_TYPE_NOT_GRANTED:
-                    case STATUS_PASSWORD_EXPIRED:
-                        throw new ProviderAuthenticationException(e);
-                    case STATUS_CONNECTION_DISCONNECTED:
-                    case STATUS_CONNECTION_RESET:
-                    case STATUS_NETWORK_SESSION_EXPIRED:
-                    case STATUS_IO_TIMEOUT:
-                        throw new ProviderConnectException(e);
-                    default:
-                        break;
-                    }
-                }
-                throw e;
+                SMBJProviderUtils.onConnectShareException(e);
+                return null;
             }
         }
     }
@@ -558,7 +550,7 @@ public class SMBJProvider extends SMBProvider<SMBJProviderReusableResource, Disk
      * 
      * @param path
      * @return */
-    private String getSMBPath(String path) {
+    private String getSMBPath(String path) throws ProviderException {
         String smbPath = normalizePath(path);
         if (SOSString.isEmpty(smbPath)) {
             return "";

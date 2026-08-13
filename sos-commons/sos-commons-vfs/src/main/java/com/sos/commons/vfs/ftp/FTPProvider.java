@@ -48,9 +48,9 @@ import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.exceptions.ProviderClientNotInitializedException;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
-import com.sos.commons.vfs.exceptions.ProviderNoSuchFileException;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolCommandListener;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolReply;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
@@ -110,9 +110,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
-        return toPathStyle(Path.of(path).normalize().toString());
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            // do not use an absolute NIO path as this will add the Windows letter such as C:/ when YADE is running in a Windows environment.
+            return toPathStyle(Path.of(path).normalize().toString());
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
     /** Overrides {@link IProvider#connect()} */
@@ -245,8 +249,10 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
         String directory = SOSString.isEmpty(selection.getConfig().getDirectory()) ? "/" : selection.getConfig().getDirectory();
         try {
-            if (!requireFTPClient().changeWorkingDirectory(directory)) {
-                throw new ProviderNoSuchFileException(getDirectoryNotFoundMsg(directory));
+            FTPClient client = requireFTPClient();
+            if (!client.changeWorkingDirectory(directory)) {
+                // the cause (not found, permissions etc) can't be clearly identified - throw a generic directory exception
+                throwDirectoryException(directory.toString(), new FTPProtocolReply(client).toString());
             }
 
             List<ProviderFile> result = new ArrayList<>();
@@ -299,10 +305,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
      * - /home/test/1/2/3<br/>
      */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validateArgument("createDirectoriesIfNotExists", path, "path");
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
 
         try {
+            validateArgument("createDirectoriesIfNotExists", path, "path");
+
             String dir = normalizePath(path);
             FTPClient client = requireFTPClient();
             if (client.changeWorkingDirectory(dir)) {
@@ -323,10 +330,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             // create given directory
             createDirectory(path);
             return true;
-        } catch (ProviderException e) {
+        } catch (ProviderDirectoryCreationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throwDirectoryCreationException(path, e);
+            return false;
         }
     }
 

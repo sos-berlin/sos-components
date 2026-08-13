@@ -32,6 +32,10 @@ public class YADEEngineCommandException extends YADEEngineException {
         }
     }
 
+    public YADEEngineCommandException(YADEEngineDirectoryException cause) {
+        super(cause);
+    }
+
     public String getPrefix() {
         return prefix;
     }

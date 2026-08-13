@@ -32,9 +32,9 @@ import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderConnectException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
-import com.sos.commons.vfs.exceptions.ProviderNoSuchFileException;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 
 public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
@@ -58,8 +58,12 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        return toPathStyle(getAbsoluteNormalizedPath(path).toString());
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            return toPathStyle(getAbsoluteNormalizedPath(path).toString());
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
+        }
     }
 
     /** Overrides {@link IProvider#connect())} */
@@ -101,7 +105,8 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
 
         Path directory = Paths.get(selection.getConfig().getDirectory() == null ? "" : selection.getConfig().getDirectory());
         if (!Files.exists(directory)) {
-            throw new ProviderNoSuchFileException(getDirectoryNotFoundMsg(directory.toString()));
+            throwDirectoryNotFoundException(directory.toString(), "does not exist");
+            return new ArrayList<>();
         }
         try {
             List<ProviderFile> result;
@@ -132,10 +137,11 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(String)} */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validateArgument("createDirectoriesIfNotExists", path, "path");
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
 
         try {
+            validateArgument("createDirectoriesIfNotExists", path, "path");
+
             Path p = getAbsoluteNormalizedPath(path);
             if (exists(p)) {
                 return false;
@@ -145,8 +151,11 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                 getLogger().debug("%s[createDirectoriesIfNotExists][%s]created", getLogPrefix(), path);
             }
             return true;
+        } catch (ProviderDirectoryCreationException e) {
+            throw e;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path), e);
+            throwDirectoryCreationException(path, e);
+            return false;
         }
     }
 

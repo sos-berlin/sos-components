@@ -3,6 +3,7 @@ package com.sos.yade.engine.commons.helpers;
 import java.util.concurrent.Callable;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.yade.engine.commons.arguments.YADEArguments.RetryOnConnectionError;
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.IYADEProviderDelegator;
@@ -33,7 +34,9 @@ public class YADEProviderDelegatorHelper {
         if (!retry.isEnabled()) {
             try {
                 delegator.getProvider().ensureConnected();
-            } catch (Exception e) {
+            } catch (ProviderConnectException e) {
+                delegator.getProvider().disconnect();
+
                 throwConnectionException(delegator, e);
             }
             return;
@@ -43,7 +46,9 @@ public class YADEProviderDelegatorHelper {
             try {
                 delegator.getProvider().ensureConnected();
                 return;
-            } catch (Exception e) {
+            } catch (ProviderConnectException e) {
+                delegator.getProvider().disconnect();
+
                 if (retryCounter == retry.getMaxRetries()) {
                     throwConnectionException(delegator, e);
                 }

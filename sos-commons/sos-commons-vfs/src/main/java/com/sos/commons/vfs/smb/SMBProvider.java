@@ -9,6 +9,7 @@ import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderReusableResource;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 
@@ -49,15 +50,19 @@ public abstract class SMBProvider<R extends AProviderReusableResource<C>, C> ext
 
     /** Overrides {@link IProvider#normalizePath(String)} */
     @Override
-    public String normalizePath(String path) {
-        if (SOSString.isEmpty(path)) {
-            return getPathSeparator();
+    public String normalizePath(String path) throws ProviderException {
+        try {
+            if (SOSString.isEmpty(path)) {
+                return getPathSeparator();
+            }
+            String p = toPathStyle(Path.of(path).normalize().toString());
+            if (p == null) {
+                return getPathSeparator();
+            }
+            return p.startsWith(getPathSeparator()) ? p : getPathSeparator() + p;
+        } catch (Exception e) {
+            throw new ProviderException(getPathOperationPrefix(path), e);
         }
-        String p = toPathStyle(Path.of(path).normalize().toString());
-        if (p == null) {
-            return getPathSeparator();
-        }
-        return p.startsWith(getPathSeparator()) ? p : getPathSeparator() + p;
     }
 
     /** 'sos/documents/myfile.txt' -> 'sos'<br/>
@@ -84,6 +89,11 @@ public abstract class SMBProvider<R extends AProviderReusableResource<C>, C> ext
                 getLogger().debug("%s[shareName]%s", getLogPrefix(), shareName);
             }
         }
+        return shareName;
+    }
+
+    public String setAndGetShareName(SOSArgument<String> shareNameArg) {
+        shareName = shareNameArg.getValue();
         return shareName;
     }
 }

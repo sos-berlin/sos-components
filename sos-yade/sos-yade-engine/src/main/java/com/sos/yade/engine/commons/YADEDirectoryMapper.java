@@ -11,10 +11,14 @@ import com.sos.commons.util.SOSPathUtils;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryCreationException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryNotFoundException;
 import com.sos.yade.engine.handlers.operations.copymove.YADECopyMoveOperationsConfig;
 import com.sos.yade.engine.handlers.operations.copymove.file.commons.YADEFileNameInfo;
 import com.sos.yade.engine.handlers.operations.copymove.file.helpers.YADEFileReplacementHelper;
@@ -52,7 +56,8 @@ public class YADEDirectoryMapper {
      * Depending on configuration (DisableMakeDirectories), this may create missing directories.<br />
      * All target directories are only evaluated if target replacement is not enabled, otherwise the target directories are evaluated/created on every file */
     public void prepareTargetDirectories(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) throws ProviderException {
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator)
+            throws YADEEngineTargetDirectoryException {
 
         tryMapSourceTarget(logger, config, sourceDelegator, targetDelegator);
 
@@ -60,22 +65,32 @@ public class YADEDirectoryMapper {
         Set<String> targetDirs = getTargetDirectoriesToCreate(logger, targetDelegator);
         if (targetDirs.size() > 0) {
             if (config.getTarget().isCreateDirectoriesEnabled()) {
-                if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
-                    if (isDebugEnabled) {
-                        logger.debug("[prepareTargetDirectories][targetDirs=%s]created", targetDirs);
+                try {
+                    if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirs)) {
+                        if (isDebugEnabled) {
+                            logger.debug("[prepareTargetDirectories][targetDirs=%s]created", targetDirs);
+                        }
+                    } else {
+                        if (isDebugEnabled) {
+                            logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]already exist", targetDirs);
+                        }
                     }
-                } else {
-                    if (isDebugEnabled) {
-                        logger.debug("[prepareTargetDirectories][targetDirs=%s][skip]already exist", targetDirs);
-                    }
+                } catch (ProviderDirectoryCreationException e) {
+                    throw new YADEEngineTargetDirectoryCreationException(e);
                 }
             } else {
                 if (targetDirs.size() == 1) {
                     String targetDir = targetDirs.iterator().next();
-                    if (!targetDelegator.getProvider().exists(targetDir)) {
-                        throw new ProviderException("[" + targetDelegator.getLabel() + "][" + YADEArgumentsHelper.toStringAsOppositeValue(
-                                targetDelegator.getArgs().getCreateDirectories()) + "][" + targetDir
-                                + "]directory does not exist and automatic creation is disabled");
+                    try {
+                        if (!targetDelegator.getProvider().directoryExists(targetDir)) {
+                            throw new YADEEngineTargetDirectoryNotFoundException("[" + targetDelegator.getLabel() + "][Directory=" + targetDir
+                                    + "]directory does not exist and automatic creation is disabled (" + YADEArgumentsHelper.toStringAsOppositeValue(
+                                            targetDelegator.getArgs().getCreateDirectories()) + ")");
+                        }
+                    } catch (YADEEngineTargetDirectoryNotFoundException e) {
+                        throw e;
+                    } catch (ProviderException e) {
+                        throw new YADEEngineTargetDirectoryException(e);
                     }
                 }
                 if (isDebugEnabled) {
@@ -118,7 +133,8 @@ public class YADEDirectoryMapper {
     // - it may be a sub path, but also a parent/other path...
     // - it cannot be identified here because the substitution may depend on the filename..
     private void tryMapSourceTarget(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
-            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator) throws ProviderException {
+            final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator)
+            throws YADEEngineTargetDirectoryException {
         sourceTarget.clear();
 
         if (logger.isDebugEnabled()) {
@@ -261,7 +277,7 @@ public class YADEDirectoryMapper {
 
     // sourceDirectoryPathForMapping - directory path without leading path separator
     private String getTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
-            String sourceDirectoryPathForMapping) throws ProviderException {
+            String sourceDirectoryPathForMapping) throws YADEEngineTargetDirectoryException {
 
         if (logger.isDebugEnabled()) {
             logger.debug("[getTargetDirectory]sourceDirectoryPathForMapping=" + sourceDirectoryPathForMapping);
@@ -301,7 +317,7 @@ public class YADEDirectoryMapper {
             // if (logger.isDebugEnabled()) {
             // logger.debug("[getTargetDirectory][targetPath is empty][set to]" + targetPath);
             // }
-            throw new ProviderException("[" + targetDelegator.getLabel() + "]Target directory can't be evaluated");
+            throw new YADEEngineTargetDirectoryException("[" + targetDelegator.getLabel() + "]Target directory can't be evaluated");
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectory]targetPath=" + targetPath);
@@ -311,7 +327,7 @@ public class YADEDirectoryMapper {
     }
 
     private Set<String> getTargetDirectoriesToCreate(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator)
-            throws ProviderException {
+            throws YADEEngineTargetDirectoryException {
         if (target == null) { // not Target replacement available
             if (logger.isDebugEnabled()) {
                 logger.debug("[getTargetDirectoriesToCreate][original]" + sourceTarget.values());
@@ -335,7 +351,7 @@ public class YADEDirectoryMapper {
 
     public String getTargetDirectory(final ISOSLogger logger, final YADECopyMoveOperationsConfig config,
             final YADESourceProviderDelegator sourceDelegator, final YADETargetProviderDelegator targetDelegator, final YADEProviderFile sourceFile,
-            final YADEFileNameInfo fileNameInfo) throws ProviderException {
+            final YADEFileNameInfo fileNameInfo) throws YADEEngineTargetDirectoryException {
         String targetDirectory;
         if (target == null) {// target replacement is not enabled, ignore fileNameInfo
             targetDirectory = sourceTarget.get(sourceFile.getParentFullPath());
@@ -356,17 +372,21 @@ public class YADEDirectoryMapper {
 
     // if parallel transfer - access to map from different threads
     private synchronized void tryCreateTargetDirectory(final ISOSLogger logger, final YADETargetProviderDelegator targetDelegator,
-            String targetDirectory, boolean createDirectory) throws ProviderException {
+            String targetDirectory, boolean createDirectory) throws YADEEngineTargetDirectoryCreationException {
         if (!target.contains(targetDirectory)) {
             if (createDirectory) {
-                if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
+                try {
+                    if (targetDelegator.getProvider().createDirectoriesIfNotExists(targetDirectory)) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[tryCreateTargetDirectory][directory=%s]created", targetDirectory);
+                        }
+                    } else {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("[tryCreateTargetDirectory][directory=%s][skip]already exists", targetDirectory);
+                        }
                     }
-                } else {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("[tryCreateTargetDirectory][directory=%s][skip]already exists", targetDirectory);
-                    }
+                } catch (ProviderDirectoryCreationException e) {
+                    throw new YADEEngineTargetDirectoryCreationException(e);
                 }
             } else {
                 if (logger.isDebugEnabled()) {

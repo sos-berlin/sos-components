@@ -76,7 +76,7 @@ public class YADESourceFilesPolling {
                 // sourceDir!=null is already checked on method begin
                 ensureConnected(logger, sourceDelegator, currentPollingTime);
                 try {
-                    if (sourceDelegator.getProvider().exists(sourceDelegator.getDirectory())) {
+                    if (sourceDelegator.getProvider().directoryExists(sourceDelegator.getDirectory())) {
                         shouldSelectFiles = true;
                     } else {
                         logger.info("[%s[%s]Source directory not found. Wait for the directory due to polling mode...", logPrefix, sourceDelegator

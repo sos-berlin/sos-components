@@ -19,6 +19,7 @@ import com.sos.commons.vfs.commons.IProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 import com.sos.commons.vfs.http.HTTPProvider;
@@ -80,11 +81,11 @@ public class WebDAVProvider extends HTTPProvider {
      * - https://example.com/test/1/2/3<br/>
      */
     @Override
-    public boolean createDirectoriesIfNotExists(String path) throws ProviderException {
-        validateArgument("createDirectoriesIfNotExists", path, "path");
-
+    public boolean createDirectoriesIfNotExists(String path) throws ProviderDirectoryCreationException {
         URI uri = null;
         try {
+            validateArgument("createDirectoriesIfNotExists", path, "path");
+
             BaseHttpClient client = requireHTTPClient();
             uri = new URI(normalizePath(path));
             if (WebDAVProviderUtils.directoryExists(this, client, uri)) {
@@ -105,12 +106,17 @@ public class WebDAVProvider extends HTTPProvider {
             WebDAVProviderUtils.createDirectory(this, client, uri);
             return true;
         } catch (IOException e) {
-            throwProviderConnectException(path, uri, e);
+            try {
+                throwProviderConnectException(path, uri, e);
+            } catch (ProviderException e1) {
+                throwDirectoryCreationException(getUriOrPath(path, uri), e);
+            }
             return false;
-        } catch (ProviderException e) {
+        } catch (ProviderDirectoryCreationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ProviderException(getPathOperationPrefix(path, uri), e);
+            throwDirectoryCreationException(getUriOrPath(path, uri), e);
+            return false;
         }
     }
 

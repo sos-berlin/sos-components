@@ -5,14 +5,19 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
+import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.yade.engine.commons.arguments.YADEJumpHostArguments;
 import com.sos.yade.engine.commons.arguments.YADESourceTargetArguments;
+import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
+import com.sos.yade.engine.exceptions.YADEEngineSourceDirectoryException;
+import com.sos.yade.engine.exceptions.YADEEngineTargetDirectoryException;
 
 public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
 
     private final AProvider<?, ?> provider;
     private final YADESourceTargetArguments args;
 
+    private final boolean source;
     private final String label;
 
     private final String directory;
@@ -22,14 +27,19 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     private final boolean isAzure;
     private final boolean isWindows;
 
-    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args) {
+    public AYADEProviderDelegator(AProvider<?, ?> provider, YADESourceTargetArguments args, boolean source) throws YADEEngineInitializationException {
         this.provider = provider;
         this.args = args;
+        this.source = source;
         this.label = args.getLabel().getValue();
         this.isHTTP = isHTTPProvider();
         this.isAzure = isAzureProvider();
         this.isWindows = isWindowsProvider();
-        this.directory = getDirectoryPath(args.getDirectory().getValue());
+        try {
+            this.directory = getDirectoryPath(args.getDirectory().getValue());
+        } catch (Exception e) {
+            throw new YADEEngineInitializationException(e);
+        }
         this.directoryWithTrailingPathSeparator = getDirectoryPathWithTrailingPathSeparator(directory);
     }
 
@@ -43,6 +53,18 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
     @Override
     public YADESourceTargetArguments getArgs() {
         return args;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#isSource()} */
+    @Override
+    public boolean isSource() {
+        return source;
+    }
+
+    /** Overrides {@link IYADEProviderDelegator#isJumpHost()} */
+    @Override
+    public boolean isJumpHost() {
+        return YADEJumpHostArguments.LABEL.equals(label);
     }
 
     /** Overrides {@link IYADEProviderDelegator#getLabel()} */
@@ -87,10 +109,6 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         return isWindows;
     }
 
-    public boolean isJumpHost() {
-        return YADEJumpHostArguments.LABEL.equals(label);
-    }
-
     private boolean isHTTPProvider() {
         switch (getArgs().getProvider().getProtocol().getValue()) {
         case AZURE_BLOB_STORAGE:
@@ -118,7 +136,7 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         }
     }
 
-    private String getDirectoryPath(String path) {
+    private String getDirectoryPath(String path) throws Exception {
         if (SOSString.isEmpty(path)) {
             return null;
         }
@@ -132,7 +150,16 @@ public abstract class AYADEProviderDelegator implements IYADEProviderDelegator {
         // dir = provider.normalizePath(dir);
         // }
         if (!isJumpHost()) {
-            dir = provider.normalizePath(dir);
+            try {
+                dir = provider.normalizePath(dir);
+            } catch (ProviderException e) {
+                String dirMsg = "[Directory=" + dir + "]" + e.toString();
+                if (source) {
+                    throw new YADEEngineSourceDirectoryException(dirMsg, e);
+                } else {
+                    throw new YADEEngineTargetDirectoryException(dirMsg, e);
+                }
+            }
         }
 
         return SOSPathUtils.isUnixStylePathSeparator(getProvider().getPathSeparator()) ? SOSPathUtils.getUnixStyleDirectoryWithoutTrailingSeparator(

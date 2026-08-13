@@ -85,10 +85,11 @@ public class WebDAVProviderUtils {
         HttpExecutionResult<String> executeResult = client.executeWithResponseBody(createPROPFINDRequest(client, directoryURI, depth));
         int code = executeResult.response().statusCode();
         if (!HttpUtils.isSuccessful(code)) {
-            // if (HttpUtils.isNotFound(code)) {
-            // return 0;
-            // }
-            throw new Exception(BaseHttpClient.formatExecutionResult(executeResult));
+            String executionResult = BaseHttpClient.formatExecutionResult(executeResult);
+            if (HttpUtils.isNotFound(code)) {
+                provider.throwDirectoryNotFoundException(directoryPath, executionResult);
+            }
+            throw new Exception(executionResult);
         }
 
         Set<String> subDirectories = new HashSet<>();
