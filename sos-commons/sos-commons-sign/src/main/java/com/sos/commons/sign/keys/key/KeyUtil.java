@@ -1659,32 +1659,37 @@ public abstract class KeyUtil {
     }
     
 
-    public static JocKeyPair createMLKEMJocKeyPairBC(MLKEMParameterSpec algorithmSpec, String account, String dn)
+    public static KeyPair createMLKEMKeyPairBC(MLKEMParameterSpec algorithmSpec) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Security.addProvider(new BouncyCastleProvider());
         // Generate ML-KEM key pair
         KeyPairGenerator kpGen = KeyPairGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
         if (algorithmSpec == null) {
             // Default
-            algorithmSpec = MLKEMParameterSpec.ml_kem_512;
+            algorithmSpec = MLKEMParameterSpec.ml_kem_768; // # Default:
         }
         kpGen.initialize(algorithmSpec, new SecureRandom());
-        KeyPair kp = kpGen.generateKeyPair();
+        return kpGen.generateKeyPair();
+    }
+    
+    public static JocKeyPair createMLKEMJocKeyPairBC(MLKEMParameterSpec algorithmSpec, String account, String dn)
+            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         JocKeyPair keyPair = new JocKeyPair();
+        KeyPair kp = createMLKEMKeyPairBC(algorithmSpec);
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
         String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
         byte[] encodedPublic = kp.getPublic().getEncoded();
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
+        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
         keyPair.setKeyType(JocKeyType.PRIVATE.name());
-        try {
-            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account,
-                    SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, dn)));
-        } catch (CertificateEncodingException | IOException e) {
-            LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
-        }
+//        try {
+//            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account,
+//                    SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, dn)));
+//        } catch (CertificateEncodingException | IOException e) {
+//            LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
+//        }
         return keyPair;
     }
 
