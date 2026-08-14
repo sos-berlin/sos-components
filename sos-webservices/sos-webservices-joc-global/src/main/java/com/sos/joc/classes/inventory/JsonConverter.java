@@ -34,6 +34,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.InternalExecutableType;
@@ -69,7 +70,7 @@ public class JsonConverter {
 
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value(),
             InstructionType.POST_NOTICE.value(), InstructionType.EXPECT_NOTICE.value(), InstructionType.CONSUME_NOTICES.value(), InstructionType.LOCK
-                    .value(), InstructionType.FINISH.value(), InstructionType.STICKY_SUBAGENT.value());
+                    .value(), InstructionType.FINISH.value(), InstructionType.STICKY_SUBAGENT.value(), InstructionType.SEGMENT.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"")
             .asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"")
@@ -517,6 +518,16 @@ public class JsonConverter {
                     if (at.getBlock() != null) {
                         convertInstructions(controllerId, workflowName, at.getBlock().getInstructions(), sat.getBlock().getInstructions(),
                                 addOrderIndex, zoneId);
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = invInstruction.cast();
+                    com.sos.sign.model.instruction.Segment sseg = signInstruction.cast();
+                    signInstructions.remove(sseg);
+                    if (seg.getBlock() != null && sseg.getBlock().getInstructions() != null) {
+                        signInstructions.addAll(i, sseg.getBlock().getInstructions());
+                        convertInstructions(controllerId, workflowName, seg.getBlock().getInstructions(), signInstructions.subList(i, i + sseg
+                                .getBlock().getInstructions().size()), addOrderIndex, zoneId);
                     }
                     break;
                 default:

@@ -31,7 +31,8 @@ public enum InstructionType {
     BREAK("Break"),
     CASE_WHEN("CaseWhen"),
     SLEEP("Sleep"),
-    ADMISSION_TIME("AdmissionTime");
+    ADMISSION_TIME("AdmissionTime"),
+    SEGMENT("Segment");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 

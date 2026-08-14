@@ -65,6 +65,7 @@ import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -2089,6 +2090,12 @@ public class ImportUtils {
                     AdmissionTime at = inst.cast();
                     if (at.getBlock() != null) {
                         updateWorkflowInstructions(at.getBlock().getInstructions(), orderTags, pos, b);
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        updateWorkflowInstructions(seg.getBlock().getInstructions(), orderTags, pos, b);
                     }
                     break;
                 case ADD_ORDER:

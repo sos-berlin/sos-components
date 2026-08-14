@@ -95,16 +95,16 @@ public class ConverterTest {
         assertTrue(result.equals(expected));
     }
     
-    //@Test
-    public void getConsumeInstruction() throws JsonProcessingException {
-        
-        String json = "{\"TYPE\":\"ConsumeNotices\",\"noticeBoardNames\":\"b\",\"subworkflow\":{}}";
-        ConsumeNotices cn = new ConsumeNotices("b", new Instructions());
-        String cnJson = Globals.objectMapper.writeValueAsString(cn);
-        System.out.println(cnJson);
-        cn = Globals.objectMapper.readValue(json, ConsumeNotices.class);
-        cnJson = Globals.objectMapper.writeValueAsString(cn);
-        System.out.println(cnJson);
+    @Test
+    public void TestWorkflowWithSegmentInstructions() throws IOException {
+
+        String w = "{\"path\":\"/my_workflow\",\"instructions\":[{\"TYPE\":\"Segment\",\"label\":\"Data Ingestion\",\"block\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job1\"},{\"TYPE\":\"Execute.Named\",\"jobName\":\"job2\"},{\"TYPE\":\"Segment\",\"label\":\"Data Ingestion2\",\"block\":{\"instructions\":[{\"TYPE\":\"Segment\",\"label\":\"Data Ingestion3\",\"block\":{\"instructions\":[{\"TYPE\":\"Execute.Named\",\"jobName\":\"job3\"}]}},{\"TYPE\":\"Execute.Named\",\"jobName\":\"job4\"}]}}]}}]}";
+        String expectedInstructions = "[{\"jobName\":\"job1\"},{\"jobName\":\"job2\"},{\"jobName\":\"job3\"},{\"jobName\":\"job4\"}]";
+
+        String result = Globals.objectMapper.writeValueAsString(JsonConverter.readAsConvertedWorkflow("hallo", "my_workflow", w, null)
+                .getInstructions());
+        System.out.println(result);
+        assertTrue(result.equals(expectedInstructions));
     }
     
     @Test

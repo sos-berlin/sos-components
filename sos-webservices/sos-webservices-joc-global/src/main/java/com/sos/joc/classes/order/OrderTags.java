@@ -49,6 +49,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -1228,6 +1229,12 @@ public class OrderTags {
                         getOrderTags(tags, at.getBlock().getInstructions(), dbOrderTagLayer);
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        getOrderTags(tags, seg.getBlock().getInstructions(), dbOrderTagLayer);
+                    }
+                    break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     if (ao.getTags() != null) {
@@ -1353,6 +1360,12 @@ public class OrderTags {
                     AdmissionTime at = inst.cast();
                     if (at.getBlock() != null) {
                         getOrderTags(tags, at.getBlock().getInstructions(), gt);
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        getOrderTags(tags, seg.getBlock().getInstructions(), gt);
                     }
                     break;
                 case ADD_ORDER:

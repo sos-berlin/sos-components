@@ -1,0 +1,25 @@
+{
+  "title": "Segment",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Segment",
+  "type": "object",
+  "required": [
+  	"block"
+  ],
+  
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Segment'",
+  "propertyOrder": [
+  	"TYPE",
+    "block"
+  ],
+  "properties": {
+    "block": {
+    	"$ref": "instructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

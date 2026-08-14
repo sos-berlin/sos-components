@@ -28,6 +28,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -652,6 +653,13 @@ public class JobTemplatesPropagate {
                                 deleteUnknownNodeProps, withAddParams);
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        setNodeArguments(seg.getBlock().getInstructions(), jobName, jReport, jobTemplateArguments, defaultArgs,
+                                deleteUnknownNodeProps, withAddParams);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -754,6 +762,12 @@ public class JobTemplatesPropagate {
                     AdmissionTime at = inst.cast();
                     if (at.getBlock() != null) {
                         readNodeArguments(at.getBlock().getInstructions(), jobName, args);
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        readNodeArguments(seg.getBlock().getInstructions(), jobName, args);
                     }
                     break;
                 default:

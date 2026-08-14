@@ -55,6 +55,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -780,6 +781,16 @@ public class WorkflowsHelper {
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
+                case SEGMENT: //TODO
+                    Segment seg = inst.cast();
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "segment"), seg.getBlock().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
+//                    seg.setPosition(null);
+//                    seg.setPositionString(null);
+//                    seg.setState(null);
+//                    setWorkflowPositionsAndForkListVariables(parentPosition, seg.getNodes().getInstructions(), forkListVariables,
+//                            expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
+                    break;
                 default:
                     break;
                 }
@@ -909,6 +920,12 @@ public class WorkflowsHelper {
                     AdmissionTime at = inst.cast();
                     if (at.getBlock() != null) {
                         setWorkflowPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
+                    }
+                    break;
+                case SEGMENT: //TODO
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        setWorkflowPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 default:
@@ -1046,6 +1063,14 @@ public class WorkflowsHelper {
                         Object[] blockPos = extendArray(pos, "admissionTime");
                         blockPoss.add(getBlockPosition(blockPos, inst, null, at.getBlock().getInstructions()));
                         setWorkflowBlockPositions(blockPos, at.getBlock().getInstructions(), blockPoss);
+                    }
+                    break;
+                case SEGMENT: // TODO
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        Object[] blockPos = extendArray(pos, "segment");
+                        blockPoss.add(getBlockPosition(blockPos, inst, null, seg.getBlock().getInstructions()));
+                        setWorkflowBlockPositions(blockPos, seg.getBlock().getInstructions(), blockPoss);
                     }
                     break;
                 default:
@@ -1322,6 +1347,12 @@ public class WorkflowsHelper {
                         updateWorkflowBoardname(oldNewBoardNames, at.getBlock().getInstructions());
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        updateWorkflowBoardname(oldNewBoardNames, seg.getBlock().getInstructions());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -1462,6 +1493,14 @@ public class WorkflowsHelper {
                         boardPostPositions.put(p.getPositionString(), pns.getNoticeBoardNames().stream().collect(Collectors.toSet()));
                     }
                     break;
+                case SEGMENT: // TODO
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        setWorkflowBoardPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
+                    }
+                    break;
+                
                 default:
                     break;
                 }
@@ -1574,7 +1613,13 @@ public class WorkflowsHelper {
                     if (at.getBlock() != null) {
                         extractImplicitEnds(at.getBlock().getInstructions(), posSet, 0, true);
                     }
-                    break;    
+                    break;
+                case SEGMENT: // TODO
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        extractImplicitEnds(seg.getBlock().getInstructions(), posSet, 0, true);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -2108,7 +2153,15 @@ public class WorkflowsHelper {
                             return true;
                         }
                     }
-                    break;    
+                    break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        if(hasBoard(boardName, seg.getBlock().getInstructions())) {
+                            return true;
+                        }
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -2219,7 +2272,13 @@ public class WorkflowsHelper {
                     if (at.getBlock() != null) {
                         setCaseWhenPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), poss);
                     }
-                    break;    
+                    break;
+                case SEGMENT: // TODO
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        setCaseWhenPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), poss);
+                    }
+                    break;
                 default:
                     break;
                 }

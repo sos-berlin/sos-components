@@ -19,6 +19,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -197,6 +198,13 @@ public class ReferenceValidator {
                         validateAddOrderInstructionArguments(at.getBlock().getInstructions(), orderPreparation);
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        validateAddOrderInstructionArguments(seg.getBlock().getInstructions(), orderPreparation);
+                    }
+                    break;
+                
                 default:
                     break;
                 }

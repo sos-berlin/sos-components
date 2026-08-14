@@ -19,6 +19,7 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -151,6 +152,12 @@ public class WorkflowConverter {
                     AdmissionTime at = invInstruction.cast();
                     if (at.getBlock() != null) {
                         convertInstructions(at.getBlock().getInstructions());
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = invInstruction.cast();
+                    if (seg.getBlock() != null) {
+                        convertInstructions(seg.getBlock().getInstructions());
                     }
                     break;
                 default:

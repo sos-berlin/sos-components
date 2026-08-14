@@ -55,7 +55,8 @@ import com.sos.inventory.model.instruction.InstructionType;
         @JsonSubTypes.Type(value = Break.class, name = "Break"),
         @JsonSubTypes.Type(value = IfElse.class, name = "CaseWhen"),
         @JsonSubTypes.Type(value = Sleep.class, name = "Sleep"),
-        @JsonSubTypes.Type(value = AdmissionTime.class, name = "AdmissionTime")})
+        @JsonSubTypes.Type(value = AdmissionTime.class, name = "AdmissionTime"),
+        @JsonSubTypes.Type(value = Segment.class, name = "Segment")})
 public abstract class Instruction
     extends ClassHelper
 {

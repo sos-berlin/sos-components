@@ -59,6 +59,7 @@ import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
 import com.sos.inventory.model.instruction.Prompt;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.Sleep;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
@@ -1195,10 +1196,18 @@ public class Validator {
                                 dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        validateInstructions(seg.getBlock().getInstructions(), instPosition + "nodes.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, dbLayer);
+                    }
+                    break;
                 case SLEEP:
                     Sleep sleep = inst.cast();
                     validateExpression("$." + instPosition + "duration: ", sleep.getDuration());
                     break;
+                
                 default:
                     break;
                 }
@@ -1517,6 +1526,13 @@ public class Validator {
                     validateAdmissionTime(at.getAdmissionTimeScheme(), instPosition);
                     if (at.getBlock() != null) {
                         validateInstructions(at.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
+                                dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
+                    }
+                    break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        validateInstructions(seg.getBlock().getInstructions(), instPosition + "block.instructions", jobs, orderPreparation,
                                 dayOffsetSeconds, labels, invalidAgentRefs, boardNames, retryConfs, forkListExist, allWorkflowJsonsByName);
                     }
                     break;

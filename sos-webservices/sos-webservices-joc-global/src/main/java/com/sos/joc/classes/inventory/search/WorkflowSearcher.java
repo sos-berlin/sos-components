@@ -28,6 +28,7 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.PostNotices;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -565,13 +566,22 @@ public class WorkflowSearcher {
             case ADMISSION_TIME:
                 AdmissionTime at = in.cast();
                 if (at.getBlock() != null) {
-                    String position = getPosition(parentPosition, index, "options");
+                    String position = getPosition(parentPosition, index, "admissionTime");
                     result.add(new WorkflowInstruction<AdmissionTime>(position, at));
 
                     handleInstructions(result, at.getBlock().getInstructions(), position);
                 }
                 break;
-                
+            case SEGMENT:
+                Segment seg = in.cast();
+                if (seg.getBlock() != null) { //TODO
+                    String position = getPosition(parentPosition, index, "segment");
+                    result.add(new WorkflowInstruction<Segment>(position, seg));
+                    
+                    handleInstructions(result, seg.getBlock().getInstructions(), parentPosition);
+                }
+                break;
+               
             default:
 
                 break;

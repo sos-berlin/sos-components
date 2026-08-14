@@ -23,6 +23,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Options;
+import com.sos.inventory.model.instruction.Segment;
 import com.sos.inventory.model.instruction.StickySubagent;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.instruction.When;
@@ -721,6 +722,12 @@ public class JsonSerializer {
                         cleanInventoryInstructions(at.getBlock().getInstructions(), jobs, forkListAgentName, stickyAgentName);
                     }
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        cleanInventoryInstructions(seg.getBlock().getInstructions(), jobs, forkListAgentName, stickyAgentName);
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -840,6 +847,13 @@ public class JsonSerializer {
                         cleanSignedInstructions(opts.getBlock().getInstructions());
                     }
                     break;
+                case SEGMENT:
+                    com.sos.sign.model.instruction.Segment seg = inst.cast();
+                    if (seg.getBlock() != null) {
+                        cleanSignedInstructions(seg.getBlock().getInstructions());
+                    }
+                    break;
+                
                 default:
                     break;
                 }

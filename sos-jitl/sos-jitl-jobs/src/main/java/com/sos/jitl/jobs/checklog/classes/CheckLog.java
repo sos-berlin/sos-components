@@ -47,7 +47,7 @@ public class CheckLog {
 
             switch (instruction.getTYPE()) {
             case EXECUTE_NAMED:
-                com.sos.inventory.model.instruction.NamedJob namedJob = (com.sos.inventory.model.instruction.NamedJob) instruction;
+                com.sos.inventory.model.instruction.NamedJob namedJob = instruction.cast();
                 int count = jobCount.getOrDefault(namedJob.getJobName(), 0);
                 jobCount.put(namedJob.getJobName(), count + 1);
                 label2Job.put(instruction.getLabel(), namedJob.getJobName());
@@ -58,13 +58,13 @@ public class CheckLog {
 
             case TRY:
                 if (!instruction.isRetry()) {
-                    com.sos.inventory.model.instruction.TryCatch tryCatch = (com.sos.inventory.model.instruction.TryCatch) instruction;
+                    com.sos.inventory.model.instruction.TryCatch tryCatch = instruction.cast();
                     s = handleInstruction(tryCatch.getTry().getInstructions(), jobCount, label2Job);
                     if (s != null && !s.isEmpty()) {
                         returnValue = s;
                     }
                 } else {
-                    com.sos.inventory.model.instruction.RetryCatch retryCatch = (com.sos.inventory.model.instruction.RetryCatch) instruction;
+                    com.sos.inventory.model.instruction.RetryCatch retryCatch = instruction.cast();
                     s = handleInstruction(retryCatch.getTry().getInstructions(), jobCount, label2Job);
                     if (s != null && !s.isEmpty()) {
                         returnValue = s;
@@ -72,7 +72,7 @@ public class CheckLog {
                 }
                 break;
             case IF:
-                com.sos.inventory.model.instruction.IfElse ifElse = (com.sos.inventory.model.instruction.IfElse) instruction;
+                com.sos.inventory.model.instruction.IfElse ifElse = instruction.cast();
 
                 if (ifElse.getThen() != null) {
                     s = handleInstruction(ifElse.getThen().getInstructions(), jobCount, label2Job);
@@ -88,7 +88,7 @@ public class CheckLog {
                 }
                 break;
             case CASE_WHEN:
-                com.sos.inventory.model.instruction.CaseWhen caseWhen = (com.sos.inventory.model.instruction.CaseWhen) instruction;
+                com.sos.inventory.model.instruction.CaseWhen caseWhen = instruction.cast();
 
                 if (caseWhen.getCases() != null) {
                     for (When when : caseWhen.getCases()) {
@@ -106,7 +106,7 @@ public class CheckLog {
                 }
                 break;
             case FORK:
-                com.sos.inventory.model.instruction.ForkJoin forkJoin = (com.sos.inventory.model.instruction.ForkJoin) instruction;
+                com.sos.inventory.model.instruction.ForkJoin forkJoin = instruction.cast();
                 for (Branch branch : forkJoin.getBranches()) {
                     s = handleInstruction(branch.getWorkflow().getInstructions(), jobCount, label2Job);
                     if (s != null && !s.isEmpty()) {
@@ -115,50 +115,57 @@ public class CheckLog {
                 }
                 break;
             case FORKLIST:
-                com.sos.inventory.model.instruction.ForkList forkList = (com.sos.inventory.model.instruction.ForkList) instruction;
+                com.sos.inventory.model.instruction.ForkList forkList = instruction.cast();
                 s = handleInstruction(forkList.getWorkflow().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case LOCK:
-                com.sos.inventory.model.instruction.Lock lock = (com.sos.inventory.model.instruction.Lock) instruction;
+                com.sos.inventory.model.instruction.Lock lock = instruction.cast();
                 s = handleInstruction(lock.getLockedWorkflow().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case STICKY_SUBAGENT:
-                com.sos.inventory.model.instruction.StickySubagent stickySubagent = (com.sos.inventory.model.instruction.StickySubagent) instruction;
+                com.sos.inventory.model.instruction.StickySubagent stickySubagent = instruction.cast();
                 s = handleInstruction(stickySubagent.getSubworkflow().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case CYCLE:
-                com.sos.inventory.model.instruction.Cycle cycle = (com.sos.inventory.model.instruction.Cycle) instruction;
+                com.sos.inventory.model.instruction.Cycle cycle = instruction.cast();
                 s = handleInstruction(cycle.getCycleWorkflow().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case OPTIONS:
-                com.sos.inventory.model.instruction.Options options = (com.sos.inventory.model.instruction.Options) instruction;
+                com.sos.inventory.model.instruction.Options options = instruction.cast();
                 s = handleInstruction(options.getBlock().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case CONSUME_NOTICES:
-                com.sos.inventory.model.instruction.ConsumeNotices consumeNotices = (com.sos.inventory.model.instruction.ConsumeNotices) instruction;
+                com.sos.inventory.model.instruction.ConsumeNotices consumeNotices = instruction.cast();
                 s = handleInstruction(consumeNotices.getSubworkflow().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
                 break;
             case ADMISSION_TIME:
-                com.sos.inventory.model.instruction.AdmissionTime admissions = (com.sos.inventory.model.instruction.AdmissionTime) instruction;
+                com.sos.inventory.model.instruction.AdmissionTime admissions = instruction.cast();
                 s = handleInstruction(admissions.getBlock().getInstructions(), jobCount, label2Job);
+                if (s != null && !s.isEmpty()) {
+                    returnValue = s;
+                }
+                break;
+            case SEGMENT:
+                com.sos.inventory.model.instruction.Segment segment = instruction.cast();
+                s = handleInstruction(segment.getBlock().getInstructions(), jobCount, label2Job);
                 if (s != null && !s.isEmpty()) {
                     returnValue = s;
                 }
