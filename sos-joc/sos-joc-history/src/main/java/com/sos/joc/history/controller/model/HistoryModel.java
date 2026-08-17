@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
@@ -64,6 +65,7 @@ import com.sos.joc.history.controller.exception.model.HistoryModelOrderException
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderNotFoundException;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepException;
 import com.sos.joc.history.controller.exception.model.HistoryModelOrderStepNotFoundException;
+import com.sos.joc.history.controller.exception.model.HistoryModelResetProcessingNeededException;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
@@ -175,6 +177,8 @@ public class HistoryModel {
     private Long storedEventId;
     private long transactionCounter;
     private int maxTransactions = 100;
+    // PgSQL specific - 0 means normal processing
+    private long resetSessionOnConstraintViolationEventId = 0L;
     private boolean closed = false;
 
     private boolean isDebugEnabled;
@@ -283,6 +287,7 @@ public class HistoryModel {
         }
 
         boolean hasError = false;
+        boolean resetProcessingNeededException = false;
         try {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
@@ -564,34 +569,41 @@ public class HistoryModel {
                     counter.addFailed();
                 }
             }
+        } catch (HistoryModelResetProcessingNeededException e) {
+            resetProcessingNeededException = true;
+            throw e;
         } catch (Exception e) {
             hasError = true;
             throw new HistoryModelException(controllerConfiguration.getCurrent().getId(), String.format("[%s][%s][end]%s", identifier, method, e
                     .toString()), e);
         } finally {
-            Exception ex = null;
-            try {
-                tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
-            } catch (Exception e1) {
-                ex = e1;
-            }
-            dbLayer.close();
-
-            if (counter.getProcessed() == 0 && firstEventId == 0 && counter.getTotal() > 0) {
+            if (resetProcessingNeededException) {
+                showSummary(startEventId, firstEventId, start, counter);
+                transactionCounter = 0L;
+            } else {
+                Exception ex = null;
                 try {
-                    firstEventId = list.get(0).getEventId();
-                } catch (Exception e2) {
+                    tryStoreCurrentStateAtEnd(dbLayer, lastSuccessEventId);
+                } catch (Exception e1) {
+                    ex = e1;
+                }
+                dbLayer.close();
+
+                if (counter.getProcessed() == 0 && firstEventId == 0 && counter.getTotal() > 0) {
+                    try {
+                        firstEventId = list.get(0).getEventId();
+                    } catch (Exception e2) {
+                    }
+                }
+
+                showSummary(startEventId, firstEventId, start, counter);
+                transactionCounter = 0L;
+
+                if (ex != null && !hasError) {
+                    throw new HistoryModelException(controllerConfiguration.getCurrent().getId(), String.format(
+                            "[%s][%s][error on store lastSuccessEventId=%s]%s", identifier, method, lastSuccessEventId, ex.toString()), ex);
                 }
             }
-
-            showSummary(startEventId, firstEventId, start, counter);
-            transactionCounter = 0L;
-
-            if (ex != null && !hasError) {
-                throw new HistoryModelException(controllerConfiguration.getCurrent().getId(), String.format(
-                        "[%s][%s][error on store lastSuccessEventId=%s]%s", identifier, method, lastSuccessEventId, ex.toString()), ex);
-            }
-
         }
 
         return storedEventId;
@@ -736,8 +748,9 @@ public class HistoryModel {
         }
     }
 
+    /** resetSessionOnConstraintViolationEventId - see {@link #tryResetSessionOnConstraintViolationException(DBLayerHistory, AFatEvent)} explanation */
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
-        if (transactionCounter % maxTransactions == 0) {
+        if ((transactionCounter % maxTransactions == 0) || resetSessionOnConstraintViolationEventId > 0) {
             storeCurrentState(dbLayer, eventId);
             dbLayer.beginTransaction();
         }
@@ -747,6 +760,48 @@ public class HistoryModel {
         if (eventId > 0 && !storedEventId.equals(eventId)) {
             storeCurrentState(dbLayer, eventId);
         }
+    }
+
+    /** Disables session reset mode once an event beyond the original constraint violation has been processed successfully. */
+    private void tryDisableResetSessionOnConstraintViolation(long eventId) {
+        if (resetSessionOnConstraintViolationEventId > 0 && eventId > resetSessionOnConstraintViolationEventId) {
+            resetSessionOnConstraintViolationEventId = 0L;
+            LOGGER.info(String.format(
+                    "[%s][ConstraintViolation][recovery][end]single-transaction mode ended at eventId=%s, switched back to normal batch commits (every %s)",
+                    controllerConfiguration.getCurrent().getId(), eventId, maxTransactions));
+        }
+    }
+
+    /** PostgreSQL specific only:<br />
+     * - the transaction must be rolled back (+ new connection) after a constraint violation before further SQL statements can be executed.<br/>
+     * Other DBMS: The transaction remains usable after a constraint violation, so no rollback is required before executing further SQL statements.
+     * 
+     * 1. First constraint violation: abort current batch and restart from stored event ID.<br />
+     * 2. After restart: commit each event separately (see {@link #tryStoreCurrentState(DBLayerHistory, Long)} to preserve events that may have been rolled
+     * back.<br />
+     * 3. Disable reset mode once an event insert beyond the original violation was successful - see {@link #tryDisableResetSessionOnConstraintViolation(long)}
+     * 
+     * @throws HistoryModelResetSessionOnConstraintViolationException */
+    private void tryResetSessionOnConstraintViolationException(DBLayerHistory dbLayer, AFatEvent event) throws SOSHibernateException,
+            HistoryModelResetProcessingNeededException {
+        if (!dbFactory.dbmsIsPostgres()) {
+            return;
+        }
+        dbLayer.close();
+
+        // first occurrence - abort the current processing to repeat it and store entries that may have been affected (not stored) by session.close(rollback).
+        if (resetSessionOnConstraintViolationEventId == 0) {
+            resetSessionOnConstraintViolationEventId = event.getEventId();
+            throw new HistoryModelResetProcessingNeededException(controllerConfiguration.getCurrent().getId(), String.format(
+                    "[ConstraintViolation][recovery][start][%s][%s]Processing aborted due to a constraint violation exception. Processing will be restarted from the stored event ID="
+                            + storedEventId + " in single-transaction mode until events with eventId > %s are successfully inserted", event.getType(),
+                    resetSessionOnConstraintViolationEventId, resetSessionOnConstraintViolationEventId));
+        }
+
+        // for each subsequent occurrence – create a new session (the old session is already closed)
+        dbLayer.setSession(dbFactory.openStatelessSession());
+        dbLayer.getSession().setIdentifier(identifier);
+        dbLayer.beginTransaction();
     }
 
     private void storeCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
@@ -774,6 +829,7 @@ public class HistoryModel {
             item.setCreated(new Date());
             dbLayer.getSession().save(item);
 
+            tryDisableResetSessionOnConstraintViolation(event.getEventId());
             controllerTimezone = item.getTimezone();
             tryStoreCurrentState(dbLayer, event.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
@@ -782,6 +838,7 @@ public class HistoryModel {
                 throw e;
             }
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()));
+            tryResetSessionOnConstraintViolationException(dbLayer, event);
         } finally {
             if (controllerTimezone == null) {
                 controllerTimezone = HistoryUtil.getTimeZone("controllerReady " + controllerConfiguration.getCurrent().getId(), event.getTimezone());
@@ -839,6 +896,7 @@ public class HistoryModel {
 
             dbLayer.getSession().save(item);
 
+            tryDisableResetSessionOnConstraintViolation(event.getEventId());
             tryStoreCurrentState(dbLayer, event.getEventId());
             cacheHandler.addAgent(item.getAgentId(), new CachedAgent(item));
         } catch (SOSHibernateObjectOperationException e) {
@@ -847,6 +905,8 @@ public class HistoryModel {
                 throw e;
             }
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s]%s", identifier, event.getType(), event.getEventId(), e.toString()));
+            tryResetSessionOnConstraintViolationException(dbLayer, event);
+
             cacheHandler.addAgentByReadyEventId(dbLayer, event.getId(), event.getEventId());
         }
     }
@@ -1003,6 +1063,7 @@ public class HistoryModel {
             storeLog2File(le);
             cacheHandler.addOrder(co);
 
+            tryDisableResetSessionOnConstraintViolation(eo.getEventId());
             tryStoreCurrentState(dbLayer, eo.getEventId());
 
             return new HistoryOrderBean(EventType.OrderStarted, eo.getEventId(), item);
@@ -1013,6 +1074,7 @@ public class HistoryModel {
             }
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo.getOrderId(), e
                     .toString()));
+            tryResetSessionOnConstraintViolationException(dbLayer, eo);
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eo.getEventId());
@@ -1561,6 +1623,7 @@ public class HistoryModel {
             storeLog2File(le);
             cacheHandler.addOrder(co);
 
+            tryDisableResetSessionOnConstraintViolation(eo.getEventId());
             tryStoreCurrentState(dbLayer, eo.getEventId());
 
             return new HistoryOrderBean(EventType.OrderStarted, eo.getEventId(), item);
@@ -1571,6 +1634,7 @@ public class HistoryModel {
             }
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eo.getType(), eo.getEventId(), eo
                     .getOrderId(), forkOrder.getBranchIdOrName(), e.toString()));
+            tryResetSessionOnConstraintViolationException(dbLayer, eo);
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eo.getEventId());
@@ -1682,6 +1746,7 @@ public class HistoryModel {
             storeLog2File(le);
             cacheHandler.addOrderStep(cos);
 
+            tryDisableResetSessionOnConstraintViolation(eos.getEventId());
             tryStoreCurrentState(dbLayer, eos.getEventId());
 
             return new HistoryOrderStepBean(EventType.OrderProcessingStarted, eos.getEventId(), item, job.getWarnIfLonger(), job.getWarnIfShorter(),
@@ -1693,6 +1758,7 @@ public class HistoryModel {
             }
             LOGGER.info(String.format("[%s][ConstraintViolation][%s][eventId=%s][%s][%s]%s", identifier, eos.getType(), eos.getEventId(), eos
                     .getOrderId(), eos.getPosition(), e.toString()));
+            tryResetSessionOnConstraintViolationException(dbLayer, eos);
 
             StringBuilder sb = new StringBuilder(controllerConfiguration.getCurrent().getId());
             sb.append("-").append(eos.getEventId());
