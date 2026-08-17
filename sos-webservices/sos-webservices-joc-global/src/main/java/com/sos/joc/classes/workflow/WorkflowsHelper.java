@@ -617,27 +617,39 @@ public class WorkflowsHelper {
             w.setAddOrderToWorkflows(Collections.emptyList());
         }
     }
-
-    private static void setWorkflowPositionsAndForkListVariables(Object[] parentPosition, List<Instruction> insts, Set<String> forkListVariables,
+    
+    private static int setWorkflowPositionsAndForkListVariables(Object[] parentPosition, List<Instruction> insts, Set<String> forkListVariables,
             Set<String> expectedNoticeBoards, Set<String> postNoticeBoards, Set<String> consumeNoticeBoards, Set<String> workflowNamesFromAddOrders,
             Set<String> skippedLabels, Set<JPosition> stoppedPositions) {
+        return setWorkflowPositionsAndForkListVariables(parentPosition, 0, insts, forkListVariables, expectedNoticeBoards, postNoticeBoards,
+                consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
+    }
+
+    private static int setWorkflowPositionsAndForkListVariables(Object[] parentPosition, int posIndex, List<Instruction> insts,
+            Set<String> forkListVariables, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards, Set<String> consumeNoticeBoards,
+            Set<String> workflowNamesFromAddOrders, Set<String> skippedLabels, Set<JPosition> stoppedPositions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
+
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
                 JPosition jPos = getJPosition(inst.getPosition());
-                if (stoppedPositions.contains(jPos)) {
-                    inst.setState(getState(InstructionStateText.STOPPED));
-                }
-                if (inst.getLabel() != null && skippedLabels.contains(inst.getLabel())) {
-                    if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
-                        inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
-                    } else {
-                        inst.setState(getState(InstructionStateText.SKIPPED));
+                if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    if (stoppedPositions.contains(jPos)) {
+                        inst.setState(getState(InstructionStateText.STOPPED));
+                    }
+                    if (inst.getLabel() != null && skippedLabels.contains(inst.getLabel())) {
+                        if (inst.getState() != null && InstructionStateText.STOPPED.equals(inst.getState().get_text())) {
+                            inst.setState(getState(InstructionStateText.STOPPED_AND_SKIPPED));
+                        } else {
+                            inst.setState(getState(InstructionStateText.SKIPPED));
+                        }
                     }
                 }
+                inst.setPositionString(getJPositionString(inst.getPosition()));
+
                 inst.setPositionString(getJPositionString(jPos));
                 switch (inst.getTYPE()) {
                 case FORK:
@@ -781,42 +793,51 @@ public class WorkflowsHelper {
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
-                case SEGMENT: //TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "segment"), seg.getBlock().getInstructions(), forkListVariables,
+                    inst.setPosition(null);
+                    inst.setPositionString(null);
+                    posIndex--;
+                    posIndex = setWorkflowPositionsAndForkListVariables(parentPosition, posIndex, seg.getBlock().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
-//                    seg.setPosition(null);
-//                    seg.setPositionString(null);
-//                    seg.setState(null);
-//                    setWorkflowPositionsAndForkListVariables(parentPosition, seg.getNodes().getInstructions(), forkListVariables,
-//                            expectedNoticeBoards, postNoticeBoards, consumeNoticeBoards, workflowNamesFromAddOrders, skippedLabels, stoppedPositions);
                     break;
                 default:
                     break;
                 }
             }
         }
+        return posIndex;
     }
     
     private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
         setWorkflowPositions(parentPosition, insts, null, false);
     }
+    
+    private static int setWorkflowPositions(Object[] parentPosition, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos,
+            boolean withAllPositions) {
+        return setWorkflowPositions(parentPosition, 0, insts, mapLabelToPos, withAllPositions);
+    }
 
-    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos,
+    private static int setWorkflowPositions(Object[] parentPosition, int posIndex, List<Instruction> insts, Map<String, List<Object>> mapLabelToPos,
             boolean withAllPositions) {
         if (insts != null) {
+
             for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
+
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
                 inst.setPositionString(getJPositionString(inst.getPosition()));
-                if (mapLabelToPos != null) {
-                    if (inst.getLabel() != null && !inst.getLabel().isEmpty()) {
-                        mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
-                    }
-                    if (withAllPositions) {
-                        mapLabelToPos.putIfAbsent(inst.getPositionString(), inst.getPosition());
+
+                if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    if (mapLabelToPos != null) {
+                        if (inst.getLabel() != null && !inst.getLabel().isEmpty()) {
+                            mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
+                        }
+                        if (withAllPositions) {
+                            mapLabelToPos.putIfAbsent(inst.getPositionString(), inst.getPosition());
+                        }
                     }
                 }
                 switch (inst.getTYPE()) {
@@ -829,7 +850,8 @@ public class WorkflowsHelper {
                             } else {
                                 b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
                             }
-                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), mapLabelToPos, withAllPositions);
+                            setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), mapLabelToPos,
+                                    withAllPositions);
                         }
                     }
                     break;
@@ -853,7 +875,7 @@ public class WorkflowsHelper {
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = inst.cast();
                     if (cn.getSubworkflow() == null || cn.getSubworkflow().getInstructions() == null) {
-                        cn.setSubworkflow(new Instructions(Collections.emptyList())); 
+                        cn.setSubworkflow(new Instructions(Collections.emptyList()));
                     }
                     setWorkflowPositions(extendArray(pos, "consumeNotices"), cn.getSubworkflow().getInstructions(), mapLabelToPos, withAllPositions);
                     break;
@@ -907,7 +929,8 @@ public class WorkflowsHelper {
                 case STICKY_SUBAGENT:
                     StickySubagent sticky = inst.cast();
                     if (sticky.getSubworkflow() != null) {
-                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos, withAllPositions);
+                        setWorkflowPositions(extendArray(pos, "stickySubagent"), sticky.getSubworkflow().getInstructions(), mapLabelToPos,
+                                withAllPositions);
                     }
                     break;
                 case OPTIONS:
@@ -922,10 +945,13 @@ public class WorkflowsHelper {
                         setWorkflowPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
-                case SEGMENT: //TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
+                    inst.setPosition(null);
+                    inst.setPositionString(null);
+                    posIndex--;
                     if (seg.getBlock() != null) {
-                        setWorkflowPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
+                        posIndex = setWorkflowPositions(parentPosition, posIndex, seg.getBlock().getInstructions(), mapLabelToPos, withAllPositions);
                     }
                     break;
                 default:
@@ -933,6 +959,7 @@ public class WorkflowsHelper {
                 }
             }
         }
+        return posIndex;
     }
     
     public static Set<BlockPosition> getWorkflowBlockPositions(List<Instruction> insts) {
@@ -942,11 +969,15 @@ public class WorkflowsHelper {
         return blockPoss;
     }
     
-    private static void setWorkflowBlockPositions(Object[] parentPosition, List<Instruction> insts, Set<BlockPosition> blockPoss) {
+    private static int setWorkflowBlockPositions(Object[] parentPosition, List<Instruction> insts, Set<BlockPosition> blockPoss) {
+        return setWorkflowBlockPositions(parentPosition, 0, insts, blockPoss);
+    }
+    
+    private static int setWorkflowBlockPositions(Object[] parentPosition, int posIndex, List<Instruction> insts, Set<BlockPosition> blockPoss) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
                 Instruction inst = insts.get(i);
                 switch (inst.getTYPE()) {
                 case FORK:
@@ -1065,12 +1096,11 @@ public class WorkflowsHelper {
                         setWorkflowBlockPositions(blockPos, at.getBlock().getInstructions(), blockPoss);
                     }
                     break;
-                case SEGMENT: // TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
+                    posIndex--;
                     if (seg.getBlock() != null) {
-                        Object[] blockPos = extendArray(pos, "segment");
-                        blockPoss.add(getBlockPosition(blockPos, inst, null, seg.getBlock().getInstructions()));
-                        setWorkflowBlockPositions(blockPos, seg.getBlock().getInstructions(), blockPoss);
+                        posIndex = setWorkflowBlockPositions(parentPosition, posIndex, seg.getBlock().getInstructions(), blockPoss);
                     }
                     break;
                 default:
@@ -1078,6 +1108,7 @@ public class WorkflowsHelper {
                 }
             }
         }
+        return posIndex;
     }
     
     private static BlockPosition getBlockPosition(Object[] pos, Instruction inst, String blockName, List<Instruction> insts) {
@@ -1090,22 +1121,30 @@ public class WorkflowsHelper {
         p.setPositions(getWorkflowAddOrderPositions(insts, pos));
         return p;
     }
+    
+    private static int setWorkflowAddOrderPositions(Object[] parentPosition, int depth, List<Instruction> insts,
+            Set<Position> positions) {
+        return setWorkflowAddOrderPositions(parentPosition, 0, depth, insts, positions);
+    }
 
-    private static void setWorkflowAddOrderPositions(Object[] parentPosition, int depth, List<Instruction> insts, Set<Position> positions) {
+    private static int setWorkflowAddOrderPositions(Object[] parentPosition, int posIndex, int depth, List<Instruction> insts,
+            Set<Position> positions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
                 Instruction inst = insts.get(i);
-                Position p = new Position();
-                p.setPosition(Arrays.asList(pos));
-                if (p.getPosition().size() - depth > 3) {
-                    continue;
+                if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    Position p = new Position();
+                    p.setPosition(Arrays.asList(pos));
+                    if (p.getPosition().size() - depth > 3) {
+                        continue;
+                    }
+                    p.setPositionString(getJPositionString(p.getPosition()));
+                    p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
+                    p.setLabel(inst.getLabel());
+                    positions.add(p);
                 }
-                p.setPositionString(getJPositionString(p.getPosition()));
-                p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
-                p.setLabel(inst.getLabel());
-                positions.add(p);
                 // inst.setPosition(Arrays.asList(pos));
                 // inst.setPositionString(getJPositionString(inst.getPosition()));
                 switch (inst.getTYPE()) {
@@ -1183,11 +1222,20 @@ public class WorkflowsHelper {
                     // Cycle c = inst.cast();
                     // setWorkflowAddOrderPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), positions);
                     break;
+                case SEGMENT:
+                    Segment seg = inst.cast();
+                    posIndex--;
+                    if (seg.getBlock() != null) {
+                        posIndex = setWorkflowAddOrderPositions(parentPosition, posIndex, depth, seg.getBlock().getInstructions(), positions);
+                    }
+                    break;
+                
                 default:
                     break;
                 }
             }
         }
+        return posIndex;
     }
 
     public static void updateWorkflowBoardname(Map<String, String> oldNewBoardNames, List<Instruction> insts) {
@@ -1360,28 +1408,37 @@ public class WorkflowsHelper {
         }
     }
     
-    private static void setWorkflowBoardPositions(Object[] parentPosition, List<Instruction> insts, int level, Map<String, Set<String>> boardPostPositions,
+    private static int setWorkflowBoardPositions(Object[] parentPosition, List<Instruction> insts, int level,
+            Map<String, Set<String>> boardPostPositions,
+            Map<String, Set<String>> boardExpectPositions, Map<String, Set<String>> boardConsumePositions) {
+        return setWorkflowBoardPositions(parentPosition, 0, insts, level, boardPostPositions, boardExpectPositions, boardConsumePositions);
+    }
+    
+    private static int setWorkflowBoardPositions(Object[] parentPosition, int posIndex, List<Instruction> insts, int level,
+            Map<String, Set<String>> boardPostPositions,
             Map<String, Set<String>> boardExpectPositions, Map<String, Set<String>> boardConsumePositions) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 if (level > 0 && parentPosition.length/2 >= level) {
                     continue;
                 }
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
                 Instruction inst = insts.get(i);
                 Position p = new Position();
-                p.setPosition(Arrays.asList(pos));
-                p.setPositionString(getJPositionString(p.getPosition()));
-                p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
-                p.setLabel(inst.getLabel());
+                if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    p.setPosition(Arrays.asList(pos));
+                    p.setPositionString(getJPositionString(p.getPosition()));
+                    p.setType(inst.getTYPE().value().replace("Execute.Named", "Job"));
+                    p.setLabel(inst.getLabel());
+                }
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
                         if (b.getWorkflow() != null) {
-                            setWorkflowBoardPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), level, boardPostPositions,
-                                    boardExpectPositions, boardConsumePositions);
+                            setWorkflowBoardPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), level,
+                                    boardPostPositions, boardExpectPositions, boardConsumePositions);
                         }
                     }
                     break;
@@ -1395,12 +1452,12 @@ public class WorkflowsHelper {
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), level, boardPostPositions, boardExpectPositions,
-                                boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
                     }
                     if (ie.getElse() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), level, boardPostPositions, boardExpectPositions,
-                                boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
                     }
                     break;
                 case CASE_WHEN:
@@ -1417,15 +1474,15 @@ public class WorkflowsHelper {
                         }
                     }
                     if (cw.getElse() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), level, boardPostPositions, boardExpectPositions,
-                                boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), level, boardPostPositions, boardExpectPositions,
-                                boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), level, boardPostPositions,
+                                boardExpectPositions, boardConsumePositions);
                     }
                     if (tc.getCatch() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), level, boardPostPositions,
@@ -1463,40 +1520,41 @@ public class WorkflowsHelper {
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "stickySubagent"), ss.getSubworkflow().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "stickySubagent"), ss.getSubworkflow().getInstructions(), level,
+                                boardPostPositions, boardExpectPositions, boardConsumePositions);
                     }
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cns = inst.cast();
                     String cnsNamesExpr = cns.getNoticeBoardNames();
                     Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
-                    if (cnsNames != null && !cnsNames.isEmpty()) {
+                    if (cnsNames != null && !cnsNames.isEmpty() && p.getPositionString() != null) {
                         boardConsumePositions.put(p.getPositionString(), cnsNames);
                     }
                     if (cns.getSubworkflow() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                        setWorkflowBoardPositions(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), level,
+                                boardPostPositions, boardExpectPositions, boardConsumePositions);
                     }
                     break;
                 case EXPECT_NOTICES:
                     ExpectNotices ens = inst.cast();
                     String ensNamesExpr = ens.getNoticeBoardNames();
                     Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
-                    if (ensNames != null && !ensNames.isEmpty()) {
+                    if (ensNames != null && !ensNames.isEmpty() && p.getPositionString() != null) {
                         boardExpectPositions.put(p.getPositionString(), ensNames);
                     }
                     break;
                 case POST_NOTICES:
                     PostNotices pns = inst.cast();
-                    if (pns.getNoticeBoardNames() != null && !pns.getNoticeBoardNames().isEmpty()) {
+                    if (pns.getNoticeBoardNames() != null && !pns.getNoticeBoardNames().isEmpty() && p.getPositionString() != null) {
                         boardPostPositions.put(p.getPositionString(), pns.getNoticeBoardNames().stream().collect(Collectors.toSet()));
                     }
                     break;
-                case SEGMENT: // TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
+                    posIndex--;
                     if (seg.getBlock() != null) {
-                        setWorkflowBoardPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), level, boardPostPositions,
+                        posIndex = setWorkflowBoardPositions(parentPosition, posIndex, seg.getBlock().getInstructions(), level, boardPostPositions,
                                 boardExpectPositions, boardConsumePositions);
                     }
                     break;
@@ -1506,6 +1564,7 @@ public class WorkflowsHelper {
                 }
             }
         }
+        return posIndex;
     }
 
     public static Set<String> extractDisallowedImplicitEnds(List<Instruction> insts) {
@@ -1614,7 +1673,7 @@ public class WorkflowsHelper {
                         extractImplicitEnds(at.getBlock().getInstructions(), posSet, 0, true);
                     }
                     break;
-                case SEGMENT: // TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
                     if (seg.getBlock() != null) {
                         extractImplicitEnds(seg.getBlock().getInstructions(), posSet, 0, true);
@@ -2177,11 +2236,15 @@ public class WorkflowsHelper {
         return poss;
     }
     
-    private static void setCaseWhenPositions(Object[] parentPosition, List<Instruction> insts, Set<String> poss) {
+    private static int setCaseWhenPositions(Object[] parentPosition, List<Instruction> insts, Set<String> poss) {
+        return setCaseWhenPositions(parentPosition, 0, insts, poss);
+    }
+    
+    private static int setCaseWhenPositions(Object[] parentPosition, int posIndex, List<Instruction> insts, Set<String> poss) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                pos[parentPosition.length] = i;
+                Object[] pos = extendArray(parentPosition, posIndex);
+                posIndex++;
                 Instruction inst = insts.get(i);
                 switch (inst.getTYPE()) {
                 case FORK:
@@ -2273,10 +2336,11 @@ public class WorkflowsHelper {
                         setCaseWhenPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), poss);
                     }
                     break;
-                case SEGMENT: // TODO
+                case SEGMENT:
                     Segment seg = inst.cast();
+                    posIndex--;
                     if (seg.getBlock() != null) {
-                        setCaseWhenPositions(extendArray(pos, "segment"), seg.getBlock().getInstructions(), poss);
+                        posIndex = setCaseWhenPositions(parentPosition, posIndex, seg.getBlock().getInstructions(), poss);
                     }
                     break;
                 default:
@@ -2284,6 +2348,7 @@ public class WorkflowsHelper {
                 }
             }
         }
+        return posIndex;
     }
     
 //    public static Optional<NamedJob> getFirstJob(Instruction firstInst) {

@@ -1,0 +1,100 @@
+{
+    "TYPE": "Workflow",
+    "version": "1.8.1",
+    "timeZone": "Europe/Berlin",
+    "instructions": [
+        {
+            "TYPE": "Execute.Named",
+            "jobName": "job",
+            "label": "job0"
+        },
+        {
+            "TYPE": "Options",
+            "label": "opt-1",
+            "block": {
+                "instructions": [
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job",
+                        "label": "job1"
+                    },
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job",
+                        "label": "job2"
+                    },
+                    {
+                        "TYPE": "Options",
+                        "label": "opt-2",
+                        "block": {
+                            "instructions": [
+                                {
+                                    "TYPE": "Options",
+                                    "label": "opt-3",
+                                    "block": {
+                                        "instructions": [
+                                            {
+                                                "TYPE": "Execute.Named",
+                                                "jobName": "job",
+                                                "label": "job3"
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "TYPE": "CaseWhen",
+                                    "cases": [
+                                        {
+                                            "predicate": "false",
+                                            "then": {
+                                                "instructions": [
+                                                    {
+                                                        "TYPE": "Execute.Named",
+                                                        "jobName": "job",
+                                                        "label": "case1"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "predicate": "true",
+                                            "then": {
+                                                "instructions": [
+                                                    {
+                                                        "TYPE": "Execute.Named",
+                                                        "jobName": "job",
+                                                        "label": "case2"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job",
+                        "label": "job4"
+                    }
+                ]
+            }
+        },
+        {
+            "TYPE": "Execute.Named",
+            "jobName": "job",
+            "label": "job5"
+        }
+    ],
+    "jobs": {
+        "job": {
+            "agentName": "standalone-agent",
+            "executable": {
+                "TYPE": "ShellScriptExecutable",
+                "script": "#! /bin/sh\necho \"SEGMENT\""
+            },
+            "graceTimeout": 1
+        }
+    }
+}

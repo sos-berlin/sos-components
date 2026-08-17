@@ -16,7 +16,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.instruction.CaseWhen;
-import com.sos.inventory.model.instruction.ConsumeNotices;
 import com.sos.inventory.model.instruction.Instructions;
 import com.sos.inventory.model.instruction.When;
 import com.sos.inventory.model.workflow.Requirements;
