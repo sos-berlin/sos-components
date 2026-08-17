@@ -1662,7 +1662,7 @@ public abstract class KeyUtil {
     public static KeyPair createMLKEMKeyPairBC(MLKEMParameterSpec algorithmSpec) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Security.addProvider(new BouncyCastleProvider());
-        // Generate ML-KEM key pair
+        // Generate ML-KEM key pair with new MLKEM implementation of BC. This should replace old Kyber implementation, but does not work with every Java17 version.
         KeyPairGenerator kpGen = KeyPairGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
         if (algorithmSpec == null) {
             // Default
@@ -1671,29 +1671,28 @@ public abstract class KeyUtil {
         kpGen.initialize(algorithmSpec, new SecureRandom());
         return kpGen.generateKeyPair();
     }
+
+    public static JocKeyPair createMLKEMJocKeyPairBC(KeyPair keyPair, String account, String dn)
+            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        JocKeyPair jocKeyPair = new JocKeyPair();
+        byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
+        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        byte[] encodedPublic = keyPair.getPublic().getEncoded();
+        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+        jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
+        jocKeyPair.setKeyType(JocKeyType.PRIVATE.name());
+        return jocKeyPair;
+    }
     
     public static JocKeyPair createMLKEMJocKeyPairBC(MLKEMParameterSpec algorithmSpec, String account, String dn)
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        JocKeyPair keyPair = new JocKeyPair();
         KeyPair kp = createMLKEMKeyPairBC(algorithmSpec);
-        byte[] encodedPrivate = kp.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
-        byte[] encodedPublic = kp.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
-        keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
-        keyPair.setKeyType(JocKeyType.PRIVATE.name());
-//        try {
-//            keyPair.setCertificate(CertificateUtils.asPEMString(generateCertificateFromKeyPair(kp, account,
-//                    SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, dn)));
-//        } catch (CertificateEncodingException | IOException e) {
-//            LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
-//        }
-        return keyPair;
+        return createMLKEMJocKeyPairBC(kp, account, dn);
     }
 
-    public static JocKeyPair createMLKyberJocKeyPairBC(KyberParameterSpec algorithmSpec, String account, String dn)
+    public static KeyPair createMLKyberKeyPairBC(KyberParameterSpec algorithmSpec)
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Security.addProvider(new BouncyCastlePQCProvider());
         // Generate ML-KEM key pair
@@ -1703,23 +1702,27 @@ public abstract class KeyUtil {
             algorithmSpec = KyberParameterSpec.kyber768;
         }
         kpGen.initialize(algorithmSpec, new SecureRandom());
-        KeyPair kp = kpGen.generateKeyPair();
-        JocKeyPair keyPair = new JocKeyPair();
-        byte[] encodedPrivate = kp.getPrivate().getEncoded();
+        return kpGen.generateKeyPair();
+    }
+
+    public static JocKeyPair createMLKyberJocKeyPairBC(KeyPair keyPair, String account, String dn)
+            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        JocKeyPair jocKeyPair = new JocKeyPair();
+        byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
         String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
-        byte[] encodedPublic = kp.getPublic().getEncoded();
+        byte[] encodedPublic = keyPair.getPublic().getEncoded();
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
-        keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
-        keyPair.setKeyType(JocKeyType.PRIVATE.name());
-//        try {
-//            keyPair.setCertificate(CertificateUtils.asMlkemPEMString(generatePqcCertificateFromKeyPair(kp, account,
-//                    SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, dn, null, null)));
-//        } catch (CertificateEncodingException | IOException e) {
-//            LOGGER.warn("certificate could not be extracted from key pair. cause:", e);
-//        }
-        return keyPair;
+        jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
+        jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+        jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
+        jocKeyPair.setKeyType(JocKeyType.PRIVATE.name());
+        return jocKeyPair;
+    }
+
+    public static JocKeyPair createMLKyberJocKeyPairBC(KyberParameterSpec algorithmSpec, String account, String dn)
+            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        KeyPair kp = createMLKyberKeyPairBC(algorithmSpec);
+        return createMLKyberJocKeyPairBC(kp, account, dn);
     }
 
 }

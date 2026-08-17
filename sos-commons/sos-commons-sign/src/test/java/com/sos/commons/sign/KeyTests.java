@@ -17,14 +17,12 @@ import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
@@ -51,11 +49,6 @@ import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.SecretWithEncapsulation;
-import org.bouncycastle.crypto.kems.MLKEMExtractor;
-import org.bouncycastle.crypto.kems.MLKEMGenerator;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.params.MLKEMPrivateKeyParameters;
 import org.bouncycastle.jcajce.SecretKeyWithEncapsulation;
 import org.bouncycastle.jcajce.spec.KEMExtractSpec;
 import org.bouncycastle.jcajce.spec.KEMGenerateSpec;
@@ -66,7 +59,6 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCSException;
-import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.AfterClass;
@@ -264,7 +256,7 @@ public class KeyTests {
 
     @Test
     public void test04VerifySignatureString() {
-        LOGGER.trace("*********  Test 4: Verify Signature from String  ***********************************************"); 
+        LOGGER.trace("*********  Test 4: Verify Signature from String  ***********************************************");
         Boolean isVerified = null;
         try {
             isVerified = VerifySignature.verifyPGP(PUBLICKEY_STRING, ORIGINAL_STRING, SIGNATURE_STRING);
@@ -479,9 +471,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException | IOException | PGPException e) {
@@ -513,9 +505,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException | IOException | PGPException e) {
@@ -526,6 +518,7 @@ public class KeyTests {
             assertNotNull(keyPair.getPublicKey());
         }
     }
+
     @Test
     public void test11CreateKeyPairSignAndVerify() {
         LOGGER.trace("*********  Test 11: Create KeyPair, Sign and Verify  *******************************************");
@@ -576,9 +569,9 @@ public class KeyTests {
             LOGGER.trace("The created signature was verified.");
         }
     }
-    
+
     @Test
-    public void test12aExtractPublicKeyFromPrivateKeyString () {
+    public void test12aExtractPublicKeyFromPrivateKeyString() {
         LOGGER.trace("*********  Test 12a: Extract public key from private key String  *******************************");
         try {
             String publicKey = KeyUtil.extractPublicKey(PRIVATEKEY_STRING);
@@ -590,9 +583,9 @@ public class KeyTests {
     }
 
     @Test
-    public void test12bExtractPublicKeyFromPrivateKeyPath () {
+    public void test12bExtractPublicKeyFromPrivateKeyPath() {
         LOGGER.trace("*********  Test 12b: Extract public key from private key Path  *********************************");
-       Path privateKeyPath = Paths.get(PRIVATEKEY_PATH);
+        Path privateKeyPath = Paths.get(PRIVATEKEY_PATH);
         try {
             String publicKey = KeyUtil.extractPublicKey(privateKeyPath);
             LOGGER.trace("Public Key successfully restored from Private Key!");
@@ -603,7 +596,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test12cExtractPublicKeyFromPrivateKeyInputStreamFromString () {
+    public void test12cExtractPublicKeyFromPrivateKeyInputStreamFromString() {
         LOGGER.trace("*********  Test 12c: Extract public key from private key InputStream (from String)  ************");
         InputStream privateKeyStream = IOUtils.toInputStream(PRIVATEKEY_STRING, StandardCharsets.UTF_8);
         try {
@@ -616,7 +609,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test12dExtractPublicKeyFromPrivateKeyInputStreamFromFile () {
+    public void test12dExtractPublicKeyFromPrivateKeyInputStreamFromFile() {
         LOGGER.trace("*********  Test 12d: Extract public key from private key InputStream (from File)  **************");
         InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         try {
@@ -629,17 +622,17 @@ public class KeyTests {
     }
 
     @Test
-    public void test13aCheckValidityPeriodFromExpirableKeyInputStream () {
+    public void test13aCheckValidityPeriodFromExpirableKeyInputStream() {
         LOGGER.trace("*********  Test 13a: get validity period for private key (expirable)  **************************");
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRABLE_PRIVATEKEY_RESOURCE_PATH);
-        
+
         try {
             PGPPublicKey publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
             Long keyId = publicPGPKey.getKeyID();
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -647,9 +640,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -658,7 +651,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test13bCheckValidityPeriodFromUnexpirableKeyInputStream () {
+    public void test13bCheckValidityPeriodFromUnexpirableKeyInputStream() {
         LOGGER.trace("*********  Test 13b: get validity period for private key (not expirable)  **********************");
         InputStream privateKeyStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         try {
@@ -667,7 +660,7 @@ public class KeyTests {
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -675,9 +668,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -686,7 +679,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test13cCheckValidityPeriodFromAlreadyExpiredKeyInputStream () {
+    public void test13cCheckValidityPeriodFromAlreadyExpiredKeyInputStream() {
         LOGGER.trace("*********  Test 13c: get validity period for private key (already expired)  ********************");
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PRIVATEKEY_RESOURCE_PATH);
         try {
@@ -695,7 +688,7 @@ public class KeyTests {
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -703,9 +696,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -714,7 +707,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test13dCheckValidityPeriodFromExpirableKeyInputStream () {
+    public void test13dCheckValidityPeriodFromExpirableKeyInputStream() {
         LOGGER.trace("*********  Test 13d: get validity period for public key (expirable)  ***************************");
         InputStream publicKeyStream = getClass().getResourceAsStream(EXPIRABLE_PUBLICKEY_RESOURCE_PATH);
         try {
@@ -723,7 +716,7 @@ public class KeyTests {
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -731,9 +724,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -742,7 +735,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test13eCheckValidityPeriodFromUnexpirableKeyInputStream () {
+    public void test13eCheckValidityPeriodFromUnexpirableKeyInputStream() {
         LOGGER.trace("*********  Test 13e: get validity period for public key (not expirable)  ***********************");
         InputStream privateKeyStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
         try {
@@ -751,7 +744,7 @@ public class KeyTests {
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -759,9 +752,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -770,7 +763,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test13fCheckValidityPeriodFromAlreadyExpiredKeyInputStream () {
+    public void test13fCheckValidityPeriodFromAlreadyExpiredKeyInputStream() {
         LOGGER.trace("*********  Test 13f: get validity period for public key (already expired)  *********************");
         InputStream privateKeyStream = getClass().getResourceAsStream(EXPIRED_PUBLICKEY_RESOURCE_PATH);
         try {
@@ -779,7 +772,7 @@ public class KeyTests {
             String keyID = Long.toHexString(keyId).toUpperCase();
             LOGGER.trace(String.format("Extracted KeyId (original as Long): %1$d", keyId));
             LOGGER.trace(String.format("Extracted KeyId (as Hex String): %1$s", keyID));
-            LOGGER.trace(String.format("Extracted UserId: %1$s", (String)publicPGPKey.getUserIDs().next()));
+            LOGGER.trace(String.format("Extracted UserId: %1$s", (String) publicPGPKey.getUserIDs().next()));
             LOGGER.trace(String.format("Extracted \"Fingerprint\": %1$s", Hex.toHexString(publicPGPKey.getFingerprint())));
             LOGGER.trace(String.format("Extracted \"Encoded\": %1$s", Hex.toHexString(publicPGPKey.getEncoded())));
             Date validUntil = KeyUtil.getValidUntil(publicPGPKey);
@@ -787,9 +780,9 @@ public class KeyTests {
                 LOGGER.trace("Key does not expire!");
             } else {
                 if (validUntil.getTime() < Date.from(Instant.now()).getTime()) {
-                    LOGGER.trace("Key has expired on: " + validUntil.toString()); 
+                    LOGGER.trace("Key has expired on: " + validUntil.toString());
                 } else {
-                    LOGGER.trace("valid until: " + validUntil.toString()); 
+                    LOGGER.trace("valid until: " + validUntil.toString());
                 }
             }
         } catch (IOException | PGPException e) {
@@ -798,7 +791,7 @@ public class KeyTests {
     }
 
     @Test
-    public void test14CheckKeyStringIsValidPGPKeyString () throws IOException, PGPException {
+    public void test14CheckKeyStringIsValidPGPKeyString() throws IOException, PGPException {
         LOGGER.trace("*********  Test 14: check if provided String really is a PGP key String  ***********************");
         Boolean valid = null;
         LOGGER.trace("***************  check 1: private Key; valid true Test  ****************************************");
@@ -833,7 +826,7 @@ public class KeyTests {
         LOGGER.trace("Key is valid: " + valid);
         assertFalse(valid);
         LOGGER.trace("***************  check 5a: JocKeyPair private key; valid true  *********************************");
-        JocKeyPair keyPair = new JocKeyPair();               
+        JocKeyPair keyPair = new JocKeyPair();
         keyPair.setPrivateKey(PRIVATEKEY_STRING);
         keyPair.setKeyAlgorithm(SOSKeyConstants.PGP_ALGORITHM_NAME);
         keyPair.setPublicKey(null);
@@ -866,10 +859,10 @@ public class KeyTests {
         LOGGER.trace("KeyPair is valid: " + valid);
         assertFalse(valid);
     }
-    
+
     @Test
-    public void test15CheckValidityInformationFromValidSecondsAndExpirationTime ()
-            throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+    public void test15CheckValidityInformationFromValidSecondsAndExpirationTime() throws IOException, PGPException, NoSuchAlgorithmException,
+            NoSuchProviderException, InvalidKeyException, SignatureException {
         LOGGER.trace("*********  Test 15: check valid seconds and expirationTime set  ********************************");
         Instant now = Instant.now();
         long yearInMillis = 1000L * 60L * 60L * 24L * 365L;
@@ -910,11 +903,10 @@ public class KeyTests {
                 LOGGER.warn("Created signature verification was not successful!");
             }
             assertTrue(verified);
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
-                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | SignatureException
+                | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
-        finally {
+        } finally {
             assertNotNull(signature);
         }
     }
@@ -939,11 +931,10 @@ public class KeyTests {
                 LOGGER.warn("Created signature verification was not successful!");
             }
             assertTrue(verified);
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
-                | InvalidKeySpecException | SignatureException | DataLengthException | NoSuchProviderException e) {
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | SignatureException | DataLengthException
+                | NoSuchProviderException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
-        finally {
+        } finally {
             assertNotNull(signature);
         }
     }
@@ -968,11 +959,10 @@ public class KeyTests {
                 LOGGER.warn("Created signature verification was not successful!");
             }
             assertTrue(verified);
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
-                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | SignatureException
+                | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
-        finally {
+        } finally {
             assertNotNull(signature);
         }
     }
@@ -985,8 +975,8 @@ public class KeyTests {
             String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
-            Certificate certificate =  KeyUtil.getCertificate(
-                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            Certificate certificate = KeyUtil.getCertificate(new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)),
+                    StandardCharsets.UTF_8));
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
@@ -997,14 +987,12 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
-                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | SignatureException
+                | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
-        catch(CertificateException e){
+        } catch (CertificateException e) {
             LOGGER.error(e.getMessage(), e);
-        }
-        finally {
+        } finally {
             assertNotNull(signature);
         }
     }
@@ -1017,8 +1005,8 @@ public class KeyTests {
             String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
-            X509Certificate certificate =  KeyUtil.getX509Certificate(
-                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            X509Certificate certificate = KeyUtil.getX509Certificate(new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)),
+                    StandardCharsets.UTF_8));
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
@@ -1029,14 +1017,12 @@ public class KeyTests {
             } else {
                 LOGGER.warn("Created signature verification was not successful!");
             }
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException 
-                | InvalidKeySpecException | SignatureException | DataLengthException e) {
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | SignatureException
+                | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
-        catch(CertificateException e){
+        } catch (CertificateException e) {
             LOGGER.error(e.getMessage(), e);
-        }
-        finally {
+        } finally {
             assertNotNull(signature);
         }
     }
@@ -1049,8 +1035,8 @@ public class KeyTests {
             String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
-            X509Certificate certificate =  KeyUtil.getX509Certificate(
-                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            X509Certificate certificate = KeyUtil.getX509Certificate(new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)),
+                    StandardCharsets.UTF_8));
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
@@ -1077,8 +1063,8 @@ public class KeyTests {
             String privateKeyString = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
             KeyPair keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
-            Certificate certificate =  KeyUtil.getCertificate(
-                    new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8));
+            Certificate certificate = KeyUtil.getCertificate(new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)),
+                    StandardCharsets.UTF_8));
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.trace("Signing was successful!");
@@ -1107,8 +1093,8 @@ public class KeyTests {
             boolean keyPairMatches = KeyUtil.pubKeyMatchesPrivKey(keyPair.getPrivate(), keyPair.getPublic());
             LOGGER.trace("Keys From KeyPair match: " + keyPairMatches);
             boolean compareMatched = KeyUtil.compareRSAKeyAndCertificate(privateKeyString, certificateString);
-            X509Certificate x509Certificate =  KeyUtil.getX509Certificate(certificateString);
-            Certificate certificate =  KeyUtil.getCertificate(certificateString);
+            X509Certificate x509Certificate = KeyUtil.getX509Certificate(certificateString);
+            Certificate certificate = KeyUtil.getCertificate(certificateString);
             LOGGER.trace("Private Key and Certificate match: " + compareMatched);
             boolean keysX509Match = KeyUtil.pubKeyFromCertMatchPrivKey(keyPair.getPrivate(), x509Certificate);
             LOGGER.trace("Private Key and Certificate match: " + keysX509Match);
@@ -1128,7 +1114,7 @@ public class KeyTests {
             LOGGER.trace("Private Key from KeyPair and Public Key from Certificate match: " + keysMatches);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | DataLengthException | CertificateException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
+        }
     }
 
     @Test
@@ -1143,7 +1129,7 @@ public class KeyTests {
             assertTrue(keysAndGeneratedX509Match);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | DataLengthException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
+        }
     }
 
     @Test
@@ -1159,7 +1145,7 @@ public class KeyTests {
             assertNotNull(jocKeyPair);
         } catch (NoSuchAlgorithmException | DataLengthException | NoSuchProviderException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
+        }
     }
 
     @Test
@@ -1174,25 +1160,23 @@ public class KeyTests {
             LOGGER.trace(String.format("KeyID: %1$s", jocKeyPair.getKeyID()));
             LOGGER.trace(String.format("validUntil: %1$s", jocKeyPair.getValidUntil()));
             assertNotNull(jocKeyPair);
-            KeyPair kp = new KeyPair(
-                    KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), 
-                    KeyUtil.getPrivateKeyFromString(jocKeyPair.getPrivateKey()));
+            KeyPair kp = new KeyPair(KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), KeyUtil
+                    .getPrivateKeyFromString(jocKeyPair.getPrivateKey()));
             LOGGER.trace("PrivateKey before and after parsing match: " + keyPair.getPrivate().equals(kp.getPrivate()));
             assertEquals(keyPair.getPrivate(), kp.getPrivate());
             LOGGER.trace("PublicKey before and after parsing match: " + keyPair.getPublic().equals(kp.getPublic()));
             assertEquals(keyPair.getPublic(), kp.getPublic());
         } catch (NoSuchAlgorithmException | DataLengthException | NoSuchProviderException | InvalidKeySpecException | IOException e) {
             LOGGER.error(e.getMessage(), e);
-        } 
+        }
     }
-    
+
     @Test
-    public void test27ExtRSAKeyAndCertificate () throws IOException {
+    public void test27ExtRSAKeyAndCertificate() throws IOException {
         LOGGER.trace("*********  Test 27: use OpenSSL generated RSA Key and X.509 certificate  ***********************");
-        String privateKeyString = new String(Files.readAllBytes(
-                Paths.get("src/test/resources/sos.private-rsa-key.pem")), StandardCharsets.UTF_8);
-        String certificateString = new String(Files.readAllBytes(
-                Paths.get("src/test/resources/sos.certificate-rsa-key.pem")), StandardCharsets.UTF_8);
+        String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-rsa-key.pem")), StandardCharsets.UTF_8);
+        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.certificate-rsa-key.pem")),
+                StandardCharsets.UTF_8);
         KeyPair keyPair = null;
         String signature = null;
         try {
@@ -1200,7 +1184,7 @@ public class KeyTests {
             keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
             assertNotNull(keyPair);
             LOGGER.trace("*********  create X.509 certifcate Object from File  *******************************************");
-            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+            X509Certificate certificate = KeyUtil.getX509Certificate(certificateString);
             assertNotNull(certificate);
             LOGGER.trace("*********  create signature of example String with private RSA key from KeyPair object  ********");
             signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
@@ -1211,23 +1195,17 @@ public class KeyTests {
             LOGGER.trace("*********  verify signature with X.509 certificate object  *************************************");
             Boolean verified = VerifySignature.verifyX509(certificate, ORIGINAL_STRING, signature);
             assertTrue(verified);
-        } catch (NoSuchAlgorithmException|
-                InvalidKeySpecException|
-                CertificateException | 
-                InvalidKeyException | 
-                SignatureException | 
-                NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | CertificateException | InvalidKeyException | SignatureException
+                | NoSuchProviderException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
     @Test
-    public void test28ExtECDSAKeyAndCertificate () throws IOException {
+    public void test28ExtECDSAKeyAndCertificate() throws IOException {
         LOGGER.trace("*********  Test 28: use OpenSSL generated ECDSA Key and X.509 certificate  *********************");
-        String privateKeyString = new String(Files.readAllBytes(
-                Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
-        String certificateString = new String(Files.readAllBytes(
-                Paths.get("src/test/resources/sos.certificate-ec-key.pem")), StandardCharsets.UTF_8);
+        String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
+        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.certificate-ec-key.pem")), StandardCharsets.UTF_8);
         KeyPair keyPair = null;
         String signature = null;
         try {
@@ -1235,7 +1213,7 @@ public class KeyTests {
             keyPair = KeyUtil.getKeyPairFromECDSAPrivatKeyString(privateKeyString);
             assertNotNull(keyPair);
             LOGGER.trace("*********  create X.509 certifcate Object from File  *******************************************");
-            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+            X509Certificate certificate = KeyUtil.getX509Certificate(certificateString);
             assertNotNull(certificate);
             LOGGER.trace("*********  create signature of example String with private ECDSA key from KeyPair object  ******");
             signature = SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getPrivate(), ORIGINAL_STRING);
@@ -1247,26 +1225,20 @@ public class KeyTests {
             boolean verified = VerifySignature.verifyX509BC(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, certificate, ORIGINAL_STRING, signature);
             LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verified);
             verified = VerifySignature.verifyX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, certificate.getPublicKey(), ORIGINAL_STRING, signature);
-            LOGGER.trace(
-                    "Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verified);
+            LOGGER.trace("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verified);
             assertTrue(verified);
-        } catch (NoSuchAlgorithmException|
-                InvalidKeySpecException|
-                CertificateException | 
-                InvalidKeyException | 
-                SignatureException | 
-                NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | CertificateException | InvalidKeyException | SignatureException
+                | NoSuchProviderException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
 
     @Test
-    public void test29ExtractCNFromX509Certificate () throws IOException, CertificateException, InvalidNameException {
+    public void test29ExtractCNFromX509Certificate() throws IOException, CertificateException, InvalidNameException {
         LOGGER.trace("*********  Test 29: extract CN from client X.509 certificate  **********************************");
-        String certificateString = new String(Files.readAllBytes(
-                Paths.get("src/test/resources/sp.crt")), StandardCharsets.UTF_8);
+        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sp.crt")), StandardCharsets.UTF_8);
         LOGGER.trace("*********  create X.509 certifcate Object from File  *******************************************");
-        X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+        X509Certificate certificate = KeyUtil.getX509Certificate(certificateString);
         assertNotNull(certificate);
         String subjectDN = certificate.getSubjectX500Principal().getName();
         // get CN with bouncy castle
@@ -1274,34 +1246,33 @@ public class KeyTests {
         RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
         String clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
         LOGGER.trace("bouncycastle: CN=" + clientCN);
-        
+
         // get CN with LDAP
         LdapName ldapName = new LdapName(subjectDN);
         clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
         LOGGER.trace("LdapName: CN=" + clientCN);
-            
+
     }
 
     @Test
     @Ignore
-    public void test30ParseKey () throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, PKCSException {
+    public void test30ParseKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, PKCSException {
         LOGGER.trace("*********************  Test 30: parse a private key  *******************************************");
         String privateKeyString = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\keys\\centostest_primary\\agent.key")));
         PrivateKey key = KeyUtil.getPrivateKeyFromString(privateKeyString);
     }
-    
+
     @Test
     @Ignore
-    public void test31createECKeyAndValidInvalidCerts () throws NoSuchAlgorithmException, NoSuchProviderException,
-          InvalidAlgorithmParameterException, InvalidKeySpecException, IOException, CertificateEncodingException {
-      LOGGER.trace("***********  Test 31: create EC key and valid and invalid certs  *******************************");
-      String account = "sp";
-      String dn = "CN=sp,OU=devel,O=sos-berlin,L=Berlin,ST=Berlin,C=DE";
-      JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(account, dn);
-      KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(jocKeyPair.getPrivateKey());
+    public void test31createECKeyAndValidInvalidCerts() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            InvalidKeySpecException, IOException, CertificateEncodingException {
+        LOGGER.trace("***********  Test 31: create EC key and valid and invalid certs  *******************************");
+        String account = "sp";
+        String dn = "CN=sp,OU=devel,O=sos-berlin,L=Berlin,ST=Berlin,C=DE";
+        JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(account, dn);
+        KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(jocKeyPair.getPrivateKey());
         Files.write(Paths.get("./target/private.key"), jocKeyPair.getPrivateKey().getBytes());
-        X509Certificate certValidNewest = KeyUtil.generateCertificateFromKeyPair(kp, account, 
-            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn);
+        X509Certificate certValidNewest = KeyUtil.generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn);
         long secondsYear = 365 * 24 * 60 * 60;
         long secondsTwoDays = 2 * 24 * 60 * 60;
         long secondsFourDays = 4 * 24 * 60 * 60;
@@ -1310,39 +1281,39 @@ public class KeyTests {
         Date dateTwoDaysAhead = Date.from(Instant.now().plusSeconds(secondsTwoDays));
         Date dateFourDaysAgo = Date.from(Instant.now().minusSeconds(secondsFourDays));
         Date dateFourDaysAhead = Date.from(Instant.now().plusSeconds(secondsFourDays));
-        
-        X509Certificate certInvalidTwoDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, 
-            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateYearAgo, dateTwoDaysAgo);
-        X509Certificate certInvalidFourDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, 
-            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateYearAgo, dateFourDaysAgo);
-        X509Certificate certValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, 
-            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateTwoDaysAgo, dateFourDaysAhead);
-        X509Certificate certNotYetValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, 
-            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn, dateTwoDaysAhead, dateFourDaysAhead);
+
+        X509Certificate certInvalidTwoDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn,
+                dateYearAgo, dateTwoDaysAgo);
+        X509Certificate certInvalidFourDaysAgo = KeyUtil.generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn,
+                dateYearAgo, dateFourDaysAgo);
+        X509Certificate certValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn,
+                dateTwoDaysAgo, dateFourDaysAhead);
+        X509Certificate certNotYetValidFourDaysAhead = KeyUtil.generateCertificateFromKeyPair(kp, account, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, dn,
+                dateTwoDaysAhead, dateFourDaysAhead);
         Files.write(Paths.get("./target/sp_valid-newest.crt"), Base64.getEncoder().encode(certValidNewest.getEncoded()));
         Files.write(Paths.get("./target/sp_invalid-2days-ago.crt"), Base64.getEncoder().encode(certInvalidTwoDaysAgo.getEncoded()));
         Files.write(Paths.get("./target/sp_invalid-4days-ago.crt"), Base64.getEncoder().encode(certInvalidFourDaysAgo.getEncoded()));
         Files.write(Paths.get("./target/sp_valid-4Days-ahead.crt"), Base64.getEncoder().encode(certValidFourDaysAhead.getEncoded()));
         Files.write(Paths.get("./target/sp_valid-in2Days-4Days-ahead.crt"), Base64.getEncoder().encode(certNotYetValidFourDaysAhead.getEncoded()));
     }
-    
+
     @Test
-    public void test32CheckDataPositive () throws SOSKeyException, IOException {
-      LOGGER.trace("***********  Test 32: check date if it is really a certificate or key  *************************");
-      String certificate = new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8);
-      String privateKey = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
-      KeyUtil.isInputCertOrPublicKey(certificate);
-      KeyUtil.isInputPrivateKey(privateKey);
+    public void test32CheckDataPositive() throws SOSKeyException, IOException {
+        LOGGER.trace("***********  Test 32: check date if it is really a certificate or key  *************************");
+        String certificate = new String(Files.readAllBytes(Paths.get(X509_CERTIFICATE_PATH)), StandardCharsets.UTF_8);
+        String privateKey = new String(Files.readAllBytes(Paths.get(X509_PRIVATEKEY_PATH)), StandardCharsets.UTF_8);
+        KeyUtil.isInputCertOrPublicKey(certificate);
+        KeyUtil.isInputPrivateKey(privateKey);
     }
-    
+
     @Test(expected = SOSKeyException.class)
-    public void test33CheckDataNegative () throws SOSKeyException, IOException {
-      LOGGER.trace("***********  Test 33: check date if it is really a certificate or key  *************************");
-      String wrongValue = "Hello World";
-      KeyUtil.isInputCertOrPublicKey(wrongValue);
-      KeyUtil.isInputPrivateKey(wrongValue);
+    public void test33CheckDataNegative() throws SOSKeyException, IOException {
+        LOGGER.trace("***********  Test 33: check date if it is really a certificate or key  *************************");
+        String wrongValue = "Hello World";
+        KeyUtil.isInputCertOrPublicKey(wrongValue);
+        KeyUtil.isInputPrivateKey(wrongValue);
     }
-    
+
     @SuppressWarnings("unused")
     private static String byteArrayToHexString(byte[] ba) {
         MessageDigest digest;
@@ -1390,8 +1361,7 @@ public class KeyTests {
         try {
             LOGGER.info("****************  Sign  ************************************************************************");
             signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(keyPair.getPrivateKey())), 
-                    ORIGINAL_STRING);
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(keyPair.getPrivateKey())), ORIGINAL_STRING);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
@@ -1403,62 +1373,7 @@ public class KeyTests {
         try {
             LOGGER.info("****************  Verify  **********************************************************************");
             Boolean verified = VerifySignature.verifyBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPublicKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(keyPair.getPublicKey())), ORIGINAL_STRING,
-                    signature);
-            if (verified) {
-                LOGGER.info("Created signature verification was successful!");
-            } else {
-                LOGGER.warn("Created signature verification was not successful!");
-            }
-            assertTrue(verified);
-        } catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException | NoSuchProviderException
-                | IOException e) {
-            LOGGER.error(e.getMessage(), e);
-        } finally {
-            LOGGER.info("The created private key was used for signing.");
-            LOGGER.info("The created public key was used for verification.");
-            LOGGER.info("The created signature was verified.");
-        }
-    }
-    
-    @Ignore
-    @Test
-    public void test35CreateMLKEMKeyPairSignAndVerify() {
-        LOGGER.info("*********  Test 35: Create ML-KEM KeyPair, Sign and Verify  ************************************");
-        String username = "test";
-        String signature = null;
-        JocKeyPair keyPair = null;
-        try {
-            LOGGER.info("****************  Create KeyPair  **************************************************************");
-            keyPair = KeyUtil.createMLKyberJocKeyPairBC(KyberParameterSpec.kyber768, username, null);
-            assertNotNull(keyPair.getPrivateKey());
-            assertNotNull(keyPair.getPublicKey());
-            assertNotEquals(keyPair.getPrivateKey(), "");
-            assertNotEquals(keyPair.getPublicKey(), "");
-            LOGGER.info("KeyPair generation was successful!");
-            LOGGER.info(String.format("privateKey:\n%1$s%2$s", keyPair.getPrivateKey().substring(0, 120), "..."));
-            LOGGER.info(String.format("publicKey:\n%1$s%2$s", keyPair.getPublicKey().substring(0, 119), "..."));
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
-            LOGGER.info("KeyPair generation was not successful!");
-            LOGGER.error(e.getMessage(), e);
-        }
-        try {
-            LOGGER.info("****************  Sign  ************************************************************************");
-            signature = SignObject.signMLKEM(KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, 
-                    KeyUtil.stripFormatFromPrivateKey(keyPair.getPrivateKey())), ORIGINAL_STRING);
-            assertNotNull(signature);
-            assertNotEquals(signature, "");
-            LOGGER.info("Signing was successful!");
-            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 112), "..."));
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException | NoSuchProviderException e) {
-            LOGGER.info("Signing was not successful!");
-            LOGGER.error(e.getMessage(), e);
-        }
-        try {
-            LOGGER.info("****************  Verify  **********************************************************************");
-            Boolean verified = VerifySignature.verifyBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, KeyUtil.getPublicKeyFromStringBC(
-                    SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(keyPair.getPublicKey())), ORIGINAL_STRING,
-                    signature);
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(keyPair.getPublicKey())), ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.info("Created signature verification was successful!");
             } else {
@@ -1475,46 +1390,66 @@ public class KeyTests {
         }
     }
 
-    @Ignore
+    // @Ignore
     @Test
-    public void test36CreateAndValidateMLKEMKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
-        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair and check secret  ************************************");
-        Security.addProvider(new BouncyCastlePQCProvider());
+    public void test35CreateAndValidateMLKEMKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
+        LOGGER.info("*********  Test 35: Create ML-KEM KeyPair and check secret  ************************************");
+        String username = "test";
         LOGGER.info("****************  Create KeyPair  **************************************************************");
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("Kyber", "BCPQC");
-        kpg.initialize(KyberParameterSpec.kyber768);
-        KeyPair keyPair = kpg.generateKeyPair();
-        
-        // Transport Object
-        JocKeyPair jocKeyPair = new JocKeyPair();
-        byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
-        byte[] encodedPublic = keyPair.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        jocKeyPair.setPrivateKey(KeyUtil.formatPrivateECDSAKey(encodedPrivateToString));
-        jocKeyPair.setPublicKey(KeyUtil.formatPublicECDSAKey(encodedPublicToString));
-        jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
-        jocKeyPair.setKeyType(JocKeyType.PRIVATE.name());
+        KeyPair keyPair = KeyUtil.createMLKEMKeyPairBC(MLKEMParameterSpec.ml_kem_768);
+        JocKeyPair jocKeyPair = KeyUtil.createMLKEMJocKeyPairBC(keyPair, username, null);
         LOGGER.info("KeyPair generation was successful!");
         LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
         LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
-        
+        // Transport Object
+        PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, 
+                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+        KeyGenerator keyGenSender = KeyGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
+        keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
+        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
+
+        LOGGER.info("****************  Verify  **********************************************************************");
+        KeyGenerator keyGenReceiver = KeyGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
+
+        PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, 
+                KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
+        keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
+        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
+
+        if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
+            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
+        }
+    }
+
+    @Test
+    public void test36CreateAndValidateKyberKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
+        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair with Kyber and check secret  *************************");
+        String username = "test";
+        LOGGER.info("****************  Create KeyPair  **************************************************************");
+        KeyPair keyPair = KeyUtil.createMLKyberKeyPairBC(KyberParameterSpec.kyber768);
+        JocKeyPair jocKeyPair = KeyUtil.createMLKyberJocKeyPairBC(keyPair, username, null);
+        LOGGER.info("KeyPair generation was successful!");
+        LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
+        LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
+        // Transport Object
+
         PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
                 KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
-        KeyGenerator keyGenSender = KeyGenerator.getInstance("Kyber", "BCPQC");
+         KeyGenerator keyGenSender = KeyGenerator.getInstance("Kyber", "BCPQC");
         keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
-        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation)keyGenSender.generateKey();
-        
+        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
+
         LOGGER.info("****************  Verify  **********************************************************************");
         KeyGenerator keyGenReceiver = KeyGenerator.getInstance("Kyber", "BCPQC");
 
         PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
                 KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
         keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
-        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation)keyGenReceiver.generateKey();
-
+        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
         if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
-            LOGGER.info("AES key generated successfully: " + Hex.toHexString(secEnc1.getEncoded()));
+            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
         }
     }
 
@@ -1525,8 +1460,8 @@ public class KeyTests {
         String username = "test";
         String signature = null;
         // signer: key pair of the user that requests the csr,
-        //         the csr will be signed by the key pair of the user the certificate should be signed for
-        KeyPair signerkeyPair = null; 
+        // the csr will be signed by the key pair of the user the certificate should be signed for
+        KeyPair signerkeyPair = null;
         JocKeyPair jocKeyPair = null;
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
@@ -1547,33 +1482,32 @@ public class KeyTests {
         }
         Certificate issuerCert = null;
         X509Certificate userCertificate = null;
-        if(jocKeyPair != null) {
-            String filename = "X.509.MLDSA.certificate_bundle.zip";
-            String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        if (jocKeyPair != null) {
+            String filename = "X.509.MLDSA-44.certificate_bundle.zip";
+            String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE");
             String csrString = null;
             try {
                 // issuer: the CA that takes the user signed csr and creates an issuer signed user certificate
-                KeyPair issuerkeyPair = KeyUtil.getKeyPairFromEncryptedPrivatKeyString(
-                        new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.key"))), 
-                        new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.pwd"))));
+                KeyPair issuerkeyPair = KeyUtil.getKeyPairFromEncryptedPrivatKeyString(new String(Files.readAllBytes(Paths.get(
+                        "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.key"))), new String(Files.readAllBytes(Paths.get(
+                                "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.pwd"))));
                 issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
                 // create a CertificateSigningRequest (CSR) for the users KeyPair
-                PKCS10CertificationRequest  csr = CAUtils.createCSR(signerkeyPair.getPrivate().getAlgorithm(),
-                        signerkeyPair, userSubjectDN);
+                PKCS10CertificationRequest csr = CAUtils.createCSR(signerkeyPair.getPrivate().getAlgorithm(), signerkeyPair, userSubjectDN);
                 csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
                 // use the users CSR to create the new user certificate and sign it by the given CA
-                userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
-                        issuerkeyPair.getPrivate(), signerkeyPair, csr, (X509Certificate)issuerCert, "test sp sp.sos");
-                
-                String userCert =  CertificateUtils.asPEMString(userCertificate);
+                userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), signerkeyPair, csr,
+                        (X509Certificate) issuerCert, "test sp sp.sos");
+
+                String userCert = CertificateUtils.asPEMString(userCertificate);
                 jocKeyPair.setCertificate(userCert);
                 // verify the CA signed user certificate against the public key of the CA
                 userCertificate.verify(issuerkeyPair.getPublic());
-                exportCertificateBundle(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\root-ca.key"))),
-                       new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"))),
-                       csrString, jocKeyPair.getPrivateKey(), jocKeyPair.getCertificate(), filename);
-            } catch (IOException | NoSuchAlgorithmException | CertException | CertificateException | OperatorCreationException | 
-                    InvalidKeyException | NoSuchProviderException | SignatureException e) {
+                exportCertificateBundle(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\root-ca.key"))), new String(Files
+                        .readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"))), csrString, jocKeyPair.getPrivateKey(),
+                        jocKeyPair.getCertificate(), filename);
+            } catch (IOException | NoSuchAlgorithmException | CertException | CertificateException | OperatorCreationException | InvalidKeyException
+                    | NoSuchProviderException | SignatureException e) {
                 LOGGER.info("Signing was not successful!");
                 LOGGER.error(e.getMessage(), e);
             }
@@ -1582,8 +1516,7 @@ public class KeyTests {
             LOGGER.info("****************  Sign  ************************************************************************");
             // sign the test string with the users private (MLDSA) key
             signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey())), 
-                    ORIGINAL_STRING);
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey())), ORIGINAL_STRING);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
@@ -1596,8 +1529,7 @@ public class KeyTests {
             LOGGER.info("****************  Verify  **********************************************************************");
             // verify the signature with the users public key
             Boolean verified = VerifySignature.verifyBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPublicKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), ORIGINAL_STRING,
-                    signature);
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), ORIGINAL_STRING, signature);
             if (verified) {
                 LOGGER.info("Created signature verification was successful!");
             } else {
@@ -1605,7 +1537,7 @@ public class KeyTests {
             }
             assertTrue(verified);
             // verify the signature with the CAs public key derived from the CAs certificate
-            if(issuerCert != null) {
+            if (issuerCert != null) {
                 try {
                     verified = VerifySignature.verifyX509(issuerCert.getPublicKey(), ORIGINAL_STRING, signature);
                     LOGGER.info("Signature verification with intermediate certificate was successful!");
@@ -1615,7 +1547,7 @@ public class KeyTests {
                 }
             }
             // verify the signature with the users public key derived from the users X509 certificate (the controller way)
-            if(userCertificate != null) {
+            if (userCertificate != null) {
                 try {
                     verified = VerifySignature.verifyX509(userCertificate.getPublicKey(), ORIGINAL_STRING, signature);
                     LOGGER.info("Signature verification with user certificate was successful!");
@@ -1633,7 +1565,7 @@ public class KeyTests {
             LOGGER.info("The public key of the created X509 certificate was used for signature verification.");
             LOGGER.info("The created signature was verified.");
         }
-        
+
     }
 
     @Ignore
@@ -1642,21 +1574,137 @@ public class KeyTests {
         String key = new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_private.key")));
         assertNotNull(KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(key)));
         LOGGER.info("parsing key from file user_private.key was successful.");
-    }    
+    }
 
     @Ignore
     @Test
     public void test39KeyPairValidMLDSA() throws IOException {
         JocKeyPair keyPair = new JocKeyPair();
         keyPair.setPrivateKey(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_private.key"))));
-        keyPair.setCertificate(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_certificate.crt"))));
+        keyPair.setCertificate(new String(Files.readAllBytes(Paths.get(
+                "C:\\sp\\devel\\js7\\signing\\MLDSA\\generated\\20260722\\user_certificate.crt"))));
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
         keyPair.setKeyType(JocKeyType.PRIVATE.name());
         assertTrue(KeyUtil.isKeyPairValid(keyPair));
     }
-    
-    private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert, String filename)
-            throws IOException {
+
+    @Ignore
+    @Test
+    public void test401CreateMLKEMKeyPairAndCertificate() {
+        LOGGER.info("*********  Test 40: Create ML-KEM KeyPair and X509 certificate  ************************************");
+        String username = "test";
+        String signature = null;
+        // signer: key pair of the user that requests the csr,
+        // the csr will be signed by the key pair of the user the certificate should be signed for
+        KeyPair signerkeyPair = null;
+        JocKeyPair jocKeyPair = null;
+        try {
+            LOGGER.info("****************  Create KeyPair  **************************************************************");
+            // create new KeyPair for user
+            signerkeyPair = KeyUtil.createMLDSAKeyPairBC(MLDSAParameterSpec.ml_dsa_87);
+            // create new JocKeyPair from the java KeyPair
+            jocKeyPair = KeyUtil.createMLDSAJocKeyPairBC(signerkeyPair, username, null);
+            assertNotNull(jocKeyPair.getPrivateKey());
+            assertNotNull(jocKeyPair.getPublicKey());
+            assertNotEquals(jocKeyPair.getPrivateKey(), "");
+            assertNotEquals(jocKeyPair.getPublicKey(), "");
+            LOGGER.info("KeyPair generation was successful!");
+            LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
+            LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
+            LOGGER.info("KeyPair generation was not successful!");
+            LOGGER.error(e.getMessage(), e);
+        }
+        Certificate issuerCert = null;
+        X509Certificate userCertificate = null;
+        if (jocKeyPair != null) {
+            String filename = "X.509.MLDSA-44.certificate_bundle.zip";
+            String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE");
+            String csrString = null;
+            try {
+                // issuer: the CA that takes the user signed csr and creates an issuer signed user certificate
+                KeyPair issuerkeyPair = KeyUtil.getKeyPairFromEncryptedPrivatKeyString(new String(Files.readAllBytes(Paths.get(
+                        "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.key"))), new String(Files.readAllBytes(Paths.get(
+                                "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.pwd"))));
+                issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
+                // create a CertificateSigningRequest (CSR) for the users KeyPair
+                PKCS10CertificationRequest csr = CAUtils.createCSR(signerkeyPair.getPrivate().getAlgorithm(), signerkeyPair, userSubjectDN);
+                csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+                // use the users CSR to create the new user certificate and sign it by the given CA
+                userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), signerkeyPair, csr,
+                        (X509Certificate) issuerCert, "test sp sp.sos");
+
+                String userCert = CertificateUtils.asPEMString(userCertificate);
+                jocKeyPair.setCertificate(userCert);
+                // verify the CA signed user certificate against the public key of the CA
+                userCertificate.verify(issuerkeyPair.getPublic());
+                exportCertificateBundle(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\root-ca.key"))), new String(Files
+                        .readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"))), csrString, jocKeyPair.getPrivateKey(),
+                        jocKeyPair.getCertificate(), filename);
+            } catch (IOException | NoSuchAlgorithmException | CertException | CertificateException | OperatorCreationException | InvalidKeyException
+                    | NoSuchProviderException | SignatureException e) {
+                LOGGER.info("Signing was not successful!");
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+        try {
+            LOGGER.info("****************  Sign  ************************************************************************");
+            // sign the test string with the users private (MLDSA) key
+            signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey())), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 112), "..."));
+        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException e) {
+            LOGGER.info("Signing was not successful!");
+            LOGGER.error(e.getMessage(), e);
+        }
+        try {
+            LOGGER.info("****************  Verify  **********************************************************************");
+            // verify the signature with the users public key
+            Boolean verified = VerifySignature.verifyBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPublicKeyFromStringBC(
+                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), ORIGINAL_STRING, signature);
+            if (verified) {
+                LOGGER.info("Created signature verification was successful!");
+            } else {
+                LOGGER.warn("Created signature verification was not successful!");
+            }
+            assertTrue(verified);
+            // verify the signature with the CAs public key derived from the CAs certificate
+            if (issuerCert != null) {
+                try {
+                    verified = VerifySignature.verifyX509(issuerCert.getPublicKey(), ORIGINAL_STRING, signature);
+                    LOGGER.info("Signature verification with intermediate certificate was successful!");
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                    LOGGER.warn("Signature verification with intermediate certificate was not successful!");
+                }
+            }
+            // verify the signature with the users public key derived from the users X509 certificate (the controller way)
+            if (userCertificate != null) {
+                try {
+                    verified = VerifySignature.verifyX509(userCertificate.getPublicKey(), ORIGINAL_STRING, signature);
+                    LOGGER.info("Signature verification with user certificate was successful!");
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                    LOGGER.warn("Signature verification with user certificate was not successful!");
+                }
+            }
+        } catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException | NoSuchProviderException
+                | IOException e) {
+            LOGGER.error(e.getMessage(), e);
+        } finally {
+            LOGGER.info("The created private key was used for signing.");
+            LOGGER.info("The created public key was used for signature verification.");
+            LOGGER.info("The public key of the created X509 certificate was used for signature verification.");
+            LOGGER.info("The created signature was verified.");
+        }
+
+    }
+
+    private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert,
+            String filename) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
         Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
@@ -1666,7 +1714,7 @@ public class KeyTests {
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
-        if(rootCert != null) {
+        if (rootCert != null) {
             ZipEntry rootCertEntry = new ZipEntry("root_certificate.crt");
             zipOut.putNextEntry(rootCertEntry);
             zipOut.write(rootCert.getBytes());
