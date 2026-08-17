@@ -767,7 +767,7 @@ public class HistoryModel {
         if (resetSessionOnConstraintViolationEventId > 0 && eventId > resetSessionOnConstraintViolationEventId) {
             resetSessionOnConstraintViolationEventId = 0L;
             LOGGER.info(String.format(
-                    "[%s][ConstraintViolation][recovery][end]single-transaction mode ended at eventId=%s, switched back to normal batch commits (every %s)",
+                    "[%s][ConstraintViolation][recovery][completed]single-transaction mode ended at eventId=%s, switched back to normal batch commits (every %s)",
                     controllerConfiguration.getCurrent().getId(), eventId, maxTransactions));
         }
     }
