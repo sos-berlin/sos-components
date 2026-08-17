@@ -28,6 +28,8 @@ import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.history.controller.exception.HistoryFatalException;
 import com.sos.joc.history.controller.exception.HistoryProcessingDatabaseConnectException;
 import com.sos.joc.history.controller.exception.HistoryProcessingException;
+import com.sos.joc.history.controller.exception.HistoryProcessingResetProcessingNeededException;
+import com.sos.joc.history.controller.exception.model.HistoryModelResetProcessingNeededException;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.FluxEventHandler;
 import com.sos.joc.history.controller.proxy.FluxStopper;
@@ -218,7 +220,8 @@ public class HistoryControllerHandler {
             } catch (Throwable ex) {
                 errorCounter++;
                 boolean waitForDatabaseConnection = false;
-
+                boolean waitForAfterTorn = false;
+                boolean waitForResetProcessingNeeded = false;
                 if (closed.get()) {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()));
                 } else {
@@ -226,6 +229,7 @@ public class HistoryControllerHandler {
                         if (isTornException((ProblemException) ex)) {
                             LOGGER.info(String.format("%s[TORN]%s", method, ex.toString()));
                             tornAfterEventId = new AtomicLong(getTornEventId());
+                            waitForAfterTorn = true;
                         } else {
                             LOGGER.error(String.format("%s[errorCounter=%s]%s", method, errorCounter, ex.toString()), ex);
                         }
@@ -242,6 +246,10 @@ public class HistoryControllerHandler {
                             waitForDatabaseConnection = true;
                             errorCounter = 0;
                             LOGGER.error(String.format("%s%s", method, ex.toString()), ex);
+                        } else if (ex instanceof HistoryProcessingResetProcessingNeededException) {
+                            waitForResetProcessingNeeded = true;
+                            errorCounter = 0;
+                            LOGGER.info(String.format("%s%s", method, ex.getCause().getMessage()));
                         } else {
                             if (config.getMaxStopProcessingOnErrors() > 0 && errorCounter >= config.getMaxStopProcessingOnErrors()) {
                                 HistoryFatalException hfe = new HistoryFatalException(controllerId, config.getMaxStopProcessingOnErrors(), ex);
@@ -263,8 +271,14 @@ public class HistoryControllerHandler {
                     waitForDatabaseConnection();
                 } else {
                     long interval = config.getWaitIntervalOnProcessingError();
-                    if (errorCounter > 10) {
-                        interval = interval * 2;
+                    if (waitForAfterTorn) {
+                        interval = 2L;
+                    } else if (waitForResetProcessingNeeded) {
+                        interval = 2L;
+                    } else {
+                        if (errorCounter > 10) {
+                            interval = interval * 2;
+                        }
                     }
                     waitFor(interval);
                 }
@@ -409,7 +423,9 @@ public class HistoryControllerHandler {
                                     releaseEvents(eventId.get());
                                     lastActivityEnd.set(new Date().getTime());
                                     errorCounter = 0;
-                                } catch (Throwable e) {
+                                } catch (HistoryModelResetProcessingNeededException e) {
+                                    throw new HistoryProcessingResetProcessingNeededException(e);
+                                } catch (Exception e) {
                                     inProcess.set(false);
                                     if (SOSHibernate.isConnectException(e)) {
                                         throw new HistoryProcessingDatabaseConnectException(controllerId, e);
@@ -1025,7 +1041,7 @@ public class HistoryControllerHandler {
             if (stopper != null) {
                 stopper.stop();
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.warn("[" + serviceIdentifier + "][stopFlux][stopper]" + e.toString(), e);
         }
     }

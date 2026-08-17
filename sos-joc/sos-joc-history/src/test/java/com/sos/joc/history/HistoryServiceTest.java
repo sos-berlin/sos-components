@@ -42,8 +42,8 @@ public class HistoryServiceTest {
 
     private List<ControllerConfiguration> getControllers() {
         Properties p = new Properties();
-        p.setProperty("controller_id", "js7.x");
-        p.setProperty("primary_controller_uri", "http://localhost:5444");
+        p.setProperty("controller_id", "js7-2.8.x-52899");
+        p.setProperty("primary_controller_uri", "http://localhost:62899");
 
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
         ControllerConfiguration c = new ControllerConfiguration();
@@ -61,13 +61,15 @@ public class HistoryServiceTest {
     public void test() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        Path resDir = Paths.get("src/test/resources");
+        Path resDir = Paths.get("src/test/resources").toAbsolutePath();
+        Path hibernate = resDir.resolve("hibernate").resolve("hibernate.cfg.pgsql.xml");
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Globals.sosCockpitProperties.getProperties().setProperty("history_log_dir", resDir.resolve("logs").toString());
+        Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", hibernate.toString());
 
-        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate").resolve("hibernate.cfg.mysql.xml"),
-                resDir, JocSecurityLevel.LOW, false, "title", "joc", 0, "joc#0", "2.5.4");
+        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", hibernate, resDir, JocSecurityLevel.LOW, false, "title", "joc", 0,
+                "joc#0", "2.8.5");
 
         HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         AConfigurationSection configuration = null;
