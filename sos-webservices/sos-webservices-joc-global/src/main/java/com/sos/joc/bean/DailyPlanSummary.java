@@ -47,7 +47,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
     private AtomicBoolean hasOrderEvent = new AtomicBoolean(false);
     private AtomicBoolean initialised = new AtomicBoolean(false);
     private ZoneId zoneId = ZoneOffset.UTC;
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistorySummaryMBean.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSummaryMBean.class);
     private Predicate<String> isMainOrder = oId -> oId == null || !oId.contains("|");
     private Predicate<String> isDailyPlanOrder = oId -> oId == null || oId.contains(".*#[PC][0-9]+-.*");
     private Predicate<DBItemDailyPlanWithHistory> isCancelled = item -> OrderStateText.CANCELLED.intValue() == item.getState();
@@ -194,11 +194,19 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
                     });
 
             int all = finished.get() + planned.get() + plannedLate.get() + submitted.get() + submittedLate.get();
-            finishedOrders = finished.get() * 100 / all;
-            plannedLateOrders = plannedLate.get() * 100 / all;
-            plannedOrders = planned.get() * 100 / all;
-            submittedLateOrders = submittedLate.get() * 100 / all;
-            submittedOrders = submitted.get() * 100 / all;
+            if (all == 0) {
+                finishedOrders = 0;
+                plannedLateOrders = 0;
+                plannedOrders = 0;
+                submittedLateOrders = 0;
+                submittedOrders = 0;
+            } else {
+                finishedOrders = finished.get() * 100 / all;
+                plannedLateOrders = plannedLate.get() * 100 / all;
+                plannedOrders = planned.get() * 100 / all;
+                submittedLateOrders = submittedLate.get() * 100 / all;
+                submittedOrders = submitted.get() * 100 / all;
+            }
 
         } catch (Exception e) {
             LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
