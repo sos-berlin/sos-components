@@ -361,8 +361,7 @@ public class JsonConverter {
             List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex, ZoneId zoneId) {
         if (invInstructions != null) {
             int signIndex = 0;
-            for (int i = 0; i < invInstructions.size(); i++) {
-                Instruction invInstruction = invInstructions.get(i);
+            for (Instruction invInstruction : invInstructions) {
                 com.sos.sign.model.instruction.Instruction signInstruction = signInstructions.get(signIndex);
                 switch (invInstruction.getTYPE()) {
                 case FORKLIST:
@@ -445,10 +444,10 @@ public class JsonConverter {
                     }
                     break;
                 case POST_NOTICE:
-                    signInstructions.set(i, NoticeToNoticesConverter.postNoticeToSignPostNotices(signInstruction.cast()));
+                    signInstructions.set(signIndex, NoticeToNoticesConverter.postNoticeToSignPostNotices(signInstruction.cast()));
                     break;
                 case EXPECT_NOTICE:
-                    signInstructions.set(i, NoticeToNoticesConverter.expectNoticeToSignExpectNotices(signInstruction.cast()));
+                    signInstructions.set(signIndex, NoticeToNoticesConverter.expectNoticeToSignExpectNotices(signInstruction.cast()));
                     break;
                 case CONSUME_NOTICES:
                     ConsumeNotices cn = invInstruction.cast();
