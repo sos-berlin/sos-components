@@ -104,7 +104,10 @@ public class ClusterWatch {
                     } else {
                         LOGGER.info("[ClusterWatch] no Controller cluster registered.");
                     }
-                    controllerDbInstances.forEach((controllerId, dbItems) -> ProxiesEdit.update(dbItems, true));
+                    
+                    // unforced if no joc cluster installed or not called after switch-over
+                    boolean force = evt.getOldClusterMemberId() != null;
+                    controllerDbInstances.forEach((controllerId, dbItems) -> ProxiesEdit.update(dbItems, force));
 
                     Proxies.getControllerDbInstances().keySet().stream().filter(c -> !controllerDbInstances.containsKey(c)).forEach(Proxies
                             .getInstance()::removeProxies);
