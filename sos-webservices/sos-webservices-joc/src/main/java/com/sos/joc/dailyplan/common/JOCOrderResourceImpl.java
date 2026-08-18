@@ -210,7 +210,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
         p.setPlannedStartTime(item.getPlannedStart());
         p.setExpectedEndTime(item.getExpectedEnd());
-        p.setLate(item.isLate());
         p.setSurveyDate(SOSDate.toUtcDate(item.getPlannedOrderCreated()));
 
         p.setStartMode(item.getStartMode());

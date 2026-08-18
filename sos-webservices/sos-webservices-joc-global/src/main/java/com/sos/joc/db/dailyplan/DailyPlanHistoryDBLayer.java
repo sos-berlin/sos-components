@@ -2,6 +2,7 @@ package com.sos.joc.db.dailyplan;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -136,5 +137,32 @@ public class DailyPlanHistoryDBLayer extends DBLayer {
             query.setMaxResults(limit);
         }
         return getSession().getResultList(query);
+    }
+    
+    public List<DBItemDailyPlanWithHistory> getOrdersWithHistoryState(String controllerId, Date submissionTime)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("select ");
+        hql.append("p.orderId as orderId,");
+        hql.append("p.submitted as submitted,");
+        hql.append("p.plannedStart as plannedStart,");
+        hql.append("o.startTime as startTime,");
+        hql.append("o.state as state ");
+        hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
+        hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" s on p.submissionHistoryId = s.id left outer join ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
+        hql.append("where p.controllerId=:controllerId ");
+        hql.append("and s.submissionForDate=:submissionTime");
+
+        Query<DBItemDailyPlanWithHistory> query = getSession().createQuery(hql.toString(), DBItemDailyPlanWithHistory.class);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("submissionTime", submissionTime);
+        
+        List<DBItemDailyPlanWithHistory> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+
+        return result;
     }
 }
