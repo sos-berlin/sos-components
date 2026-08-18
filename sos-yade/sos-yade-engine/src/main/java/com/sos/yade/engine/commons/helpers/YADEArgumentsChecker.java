@@ -193,8 +193,8 @@ public class YADEArgumentsChecker {
         if (targetArgs.getResumeFiles().isTrue()) {
             if (!args.getRetryOnConnectionError().isEnabled()) {
                 targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
-                logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),
-                        YADEArgumentsHelper.toString(args.getConnectionErrorRetryCountMax()));
+                logger.info("[%s][%s]due to RetryOnConnectionError is not configured", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(
+                        targetArgs.getResumeFiles()));
             } else if (targetArgs.isCompressFilesEnabled()) {
                 targetArgs.getResumeFiles().setValue(Boolean.valueOf(false));
                 logger.info("[%s][%s]due to %s", YADETargetArguments.LABEL, YADEArgumentsHelper.toString(targetArgs.getResumeFiles()),

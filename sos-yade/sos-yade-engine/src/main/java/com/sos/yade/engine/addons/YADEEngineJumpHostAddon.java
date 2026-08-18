@@ -2,6 +2,7 @@ package com.sos.yade.engine.addons;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLJumpHostSettings
 import com.sos.yade.engine.commons.delegators.AYADEProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADESourceProviderDelegator;
 import com.sos.yade.engine.commons.delegators.YADETargetProviderDelegator;
+import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 import com.sos.yade.engine.exceptions.YADEEngineInitializationException;
 import com.sos.yade.engine.exceptions.YADEEngineJumpHostException;
 import com.sos.yade.engine.handlers.command.YADECommandExecutor;
@@ -168,6 +170,11 @@ public class YADEEngineJumpHostAddon {
 
             newSourceArgs.getCommands().addCommandBeforeOperation(config.getYADEClientCommand(config.settingsXML, config.profileId));
             argsLoader.setSourceArgs(newSourceArgs);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[CURRENT_JUMP_ARGS_AS_SOURCE]" + YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, newSourceArgs,
+                        Collections.singleton(newSourceArgs.getProvider().getClass().getSimpleName())));
+            }
         } else {
             // Source (Any Provider) - the same as before
             // Target (Jump Host)
@@ -183,12 +190,21 @@ public class YADEEngineJumpHostAddon {
             newTargetArgs.getCreateDirectories().setValue(Boolean.valueOf(true));
             newTargetArgs.setProvider(argsLoader.getJumpHostArgs().getProvider());
             newTargetArgs.setCommands(argsLoader.getJumpHostArgs().getCommands());
-            // only KeepModificationDate - all other TargetOptions such as AppendFiles, Atomic, CumulativeFile, etc.
+            // Only the following settings are relevant for the transfer from the source to the jump:
+            // - CheckSize/KeepModificationDate/ResumeFiles
+            // all other TargetOptions such as AppendFiles, Atomic, CumulativeFile, etc.
             // are applied during the transfer from the JumpHost to the Target (generated in the config.settingsXML)
+            newTargetArgs.getCheckSize().setValue(argsLoader.getTargetArgs().getCheckSize().getValue());
             newTargetArgs.getKeepModificationDate().setValue(argsLoader.getTargetArgs().getKeepModificationDate().getValue());
+            newTargetArgs.getResumeFiles().setValue(argsLoader.getTargetArgs().getResumeFiles().getValue());
 
             newTargetArgs.getCommands().addCommandAfterOperationOnSuccess(config.getYADEClientCommand(config.settingsXML, config.profileId));
             argsLoader.setTargetArgs(newTargetArgs);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("[CURRENT_JUMP_ARGS_AS_TARGET]" + YADEArgumentsHelper.toString(logger, YADEJumpHostArguments.LABEL, newTargetArgs,
+                        Collections.singleton(newTargetArgs.getProvider().getClass().getSimpleName())));
+            }
         }
         // logger.info(jumpHostSettingsXMLContent);
 

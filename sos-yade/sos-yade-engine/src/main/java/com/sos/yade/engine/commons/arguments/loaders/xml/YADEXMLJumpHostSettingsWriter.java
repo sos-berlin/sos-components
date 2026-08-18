@@ -883,9 +883,11 @@ public class YADEXMLJumpHostSettingsWriter {
 
         sb.append("<Directory>").append(cdata(config.getDataDirectory())).append("</Directory>");
 
-        // only KeepModificationDate - see comments YADEEngineJumpHostAddon.init()
+        // only CheckSize/KeepModificationDate/ResumeFiles - see comments YADEEngineJumpHostAddon.init()
         sb.append("<TargetFileOptions>");
+        sb.append("<CheckSize>").append(targetArgs.getCheckSize().getValue()).append("</CheckSize>");
         sb.append("<KeepModificationDate>").append(targetArgs.getKeepModificationDate().getValue()).append("</KeepModificationDate>");
+        sb.append("<ResumeFiles>").append(targetArgs.getResumeFiles().getValue()).append("</ResumeFiles>");
         sb.append("</TargetFileOptions>");
 
         sb.append("</CopyTarget>");
