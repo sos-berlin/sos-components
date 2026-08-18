@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -104,6 +107,17 @@ public class ConverterTest {
                 .getInstructions());
         System.out.println(result);
         assertTrue(result.equals(expectedInstructions));
+    }
+    
+    @Test
+    public void TestWorkflowWithSegmentInstructions2() throws IOException {
+
+        Path json = Paths.get("src/test/resources/json/largeSegmentWorkflow.json");
+        List<com.sos.sign.model.instruction.Instruction> resultInsts = JsonConverter.readAsConvertedDeployObject("hallo", "segmentWorkflow", Files
+                .readString(json), com.sos.sign.model.workflow.Workflow.class, null, null).getInstructions();
+        String result = Globals.objectMapper.writeValueAsString(resultInsts);
+        System.out.println(result);
+        assertTrue(resultInsts.size() == 1000);
     }
     
     @Test

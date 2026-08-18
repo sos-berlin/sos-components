@@ -360,9 +360,10 @@ public class JsonConverter {
     private static void convertInstructions(String controllerId, String workflowName, List<Instruction> invInstructions,
             List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex, ZoneId zoneId) {
         if (invInstructions != null) {
+            int signIndex = 0;
             for (int i = 0; i < invInstructions.size(); i++) {
                 Instruction invInstruction = invInstructions.get(i);
-                com.sos.sign.model.instruction.Instruction signInstruction = signInstructions.get(i);
+                com.sos.sign.model.instruction.Instruction signInstruction = signInstructions.get(signIndex);
                 switch (invInstruction.getTYPE()) {
                 case FORKLIST:
                     ForkList fl = invInstruction.cast();
@@ -523,16 +524,21 @@ public class JsonConverter {
                 case SEGMENT:
                     Segment seg = invInstruction.cast();
                     com.sos.sign.model.instruction.Segment sseg = signInstruction.cast();
+                    int segmentIndex = signInstructions.indexOf(sseg);
                     signInstructions.remove(sseg);
+                    signIndex--;
                     if (seg.getBlock() != null && sseg.getBlock().getInstructions() != null) {
-                        signInstructions.addAll(i, sseg.getBlock().getInstructions());
-                        convertInstructions(controllerId, workflowName, seg.getBlock().getInstructions(), signInstructions.subList(i, i + sseg
-                                .getBlock().getInstructions().size()), addOrderIndex, zoneId);
+                        signInstructions.addAll(segmentIndex, sseg.getBlock().getInstructions());
+                        int blockSize = sseg.getBlock().getInstructions().size();
+                        signIndex += blockSize; 
+                        convertInstructions(controllerId, workflowName, seg.getBlock().getInstructions(), signInstructions.subList(segmentIndex,
+                                segmentIndex + blockSize), addOrderIndex, zoneId);
                     }
                     break;
                 default:
                     break;
                 }
+                signIndex++;
             }
         }
     }
