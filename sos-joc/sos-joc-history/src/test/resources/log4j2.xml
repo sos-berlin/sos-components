@@ -19,13 +19,13 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<Root level="trace">
+		<Root level="info">
 			<AppenderRef ref="console" />
 			<!-- <AppenderRef ref="fileLogger" /> -->
 		</Root>
 		<Logger name="org.hibernate" level="fatal" />
 		<Logger name="com.mchange.v2" level="fatal" />
-		<Logger name="com.sos" level="trace" />
-		<Logger name="js7" level="trace" />
+		<Logger name="com.sos" level="info" />
+		<Logger name="js7" level="info" />
 	</Loggers>
 </Configuration>

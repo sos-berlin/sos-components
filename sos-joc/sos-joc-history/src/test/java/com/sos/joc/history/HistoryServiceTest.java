@@ -8,11 +8,13 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.query.Query;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
@@ -21,11 +23,34 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class HistoryServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryServiceTest.class);
+
+    @Ignore
+    @Test
+    public void test() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+        Path resDir = Paths.get("src/test/resources").toAbsolutePath();
+        Path hibernate = resDir.resolve("hibernate").resolve("hibernate.cfg.pgsql.xml");
+
+        Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.sosCockpitProperties.getProperties().setProperty("history_log_dir", resDir.resolve("logs").toString());
+        Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", hibernate.toString());
+
+        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", hibernate, resDir, JocSecurityLevel.LOW, false, "title", "joc", 0,
+                "joc#0", "2.x");
+
+        HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        AConfigurationSection configuration = null;
+        service.start(StartupMode.manual_restart, getControllers(), configuration);
+        HistoryServiceTest.stopAfter(service, StartupMode.manual_restart, 60);
+    }
 
     private static void stopAfter(IJocActiveMemberService service, StartupMode mode, int seconds) {
         LOGGER.info(String.format("[start][stopAfter][%ss]...", seconds));
@@ -41,41 +66,28 @@ public class HistoryServiceTest {
     }
 
     private List<ControllerConfiguration> getControllers() {
-        Properties p = new Properties();
-        p.setProperty("controller_id", "js7-2.8.x-52899");
-        p.setProperty("primary_controller_uri", "http://localhost:62899");
-
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
-        ControllerConfiguration c = new ControllerConfiguration();
+        SOSHibernateSession session = null;
         try {
-            c.load(p);
-            list.add(c);
-        } catch (Exception e) {
+            session = Globals.getHibernateFactory().openStatelessSession("getControllersId");
+            Query<DBItemInventoryJSInstance> query = session.createQuery("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+
+            List<DBItemInventoryJSInstance> result = session.getResultList(query);
+            for (DBItemInventoryJSInstance item : result) {
+                Properties p = new Properties();
+                p.setProperty("controller_id", item.getControllerId());
+                p.setProperty("primary_controller_uri", item.getUri());
+
+                ControllerConfiguration c = new ControllerConfiguration();
+                c.load(p);
+                list.add(c);
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getControllersId]%s", e.toString()), e);
+        } finally {
+            Globals.getHibernateFactory().close(session);
         }
-
         return list;
-    }
-
-    @Ignore
-    @Test
-    public void test() throws Exception {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-
-        Path resDir = Paths.get("src/test/resources").toAbsolutePath();
-        Path hibernate = resDir.resolve("hibernate").resolve("hibernate.cfg.pgsql.xml");
-
-        Globals.sosCockpitProperties = new JocCockpitProperties();
-        Globals.sosCockpitProperties.getProperties().setProperty("history_log_dir", resDir.resolve("logs").toString());
-        Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", hibernate.toString());
-
-        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", hibernate, resDir, JocSecurityLevel.LOW, false, "title", "joc", 0,
-                "joc#0", "2.8.5");
-
-        HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        AConfigurationSection configuration = null;
-        service.start(StartupMode.manual_restart, getControllers(), configuration);
-        HistoryServiceTest.stopAfter(service, StartupMode.manual_restart, 60);
-
     }
 
 }
