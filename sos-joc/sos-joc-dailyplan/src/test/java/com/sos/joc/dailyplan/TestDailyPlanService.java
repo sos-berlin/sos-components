@@ -9,12 +9,14 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.query.Query;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -27,6 +29,8 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.service.active.IJocActiveMemberService;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class TestDailyPlanService {
@@ -38,23 +42,24 @@ public class TestDailyPlanService {
         TimeZone.setDefault(TimeZone.getTimeZone(SOSDate.TIMEZONE_UTC));
     }
 
-    @Test
     @Ignore
-    public void test3() throws Exception {
-        Globals.sosCockpitProperties = new JocCockpitProperties();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    @Test
+    public void testService() throws Exception {
+        Path resDir = Paths.get("src/test/resources").toAbsolutePath();
+        Path hibernateFile = resDir.resolve("hibernate").resolve("hibernate.cfg.pgsql.xml");
 
-        Path resDir = Paths.get("src/test/resources");
-        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
-                false, "title", "joc", 0, "joc#0", "2.5.4");
+        Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.sosCockpitProperties.getProperties().put("hibernate_configuration_file", hibernateFile.toString());
+
+        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", hibernateFile, resDir, JocSecurityLevel.LOW, false, "title",
+                "joc", 0, "joc#0", "2.x");
 
         DailyPlanService service = new DailyPlanService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        ConfigurationGlobals configurations = new ConfigurationGlobals();
+        ConfigurationGlobals configurations = Globals.getConfigurationGlobals();
         AConfigurationSection configuration = configurations.getConfigurationSection(DefaultSections.dailyplan);
 
         service.start(StartupMode.manual_restart, getControllers(), configuration);
-        TestDailyPlanService.stopAfter(service, StartupMode.manual_restart, 13 * 60);
-
+        TestDailyPlanService.stopAfter(service, StartupMode.manual_restart, 2 * 60);
     }
 
     @Ignore
@@ -82,18 +87,28 @@ public class TestDailyPlanService {
     }
 
     private List<ControllerConfiguration> getControllers() {
-        Properties p = new Properties();
-        p.setProperty("controller_id", "controller");
-        p.setProperty("primary_controller_uri", "http://localhost:4424");
-
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
-        ControllerConfiguration c = new ControllerConfiguration();
+        SOSHibernateSession session = null;
         try {
-            c.load(p);
-            list.add(c);
-        } catch (Exception e) {
-        }
+            session = Globals.getHibernateFactory().openStatelessSession("getControllersId");
+            Query<DBItemInventoryJSInstance> query = session.createQuery("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
 
+            List<DBItemInventoryJSInstance> result = session.getResultList(query);
+            for (DBItemInventoryJSInstance item : result) {
+                Properties p = new Properties();
+                p.setProperty("controller_id", item.getControllerId());
+                p.setProperty("primary_controller_uri", item.getUri());
+
+                ControllerConfiguration c = new ControllerConfiguration();
+                c.load(p);
+                list.add(c);
+            }
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[getControllersId]%s", e.toString()), e);
+        } finally {
+            Globals.getHibernateFactory().close(session);
+        }
         return list;
     }
+
 }
