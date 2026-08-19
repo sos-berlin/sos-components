@@ -4,9 +4,11 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
@@ -117,12 +119,18 @@ public class PeriodResolver {
         Date startUTC = Date.from(JobSchedulerDate.getScheduledForInUTC(startDateTime, timeZone).get());
         // NOW
         Date nowUTC = JobSchedulerDate.nowInUtc();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("    [isInDailyPlanPeriod][period_begin=%s(%s)][UTC][DailyPlanPeriod start=%s, end=%s]now=%s", settings
+                    .getPeriodBegin(), timeZone, SOSDate.tryGetDateTimeAsString(periodStartUTC), SOSDate.tryGetDateTimeAsString(periodEndUTC), SOSDate
+                            .tryGetDateTimeAsString(nowUTC)));
+        }
+
         // Check
         boolean isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("    [isInDailyPlanPeriod=%s][UTC][start=%s][DailyPlanPeriod start=%s, end=%s][now=%s]", isInDailyPlanPeriod,
-                    SOSDate.tryGetDateTimeAsString(startUTC), SOSDate.tryGetDateTimeAsString(periodStartUTC), SOSDate.tryGetDateTimeAsString(
-                            periodEndUTC), SOSDate.tryGetDateTimeAsString(nowUTC)));
+            LOGGER.debug(String.format("      [isInDailyPlanPeriod=%s][start=%s(%s)->%s(UTC)]", isInDailyPlanPeriod, SOSDate.tryGetDateTimeAsString(
+                    startUTC.getTime(), TimeZone.getTimeZone(timeZone)), timeZone, SOSDate.tryGetDateTimeAsString(startUTC)));
         }
 
         frequencyResolverDates.add(frequencyResolverDate);
@@ -133,15 +141,31 @@ public class PeriodResolver {
             if (!settings.isPeriodBeginMidnight() && dailyPlanDate.equals(frequencyResolverDate)) {
                 frequencyResolverDates.add(getNextDateAsString(frequencyResolverDate));
 
-                startUTC = SOSDate.add(startUTC, 1, ChronoUnit.DAYS);
+                // Important: add plusDays(1) to the LocalDateTime before applying the time zone.
+                // Example 1:
+                // 2027-03-27 02:59:59 + 1 day -> 2027-03-28 02:59:59
+                // then atZone(Europe/Berlin) -> 2027-03-28 03:59:59 due to DST.
+                //
+                // Example 2:
+                // 2027-03-28 02:59:59 + 1 day -> 2027-03-29 02:59:59
+                // then atZone(Europe/Berlin) -> 2027-03-29 02:59:59.
+                //
+                // If atZone() is applied before plusDays(1), Example 2 would first become:
+                // 2027-03-28 02:59:59 -> 2027-03-28 03:59:59 due to DST
+                // then +1 day -> 2027-03-29 03:59:59, which is incorrect.
+                ZonedDateTime newStartDateTime = LocalDateTime.parse(startDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).plusDays(1)
+                        .atZone(ZoneId.of(timeZone));
+
+                // startUTC = SOSDate.add(startUTC, 1, ChronoUnit.DAYS);
+                startUTC = Date.from(newStartDateTime.toInstant());
                 // Check
                 isInDailyPlanPeriod = startUTC.after(nowUTC) && startUTC.getTime() >= periodStartUTC.getTime() && startUTC.before(periodEndUTC);
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format(
-                            "    [isInDailyPlanPeriod=%s][recheck due to period_begin=%s][UTC][start=%s][DailyPlanPeriod start=%s, end=%s][now=%s]",
-                            isInDailyPlanPeriod, settings.getPeriodBegin(), SOSDate.tryGetDateTimeAsString(startUTC), SOSDate.tryGetDateTimeAsString(
-                                    periodStartUTC), SOSDate.tryGetDateTimeAsString(periodEndUTC), SOSDate.tryGetDateTimeAsString(nowUTC)));
+                            "      [isInDailyPlanPeriod=%s][start=%s(%s)->%s(UTC)]start time redefined and rechecked because period_begin=%s",
+                            isInDailyPlanPeriod, SOSDate.tryGetDateTimeAsString(startUTC.getTime(), TimeZone.getTimeZone(timeZone)), timeZone, SOSDate
+                                    .tryGetDateTimeAsString(startUTC), settings.getPeriodBegin()));
                 }
             }
         }
