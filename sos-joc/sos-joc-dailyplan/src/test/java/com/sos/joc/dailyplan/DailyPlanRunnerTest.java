@@ -174,7 +174,7 @@ public class DailyPlanRunnerTest {
         Date dailyPlanDate = dps.getDailyPlanDate();
         if (dailyPlanDate == null) {
             // next day
-            dailyPlanDate = SOSDate.add(SOSDate.getDate(currentSystemDatetime), dps.getDaysAheadPlan(), ChronoUnit.DAYS);
+            dailyPlanDate = SOSDate.addToDate(SOSDate.getDate(currentSystemDatetime), dps.getDaysAheadPlan(), ChronoUnit.DAYS);
         }
 
         String dateFrom = SOSDate.tryGetDateTimeAsString(dailyPlanDate);
