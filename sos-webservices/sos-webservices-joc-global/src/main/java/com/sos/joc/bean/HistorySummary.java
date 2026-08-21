@@ -43,6 +43,7 @@ public class HistorySummary implements HistorySummaryMBean, IJocMBean {
         orderStepsHistoryFilter = initOrderStepsHistoryFilter();
         EventBus.getInstance().register(this);
         setOrderSummary();
+        setOrderStepsSummary();
     }
 
     @Subscribe({ HistoryOrderTerminated.class })

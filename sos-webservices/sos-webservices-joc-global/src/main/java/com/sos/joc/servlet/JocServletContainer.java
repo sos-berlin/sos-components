@@ -112,9 +112,9 @@ public class JocServletContainer extends ServletContainer {
                 AReporting.deleteTmpFolder();
             }, "servlet-init2").start();
             
+            JOCMBeanServer.register();
             JocClusterService.getInstance().start(StartupMode.automatic, true);
             DependencyUpdate.getInstance().updateThreaded();
-            JOCMBeanServer.register();
             cleanupAllTempDirSubFolders();
         }, "servlet-init").start();
         

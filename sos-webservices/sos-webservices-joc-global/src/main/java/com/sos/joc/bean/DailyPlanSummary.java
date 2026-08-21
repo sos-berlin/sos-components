@@ -73,7 +73,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     @Subscribe({ HistoryOrderTerminated.class, HistoryOrderStarted.class })
     public void update(HistoryOrderEvent evt) {
-        if (initialised.get() && controllerId.equals(evt.getControllerId()) && isMainOrder.and(isDailyPlanOrder).test(evt.getOrderId())) {
+        if (controllerId.equals(evt.getControllerId()) && isMainOrder.and(isDailyPlanOrder).test(evt.getOrderId())) {
             if (!hasOrderEvent.getAndSet(true)) {
                 Executors.newScheduledThreadPool(1).schedule(() -> {
                     setDailyPlanSummary();
@@ -85,7 +85,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     @Subscribe({ DailyPlanEvent.class })
     public void update(DailyPlanEvent evt) {
-        if (initialised.get() && "DailyPlanUpdated".equals(evt.getKey()) && controllerId.equals(evt.getControllerId()) && !SOSString.isEmpty(evt
+        if ("DailyPlanUpdated".equals(evt.getKey()) && controllerId.equals(evt.getControllerId()) && !SOSString.isEmpty(evt
                 .getDailyPlanDate())) {
             if (LocalDate.now(zoneId).atStartOfDay().format(DateTimeFormatter.ISO_LOCAL_DATE).equals(evt.getDailyPlanDate())) {
                 if (!hasOrderEvent.getAndSet(true)) {

@@ -10,6 +10,6 @@ public interface OrdersSnapshotMBean {
     public int getfailed();
     public int getsuspended();
     public int getwaiting();
-    public int getterminated();
+    public int getcompleted();
     public int getprompting();
 }

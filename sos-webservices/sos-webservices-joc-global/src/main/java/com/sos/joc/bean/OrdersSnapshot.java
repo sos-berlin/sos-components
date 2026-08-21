@@ -242,7 +242,7 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
     }
 
     @Override
-    public int getterminated() {
+    public int getcompleted() {
         return summary.getTerminated();
     }
 
