@@ -24,7 +24,6 @@ import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferState;
 
-import jakarta.persistence.TemporalType;
 
 public class JocDBLayerYade {
 

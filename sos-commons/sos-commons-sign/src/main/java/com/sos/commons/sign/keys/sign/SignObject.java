@@ -43,7 +43,6 @@ import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.interfaces.StreamHandler;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.joc.model.sign.JocKeyAlgorithm;
 
 public class SignObject {
 

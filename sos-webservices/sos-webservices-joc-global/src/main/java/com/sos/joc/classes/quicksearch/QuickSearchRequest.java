@@ -12,7 +12,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.model.inventory.search.RequestBaseQuickSearchFilter;
 import com.sos.joc.model.inventory.search.RequestSearchReturnType;
 import com.sos.joc.model.inventory.search.ResponseBaseSearchItem;

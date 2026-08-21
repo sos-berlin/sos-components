@@ -3,10 +3,8 @@ package com.sos.auth.openid.classes;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,7 +25,6 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 import com.sos.joc.model.security.properties.oidc.OidcGroupRolesMappingItem;
-import com.sos.joc.model.security.properties.oidc.OidcProperties;
 
 public class SOSOpenIdWebserviceCredentials {
 

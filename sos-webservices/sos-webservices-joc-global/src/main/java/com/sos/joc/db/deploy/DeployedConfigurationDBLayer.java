@@ -35,7 +35,6 @@ import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.tag.GroupedTag;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.deploy.items.AddOrderTags;
 import com.sos.joc.db.deploy.items.Deployed;
 import com.sos.joc.db.deploy.items.DeployedContent;

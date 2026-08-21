@@ -528,7 +528,6 @@ public class AgentStoreUtils {
         DBItemInventorySubAgentInstance standbyDirector = dbLayer.getDirectorInstance(agentId, SubagentDirectorType.SECONDARY_DIRECTOR.intValue());
         boolean primaryDirectorIsChanged = false;
         boolean standbyDirectorIsChanged = false;
-        Date now = Date.from(Instant.now());
         Map<String, DBItemInventorySubAgentInstance> subAgentsOfCurAgent = mapOfAgentIds.getOrDefault(true, Collections.emptyList()).stream().collect(
                 Collectors.toMap(DBItemInventorySubAgentInstance::getSubAgentId, Function.identity()));
         Set<DBItemInventorySubAgentInstance> curDbSubAgents = new HashSet<>();

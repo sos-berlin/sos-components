@@ -2,7 +2,6 @@ package com.sos.joc.classes.logs;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;

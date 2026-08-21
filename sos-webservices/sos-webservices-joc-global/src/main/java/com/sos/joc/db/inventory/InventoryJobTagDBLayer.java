@@ -93,7 +93,7 @@ public class InventoryJobTagDBLayer extends ATagDBLayer<DBItemInventoryJobTag> {
             sql.append("delete from ").append(getTaggingTable());
             sql.append(" where workflowName=:workflowName");
 
-            Query<String> query = getSession().createQuery(sql.toString());
+            Query<Integer> query = getSession().createQuery(sql.toString());
             query.setParameter("workflowName", workflowName);
 
             return getSession().executeUpdate(query);
