@@ -634,9 +634,9 @@ public class WorkflowsHelper {
                 posIndex++;
 
                 Instruction inst = insts.get(i);
-                inst.setPosition(Arrays.asList(pos));
-                JPosition jPos = getJPosition(inst.getPosition());
                 if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    inst.setPosition(Arrays.asList(pos));
+                    JPosition jPos = getJPosition(inst.getPosition());
                     if (stoppedPositions.contains(jPos)) {
                         inst.setState(getState(InstructionStateText.STOPPED));
                     }
@@ -647,10 +647,9 @@ public class WorkflowsHelper {
                             inst.setState(getState(InstructionStateText.SKIPPED));
                         }
                     }
+                    inst.setPositionString(getJPositionString(jPos));
                 }
-                inst.setPositionString(getJPositionString(inst.getPosition()));
 
-                inst.setPositionString(getJPositionString(jPos));
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
@@ -827,10 +826,10 @@ public class WorkflowsHelper {
                 posIndex++;
 
                 Instruction inst = insts.get(i);
-                inst.setPosition(Arrays.asList(pos));
-                inst.setPositionString(getJPositionString(inst.getPosition()));
 
                 if (!InstructionType.SEGMENT.equals(inst.getTYPE())) {
+                    inst.setPosition(Arrays.asList(pos));
+                    inst.setPositionString(getJPositionString(inst.getPosition()));
                     if (mapLabelToPos != null) {
                         if (inst.getLabel() != null && !inst.getLabel().isEmpty()) {
                             mapLabelToPos.putIfAbsent(inst.getLabel(), inst.getPosition());
@@ -1145,8 +1144,7 @@ public class WorkflowsHelper {
                     p.setLabel(inst.getLabel());
                     positions.add(p);
                 }
-                // inst.setPosition(Arrays.asList(pos));
-                // inst.setPositionString(getJPositionString(inst.getPosition()));
+                
                 switch (inst.getTYPE()) {
                 case FORK:
                     // ForkJoin f = inst.cast();
