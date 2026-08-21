@@ -142,7 +142,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
          * - recreate orders 
          * - release semaphore final time and remove it
          * */
-        PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID);
+        while(!PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID)) {
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
         LOGGER.debug("acquire semaphore from release with transactionId " + in.getTransactionId());
 
         try {
@@ -271,7 +273,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {}
         }
-        PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID);
+        while(!PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID)) {
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
         LOGGER.debug("acquire again semaphore from release with transactionId " + transactionId);
     }
 

@@ -90,7 +90,9 @@ public abstract class ADeploy extends JOCResourceImpl {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
             LOGGER.debug("acquire semaphore from deploy with AT " + deployFilter.getTransactionId());
-            PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID);
+            while(!PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID)) {
+                TimeUnit.MILLISECONDS.sleep(50);
+            }
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
