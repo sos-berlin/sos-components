@@ -356,11 +356,12 @@ public class JsonConverter {
         }
         return replaceTokens;
     }
-
-    private static void convertInstructions(String controllerId, String workflowName, List<Instruction> invInstructions,
-            List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex, ZoneId zoneId) {
+    
+    private static List<com.sos.sign.model.instruction.Instruction> convertInstructions(String controllerId, String workflowName,
+            List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions, AtomicInteger addOrderIndex,
+            ZoneId zoneId) {
+        int signIndex = 0;
         if (invInstructions != null) {
-            int signIndex = 0;
             for (Instruction invInstruction : invInstructions) {
                 com.sos.sign.model.instruction.Instruction signInstruction = signInstructions.get(signIndex);
                 switch (invInstruction.getTYPE()) {
@@ -527,11 +528,10 @@ public class JsonConverter {
                     signInstructions.remove(sseg);
                     signIndex--;
                     if (seg.getBlock() != null && sseg.getBlock().getInstructions() != null) {
-                        signInstructions.addAll(segmentIndex, sseg.getBlock().getInstructions());
-                        int blockSize = sseg.getBlock().getInstructions().size();
-                        signIndex += blockSize; 
-                        convertInstructions(controllerId, workflowName, seg.getBlock().getInstructions(), signInstructions.subList(segmentIndex,
-                                segmentIndex + blockSize), addOrderIndex, zoneId);
+                        List<com.sos.sign.model.instruction.Instruction> converted = convertInstructions(controllerId, workflowName, seg.getBlock()
+                                .getInstructions(), sseg.getBlock().getInstructions(), addOrderIndex, zoneId);
+                        signIndex += converted.size();
+                        signInstructions.addAll(segmentIndex, converted);
                     }
                     break;
                 default:
@@ -540,6 +540,7 @@ public class JsonConverter {
                 signIndex++;
             }
         }
+        return signInstructions;
     }
 
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {

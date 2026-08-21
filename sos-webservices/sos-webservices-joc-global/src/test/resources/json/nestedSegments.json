@@ -1,0 +1,109 @@
+{
+    "version": "1.9.1",
+    "timeZone": "Etc/UTC",
+    "instructions": [
+        {
+            "TYPE": "Segment",
+            "label": "segment-A",
+            "block": {
+                "instructions": [
+                    {
+                        "TYPE": "Segment",
+                        "label": "segment-1",
+                        "block": {
+                            "instructions": [
+                                {
+                                    "TYPE": "Execute.Named",
+                                    "jobName": "job-base",
+                                    "label": "job-1-1"
+                                },
+                                {
+                                    "TYPE": "Execute.Named",
+                                    "jobName": "job-base",
+                                    "label": "job-1-2"
+                                },
+                                {
+                                    "TYPE": "Execute.Named",
+                                    "jobName": "job-base",
+                                    "label": "job-1-3"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "TYPE": "Segment",
+                        "label": "step-1",
+                        "block": {
+                            "instructions": [
+                                {
+                                    "TYPE": "Execute.Named",
+                                    "jobName": "job-base",
+                                    "label": "job-step-1-1"
+                                },
+                                {
+                                    "TYPE": "Execute.Named",
+                                    "jobName": "job-base",
+                                    "label": "job-step-1-2"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "TYPE": "Segment",
+            "label": "segment-2",
+            "block": {
+                "instructions": [
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job-base",
+                        "label": "job-2-1"
+                    },
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job-base",
+                        "label": "job-2-2"
+                    },
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job-base",
+                        "label": "job-2-3"
+                    }
+                ]
+            }
+        },
+        {
+            "TYPE": "Segment",
+            "label": "step-2",
+            "block": {
+                "instructions": [
+                    {
+                        "TYPE": "Execute.Named",
+                        "jobName": "job-base",
+                        "label": "job-step-2-1"
+                    }
+                ]
+            }
+        }
+    ],
+    "jobs": {
+        "job-base": {
+            "agentName": "standalone-agent",
+            "withSubagentClusterIdExpr": false,
+            "executable": {
+                "TYPE": "ShellScriptExecutable",
+                "script": "#!/bin/bash\n\nhostnamne\nsleep 5",
+                "v1Compatible": false
+            },
+            "skipIfNoAdmissionForOrderDay": false,
+            "killAtEndOfAdmissionPeriod": false,
+            "parallelism": 1,
+            "graceTimeout": 1,
+            "failOnErrWritten": false,
+            "warnOnErrWritten": false,
+            "isNotRestartable": false
+        }
+    }
+}

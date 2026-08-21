@@ -105,7 +105,7 @@ public class ConverterTest {
 
         String result = Globals.objectMapper.writeValueAsString(JsonConverter.readAsConvertedWorkflow("hallo", "my_workflow", w, null)
                 .getInstructions());
-        System.out.println(result);
+        //System.out.println(result);
         assertTrue(result.equals(expectedInstructions));
     }
     
@@ -113,11 +113,22 @@ public class ConverterTest {
     public void TestWorkflowWithSegmentInstructions2() throws IOException {
 
         Path json = Paths.get("src/test/resources/json/largeSegmentWorkflow.json");
-        List<com.sos.sign.model.instruction.Instruction> resultInsts = JsonConverter.readAsConvertedDeployObject("hallo", "segmentWorkflow", Files
+        List<com.sos.sign.model.instruction.Instruction> resultInsts = JsonConverter.readAsConvertedDeployObject("hallo", "largeSegmentWorkflow",
+                Files.readString(json), com.sos.sign.model.workflow.Workflow.class, null, null).getInstructions();
+        String result = Globals.objectMapper.writeValueAsString(resultInsts);
+        //System.out.println(result);
+        assertTrue(resultInsts.size() == 1000);
+    }
+    
+    @Test
+    public void TestWorkflowWithSegmentInstructions3() throws IOException {
+
+        Path json = Paths.get("src/test/resources/json/nestedSegments.json");
+        List<com.sos.sign.model.instruction.Instruction> resultInsts = JsonConverter.readAsConvertedDeployObject("hallo", "nestedSegments", Files
                 .readString(json), com.sos.sign.model.workflow.Workflow.class, null, null).getInstructions();
         String result = Globals.objectMapper.writeValueAsString(resultInsts);
-        System.out.println(result);
-        assertTrue(resultInsts.size() == 1000);
+        //System.out.println(result);
+        assertTrue(resultInsts.size() == 9);
     }
     
     @Test
