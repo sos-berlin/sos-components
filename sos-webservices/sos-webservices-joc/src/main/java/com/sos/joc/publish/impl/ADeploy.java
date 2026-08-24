@@ -89,10 +89,10 @@ public abstract class ADeploy extends JOCResourceImpl {
             if (PublishSemaphore.availablePermits(deployFilter.getTransactionId()) == 1) {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
-            LOGGER.debug("acquire semaphore from deploy with AT " + deployFilter.getTransactionId());
             while(!PublishSemaphore.tryAcquire(deployFilter.getTransactionId(), SEMAPHORE_ID)) {
                 TimeUnit.MILLISECONDS.sleep(50);
             }
+            LOGGER.debug("DEPLOY: acquire semaphore with transactionId " + deployFilter.getTransactionId());
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
@@ -278,7 +278,9 @@ public abstract class ADeploy extends JOCResourceImpl {
 
                         PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
                             .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
-                        
+                        LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed from order filter");
+                        LOGGER.debug("DEPLOY: order cancel - future started");
+
                         List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter, null);
                         
                         CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
@@ -286,6 +288,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                                     .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                             mappedFutures.putIfAbsent(true, Collections.emptyList());
                             mappedFutures.putIfAbsent(false, Collections.emptyList());
+                            LOGGER.debug("DEPLOY: order cancel - future finished");
                             
                             if(!mappedFutures.get(true).isEmpty()) {
                                 // contains futures with errors
