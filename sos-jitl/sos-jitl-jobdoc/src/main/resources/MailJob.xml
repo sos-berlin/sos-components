@@ -116,6 +116,16 @@
                 </note>
             </param>
         
+            <param name="priority" required="false" default_value="NORMAL">
+                <note>
+                    <title>Priority of the mail. Will set the X-Priority header as processed by some email clients, e.g. MS Outlook</title>
+                    <p>
+                        By default the value NORMAL is used. Possible values are:<br/>
+                        VERY_HIGH<br/>HIGH<br/>NORMAL<br/>LOW<br/>VERY_LOW<br/>
+                    </p>
+                </note>
+            </param>
+        
             <param name="attachment" required="false">
                 <note>
                     <title>Path to attachment(s)</title>

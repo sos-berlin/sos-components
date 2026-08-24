@@ -34,6 +34,8 @@ public class MailJobArguments extends JobArguments {
     private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
     private JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
+    private JobArgument<String> priority = new JobArgument<String>("priority", false, "NORMAL");
+
     public MailJobArguments() {
         super(new CredentialStoreArguments());
     }
@@ -133,4 +135,15 @@ public class MailJobArguments extends JobArguments {
     public List<String> getAttachments() {
         return attachment.getValue();
     }
+
+    
+    public String getPriority() {
+        return priority.getValue();
+    }
+
+    
+    public void setPriority(String priority) {
+        this.priority.setValue(priority);
+    }
+
 }
