@@ -85,6 +85,11 @@
     "isNotRestartable": {
       "description": "default -> false",
       "type": "boolean"
+    },
+    "maxWaitForStdouterr": {
+        "description": "in seconds",
+        "type": "integer",
+        "minimum": 1
     }
   },
   "additionalProperties": false

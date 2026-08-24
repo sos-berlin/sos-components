@@ -36,7 +36,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "failOnErrWritten",
     "defaultArguments",
     "jobResourcePaths",
-    "isNotRestartable"
+    "isNotRestartable",
+    "maxWaitForStdouterr"
 })
 public class Job {
 
@@ -140,6 +141,13 @@ public class Job {
     @JsonProperty("isNotRestartable")
     @JsonPropertyDescription("default -> false")
     private Boolean isNotRestartable;
+    /**
+     * in seconds
+     * 
+     */
+    @JsonProperty("maxWaitForStdouterr")
+    @JsonPropertyDescription("in seconds")
+    private Integer maxWaitForStdouterr;
 
     /**
      * No args constructor for use in serialization
@@ -150,6 +158,7 @@ public class Job {
 
     /**
      * 
+     * @param maxWaitForStdouterr
      * @param sigkillDelay
      * @param failOnErrWritten
      * @param subagentBundleId
@@ -166,7 +175,7 @@ public class Job {
      * @param skipIfNoAdmissionStartForOrderDay
      * @param isNotRestartable
      */
-    public Job(String agentPath, String subagentBundleId, String subagentBundleIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, Boolean killAtEndOfAdmissionPeriod, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable) {
+    public Job(String agentPath, String subagentBundleId, String subagentBundleIdExpr, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionStartForOrderDay, Boolean killAtEndOfAdmissionPeriod, JobReturnCode returnCodeMeaning, Integer processLimit, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, Environment defaultArguments, List<String> jobResourcePaths, Boolean isNotRestartable, Integer maxWaitForStdouterr) {
         super();
         this.agentPath = agentPath;
         this.subagentBundleId = subagentBundleId;
@@ -183,6 +192,7 @@ public class Job {
         this.defaultArguments = defaultArguments;
         this.jobResourcePaths = jobResourcePaths;
         this.isNotRestartable = isNotRestartable;
+        this.maxWaitForStdouterr = maxWaitForStdouterr;
     }
 
     /**
@@ -419,14 +429,32 @@ public class Job {
         this.isNotRestartable = isNotRestartable;
     }
 
+    /**
+     * in seconds
+     * 
+     */
+    @JsonProperty("maxWaitForStdouterr")
+    public Integer getMaxWaitForStdouterr() {
+        return maxWaitForStdouterr;
+    }
+
+    /**
+     * in seconds
+     * 
+     */
+    @JsonProperty("maxWaitForStdouterr")
+    public void setMaxWaitForStdouterr(Integer maxWaitForStdouterr) {
+        this.maxWaitForStdouterr = maxWaitForStdouterr;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentBundleId", subagentBundleId).append("subagentBundleIdExpr", subagentBundleIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("killAtEndOfAdmissionPeriod", killAtEndOfAdmissionPeriod).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("subagentBundleId", subagentBundleId).append("subagentBundleIdExpr", subagentBundleIdExpr).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionStartForOrderDay", skipIfNoAdmissionStartForOrderDay).append("killAtEndOfAdmissionPeriod", killAtEndOfAdmissionPeriod).append("returnCodeMeaning", returnCodeMeaning).append("processLimit", processLimit).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).append("isNotRestartable", isNotRestartable).append("maxWaitForStdouterr", maxWaitForStdouterr).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sigkillDelay).append(failOnErrWritten).append(subagentBundleId).append(subagentBundleIdExpr).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
+        return new HashCodeBuilder().append(maxWaitForStdouterr).append(sigkillDelay).append(failOnErrWritten).append(subagentBundleId).append(subagentBundleIdExpr).append(executable).append(timeout).append(admissionTimeScheme).append(agentPath).append(returnCodeMeaning).append(processLimit).append(defaultArguments).append(jobResourcePaths).append(killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay).append(isNotRestartable).toHashCode();
     }
 
     @Override
@@ -438,7 +466,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(subagentBundleId, rhs.subagentBundleId).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
+        return new EqualsBuilder().append(maxWaitForStdouterr, rhs.maxWaitForStdouterr).append(sigkillDelay, rhs.sigkillDelay).append(failOnErrWritten, rhs.failOnErrWritten).append(subagentBundleId, rhs.subagentBundleId).append(subagentBundleIdExpr, rhs.subagentBundleIdExpr).append(executable, rhs.executable).append(timeout, rhs.timeout).append(admissionTimeScheme, rhs.admissionTimeScheme).append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(processLimit, rhs.processLimit).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(killAtEndOfAdmissionPeriod, rhs.killAtEndOfAdmissionPeriod).append(skipIfNoAdmissionStartForOrderDay, rhs.skipIfNoAdmissionStartForOrderDay).append(isNotRestartable, rhs.isNotRestartable).isEquals();
     }
 
 }
