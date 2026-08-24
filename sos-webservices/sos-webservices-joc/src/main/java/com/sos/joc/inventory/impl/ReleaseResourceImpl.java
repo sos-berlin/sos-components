@@ -145,7 +145,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         while(!PublishSemaphore.tryAcquire(in.getTransactionId(), SEMAPHORE_ID)) {
             TimeUnit.MILLISECONDS.sleep(50);
         }
-        LOGGER.debug("acquire semaphore from release with transactionId " + in.getTransactionId());
+        LOGGER.debug("RELEASE: acquire semaphore from release with transactionId " + in.getTransactionId());
 
         try {
             SOSHibernateSession session = null;
@@ -176,17 +176,20 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             
             PublishSemaphore.getInstance().getSemaphore(in.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(
                     Stream.concat(workflowNamesStream, workflowNamesRenamedStream).collect(Collectors.toSet())));
+            LOGGER.debug("RELEASE: already processed workflow names added to Semaphore");
             
             // JOC-2173, JOC-2224
             // cancel based on the old name of renamed schedules, and the current name of not-renamed schedules
             List<CompletableFuture<ControllerCommandResponse>> futures = cancelOrders(in, 
                     Stream.concat(schedulePaths.stream(), renamedOldSchedulePathsWithWorkflowNames.keySet().stream()).distinct().toList(), accessToken);
+            LOGGER.debug("RELEASE: order cancel - future started");
             
             CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
                 Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
                         .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                 mappedFutures.putIfAbsent(true, Collections.emptyList());
                 mappedFutures.putIfAbsent(false, Collections.emptyList());
+                LOGGER.debug("RELEASE: order cancel - future finished");
                 
                 SOSHibernateSession futureSession = null;
                 List<Throwable> errors = new ArrayList<>();
@@ -212,17 +215,18 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, true));
                     }
-                    releaseAndReaquireSemaphore(in.getTransactionId());
                     // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, false));
                     }
+                    releaseAndReaquireSemaphore(in.getTransactionId());
                     if (!errors.isEmpty()) {
                         throw errors.get(0);
                     }
                     auditLogObjectsLogging.log();
                     if (!mappedFutures.get(false).isEmpty()){
+                        LOGGER.debug("RELEASE: order generate - started");
                         // alle gegebenen controllerIds
                             recreateOrders(in, schedulePaths, 
                                     mappedFutures.get(false).stream().map(ControllerCommandResponse::getControllerId).collect(Collectors.toSet()), 
@@ -250,11 +254,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void releaseSemaphoreFinal(String transactionId) {
         try {
             PublishSemaphore.release(transactionId);
-            LOGGER.debug("final release semaphore from release with transactionId " + transactionId);
+            LOGGER.debug("RELEASE: final release of semaphore with transactionId " + transactionId);
             if (PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str
                     .equals(SEMAPHORE_ID)).isPresent()) {
                 PublishSemaphore.remove(transactionId);
-                LOGGER.debug("final remove semaphore from release with transactionId " + transactionId);
+                LOGGER.debug("RELEASE: final remove of semaphore with transactionId " + transactionId);
             }
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
@@ -264,7 +268,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void releaseAndReaquireSemaphore(String transactionId) throws InterruptedException {
         try {
             PublishSemaphore.release(transactionId);
-            LOGGER.debug("release semaphore from release with transactionId " + transactionId);
+            LOGGER.debug("RELEASE: semaphore with transactionId " + transactionId + " released");
         } catch (Exception e) {
             // DO NOTHING if semaphore release failed
         }
@@ -276,7 +280,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         while(!PublishSemaphore.tryAcquire(transactionId, SEMAPHORE_ID)) {
             TimeUnit.MILLISECONDS.sleep(50);
         }
-        LOGGER.debug("acquire again semaphore from release with transactionId " + transactionId);
+        LOGGER.debug("RELEASE: reacquired semaphore with transactionId " + transactionId);
     }
 
     private static List<Throwable> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
@@ -482,7 +486,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         DependencyResolver.updateDependencies(conf);
         auditLogObjectsLogging.addDetail(JocAuditLog.storeAuditLogDetail(new AuditLogDetail(conf.getPath(), conf.getType()), dbLayer.getSession(),
                 dbAuditLog));
-
+        LOGGER.debug("RELEASE: updated item released");
         return errors;
     }
 

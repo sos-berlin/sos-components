@@ -190,7 +190,8 @@ public class StoreDeployments {
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
                     PublishSemaphore.getInstance().getSemaphore(accessToken).map(ReleaseDeploySemaphore::getWorkflowNames)
-                    .ifPresent(set -> workflowNames.removeAll(set));
+                            .ifPresent(set -> workflowNames.removeAll(set));
+                    LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed");
                     // get the schedules referencing these workflows
                     List<String> workflowsWithSubmit = new ArrayList<String>();
                     List<String> workflowsWithoutSubmit = new ArrayList<String>();
@@ -212,10 +213,14 @@ public class StoreDeployments {
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
                     if (!workflowsWithSubmit.isEmpty()) {
+                        PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getWorkflowNames)
+                                .ifPresent(set -> workflowsWithSubmit.removeAll(set));
                         requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithSubmit, null, controllerId,
                                 true, true, allowedDailyPlanDates));
                     }
                     if (!workflowsWithoutSubmit.isEmpty()) {
+                        PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getWorkflowNames)
+                                .ifPresent(set -> workflowsWithoutSubmit.removeAll(set));
                         requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
                                 false, true, allowedDailyPlanDates));
                     }
@@ -246,10 +251,11 @@ public class StoreDeployments {
             if(transactionId != null) {
                 try {
                     PublishSemaphore.release(transactionId);
+                    LOGGER.debug("DEPLOY: final release of semaphore from deploy with transactionId " + transactionId);
                     if(PublishSemaphore.getInstance().getSemaphore(transactionId)
                             .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
                         PublishSemaphore.remove(transactionId);
-                        LOGGER.debug("final remove semaphore from deploy with transactionId " + transactionId);
+                        LOGGER.debug("DEPLOY: final remove of semaphore from deploy with transactionId " + transactionId);
                     }
                 } catch (Exception e) {
                     // DO NOTHING if semaphore release failed
