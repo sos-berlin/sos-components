@@ -86,7 +86,7 @@ public class TestPeriodResolver {
     @Ignore
     @Test
     public void testDayIsInPlanPeriodSingleStart() throws Exception {
-        String dailyPlanDate = SOSDate.getDateAsString(SOSDate.addToDate(new Date(), 1, ChronoUnit.DAYS));
+        List<String> dailyPlanDates = getDailyPlanDays(SOSDate.addToDate(new Date(), 1, ChronoUnit.DAYS), 1); // the next day only
         // dailyPlanDates = getDailyPlanDays(3); // 3 days from the current day
 
         // same period_begin=00:00:00, same start times, different time zones
@@ -195,7 +195,7 @@ public class TestPeriodResolver {
         List<String> l = new ArrayList<>();
         l.add(SOSDate.getDateAsString(from));
         for (int i = 1; i < number; i++) {
-            l.add(SOSDate.getDateAsString(SOSDate.add(from, i, ChronoUnit.DAYS)));
+            l.add(SOSDate.getDateAsString(SOSDate.addToDate(from, i, ChronoUnit.DAYS)));
         }
         return l;
     }
@@ -225,7 +225,7 @@ public class TestPeriodResolver {
             // Date frd = SOSDate.getDate(dailyPlanDate);
             List<String> frequencyResolverDates = new ArrayList<>();
             frequencyResolverDates.add(dailyPlanDate);
-        frequencyResolverDates.add(SOSDate.getDateAsString(SOSDate.addToDate(frd, 1, ChronoUnit.DAYS)));
+            // frequencyResolverDates.add(SOSDate.getDateAsString(SOSDate.add(frd, 1, ChronoUnit.DAYS)));
 
             for (String frequencyResolverDate : frequencyResolverDates) {
                 PeriodResolver pr = new PeriodResolver(s);
