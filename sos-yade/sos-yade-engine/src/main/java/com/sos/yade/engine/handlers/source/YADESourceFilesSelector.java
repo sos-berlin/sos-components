@@ -156,7 +156,7 @@ public class YADESourceFilesSelector {
     }
 
     private static List<ProviderFile> selectSingleFiles(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator,
-            ProviderFileSelection selection) throws YADEEngineSourceFilesSelectorException {
+            ProviderFileSelection selection) throws YADEEngineException {
 
         YADESourceArguments args = sourceDelegator.getArgs();
 
@@ -196,8 +196,10 @@ public class YADESourceFilesSelector {
                 break l;
             }
             String path = singleFile;
+            boolean checkDirectory = false;
             if (sourceDelegator.getDirectory() != null) {
                 if (!sourceDelegator.getProvider().isAbsolutePath(singleFile)) {
+                    checkDirectory = true;
                     path = sourceDelegator.appendPath(sourceDelegator.getDirectory(), singleFile);
                 }
             }
@@ -207,10 +209,14 @@ public class YADESourceFilesSelector {
             try {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
             } catch (ProviderException e) {
+                checkDirectory(logger, sourceDelegator, logPrefix, checkDirectory);
+
                 Throwable ex = e.getCause() == null ? e : e.getCause();
                 YADEReturnCode returnCode = getReturnCode(sourceDelegator, e);
                 throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, returnCode, sourceDelegator);
             } catch (Exception e) {
+                checkDirectory(logger, sourceDelegator, logPrefix, checkDirectory);
+
                 Throwable ex = e.getCause() == null ? e : e.getCause();
                 throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
             }
@@ -220,6 +226,7 @@ public class YADESourceFilesSelector {
                         logger.debug(logPrefix + "not found");
                     }
                 } else {
+                    checkDirectory(logger, sourceDelegator, logPrefix, checkDirectory);
                     logger.info(logPrefix + "not found");
                 }
             } else {
@@ -234,6 +241,23 @@ public class YADESourceFilesSelector {
             }
         }
         return result;
+    }
+
+    private static void checkDirectory(ISOSLogger logger, YADESourceProviderDelegator sourceDelegator, String logPrefix, boolean checkDirectory) {
+        if (!checkDirectory) {
+            return;
+        }
+        try {
+            if (!sourceDelegator.getProvider().directoryExists(sourceDelegator.getDirectory())) {
+                try {
+                    sourceDelegator.getProvider().throwDirectoryNotFoundException(sourceDelegator.getDirectory());
+                } catch (Exception e) {
+                    logger.info(logPrefix + "[" + YADEEngineSourceDirectoryNotFoundException.class.getSimpleName() + "]" + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            logger.info(logPrefix + "[" + YADEEngineSourceDirectoryException.class.getSimpleName() + "]" + e.getMessage());
+        }
     }
 
     private static boolean addSingleFile(ISOSLogger logger, AProvider<?, ?> provider, ProviderFile file, ProviderFileSelection selection) {
