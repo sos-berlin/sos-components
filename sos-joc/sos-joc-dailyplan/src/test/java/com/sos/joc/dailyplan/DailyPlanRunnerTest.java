@@ -102,13 +102,37 @@ public class DailyPlanRunnerTest {
         }
     }
 
-    /** setTimeTransformer(currentSystemDatetime) moves the JUnit test environment to a different point in time by changing the system clock.<br />
-     * In other words, it makes the test environment travel to the specified date and time (currentSystemDatetime).
+    /** Sets a fixed time for the test environment using the TimeTransformer Java agent.
+     * <p>
+     * The agent manipulates the time returned by {@link System#currentTimeMillis()} and {@link System#nanoTime()}, effectively "freezing" the system time to
+     * the specified date and time for the duration of the test.
+     * </p>
+     * <p>
+     * <b>Important:</b> Most java.time APIs (e.g., {@link LocalDateTime#now()}, {@link ZonedDateTime#now()}, {@link LocalDate#now()}) ARE affected because they
+     * internally use {@code System.currentTimeMillis()}.
+     * </p>
+     * <p>
+     * <b>The ONLY exception:</b> {@link Instant#now()} is NOT affected because it uses a separate internal clock ({@link Clock#systemUTC()}).
+     * </p>
      * 
-     * 1) Download the jar file : https://mvnrepository.com/artifact/com.topdesk/time-transformer-agent<br />
-     * 2) Add the jar file to the project dependencies<br/>
-     * 3) Activate the code - {@link #setTimeTransformer(String)} and {@link #resetTimeTransformer()} <br />
-     * 4) Run Configuration ... Arguments -> VM Arguments: -javaagent:<path to the jar file> */
+     * <b>Setup:</b>
+     * <ol>
+     * <li>Download the JAR from: <a href="https://mvnrepository.com/artifact/com.topdesk/time-transformer-agent">Maven Repository</a></li>
+     * <li>Add the JAR to the project dependencies</li>
+     * <li>Add the following VM argument to the test run configuration:
+     * 
+     * <pre>
+     * -javaagent:&lt;path-to-time-transformer-agent.jar&gt;
+     * </pre>
+     * 
+     * </li>
+     * <li>Use {@link #setTimeTransformer(String)} to set a fixed time</li>
+     * <li>Use {@link #resetTimeTransformer()} to reset to real time</li>
+     * </ol>
+     * 
+     * @see System#currentTimeMillis()
+     * @see System#nanoTime()
+     * @see Instant#now() */
     @Ignore
     @Test
     public void testRunNowDST() {
@@ -116,7 +140,7 @@ public class DailyPlanRunnerTest {
         // setTimeTransformer("2026-10-23 05:30:00");
 
         // 2027 summer time - 2027-03-28
-        String currentSystemDatetime = "2027-03-26 05:30:00";
+        String currentSystemDatetime = "2027-03-25 05:30:00";
         try {
             setTimeTransformer(currentSystemDatetime);
 
@@ -127,7 +151,7 @@ public class DailyPlanRunnerTest {
             dps.setTimeZone("Europe/Berlin");
             dps.setPeriodBegin("06:00:00");
             // dps.setDaysAheadPlan(3);
-            dps.setDaysAheadPlan(3);
+            dps.setDaysAheadPlan(4);
             dps.setDaysAheadSubmit(0);
 
             deleteSubmissions(dps, currentSystemDatetime);
@@ -174,7 +198,7 @@ public class DailyPlanRunnerTest {
         Date dailyPlanDate = dps.getDailyPlanDate();
         if (dailyPlanDate == null) {
             // next day
-            dailyPlanDate = SOSDate.add(SOSDate.getDate(currentSystemDatetime), dps.getDaysAheadPlan(), ChronoUnit.DAYS);
+            dailyPlanDate = SOSDate.add(SOSDate.getDate(currentSystemDatetime), 1, ChronoUnit.DAYS);
         }
 
         String dateFrom = SOSDate.tryGetDateTimeAsString(dailyPlanDate);
@@ -204,9 +228,9 @@ public class DailyPlanRunnerTest {
     }
 
     /** see {@link #testRunNowDST()} */
-    private void setTimeTransformer(String isoDateTime) {
+    public static void setTimeTransformer(String isoDateTime) {
         try {
-            // long time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(isoDateTime).getTime();
+            // long time = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(isoDateTime).getTime();
 
             // com.topdesk.timetransformer.TimeTransformer.setTime(com.topdesk.timetransformer.TransformingTime.INSTANCE);
             // com.topdesk.timetransformer.TransformingTime.INSTANCE.apply(com.topdesk.timetransformer.TransformingTime.change().at(time).start());
@@ -215,7 +239,7 @@ public class DailyPlanRunnerTest {
         }
     }
 
-    private void resetTimeTransformer() {
+    public static void resetTimeTransformer() {
         // com.topdesk.timetransformer.TimeTransformer.setTime(com.topdesk.timetransformer.DefaultTime.INSTANCE);
     }
 
