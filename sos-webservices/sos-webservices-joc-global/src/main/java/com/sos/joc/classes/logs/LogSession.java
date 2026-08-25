@@ -3,7 +3,9 @@ package com.sos.joc.classes.logs;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.sos.joc.model.log.JOCServiceId;
@@ -205,7 +207,25 @@ public class LogSession {
     }
     
     public JResource<JLogDirectoryIndex> getResource() {
-        return JOCLogProxyContext.getJResource(serviceId.logPrefix(), logLevel);
+        return JOCLogProxyContext.getJResource();
+    }
+    
+    public CompletableFuture<Void> getNextLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, LogLineKey key) {
+        return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
+            return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
+                return logIndex.keyedLogLineFlux(key, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
+                        .commonPool())).flatMapIterable(Function.identity());
+            }).thenAccept(consumer);
+        });
+    }
+    
+    public CompletableFuture<Void> getPrevLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, Instant instantFrom) {
+        return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
+            return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
+                return logIndex.keyedLogLineFlux(instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
+                        .commonPool())).flatMapIterable(Function.identity());
+            }).thenAccept(consumer);
+        });
     }
     
     public Flux<KeyedLogLine> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
