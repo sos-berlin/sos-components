@@ -1102,38 +1102,6 @@ public class ImportUtils {
         return null;
     }
 
-    private static boolean checkObjectNotEmpty(Workflow workflow) {
-        if (workflow != null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Script script) {
-        if (script != null && script.getScript() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-    
-    private static boolean checkObjectNotEmpty(JobTemplate job) {
-        if (job != null && job.getExecutable() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-    
-    private static boolean checkObjectNotEmpty(Report report) {
-        if (report != null && report.getFrequencies() == null && report.getTemplateName() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static boolean checkObjectNotEmpty(com.sos.sign.model.workflow.Workflow workflow) {
         if (workflow != null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow.getTYPE() == null) {
             return false;
@@ -1144,14 +1112,6 @@ public class ImportUtils {
 
     private static boolean checkObjectNotEmpty(JobResource jobResource) {
         if (jobResource != null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource != null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -1174,33 +1134,8 @@ public class ImportUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board == null) {
-            return false;
-        }
-        if (board.getBoardType() == null) {
-            return false;
-        }
-        if (board.getBoardType().equals(BoardType.PLANNABLE)) {
-            return true;
-        } else if (board.getEndOfLife() == null && (board.getExpectOrderToNoticeId() == null || board.getPostOrderToNoticeId() == null)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static boolean checkObjectNotEmpty(JobClass jobClass) {
         if (jobClass != null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null
-                && jobClass.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -1217,47 +1152,8 @@ public class ImportUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource
-                .getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource
-                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null && fileOrderSource.getDirectoryExpr() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static boolean checkObjectNotEmpty(Lock lock) {
         if (lock != null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
-        if (lock != null && lock.getDocumentationName() == null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
-                && schedule.getCalendars() == null && schedule.getWorkflowName() == null && schedule.getWorkflowNames() == null && schedule
-                        .getSubmitOrderToControllerWhenPlanned() == null && schedule.getNonWorkingDayCalendars() == null && schedule
-                                .getOrderParameterisations() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar
-                .getFrom() == null && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar
-                        .getType() == null) {
             return false;
         } else {
             return true;
@@ -1284,7 +1180,6 @@ public class ImportUtils {
                 if(wasValid != cfg.getValid()) {
                     try {
                         JocInventory.updateConfiguration(dbLayer, cfg);
-//                        session.update(cfg);
                     } catch (Throwable e) {
                         throw new JocSosHibernateException(e);
                     }
