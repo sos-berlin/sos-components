@@ -20,7 +20,7 @@ public class JOCLogProxyContext {
     private static Path logDir = Paths.get("logs");
     private JResource<JLogDirectoryIndex> resource = null;
     public static ZoneId zoneId = ZoneId.of("UTC");
-    private static Set<String> logPrefizes = EnumSet.allOf(JOCServiceId.class).stream().map(JOCServiceId::value).collect(Collectors.toSet());
+    private static Set<String> logPrefizes = EnumSet.allOf(JOCServiceId.class).stream().map(JOCServiceId::logPrefix).collect(Collectors.toSet());
     //for tests
     //private static Path logDir = Paths.get("C:\\ProgramData\\sos-berlin.com\\js7\\joc.2.9\\jetty_base\\logs");
     
