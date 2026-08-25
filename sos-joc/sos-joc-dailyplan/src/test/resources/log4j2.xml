@@ -1,36 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
-    <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout
-                pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
-        </Console>
-        <RollingFile name="fileLogger"
-            fileName="${basePath}/dailyplan_test.log"
-            filePattern="${basePath}/dailyplan_test-%d{yyyy-MM-dd}.log">
-            <PatternLayout
-                pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
-            <Policies>
-                <SizeBasedTriggeringPolicy size="10MB" />
-            </Policies>
-        </RollingFile>
-    </Appenders>
-    <Loggers>
-        <Root level="info">
-            <AppenderRef ref="console" />
-            <!-- <AppenderRef ref="fileLogger" /> -->
-        </Root>
-        <Logger name="org.hibernate" level="fatal" />
-        <Logger name="com.mchange.v2" level="fatal" />
-       
-        <Logger name="com.sos" level="debug" />
-        <Logger name="com.sos.commons.hibernate" level="warn" />
-        
-        <Logger name="com.sos.joc.classes.calendar.FrequencyResolver" level="warn" />        
-        <Logger name="com.sos.joc.dailyplan.common.DailyPlanHelper" level="warn" />
-        <Logger name="com.sos.joc.dailyplan.common.PeriodResolver" level="debug" />
-        
-        <Logger name="com.sos.joc.dailyplan.DailyPlanRunner" level="debug" />
-        
-    </Loggers>
+	<Properties>
+		<Property name="basePath">src/test/resources/logs</Property>
+	</Properties>
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t] (%F:%L) - %m%n" />
+		</Console>
+		<RollingFile name="fileLogger"
+			fileName="${basePath}/dailyplan_test.log"
+			filePattern="${basePath}/dailyplan_test-%d{yyyy-MM-dd}.log">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS}[%5p][%t](%F:%L) - %m%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="console" />
+			<!-- <AppenderRef ref="fileLogger" /> -->
+		</Root>
+		<Logger name="org.hibernate" level="fatal" />
+		<Logger name="com.mchange.v2" level="fatal" />
+
+		<Logger name="com.sos" level="debug" />
+		<Logger name="com.sos.commons.hibernate" level="warn" />
+
+		<Logger name="com.sos.joc.classes.calendar.FrequencyResolver"
+			level="warn" />
+		<Logger name="com.sos.joc.dailyplan.common.DailyPlanHelper"
+			level="warn" />
+		<Logger name="com.sos.joc.dailyplan.common.PeriodResolver"
+			level="debug" />
+
+		<Logger name="com.sos.joc.dailyplan.DailyPlanRunner"
+			level="debug" />
+
+	</Loggers>
 </Configuration>
