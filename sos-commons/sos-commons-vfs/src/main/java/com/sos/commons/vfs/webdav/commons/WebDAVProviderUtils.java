@@ -89,7 +89,7 @@ public class WebDAVProviderUtils {
             if (HttpUtils.isNotFound(code)) {
                 provider.throwDirectoryNotFoundException(directoryPath, executionResult);
             }
-            throw new Exception(executionResult);
+            provider.throwDirectoryException(directoryPath, executionResult);
         }
 
         Set<String> subDirectories = new HashSet<>();

@@ -17,6 +17,7 @@ import com.sos.commons.vfs.azure.AzureBlobStorageProvider;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.commons.vfs.commons.file.selection.ProviderFileSelection;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
+import com.sos.commons.vfs.exceptions.ProviderDirectoryException;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.transform.SOSXmlTransformer;
 
@@ -102,7 +103,7 @@ public class AzureBlobStorageProviderUtils {
             if (HttpUtils.isUnauthorized(code)) {
                 throw new ProviderAuthenticationException(client.formatExecutionResultForException(executeResult));
             } else {
-                throw new Exception(client.formatExecutionResultForException(executeResult));
+                throw new ProviderDirectoryException(client.formatExecutionResultForException(executeResult));
             }
         }
 
@@ -151,7 +152,7 @@ public class AzureBlobStorageProviderUtils {
             if (HttpUtils.isUnauthorized(code)) {
                 throw new ProviderAuthenticationException(client.formatExecutionResultForException(executeResult));
             } else {
-                throw new Exception(client.formatExecutionResultForException(executeResult));
+                throw new ProviderDirectoryException(client.formatExecutionResultForException(executeResult));
             }
         }
 

@@ -164,7 +164,7 @@ public class SMBJProviderUtils {
             if (isNotFoundException(e)) {
                 provider.throwDirectoryNotFoundException(directoryPath, e);
             }
-            throw e;
+            provider.throwDirectoryException(directoryPath, e);
         }
 
         for (FileIdBothDirectoryInformation info : infos) {

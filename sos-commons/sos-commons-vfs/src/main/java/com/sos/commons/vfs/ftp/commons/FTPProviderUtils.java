@@ -109,7 +109,7 @@ public class FTPProviderUtils {
         FTPFile[] subDirInfos = client.listFiles(directoryPath);
         FTPProtocolReply reply = new FTPProtocolReply(client);
         if (!reply.isPositiveReply()) {
-            throw new IOException(reply.toString());
+            provider.throwDirectoryException(directoryPath, reply.toString());
         }
         for (FTPFile subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {

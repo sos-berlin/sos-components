@@ -215,7 +215,7 @@ public class SSHJProviderUtils {
             if (isNotFoundException(e)) {
                 provider.throwDirectoryNotFoundException(directoryPath, e);
             }
-            throw e;
+            provider.throwDirectoryException(directoryPath, e);
         }
         for (RemoteResourceInfo subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {

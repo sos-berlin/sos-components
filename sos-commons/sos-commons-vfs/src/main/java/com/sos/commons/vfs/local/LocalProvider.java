@@ -110,12 +110,19 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
         }
         try {
             List<ProviderFile> result;
-            if (selection.getConfig().isRecursive()) {
-                result = selectFilesRecursive(selection, directory);
-            } else {
-                result = selectFilesNonRecursive(selection, directory);
+            try {
+                if (selection.getConfig().isRecursive()) {
+                    result = selectFilesRecursive(selection, directory);
+                } else {
+                    result = selectFilesNonRecursive(selection, directory);
+                }
+                return result;
+            } catch (ProviderException e) {
+                throw e;
+            } catch (Exception e) {
+                throwDirectoryException(directory.toString(), e);
+                return null;
             }
-            return result;
         } catch (ProviderException e) {
             throw e;
         } catch (Exception e) {

@@ -543,6 +543,10 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         throw new ProviderDirectoryException(getLogPrefix() + "[Directory=" + directory + "]" + msg);
     }
 
+    public void throwDirectoryException(String directory, Throwable e) throws ProviderDirectoryException {
+        throw new ProviderDirectoryException(getLogPrefix() + "Directory=" + directory, e);
+    }
+
     public void throwDirectoryNotFoundException(String directory) throws ProviderDirectoryNotFoundException {
         throw new ProviderDirectoryNotFoundException(getLogPrefix() + "[Directory=" + directory + "]does not exist");
     }
