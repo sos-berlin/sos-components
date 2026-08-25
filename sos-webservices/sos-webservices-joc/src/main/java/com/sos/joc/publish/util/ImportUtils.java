@@ -855,12 +855,12 @@ public class ImportUtils {
             com.sos.inventory.model.workflow.Workflow workflow = (com.sos.inventory.model.workflow.Workflow) JocInventory.content2IJSObject(outBuffer
                     .toString(StandardCharsets.UTF_8), ConfigurationType.WORKFLOW);
             //workflow = JsonSerializer.emptyValuesToNull(workflow);
-            if (checkObjectNotEmpty(workflow)) {
+//            if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
-            } else {
-                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             workflowEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             workflowEdit.setPath(normalizedPath);
             workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
@@ -874,12 +874,12 @@ public class ImportUtils {
             JobResourceEdit jobResourceEdit = new JobResourceEdit();
             com.sos.inventory.model.jobresource.JobResource jobResource = (com.sos.inventory.model.jobresource.JobResource) JocInventory
                     .content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.JOBRESOURCE);
-            if (checkObjectNotEmpty(jobResource)) {
+//            if (checkObjectNotEmpty(jobResource)) {
                 jobResourceEdit.setConfiguration(jobResource);
-            } else {
-                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             jobResourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             jobResourceEdit.setPath(normalizedPath);
             jobResourceEdit.setObjectType(ConfigurationType.JOBRESOURCE);
@@ -892,11 +892,11 @@ public class ImportUtils {
             LockEdit lockEdit = new LockEdit();
             com.sos.inventory.model.lock.Lock lock = (com.sos.inventory.model.lock.Lock) JocInventory.content2IJSObject(outBuffer.toString(
                     StandardCharsets.UTF_8), ConfigurationType.LOCK);
-            if (checkObjectNotEmpty(lock)) {
+//            if (checkObjectNotEmpty(lock)) {
                 lockEdit.setConfiguration(lock);
-            } else {
-                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", normalizedPath));
+//            }
             lockEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             lockEdit.setPath(normalizedPath);
             lockEdit.setObjectType(ConfigurationType.LOCK);
@@ -909,11 +909,11 @@ public class ImportUtils {
             BoardEdit boardEdit = new BoardEdit();
             com.sos.inventory.model.board.Board board = (com.sos.inventory.model.board.Board) JocInventory.content2IJSObject(outBuffer.toString(
                     StandardCharsets.UTF_8), ConfigurationType.NOTICEBOARD);
-            if (checkObjectNotEmpty(board)) {
+//            if (checkObjectNotEmpty(board)) {
                 boardEdit.setConfiguration(board);
-            } else {
-                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", normalizedPath));
+//            }
             boardEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             boardEdit.setPath(normalizedPath);
             boardEdit.setObjectType(ConfigurationType.NOTICEBOARD);
@@ -926,12 +926,12 @@ public class ImportUtils {
             JobClassEdit jobClassEdit = new JobClassEdit();
             com.sos.inventory.model.jobclass.JobClass jobClass = (com.sos.inventory.model.jobclass.JobClass) JocInventory.content2IJSObject(outBuffer
                     .toString(StandardCharsets.UTF_8), ConfigurationType.JOBCLASS);
-            if (checkObjectNotEmpty(jobClass)) {
+//            if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
-            } else {
-                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             jobClassEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             jobClassEdit.setPath(normalizedPath);
             jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
@@ -947,12 +947,12 @@ public class ImportUtils {
                     (com.sos.inventory.model.fileordersource.FileOrderSource) JocInventory.content2IJSObject(outBuffer
                             .toString(StandardCharsets.UTF_8), ConfigurationType.FILEORDERSOURCE);
             //fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
-            if (checkObjectNotEmpty(fileOrderSource)) {
+//            if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
-            } else {
-                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             fileOrderSourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             fileOrderSourceEdit.setPath(normalizedPath);
             fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
@@ -965,12 +965,12 @@ public class ImportUtils {
             }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
             Schedule schedule = (Schedule) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.SCHEDULE);
-            if (checkObjectNotEmpty(schedule)) {
+//            if (checkObjectNotEmpty(schedule)) {
                 scheduleEdit.setConfiguration(schedule);
-            } else {
-                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             scheduleEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             scheduleEdit.setPath(normalizedPath);
             scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
@@ -983,12 +983,12 @@ public class ImportUtils {
             }
             ScriptEdit scriptEdit = new ScriptEdit();
             Script script = (Script) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.INCLUDESCRIPT);
-            if (checkObjectNotEmpty(script)) {
+//            if (checkObjectNotEmpty(script)) {
                 scriptEdit.setConfiguration(script);
-            } else {
-                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             scriptEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             scriptEdit.setPath(normalizedPath);
             scriptEdit.setObjectType(ConfigurationType.INCLUDESCRIPT);
@@ -1002,12 +1002,12 @@ public class ImportUtils {
             JobEdit jobEdit = new JobEdit();
             JobTemplate jobTemplate = (JobTemplate) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8),
                     ConfigurationType.JOBTEMPLATE);
-            if (checkObjectNotEmpty(jobTemplate)) {
+//            if (checkObjectNotEmpty(jobTemplate)) {
                 jobEdit.setConfiguration(jobTemplate);
-            } else {
-                throw new JocImportException(String.format("Job template with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Job template with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             jobEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             jobEdit.setPath(normalizedPath);
             jobEdit.setObjectType(ConfigurationType.JOBTEMPLATE);
@@ -1020,7 +1020,7 @@ public class ImportUtils {
             }
             Calendar cal = (Calendar) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8),
                     ConfigurationType.WORKINGDAYSCALENDAR);
-            if (checkObjectNotEmpty(cal)) {
+//            if (checkObjectNotEmpty(cal)) {
                 if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                     WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                     wdcEdit.setConfiguration(cal);
@@ -1036,10 +1036,10 @@ public class ImportUtils {
                     nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                     return nwdcEdit;
                 }
-            } else {
-                throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
-                        + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
+//                        + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+//            }
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.REPORT_FILE_EXTENSION.value(),
                     ""));
@@ -1048,50 +1048,18 @@ public class ImportUtils {
             }
             ReportEdit reportEdit = new ReportEdit();
             Report report = (Report) JocInventory.content2IJSObject(outBuffer.toString(StandardCharsets.UTF_8), ConfigurationType.REPORT);
-            if (checkObjectNotEmpty(report)) {
+//            if (checkObjectNotEmpty(report)) {
                 reportEdit.setConfiguration(report);
-            } else {
-                throw new JocImportException(String.format("Report with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
+//            } else {
+//                throw new JocImportException(String.format("Report with path %1$s not imported. Object values could not be mapped.",
+//                        normalizedPath));
+//            }
             reportEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             reportEdit.setPath(normalizedPath);
             reportEdit.setObjectType(ConfigurationType.REPORT);
             return reportEdit;
         }
         return null;
-    }
-
-    private static boolean checkObjectNotEmpty(Workflow workflow) {
-        if (workflow != null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Script script) {
-        if (script != null && script.getScript() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-    
-    private static boolean checkObjectNotEmpty(JobTemplate job) {
-        if (job != null && job.getExecutable() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-    
-    private static boolean checkObjectNotEmpty(Report report) {
-        if (report != null && report.getFrequencies() == null && report.getTemplateName() == null) {
-            return false;
-        } else {
-            return true;
-        }
     }
 
     private static boolean checkObjectNotEmpty(com.sos.sign.model.workflow.Workflow workflow) {
@@ -1104,14 +1072,6 @@ public class ImportUtils {
 
     private static boolean checkObjectNotEmpty(JobResource jobResource) {
         if (jobResource != null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource != null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -1134,33 +1094,8 @@ public class ImportUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board == null) {
-            return false;
-        }
-        if (board.getBoardType() == null) {
-            return false;
-        }
-        if (board.getBoardType().equals(BoardType.PLANNABLE)) {
-            return true;
-        } else if (board.getEndOfLife() == null && (board.getExpectOrderToNoticeId() == null || board.getPostOrderToNoticeId() == null)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static boolean checkObjectNotEmpty(JobClass jobClass) {
         if (jobClass != null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null
-                && jobClass.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -1177,47 +1112,8 @@ public class ImportUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource
-                .getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource
-                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null && fileOrderSource.getDirectoryExpr() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static boolean checkObjectNotEmpty(Lock lock) {
         if (lock != null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
-        if (lock != null && lock.getDocumentationName() == null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
-                && schedule.getCalendars() == null && schedule.getWorkflowName() == null && schedule.getWorkflowNames() == null && schedule
-                        .getSubmitOrderToControllerWhenPlanned() == null && schedule.getNonWorkingDayCalendars() == null && schedule
-                                .getOrderParameterisations() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar
-                .getFrom() == null && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar
-                        .getType() == null) {
             return false;
         } else {
             return true;
@@ -1244,7 +1140,6 @@ public class ImportUtils {
                 if(wasValid != cfg.getValid()) {
                     try {
                         JocInventory.updateConfiguration(dbLayer, cfg);
-//                        session.update(cfg);
                     } catch (Throwable e) {
                         throw new JocSosHibernateException(e);
                     }
