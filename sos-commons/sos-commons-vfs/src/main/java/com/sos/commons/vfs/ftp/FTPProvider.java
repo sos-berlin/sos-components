@@ -252,7 +252,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             FTPClient client = requireFTPClient();
             if (!client.changeWorkingDirectory(directory)) {
                 // the cause (not found, permissions etc) can't be clearly identified - throw a generic directory exception
-                throwDirectoryException(directory.toString(), new FTPProtocolReply(client).toString());
+                throwDirectoryException(directory, new FTPProtocolReply(client).toString());
             }
 
             List<ProviderFile> result = new ArrayList<>();
