@@ -21,9 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
 import com.sos.joc.event.EventBus;
@@ -38,15 +40,13 @@ import com.sos.joc.model.order.OrderStateText;
 public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     private final String controllerId;
-    private double finishedOrders = 0;
-    private double plannedOrders = 0;
-    private double plannedLateOrders = 0;
-    private double submittedOrders = 0;
-    private double submittedLateOrders = 0;
+    private float finishedOrders = 0;
+    private float plannedOrders = 0;
+    private float plannedLateOrders = 0;
+    private float submittedOrders = 0;
+    private float submittedLateOrders = 0;
 
     private AtomicBoolean hasOrderEvent = new AtomicBoolean(false);
-    private AtomicBoolean initialised = new AtomicBoolean(false);
-    private ZoneId zoneId = ZoneOffset.UTC;
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSummaryMBean.class);
     private Predicate<String> isMainOrder = oId -> oId == null || !oId.contains("|");
     private Predicate<String> isDailyPlanOrder = oId -> oId == null || oId.contains(".*#[PC][0-9]+-.*");
@@ -60,15 +60,17 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     public DailyPlanSummary(String controllerId) {
         this.controllerId = controllerId;
-        if (Globals.getConfigurationGlobals() != null) {
-            init();
-        }
         EventBus.getInstance().register(this);
     }
 
     @Subscribe({ DailyPlanCalendarEvent.class })
     public void init(DailyPlanCalendarEvent evt) {
-        init();
+        if (!hasOrderEvent.getAndSet(true)) {
+            Executors.newScheduledThreadPool(1).schedule(() -> {
+                setDailyPlanSummary();
+                hasOrderEvent.set(false);
+            }, 5, TimeUnit.SECONDS);
+        }
     }
 
     @Subscribe({ HistoryOrderTerminated.class, HistoryOrderStarted.class })
@@ -87,13 +89,18 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
     public void update(DailyPlanEvent evt) {
         if ("DailyPlanUpdated".equals(evt.getKey()) && controllerId.equals(evt.getControllerId()) && !SOSString.isEmpty(evt
                 .getDailyPlanDate())) {
-            if (LocalDate.now(zoneId).atStartOfDay().format(DateTimeFormatter.ISO_LOCAL_DATE).equals(evt.getDailyPlanDate())) {
-                if (!hasOrderEvent.getAndSet(true)) {
-                    Executors.newScheduledThreadPool(1).schedule(() -> {
-                        setDailyPlanSummary();
-                        hasOrderEvent.set(false);
-                    }, 5, TimeUnit.SECONDS);
+            try {
+                ZoneId zoneId = getZoneId();
+                if (LocalDate.now(zoneId).atStartOfDay().format(DateTimeFormatter.ISO_LOCAL_DATE).equals(evt.getDailyPlanDate())) {
+                    if (!hasOrderEvent.getAndSet(true)) {
+                        Executors.newScheduledThreadPool(1).schedule(() -> {
+                            setDailyPlanSummary(zoneId);
+                            hasOrderEvent.set(false);
+                        }, 5, TimeUnit.SECONDS);
+                    }
                 }
+            } catch (Exception e) {
+                LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
             }
         }
     }
@@ -104,139 +111,144 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
         return "dailyplan";
     }
     
-    private void setTimezone() {
-        zoneId = ZoneId.of(Globals.getConfigurationGlobalsDailyPlan().getTimeZone().getValue());
+    private ZoneId getZoneId() {
+        ConfigurationEntry timezone =  Globals.getConfigurationGlobalsDailyPlan().getTimeZone();
+        String zone = timezone.getValue() == null ? timezone.getDefault() : timezone.getValue();
+        return ZoneId.of(zone);
     }
     
-    private void init() {
-        setTimezone();
-        if (!initialised.get()) {
-            setDailyPlanSummary();
-            initialised.set(true);
+    private void setDailyPlanSummary() {
+        try {
+            setDailyPlanSummary(getZoneId());
+        } catch (Exception e) {
+            LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
         }
     }
 
-    private void setDailyPlanSummary() {
+    private void setDailyPlanSummary(ZoneId zoneId) {
         SOSHibernateSession connection = null;
         try {
-            AtomicInteger finished = new AtomicInteger(0);
-            AtomicInteger planned = new AtomicInteger(0);
-            AtomicInteger plannedLate = new AtomicInteger(0);
-            AtomicInteger submitted = new AtomicInteger(0);
-            AtomicInteger submittedLate = new AtomicInteger(0);
-
-            Date submissionDate = Date.from(LocalDate.now(zoneId).atStartOfDay().toInstant(ZoneOffset.UTC));
-            Date nowDate = Date.from(Instant.now());
-            
             connection = Globals.createSosHibernateStatelessConnection(DailyPlanSummaryMBean.class.getSimpleName());
-            DailyPlanHistoryDBLayer jobHistoryDBLayer = new DailyPlanHistoryDBLayer(connection);
-            List<DBItemDailyPlanWithHistory> result = jobHistoryDBLayer.getOrdersWithHistoryState(controllerId, submissionDate);
-            Globals.disconnect(connection);
-            
-            result.stream().collect(Collectors.groupingBy(item -> OrdersHelper.getOrderIdMainPart(item.getOrderId()), Collectors.toCollection(
-                    supplier))).values().forEach(l -> {
-                        if (l.size() == 1) { // single order
-                            if (l.first().getState() == null) { // order is not started
-                                if (l.first().getPlannedStart().before(nowDate)) {
-                                    if (l.first().isSubmitted()) {
-                                        submittedLate.getAndIncrement();
-                                    } else {
-                                        plannedLate.getAndIncrement();
-                                    }
-                                } else {
-                                    if (l.first().isSubmitted()) {
-                                        submitted.getAndIncrement();
-                                    } else {
-                                        planned.getAndIncrement();
-                                    }
-                                }
-                            } else { // order is started
-                                if (isComplete.test(l.first())) {
-                                    finished.getAndIncrement();
-                                } else if (startTimeIsLate.test(l.first())) {
-                                    submittedLate.getAndIncrement();
-                                } else {
-                                    submitted.getAndIncrement();
-                                }
-                            }
-                        } else { // cyclic order
-                            if (l.first().getState() == null) { // no cyclic order is started
-                                if (l.first().getPlannedStart().before(nowDate)) {
-                                    if (l.first().isSubmitted()) {
-                                        submittedLate.getAndIncrement();
-                                    } else {
-                                        plannedLate.getAndIncrement();
-                                    }
-                                } else {
-                                    if (l.first().isSubmitted()) {
-                                        submitted.getAndIncrement();
-                                    } else {
-                                        planned.getAndIncrement();
-                                    }
-                                }
-                            } else if (l.last().getState() == null) { // not all of cyclic order is started
-                                l.removeIf(item -> item.getState() != null);
-                                if (l.first().getPlannedStart().before(nowDate)) {
-                                    submittedLate.getAndIncrement();
-                                } else {
-                                    submitted.getAndIncrement();
-                                }
-                            } else if (l.stream().anyMatch(isComplete.negate())) { // not all of cyclic order is complete
-                                if (startTimeIsLate.test(l.last())) {
-                                    submittedLate.getAndIncrement();
-                                } else {
-                                    submitted.getAndIncrement();
-                                }
-                            } else {
-                                finished.getAndIncrement();
-                            }
-                        }
-                    });
-
-            int all = finished.get() + planned.get() + plannedLate.get() + submitted.get() + submittedLate.get();
-            if (all == 0) {
-                finishedOrders = 0;
-                plannedLateOrders = 0;
-                plannedOrders = 0;
-                submittedLateOrders = 0;
-                submittedOrders = 0;
-            } else {
-                finishedOrders = finished.get() * 100 / all;
-                plannedLateOrders = plannedLate.get() * 100 / all;
-                plannedOrders = planned.get() * 100 / all;
-                submittedLateOrders = submittedLate.get() * 100 / all;
-                submittedOrders = submitted.get() * 100 / all;
-            }
-
+            setDailyPlanSummary(connection, zoneId);
         } catch (Exception e) {
             LOGGER.warn("Error at updating " + objectName() + " metrics: ", e);
         } finally {
             Globals.disconnect(connection);
         }
     }
+    
+    private void setDailyPlanSummary(SOSHibernateSession connection, ZoneId zoneId) throws SOSHibernateException {
+        AtomicInteger finished = new AtomicInteger(0);
+        AtomicInteger planned = new AtomicInteger(0);
+        AtomicInteger plannedLate = new AtomicInteger(0);
+        AtomicInteger submitted = new AtomicInteger(0);
+        AtomicInteger submittedLate = new AtomicInteger(0);
+
+        Date submissionDate = Date.from(LocalDate.now(zoneId).atStartOfDay().toInstant(ZoneOffset.UTC));
+        Date nowDate = Date.from(Instant.now());
+
+        DailyPlanHistoryDBLayer jobHistoryDBLayer = new DailyPlanHistoryDBLayer(connection);
+        List<DBItemDailyPlanWithHistory> result = jobHistoryDBLayer.getOrdersWithHistoryState(controllerId, submissionDate);
+        Globals.disconnect(connection);
+
+        result.stream().collect(Collectors.groupingBy(item -> OrdersHelper.getOrderIdMainPart(item.getOrderId()), Collectors.toCollection(supplier)))
+                .values().forEach(l -> {
+                    if (l.size() == 1) { // single order
+                        if (l.first().getState() == null) { // order is not started
+                            if (l.first().getPlannedStart().before(nowDate)) {
+                                if (l.first().isSubmitted()) {
+                                    submittedLate.getAndIncrement();
+                                } else {
+                                    plannedLate.getAndIncrement();
+                                }
+                            } else {
+                                if (l.first().isSubmitted()) {
+                                    submitted.getAndIncrement();
+                                } else {
+                                    planned.getAndIncrement();
+                                }
+                            }
+                        } else { // order is started
+                            if (isComplete.test(l.first())) {
+                                finished.getAndIncrement();
+                            } else if (startTimeIsLate.test(l.first())) {
+                                submittedLate.getAndIncrement();
+                            } else {
+                                submitted.getAndIncrement();
+                            }
+                        }
+                    } else { // cyclic order
+                        if (l.first().getState() == null) { // no cyclic order is started
+                            if (l.first().getPlannedStart().before(nowDate)) {
+                                if (l.first().isSubmitted()) {
+                                    submittedLate.getAndIncrement();
+                                } else {
+                                    plannedLate.getAndIncrement();
+                                }
+                            } else {
+                                if (l.first().isSubmitted()) {
+                                    submitted.getAndIncrement();
+                                } else {
+                                    planned.getAndIncrement();
+                                }
+                            }
+                        } else if (l.last().getState() == null) { // not all of cyclic order is started
+                            l.removeIf(item -> item.getState() != null);
+                            if (l.first().getPlannedStart().before(nowDate)) {
+                                submittedLate.getAndIncrement();
+                            } else {
+                                submitted.getAndIncrement();
+                            }
+                        } else if (l.stream().anyMatch(isComplete.negate())) { // not all of cyclic order is complete
+                            if (startTimeIsLate.test(l.last())) {
+                                submittedLate.getAndIncrement();
+                            } else {
+                                submitted.getAndIncrement();
+                            }
+                        } else {
+                            finished.getAndIncrement();
+                        }
+                    }
+                });
+
+        float all = finished.get() + planned.get() + plannedLate.get() + submitted.get() + submittedLate.get();
+        if (all == 0) {
+            finishedOrders = 0;
+            plannedLateOrders = 0;
+            plannedOrders = 0;
+            submittedLateOrders = 0;
+            submittedOrders = 0;
+        } else {
+            finishedOrders = finished.get() * 100 / all;
+            plannedLateOrders = plannedLate.get() * 100 / all;
+            plannedOrders = planned.get() * 100 / all;
+            submittedLateOrders = submittedLate.get() * 100 / all;
+            submittedOrders = submitted.get() * 100 / all;
+        }
+    }
 
     @Override
-    public double getfinished_orders() {
+    public float getfinished_orders() {
         return finishedOrders;
     }
 
     @Override
-    public double getplanned_late_orders() {
+    public float getplanned_late_orders() {
         return plannedLateOrders;
     }
 
     @Override
-    public double getplanned_orders() {
+    public float getplanned_orders() {
         return plannedOrders;
     }
 
     @Override
-    public double getsubmitted_late_orders() {
+    public float getsubmitted_late_orders() {
         return submittedLateOrders;
     }
 
     @Override
-    public double getsubmitted_orders() {
+    public float getsubmitted_orders() {
         return submittedOrders;
     }
 
