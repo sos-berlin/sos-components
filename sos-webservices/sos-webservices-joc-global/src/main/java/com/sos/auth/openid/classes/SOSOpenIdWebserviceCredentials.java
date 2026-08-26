@@ -47,6 +47,7 @@ public class SOSOpenIdWebserviceCredentials {
     private Map<String, List<String>> groupRolesMap;
     private Set<String> claims;
     private Set<String> scopes;
+    private String extractQuery;
 
     public String getAuthenticationUrl() {
         return authenticationUrl;
@@ -183,6 +184,11 @@ public class SOSOpenIdWebserviceCredentials {
                 scopes = properties.getOidc().getIamOidcGroupScopes().stream().filter(s -> !SOSString.isEmpty(s)).collect(Collectors.toSet());
             }
         }
+        if (extractQuery == null) {
+            if (properties.getOidc().getIamOidcGroupExtractQuery() != null) {
+                extractQuery = properties.getOidc().getIamOidcGroupExtractQuery();
+            }
+        }
 
         String truststorePathGui = getProperty(properties.getOidc().getIamOidcTruststorePath(), "");
         String truststorePassGui = getProperty(properties.getOidc().getIamOidcTruststorePassword(), "");
@@ -238,5 +244,9 @@ public class SOSOpenIdWebserviceCredentials {
     
     public Set<String> getScopes() {
         return scopes;
+    }
+    
+    public String getExtractQuery() {
+        return extractQuery;
     }
 }

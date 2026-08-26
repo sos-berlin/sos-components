@@ -3,6 +3,7 @@ package com.sos.joc.security.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -121,7 +122,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             checkRequiredParameter("identityServiceName", identityService.getIdentityServiceName());
             checkRequiredParameter("identityServiceType", identityService.getIdentityServiceType());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_STORE);
             sosHibernateSession.setAutoCommit(false);
             sosHibernateSession.beginTransaction();
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
@@ -299,19 +300,10 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
 
             IdentityServices identityServices = new IdentityServices();
             identityServices.setIdentityServiceItems(new ArrayList<IdentityService>());
-            identityServices.setIdentityServiceTypes(new ArrayList<IdentityServiceTypes>());
+            identityServices.setIdentityServiceTypes(EnumSet.allOf(IdentityServiceTypes.class).stream().filter(ist -> !ist.equals(
+                    IdentityServiceTypes.UNKNOWN)).toList());
 
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.LDAP_JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.KEYCLOAK_JOC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.FIDO);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.CERTIFICATE);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.OIDC);
-            identityServices.getIdentityServiceTypes().add(IdentityServiceTypes.OIDC_JOC);
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES);
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());

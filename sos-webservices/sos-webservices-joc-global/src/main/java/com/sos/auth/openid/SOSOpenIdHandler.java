@@ -16,16 +16,21 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
@@ -34,6 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.openid.classes.SOSJWTVerifier;
@@ -47,12 +54,16 @@ import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
-
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
+
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
+import net.thisptr.jackson.jq.JsonQuery;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Versions;
+import net.thisptr.jackson.jq.exception.JsonQueryException;
 
 public class SOSOpenIdHandler {
 
@@ -78,6 +89,7 @@ public class SOSOpenIdHandler {
     private KeyStore truststore = null;
     private String accountIdentifier = null;
     private String kid;
+    private static final Scope rootScope = Scope.newEmptyScope();
     String openidConfiguration;
 
     public SOSOpenIdHandler(SOSOpenIdWebserviceCredentials webserviceCredentials) throws Exception {
@@ -364,7 +376,7 @@ public class SOSOpenIdHandler {
         }
     }
 
-    public Set<String> getTokenRoles() {
+    public Set<String> getTokenRoles() throws JsonMappingException, JsonQueryException, JsonProcessingException {
 
         Set<String> roles = new HashSet<String>();
         JsonReader jsonReaderHeader = null;
@@ -387,7 +399,7 @@ public class SOSOpenIdHandler {
             Map<String, List<String>> groupRolesMap = webserviceCredentials.getGroupRolesMap();
 
             if (webserviceCredentials.getClaims() != null && groupRolesMap != null) {
-
+                
                 for (String claim : webserviceCredentials.getClaims()) {
                     JsonValue jv = jsonPayload.get(claim);
                     if (jv == null) {
@@ -395,15 +407,36 @@ public class SOSOpenIdHandler {
                         continue;
                     }
                     if (jv.getValueType().equals(ValueType.ARRAY)) {
-                        JsonArray array = jv.asJsonArray();
-                        for (int i = 0; i < array.size(); i++) {
-                            String group = array.getString(i);
-                            addRoles(group, groupRolesMap, roles);
-                        }
+                        jv.asJsonArray().stream().filter(js -> js.getValueType().equals(ValueType.STRING)).map(JsonString.class::cast).map(
+                                JsonString::getString).forEach(group -> addRoles(group, groupRolesMap, roles));
+                        // JsonArray array = jv.asJsonArray();
+                        // for (int i = 0; i < array.size(); i++) {
+                        // String group = array.getString(i);
+                        // addRoles(group, groupRolesMap, roles);
+                        // }
                     } else if (jv.getValueType().equals(ValueType.STRING)) {
-                        String group = jsonPayload.getString(claim);
-                        addRoles(group, groupRolesMap, roles);
+                        addRoles(jsonPayload.getString(claim), groupRolesMap, roles);
                     }
+                }
+            }
+            
+            if (webserviceCredentials.getExtractQuery() != null) {
+                if (webserviceCredentials.getExtractQuery().startsWith("jq:")) {
+
+                    AtomicInteger groupFoundWithQuery = new AtomicInteger(0);
+                    List<JsonNode> nodes = runJqQuery(new ObjectMapper().readTree(payload), webserviceCredentials.getExtractQuery().substring(3));
+                    nodes.stream().filter(jn -> jn.isArray() || jn.isTextual()).flatMap(jn -> jn.isArray() ? jn.valueStream() : Stream.of(jn)).filter(
+                            JsonNode::isTextual).map(JsonNode::asText).peek(group -> groupFoundWithQuery.getAndIncrement()).forEach(group -> addRoles(
+                                    group, groupRolesMap, roles));
+
+                    if (groupFoundWithQuery.get() == 0) {
+                        LOGGER.info("Configured jq query was unable to extract a group in JWT Id-Token");
+                        LOGGER.debug("Query result: " + nodes.stream().map(JsonNode::toString).collect(Collectors.joining(", ")));
+                    }
+
+                } else if (webserviceCredentials.getExtractQuery().startsWith("jp:")) {
+                    // extraction with JSONPath not yert implemented
+                    LOGGER.info("Extracting groups in JWT Id-Token with JSONPath query is not yet implemented");
                 }
             }
 
@@ -417,6 +450,13 @@ public class SOSOpenIdHandler {
                 jsonReaderPayload.close();
             }
         }
+    }
+    
+    private static List<JsonNode> runJqQuery(JsonNode jsonNode, String jqQuery) throws JsonQueryException {
+        BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_7, rootScope);
+        List<JsonNode> out = new ArrayList<>();
+        JsonQuery.compile(jqQuery, Versions.JQ_1_7).apply(rootScope, jsonNode, out::add);
+        return out;
     }
     
     private void addRoles(String group, Map<String, List<String>> groupRolesMap, Set<String> roles) {
