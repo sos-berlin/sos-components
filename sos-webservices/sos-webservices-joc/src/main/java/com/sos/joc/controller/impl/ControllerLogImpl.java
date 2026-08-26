@@ -74,7 +74,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             byte[] header = getHeader(dbItem, instantFrom, timeZone);
 
             JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
-            Flux<byte[]> flux = proxy.byteLogLineFlux(serverId, logLevel, instantFrom, selection)
+            Flux<byte[]> flux = proxy.engineLog(serverId, logLevel).flatMap(eLog -> eLog.byteLogLineFlux(instantFrom, selection))
                     .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
                     .flatMapIterable(Function.identity());
                     //.takeWhile(LogHelper.dateToIsReached(instantTo, zoneId));

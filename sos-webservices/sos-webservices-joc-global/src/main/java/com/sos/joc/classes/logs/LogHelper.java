@@ -92,8 +92,9 @@ public class LogHelper {
             LogSession ls = new LogSession(controllerId, serverId, logLevel, instantFrom, instantTo, in.getNumOfLines(), zoneId, chunkSize, entity
                     .getLogToken());
 
-            setLogLines(proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection), ls, chunk - 1, entity);
-            
+            setLogLines(proxy.engineLog(serverId, logLevel).flatMap(eLog -> eLog.keyedLogLineFlux(instantFrom, selection)).publishOn(Schedulers
+                    .fromExecutor(ForkJoinPool.commonPool())), ls, chunk - 1, entity);
+
             LogSessions.addSession(accessToken, entity.getLogToken(), ls);
 
         } else { // JOC logs
@@ -334,18 +335,17 @@ public class LogHelper {
         AtomicLong chunkLinesCounter = new AtomicLong(0);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
         
-        KeyedLogLine lastLine = flux.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool())).flatMapIterable(Function.identity()).takeWhile(
-                dateToIsReached(ls, entity, false)).doOnNext(keyedLogLine -> {
-                    long row = linesCounter.getAndIncrement();
-                    if (row == 1l) {
-                        ls.setFirstKey(keyedLogLine.key());
-                    }
-                    if (row <= chunk) {
-                        lastChunkKey.set(keyedLogLine.key());
-                        entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
-                        chunkLinesCounter.incrementAndGet();
-                    }
-                }).blockLast();
+        KeyedLogLine lastLine = flux.flatMapIterable(Function.identity()).takeWhile(dateToIsReached(ls, entity, false)).doOnNext(keyedLogLine -> {
+            long row = linesCounter.getAndIncrement();
+            if (row == 1l) {
+                ls.setFirstKey(keyedLogLine.key());
+            }
+            if (row <= chunk) {
+                lastChunkKey.set(keyedLogLine.key());
+                entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+                chunkLinesCounter.incrementAndGet();
+            }
+        }).blockLast();
 
         Optional<LogLineKey> lastKeyOpt = Optional.ofNullable(lastLine).map(KeyedLogLine::key);
         Optional<LogLineKey> preLastKeyOpt = Optional.ofNullable(lastChunkKey.get());

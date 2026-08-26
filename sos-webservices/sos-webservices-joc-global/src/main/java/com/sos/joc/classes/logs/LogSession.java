@@ -213,8 +213,9 @@ public class LogSession {
     public CompletableFuture<Void> getNextLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, LogLineKey key) {
         return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
             return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
-                return logIndex.keyedLogLineFlux(key, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
-                        .commonPool())).flatMapIterable(Function.identity());
+                return logIndex.keyedLogLineFlux(key, selection)
+                        //.publishOn(Schedulers.fromExecutor(ForkJoinPool .commonPool()))
+                        .flatMapIterable(Function.identity());
             }).thenAccept(consumer);
         });
     }
@@ -222,21 +223,22 @@ public class LogSession {
     public CompletableFuture<Void> getPrevLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, Instant instantFrom) {
         return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
             return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
-                return logIndex.keyedLogLineFlux(instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool
-                        .commonPool())).flatMapIterable(Function.identity());
+                return logIndex.keyedLogLineFlux(instantFrom, selection)
+                        //.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                        .flatMapIterable(Function.identity());
             }).thenAccept(consumer);
         });
     }
     
     public Flux<KeyedLogLine> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
-        return proxy.keyedLogLineFlux(serverId, logLevel, key, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
-                .flatMapIterable(Function.identity());
+        return proxy.engineLog(serverId, logLevel).flatMap(eLog -> eLog.keyedLogLineFlux(key, selection)).publishOn(Schedulers.fromExecutor(
+                ForkJoinPool.commonPool())).flatMapIterable(Function.identity());
     }
 
     // It's a fake until proxy has a better API
     public Flux<KeyedLogLine> getPrevLogLinesFlux(JControllerProxy proxy, JLogSelection selection, Instant instantFrom) {
-        return proxy.keyedLogLineFlux(serverId, logLevel, instantFrom, selection).publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
-                .flatMapIterable(Function.identity());
+        return proxy.engineLog(serverId, logLevel).flatMap(eLog -> eLog.keyedLogLineFlux(instantFrom, selection)).publishOn(Schedulers.fromExecutor(
+                ForkJoinPool.commonPool())).flatMapIterable(Function.identity());
     }
 
     public Long getChunkSize() {
