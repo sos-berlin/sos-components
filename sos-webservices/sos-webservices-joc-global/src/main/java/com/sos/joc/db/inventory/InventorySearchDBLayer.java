@@ -854,6 +854,8 @@ public class InventorySearchDBLayer extends DBLayer {
             lock = setHQLAndGetParameterValue(oracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(oracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(oracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            argumentName = setHQLAndGetArgNames(oracle, hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(oracle, hql, advanced.getArgumentValue());
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -1519,6 +1521,8 @@ public class InventorySearchDBLayer extends DBLayer {
             lock = setHQLAndGetParameterValue(oracle, hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(oracle, hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(oracle, hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
+            argumentName = setHQLAndGetArgNames(oracle, hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(oracle, hql, advanced.getArgumentValue());
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
