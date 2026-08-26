@@ -420,7 +420,7 @@ public class SOSOpenIdHandler {
                 }
             }
             
-            if (webserviceCredentials.getExtractQuery() != null) {
+            if (webserviceCredentials.getExtractQuery() != null && !webserviceCredentials.getExtractQuery().isBlank()) {
                 if (webserviceCredentials.getExtractQuery().startsWith("jq:")) {
 
                     AtomicInteger groupFoundWithQuery = new AtomicInteger(0);
@@ -430,7 +430,7 @@ public class SOSOpenIdHandler {
                                     group, groupRolesMap, roles));
 
                     if (groupFoundWithQuery.get() == 0) {
-                        LOGGER.info("Configured jq query was unable to extract a group in JWT Id-Token");
+                        LOGGER.warn("Configured jq query was unable to extract a group in JWT Id-Token");
                         LOGGER.debug("Query result: " + nodes.stream().map(JsonNode::toString).collect(Collectors.joining(", ")));
                     }
 
