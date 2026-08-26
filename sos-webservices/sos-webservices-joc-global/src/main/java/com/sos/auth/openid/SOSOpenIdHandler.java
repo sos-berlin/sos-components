@@ -437,6 +437,8 @@ public class SOSOpenIdHandler {
                 } else if (webserviceCredentials.getExtractQuery().startsWith("jp:")) {
                     // extraction with JSONPath not yert implemented
                     LOGGER.info("Extracting groups in JWT Id-Token with JSONPath query is not yet implemented");
+                } else {
+                    LOGGER.info("Query to extract groups in JWT Id-Token start with an unsupported prefix. Use 'jq:'!");
                 }
             }
 
