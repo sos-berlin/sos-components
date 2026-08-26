@@ -213,20 +213,18 @@ public class YADESourceFilesSelector {
                 file = sourceDelegator.getProvider().getFileIfExists(path);
             } catch (ProviderConnectException e) {
                 logger.info(logPrefix + e.getMessage());
-                throw new YADEEngineSourceConnectionException(logPrefix + e.toString(), e);
+                throw new YADEEngineSourceConnectionException(e, sourceDelegator);
             } catch (ProviderException e) {
                 logger.info(logPrefix + e.getMessage());
                 checkDirectoryOnSingleFileError(logger, sourceDelegator, checkDirectory, e);
 
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + e.toString(), e);
                 YADEReturnCode returnCode = getReturnCode(sourceDelegator, e);
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, returnCode, sourceDelegator);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + e.toString(), e, returnCode, sourceDelegator);
             } catch (Exception e) {
                 logger.info(logPrefix + e.getMessage());
                 checkDirectoryOnSingleFileError(logger, sourceDelegator, checkDirectory, e);
 
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + e.toString(), e);
-                throw new YADEEngineSourceFilesSelectorException(logPrefix + ex.toString(), ex, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
+                throw new YADEEngineSourceFilesSelectorException(logPrefix + e.toString(), e, YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
             }
             if (file == null) {
                 if (selection.getConfig().isPolling()) {
@@ -265,11 +263,11 @@ public class YADESourceFilesSelector {
                 }
             }
         } catch (ProviderConnectException e) {
-            throw new YADEEngineSourceConnectionException(SOSException.mergeException(e, ex));
+            throw new YADEEngineSourceConnectionException(SOSException.mergeException(e, ex), sourceDelegator);
         } catch (ProviderDirectoryException e) {
             throw new YADEEngineSourceDirectoryException(SOSException.mergeException(e, ex));
         } catch (ProviderException e) {
-            throw new YADEEngineSourceFilesSelectorException(SOSException.mergeException(ex, e));
+            throw new YADEEngineSourceFilesSelectorException(SOSException.mergeException(ex, e), YADEReturnCode.SOURCE_FILES_ERROR, sourceDelegator);
         }
     }
 
