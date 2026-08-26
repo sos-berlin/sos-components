@@ -40,11 +40,11 @@ import com.sos.joc.model.order.OrderStateText;
 public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
     private final String controllerId;
-    private float finishedOrders = 0;
-    private float plannedOrders = 0;
-    private float plannedLateOrders = 0;
-    private float submittedOrders = 0;
-    private float submittedLateOrders = 0;
+    private double finishedOrders = 0;
+    private double plannedOrders = 0;
+    private double plannedLateOrders = 0;
+    private double submittedOrders = 0;
+    private double submittedLateOrders = 0;
 
     private AtomicBoolean hasOrderEvent = new AtomicBoolean(false);
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSummaryMBean.class);
@@ -211,7 +211,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
                     }
                 });
 
-        float all = finished.get() + planned.get() + plannedLate.get() + submitted.get() + submittedLate.get();
+        double all = finished.get() + planned.get() + plannedLate.get() + submitted.get() + submittedLate.get();
         if (all == 0) {
             finishedOrders = 0;
             plannedLateOrders = 0;
@@ -228,27 +228,27 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
     }
 
     @Override
-    public float getfinished_orders() {
+    public double getfinished_orders() {
         return finishedOrders;
     }
 
     @Override
-    public float getplanned_late_orders() {
+    public double getplanned_late_orders() {
         return plannedLateOrders;
     }
 
     @Override
-    public float getplanned_orders() {
+    public double getplanned_orders() {
         return plannedOrders;
     }
 
     @Override
-    public float getsubmitted_late_orders() {
+    public double getsubmitted_late_orders() {
         return submittedLateOrders;
     }
 
     @Override
-    public float getsubmitted_orders() {
+    public double getsubmitted_orders() {
         return submittedOrders;
     }
 
