@@ -151,7 +151,14 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     /** Overrides {@link IProvider#directoryExists(String)} */
     @Override
     public boolean directoryExists(String path) throws ProviderException {
-        return exists(path);
+        try {
+            return exists(path);
+        } catch (ProviderConnectException | ProviderDirectoryException e) {
+            throw e;
+        } catch (ProviderException e) {
+            throwDirectoryException(path, e);
+            return false;
+        }
     }
 
     /** Overrides {@link IProvider#createDirectoriesIfNotExists(Collection)} */
@@ -544,7 +551,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     }
 
     public void throwDirectoryException(String directory, Throwable e) throws ProviderDirectoryException {
-        throw new ProviderDirectoryException(getLogPrefix() + "Directory=" + directory, e);
+        throw new ProviderDirectoryException(getLogPrefix() + "[Directory=" + directory + "]", e);
     }
 
     public void throwDirectoryNotFoundException(String directory) throws ProviderDirectoryNotFoundException {
@@ -556,7 +563,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     }
 
     public void throwDirectoryNotFoundException(String directory, Throwable e) throws ProviderDirectoryNotFoundException {
-        throw new ProviderDirectoryNotFoundException(getLogPrefix() + "Directory=" + directory, e);
+        throw new ProviderDirectoryNotFoundException(getLogPrefix() + "[Directory=" + directory + "]", e);
     }
 
     public void throwDirectoryCreationException(String directory, String msg) throws ProviderDirectoryCreationException {
@@ -564,7 +571,7 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
     }
 
     public void throwDirectoryCreationException(String directory, Throwable e) throws ProviderDirectoryCreationException {
-        throw new ProviderDirectoryCreationException(getLogPrefix() + "Directory=" + directory, e);
+        throw new ProviderDirectoryCreationException(getLogPrefix() + "[Directory=" + directory + "]", e);
     }
 
     public static String millis2string(int val) {
