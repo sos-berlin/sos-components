@@ -1,17 +1,28 @@
 {
-    "searchx": "test_",
-    "returnType": "FILEORDERSOURCE",
-    "folders": [
-        "/agent/memory_"
-    ],
-    "deployedOrReleased": true,
-    "advanced": {
-        "jobName": "*",
-        "jobNameExactMatch": true,
-        "jobCriticalityX": "NORMAL",
-        "workflow": "test_",
-        "calendarX": "Any?ays",
-        "envName": "t_"
+    "advancedALL": {
+        "agentName": "primaryAgent",
+        "workflow": "e",
+        "fileOrderSource": "e",
+        "jobResources": "e",
+        "noticeBoards": "3",
+        "lock": "3",
+        "includeScripts": "d",
+        "calendar": "d",
+        "jobTemplate": "e",
+        "jobCountFrom": 5,
+        "jobCountTo": 10,
+        "jobName": "1",
+        "jobCriticality": "MAJOR",
+        "argumentName": "work",
+        "argumentValue": "12",
+        "envName": "11",
+        "envValue": "11"
     },
-    "returnTypeX": "SCHEDULE"
+    "advanced": {
+        "argumentValue": "12"
+    },
+    "deployedOrReleasedX": true,
+    "undeployedOrUnreleasedX": true,
+    "_all": "[WORKFLOW, FILEORDERSOURCE, JOBRESOURCE, JOBTEMPLATE, NOTICEBOARD, LOCK, SCHEDULE, INCLUDESCRIPT, CALENDAR, WORKINGDAYSCALENDAR, NONWORKINGDAYSCALENDAR, REPORT]",
+    "returnType": "SCHEDULE"
 }
