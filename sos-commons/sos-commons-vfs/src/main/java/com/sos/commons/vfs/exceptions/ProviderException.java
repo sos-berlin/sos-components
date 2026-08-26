@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.exceptions;
 
 import com.sos.commons.exception.SOSException;
+import com.sos.commons.util.SOSString;
 
 public class ProviderException extends SOSException {
 
@@ -25,7 +26,10 @@ public class ProviderException extends SOSException {
     private static String getMethodName() {
         StackTraceElement[] st = Thread.currentThread().getStackTrace();
         if (st.length > 3) {
-            return "[" + st[3].getMethodName() + "]";
+            String n = st[3].getMethodName();
+            if (!SOSString.isEmpty(n) && !n.startsWith("<")) { // <init>
+                return "[" + n + "]";
+            }
         }
         return "";
     }
