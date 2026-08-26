@@ -23,9 +23,11 @@ import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.bean.DailyPlanSummary;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
@@ -496,8 +498,11 @@ public class Globals {
     }
 
     public synchronized static void setConfigurationGlobals(ConfigurationGlobals val) {
-        clusterInitialized = true;
         configurationGlobals = val;
+        if (!clusterInitialized) {
+            Proxies.getControllerDbInstances().keySet().forEach(cId -> DailyPlanSummary.getInstance(cId).update());
+        }
+        clusterInitialized = true;
     }
 
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {

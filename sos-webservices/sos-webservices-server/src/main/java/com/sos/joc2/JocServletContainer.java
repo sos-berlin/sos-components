@@ -87,10 +87,10 @@ public class JocServletContainer extends ServletContainer {
                 SOSShell.printSystemInfos();
                 SOSShell.printJVMInfos();
             }, "servlet-init2").start();
+            JOCMBeanServer.register();
             if (withClusterService) {
                 JocClusterService.getInstance().start(StartupMode.automatic, true);
             }
-            JOCMBeanServer.register();
             DependencyUpdate.getInstance().updateThreaded();
         }, "servlet-init").start();
         

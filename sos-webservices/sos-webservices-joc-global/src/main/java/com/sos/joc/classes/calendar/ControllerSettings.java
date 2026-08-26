@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
+import com.sos.joc.bean.DailyPlanSummary;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
@@ -111,6 +112,7 @@ public class ControllerSettings {
 
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar));
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+            DailyPlanSummary.getInstance(controllerId).update();
             Map<CalendarPath, JCalendar> knownCalendars = null;
             try {
                 // JControllerApi api = ControllerApi.of(controllerId);

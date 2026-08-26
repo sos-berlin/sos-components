@@ -7,7 +7,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +32,6 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
-import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
@@ -39,6 +40,7 @@ import com.sos.joc.model.order.OrderStateText;
 
 public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
 
+    private static Map<String, DailyPlanSummary> instances = new HashMap<>();
     private final String controllerId;
     private double finishedOrders = 0;
     private double plannedOrders = 0;
@@ -58,13 +60,19 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
     private final static Comparator<DBItemDailyPlanWithHistory> comparator = Comparator.comparing(DBItemDailyPlanWithHistory::getPlannedStart);
     private final static Supplier<TreeSet<DBItemDailyPlanWithHistory>> supplier = () -> new TreeSet<>(comparator);
 
-    public DailyPlanSummary(String controllerId) {
+    private DailyPlanSummary(String controllerId) {
         this.controllerId = controllerId;
         EventBus.getInstance().register(this);
     }
+    
+    public static synchronized DailyPlanSummary getInstance(String controllerId) {
+        if (instances.get(controllerId) == null) {
+            instances.put(controllerId, new DailyPlanSummary(controllerId));
+        }
+        return instances.get(controllerId);
+    }
 
-    @Subscribe({ DailyPlanCalendarEvent.class })
-    public void init(DailyPlanCalendarEvent evt) {
+    public void update() {
         if (!hasOrderEvent.getAndSet(true)) {
             Executors.newScheduledThreadPool(1).schedule(() -> {
                 setDailyPlanSummary();
@@ -76,12 +84,7 @@ public class DailyPlanSummary implements DailyPlanSummaryMBean, IJocMBean {
     @Subscribe({ HistoryOrderTerminated.class, HistoryOrderStarted.class })
     public void update(HistoryOrderEvent evt) {
         if (controllerId.equals(evt.getControllerId()) && isMainOrder.and(isDailyPlanOrder).test(evt.getOrderId())) {
-            if (!hasOrderEvent.getAndSet(true)) {
-                Executors.newScheduledThreadPool(1).schedule(() -> {
-                    setDailyPlanSummary();
-                    hasOrderEvent.set(false);
-                }, 5, TimeUnit.SECONDS);
-            }
+            update();
         }
     }
 
