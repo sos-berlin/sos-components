@@ -54,6 +54,7 @@ import com.sos.joc.monitoring.model.bean.MonitorEmptyResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarn;
+import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarnEvaluation;
 import com.sos.joc.monitoring.model.bean.NotifierTask;
 import com.sos.joc.monitoring.model.bean.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
@@ -417,6 +418,16 @@ public class OrderNotifierModel {
                 return null;
             }
 
+            MonitorOrderStepResultWarnEvaluation evaluation = warning.evaluate(analyzer.getOrderStep());
+            if (!evaluation.isApplicable()) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s[notification id=%s][%s][%s %s][skip]%s", Configuration.LOG_INTENT, notification
+                            .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), warning.getReason(), evaluation
+                                    .getReason()));
+                }
+                return null;
+            }
+
             if (analyzer.getSentWarnings() != null && analyzer.getSentWarnings().containsKey(notification.getNotificationId())) {
                 if (analyzer.getSentWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
                     if (isDebugEnabled) {
@@ -445,12 +456,13 @@ public class OrderNotifierModel {
         try {
             mn = dbLayer.saveNotification(notification, analyzer, range, type, recoveredId, warnReason, warnText);
             if (notification.getMonitors().size() == 0) {
-                LOGGER.info(String.format("[%s][notification id=%s][%s][%s][store to database only]%s%s", mn.getId(), notification
-                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), (warnText == null ? ""
+                LOGGER.info(String.format("[notification id=%s][db id=%s][%s][%s][store to database only]%s%s", notification.getNotificationId(), mn
+                        .getId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), (warnText == null ? ""
                                 : warnText)));
             } else {
-                LOGGER.info(String.format("[%s][notification id=%s][%s][%s][send to %s monitors %s]%s%s", mn.getId(), notification
-                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), notification.getMonitors().size(), notification
+                LOGGER.info(String.format("[notification id=%s][db id=%s][%s][%s][send to %s monitors %s]%s%s", notification.getNotificationId(), mn
+                        .getId(),
+                        range, ANotifier.getTypeAsString(type, warnReason), notification.getMonitors().size(), notification
                                 .getMonitorsAsString(), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
             }
         } catch (Exception e) {
