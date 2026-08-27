@@ -365,7 +365,9 @@ public class HistoryMonitoringPayloadHandler {
             return new MonitorOrderStepResult(hosb, null);
         }
 
-        MonitorOrderStepResultWarn warn = model.analyzeLongerThan(dbLayer, hosb, hosb.getEndTime(), true);
+        // should always be false because this is called after orderStepProcessed, but check the actual end time to be safe
+        boolean endTimeEstimated = hosb.getEndTime() == null;
+        MonitorOrderStepResultWarn warn = model.analyzeLongerThan(dbLayer, hosb, hosb.getEndTime(), true, false, endTimeEstimated);
         if (warn != null && warn.isInvalid()) {
             model.removeLongerThan("analyzeExecutionTime", hosb);
             warn = null;
@@ -394,12 +396,12 @@ public class HistoryMonitoringPayloadHandler {
         if (expected == null || expected.getSeconds() == null) {
             return null;
         }
-        long diff = SOSDate.getSeconds(hosb.getEndTime()) - SOSDate.getSeconds(hosb.getStartTime());
-        if (diff < 0) {
+        long elapsedSeconds = MonitorOrderStepResultWarn.calculateElapsedSeconds(hosb.getStartTime(), hosb.getEndTime());
+        if (elapsedSeconds < 0) {
             if (LOGGER.isDebugEnabled()) {
                 try {
-                    LOGGER.debug(String.format("[%s][analyzeShorterThan][diff=%s < 0][startTime=%s, endTime=%s]%s",
-                            MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, diff, SOSDate.getDateTimeAsString(hosb.getStartTime()), SOSDate
+                    LOGGER.debug(String.format("[%s][analyzeShorterThan][elapsedSeconds=%s < 0][startTime=%s, endTime=%s]%s",
+                            MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, elapsedSeconds, SOSDate.getDateTimeAsString(hosb.getStartTime()), SOSDate
                                     .getDateTimeAsString(hosb.getEndTime()), SOSString.toString(hosb)));
                 } catch (Exception e) {
                     LOGGER.warn(e.toString(), e);
@@ -408,7 +410,7 @@ public class HistoryMonitoringPayloadHandler {
             return null;
         }
 
-        if (diff < expected.getSeconds()) {
+        if (elapsedSeconds < expected.getSeconds()) {
             return new MonitorOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected %s", model
                     .getExpectedDurationMessage(hosb.getWarnIfShorter(), expected)));
         }
