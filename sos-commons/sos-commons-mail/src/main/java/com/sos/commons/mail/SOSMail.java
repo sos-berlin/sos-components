@@ -158,6 +158,7 @@ public class SOSMail {
             }
         }
         this.smtpProperties = smtpProperties;
+        init();
     }
 
     public SOSMail(final String smtpHost) throws Exception {
