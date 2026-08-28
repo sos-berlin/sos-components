@@ -21,6 +21,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.HistoryMonitorService;
 import com.sos.joc.monitoring.MonitorService;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.model.bean.ExpectedSeconds;
@@ -52,12 +53,13 @@ public class HistoryMonitoringPayloadHandler {
             HistoryOrderBean hob;
             for (AHistoryBean b : copy) {
                 if (isDebugEnabled) {
-                    LOGGER.debug("[PAYLOAD]" + b.getEventType() + "=" + SOSString.toString(b));
+                    LOGGER.debug(HistoryMonitorService.LOG_IDENTIFIER + "[" + b.getControllerId() + "][PAYLOAD]" + b.getEventType() + "=" + SOSString
+                            .toString(b));
                 }
                 if (model.getClosed().get()) {
                     break;
                 }
-
+                toNotify.addLastEventIdByController(b.getControllerId(), b.getEventId());
                 // todo - toRemove - cleanup too old payloads ???
 
                 switch (b.getEventType()) {
@@ -109,14 +111,14 @@ public class HistoryMonitoringPayloadHandler {
                     break;
                 // OrderStep
                 case OrderProcessingStarted:
-                    orderStepStarted(model, dbLayer, (HistoryOrderStepBean) b);
+                    orderProcessingStarted(model, dbLayer, (HistoryOrderStepBean) b);
                     break;
                 case OrderProcessed:
-                    toNotify.getSteps().add(orderStepProcessed(model, dbLayer, (HistoryOrderStepBean) b));
+                    toNotify.getSteps().add(orderProcessed(model, dbLayer, (HistoryOrderStepBean) b));
                     break;
                 case OrderStderrWritten:
 
-                    toNotify.getSteps().add(getOrderStepStderrWarning((HistoryOrderStepBean) b));
+                    toNotify.getSteps().add(orderStderrWritten((HistoryOrderStepBean) b));
                     break;
                 default:
                     break;
@@ -126,10 +128,9 @@ public class HistoryMonitoringPayloadHandler {
             dbLayer.getSession().commit();
 
             toNotify.setFirstEventId(copy.get(0).getEventId());
-            toNotify.setLastEventId(copy.get(copy.size() - 1).getEventId());
         } catch (Exception e) {
             dbLayer.rollback();
-            LOGGER.warn(e.toString(), e);
+            LOGGER.warn(HistoryMonitorService.LOG_IDENTIFIER + e.toString(), e);
         } finally {
             dbLayer.close();
             model.getPayloads().removeAll(toRemove);
@@ -192,13 +193,13 @@ public class HistoryMonitoringPayloadHandler {
 
     private void orderResumed(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrderOnResumed(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderForked(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrderOnForked(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
 
         List<HistoryOrderBean> children = hob.getChildren();
@@ -223,48 +224,50 @@ public class HistoryMonitoringPayloadHandler {
                 continue;
             }
             if (!dbLayer.updateOrder(child)) {
-                insert(dbLayer, hob.getEventType(), child.getOrderId(), child.getHistoryId());
+                insert(dbLayer, hob.getEventType(), hob.getControllerId(), child.getOrderId(), child.getHistoryId());
             }
         }
     }
 
     private void orderFailed(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderStopped(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderSuspended(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderCancelled(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderBroken(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderFinished(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(dbLayer, hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
+            insert(dbLayer, hob.getEventType(), hob.getControllerId(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
-    private void orderStepStarted(HistoryMonitoringModel model, DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) throws SOSHibernateException {
+    // order step started
+    private void orderProcessingStarted(HistoryMonitoringModel model, DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb)
+            throws SOSHibernateException {
         DBItemMonitoringOrderStep item = new DBItemMonitoringOrderStep();
         item.setHistoryId(hosb.getHistoryId());
         item.setWorkflowPosition(hosb.getWorkflowPosition());
@@ -294,10 +297,10 @@ public class HistoryMonitoringPayloadHandler {
         try {
             dbLayer.getSession().save(item);
             if (!dbLayer.updateOrderOnOrderStep(item.getHistoryOrderId(), item.getHistoryId())) {
-                insert(dbLayer, hosb.getEventType(), hosb.getOrderId(), item.getHistoryOrderId());
+                insert(dbLayer, hosb.getEventType(), hosb.getControllerId(), hosb.getOrderId(), item.getHistoryOrderId());
             }
             if (!SOSString.isEmpty(hosb.getWarnIfLonger())) {
-                model.putLongerThan("orderStepStarted", hosb);
+                model.putLongerThan("orderProcessingStarted", hosb);
             }
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -307,30 +310,32 @@ public class HistoryMonitoringPayloadHandler {
         }
     }
 
-    private MonitorOrderStepResult getOrderStepStderrWarning(HistoryOrderStepBean hosb) {
+    // order step
+    private MonitorOrderStepResult orderStderrWritten(HistoryOrderStepBean hosb) {
         MonitorOrderStepResultWarn warn = new MonitorOrderStepResultWarn(JobWarning.STDERR, "Job reports output to stderr: " + hosb
                 .getFirstChunkStdError());
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s][workflowPath=%s, job=%s(historyId=%s)]%s", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb
+            LOGGER.debug(String.format("%s[%s][workflowPath=%s, job=%s(historyId=%s)]%s", HistoryMonitorService.LOG_IDENTIFIER, hosb
                     .getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(), SOSString.toString(warn)));
         }
         return new MonitorOrderStepResult(hosb, warn);
     }
 
-    private MonitorOrderStepResult orderStepProcessed(HistoryMonitoringModel model, DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb)
+    // order step processed
+    private MonitorOrderStepResult orderProcessed(HistoryMonitoringModel model, DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb)
             throws SOSHibernateException {
         MonitorOrderStepResult r = analyzeExecutionTime(model, dbLayer, hosb);
         r.addWarn(analyzeReturnCode(hosb));
 
         dbLayer.setOrderStepEnd(r);
 
-        model.removeLongerThan("orderStepProcessed", hosb);
+        model.removeLongerThan("orderProcessed", hosb);
 
         if (LOGGER.isDebugEnabled()) {
             if (!SOSCollection.isEmpty(r.getWarnings())) {
-                LOGGER.debug(String.format("[%s][orderStepProcessed][warnings][%s][workflowPath=%s, job=%s(historyId=%s, step=%s)]warnings=%s",
-                        MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
-                                .getHistoryId(), r.getStep(), r.getWarnings().size()));
+                LOGGER.debug(String.format("%s[%s][orderProcessed][warnings][workflowPath=%s, job=%s(historyId=%s, step=%s)]warnings=%s",
+                        HistoryMonitorService.LOG_IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb.getHistoryId(),
+                        r.getStep(), r.getWarnings().size()));
                 for (MonitorOrderStepResultWarn warn : r.getWarnings()) {
                     LOGGER.debug(String.format("    %s", SOSString.toString(warn)));
                 }
@@ -340,10 +345,10 @@ public class HistoryMonitoringPayloadHandler {
         return r;
     }
 
-    private boolean insert(DBLayerMonitoring dbLayer, EventType eventType, String orderId, Long historyId) {
+    private boolean insert(DBLayerMonitoring dbLayer, EventType eventType, String controllerId, String orderId, Long historyId) {
         try {
-            LOGGER.info(String.format("[%s][%s][order not found=%s, id=%s]read from history orders...", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY,
-                    eventType.name(), orderId, historyId));
+            LOGGER.info(String.format("%s[%s][%s][order not found=%s, id=%s]read from history orders...", HistoryMonitorService.LOG_IDENTIFIER,
+                    controllerId, eventType.name(), orderId, historyId));
 
             DBItemMonitoringOrder item = dbLayer.convert(dbLayer.getHistoryOrder(historyId));
             if (item != null) {
@@ -351,11 +356,11 @@ public class HistoryMonitoringPayloadHandler {
                     dbLayer.getSession().save(item);
                     return true;
                 } catch (Exception e) {
-                    LOGGER.warn(String.format("[%s][save]%s", historyId, e.toString()), e);
+                    LOGGER.warn(String.format("%s[%s][%s][save]%s", HistoryMonitorService.LOG_IDENTIFIER, controllerId, historyId, e.toString()), e);
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn(String.format("[%s][get]%s", historyId, e.toString()), e);
+            LOGGER.warn(String.format("%s[%s][%s][get]%s", HistoryMonitorService.LOG_IDENTIFIER, controllerId, historyId, e.toString()), e);
         }
         return false;
     }
@@ -365,9 +370,9 @@ public class HistoryMonitoringPayloadHandler {
             return new MonitorOrderStepResult(hosb, null);
         }
 
-        // should always be false because this is called after orderStepProcessed, but check the actual end time to be safe
+        // endTimeEstimated should always be false because this is called after orderStepProcessed, but check the actual end time to be safe
         boolean endTimeEstimated = hosb.getEndTime() == null;
-        MonitorOrderStepResultWarn warn = model.analyzeLongerThan(dbLayer, hosb, hosb.getEndTime(), true, false, endTimeEstimated);
+        MonitorOrderStepResultWarn warn = model.analyzeLongerThan(dbLayer, hosb, hosb.getEndTime(), true, endTimeEstimated);
         if (warn != null && warn.isInvalid()) {
             model.removeLongerThan("analyzeExecutionTime", hosb);
             warn = null;
@@ -400,9 +405,9 @@ public class HistoryMonitoringPayloadHandler {
         if (elapsedSeconds < 0) {
             if (LOGGER.isDebugEnabled()) {
                 try {
-                    LOGGER.debug(String.format("[%s][analyzeShorterThan][elapsedSeconds=%s < 0][startTime=%s, endTime=%s]%s",
-                            MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, elapsedSeconds, SOSDate.getDateTimeAsString(hosb.getStartTime()), SOSDate
-                                    .getDateTimeAsString(hosb.getEndTime()), SOSString.toString(hosb)));
+                    LOGGER.debug(String.format("%s[%s][analyzeShorterThan][elapsedSeconds=%s < 0][startTime=%s, endTime=%s]%s",
+                            HistoryMonitorService.LOG_IDENTIFIER, hosb.getControllerId(), elapsedSeconds, SOSDate.getDateTimeAsString(hosb
+                                    .getStartTime()), SOSDate.getDateTimeAsString(hosb.getEndTime()), SOSString.toString(hosb)));
                 } catch (Exception e) {
                     LOGGER.warn(e.toString(), e);
                 }

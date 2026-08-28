@@ -67,8 +67,7 @@ public class OrderNotifierModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderNotifierModel.class);
 
-    private static final String LOG_IDENTIFIER = String.format("[%s][%s]", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY,
-            MonitorService.NOTIFICATION_IDENTIFIER);
+    private static final String LOG_IDENTIFIER = "[" + MonitorService.NOTIFICATION_IDENTIFIER + "]";
 
     private static final String IDENTIFIER = String.format("%s_n", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY);
     private static final String IDENTIFIER_NOTIFICATION_MONITOR_EXECUTOR = IDENTIFIER + "_ex";
@@ -134,11 +133,30 @@ public class OrderNotifierModel {
             return;
         }
 
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         while (!closed.get()) {
             try {
                 AMonitorResult r = candidates.take();
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("%s[dispatchLoop]%s", LOG_IDENTIFIER, SOSString.toString(r)));
+                if (isDebugEnabled) {
+                    if (r == null) {
+                        LOGGER.debug(String.format("%s[dispatchLoop]null", LOG_IDENTIFIER));
+                    } else {
+                        if (r == CANDIDATES_WAKEUP_ENTRY) {
+                            LOGGER.debug(String.format("%s[dispatchLoop]%s", LOG_IDENTIFIER, SOSString.toString(r)));
+                        } else {
+                            try {
+                                String controllerId = "unknown controllerId";
+                                if (r.isStep()) { // STEP
+                                    controllerId = ((MonitorOrderStepResult) r).getControllerId();
+                                } else {
+                                    controllerId = ((MonitorOrderResult) r).getControllerId();
+                                }
+                                LOGGER.debug(String.format("%s[%s][dispatchLoop]%s", LOG_IDENTIFIER, controllerId, SOSString.toString(r)));
+                            } catch (Exception e) {
+                                LOGGER.debug(LOG_IDENTIFIER + e.toString(), e);
+                            }
+                        }
+                    }
                 }
                 if (r == CANDIDATES_WAKEUP_ENTRY) { // == instead of equals is ok
                     continue; // go to check closed.get()
@@ -199,13 +217,14 @@ public class OrderNotifierModel {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (r.isCompleted()) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[notifyStep][skip][completed=true][%s]%s", range, r.toString()));
+                LOGGER.debug(String.format("%s[%s][notifyStep][skip][completed=true][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, r
+                        .toString()));
             }
             return;
         }
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyStep][start][%s]%s", range, r.toString()));
+            LOGGER.debug(String.format("%s[%s][notifyStep][start][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, r.toString()));
         }
 
         notifyStepWarning(r);
@@ -217,7 +236,7 @@ public class OrderNotifierModel {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
                         .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
                                 .getCriticality(), r.getStep().getReturnCode());
-                notify(range, configuredNotifications, null, r, NotificationType.ERROR, null);
+                notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.ERROR, null);
                 r.setErrorCompleted();
             }
         } else {
@@ -226,7 +245,7 @@ public class OrderNotifierModel {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
                         .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
                                 .getCriticality(), r.getStep().getReturnCode());
-                notify(range, configuredNotifications, null, r, NotificationType.RECOVERED, null);
+                notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.RECOVERED, null);
                 r.setRecoveryCompleted();
             }
             // SUCCESS
@@ -234,12 +253,12 @@ public class OrderNotifierModel {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnSuccess(), r.getStep()
                         .getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
                                 .getCriticality(), r.getStep().getReturnCode());
-                notify(range, configuredNotifications, null, r, NotificationType.SUCCESS, null);
+                notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.SUCCESS, null);
                 r.setSuccessCompleted();
             }
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyStep][end][%s]%s", range, r.toString()));
+            LOGGER.debug(String.format("%s[%s][notifyStep][end][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, r.toString()));
         }
     }
 
@@ -249,16 +268,17 @@ public class OrderNotifierModel {
                 return;
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[notifyStepWarning][start]warnings=%s", r.getWarnings().size()));
+                LOGGER.debug(String.format("%s[%s][notifyStepWarning][start]warnings=%s", LOG_IDENTIFIER, r.getControllerId(), r.getWarnings()
+                        .size()));
             }
             OrderNotificationRange range = OrderNotificationRange.WORKFLOW_JOB;
             List<Notification> configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnWarning(), r
                     .getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep().getJobName(), r.getStep().getJobLabel(), r.getStep()
                             .getCriticality(), r.getStep().getReturnCode());
-            notify(range, configuredNotifications, null, r, NotificationType.WARNING, r.getWarnings());
+            notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.WARNING, r.getWarnings());
             r.setWarnCompleted();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[notifyStepWarning][end]warnings=%s", r.getWarnings().size()));
+                LOGGER.debug(String.format("%s[%s][notifyStepWarning][end]warnings=%s", LOG_IDENTIFIER, r.getControllerId(), r.getWarnings().size()));
             }
         }
     }
@@ -268,13 +288,15 @@ public class OrderNotifierModel {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (r.isCompleted()) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[notifyOrder][skip][completed=true][%s]%s", range, r.toString()));
+                LOGGER.debug(String.format("%s[%s][notifyOrder][skip][completed=true][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, r
+                        .toString()));
             }
             return;
         }
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyOrder][start][%s][%s]%s", range, type, SOSString.toString(r)));
+            LOGGER.debug(String.format("%s[%s][notifyOrder][start][%s][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, type, SOSString.toString(
+                    r)));
         }
 
         List<Notification> configuredNotifications;
@@ -283,7 +305,7 @@ public class OrderNotifierModel {
             if (!r.isErrorCompleted()) {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
                         .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
-                notify(range, configuredNotifications, r, null, NotificationType.ERROR, null);
+                notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.ERROR, null);
                 r.setErrorCompleted();
             }
             break;
@@ -292,29 +314,31 @@ public class OrderNotifierModel {
             if (!r.isRecoveryCompleted()) {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
                         .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
-                notify(range, configuredNotifications, r, null, NotificationType.RECOVERED, null);
+                notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.RECOVERED, null);
                 r.setRecoveryCompleted();
             }
             // SUCCESS
             if (!r.isSuccessCompleted()) {
                 configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
                         .getOnSuccess(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
-                notify(range, configuredNotifications, r, null, NotificationType.SUCCESS, null);
+                notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.SUCCESS, null);
                 r.setSuccessCompleted();
             }
             break;
         default:
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("[notifyOrder][skip][%s][%s]because NotificationType=%s", range, type, type));
+                LOGGER.debug(String.format("%s[%s][notifyOrder][skip][%s][%s]because NotificationType=%s", LOG_IDENTIFIER, r.getControllerId(), range,
+                        type, type));
             }
             break;
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("[notifyOrder][end][%s][%s]%s", range, type, SOSString.toString(r)));
+            LOGGER.debug(String.format("%s[%s][notifyOrder][end][%s][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, type, SOSString.toString(
+                    r)));
         }
     }
 
-    private boolean notify(OrderNotificationRange range, List<Notification> configuredNotifications, MonitorOrderResult mor,
+    private boolean notify(String controllerId, OrderNotificationRange range, List<Notification> configuredNotifications, MonitorOrderResult mor,
             MonitorOrderStepResult mosr, NotificationType type, List<MonitorOrderStepResultWarn> warnings) {
         if (configuredNotifications.size() == 0) {
             return false;
@@ -322,9 +346,9 @@ public class OrderNotifierModel {
 
         OrderNotifyAnalyzer analyzer = new OrderNotifyAnalyzer();
 
-        DBLayerMonitoring dbLayer = new DBLayerMonitoring(IDENTIFIER);
+        DBLayerMonitoring dbLayer = new DBLayerMonitoring(LOG_IDENTIFIER + "[" + controllerId + "]");
         try {
-            dbLayer.setSession(factory.openStatelessSession());
+            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
             if (!analyzer.analyze(range, dbLayer, configuredNotifications, mor, mosr, type, warnings)) {
@@ -363,7 +387,7 @@ public class OrderNotifierModel {
 
             return notified;
         } catch (Exception e) {
-            LOGGER.error(LOG_IDENTIFIER + e.toString(), e);
+            LOGGER.error(LOG_IDENTIFIER + "[" + controllerId + "]" + e.toString(), e);
             dbLayer.rollback();
             return false;
         } finally {
@@ -400,9 +424,9 @@ public class OrderNotifierModel {
                     if (os == null) {
                         if (isDebugEnabled) {
                             JobWarning wr = warning == null ? null : warning.getReason();
-                            LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip][monitoringOrderStep not found]%s",
-                                    Configuration.LOG_INTENT, notification.getNotificationId(), range, ANotifier.getTypeAsString(type, wr), r
-                                            .getStepId()));
+                            LOGGER.debug(String.format("%s[%s][notification id=%s][%s][%s][skip][monitoringOrderStep not found]%s",
+                                    Configuration.LOG_INTENT, analyzer.getControllerId(), notification.getNotificationId(), range, ANotifier
+                                            .getTypeAsString(type, wr), r.getStepId()));
                         }
                         return null;
                     }
@@ -413,8 +437,8 @@ public class OrderNotifierModel {
         case WARNING:
             if (warning == null || warning.getReason() == null) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[notification id=%s][%s][%s][skip]warning or warning reason is null", Configuration.LOG_INTENT,
-                            notification.getNotificationId(), range, ANotifier.getTypeAsString(type, null)));
+                    LOGGER.debug(String.format("%s[%s][notification id=%s][%s][%s][skip]warning or warning reason is null", Configuration.LOG_INTENT,
+                            analyzer.getControllerId(), notification.getNotificationId(), range, ANotifier.getTypeAsString(type, null)));
                 }
                 return null;
             }
@@ -422,9 +446,9 @@ public class OrderNotifierModel {
             MonitorOrderStepResultWarnEvaluation evaluation = warning.evaluate(analyzer.getOrderStep());
             if (!evaluation.isApplicable()) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[notification id=%s][%s][%s %s][skip]%s", Configuration.LOG_INTENT, notification
-                            .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), warning.getReason(), evaluation
-                                    .getReason()));
+                    LOGGER.debug(String.format("%s[%s][notification id=%s][%s][%s %s][skip]%s", Configuration.LOG_INTENT, analyzer.getControllerId(),
+                            notification.getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), warning.getReason(),
+                            evaluation.getReason()));
                 }
                 return null;
             }
@@ -432,18 +456,18 @@ public class OrderNotifierModel {
             if (analyzer.getSentWarnings() != null && analyzer.getSentWarnings().containsKey(notification.getNotificationId())) {
                 if (analyzer.getSentWarnings().get(notification.getNotificationId()).contains(warning.getReason())) {
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s[notification id=%s][%s][%s %s][skip][already sent]%s", Configuration.LOG_INTENT, notification
-                                .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), warning.getReason(), analyzer
-                                        .getSentWarnings()));
+                        LOGGER.debug(String.format("%s[%s][notification id=%s][%s][%s %s][skip][already sent]%s", Configuration.LOG_INTENT, analyzer
+                                .getControllerId(), notification.getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()),
+                                warning.getReason(), analyzer.getSentWarnings()));
                     }
                     return null;
                 }
             }
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[notification id=%s][%s][%s][warning=%s]sentWarnings=%s", Configuration.LOG_INTENT, notification
-                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), SOSString.toString(warning), analyzer
-                                .getSentWarnings()));
+                LOGGER.debug(String.format("%s[%s][notification id=%s][%s][%s][warning=%s]sentWarnings=%s", Configuration.LOG_INTENT, analyzer
+                        .getControllerId(), notification.getNotificationId(), range, ANotifier.getTypeAsString(type, warning.getReason()), SOSString
+                                .toString(warning), analyzer.getSentWarnings()));
             }
 
             warnReason = warning.getReason();
@@ -457,18 +481,18 @@ public class OrderNotifierModel {
         try {
             mn = dbLayer.saveNotification(notification, analyzer, range, type, recoveredId, warnReason, warnText);
             if (notification.getMonitors().size() == 0) {
-                LOGGER.info(String.format("[notification id=%s][db id=%s][%s][%s][store to database only]%s%s", notification.getNotificationId(), mn
-                        .getId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), (warnText == null ? ""
-                                : warnText)));
+                LOGGER.info(String.format("%s[%s][notification id=%s][db id=%s][%s][%s][store to database only]%s%s", LOG_IDENTIFIER, analyzer
+                        .getControllerId(), notification.getNotificationId(), mn.getId(), range, ANotifier.getTypeAsString(type, warnReason),
+                        ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
             } else {
-                LOGGER.info(String.format("[notification id=%s][db id=%s][%s][%s][send to %s monitors %s]%s%s", notification.getNotificationId(), mn
-                        .getId(),
-                        range, ANotifier.getTypeAsString(type, warnReason), notification.getMonitors().size(), notification
-                                .getMonitorsAsString(), ANotifier.getInfo(analyzer), (warnText == null ? "" : warnText)));
+                LOGGER.info(String.format("%s[%s][notification id=%s][db id=%s][%s][%s][send to %s monitors %s]%s%s", LOG_IDENTIFIER, analyzer
+                        .getControllerId(), notification.getNotificationId(), mn.getId(), range, ANotifier.getTypeAsString(type, warnReason),
+                        notification.getMonitors().size(), notification.getMonitorsAsString(), ANotifier.getInfo(analyzer), (warnText == null ? ""
+                                : warnText)));
             }
         } catch (Exception e) {
-            LOGGER.error(String.format("%s[notification id=%s][%s][%s]%s[failed]%s", LOG_IDENTIFIER, notification.getNotificationId(), range,
-                    ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), e.toString()), e);
+            LOGGER.error(String.format("%s[%s][notification id=%s][%s][%s]%s[failed]%s", LOG_IDENTIFIER, analyzer.getControllerId(), notification
+                    .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), e.toString()), e);
         }
 
         if (os != null && analyzer.getOrder() != null) {
@@ -478,8 +502,9 @@ public class OrderNotifierModel {
                             .getJobName()));
                 }
             } catch (Exception e) {
-                LOGGER.error(String.format("%s[notification id=%s][%s][%s]%s[step][setTags][failed]%s", LOG_IDENTIFIER, notification
-                        .getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(analyzer), e.toString()), e);
+                LOGGER.error(String.format("%s[%s][notification id=%s][%s][%s]%s[step][setTags][failed]%s", LOG_IDENTIFIER, analyzer
+                        .getControllerId(), notification.getNotificationId(), range, ANotifier.getTypeAsString(type, warnReason), ANotifier.getInfo(
+                                analyzer), e.toString()), e);
             }
         }
         postEvent(analyzer.getControllerId(), mn, analyzer.getOrder(), os);
@@ -519,9 +544,9 @@ public class OrderNotifierModel {
                 DBLayerMonitoring dbLayer = null;
                 try {
                     if (t.isSaveNotificationMonitor()) {
-                        dbLayer = new DBLayerMonitoring(IDENTIFIER_NOTIFICATION_DB);
+                        dbLayer = new DBLayerMonitoring(LOG_IDENTIFIER + "[" + t.getControllerId() + "]");
                         // dbLayer.setSession(factory.openStatelessSession());
-                        dbLayer.setSession(Globals.createSosHibernateStatelessConnection(IDENTIFIER_NOTIFICATION_DB));
+                        dbLayer.setSession(Globals.createSosHibernateStatelessConnection(LOG_IDENTIFIER + "[" + t.getControllerId() + "]"));
                         // dbLayer.getSession().beginTransaction();
                         if (t.getException() != null) {
                             dbLayer.saveNotificationMonitor(t.getDbNotification(), t.getMonitor(), t.getException());
@@ -534,7 +559,7 @@ public class OrderNotifierModel {
                     // if (dbLayer != null) {
                     // dbLayer.rollback();
                     // }
-                    LOGGER.warn(LOG_IDENTIFIER + e.toString(), e);
+                    LOGGER.warn(LOG_IDENTIFIER + "[" + t.getControllerId() + "]" + e.toString(), e);
                 } finally {
                     if (dbLayer != null) {
                         dbLayer.close();
@@ -557,9 +582,10 @@ public class OrderNotifierModel {
         } catch (Exception e) {
             LOGGER.error(LOG_IDENTIFIER + e.toString(), e);// contains all informations about the type etc
             if (task.getDbNotification() == null) {
-                LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s]%s[skip save notification monitor]due to save notification failed",
-                        Configuration.LOG_INTENT, task.getIdentifier(), task.getNotification().getNotificationId(), task.getRange(), ANotifier
-                                .getTypeAsString(task.getType(), task.getWarnReason()), ANotifier.getInfo(task.getAnalyzer(), task.getMonitor())));
+                LOGGER.info(String.format("%s[%s][%s][notification id=%s][%s][%s]%s[skip save notification monitor]due to save notification failed",
+                        Configuration.LOG_INTENT, task.getControllerId(), task.getIdentifier(), task.getNotification().getNotificationId(), task
+                                .getRange(), ANotifier.getTypeAsString(task.getType(), task.getWarnReason()), ANotifier.getInfo(task.getAnalyzer(),
+                                        task.getMonitor())));
             } else {
                 task.setExecuted();
                 task.saveNotificationMonitor();
@@ -576,8 +602,8 @@ public class OrderNotifierModel {
                 if (nr != null && nr.getError() != null) {
                     if (Configuration.INSTANCE.retryIncompleteNotificationsOnStartup() && closed.get() && nr.getError()
                             .getException() instanceof InterruptedException) {
-                        LOGGER.info(String.format("%s[on close][%s]notification monitor execution interrupted - marked for retry on next startup",
-                                LOG_IDENTIFIER, task.getIdentifier()));
+                        LOGGER.info(String.format("%s[%s][on close][%s]notification monitor execution interrupted - marked for retry on next startup",
+                                LOG_IDENTIFIER, task.getControllerId(), task.getIdentifier()));
 
                         // create retry candidate without execution result data
                         NotifierTask taskCopy = task.copyWithoutResult();
@@ -585,7 +611,7 @@ public class OrderNotifierModel {
                         active.add(taskCopy);
                     }
                     // LOGGER.error(LOG_IDENTIFIER + nr.getError().getMessage(), nr.getError().getException());
-                    LOGGER.error(LOG_IDENTIFIER + nr.getError().getMessage());
+                    LOGGER.error(LOG_IDENTIFIER + "[" + task.getControllerId() + "]" + nr.getError().getMessage());
                 }
                 if (task.getDbNotification() == null) {
                     LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s]%s[skip save notification result]due to save notification failed",
@@ -598,10 +624,10 @@ public class OrderNotifierModel {
 
                         task.setNotifyResult(nr);
                     } else {
-                        LOGGER.info(String.format("%s[%s][notification id=%s][%s][%s][skip]%s%s%s", Configuration.LOG_INTENT, task.getIdentifier(),
-                                task.getNotification().getNotificationId(), task.getRange(), ANotifier.getTypeAsString(task.getType(), task
-                                        .getWarnReason()), ANotifier.getMonitorInfo(task.getMonitor()), nr.getSkipCause(), ANotifier.getInfo(task
-                                                .getAnalyzer())));
+                        LOGGER.info(String.format("%s[%s][%s][notification id=%s][%s][%s][skip]%s%s%s", Configuration.LOG_INTENT, task
+                                .getControllerId(), task.getIdentifier(), task.getNotification().getNotificationId(), task.getRange(), ANotifier
+                                        .getTypeAsString(task.getType(), task.getWarnReason()), ANotifier.getMonitorInfo(task.getMonitor()), nr
+                                                .getSkipCause(), ANotifier.getInfo(task.getAnalyzer())));
                     }
                 }
             } catch (Exception e) {

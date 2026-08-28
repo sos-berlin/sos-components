@@ -27,6 +27,8 @@ public class HistoryMonitorService extends AJocActiveMemberService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMonitorService.class);
 
+    public static final String LOG_IDENTIFIER = "[" + MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY + "]";
+
     private JocClusterHibernateFactory factory;
     private HistoryMonitoringModel history = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
@@ -43,10 +45,10 @@ public class HistoryMonitorService extends AJocActiveMemberService {
             stopOnStart(mode);
 
             closed.set(false);
-            LOGGER.info(String.format("[%s][%s]start...", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, mode));
+            LOGGER.info(String.format("%s[%s]start...", LOG_IDENTIFIER, mode));
 
             createFactory(getJocConfig().getHibernateConfiguration());
-            history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig());
+            history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig(), controllers);
             history.start(getThreadGroup());
 
             return JocCluster.getOKAnswer(JocClusterState.STARTED);
@@ -60,11 +62,11 @@ public class HistoryMonitorService extends AJocActiveMemberService {
     @Override
     public synchronized JocClusterAnswer stop(StartupMode mode) {
         MonitorService.setLogger();
-        LOGGER.info(String.format("[%s][%s]stop...", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, mode));
+        LOGGER.info(String.format("%s[%s]stop...", LOG_IDENTIFIER, mode));
 
         closed.set(true);
         close(mode);
-        LOGGER.info(String.format("[%s][%s]stopped", MonitorService.SUB_SERVICE_IDENTIFIER_HISTORY, mode));
+        LOGGER.info(String.format("%s[%s]stopped", LOG_IDENTIFIER, mode));
 
         MonitorService.removeLogger();
         return JocCluster.getOKAnswer(JocClusterState.STOPPED);
