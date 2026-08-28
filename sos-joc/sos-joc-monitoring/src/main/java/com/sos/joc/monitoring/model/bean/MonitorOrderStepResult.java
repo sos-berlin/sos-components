@@ -31,6 +31,10 @@ public class MonitorOrderStepResult extends AMonitorResult {
         return warnings;
     }
 
+    public String getControllerId() {
+        return step == null ? null : step.getControllerId();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -16,6 +16,10 @@ public class MonitorOrderResult extends AMonitorResult {
         return order;
     }
 
+    public String getControllerId() {
+        return order == null ? null : order.getControllerId();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

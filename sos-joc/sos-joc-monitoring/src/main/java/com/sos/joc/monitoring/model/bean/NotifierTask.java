@@ -138,4 +138,8 @@ public class NotifierTask implements Serializable {
         return executed;
     }
 
+    public String getControllerId() {
+        return analyzer == null ? null : analyzer.getControllerId();
+    }
+
 }

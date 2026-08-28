@@ -1,7 +1,9 @@
 package com.sos.joc.monitoring.model.bean;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ToNotify extends AMonitorResult {
 
@@ -11,12 +13,13 @@ public class ToNotify extends AMonitorResult {
     private final List<MonitorOrderResult> successOrders;
 
     private Long firstEventId = null;
-    private Long lastEventId = null;
+    private Map<String, Long> lastEventIdByController = null;
 
     public ToNotify() {
         steps = new ArrayList<>();
         errorOrders = new ArrayList<>();
         successOrders = new ArrayList<>();
+        lastEventIdByController = new HashMap<>();
     }
 
     public List<MonitorOrderStepResult> getSteps() {
@@ -39,11 +42,15 @@ public class ToNotify extends AMonitorResult {
         return firstEventId;
     }
 
-    public void setLastEventId(Long val) {
-        lastEventId = val;
+    public void addLastEventIdByController(String controller, Long eventId) {
+        lastEventIdByController.put(controller, eventId);
+    }
+
+    public Map<String, Long> getLastEventIdByController() {
+        return lastEventIdByController;
     }
 
     public Long getLastEventId() {
-        return lastEventId;
+        return lastEventIdByController.values().stream().max(Long::compare).orElse(null);
     }
 }

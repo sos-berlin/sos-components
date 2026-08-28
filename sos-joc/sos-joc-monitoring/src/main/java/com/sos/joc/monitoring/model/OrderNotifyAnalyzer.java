@@ -64,8 +64,8 @@ public class OrderNotifyAnalyzer implements Serializable {
             controllerId = mosr.getStep().getControllerId();
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, range, type, toString(list),
-                        SOSString.toString(mosr)));
+                LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, controllerId, range, type,
+                        toString(list), SOSString.toString(mosr)));
             }
             break;
         case WORKFLOW:
@@ -75,8 +75,8 @@ public class OrderNotifyAnalyzer implements Serializable {
             controllerId = mor.getOrder().getControllerId();
 
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, range, type, toString(list),
-                        SOSString.toString(mor)));
+                LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, controllerId, range, type,
+                        toString(list), SOSString.toString(mor)));
             }
             break;
         }
@@ -93,8 +93,8 @@ public class OrderNotifyAnalyzer implements Serializable {
             }
             if (toRecovery.size() == 0) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s][skip][orderId=%s]nothing to recovery found",
-                            Configuration.LOG_INTENT, range, type, toString(list), orderId));
+                    LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][orderId=%s]nothing to recovery found",
+                            Configuration.LOG_INTENT, controllerId, range, type, toString(list), orderId));
                 }
                 return false;
             }
@@ -121,8 +121,8 @@ public class OrderNotifyAnalyzer implements Serializable {
         orderStep = dbLayer.getMonitoringOrderStep(stepId, true);
         if (order == null && orderStep == null) {
             if (isDebugEnabled) {
-                LOGGER.debug(String.format("%s[analyze][%s][%s][notification ids=%s][skip][orderId=%s][stepId=%s]order and step not found",
-                        Configuration.LOG_INTENT, range, type, toString(list), orderId, stepId));
+                LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][orderId=%s][stepId=%s]order and step not found",
+                        Configuration.LOG_INTENT, controllerId, range, type, toString(list), orderId, stepId));
             }
             return false;
         }

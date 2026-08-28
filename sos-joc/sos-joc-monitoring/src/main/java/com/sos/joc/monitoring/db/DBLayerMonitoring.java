@@ -50,8 +50,10 @@ public class DBLayerMonitoring extends DBLayer {
     }
 
     public void setSession(SOSHibernateSession session) {
+        if (session != null) {
+            session.setIdentifier(identifier);
+        }
         super.setSession(session);
-        getSession().setIdentifier(identifier);
     }
 
     public String getIdentifier() {
