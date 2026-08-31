@@ -125,22 +125,22 @@
 								<em>true</em>
 								<ul>
 									<li>
-										<em>PLACEHOLDER_VARIABLE</em>
-										,
-										<em>placeholder_variable</em>
-										etc. are resolved
-										regardless of case
-									</li>
+                                        only case-sensitive matches
+                                        <em>PLACEHOLDER_VARIABLE</em>
+                                        is resolved
+                                    </li>
 								</ul>
 							</li>
 							<li>
 								<em>false</em>
 								<ul>
 									<li>
-										only case-sensitive matches
-										<em>PLACEHOLDER_VARIABLE</em>
-										is resolved
-									</li>
+                                        <em>PLACEHOLDER_VARIABLE</em>
+                                        ,
+                                        <em>placeholder_variable</em>
+                                        etc. are resolved
+                                        regardless of case
+                                    </li>
 								</ul>
 							</li>
 						</ul>
