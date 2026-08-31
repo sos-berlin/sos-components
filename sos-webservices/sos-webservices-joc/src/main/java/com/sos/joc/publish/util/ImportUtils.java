@@ -1429,43 +1429,6 @@ public class ImportUtils {
         
     }
     
-    public static void revalidateInvalidInvConfigurations (List<DBItemInventoryConfiguration> storedConfigurations) {
-        SOSHibernateSession session = Globals.createSosHibernateStatelessConnection("./inventory/import");
-        InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-        InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
-        Set<Path> folders = new HashSet<>();
-        List<Long> workflowInvIds = new ArrayList<>();
-        try {
-            List<DBItemInventoryConfiguration> invalidDBItems = dbLayer.getAllInvalidConfigurations();
-            if (storedConfigurations != null) {
-                invalidDBItems.removeAll(storedConfigurations);
-            }
-            Set<String> visibleAgentNames = agentDbLayer.getVisibleAgentNames();
-            invalidDBItems.stream().filter(cfg -> validateConfiguration(cfg, visibleAgentNames, dbLayer)
-            ).peek(cfg -> cfg.setValid(true)).forEach(cfg -> {
-                try {
-                    folders.add(Paths.get(cfg.getPath()).getParent());
-                    if (JocInventory.isWorkflow(cfg.getType())) {
-                        workflowInvIds.add(cfg.getId());
-                    }
-                    dbLayer.getSession().update(cfg);
-                } catch (Exception e) {
-                    //
-                }
-            });
-            folders.stream().map(folder -> folder.toString().replace('\\', '/')).forEach(JocInventory::postEvent);
-            // Tagging events
-            if (workflowInvIds != null && !workflowInvIds.isEmpty()) {
-                InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
-                dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
-
     private static boolean validateConfiguration (DBItemInventoryConfiguration cfg, Set<String> visibleAgentNames, InventoryDBLayer dbLayer) {
         try {
             Validator.validate(cfg.getTypeAsEnum(), cfg.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, visibleAgentNames);

@@ -64,6 +64,11 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final String API_CALL = "./inventory/import";
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
+    private static final Set<ConfigurationType> TYPES_WITH_REFERENCES = Set.of(
+            ConfigurationType.WORKFLOW, 
+            ConfigurationType.SCHEDULE, 
+            ConfigurationType.JOBTEMPLATE, 
+            ConfigurationType.FILEORDERSOURCE); 
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -299,7 +304,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 ImportUtils.importTags(storedConfigurations, oldNewNameMap, values.getTags(), filter.getOverwriteTags(), hibernateSession);
             }
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
-            List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations();
+            List<DBItemInventoryConfiguration> invalidDBItems = invDbLayer.getAllInvalidConfigurations(TYPES_WITH_REFERENCES);
             CompletableFuture.runAsync(() -> {
                 Report report = new Report();
                 try {

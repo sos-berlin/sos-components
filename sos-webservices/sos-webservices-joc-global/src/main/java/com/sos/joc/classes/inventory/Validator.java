@@ -286,38 +286,9 @@ public class Validator {
                 Globals.disconnect(session);
             }
         } else if (ConfigurationType.JOBRESOURCE.equals(type)) {
-            JobResource jobResource = (JobResource) config;
-            if (jobResource.getEnv() != null) {
-                validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
-            }
-            if (jobResource.getArguments() != null) {
-                validateExpression("$.arguments", jobResource.getArguments().getAdditionalProperties());
-            }
+            validateJobResource((JobResource) config);
         } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
-            Board board = (Board) config;
-
-            if (board.getPostOrderToNoticeId() != null) {
-                validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
-            }
-            if (board.getExpectOrderToNoticeId() != null) {
-                validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
-            }
-
-            if (board.getBoardType() == null || board.getBoardType().equals(BoardType.GLOBAL)) {
-                if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() == null) {
-                    throw new JocConfigurationException("$.expectOrderToNoticeId: is required");
-                }
-                if (board.getEndOfLife() != null) {
-                    validateExpression("$.endOfLife: ", board.getEndOfLife());
-                } else {
-                    throw new JocConfigurationException("$.endOfLife: is required");
-                }
-            } else {
-                if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() != null && !board.getPostOrderToNoticeId().equals(board
-                        .getExpectOrderToNoticeId())) {
-                    throw new JocConfigurationException("use only $.postOrderToNoticeId");
-                }
-            }
+            validateBoard((Board) config);
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
         }
@@ -396,9 +367,13 @@ public class Validator {
                 validateCalendarRefs((Calendar) config, invObjNames.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, Collections.emptySet()),
                         invObjNames.getOrDefault(ConfigurationType.NONWORKINGDAYSCALENDAR, Collections.emptySet()));
             }
+        } else if (ConfigurationType.JOBRESOURCE.equals(type)) {
+            validateJobResource((JobResource) config);
+        } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
+            validateBoard((Board) config);
         } else if (ConfigurationType.REPORT.equals(type)) {
             validateReport((Report) config);
-        }
+        } 
     }
     
     private static long getDayOffsetSeconds(Workflow workflow) {
@@ -423,6 +398,40 @@ public class Validator {
             } catch (IllegalArgumentException e) {
                 throw new JocConfigurationException("$." + e.getMessage());
             }
+        }
+    }
+    
+    private static void validateBoard(Board board) {
+        if (board.getPostOrderToNoticeId() != null) {
+            validateExpression("$.postOrderToNoticeId: ", board.getPostOrderToNoticeId());
+        }
+        if (board.getExpectOrderToNoticeId() != null) {
+            validateExpression("$.expectOrderToNoticeId: ", board.getExpectOrderToNoticeId());
+        }
+
+        if (board.getBoardType() == null || board.getBoardType().equals(BoardType.GLOBAL)) {
+            if (board.getPostOrderToNoticeId() == null && board.getExpectOrderToNoticeId() == null) {
+                throw new JocConfigurationException("$.expectOrderToNoticeId: is required");
+            }
+            if (board.getEndOfLife() != null) {
+                validateExpression("$.endOfLife: ", board.getEndOfLife());
+            } else {
+                throw new JocConfigurationException("$.endOfLife: is required");
+            }
+        } else {
+            if (board.getPostOrderToNoticeId() != null && board.getExpectOrderToNoticeId() != null && !board.getPostOrderToNoticeId().equals(board
+                    .getExpectOrderToNoticeId())) {
+                throw new JocConfigurationException("use only $.postOrderToNoticeId");
+            }
+        }
+    }
+
+    private static void validateJobResource(JobResource jobResource) {
+        if (jobResource.getEnv() != null) {
+            validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
+        }
+        if (jobResource.getArguments() != null) {
+            validateExpression("$.arguments", jobResource.getArguments().getAdditionalProperties());
         }
     }
 
