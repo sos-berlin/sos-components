@@ -78,7 +78,6 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 login.setCustomLogo(loginLogo);
             }
-            login.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(login));
         } catch (Exception e) {
