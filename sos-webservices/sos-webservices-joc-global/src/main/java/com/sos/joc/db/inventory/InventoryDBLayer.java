@@ -2086,10 +2086,13 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getAllInvalidConfigurations() throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getAllInvalidConfigurations(Collection<ConfigurationType> types) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("where valid = 0");
+        hql.append("where valid = :valid");
+        hql.append(" and type in (:types)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameterList("types", types.stream().map(ConfigurationType::intValue).toList());
+        query.setParameter("valid", false);
         List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
         if (result == null) {
             return Collections.emptyList();
