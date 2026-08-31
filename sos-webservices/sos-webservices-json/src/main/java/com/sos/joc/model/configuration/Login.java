@@ -17,21 +17,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "defaultProfileAccount",
     "title",
     "enableRememberMe",
     "customLogo"
 })
 public class Login {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("defaultProfileAccount")
-    private String defaultProfileAccount;
     /**
      * string without < and >
      * <p>
@@ -50,28 +41,6 @@ public class Login {
      */
     @JsonProperty("customLogo")
     private LoginLogo customLogo;
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("defaultProfileAccount")
-    public String getDefaultProfileAccount() {
-        return defaultProfileAccount;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("defaultProfileAccount")
-    public void setDefaultProfileAccount(String defaultProfileAccount) {
-        this.defaultProfileAccount = defaultProfileAccount;
-    }
 
     /**
      * string without < and >
@@ -129,12 +98,12 @@ public class Login {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("defaultProfileAccount", defaultProfileAccount).append("title", title).append("enableRememberMe", enableRememberMe).append("customLogo", customLogo).toString();
+        return new ToStringBuilder(this).append("title", title).append("enableRememberMe", enableRememberMe).append("customLogo", customLogo).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(customLogo).append(enableRememberMe).append(title).append(defaultProfileAccount).toHashCode();
+        return new HashCodeBuilder().append(customLogo).append(enableRememberMe).append(title).toHashCode();
     }
 
     @Override
@@ -146,7 +115,7 @@ public class Login {
             return false;
         }
         Login rhs = ((Login) other);
-        return new EqualsBuilder().append(customLogo, rhs.customLogo).append(enableRememberMe, rhs.enableRememberMe).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
+        return new EqualsBuilder().append(customLogo, rhs.customLogo).append(enableRememberMe, rhs.enableRememberMe).append(title, rhs.title).isEquals();
     }
 
 }
