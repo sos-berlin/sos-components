@@ -204,6 +204,8 @@ public class SMBJProviderUtils {
     }
 
     protected static boolean isDirectory(FileIdBothDirectoryInformation info) {
+        // File attributes are represented as a bitmask and may contain additional attributes such as Hidden or Read-only.
+        // Therefore, an exact value comparison must not be used.
         return EnumWithValue.EnumUtils.isSet(info.getFileAttributes(), FileAttributes.FILE_ATTRIBUTE_DIRECTORY);
     }
 
