@@ -14,6 +14,7 @@ import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2CreateOptions;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
 import com.hierynomus.mssmb2.SMBApiException;
+import com.hierynomus.protocol.commons.EnumWithValue;
 import com.hierynomus.smbj.share.DiskShare;
 import com.hierynomus.smbj.share.File;
 import com.sos.commons.vfs.commons.file.ProviderFile;
@@ -203,8 +204,7 @@ public class SMBJProviderUtils {
     }
 
     protected static boolean isDirectory(FileIdBothDirectoryInformation info) {
-        // EnumWithValue.EnumUtils.isSet(info.getFileAttributes(), FileAttributes.FILE_ATTRIBUTE_DIRECTORY)
-        return FileAttributes.FILE_ATTRIBUTE_DIRECTORY.getValue() == info.getFileAttributes();
+        return EnumWithValue.EnumUtils.isSet(info.getFileAttributes(), FileAttributes.FILE_ATTRIBUTE_DIRECTORY);
     }
 
     protected static boolean isDirectory(FileAllInformation info) {
