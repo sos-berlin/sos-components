@@ -33,7 +33,7 @@ public class ReportsSearchImpl extends JOCResourceImpl implements ISearchResourc
             in.setReturnType(RequestSearchReturnType.REPORT);
             in.setDeployedOrReleased(true);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getReports().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getReports().getView());
             if (response != null) {
                 return response;
             }

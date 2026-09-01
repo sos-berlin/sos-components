@@ -63,8 +63,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,7 +76,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             String keyFromFile = PublishUtils.readFileContent(stream);
             keyPair.setPrivateKey(null);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
             String reason = null;
             if (keyFromFile != null) {
                 if (keyFromFile.startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER) 

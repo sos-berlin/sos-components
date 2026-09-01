@@ -42,7 +42,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
                 return response;
             }
             
-            String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+            String curAccountName = getAccountName();
             String accountNameFromRequest = in.getRequestor();
             if (!accountNameFromRequest.equals(curAccountName)) {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request");

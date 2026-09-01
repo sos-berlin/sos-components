@@ -49,8 +49,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken)
-                    .getWorkflows().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -88,7 +87,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 String path = WorkflowPaths.getPath(content.getName());
                 checkFolderPermissions(path, folderPermissions.getListOfFolders());
                 workflow.setPath(path);
-                workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId(), getAccount()));
+                workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId(), getAccountName()));
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());
                 WorkflowsHelper.setStateAndSuspended(currentstate, workflow);

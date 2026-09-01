@@ -30,7 +30,7 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.CERTIFICATES);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -41,7 +41,7 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
             if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                accountName =  getAccountName();
             }
             DBItemInventoryCertificate dbCert = dbLayerKeys.getSigningRootCaCertificate(accountName);
             JocKeyPair jocKeyPair = new JocKeyPair();

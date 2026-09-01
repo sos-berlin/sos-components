@@ -32,7 +32,7 @@ public class GroupImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> implemen
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

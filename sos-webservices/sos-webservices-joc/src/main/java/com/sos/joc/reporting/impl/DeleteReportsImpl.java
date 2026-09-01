@@ -30,7 +30,7 @@ public class DeleteReportsImpl extends JOCResourceImpl implements IDeleteReports
             JsonValidator.validateFailFast(filterBytes, DeleteReports.class);
             DeleteReports in = Globals.objectMapper.readValue(filterBytes, DeleteReports.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getReports().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getReports().getManage()));
             if (response != null) {
                 return response;
             }

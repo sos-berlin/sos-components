@@ -61,8 +61,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
 
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
-            String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
-            if (!item.getRequestor().equals(curAccountName)) {
+            if (!item.getRequestor().equals(getAccountName())) {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + in.getId());
             }
             
@@ -95,7 +94,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             if (response != null) {
                 return response;
             }
-            if (!jobschedulerUser.getSOSAuthCurrentAccount().isApprover()) {
+            if (!getCurrentAccount().isApprover()) {
                 throw new JocAccessDeniedException("The current user is not an approver.");
             }
             
@@ -134,7 +133,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             }
 
             Map<String, Long> approversForEvents = new HashMap<>();
-            String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+            String curAccountName = getAccountName();
             if (item.getApprover().equals(curAccountName)) {
                 dbLayer.updateApproverStatusInclusiveTransaction(item.getId(), newState);
             } else {

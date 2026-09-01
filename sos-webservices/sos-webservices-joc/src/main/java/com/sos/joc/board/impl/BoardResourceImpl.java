@@ -55,8 +55,8 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardFilter.class);
             BoardFilter filter = Globals.objectMapper.readValue(filterBytes, BoardFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
-                    accessToken).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
+                    .getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
@@ -130,7 +130,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             
             PlannedBoards plB = new PlannedBoards(Collections.singletonMap(boardPath, pbs), orders, filter.getCompact() == Boolean.TRUE, filter
                     .getLimit(), currentState);
-            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccount()));
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccountName()));
             
             answer.setNoticeBoard(plB.getPlannedBoard(dc));
             answer.setDeliveryDate(Date.from(Instant.now()));

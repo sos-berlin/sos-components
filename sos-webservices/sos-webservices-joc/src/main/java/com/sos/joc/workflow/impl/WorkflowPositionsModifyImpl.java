@@ -66,8 +66,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
     public JOCDefaultResponse stopWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowPositions modifyWorkflow = initRequest(Action.STOP, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
-                    accessToken));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -82,8 +81,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
     public JOCDefaultResponse unstopWorkflows(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflowPositions modifyWorkflow = initRequest(Action.UNSTOP, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId(),
-                    accessToken));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflow.getControllerId(), hasPermission(modifyWorkflow.getControllerId()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -222,7 +220,7 @@ public class WorkflowPositionsModifyImpl extends JOCResourceImpl implements IWor
         }
     }
 
-    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
+    private Stream<Boolean> hasPermission(String controllerId) {
+        return getControllerPermissions(controllerId).map(p -> p.getOrders().getManagePositions());
     }
 }

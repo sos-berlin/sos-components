@@ -367,7 +367,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         orderFilterReleased.setDailyPlanDateFrom(dateFormatted);
         orderFilterReleased.setSchedulePaths(scheduleNames.stream().toList());
         
-        List<CompletableFuture<ControllerCommandResponse>> futures = cancelOrders(orderFilterReleased, orderFilterDeployed, accessToken, session);
+        List<CompletableFuture<ControllerCommandResponse>> futures = cancelOrders(orderFilterReleased, orderFilterDeployed, session);
         
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
@@ -387,7 +387,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     InventoryDBLayer futureDbLayer = new InventoryDBLayer(futureSession);
                     
                     String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
-                            .getConfigurationGlobalsJoc()) : getAccount();
+                            .getConfigurationGlobalsJoc()) : getAccountName();
                     
                     deployments.stream().map(DBItemDeploymentHistory::getFolder).forEach(foldersForEvent::add);
                     Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(deployments, new DBLayerDeploy(futureSession),
@@ -471,7 +471,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
     }
     
     private List<CompletableFuture<ControllerCommandResponse>> cancelOrders(DailyPlanOrderFilterDef orderFilterReleased, 
-            DailyPlanOrderFilterDef orderFilterDeployed, String xAccessToken, SOSHibernateSession session) throws SOSHibernateException,
+            DailyPlanOrderFilterDef orderFilterDeployed, SOSHibernateSession session) throws SOSHibernateException,
                 ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
                 DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
@@ -480,13 +480,14 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerReleased = new HashMap<>();
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerDeployed = new HashMap<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+        cancelOrderImpl.setCurrentAccount(getCurrentAccount());
         
         if(!orderFilterDeployed.getWorkflowPaths().isEmpty()) {
-            ordersPerControllerDeployed.putAll(cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilterDeployed, xAccessToken));
+            ordersPerControllerDeployed.putAll(cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilterDeployed));
         }
 
         if (!orderFilterReleased.getSchedulePaths().isEmpty()) {
-            ordersPerControllerReleased.putAll(cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilterReleased, xAccessToken));
+            ordersPerControllerReleased.putAll(cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilterReleased));
         }
 
         ordersPerControllerReleased.keySet().forEach(k -> ordersPerControllerDeployed.putIfAbsent(k, Collections.emptyList()));
@@ -494,10 +495,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 Collections.emptyList()).stream()).distinct().toList()));
         ordersPerController.values().removeIf(v -> v.isEmpty());
         
-        Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                ordersPerController, xAccessToken);
+        Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(ordersPerController);
 
         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+        deleteOrdersImpl.setCurrentAccount(getCurrentAccount());
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             cancelOrderResponsePerController.putIfAbsent(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
                     controllerId)));
@@ -520,10 +521,10 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
                         if (!localOrderFilterReleased.getSchedulePaths().isEmpty()) {
-                            successful1 = deleteOrdersImpl.deleteOrders(localOrderFilterReleased, xAccessToken, false, false, false); 
+                            successful1 = deleteOrdersImpl.deleteOrders(localOrderFilterReleased, false, false, false); 
                         }
                         if (!localOrderFilterDeployed.getWorkflowPaths().isEmpty()) {
-                            successful2 = deleteOrdersImpl.deleteOrders(localOrderFilterDeployed, xAccessToken, false, false, false);
+                            successful2 = deleteOrdersImpl.deleteOrders(localOrderFilterDeployed, false, false, false);
                         }
                         if (!successful1 || !successful2) {
                             return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(

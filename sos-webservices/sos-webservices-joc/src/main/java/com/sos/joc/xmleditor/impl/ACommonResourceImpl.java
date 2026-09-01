@@ -18,30 +18,30 @@ public class ACommonResourceImpl extends JOCResourceImpl {
         case YADE:
             switch (role) {
             case VIEW:
-                permissions = Stream.of(getBasicJocPermissions(accessToken).getFileTransfer().getView(), false);
+                permissions = Stream.of(getBasicJocPermissions().getFileTransfer().getView(), false);
                 break;
             case MANAGE:
-                permissions = getJocPermissions(accessToken).map(p -> p.getFileTransfer().getManage());
+                permissions = getJocPermissions().map(p -> p.getFileTransfer().getManage());
                 break;
             }
             break;
         case NOTIFICATION:
             switch (role) {
             case VIEW:
-                permissions = Stream.of(getBasicJocPermissions(accessToken).getNotification().getView(), false);
+                permissions = Stream.of(getBasicJocPermissions().getNotification().getView(), false);
                 break;
             case MANAGE:
-                permissions = getJocPermissions(accessToken).map(p -> p.getNotification().getManage());
+                permissions = getJocPermissions().map(p -> p.getNotification().getManage());
                 break;
             }
             break;
         case OTHER:
             switch (role) {
             case VIEW:
-                permissions = Stream.of(getBasicJocPermissions(accessToken).getOthers().getView(), false);
+                permissions = Stream.of(getBasicJocPermissions().getOthers().getView(), false);
                 break;
             case MANAGE:
-                permissions = getJocPermissions(accessToken).map(p -> p.getOthers().getManage());
+                permissions = getJocPermissions().map(p -> p.getOthers().getManage());
                 break;
             }
             break;

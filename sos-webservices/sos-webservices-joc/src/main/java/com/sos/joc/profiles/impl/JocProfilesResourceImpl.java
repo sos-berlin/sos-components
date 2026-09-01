@@ -54,7 +54,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
 
             boolean onlyActAccount = true;
             for (String accountName : profilesFilter.getAccounts()) {
-                if (!accountName.equals(this.getAccount())) {
+                if (!accountName.equals(this.getAccountName())) {
                     onlyActAccount = false;
                     break;
                 }
@@ -62,7 +62,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
 
             JOCDefaultResponse jocDefaultResponse = null;
             if (!onlyActAccount) {
-                jocDefaultResponse = initManageAccountPermissions(accessToken);
+                jocDefaultResponse = initManageAccountPermissions();
             } else {
                 jocDefaultResponse = initPermissions("", true, false);
             }
@@ -93,7 +93,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
         try {
             body = initLogging(API_CALL_PROFILES, body, accessToken, CategoryType.SETTINGS);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

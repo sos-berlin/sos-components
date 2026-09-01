@@ -33,8 +33,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
             OrdersFilterV in = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = in.getControllerId();
             
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
-                    .getView());
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders().getView());
             if (response != null) {
                 return response;
             }

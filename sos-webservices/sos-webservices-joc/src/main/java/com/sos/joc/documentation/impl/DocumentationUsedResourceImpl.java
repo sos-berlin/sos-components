@@ -35,7 +35,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getDocumentations().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

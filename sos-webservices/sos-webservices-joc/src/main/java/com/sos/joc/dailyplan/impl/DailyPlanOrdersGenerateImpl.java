@@ -94,14 +94,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             throws Exception {
 
         String controllerId = in.getControllerId();
-        if (!getBasicControllerPermissions(controllerId, accessToken).getOrders().getCreate()) {
+        if (!getBasicControllerPermissions(controllerId).getOrders().getCreate()) {
             return false;
         }
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog()).getId() : 0L;
 
         if (folderPermissions == null) {
-            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+            folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
         }
         folderPermissions.setSchedulerId(controllerId);
 
@@ -191,7 +191,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     private DailyPlanRunner newDailyPlanRunner(String dailyPlanDate, GenerateRequest in, DailyPlanSettings dpSettings, String parentCaller)
             throws SOSInvalidDataException {
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setUserAccount(getAccountName());
         settings.setOverwrite(in.getOverwrite());
         settings.setSubmit(in.getWithSubmit());
         settings.setTimeZone(dpSettings.getTimeZone());

@@ -68,10 +68,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getBasicControllerDefaultPermissions(accessToken).getOrders().getView();
+                    permitted = getBasicControllerDefaultPermissions().getOrders().getView();
                 } else {
                     allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                            availableController -> getBasicControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                            availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(
                                     Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -80,7 +80,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getBasicControllerPermissions(controllerId, accessToken).getOrders().getView();
+                permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
 
             JOCDefaultResponse response = initPermissions(controllerId, permitted);
@@ -158,7 +158,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 if (profiler && i == 1) {
                                     profilerFirstEntry = Instant.now();
                                 }
-                                if (isControllerIdEmpty && !getControllerPermissions(item, accessToken, checkedControllers)) {
+                                if (isControllerIdEmpty && !getControllerPermissions(item, checkedControllers)) {
                                     continue;
                                 }
                                 if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
@@ -206,10 +206,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         }
     }
 
-    private boolean getControllerPermissions(DBItemHistoryOrderStep item, String accessToken, Map<String, Boolean> checkedControllers) {
+    private boolean getControllerPermissions(DBItemHistoryOrderStep item, Map<String, Boolean> checkedControllers) {
         Boolean result = checkedControllers.get(item.getControllerId());
         if (result == null) {
-            result = getBasicControllerPermissions(item.getControllerId(), accessToken).getOrders().getView();
+            result = getBasicControllerPermissions(item.getControllerId()).getOrders().getView();
             checkedControllers.put(item.getControllerId(), result);
         }
         return result;

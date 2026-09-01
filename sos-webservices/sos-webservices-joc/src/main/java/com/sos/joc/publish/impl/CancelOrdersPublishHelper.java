@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
@@ -40,10 +39,11 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 
 public class CancelOrdersPublishHelper {
 
-    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter, Function<ControllerCommandResponse, ControllerCommandResponse> apply) 
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
-        
+    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter,
+            Function<ControllerCommandResponse, ControllerCommandResponse> apply) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, SOSHibernateException, ExecutionException {
+    
         if ((orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) && 
                 (orderFilter.getSchedulePaths() == null || orderFilter.getSchedulePaths().isEmpty())) {
             return Collections.emptyList();
@@ -51,10 +51,9 @@ public class CancelOrdersPublishHelper {
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                xAccessToken);
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                ordersPerController, xAccessToken);
+                ordersPerController);
         for (String controllerId : cancelOrderResponsePerController.keySet()) {
             CompletableFuture<ControllerCommandResponse> f = cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                 if (ccr.getException().isEmpty()) {
@@ -73,10 +72,10 @@ public class CancelOrdersPublishHelper {
                     try {
                         // TODO create Method to transfer a set of order objects to delete instead of a filter
                         if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-                            successful1 = deleteOrdersImpl.deleteOrders(localOrderScheduleFilter, xAccessToken, false, false, false); 
+                            successful1 = deleteOrdersImpl.deleteOrders(localOrderScheduleFilter, false, false, false); 
                         }
                         if (orderFilter.getWorkflowPaths() != null && !orderFilter.getWorkflowPaths().isEmpty()) {
-                            successful2 = deleteOrdersImpl.deleteOrders(localOrderWorkflowFilter, xAccessToken, false, false, false);
+                            successful2 = deleteOrdersImpl.deleteOrders(localOrderWorkflowFilter, false, false, false);
                         }
                         if (!successful1 || !successful2) {
                             return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(

@@ -26,7 +26,7 @@ public class ShowApproversImpl extends JOCResourceImpl implements IShowApprovers
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.OTHERS);
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getAccounts().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (response != null) {
                 return response;
             }

@@ -259,8 +259,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             Map<String, HasNote> scheduleNotes = Collections.emptyMap();
             if (withNotes) {
                 InventoryNotesDBLayer dbNoteLayer = new InventoryNotesDBLayer(session);
-                workflowNotes = dbNoteLayer.hasNote(ConfigurationType.WORKFLOW.intValue(), getAccount());
-                scheduleNotes = dbNoteLayer.hasNote(ConfigurationType.SCHEDULE.intValue(), getAccount());
+                workflowNotes = dbNoteLayer.hasNote(ConfigurationType.WORKFLOW.intValue(), getAccountName());
+                scheduleNotes = dbNoteLayer.hasNote(ConfigurationType.SCHEDULE.intValue(), getAccountName());
             }
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (DBItemDailyPlanWithHistory item : orders) {

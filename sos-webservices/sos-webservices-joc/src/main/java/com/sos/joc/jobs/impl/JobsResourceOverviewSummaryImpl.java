@@ -50,10 +50,10 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getBasicControllerDefaultPermissions(accessToken).getOrders().getView();
+                    permitted = getBasicControllerDefaultPermissions().getOrders().getView();
                 } else {
                     allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                            availableController -> getBasicControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                            availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(
                                     Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
@@ -62,7 +62,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getBasicControllerPermissions(controllerId, accessToken).getOrders().getView();
+                permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);

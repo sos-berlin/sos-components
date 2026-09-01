@@ -62,8 +62,7 @@ public class GetVersionsImpl extends JOCResourceImpl implements IGetVersionsReso
             JsonValidator.validateFailFast(versionsFilter, VersionsFilter.class);
             VersionsFilter filter = Globals.objectMapper.readValue(versionsFilter, VersionsFilter.class);
             Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken).getView())
-                    .collect(Collectors.toSet());
+                    .filter(availableController -> getBasicControllerPermissions(availableController).getView()).collect(Collectors.toSet());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_VERSIONS);
             // only for debugging, as curVersion is not set in dev environment (grizzly)
             final String jocVersion = Globals.curVersion.getVersion();

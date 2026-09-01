@@ -53,7 +53,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 
             in.setFolder(normalizeFolder(in.getFolder()));
-            JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
             }

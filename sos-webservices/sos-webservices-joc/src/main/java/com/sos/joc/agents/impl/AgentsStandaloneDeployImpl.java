@@ -51,7 +51,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
-            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
+            Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {

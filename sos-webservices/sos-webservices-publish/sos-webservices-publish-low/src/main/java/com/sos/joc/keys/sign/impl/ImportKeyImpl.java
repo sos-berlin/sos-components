@@ -60,7 +60,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates()
                     .getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

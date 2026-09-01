@@ -37,8 +37,7 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             JsonValidator.validateFailFast(filterBytes, WorkflowOrderCountFilter.class);
             WorkflowOrderCountFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowOrderCountFilter.class);
             String controllerId = workflowsFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken)
-                    .getWorkflows().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

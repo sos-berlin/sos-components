@@ -66,11 +66,11 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
             DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
-            DBItemInventoryNoteNotification notification = dbLayer.getNoteNotification(getAccount(), invItem.getNoteId());
+            DBItemInventoryNoteNotification notification = dbLayer.getNoteNotification(getAccountName(), invItem.getNoteId());
             if (notification != null) {
                 session.delete(notification);
-                Long numOfNotification = dbLayer.getNumOfNoteNotifications(getAccount());
-                EventBus.getInstance().post(new NoteEvent(invItem.getPath(), in.getObjectType().value(), Map.of(getAccount(), numOfNotification),
+                Long numOfNotification = dbLayer.getNumOfNoteNotifications(getAccountName());
+                EventBus.getInstance().post(new NoteEvent(invItem.getPath(), in.getObjectType().value(), Map.of(getAccountName(), numOfNotification),
                         true, true));
             }
             NoteResponse note = getNoteResponse(dbItem, in, invItem.getPath());
@@ -185,7 +185,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
                 
                 note.getMetadata().setDisplayPreferences(in.getDisplayPreferences());
                 note.getMetadata().setModified(now);
-                note.getMetadata().setModifiedBy(newAuthor(getAccount()));
+                note.getMetadata().setModifiedBy(newAuthor(getAccountName()));
                 
                 dbItem.setContent(Globals.objectMapper.writeValueAsString(note));
                 dbItem.setModified(now);
@@ -216,7 +216,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             session = Globals.createSosHibernateStatelessConnection(API_CALL_USERS);
             IamHistoryDbLayer dbLayer = new IamHistoryDbLayer(session);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(Map.of("deliveryDate", Date.from(Instant.now()), "users", dbLayer
-                    .getLastLoggedInAccountNames().filter(u -> !u.equals(getAccount())).toList())));
+                    .getLastLoggedInAccountNames().filter(u -> !u.equals(getAccountName())).toList())));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -237,7 +237,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             session = Globals.createSosHibernateStatelessConnection(API_CALL_NOTIFICATIONS);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             Notifications notifications = new Notifications();
-            notifications.setNotifications(dbLayer.getNoteNotifications(getAccount()).stream().map(Notification.class::cast).filter(n -> n
+            notifications.setNotifications(dbLayer.getNoteNotifications(getAccountName()).stream().map(Notification.class::cast).filter(n -> n
                     .getSeverity() != null).toList());
             notifications.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(notifications));

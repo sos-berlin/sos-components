@@ -92,13 +92,13 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             JsonValidator.validate(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
             String controllerId = addOrders.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p
                     .getOrders().getCreate()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
-            boolean hasManagePositionsPermission = getBasicControllerPermissions(controllerId, accessToken).getOrders().getManagePositions();
+            boolean hasManagePositionsPermission = getBasicControllerPermissions(controllerId).getOrders().getManagePositions();
             Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
             Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
             Predicate<AddOrder> requestHasBlockPositionSettings = o -> o.getBlockPosition() != null;
@@ -155,7 +155,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
-            final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
+            final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccountName());
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
             Consumer<AddOrder> workflowNameToPath = o -> o.setWorkflowPath(WorkflowPaths.getPath(JocInventory.pathToName(o.getWorkflowPath())));

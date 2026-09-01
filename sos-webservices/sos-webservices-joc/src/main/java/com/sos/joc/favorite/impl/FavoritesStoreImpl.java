@@ -44,7 +44,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
                 return jocDefaultResponse;
             }
             
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
@@ -84,7 +84,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
                 return jocDefaultResponse;
             }
             
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_RENAME);
             connection.setAutoCommit(false);
             connection.beginTransaction();

@@ -91,7 +91,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in, String accessToken)
+    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
@@ -101,23 +101,20 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (!ordersPerControllerIds.isEmpty()) {
             ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getBasicControllerPermissions(
-                    availableController.getKey(), accessToken).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey,
+                    availableController.getKey()).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey,
                             Map.Entry::getValue));
 
-            if (ordersPerControllerIds.keySet().isEmpty()) {
+            if (ordersPerControllerIds.isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
             }
-        } else {
-            initGetPermissions(accessToken);
         }
         return ordersPerControllerIds;
     }
 
-    public Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(
-            Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken) throws SOSHibernateException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
-        
+    public Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController)
+            throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+
         Map<String, CompletableFuture<ControllerCommandResponse>> futures = new HashMap<>();
         for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
             String controllerId = entry.getKey();
@@ -153,7 +150,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         Long auditLogId = storeAuditLog(auditLog).getId();
 
         if (folderPermissions == null) {
-            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+            folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
         }
 
         for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
@@ -204,7 +201,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
         
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = getSubmittedOrderIdsFromDailyplanDate(in, accessToken);
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = getSubmittedOrderIdsFromDailyplanDate(in);
         
         if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
             Set<String> cyclicOrderIdMainParts = in.getOrderIds().stream().filter(OrdersHelper::isCyclicOrderId).map(

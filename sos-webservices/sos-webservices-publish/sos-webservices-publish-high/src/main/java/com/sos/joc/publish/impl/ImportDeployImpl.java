@@ -111,7 +111,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             JsonValidator.validateFailFast(fakeRequest, ImportDeployFilter.class);
             // copy&paste Permission, has to be changed to the correct permission for upload
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getDeploy(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getDeploy(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -124,7 +124,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
             
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
             stream = body.getEntityAs(InputStream.class);
             Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();

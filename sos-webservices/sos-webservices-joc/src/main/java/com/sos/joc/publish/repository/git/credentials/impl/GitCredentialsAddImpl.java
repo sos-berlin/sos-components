@@ -66,7 +66,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             initLogging(API_CALL, filterForLog, addCredentialsFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(addCredentialsFilter, AddCredentialsFilter.class);
             AddCredentialsFilter filter = Globals.objectMapper.readValue(addCredentialsFilter, AddCredentialsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,7 +77,7 @@ public class GitCredentialsAddImpl extends JOCResourceImpl implements IGitCreden
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                account = getAccountName();
             }
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             JocConfigurationFilter dbFilter = new JocConfigurationFilter();

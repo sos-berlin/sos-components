@@ -56,8 +56,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(fakeRequest, ImportCertificateRequestFilter.class);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -103,7 +103,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ReleaseFilter.class, true);
             ReleaseFilter in = Globals.objectMapper.readValue(inBytes, ReleaseFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response != null) {
                 return response;
             }
@@ -181,7 +181,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             // JOC-2173, JOC-2224
             // cancel based on the old name of renamed schedules, and the current name of not-renamed schedules
             List<CompletableFuture<ControllerCommandResponse>> futures = cancelOrders(in, 
-                    Stream.concat(schedulePaths.stream(), renamedOldSchedulePathsWithWorkflowNames.keySet().stream()).distinct().toList(), accessToken);
+                    Stream.concat(schedulePaths.stream(), renamedOldSchedulePathsWithWorkflowNames.keySet().stream()).distinct().toList());
             LOGGER.debug("RELEASE: order cancel - future started");
             
             CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
@@ -784,12 +784,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return Arrays.asList(DailyPlanOrderStateText.PLANNED, DailyPlanOrderStateText.SUBMITTED);
     }
     
-    private List<CompletableFuture<ControllerCommandResponse>> cancelOrders(ReleaseFilter filter, List<String> schedulePaths, String xAccessToken) throws 
+    private List<CompletableFuture<ControllerCommandResponse>> cancelOrders(ReleaseFilter filter, List<String> schedulePaths) throws 
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+            //cancelOrderImpl.setCurrentAccount(this.);
             DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
 
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
@@ -805,10 +806,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 orderFilter.setStates(getOrderStatesForFilter());
             }
             if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                        xAccessToken);
+                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
                 Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                        ordersPerController, xAccessToken);
+                        ordersPerController);
                 for (String controllerId : cancelOrderResponsePerController.keySet()) {
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
@@ -820,7 +820,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             try {
                                 // TODO create Method to transfer a set of order objects to delete instead of a filter
                                 if (!localOrderFilter.getSchedulePaths().isEmpty()) {
-                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, xAccessToken, false, false, false); 
+                                    successful = deleteOrdersImpl.deleteOrders(localOrderFilter, false, false, false); 
                                 }
                                 if (!successful) {
                                     return new ControllerCommandResponse(controllerId, Optional.of(new JocReleaseException(

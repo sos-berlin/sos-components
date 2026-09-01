@@ -34,7 +34,7 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
             SystemNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationAcknowledgeFilter.class);
 
             // 1) notification view changes permitted
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getNotification().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }
@@ -49,7 +49,7 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
                 session.beginTransaction();
 
                 Date created = new Date();
-                String account = getAccount();
+                String account = getAccountName();
                 for (Long notificationId : in.getNotificationIds()) {
                     DBItemSystemNotification notification = dbLayer.getSystemNotification(notificationId);
                     if (notification != null) {

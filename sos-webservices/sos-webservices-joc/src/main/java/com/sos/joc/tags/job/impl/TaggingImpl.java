@@ -52,7 +52,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         SOSHibernateSession session = null;
         try {
             RequestJobFilter in = initRequest(IMPL_PATH_TAGGING, RequestJobFilter.class, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -180,7 +180,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         try {
             com.sos.joc.model.tag.rename.RequestJobFilter in = initRequest(IMPL_RENAME_TAGGING, com.sos.joc.model.tag.rename.RequestJobFilter.class,
                     accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -212,7 +212,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         SOSHibernateSession session = null;
         try {
             RequestWorkflowJobFilter in = initRequest(IMPL_PATH_TAGS, RequestWorkflowJobFilter.class, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

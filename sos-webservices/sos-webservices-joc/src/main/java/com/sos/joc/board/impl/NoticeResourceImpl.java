@@ -56,7 +56,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
         String controllerId = filter.getControllerId();
         
-        JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getNoticeBoards())
+        JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getNoticeBoards())
                 .map(p -> action.equals(Action.DELETE) ? p.getDelete() : p.getPost()));
         if (response != null) {
             return response;

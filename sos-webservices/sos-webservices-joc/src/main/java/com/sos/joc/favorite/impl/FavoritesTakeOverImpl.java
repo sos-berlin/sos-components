@@ -38,7 +38,7 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
                 return jocDefaultResponse;
             }
             
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             connection.beginTransaction();

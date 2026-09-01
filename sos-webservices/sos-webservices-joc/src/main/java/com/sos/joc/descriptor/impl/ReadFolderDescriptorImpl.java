@@ -25,7 +25,7 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
             JsonValidator.validate(body, RequestFolder.class);
             com.sos.joc.model.inventory.common.RequestFolder filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
-            JOCDefaultResponse response = checkPermissions(accessToken, filter, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, false)));
             }
@@ -44,7 +44,7 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
 
             filter.setPath(normalizeFolder(filter.getPath()));
-            JOCDefaultResponse response = checkPermissions(accessToken, filter, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, true)));
             }

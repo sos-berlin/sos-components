@@ -42,7 +42,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
 
             String controllerId = auditLogFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -54,16 +54,16 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
-                        availableController, accessToken).getView()).collect(Collectors.toSet());
+                        availableController).getView()).collect(Collectors.toSet());
                 controllerCategoryIsPermitted = !allowedControllers.isEmpty();
                 deployCategoryIsPermitted = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getBasicControllerPermissions(availableController, accessToken).getDeployments().getView()).count() > 0L;
+                        availableController -> getBasicControllerPermissions(availableController).getDeployments().getView()).count() > 0L;
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                     allControllerAllowed = true;
                 }
             } else {
-                controllerCategoryIsPermitted = getBasicControllerPermissions(controllerId, accessToken).getView();
-                deployCategoryIsPermitted = getBasicControllerPermissions(controllerId, accessToken).getDeployments().getView();
+                controllerCategoryIsPermitted = getBasicControllerPermissions(controllerId).getView();
+                deployCategoryIsPermitted = getBasicControllerPermissions(controllerId).getDeployments().getView();
                 if (controllerCategoryIsPermitted) {
                     allowedControllers = Collections.singleton(controllerId);
                 }
@@ -74,17 +74,17 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 case CONTROLLER:
                     return true; // depends on ControllerId
                 case CERTIFICATES:
-                    return getBasicJocPermissions(accessToken).getAdministration().getCertificates().getView();
+                    return getBasicJocPermissions().getAdministration().getCertificates().getView();
                 case DAILYPLAN:
-                    return getBasicJocPermissions(accessToken).getDailyPlan().getView();
+                    return getBasicJocPermissions().getDailyPlan().getView();
                 case DEPLOYMENT:
                     return true; // depends on ControllerId
                 case DOCUMENTATIONS:
-                    return getBasicJocPermissions(accessToken).getDocumentations().getView();
+                    return getBasicJocPermissions().getDocumentations().getView();
                 case INVENTORY:
-                    return getBasicJocPermissions(accessToken).getInventory().getView();
+                    return getBasicJocPermissions().getInventory().getView();
                 case IDENTITY:
-                    return getBasicJocPermissions(accessToken).getAdministration().getAccounts().getView();
+                    return getBasicJocPermissions().getAdministration().getAccounts().getView();
                 default:
                     return true;
                 }

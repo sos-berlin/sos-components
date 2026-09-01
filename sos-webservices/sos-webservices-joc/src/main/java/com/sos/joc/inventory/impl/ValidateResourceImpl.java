@@ -26,7 +26,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         try {
             String apiCall = String.format("./%s/%s/validate", JocInventory.APPLICATION_PATH, objectType);
             inBytes = initLogging(apiCall, inBytes, accessToken, CategoryType.INVENTORY);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;
             }

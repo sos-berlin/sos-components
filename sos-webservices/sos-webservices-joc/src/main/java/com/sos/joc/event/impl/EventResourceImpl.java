@@ -64,7 +64,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());
 
-            entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getJobschedulerUser()),
+            entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getCurrentAccount()),
                     folderPermissions.getListOfFolders(), accessToken);
             
             try { // JOC-2248
@@ -87,7 +87,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
     private ISOSSession checkSession() throws SessionNotExistException {
         try {
-            ISOSSession session = getJobschedulerUser().getSOSAuthCurrentAccount().getCurrentSubject().getSession();
+            checkCurrentAccount();
+            ISOSSession session = getCurrentAccount().getCurrentSubject().getSession();
             long timeout = session.getTimeout();
             // LOGGER.info("Session timeout: " + timeout);
             if (timeout < 0L) {

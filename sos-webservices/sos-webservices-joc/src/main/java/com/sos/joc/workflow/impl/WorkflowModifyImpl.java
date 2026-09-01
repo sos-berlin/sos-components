@@ -42,8 +42,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     public JOCDefaultResponse transition(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflow workflow = initRequest(Action.TRANSITION, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId(),
-                    accessToken));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -58,8 +57,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
     public JOCDefaultResponse transfer(String accessToken, byte[] filterBytes) {
         try {
             ModifyWorkflow workflow = initRequest(Action.TRANSFER, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId(),
-                    accessToken));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflow.getControllerId(), hasPermission(workflow.getControllerId()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -113,7 +111,7 @@ public class WorkflowModifyImpl extends JOCResourceImpl implements IWorkflowModi
         }
     }
 
-    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
+    private Stream<Boolean> hasPermission(String controllerId) {
+        return getControllerPermissions(controllerId).map(p -> p.getOrders().getManagePositions());
     }
 }

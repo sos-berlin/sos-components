@@ -34,7 +34,7 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse response = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (response != null) {
                 return response;
             }
@@ -49,7 +49,7 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
             StandardYADEJobResourceHandler.storeAndDeploy(this, accessToken, in, SOSXML.parse(in.getConfiguration()));
 
             // step 3 - update db and reread
-            ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in, getAccount(), 0L);
+            ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in, getAccountName(), 0L);
 
             // step 4 - post events
             EventBus.getInstance().post(new YADEConfigurationDeployed("", ""));

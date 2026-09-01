@@ -11,15 +11,11 @@ public class JobSchedulerUser {
 	private SOSAuthCurrentAccount sosAuthCurrentAccount;
 
 	public JobSchedulerUser(String accessToken) {
-		super();
 		this.accessToken = accessToken;
 	}
 
 	public SOSAuthCurrentAccount getSOSAuthCurrentAccount() throws SessionNotExistException {
-		if (sosAuthCurrentAccount == null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
-			sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-		}
-		if (sosAuthCurrentAccount == null) {
+		if (!isAuthenticated()) {
 			throw new SessionNotExistException("Session doesn't exist [" + accessToken + "]");
 		}
 		return sosAuthCurrentAccount;

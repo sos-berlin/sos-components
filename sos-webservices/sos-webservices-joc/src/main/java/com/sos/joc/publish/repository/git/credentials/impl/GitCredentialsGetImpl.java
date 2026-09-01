@@ -34,7 +34,7 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
             Date started = Date.from(Instant.now());
             LOGGER.trace("*** get credentials started ***" + started);
             initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.IDENTITY);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -43,7 +43,7 @@ public class GitCredentialsGetImpl extends JOCResourceImpl implements IGitCreden
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                account = getAccountName();
             }
 
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);

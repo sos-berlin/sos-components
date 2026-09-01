@@ -42,8 +42,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             storeCertificateFilter = initLogging(API_CALL, storeCertificateFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(storeCertificateFilter, StoreCertificateRequestFilter.class);
             StoreCertificateRequestFilter filter = Globals.objectMapper.readValue(storeCertificateFilter, StoreCertificateRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -81,8 +80,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
     private byte[] createDeployFilter(String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
         try {
             List<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken)
-                            .getDeployments().getDeploy()).collect(Collectors.toList());
+                    .filter(availableController -> getBasicControllerPermissions(availableController).getDeployments().getDeploy()).collect(Collectors.toList());
             // TODO allowedControllerIds.isEmpty -> no permissions
             return EnciphermentUtils.createDeployFilter(allowedControllerIds, jobResource.getPath(), audit);
         } catch (JsonProcessingException e) {

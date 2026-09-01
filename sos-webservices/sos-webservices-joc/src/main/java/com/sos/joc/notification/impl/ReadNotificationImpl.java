@@ -24,7 +24,7 @@ public class ReadNotificationImpl extends JOCResourceImpl implements IReadNotifi
             readNotificationFilter = initLogging(API_CALL, readNotificationFilter, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(readNotificationFilter, ReadNotificationFilter.class);
             ReadConfiguration in = Globals.objectMapper.readValue(readNotificationFilter, ReadConfiguration.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(xAccessToken).getNotification().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getNotification().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

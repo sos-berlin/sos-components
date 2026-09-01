@@ -20,7 +20,7 @@ public class DailyPlanCalendarImpl extends JOCOrderResourceImpl implements IDail
 
         try {
             initLogging(IMPL_PATH, "{}".getBytes(), accessToken, CategoryType.DAILYPLAN);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getSettings()
                     .getManage()));
             if (response != null) {
                 return response;

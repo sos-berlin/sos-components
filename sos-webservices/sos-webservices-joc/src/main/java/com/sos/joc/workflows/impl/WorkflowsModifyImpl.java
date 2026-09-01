@@ -56,7 +56,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         try {
             ModifyWorkflows modifyWorkflows = initRequest(Action.SUSPEND, accessToken, filterBytes);
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(modifyWorkflows
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()));
+                    .getControllerId()).map(p -> p.getOrders().getSuspendResume()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -72,7 +72,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         try {
             ModifyWorkflows modifyWorkflows = initRequest(Action.RESUME, accessToken, filterBytes);
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(modifyWorkflows
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()));
+                    .getControllerId()).map(p -> p.getOrders().getSuspendResume()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

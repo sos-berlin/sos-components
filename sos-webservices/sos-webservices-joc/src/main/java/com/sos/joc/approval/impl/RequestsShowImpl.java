@@ -48,13 +48,12 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             
-            boolean isApprover = jobschedulerUser.getSOSAuthCurrentAccount().isApprover();
-            String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+            boolean isApprover = getCurrentAccount().isApprover();
             
             // every Approver can see all approval requests
             // if the user is not an approver then he sees only its own approval requests
             if (!isApprover) {
-                in.setRequestors(Collections.singleton(curAccountName));
+                in.setRequestors(Collections.singleton(getAccountName()));
             }
 
             List<DBItemJocApprovalRequest> items = dbLayer.getApprovalRequests(in);

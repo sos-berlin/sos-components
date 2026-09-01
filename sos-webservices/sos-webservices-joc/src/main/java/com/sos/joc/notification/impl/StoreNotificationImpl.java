@@ -32,7 +32,7 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
             storeNotificationFilter = initLogging(API_CALL, storeNotificationFilter, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validate(storeNotificationFilter, StoreNotificationFilter.class);
             StoreConfiguration in = Globals.objectMapper.readValue(storeNotificationFilter, StoreConfiguration.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getNotification().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -51,12 +51,12 @@ public class StoreNotificationImpl extends JOCResourceImpl implements IStoreNoti
             item = dbLayer.getObject(notificationType.name(), name);
             boolean isChanged = true;
             if (item == null) {
-                item = StoreResourceImpl.create(hibernateSession, in, name, getAccount(), dbAuditlog.getId());
+                item = StoreResourceImpl.create(hibernateSession, in, name, getAccountName(), dbAuditlog.getId());
             } else {
                 String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
                 isChanged = JocXmlEditor.isChanged(item, currentConfiguration);
                 if (isChanged) {
-                    item = StoreResourceImpl.update(hibernateSession, in, item, name, getAccount(), dbAuditlog.getId());
+                    item = StoreResourceImpl.update(hibernateSession, in, item, name, getAccountName(), dbAuditlog.getId());
                 }
             }
             Globals.commit(hibernateSession);

@@ -54,7 +54,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (response != null) {
                 return response;
             }
-            if (!deleteOrders(in, accessToken, true, true)) {
+            if (!deleteOrders(in, true, true)) {
                 return accessDeniedResponse();
             }
             
@@ -65,35 +65,30 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent) throws SOSHibernateException {
-        return deleteOrders(in, accessToken, withAudit, withEvent, true);
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, boolean withAudit, boolean withEvent) throws SOSHibernateException {
+        return deleteOrders(in, withAudit, withEvent, true);
     }
 
     
-    public boolean deleteOrders(DailyPlanOrderFilterDef in, String accessToken, boolean withAudit, boolean withEvent, boolean evalPermissions)
+    public boolean deleteOrders(DailyPlanOrderFilterDef in, boolean withAudit, boolean withEvent, boolean evalPermissions)
             throws SOSHibernateException {
 
-        boolean noControllerAvailable = Proxies.getControllerDbInstances().isEmpty();
         boolean permitted = true;
         Set<String> allowedControllers = Collections.emptySet();
-        if (!noControllerAvailable) {
-            Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
-            if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
-                controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
-            }
-            allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController,
-                    accessToken).getOrders().getCreate()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-        } else {
-            initGetPermissions(accessToken);
+        Stream<String> controllerIds = Proxies.getControllerDbInstances().keySet().stream();
+        if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
+            controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
         }
-        
+        allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController).getOrders().getCreate())
+                .collect(Collectors.toSet());
+        permitted = !allowedControllers.isEmpty();
+
         if (!permitted) {
             return false;
         }
         
         if (folderPermissions == null) {
-            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+            folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
         }
         
         if (withAudit) {

@@ -61,7 +61,7 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
             item.setHasDeployments(false);
             item.setHasReleases(false);
             item.setIsReferencedBy(null);
-            item.setHasNote(new InventoryNotesDBLayer(session).hasNote(config.getId(), getAccount()));
+            item.setHasNote(new InventoryNotesDBLayer(session).hasNote(config.getId(), getAccountName()));
             
             if (in.getCommitId() != null && !in.getCommitId().isEmpty() && JocInventory.isDeployable(type)) {
                 String invContentFromDepHistory = dbLayer.getDeployedInventoryContent(config.getId(), in.getCommitId());

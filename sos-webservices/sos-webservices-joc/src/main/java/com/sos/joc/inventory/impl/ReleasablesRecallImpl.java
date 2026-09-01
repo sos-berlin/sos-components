@@ -78,7 +78,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             filter = initLogging(API_CALL, filter, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filter, ReleasableRecallFilter.class, true);
             ReleasableRecallFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;
             }
@@ -136,7 +136,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             JsonValidator.validate(filter, RequestFolder.class, true);
             ReleasableRecallFolderFilter recallFilter = Globals.objectMapper.readValue(filter, ReleasableRecallFolderFilter.class);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response != null) {
                 return response;
             }

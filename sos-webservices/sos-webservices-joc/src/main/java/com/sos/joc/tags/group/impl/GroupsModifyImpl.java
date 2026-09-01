@@ -57,7 +57,7 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
     private JOCDefaultResponse postTagsModify(Action action, String accessToken, byte[] filterBytes) {
         try {
             RequestFilters modifyTags = initModifyRequest(action, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -78,8 +78,8 @@ public class GroupsModifyImpl extends JOCResourceImpl implements ITagsModify {
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }
 
-    private JOCDefaultResponse initPermissions(String accessToken) {
-        return initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+    private JOCDefaultResponse initPermissions() {
+        return initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
     }
     
     private Stream<JOCEvent> postTagsModify(Action action, RequestFilters modifyTags) throws Exception {

@@ -35,7 +35,7 @@ public class UnlinkFolderImpl extends JOCResourceImpl implements IUnlinkFolder {
             unlinkFolderFilter = initLogging(API_CALL, unlinkFolderFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(unlinkFolderFilter, UnlinkFolderFilter.class);
             UnlinkFolderFilter filter = Globals.objectMapper.readValue(unlinkFolderFilter, UnlinkFolderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

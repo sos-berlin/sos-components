@@ -35,7 +35,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
                 return jocDefaultResponse;
             }
 
-            JOCPreferences jocPreferences = new JOCPreferences(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
+            JOCPreferences jocPreferences = new JOCPreferences(getAccountName());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
@@ -48,7 +48,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
                     if (dbControllerId == null || dbControllerId.isEmpty()) {
                         continue;
                     }
-                    if (!getBasicControllerPermissions(dbControllerId, accessToken).getView()) {
+                    if (!getBasicControllerPermissions(dbControllerId).getView()) {
                         continue;
                     }
                     controllerIds.add(dbControllerId);

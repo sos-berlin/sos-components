@@ -36,7 +36,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
             body = initLogging(JocInventory.getResourceImplPath("path"), body, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(body, PathFilter.class);
             PathFilter filter = Globals.objectMapper.readValue(body, PathFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

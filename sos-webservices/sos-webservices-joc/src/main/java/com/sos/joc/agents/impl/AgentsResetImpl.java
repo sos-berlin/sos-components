@@ -41,7 +41,7 @@ public class AgentsResetImpl extends JOCResourceImpl implements IAgentsReset {
             
             String controllerId = agentParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
