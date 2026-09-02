@@ -203,6 +203,24 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
         arg.setValue(Boolean.parseBoolean(getValue(node)));
     }
 
+    protected void setBooleanArgumentValue(SOSArgument<Boolean> arg, String value) {
+        if (arg == null || !SOSString.isBoolean(value)) {
+            return;
+        }
+        arg.setValue(Boolean.parseBoolean(value));
+    }
+
+    protected void setBooleanArgumentValueFromEnv(SOSArgument<Boolean> arg, String envVar) {
+        if (arg == null) {
+            return;
+        }
+        String value = System.getenv(envVar);
+        if (!SOSString.isBoolean(value)) {
+            return;
+        }
+        arg.setValue(Boolean.parseBoolean(value));
+    }
+
     protected void setOppositeBooleanArgumentValue(SOSArgument<Boolean> arg, Node node) {
         if (arg == null || node == null) {
             return;

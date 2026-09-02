@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.yade;
 import java.util.List;
 
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.js7.job.Job;
 import com.sos.js7.job.OrderProcessStep;
@@ -92,13 +93,25 @@ public class YADEJob extends Job<YADEJobArguments> {
         if (!args.getSourceRecursive().isEmpty()) {
             argsLoader.getSourceArgs().getRecursive().setValue(args.getSourceRecursive().getValue());
         }
+        applyOverridesProxy(argsLoader.getSourceArgs().getProvider(), args);
 
         // Target
-        if (!args.getTargetDir().isEmpty() && argsLoader.getTargetArgs() != null) {
-            argsLoader.getTargetArgs().getDirectory().setValue(args.getTargetDir().getValue());
+        if (argsLoader.getTargetArgs() != null) {
+            if (!args.getTargetDir().isEmpty()) {
+                argsLoader.getTargetArgs().getDirectory().setValue(args.getTargetDir().getValue());
+            }
+            applyOverridesProxy(argsLoader.getTargetArgs().getProvider(), args);
         }
 
         applySimulation(argsLoader, args);
+    }
+
+    // the environment variable ProxyConfigArguments.ENV_VAR_PROXY_SOCKS_RESOLVE_HOSTNAME is already handled by the xml parser
+    private void applyOverridesProxy(AProviderArguments providerArgs, YADEJobArguments args) {
+        if (providerArgs == null || providerArgs.getProxy() == null || args.getProxySocksResolveHostname().isEmpty()) {
+            return;
+        }
+        providerArgs.getProxy().getSocksResolveHostname().setValue(args.getProxySocksResolveHostname().getValue());
     }
 
     private void applySimulation(AYADEArgumentsLoader argsLoader, YADEJobArguments args) {

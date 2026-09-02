@@ -4273,7 +4273,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="SOCKSProxy" type="AuthenticatedProxyType">
+	  <xs:element name="SOCKSProxy" type="AuthenticatedSocksProxyType">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/Proxy/SOCKSProxy"/>
          <xs:documentation>
@@ -4291,8 +4291,53 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>
                   <em>SOCKS</em> Proxy is a network protocol that routes traffic between a client and server through a proxy server.<br/>
-        It works at the transport layer (Layer 5 of the OSI model), forwarding any type of traffic (e.g., HTTP, FTP) without interpreting it.<br/>
+        SOCKS operates at the session layer (Layer 5 of the OSI model) and forwards network traffic without interpreting the application-layer protocol, such as HTTP, FTP, or SSH.<br/>
         This makes it versatile and protocol-independent.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="ResolveHostname" type="BooleanOrVarType" default="false">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/Proxy/SOCKSProxy/ResolveHostname">
+                <Release starting="2.8.5, 2.9.1" issue="YADE-662"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-662">YADE-662</a> Availability starting with 2.8.5, 2.9.1.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Controls whether the destination hostname is resolved locally when using a SOCKS proxy.</p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>false</strong>: The destination hostname is passed to the SOCKS proxy without local resolution. 
+                The SOCKS proxy resolves the hostname using its own DNS configuration. 
+                This allows connections to hostnames that are only resolvable from the proxy's network and allows hostname-based proxy rules, such as whitelists, to be applied. 
+                However, this can fail when using a SOCKS4-only proxy server, as SOCKS4 requires an IP address rather than a hostname.
+            </li>
+                  <li>
+                     <strong>true</strong>: The destination hostname is resolved locally before the connection is established. 
+                The SOCKS proxy receives the resulting IP address. 
+                This can be required when using a SOCKS4-only proxy server, but can fail if the hostname cannot be resolved locally or if the SOCKS proxy uses hostname-based rules, such as a whitelist.
+            </li>
+               </ul>
+               <p/>
+               <p>Setting Scope and Precedence.</p>
+               <ol>
+                  <li>If this setting is explicitly configured, it takes precedence over the corresponding environment variable <code>PROXY_SOCKS_RESOLVE_HOSTNAME</code>.</li>
+                  <li>The value is overridden when the corresponding argument is specified in the YADE JITL job or as a YADE CLI argument.</li>
+               </ol>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -15077,6 +15122,13 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    <xs:sequence>
 			      <xs:element ref="BasicConnection"/>
 			      <xs:element ref="BasicAuthentication" minOccurs="0"/>
+		    </xs:sequence>
+	  </xs:complexType>
+    <xs:complexType name="AuthenticatedSocksProxyType">
+		    <xs:sequence>
+			      <xs:element ref="BasicConnection"/>
+			      <xs:element ref="BasicAuthentication" minOccurs="0"/>
+            <xs:element ref="ResolveHostname" minOccurs="0"/>
 		    </xs:sequence>
 	  </xs:complexType>
 	  <xs:complexType name="WriteableFragmentRefType">

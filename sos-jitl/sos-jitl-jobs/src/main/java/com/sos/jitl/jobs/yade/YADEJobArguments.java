@@ -39,6 +39,9 @@ public class YADEJobArguments extends JobArguments {
     private JobArgument<Boolean> sourceRecursive = new JobArgument<>(YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE, false);
     // Target
     private JobArgument<String> targetDir = new JobArgument<>(YADEArguments.STARTUP_ARG_TARGET_DIR, false);
+    // PROXY
+    private JobArgument<Boolean> proxySocksResolveHostname = new JobArgument<>(YADEArguments.STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME, false,
+            Boolean.FALSE);
 
     /** Settings - replacement behavior */
     private JobArgument<Boolean> settingsReplacerCaseSensitive = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE, false,
@@ -107,6 +110,10 @@ public class YADEJobArguments extends JobArguments {
 
     public JobArgument<String> getTargetDir() {
         return targetDir;
+    }
+
+    public JobArgument<Boolean> getProxySocksResolveHostname() {
+        return proxySocksResolveHostname;
     }
 
     public JobArgument<Boolean> getSettingsReplacerCaseSensitive() {

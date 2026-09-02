@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
 import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.engine.commons.YADEOutcomeHistory;
@@ -171,11 +172,23 @@ public class YADEEngineMain {
         setOptionalBooleanArgument(argsLoader.getSourceArgs().getRecursive(), args, YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE);
         setOptionalStringArgument(argsLoader.getSourceArgs().getSimConnFaults(), args, YADEArguments.STARTUP_ARG_SOURCE_SIM_CONN_FAULTS);
 
+        applyOverridesProxy(argsLoader.getSourceArgs().getProvider(), args);
+
         // Target
         if (argsLoader.getTargetArgs() != null) {
             setOptionalStringArgument(argsLoader.getTargetArgs().getDirectory(), args, YADEArguments.STARTUP_ARG_TARGET_DIR);
             setOptionalStringArgument(argsLoader.getTargetArgs().getSimConnFaults(), args, YADEArguments.STARTUP_ARG_TARGET_SIM_CONN_FAULTS);
+
+            applyOverridesProxy(argsLoader.getTargetArgs().getProvider(), args);
         }
+    }
+
+    // the environment variable ProxyConfigArguments.ENV_VAR_PROXY_SOCKS_RESOLVE_HOSTNAME is already handled by the xml parser
+    private void applyOverridesProxy(AProviderArguments providerArgs, Map<String, String> args) {
+        if (providerArgs == null || providerArgs.getProxy() == null) {
+            return;
+        }
+        setOptionalBooleanArgument(providerArgs.getProxy().getSocksResolveHostname(), args, YADEArguments.STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME);
     }
 
     private static void writeHistoryToReturnValuesFile(ISOSLogger logger, String historyReturnValuesFile, AYADEArgumentsLoader argsLoader,
@@ -216,6 +229,7 @@ public class YADEEngineMain {
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_FILE_LIST, "<...>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_SOURCE_RECURSIVE, "<true|false>", null);
         printArgumentUsage(YADEArguments.STARTUP_ARG_TARGET_DIR, "<...>", null);
+        printArgumentUsage(YADEArguments.STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME, "<true|false>", null);
 
         System.out.println("    Processing Options:");
         printArgumentUsage(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE, "<boolean>", "default: "

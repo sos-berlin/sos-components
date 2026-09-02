@@ -109,6 +109,60 @@
 					</p>
 				</note>
 			</param>
+			<param name="proxy_socks_resolve_hostname" required="false"
+				default_value="false" DataType="java.lang.Boolean">
+				<note>
+					<p>
+						Transfer argument: Controls whether the destination hostname is
+						resolved locally when using a SOCKS proxy.
+						<ul>
+							<li>
+								<em>false</em>
+								: The destination hostname is passed to the SOCKS proxy without
+								local resolution.
+								The SOCKS proxy resolves the hostname using its
+								own DNS
+								configuration.
+								This allows connections to hostnames that
+								are only resolvable from
+								the proxy's network and allows
+								hostname-based proxy rules, such
+								as whitelists, to be applied.
+								However, this can fail when using a SOCKS4-only proxy server, as
+								SOCKS4
+								requires an IP address rather than a hostname.
+							</li>
+							<li>
+								<em>true</em>
+								: The destination hostname is resolved locally before the
+								connection is established.
+								The SOCKS proxy receives the resulting
+								IP address.
+								This can be required when using a SOCKS4-only proxy
+								server, but can
+								fail if the hostname cannot be resolved locally
+								or if the SOCKS
+								proxy uses hostname-based rules, such as a
+								whitelist.
+							</li>
+						</ul>
+
+						<p>Argument Scope and Precedence.</p>
+						<ul>
+							<li>This argument applies to both SOCKS proxies: the source proxy
+								and the target proxy, if configured.
+							</li>
+							<li>
+								If this argument is explicitly configured, it takes precedence
+								over the configuration file and the corresponding environment
+								variable
+								<code>PROXY_SOCKS_RESOLVE_HOSTNAME</code>
+								.
+							</li>
+						</ul>
+					</p>
+				</note>
+			</param>
 			<param name="settings_replacer_case_sensitive" required="false"
 				default_value="true" DataType="java.lang.Boolean">
 				<note>
@@ -125,22 +179,22 @@
 								<em>true</em>
 								<ul>
 									<li>
-                                        only case-sensitive matches
-                                        <em>PLACEHOLDER_VARIABLE</em>
-                                        is resolved
-                                    </li>
+										only case-sensitive matches
+										<em>PLACEHOLDER_VARIABLE</em>
+										is resolved
+									</li>
 								</ul>
 							</li>
 							<li>
 								<em>false</em>
 								<ul>
 									<li>
-                                        <em>PLACEHOLDER_VARIABLE</em>
-                                        ,
-                                        <em>placeholder_variable</em>
-                                        etc. are resolved
-                                        regardless of case
-                                    </li>
+										<em>PLACEHOLDER_VARIABLE</em>
+										,
+										<em>placeholder_variable</em>
+										etc. are resolved
+										regardless of case
+									</li>
 								</ul>
 							</li>
 						</ul>
@@ -214,48 +268,68 @@
 					</p>
 				</note>
 			</param>
-			<param name="source_sim_conn_faults" required="false" 
-                DataType="java.lang.String">
-                <note>
-                    <p>
-                        Simulation argument for testing connectivity fault injection.<br/>
-                        This simulates connectivity errors on the Source for testing and handling purposes.<br/>
-                        A connectivity fault occurs after the specified interval in &lt;seconds&gt;.<br/>
-                        &lt;seconds&gt; supports integer or float values, decimal separator: '.' or ',', e.g.:
-                        <ul>
-                            <li><em>1</em> - inject one connectivity fault after 1s</li>
-                            <li><em>0.5;2.5;3</em> - inject connectivity faults 3 times (after 0.5s, then 2.5s, then 3s)</li>
-                        </ul>
-                        <br />
-                        <br />                        
-                    </p>
-                </note>
-            </param>
-            <param name="target_sim_conn_faults" required="false" 
-                DataType="java.lang.String">
-                <note>
-                    <p>
-                        Simulation argument for testing connectivity fault injection.<br/>
-                        Same format as <em>source_sim_conn_faults</em>, applied to the Target provider.
-                        <br />
-                        <br />                        
-                    </p>
-                </note>
-            </param>
-            <param name="sim_conn_faults" required="false" 
-                DataType="java.lang.String">
-                <note>
-                    <p>
-                        Simulation argument for testing connectivity fault injection.<br/>
-                        Shorthand for Source AND Target connectivity faults, e.g.:
-                        <ul>
-                            <li><em>0.2;2</em> - inject faults for both providers at the same intervals</li>
-                        </ul>
-                        <br />
-                        <br />                        
-                    </p>
-                </note>
-            </param>
+			<param name="source_sim_conn_faults" required="false"
+				DataType="java.lang.String">
+				<note>
+					<p>
+						Simulation argument for testing connectivity fault injection.
+						<br />
+						This simulates connectivity errors on the Source for testing and
+						handling purposes.
+						<br />
+						A connectivity fault occurs after the specified interval in
+						&lt;seconds&gt;.
+						<br />
+						&lt;seconds&gt; supports integer or float values, decimal
+						separator: '.' or ',', e.g.:
+						<ul>
+							<li>
+								<em>1</em>
+								- inject one connectivity fault after 1s
+							</li>
+							<li>
+								<em>0.5;2.5;3</em>
+								- inject connectivity faults 3 times (after 0.5s, then 2.5s,
+								then 3s)
+							</li>
+						</ul>
+						<br />
+						<br />
+					</p>
+				</note>
+			</param>
+			<param name="target_sim_conn_faults" required="false"
+				DataType="java.lang.String">
+				<note>
+					<p>
+						Simulation argument for testing connectivity fault injection.
+						<br />
+						Same format as
+						<em>source_sim_conn_faults</em>
+						, applied to the Target provider.
+						<br />
+						<br />
+					</p>
+				</note>
+			</param>
+			<param name="sim_conn_faults" required="false"
+				DataType="java.lang.String">
+				<note>
+					<p>
+						Simulation argument for testing connectivity fault injection.
+						<br />
+						Shorthand for Source AND Target connectivity faults, e.g.:
+						<ul>
+							<li>
+								<em>0.2;2</em>
+								- inject faults for both providers at the same intervals
+							</li>
+						</ul>
+						<br />
+						<br />
+					</p>
+				</note>
+			</param>
 		</params>
 		<params id="return_parameter">
 			<param name="yade_return_values" required="true"
