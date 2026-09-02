@@ -348,10 +348,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                 if (e.isRight()) {
                     UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations1).thenAccept(either -> StoreDeployments
-                            .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                            .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                     false, null));
                 } else {
-                    StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                    StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                             false, null);
                 }
             });
@@ -369,10 +369,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations2).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                         false, null));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                 false, null);
                     }
                 });
@@ -385,10 +385,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations3).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                         false, null));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                 false, null);
                     }
                 });
@@ -407,10 +407,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
               BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                   if (e.isRight()) {
                       UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations4).thenAccept(either -> StoreDeployments
-                              .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                              .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                       false, null));
                   } else {
-                      StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                      StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                               false, null);
                   }
               });
@@ -423,10 +423,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations5).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                         false, null));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL, null,
+                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
                                 false, null);
                     }
                 });
