@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -62,9 +63,11 @@ import jakarta.ws.rs.core.StreamingOutput;
 public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
+    private SOSAuthCurrentAccount currentAccount;
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     // private String accessToken;
+    @HeaderParam("X-Access-Token")
     private String headerAccessToken;
     private JocAuditTrail jocAuditLog = new JocAuditTrail();
     private final String accessDeniedDefaultMessage = "Access denied";
@@ -81,15 +84,31 @@ public class JOCResourceImpl {
     private byte[] origBody;
 
     private JocError jocError = new JocError();
-
-    protected void initGetPermissions(String accessToken) throws JocException {
-        headerAccessToken = accessToken;
-        if (jobschedulerUser == null) {
-            // this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
-            jobschedulerUser = new JobSchedulerUser(accessToken);
+    
+    public void setCurrentAccount(JOCResourceImpl obj) {
+        this.currentAccount = obj.getCurrentAccount();
+        this.folderPermissions = currentAccount.getSosAuthFolderPermissions();
+        this.headerAccessToken = currentAccount.getAccessToken();
+        this.jobschedulerUser = new JobSchedulerUser(this.headerAccessToken);
+        if (obj.getJocError() != null) {
+            this.jocError = obj.getJocError();
         }
-
-        updateUserInMetaInfo();
+        if (obj.getJocAuditTrail() != null) {
+            this.jocAuditLog = obj.getJocAuditTrail();
+        }
+    }
+    
+    public SOSAuthCurrentAccount getCurrentAccount() {
+        return currentAccount;
+    }
+    
+    public void checkCurrentAccount() throws SessionNotExistException {
+        if (currentAccount == null) {
+            if (jobschedulerUser == null) {
+                jobschedulerUser = new JobSchedulerUser(headerAccessToken);
+            }
+            currentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
+        }
     }
 
     private String getControllerId(String controllerId) throws SessionNotExistException {
@@ -99,48 +118,47 @@ public class JOCResourceImpl {
         return controllerId;
     }
 
-    protected ControllerPermissions getBasicControllerDefaultPermissions(String accessToken) throws JocException {
-        initGetPermissions(accessToken);
-        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions();
+    protected ControllerPermissions getBasicControllerDefaultPermissions() throws JocException {
+        checkCurrentAccount();
+        return currentAccount.getControllerDefaultPermissions();
     }
 
-    protected ControllerPermissions getBasicControllerPermissions(String controllerId, String accessToken) throws JocException {
-        initGetPermissions(accessToken);
+    protected ControllerPermissions getBasicControllerPermissions(String controllerId) throws JocException {
+        checkCurrentAccount();
         controllerId = getControllerId(controllerId);
-        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(controllerId);
+        return currentAccount.getControllerPermissions(controllerId);
     }
 
-    protected JocPermissions getBasicJocPermissions(String accessToken) throws JocException {
-        initGetPermissions(accessToken);
-        return jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions();
+    protected JocPermissions getBasicJocPermissions() throws JocException {
+        checkCurrentAccount();
+        return currentAccount.getJocPermissions();
     }
 
-    protected Stream<ControllerPermissions> getControllerPermissions(String controllerId, String accessToken) throws JocException {
-        initGetPermissions(accessToken);
+    protected Stream<ControllerPermissions> getControllerPermissions(String controllerId) throws JocException {
+        checkCurrentAccount();
         controllerId = getControllerId(controllerId);
-        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(controllerId), jobschedulerUser
-                .getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId));
+        return Stream.of(currentAccount.getControllerPermissions(controllerId), currentAccount.get4EyesControllerPermissions(controllerId));
     }
 
-    protected ControllerPermissions get4EyesControllerPermissions(String controllerId) throws JocException {
-        controllerId = getControllerId(controllerId);
-        return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId);
+//    protected ControllerPermissions get4EyesControllerPermissions(String controllerId) throws JocException {
+//        controllerId = getControllerId(controllerId);
+//        return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesControllerPermissions(controllerId);
+//    }
+//
+//    protected Stream<ControllerPermissions> getControllerDefaultPermissions(String accessToken) throws JocException {
+//        initGetPermissions(accessToken);
+//        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
+//                .get4EyesControllerDefaultPermissions());
+//    }
+    
+    protected Stream<JocPermissions> getJocPermissions() throws JocException {
+        checkCurrentAccount();
+        return Stream.of(currentAccount.getJocPermissions(), currentAccount.get4EyesJocPermissions());
     }
-
-    protected Stream<ControllerPermissions> getControllerDefaultPermissions(String accessToken) throws JocException {
-        initGetPermissions(accessToken);
-        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getControllerDefaultPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
-                .get4EyesControllerDefaultPermissions());
-    }
-
-    protected Stream<JocPermissions> getJocPermissions(String accessToken) throws JocException {
-        initGetPermissions(accessToken);
-        return Stream.of(jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions(), jobschedulerUser.getSOSAuthCurrentAccount()
-                .get4EyesJocPermissions());
-    }
-
+    
     protected JocPermissions get4EyesJocPermissions() throws JocException {
-        return jobschedulerUser.getSOSAuthCurrentAccount().get4EyesJocPermissions();
+        checkCurrentAccount();
+        return currentAccount.get4EyesJocPermissions();
     }
 
     public String getAccessToken() {
@@ -152,10 +170,6 @@ public class JOCResourceImpl {
             return accessToken;
         }
         return oldAccessToken;
-    }
-
-    public JobSchedulerUser getJobschedulerUser() {
-        return jobschedulerUser;
     }
 
     public JocError getJocError() {
@@ -285,10 +299,6 @@ public class JOCResourceImpl {
         return jocAuditLog;
     }
 
-    // public void logAuditTrail() {
-    // jocAuditLog.log();
-    // }
-
     public DBItemJocAuditLog storeAuditLog(AuditParams audit) {
         checkRequiredComment(audit);
         DBItemJocAuditLog logDbItem = jocAuditLog.storeAuditLogEntry(audit);
@@ -387,7 +397,7 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
         jocError.setMessage(message);
-        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(getCurrentAccount(), jocError));
     }
 
     public JOCDefaultResponse accessDeniedResponseByUnsupported4EyesPrinciple() {
@@ -396,7 +406,7 @@ public class JOCResourceImpl {
                 "An approval should be requested according to the permissions configuration '%s' (Role: %s) but this is unsupported. Access denied.",
                 "joc:adminstration:accounts:manage", approvalRequestorRole);
         jocError.setMessage(message);
-        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(getCurrentAccount(), jocError));
     }
 
     public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken, CategoryType category) throws Exception {
@@ -421,7 +431,8 @@ public class JOCResourceImpl {
         if (sosAuthCurrentAccountAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
-
+        
+        currentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
         return body;
     }
 
@@ -541,8 +552,8 @@ public class JOCResourceImpl {
         return initWorkflowPermissions(controllerId, permissions.toList(), workflowNames);
     }
 
-    public JOCDefaultResponse initManageAccountPermissions(String accessToken) throws JocException {
-        List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getAccounts().getManage()).toList();
+    public JOCDefaultResponse initManageAccountPermissions() throws JocException {
+        List<Boolean> perms = getJocPermissions().map(p -> p.getAdministration().getAccounts().getManage()).toList();
         return initPermissions(null, perms.get(0), perms.get(1), true);
     }
 
@@ -644,7 +655,7 @@ public class JOCResourceImpl {
     }
     
     public void setFolderPermissions(String controllerId) {
-        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
+        folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
         folderPermissions.setSchedulerId(controllerId);
     }
 
@@ -653,7 +664,7 @@ public class JOCResourceImpl {
         JOCDefaultResponse jocDefaultResponse = null;
 
         if (!jobschedulerUser.isAuthenticated()) {
-            return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+            return responseStatus401(JOCDefaultResponse.getError401Schema(null, jocError));
         }
 
         if (!permission) {
@@ -673,19 +684,19 @@ public class JOCResourceImpl {
         return jocDefaultResponse;
     }
 
-    private void updateUserInMetaInfo() {
-        try {
-            if (jocError != null) {
-                String userMetaInfo = "USER: " + jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-                List<String> metaInfo = jocError.getMetaInfo();
-                if (metaInfo.size() > 2) {
-                    metaInfo.remove(2);
-                    metaInfo.add(2, userMetaInfo);
-                }
-            }
-        } catch (Exception e) {
-        }
-    }
+//    private void updateUserInMetaInfo() {
+//        try {
+//            if (jocError != null) {
+//                String userMetaInfo = "USER: " + jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+//                List<String> metaInfo = jocError.getMetaInfo();
+//                if (metaInfo.size() > 2) {
+//                    metaInfo.remove(2);
+//                    metaInfo.add(2, userMetaInfo);
+//                }
+//            }
+//        } catch (Exception e) {
+//        }
+//    }
 
     protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
         String folder = getParent(path);
@@ -723,9 +734,9 @@ public class JOCResourceImpl {
         return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
     }
 
-    public String getAccount() {
+    public String getAccountName() {
         try {
-            return jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+            return getCurrentAccount().getAccountname().trim();
         } catch (Exception e) {
             return null;
         }

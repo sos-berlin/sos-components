@@ -22,14 +22,18 @@ public class StoreConfigurationResourceImpl extends AStoreConfiguration implemen
             JsonValidator.validate(inBytes, ConfigurationObject.class, true);
             ConfigurationObject in = Globals.objectMapper.readValue(inBytes, ConfigurationObject.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = store(in, ConfigurationType.FOLDER, IMPL_PATH);
+                response = store(in);
             }
             return response;
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
+    }
+    
+    public JOCDefaultResponse store(ConfigurationObject in) throws Exception {
+        return store(in, ConfigurationType.FOLDER, IMPL_PATH);
     }
 
 }

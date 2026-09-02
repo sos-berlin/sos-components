@@ -40,7 +40,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DOCUMENTATIONS);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getDocumentations().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getDocumentations().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

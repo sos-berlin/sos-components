@@ -38,7 +38,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             filter = initLogging(API_CALL_CREATE, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validate(filter, CreateOnetimeTokenFilter.class);
             CreateOnetimeTokenFilter createOnetimeTokenFilter = Globals.objectMapper.readValue(filter, CreateOnetimeTokenFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
                     .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -110,8 +110,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             filter = initLogging(API_CALL_SHOW, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, ShowOnetimeTokenFilter.class);
             ShowOnetimeTokenFilter showOnetimeTokenFilter = Globals.objectMapper.readValue(filter, ShowOnetimeTokenFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getView()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getCertificates().getView()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

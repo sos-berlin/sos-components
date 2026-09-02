@@ -64,7 +64,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -149,8 +149,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -226,8 +225,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -282,7 +280,7 @@ public class SubAgentCommandImpl extends JOCResourceImpl implements ISubAgentCom
 
             AgentHelper.throwJocMissingLicenseException();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

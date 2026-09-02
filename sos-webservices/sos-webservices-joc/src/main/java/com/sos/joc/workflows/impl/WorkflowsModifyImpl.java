@@ -55,8 +55,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             ModifyWorkflows modifyWorkflows = initRequest(Action.SUSPEND, accessToken, filterBytes);
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.SUSPEND, modifyWorkflows);
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(
-                    modifyWorkflows.getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.SUSPEND,
-                            workflows).stream().map(WorkflowPath::string).collect(Collectors.toSet()));
+                    modifyWorkflows.getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.SUSPEND, workflows).stream()
+                            .map(WorkflowPath::string).collect(Collectors.toSet()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -73,8 +73,8 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             ModifyWorkflows modifyWorkflows = initRequest(Action.RESUME, accessToken, filterBytes);
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.RESUME, modifyWorkflows);
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(
-                    modifyWorkflows.getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.RESUME, workflows)
-                            .stream().map(WorkflowPath::string).collect(Collectors.toSet()));
+                    modifyWorkflows.getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.RESUME, workflows).stream()
+                            .map(WorkflowPath::string).collect(Collectors.toSet()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

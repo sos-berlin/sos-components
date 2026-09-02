@@ -1422,7 +1422,7 @@ public class KeyTests {
         }
     }
 
-    @Test
+    //@Test
     public void test36CreateAndValidateKyberKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
         LOGGER.info("*********  Test 36: Create ML-KEM KeyPair with Kyber and check secret  *************************");

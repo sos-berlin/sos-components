@@ -66,7 +66,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
             String controllerId = agentCommand.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -102,7 +102,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
             String controllerId = agentCommand.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -150,7 +150,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
             String controllerId = agentCommand.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p.getSwitchOver()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p.getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -194,7 +194,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             AgentCommand agentCommand = Globals.objectMapper.readValue(filterBytes, AgentCommand.class);
             
             String controllerId = agentCommand.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -219,7 +219,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                         "The Agent cluster '" + agentId + "' does not indicate loss of a Director Agent node"));
                 String user = null;
                 try {
-                    user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+                    user = getAccountName();
                 } catch (Exception e) {
                     user = Globals.getJocId();
                 }

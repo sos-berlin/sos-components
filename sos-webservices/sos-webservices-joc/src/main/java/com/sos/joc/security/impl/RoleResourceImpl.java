@@ -48,8 +48,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RoleFilter.class);
             RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -93,7 +92,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, Role.class);
             RoleStore roleStore = Globals.objectMapper.readValue(body, RoleStore.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -151,7 +150,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validate(body, RoleRename.class);
             RoleRename roleRename = Globals.objectMapper.readValue(body, RoleRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -202,7 +201,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validate(body, RolesFilter.class);
             RolesFilter rolesFilter = Globals.objectMapper.readValue(body, RolesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -247,8 +246,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RoleListFilter.class);
             RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -292,7 +290,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RolesFilter.class);
             RolesFilter roles = Globals.objectMapper.readValue(body, RolesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

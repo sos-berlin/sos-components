@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -22,9 +21,9 @@ import com.sos.joc.db.keys.DBLayerKeys;
 import com.sos.joc.encipherment.resource.IStoreCertificate;
 import com.sos.joc.encipherment.util.EnciphermentUtils;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.encipherment.StoreCertificateRequestFilter;
+import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.publish.impl.DeployImpl;
 import com.sos.schema.JsonValidator;
 
@@ -42,8 +41,7 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             storeCertificateFilter = initLogging(API_CALL, storeCertificateFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(storeCertificateFilter, StoreCertificateRequestFilter.class);
             StoreCertificateRequestFilter filter = Globals.objectMapper.readValue(storeCertificateFilter, StoreCertificateRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -59,12 +57,12 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
             final DBItemInventoryConfiguration generatedJobResource = EnciphermentUtils.createRelatedJobResource(hibernateSession, filter, auditLog
                     .getId());
             // Deploy the JobResource to all controllers
-            new Thread(() -> {
-                byte[] deployFilter = createDeployFilter(xAccessToken, generatedJobResource, filter.getAuditLog());
-                if (deployFilter != null) {
-                    new DeployImpl().postDeploy(xAccessToken, deployFilter);
-                }
-            }).start();
+            DeployFilter deployFilter = createDeployFilter(generatedJobResource);
+            if (deployFilter != null) {
+                DeployImpl deployImpl = new DeployImpl();
+                deployImpl.setCurrentAccount(this);
+                deployImpl.deploy(xAccessToken, deployFilter, auditLog);
+            }
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
@@ -78,17 +76,11 @@ public class StoreCertificateImpl extends JOCResourceImpl implements IStoreCerti
         
     }
     
-    private byte[] createDeployFilter(String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
-        try {
-            List<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken)
-                            .getDeployments().getDeploy()).collect(Collectors.toList());
-            // TODO allowedControllerIds.isEmpty -> no permissions
-            return EnciphermentUtils.createDeployFilter(allowedControllerIds, jobResource.getPath(), audit);
-        } catch (JsonProcessingException e) {
-            LOGGER.warn("error creating DeployFilter to deploy newly generated JobResource.", e);
-            return null;
-        }
+    private DeployFilter createDeployFilter(DBItemInventoryConfiguration jobResource) {
+        List<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
+                .filter(availableController -> getBasicControllerPermissions(availableController).getDeployments().getDeploy()).collect(Collectors.toList());
+        // TODO allowedControllerIds.isEmpty -> no permissions
+        return EnciphermentUtils.createDeployFilter(allowedControllerIds, jobResource.getPath());
     }
     
 }

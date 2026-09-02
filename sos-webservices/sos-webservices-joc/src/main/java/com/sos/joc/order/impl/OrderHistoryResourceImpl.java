@@ -40,7 +40,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             JsonValidator.validate(inBytes, OrderHistoryFilter.class);
             OrderHistoryFilter in = Globals.objectMapper.readValue(inBytes, OrderHistoryFilter.class);
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (response != null) {
                 return response;

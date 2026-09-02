@@ -43,8 +43,8 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             // return initPermissions(in.getControllerId(), false);
             // }
 
-            boolean perm = getBasicJocPermissions(accessToken).getNotification().getManage() && getBasicControllerPermissions(in.getControllerId(),
-                    accessToken).getOrders().getView();
+            boolean perm = getBasicJocPermissions().getNotification().getManage() && getBasicControllerPermissions(in.getControllerId()).getOrders()
+                    .getView();
             boolean fourEyesPerm = get4EyesJocPermissions().getNotification().getManage();
             JOCDefaultResponse response = initPermissions(in.getControllerId(), perm, fourEyesPerm);
             if (response != null) {
@@ -60,7 +60,6 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             if (in.getNotificationIds() != null && in.getNotificationIds().size() > 0) {
                 session.beginTransaction();
 
-                String account = getAccount();
                 for (Long notificationId : in.getNotificationIds()) {
                     // TODO check controllerId
                     DBItemNotification notification = dbLayer.getOrderNotification(notificationId);
@@ -71,7 +70,7 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
                             result = new DBItemNotificationAcknowledgement();
                             result.setId(new DBItemNotificationAcknowledgementId(notificationId, NotificationApplication.ORDER_NOTIFICATION
                                     .intValue()));
-                            result.setAccount(account);
+                            result.setAccount(getAccountName());
                             result.setComment(in.getComment());
                             session.save(result);
 

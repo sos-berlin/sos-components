@@ -61,8 +61,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
             String controllerId = workflowsFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken)
-                    .getWorkflows().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,7 +76,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
                 List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders, getJocError(),
-                        getAccount());
+                        getAccountName());
                 Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, ws.stream().map(Workflow::getPath).map(
                         JocInventory::pathToName));
                 if (!wTags.isEmpty()) {
@@ -88,7 +87,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 }
             } else {
                 workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
-                        getJocError(), getAccount()));
+                        getJocError(), getAccountName()));
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));
 

@@ -41,7 +41,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicJocPermissions(accessToken).getDailyPlan().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicJocPermissions().getDailyPlan().getView());
             if (response != null) {
                 return response;
             }
@@ -85,7 +85,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             SubmissionsDeleteRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsDeleteRequest.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getJocPermissions(accessToken).map(p -> p.getDailyPlan().getManage()));
+            JOCDefaultResponse response = initPermissions(controllerId, getJocPermissions().map(p -> p.getDailyPlan().getManage()));
             if (response != null) {
                 return response;
             }

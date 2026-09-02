@@ -149,7 +149,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 workflowNames.addAll(OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState).toList());
             }
             
-            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getModify()), workflowNames);
             if (response != null) {
                 return response;
@@ -160,7 +160,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
                 setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
                 
-                response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                         .getManagePositions()), workflowNames);
                 if (response != null) {
                     return response;
@@ -1196,7 +1196,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     private DailyPlanRunner getDailyPlanRunner(boolean withSubmit, Date dailyPlanDate) {
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setUserAccount(getAccountName());
         settings.setOverwrite(true);
         settings.setSubmit(withSubmit);
         settings.setTimeZone(getSettings().getTimeZone());
@@ -1370,7 +1370,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+            settings.setUserAccount(getAccountName());
             settings.setOverwrite(false);
             settings.setSubmit(true);
             settings.setTimeZone(getSettings().getTimeZone());
@@ -1406,7 +1406,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dailyPlanDate);
-        item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        item.setUserAccount(getAccountName());
         return item;
     }
 

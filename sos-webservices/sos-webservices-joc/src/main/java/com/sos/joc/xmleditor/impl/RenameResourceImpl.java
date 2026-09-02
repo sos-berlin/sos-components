@@ -81,7 +81,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         item.setConfigurationDraftJson(null);
         item.setSchemaLocation(in.getSchemaIdentifier());
         item.setAuditLogId(Long.valueOf(0));// TODO
-        item.setAccount(getAccount());
+        item.setAccount(getAccountName());
         session.save(item);
         return item;
     }
@@ -91,7 +91,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         item.setName(name);
         item.setSchemaLocation(in.getSchemaIdentifier());
         // item.setAuditLogId(Long.valueOf(0));// TODO
-        item.setAccount(getAccount());
+        item.setAccount(getAccountName());
         session.update(item);
         return item;
     }

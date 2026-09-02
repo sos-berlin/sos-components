@@ -33,7 +33,7 @@ public class FavoritesDeleteImpl extends JOCResourceImpl implements IFavoritesDe
                 return jocDefaultResponse;
             }
             
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             connection.beginTransaction();

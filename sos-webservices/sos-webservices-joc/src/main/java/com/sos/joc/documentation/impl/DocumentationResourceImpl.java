@@ -46,7 +46,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 initLogging(request, null, CategoryType.DOCUMENTATIONS);
             } else {
                 initLogging(request, null, accessToken, CategoryType.DOCUMENTATIONS);
-                JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getDocumentations().getView());
+                JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getDocumentations().getView());
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;
                 }

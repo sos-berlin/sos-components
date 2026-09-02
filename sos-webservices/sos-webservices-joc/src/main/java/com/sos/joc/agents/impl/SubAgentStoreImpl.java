@@ -56,8 +56,7 @@ public class SubAgentStoreImpl extends JOCResourceImpl implements ISubAgentStore
 
             String controllerId = subAgentsParam.getControllerId();
             String agentId = subAgentsParam.getAgentId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

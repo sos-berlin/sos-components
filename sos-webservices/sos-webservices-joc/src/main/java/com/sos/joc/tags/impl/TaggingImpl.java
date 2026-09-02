@@ -52,7 +52,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         SOSHibernateSession session = null;
         try {
             RequestFilter in =  initRequest(IMPL_PATH_TAGGING, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -158,7 +158,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             filterBytes = initLogging(IMPL_FOLDER_TAGGING, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, RequestModifyFilter.class);
             RequestModifyFilter in =  Globals.objectMapper.readValue(filterBytes, RequestModifyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -249,7 +249,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         SOSHibernateSession session = null;
         try {
             RequestFilter in =  initRequest(IMPL_PATH_TAGS, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

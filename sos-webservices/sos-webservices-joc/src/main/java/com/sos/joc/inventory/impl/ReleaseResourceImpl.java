@@ -107,7 +107,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, ReleaseFilter.class, true);
             ReleaseFilter in = Globals.objectMapper.readValue(inBytes, ReleaseFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response != null) {
                 return response;
             }
@@ -799,7 +799,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-
+            cancelOrderImpl.setCurrentAccount(this);
 
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
             if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
@@ -814,10 +814,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 orderFilter.setStates(getOrderStatesForFilter());
             }
             if (orderFilter.getSchedulePaths() != null && !orderFilter.getSchedulePaths().isEmpty()) {
-                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                        xAccessToken);
+                Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
                 Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                        ordersPerController, xAccessToken);
+                        ordersPerController);
                 for (String controllerId : cancelOrderResponsePerController.keySet()) {
                     futures.add(cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                         if (ccr.getException().isEmpty()) {
@@ -845,6 +844,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private void recreateOrders(ReleaseFilter filter, List<String> schedulePaths, Set<String> controllerIds, String xAccessToken, SOSHibernateSession session) {
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
+            ordersGenerate.setCurrentAccount(this);
             boolean successful = false;
             if (schedulePaths != null && !schedulePaths.isEmpty()) {
 

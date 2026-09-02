@@ -36,23 +36,13 @@ public class DeployImpl extends ADeploy implements IDeploy {
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validate(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog());
 
-            if(deployFilter.getTransactionId() == null || deployFilter.getTransactionId().isEmpty()) {
-                deployFilter.setTransactionId(UUID.randomUUID().toString());
-            }
-            new Thread(() -> {
-                try {
-                    deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
-                } catch (Exception e) {
-                    LOGGER.error(e.toString());
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e), xAccessToken, getJocError(), null);
-                }
-            }, "deploy-" + deployFilter.getTransactionId()).start();
+            deploy(xAccessToken, deployFilter, dbAuditlog);
 
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
@@ -60,4 +50,18 @@ public class DeployImpl extends ADeploy implements IDeploy {
         }
     }
     
+    public void deploy(String xAccessToken, DeployFilter deployFilter, DBItemJocAuditLog dbAuditlog) {
+        if(deployFilter.getTransactionId() == null || deployFilter.getTransactionId().isEmpty()) {
+            deployFilter.setTransactionId(UUID.randomUUID().toString());
+        }
+        new Thread(() -> {
+            try {
+                deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
+            } catch (Exception e) {
+                LOGGER.error(e.toString());
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), xAccessToken, getJocError(), null);
+            }
+        }, "deploy-" + deployFilter.getTransactionId()).start();
+    }
+
 }

@@ -38,7 +38,7 @@ public class LinkFolderImpl extends JOCResourceImpl implements ILinkFolder {
             linkFolderFilter = initLogging(API_CALL, linkFolderFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(linkFolderFilter, LinkFolderFilter.class);
             LinkFolderFilter filter = Globals.objectMapper.readValue(linkFolderFilter, LinkFolderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

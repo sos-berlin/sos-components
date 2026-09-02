@@ -60,9 +60,9 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             TransferId in = Globals.objectMapper.readValue(inBytes, TransferId.class);
 
             Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                    availableController -> getBasicControllerPermissions(availableController, accessToken).getView()).collect(Collectors.toSet());
+                    availableController -> getBasicControllerPermissions(availableController).getView()).collect(Collectors.toSet());
 
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
@@ -105,12 +105,12 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
-                        availableController, accessToken).getView()).collect(Collectors.toSet());
-            } else if (getBasicControllerPermissions(controllerId, accessToken).getView()) {
+                        availableController).getView()).collect(Collectors.toSet());
+            } else if (getBasicControllerPermissions(controllerId).getView()) {
                 allowedControllers = Collections.singleton(controllerId);
             }
 
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

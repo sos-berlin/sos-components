@@ -12,11 +12,8 @@ import com.sos.commons.xml.transform.SOSXmlTransformer;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.inventory.impl.StoreConfigurationResourceImpl;
-import com.sos.joc.model.common.Err;
-import com.sos.joc.model.common.Err420;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -35,11 +32,11 @@ public class StandardYADEJobResourceHandler {
     // XML already validated - so not empty etc
     public static void storeAndDeploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in, Document doc)
             throws Exception {
-        StandardYADEJobResource yadeJobResource = store(accessToken, in, doc);
+        StandardYADEJobResource yadeJobResource = store(impl, in, doc);
         deploy(impl, accessToken, in, yadeJobResource);
     }
 
-    private static StandardYADEJobResource store(final String accessToken, final DeployConfiguration in, Document doc) throws Exception {
+    private static StandardYADEJobResource store(final StandardYADEDeployResourceImpl impl, final DeployConfiguration in, Document doc) throws Exception {
         StandardYADEJobResource yadeJobResource = StandardYADEJobResource.get(doc);
         if (yadeJobResource == null) {
             throw new SOSMissingDataException("[Configurations/JobResource]No JobResource configured for deployment");
@@ -49,7 +46,7 @@ public class StandardYADEJobResourceHandler {
         }
 
         // call JOC API inventory/store
-        callJOCAPIInventoryStore(accessToken, yadeJobResource, doc, in.getConfiguration());
+        callJOCAPIInventoryStore(impl, yadeJobResource, doc, in.getConfiguration());
         return yadeJobResource;
     }
 
@@ -62,8 +59,8 @@ public class StandardYADEJobResourceHandler {
                 JocXmlEditor.YADE_TRANSFORM_SCHEMA_CURRENT_TO_MERGED_LEGACY_RESOURCE_PATH);
     }
 
-    private static void callJOCAPIInventoryStore(final String accessToken, final StandardYADEJobResource yadeJobResource, final Document doc2,
-            final String xml) throws Exception {
+    private static void callJOCAPIInventoryStore(final StandardYADEDeployResourceImpl impl, final StandardYADEJobResource yadeJobResource,
+            final Document doc2, final String xml) throws Exception {
 
         // 1) Prepare JOC API call inventory/store - create filter
         JobResource jr = null;
@@ -114,8 +111,10 @@ public class StandardYADEJobResourceHandler {
         }
 
         // 2) JOC API call inventory/store
-        JOCDefaultResponse response = new StoreConfigurationResourceImpl().store(accessToken, Globals.objectMapper.writeValueAsBytes(co));
-        checkResponse(response);
+        StoreConfigurationResourceImpl storeImpl = new StoreConfigurationResourceImpl();
+        storeImpl.setCurrentAccount(impl);
+        storeImpl.store(co);
+        //checkResponse(response);
     }
 
     private static void deploy(final StandardYADEDeployResourceImpl impl, final String accessToken, final DeployConfiguration in,
@@ -142,33 +141,33 @@ public class StandardYADEJobResourceHandler {
         impl.deploy(accessToken, filter, dbAuditlog, Globals.getJocSecurityLevel(), ADeploy.API_CALL);
     }
 
-    private static void checkResponse(JOCDefaultResponse response) throws Exception {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[checkResponse]" + (response.getEntity() == null ? response : response.getEntity()));
-        }
-
-        if (response.getStatus() != 200) {
-            StringBuilder msg = new StringBuilder();
-            if (response.getEntity() == null) {
-                msg.append(response);
-            } else {
-                if (response.getEntity() instanceof Err420) {
-                    Err420 err = (Err420) response.getEntity();
-                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
-                    msg.append("[").append(err.getError().getCode()).append("]");
-                    msg.append(err.getError().getMessage());
-
-                } else if (response.getEntity() instanceof Err) {
-                    Err err = (Err) response.getEntity();
-                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
-                    msg.append("[").append(err.getCode()).append("]");
-                    msg.append(err.getMessage());
-                } else {
-                    msg.append(response.getEntity());
-                }
-            }
-            throw new Exception("[" + StoreConfigurationResourceImpl.IMPL_PATH + "]" + msg);
-        }
-    }
+//    private static void checkResponse(JOCDefaultResponse response) throws Exception {
+//        if (LOGGER.isDebugEnabled()) {
+//            LOGGER.debug("[checkResponse]" + (response.getEntity() == null ? response : response.getEntity()));
+//        }
+//
+//        if (response.getStatus() != 200) {
+//            StringBuilder msg = new StringBuilder();
+//            if (response.getEntity() == null) {
+//                msg.append(response);
+//            } else {
+//                if (response.getEntity() instanceof Err420) {
+//                    Err420 err = (Err420) response.getEntity();
+//                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
+//                    msg.append("[").append(err.getError().getCode()).append("]");
+//                    msg.append(err.getError().getMessage());
+//
+//                } else if (response.getEntity() instanceof Err) {
+//                    Err err = (Err) response.getEntity();
+//                    msg.append("[").append(err.getClass().getSimpleName()).append("]");
+//                    msg.append("[").append(err.getCode()).append("]");
+//                    msg.append(err.getMessage());
+//                } else {
+//                    msg.append(response.getEntity());
+//                }
+//            }
+//            throw new Exception("[" + StoreConfigurationResourceImpl.IMPL_PATH + "]" + msg);
+//        }
+//    }
 
 }

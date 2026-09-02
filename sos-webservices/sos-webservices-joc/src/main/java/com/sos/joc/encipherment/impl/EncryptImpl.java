@@ -44,7 +44,7 @@ public class EncryptImpl extends JOCResourceImpl implements IEncrypt {
             encryptFilter = initLogging(API_CALL, encryptFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(encryptFilter, EncryptRequestFilter.class);
             EncryptRequestFilter filter = Globals.objectMapper.readValue(encryptFilter, EncryptRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getEncipherment().getEncrypt()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getEncipherment().getEncrypt()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

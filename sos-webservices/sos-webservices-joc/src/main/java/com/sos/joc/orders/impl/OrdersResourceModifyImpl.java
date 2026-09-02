@@ -110,7 +110,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getJOrders(Action.CONTINUE, modifyOrders, currentState);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
+                    .getControllerId()).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -129,7 +129,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getJOrders(Action.SUSPEND, modifyOrders, currentState);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getSuspendResume()), getWorkflowNamesFromJOrders(jOrders));
+                    .getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -148,9 +148,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getOrdersForResume(modifyOrders, currentState);
             boolean hasNotFailedOrders = jOrders.stream().anyMatch(OrdersHelper::isNotFailed);
             
-            List<Boolean> permSuspendResume = getControllerPermissions(modifyOrders.getControllerId(), accessToken).map(p -> p.getOrders()
+            List<Boolean> permSuspendResume = getControllerPermissions(modifyOrders.getControllerId()).map(p -> p.getOrders()
                     .getSuspendResume()).toList();
-            List<Boolean> permResumeFailed = getControllerPermissions(modifyOrders.getControllerId(), accessToken).map(p -> p.getOrders()
+            List<Boolean> permResumeFailed = getControllerPermissions(modifyOrders.getControllerId()).map(p -> p.getOrders()
                     .getResumeFailed()).toList();
 
             JOCDefaultResponse jocDefaultResponse = null;
@@ -180,7 +180,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getJOrders(Action.CANCEL, modifyOrders, currentState);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getCancel()), getWorkflowNamesFromJOrders(jOrders));
+                    .getControllerId()).map(p -> p.getOrders().getCancel()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -199,7 +199,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getJOrders(Action.ANSWER_PROMPT, modifyOrders, currentState);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getConfirm()), getWorkflowNamesFromJOrders(jOrders));
+                    .getControllerId()).map(p -> p.getOrders().getConfirm()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -218,7 +218,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<JOrder> jOrders = getJOrders(Action.CHANGE, modifyOrders, currentState);
             
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
+                    .getControllerId()).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -235,7 +235,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getBasicControllerPermissions(modifyOrders
-                    .getControllerId(), accessToken).getOrders().getView());
+                    .getControllerId()).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

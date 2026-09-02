@@ -42,7 +42,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
             JsonValidator.validate(inBytes, ReleasableFilter.class, true);
             ReleasableFilter in = Globals.objectMapper.readValue(inBytes, ReleasableFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
 
             if (response == null) {
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasable(in)));

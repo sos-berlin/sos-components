@@ -132,7 +132,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
                     item.setConfigurationDraft(null);
                     item.setConfigurationDraftJson(null);
                 }
-                item.setAccount(getAccount());
+                item.setAccount(getAccountName());
                 session.update(item);
 
                 if (LOGGER.isTraceEnabled()) {

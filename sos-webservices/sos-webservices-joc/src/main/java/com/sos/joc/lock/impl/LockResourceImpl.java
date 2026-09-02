@@ -39,8 +39,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LockFilter.class);
             LockFilter filter = Globals.objectMapper.readValue(filterBytes, LockFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)
-                    .getLocks().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId()).getLocks().getView());
             if (response != null) {
                 return response;
             }
@@ -71,7 +70,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
                     .getDailyPlanTimeZone(), session);
-            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccount()));
+            dc.setHasNote(new InventoryNotesDBLayer(session).hasNote(dc.getInvId(), getAccountName()));
             
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));

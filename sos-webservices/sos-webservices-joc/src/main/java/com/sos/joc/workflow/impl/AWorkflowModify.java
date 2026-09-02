@@ -38,12 +38,12 @@ public abstract class AWorkflowModify extends JOCResourceImpl {
     }
 
     protected JOCDefaultResponse initPermission(String controllerId, String workflow, String accessToken) {
-        return initWorkflowPermissions(controllerId, hasPermission(controllerId, accessToken), Collections.singleton(JocInventory.pathToName(
+        return initWorkflowPermissions(controllerId, hasPermission(controllerId), Collections.singleton(JocInventory.pathToName(
                 workflow)));
     }
 
-    private Stream<Boolean> hasPermission(String controllerId, String accessToken) {
-        return getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders().getManagePositions());
+    private Stream<Boolean> hasPermission(String controllerId) {
+        return getControllerPermissions(controllerId).map(p -> p.getOrders().getManagePositions());
     }
     
     protected void thenAcceptHandler(Either<Problem, ControllerCommand.Response> either, String controllerId,

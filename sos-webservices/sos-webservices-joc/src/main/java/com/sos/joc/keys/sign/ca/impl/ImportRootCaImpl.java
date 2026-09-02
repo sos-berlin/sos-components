@@ -61,8 +61,7 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             byte[] fakeRequest = String.format("{\"filename\":\"%s\"}", PublishUtils.getImportFilename(body)).getBytes(StandardCharsets.UTF_8);
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,9 +76,8 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                accountName =  getAccountName();
             }
-            String publicKey = null;
             if (certificateFromFile != null) {
                 try {
                     X509Certificate cert = KeyUtil.getX509Certificate(certificateFromFile);

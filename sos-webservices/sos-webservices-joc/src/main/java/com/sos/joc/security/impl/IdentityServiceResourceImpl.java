@@ -53,8 +53,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -114,7 +113,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityService identityService = Globals.objectMapper.readValue(body, IdentityService.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -196,7 +195,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServiceRename.class);
             IdentityServiceRename identityServiceRename = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -244,7 +243,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -292,8 +291,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServiceFilter.class);
             IdentityServiceFilter identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -354,7 +352,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             JsonValidator.validateFailFast(body, IdentityServicesFilter.class);
             IdentityServicesFilter identityServices = Globals.objectMapper.readValue(body, IdentityServicesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

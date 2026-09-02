@@ -65,7 +65,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             ControllerIdReq controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controllerIdObj.getControllerId();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId, accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

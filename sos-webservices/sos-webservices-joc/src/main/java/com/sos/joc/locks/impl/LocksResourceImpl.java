@@ -52,7 +52,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LocksFilter.class);
             LocksFilter filter = Globals.objectMapper.readValue(filterBytes, LocksFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(), accessToken)
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
                     .getLocks().getView());
             if (response != null) {
                 return response;
@@ -104,7 +104,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             }
             JocError jocError = getJocError();
             if (contents != null) {
-                Map<String, HasNote> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue(), getAccount());
+                Map<String, HasNote> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue(), getAccountName());
                 
                 answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
                     try {

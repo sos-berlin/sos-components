@@ -20,7 +20,7 @@ public class ReadEmailSettingsImpl extends JOCResourceImpl implements IReadEmail
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts().getView());
+            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (response != null) {
                 return response;
             }

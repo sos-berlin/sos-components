@@ -43,11 +43,10 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             connection.setAutoCommit(false);
             connection.beginTransaction();
-            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
+            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, getAccountName());
             if (apiCall.equals(API_CALL_SHARE)) {
                 favorites.getFavoriteIds().stream().forEach(f -> dbLayer.shareFavorite(f));
             } else {

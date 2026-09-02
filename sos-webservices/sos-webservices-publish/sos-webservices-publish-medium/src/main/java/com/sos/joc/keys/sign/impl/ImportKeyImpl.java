@@ -60,7 +60,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates()
                     .getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -69,7 +69,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             storeAuditLog(filter.getAuditLog());
             
             stream = body.getEntityAs(InputStream.class);
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
             JocKeyPair keyPair = null;
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);

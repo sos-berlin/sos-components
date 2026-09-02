@@ -46,7 +46,7 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.DAILYPLAN);
             JsonValidator.validate(filterBytes, ScheduleRunTimeRequest.class);
             ScheduleRunTimeRequest in = Globals.objectMapper.readValue(filterBytes, ScheduleRunTimeRequest.class);
-            JocPermissions perms = getBasicJocPermissions(accessToken);
+            JocPermissions perms = getBasicJocPermissions();
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, perms.getCalendars().getView() || perms.getDailyPlan().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

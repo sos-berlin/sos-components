@@ -44,11 +44,10 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
-            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
+            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, getAccountName());
 
             Map<FavoriteType, Set<StoreFavorite>> favoritesMap = favorites.getFavorites().stream().collect(Collectors.groupingBy(
                     StoreFavorite::getType, Collectors.toSet()));
@@ -83,11 +82,10 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_RENAME);
             connection.setAutoCommit(false);
             connection.beginTransaction();
-            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
+            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, getAccountName());
 
             for (RenameFavorite favorite : favorites.getFavoriteIds()) {
                 DBItemInventoryFavorite dbOldItem = dbLayer.getFavorite(favorite.getOldName(), favorite.getType());

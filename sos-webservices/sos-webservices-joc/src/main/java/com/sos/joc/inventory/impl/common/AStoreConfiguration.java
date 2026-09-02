@@ -201,8 +201,7 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
                     if (schedule.getOrderParameterisations() != null && schedule.getOrderParameterisations().parallelStream().anyMatch(
                             requestHasPositionSettings)) {
                         boolean hasManagePositionsPermission = Proxies.getControllerDbInstances().keySet().parallelStream().anyMatch(
-                                availableController -> getBasicControllerPermissions(availableController, getAccessToken()).getOrders()
-                                        .getManagePositions());
+                                availableController -> getBasicControllerPermissions(availableController).getOrders().getManagePositions());
                         if (!hasManagePositionsPermission) {
                             throw new JocException(new JocError("Access denied for setting start-/endpositions"));
                         }

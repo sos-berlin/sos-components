@@ -45,7 +45,7 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
             commonFilter = initLogging(API_CALL, commonFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(commonFilter, CommonFilter.class);
             CommonFilter filter = Globals.objectMapper.readValue(commonFilter, CommonFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -63,7 +63,7 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                account = getAccountName();
             }
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             Path backupPath = GitCommandUtils.backupGitGlobalConfigFile();

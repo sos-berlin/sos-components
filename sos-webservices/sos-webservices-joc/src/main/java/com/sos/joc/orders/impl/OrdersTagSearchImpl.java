@@ -26,7 +26,7 @@ public class OrdersTagSearchImpl extends JOCResourceImpl implements ITagSearchRe
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId, accessToken).getOrders()
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (response != null) {
                 return response;

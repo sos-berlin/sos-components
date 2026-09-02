@@ -38,11 +38,10 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             connection.beginTransaction();
-            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
+            FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, getAccountName());
 
             Map<FavoriteType, Set<FavoriteSharedIdentifier>> favoritesMap = favorites.getSharedFavoriteIds().stream().collect(Collectors.groupingBy(
                     FavoriteSharedIdentifier::getType, Collectors.toSet()));

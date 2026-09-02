@@ -121,7 +121,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                 dailyPlanOrderItems = Collections.emptyList();
             }
 
-            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getCreate()), dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet()));
             if (response != null) {
                 return response;
@@ -642,7 +642,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
 
     private DailyPlanRunner getDailyPlanRunner(boolean withSubmit, Date dailyPlanDate) {
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setUserAccount(getAccountName());
         settings.setOverwrite(true);
         settings.setSubmit(withSubmit);
         settings.setTimeZone(getSettings().getTimeZone());
@@ -817,7 +817,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
 
         if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+            settings.setUserAccount(getAccountName());
             settings.setOverwrite(false);
             settings.setSubmit(true);
             settings.setTimeZone(getSettings().getTimeZone());
@@ -862,7 +862,7 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
         item.setId(null);
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dailyPlanDate);
-        item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        item.setUserAccount(getAccountName());
         return item;
     }
 

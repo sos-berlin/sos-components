@@ -186,6 +186,7 @@ public class StoreDeployments {
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 if (dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
+                    // TODO JOC-2265 ordersGenerate.setCurrentAccount(this);
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());

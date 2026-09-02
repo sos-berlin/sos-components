@@ -33,7 +33,7 @@ public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.CERTIFICATES);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

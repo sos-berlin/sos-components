@@ -50,7 +50,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 String controllerId = entry.getKey();
                 Set<String> workflows = ordersPerController.getOrDefault(controllerId, Collections.emptyList()).stream().map(
                         DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet());
-                response = initWorkflowPermissions(accessToken, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                         .getCreate()), workflows);
                 if (response != null) {
                     return response;

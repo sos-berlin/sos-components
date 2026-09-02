@@ -41,8 +41,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             boolean treeForDescriptors = treeBody.getForDescriptors() == Boolean.TRUE;
             
             String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
-            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getBasicJocPermissions(accessToken), getBasicControllerPermissions(
-                    controllerId, accessToken), treeForInventory, treeForInventoryTrash, treeForDescriptors, treeForDescriptorsTrash);
+            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getBasicJocPermissions(), getBasicControllerPermissions(
+                    controllerId), treeForInventory, treeForInventoryTrash, treeForDescriptors, treeForDescriptorsTrash);
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, types.size() > 0);
             if (jocDefaultResponse != null) {

@@ -79,7 +79,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             }
             RedeploySyncFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeploySyncFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

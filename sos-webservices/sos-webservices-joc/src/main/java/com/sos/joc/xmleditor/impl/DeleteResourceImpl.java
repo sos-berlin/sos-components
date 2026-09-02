@@ -49,7 +49,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
                     break;
                 default:
                     response = responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in,
-                            getAccount(), 0L)));
+                            getAccountName(), 0L)));
                     break;
                 }
             }

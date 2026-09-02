@@ -70,7 +70,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("configurationType", configuration.getConfigurationType());
             checkRequiredParameter("configurationItem", configuration.getConfigurationItem());
 
-            String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_SAVE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
@@ -123,7 +123,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 Optional<JsonObject> oldJsonObj = StoreSettingsImpl.getJsonObject(oldConfiguration);
                 Optional<JsonObject> newJsonObj = StoreSettingsImpl.getJsonObject(configuration.getConfigurationItem());
 
-                if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
+                if (!getBasicJocPermissions().getAdministration().getSettings().getManage()) {
                     if (get4EyesJocPermissions().getAdministration().getSettings().getManage()) {
                         JOCDefaultResponse response = approvalRequestResponse();
                         if (response != null) {
@@ -139,7 +139,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             case IAM:
-                if (!getBasicJocPermissions(accessToken).getAdministration().getAccounts().getManage()) {
+                if (!getBasicJocPermissions().getAdministration().getAccounts().getManage()) {
                     return accessDeniedResponse();
                 }
                 if (get4EyesJocPermissions().getAdministration().getAccounts().getManage()) {
@@ -178,7 +178,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     boolean owner = account.equals(dbItem.getAccount());
 
                     if (!owner) {
-                        if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
+                        if (!getBasicJocPermissions().getAdministration().getCustomization().getManage()) {
                             return accessDeniedResponse();
                         }
                         if (get4EyesJocPermissions().getAdministration().getCustomization().getManage()) {
@@ -189,7 +189,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         }
                         boolean shareIsChanged = (dbItem.getShared() && !shouldBeShared) || (!dbItem.getShared() && shouldBeShared);
                         if (shareIsChanged) {
-                            if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                            if (!getBasicJocPermissions().getAdministration().getCustomization().getShare()) {
                                 return accessDeniedResponse();
                             }
                             if (get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {
@@ -302,11 +302,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // }
                 break;
             default:
-                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission or it is shared
-                boolean owner = account.equals(dbItem.getAccount());
+                boolean owner = getAccountName().equals(dbItem.getAccount());
                 if (!owner && !dbItem.getShared()) {
-                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getView()) {
+                    if (!getBasicJocPermissions().getAdministration().getCustomization().getView()) {
                         return accessDeniedResponse();
                     }
                 }
@@ -319,7 +318,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (confType.equals(ConfigurationType.GLOBALS)) {
                 // user setting from conf.getConfigurationItem() are always sent independent the settings:view permission
                 String confJson = conf.getConfigurationItem();
-                if (confJson != null && !getBasicJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                if (confJson != null && !getBasicJocPermissions().getAdministration().getSettings().getView()) {
                     // delete all except user setting from conf.getConfigurationItem()
                     try {
                         JsonReader rdr = Json.createReader(new StringReader(confJson));
@@ -388,14 +387,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
-                JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getSettings()
+                JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getSettings()
                         .getManage()));
                 if (response != null) {
                     return response;
                 }
                 break;
             default:
-                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
+                String account = getAccountName();
                 // owner doesn't need any permission
                 boolean owner = ".".equals(dbItem.getAccount()) || account.equals(dbItem.getAccount());
 
@@ -408,11 +407,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     // }
                     JOCDefaultResponse response1 = null;
                     if (!dbItem.getShared()) {
-                        response1 = initPermissions(null, andPermissions(getJocPermissions(accessToken).map(p -> p.getAdministration()
-                                .getCustomization().getManage()), getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization()
+                        response1 = initPermissions(null, andPermissions(getJocPermissions().map(p -> p.getAdministration()
+                                .getCustomization().getManage()), getJocPermissions().map(p -> p.getAdministration().getCustomization()
                                         .getShare())));
                     } else {
-                        response1 = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization()
+                        response1 = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCustomization()
                                 .getManage()));
                     }
                     if (response1 != null) {
@@ -460,12 +459,12 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // Nothing to do, always shared = false
                 break;
             default:
-                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
+                String account = getAccountName();
                 // owner doesn't need any permission
                 boolean owner = account.equals(dbItem.getAccount());
 
                 if (!owner) {
-                    List<Boolean> perms = getJocPermissions(accessToken).map(p -> p.getAdministration().getCustomization().getShare()).toList();
+                    List<Boolean> perms = getJocPermissions().map(p -> p.getAdministration().getCustomization().getShare()).toList();
                     if (!perms.get(0)) {
                         return accessDeniedResponse();
                     }
@@ -517,12 +516,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // Nothing to do, always shared = false
                 break;
             default:
-                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission
-                boolean owner = account.equals(dbItem.getAccount());
+                boolean owner = getAccountName().equals(dbItem.getAccount());
 
                 if (!owner) {
-                    if (!getBasicJocPermissions(accessToken).getAdministration().getCustomization().getShare()) {
+                    if (!getBasicJocPermissions().getAdministration().getCustomization().getShare()) {
                         return accessDeniedResponse();
                     }
                     if (get4EyesJocPermissions().getAdministration().getCustomization().getShare()) {

@@ -65,7 +65,7 @@ public class LogImpl2 extends JOCResourceImpl implements ILogResource, IJocLog {
         try {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -113,7 +113,7 @@ public class LogImpl2 extends JOCResourceImpl implements ILogResource, IJocLog {
             } else {
                 initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -133,7 +133,7 @@ public class LogImpl2 extends JOCResourceImpl implements ILogResource, IJocLog {
             filterBytes = initLogging(API_CALL_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, RunningLogFilter.class);
             RunningLogEvents jocLog = Globals.objectMapper.readValue(filterBytes, RunningLogEvents.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

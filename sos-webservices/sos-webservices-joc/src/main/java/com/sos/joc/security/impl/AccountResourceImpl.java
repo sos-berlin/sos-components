@@ -85,7 +85,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -142,7 +142,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, Account.class);
             Account account = Globals.objectMapper.readValue(body, Account.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -279,7 +279,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountRename.class);
             AccountRename accountRename = Globals.objectMapper.readValue(body, AccountRename.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -331,7 +331,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountsFilter.class);
             AccountsFilter accountsFilter = Globals.objectMapper.readValue(body, AccountsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -384,8 +384,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountListFilter.class);
             AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -450,8 +449,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -639,7 +637,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

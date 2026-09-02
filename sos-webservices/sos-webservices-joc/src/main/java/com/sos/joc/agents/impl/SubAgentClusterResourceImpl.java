@@ -54,18 +54,17 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
             
             String controllerId = subAgentClusterParameter.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
-            boolean adminPermitted = getBasicJocPermissions(accessToken).getAdministration().getControllers().getView();
+            boolean adminPermitted = getBasicJocPermissions().getAdministration().getControllers().getView();
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 if (Proxies.getControllerDbInstances().isEmpty()) {
-                    permitted = getBasicControllerDefaultPermissions(accessToken).getAgents().getView() || getBasicControllerDefaultPermissions(
-                            accessToken).getView() || adminPermitted;
+                    permitted = getBasicControllerDefaultPermissions().getAgents().getView() || getBasicControllerDefaultPermissions().getView() 
+                            || adminPermitted;
                 } else {
                     allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                            availableController -> getBasicControllerPermissions(availableController, accessToken).getAgents().getView()
-                                    || getBasicControllerPermissions(availableController, accessToken).getView() || adminPermitted).collect(Collectors
-                                            .toSet());
+                            availableController -> getBasicControllerPermissions(availableController).getAgents().getView()
+                                    || getBasicControllerPermissions(availableController).getView() || adminPermitted).collect(Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -73,8 +72,8 @@ public class SubAgentClusterResourceImpl extends JOCResourceImpl implements ISub
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getBasicControllerPermissions(controllerId, accessToken).getAgents().getView() || getBasicControllerPermissions(
-                        controllerId, accessToken).getView() || adminPermitted;
+                permitted = getBasicControllerPermissions(controllerId).getAgents().getView() || getBasicControllerPermissions(controllerId).getView() 
+                        || adminPermitted;
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);

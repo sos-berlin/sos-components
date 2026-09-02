@@ -31,15 +31,14 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId, accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SOSAuthCurrentAccount sosAuthCurrentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
-            JOCPreferences jocPreferences = new JOCPreferences(sosAuthCurrentAccount.getAccountname());
+            JOCPreferences jocPreferences = new JOCPreferences(getAccountName());
             String selectedInstance = controllerId;
             jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
-            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(sosAuthCurrentAccount);
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(getCurrentAccount());
             sosSessionHandler.setAttribute(SESSION_KEY, selectedInstance);
 
             return responseStatusJSOk(Date.from(Instant.now()));

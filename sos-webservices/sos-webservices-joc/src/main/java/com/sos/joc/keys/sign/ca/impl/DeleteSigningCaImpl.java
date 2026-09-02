@@ -30,8 +30,7 @@ public class DeleteSigningCaImpl extends JOCResourceImpl implements IDeleteSigni
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, DeleteCaFilter.class);
             DeleteCaFilter deleteCaFilter = Globals.objectMapper.readValue(filter, DeleteCaFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -45,7 +44,7 @@ public class DeleteSigningCaImpl extends JOCResourceImpl implements IDeleteSigni
             if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                accountName = getAccountName();
             }
             
             DBItemInventoryCertificate dbCert = dbLayerKeys.getSigningRootCaCertificate(accountName);

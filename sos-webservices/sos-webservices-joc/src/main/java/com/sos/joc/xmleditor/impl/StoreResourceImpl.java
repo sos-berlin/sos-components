@@ -67,13 +67,13 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             }
 
             if (item == null) {
-                item = create(session, in, name, getAccount(), 0L); // TODO auditlogId
+                item = create(session, in, name, getAccountName(), 0L); // TODO auditlogId
 
             } else {
                 String currentConfiguration = SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration();
                 isChanged = JocXmlEditor.isChanged(item, currentConfiguration);
                 if (isChanged) {
-                    item = update(session, in, item, name, getAccount(), 0L); // TODO auditlogId
+                    item = update(session, in, item, name, getAccountName(), 0L); // TODO auditlogId
                 }
             }
             session.commit();

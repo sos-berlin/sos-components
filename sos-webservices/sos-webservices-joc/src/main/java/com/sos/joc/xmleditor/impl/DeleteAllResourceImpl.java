@@ -45,12 +45,12 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
             if (supportedTypes.get(true) != null) {
                 JOCDefaultResponse jocDefaultResponse = null;
                 if (in.getObjectTypes().contains(ObjectType.YADE) && in.getObjectTypes().contains(ObjectType.OTHER)) {
-                    jocDefaultResponse = initAndPermissions(null, getJocPermissions(accessToken).map(p -> p.getFileTransfer().getManage()),
-                            getJocPermissions(accessToken).map(p -> p.getOthers().getManage()));
+                    jocDefaultResponse = initAndPermissions(null, getJocPermissions().map(p -> p.getFileTransfer().getManage()),
+                            getJocPermissions().map(p -> p.getOthers().getManage()));
                 } else if (in.getObjectTypes().contains(ObjectType.YADE)) {
-                    jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getFileTransfer().getManage()));
+                    jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getFileTransfer().getManage()));
                 } else if (in.getObjectTypes().contains(ObjectType.OTHER)) {
-                    jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getOthers().getManage()));
+                    jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getOthers().getManage()));
                 }
                 
                 if (jocDefaultResponse != null) {

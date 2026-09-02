@@ -52,7 +52,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
         try {
             ControllerLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes, ControllerLogRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId()).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -89,7 +89,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
     public JOCDefaultResponse getLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
             ControllerLogRequest in = init(LOG_API_CALL, accessToken, filterBytes, ControllerLogRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId(), accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(in.getControllerId()).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -114,7 +114,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             KeyedLogRequest in = init(LOG_PREV_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -134,7 +134,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             NextLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -154,7 +154,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             NextLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
             String controllerId = logSession.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

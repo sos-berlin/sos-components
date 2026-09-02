@@ -35,7 +35,7 @@ public class UpdateOrderingImpl extends JOCResourceImpl implements IUpdateOrderi
             filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, UpdateOrderingFilter.class);
             UpdateOrderingFilter filter = Globals.objectMapper.readValue(filterBytes, UpdateOrderingFilter.class);
-            JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
+            JOCDefaultResponse response = initManageAccountPermissions();
             if (response != null) {
                 return response;
             }

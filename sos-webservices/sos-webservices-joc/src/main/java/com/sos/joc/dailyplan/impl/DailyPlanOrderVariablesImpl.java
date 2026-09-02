@@ -29,8 +29,7 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter in = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders().getView());
             if (response != null) {
                 return response;
             }

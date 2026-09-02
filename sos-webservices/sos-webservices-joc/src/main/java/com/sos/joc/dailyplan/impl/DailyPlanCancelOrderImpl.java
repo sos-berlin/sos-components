@@ -80,7 +80,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 String controllerId = entry.getKey();
                 Set<String> workflows = ordersPerController.getOrDefault(controllerId, Collections.emptyList()).stream().map(
                         DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet());
-                response = initWorkflowPermissions(accessToken, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                response = initWorkflowPermissions(accessToken, getControllerPermissions(controllerId).map(p -> p.getOrders()
                         .getCancel()), workflows);
                 if (response != null) {
                     return response;
@@ -94,7 +94,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in, String accessToken)
+    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in)
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
@@ -103,8 +103,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (!ordersPerControllerIds.isEmpty()) {
             ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getBasicControllerPermissions(
-                    availableController.getKey(), accessToken).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue));
+                    availableController.getKey()).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
             if (ordersPerControllerIds.keySet().isEmpty()) {
                 throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
@@ -114,7 +113,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     public Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrders(
-            Map<String, List<DBItemDailyPlanOrder>> ordersPerController, String accessToken) throws SOSHibernateException,
+            Map<String, List<DBItemDailyPlanOrder>> ordersPerController) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         
@@ -144,7 +143,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private Collection<CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
-            String accessToken, AuditParams auditLog) throws SOSHibernateException,
+            AuditParams auditLog) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
@@ -241,7 +240,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
 
-        Collection<CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrders(ordersPerController, accessToken, in
+        Collection<CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrders(ordersPerController, in
                 .getAuditLog());
 
         CompletableFuture.allOf(cancelOrderResponsePerController.toArray(CompletableFuture[]::new)).thenRun(() -> {

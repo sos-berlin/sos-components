@@ -28,7 +28,7 @@ import jakarta.ws.rs.Path;
 public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAuditLogDetailResource {
 
     private static final String API_CALL = "./audit_log/detail";
-    
+
     @Override
     public JOCDefaultResponse postAuditLogDetail(String accessToken, byte[] bytes) {
         // only an alias
@@ -43,7 +43,7 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
             JsonValidator.validateFailFast(bytes, AuditLogDetailFilter.class);
             AuditLogDetailFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogDetailFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -58,25 +58,25 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
             if (dbAuditLog != null) {
                 switch (dbAuditLog.getTypeAsEnum()) {
                 case CERTIFICATES:
-                    if (!getBasicJocPermissions(accessToken).getAdministration().getCertificates().getView()) {
+                    if (!getBasicJocPermissions().getAdministration().getCertificates().getView()) {
                         permitted = false;
                     }
                 case CONTROLLER:
-                    if (!dbAuditLog.getControllerId().equals(JocAuditLog.EMPTY_STRING) && !getBasicControllerPermissions(dbAuditLog.getControllerId(),
-                            accessToken).getView()) {
+                    if (!dbAuditLog.getControllerId().equals(JocAuditLog.EMPTY_STRING) && !getBasicControllerPermissions(dbAuditLog.getControllerId())
+                            .getView()) {
                         permitted = false;
                     }
                     break;
                 case DOCUMENTATIONS:
-                    if (!getBasicJocPermissions(accessToken).getDocumentations().getView()) {
+                    if (!getBasicJocPermissions().getDocumentations().getView()) {
                         permitted = false;
                     }
                 case INVENTORY:
-                    if (!getBasicJocPermissions(accessToken).getInventory().getView()) {
+                    if (!getBasicJocPermissions().getInventory().getView()) {
                         permitted = false;
                     }
                 case DAILYPLAN:
-                    if (!getBasicJocPermissions(accessToken).getDailyPlan().getView()) {
+                    if (!getBasicJocPermissions().getDailyPlan().getView()) {
                         permitted = false;
                     }
                     break;
@@ -102,8 +102,8 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
                         break;
                     case DEPLOYMENT:
                         Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                                availableController -> getBasicControllerPermissions(availableController, accessToken).getDeployments().getView()).collect(
-                                        Collectors.toSet());
+                                availableController -> getBasicControllerPermissions(availableController).getDeployments().getView())
+                                .collect(Collectors.toSet());
                         if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                             allowedControllers = Collections.emptySet();
                         }

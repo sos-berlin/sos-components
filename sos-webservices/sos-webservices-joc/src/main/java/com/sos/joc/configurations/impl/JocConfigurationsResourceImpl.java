@@ -88,7 +88,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     configurationsFilter.setObjectType(null);
 
                     defaultGlobalSettings = new ConfigurationGlobals().getClonedDefaults();
-                    if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                    if (!getBasicJocPermissions().getAdministration().getSettings().getView()) {
                         // read only user settings without permissions
                         if (defaultGlobalSettings != null) {
                             for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
@@ -121,7 +121,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
             // if profile is new then try default_profile_account from settings if exists
             // only processed if controllerId is set and exists and requested account is equal current account
-            String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
             Date now = Date.from(Instant.now());
             if (configurationsFilter.getConfigurationType() == null || ConfigurationType.PROFILE.equals(configurationsFilter
                     .getConfigurationType())) {
@@ -155,7 +155,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             }
 
             if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
-                boolean viewPerm = getBasicJocPermissions(accessToken).getAdministration().getCustomization().getView();
+                boolean viewPerm = getBasicJocPermissions().getAdministration().getCustomization().getView();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {
                     Configuration configuration = new Configuration();
                     configuration.setAccount(jocConfigurationDbItem.getAccount());
@@ -172,7 +172,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                     switch (configuration.getConfigurationType()) {
                     case GLOBALS:
-                        if (!getBasicJocPermissions(accessToken).getAdministration().getSettings().getView() && configuration
+                        if (!getBasicJocPermissions().getAdministration().getSettings().getView() && configuration
                                 .getConfigurationItem() != null) {
                             // read only user settings without permissions
                             try {
@@ -219,7 +219,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
             ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
                     .getCustomization().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -247,7 +247,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         try {
             body = initLogging(API_CALL_PROFILES, body, accessToken, CategoryType.SETTINGS);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

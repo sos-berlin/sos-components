@@ -103,13 +103,12 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY); 
             JsonValidator.validateFailFast(fakeRequest, ConvertCronFilter.class);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
             if (filter.getFolder() == null || filter.getFolder().isEmpty()) {
@@ -121,7 +120,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             
             // process uploaded cron file
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            String timezone = getTimezoneFromProfileConfiguration(hibernateSession, account);
+            String timezone = getTimezoneFromProfileConfiguration(hibernateSession, getAccountName());
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
             DBItemInventoryConfiguration calDbItem = invDbLayer.getCalendarByName(JocInventory.pathToName(filter.getCalendarName()));
             Calendar cal = Globals.objectMapper.readValue(calDbItem.getContent(), Calendar.class);

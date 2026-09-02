@@ -41,7 +41,7 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
     public JOCDefaultResponse postDownloadLog(String accessToken, byte[] filterBytes) {
         try {
             JOCLogRequest in = init(LOG_DOWNLOAD_API_CALL, accessToken, filterBytes, JOCLogRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -80,7 +80,7 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
     public JOCDefaultResponse getLog(String accessToken, String acceptEncoding, byte[] filterBytes) {
         try {
             JOCLogRequest in = init(LOG_API_CALL, accessToken, filterBytes, JOCLogRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -98,7 +98,7 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
         try {
             KeyedLogRequest in = init(LOG_PREV_API_CALL, accessToken, filterBytes, KeyedLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -115,7 +115,7 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
         try {
             NextLogRequest in = init(LOG_NEXT_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -132,7 +132,7 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
         try {
             NextLogRequest in = init(LOG_RUNNING_API_CALL, accessToken, filterBytes, NextLogRequest.class);
             LogSession logSession = LogHelper.getLogSession(accessToken, in.getLogToken());
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getGetLog()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getGetLog()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

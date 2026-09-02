@@ -54,7 +54,7 @@ public class GroupModifyImpl extends ATagsModifyImpl<DBItemInventoryTagGroup> im
             JsonValidator.validateFailFast(filterBytes, GroupTagsFilter.class);
             GroupTagsFilter modifyTags = Globals.objectMapper.readValue(filterBytes, GroupTagsFilter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

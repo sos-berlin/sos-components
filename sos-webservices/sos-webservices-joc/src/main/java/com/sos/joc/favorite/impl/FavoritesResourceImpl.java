@@ -45,7 +45,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             FavoriteDBLayer dbLayer = new FavoriteDBLayer(connection, account);
 

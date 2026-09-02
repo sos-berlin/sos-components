@@ -38,7 +38,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             generateKeyFilter = initLogging(API_CALL, generateKeyFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
             GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getAdministration()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
                     .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -54,7 +54,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 filter.setKeyAlgorithm(SOSKeyConstants.RSA_ALGORITHM_NAME);
             }
             JocKeyPair keyPair = null;
-            String accountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String accountName = getAccountName();
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;

@@ -56,8 +56,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -155,7 +154,7 @@ public class AgentsStandaloneCommandImpl extends JOCResourceImpl implements IAge
             JsonValidator.validateFailFast(filterBytes, DeployAgents.class);
             
             DeployAgents agentParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
-            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
+            Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {

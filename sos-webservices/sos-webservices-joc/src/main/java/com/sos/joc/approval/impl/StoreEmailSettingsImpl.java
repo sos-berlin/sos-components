@@ -31,7 +31,7 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, EmailSettings.class);
             EmailSettings in = Globals.objectMapper.readValue(filterBytes, EmailSettings.class);
-            JOCDefaultResponse response = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse response = initManageAccountPermissions();
             if (response != null) {
                 return response;
             }
@@ -52,7 +52,7 @@ public class StoreEmailSettingsImpl extends JOCResourceImpl implements IStoreEma
                 dbItem.setId(null);
             }
 
-            dbItem.setAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+            dbItem.setAccount(getAccountName());
             dbItem.setConfigurationItem(Globals.objectMapper.writeValueAsString(in));
             dbItem.setConfigurationType(ConfigurationType.APPROVAL.value());
             dbItem.setControllerId(null);

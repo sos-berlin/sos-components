@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
@@ -38,20 +39,21 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 
 public class CancelOrdersPublishHelper {
 
-    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter, Function<ControllerCommandResponse, ControllerCommandResponse> apply) 
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, 
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
-        
+    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(JOCResourceImpl impl, DailyPlanOrderFilterDef orderFilter,
+            Function<ControllerCommandResponse, ControllerCommandResponse> apply) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, SOSHibernateException, ExecutionException {
+
         if ((orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) && 
                 (orderFilter.getSchedulePaths() == null || orderFilter.getSchedulePaths().isEmpty())) {
             return Collections.emptyList();
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter,
-                xAccessToken);
+        cancelOrderImpl.setCurrentAccount(impl);
+        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                ordersPerController, xAccessToken);
+                ordersPerController);
         for (String controllerId : cancelOrderResponsePerController.keySet()) {
             CompletableFuture<ControllerCommandResponse> f = cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
                 if (ccr.getException().isEmpty()) {

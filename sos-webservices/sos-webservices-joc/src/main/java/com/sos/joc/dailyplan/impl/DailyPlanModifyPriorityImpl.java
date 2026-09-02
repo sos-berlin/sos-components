@@ -96,7 +96,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                 workflowNames.addAll(dbOrders.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct().toList());
             }
             
-            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getModify()), workflowNames);
             if (response != null) {
                 return response;

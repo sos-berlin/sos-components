@@ -76,8 +76,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
-                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController,
-                        accessToken).getOrders().getCreate()).collect(Collectors.toSet());
+                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController).getOrders()
+                        .getCreate()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }
 
@@ -102,7 +102,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         setSettings(IMPL_PATH);
         
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setUserAccount(getAccountName());
         settings.setOverwrite(false);
         settings.setSubmit(true);
         settings.setTimeZone(getSettings().getTimeZone());

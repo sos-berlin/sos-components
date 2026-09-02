@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerUser;
@@ -118,9 +119,9 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user)
+    public static Event getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, SOSAuthCurrentAccount account)
             throws SessionNotExistException {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, evtIdIsEmpty, eventId, session, user);
+        return EventServiceFactory.getInstance()._getEvents(controllerId, evtIdIsEmpty, eventId, session, account);
     }
     
     public static void startEventService(String controllerId) {
@@ -154,7 +155,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, JobSchedulerUser user)
+    private Event _getEvents(String controllerId, boolean evtIdIsEmpty, Long eventId, ISOSSession session, SOSAuthCurrentAccount account)
             throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
@@ -165,8 +166,8 @@ public class EventServiceFactory {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
         setResponsePeriodInMillis();
-        setApprovalUpdatedEvent(evtIdIsEmpty, user);
-        setNoteUpdatedEvent(evtIdIsEmpty, user);
+        setApprovalUpdatedEvent(evtIdIsEmpty, account);
+        setNoteUpdatedEvent(evtIdIsEmpty, account);
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
@@ -202,9 +203,9 @@ public class EventServiceFactory {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
-                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, user, evt, agentEvt, evtM, evtO, evtA, evtN));
+                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, account, evt, agentEvt, evtM, evtO, evtA, evtN));
             } else if (Mode.IMMEDIATLY.equals(mode)) {
-                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, user, evt, agentEvt, evtM, evtO, evtA, evtN));
+                service.getEvents().iterator().forEachRemaining(shareEvents(eventId, evtIds, account, evt, agentEvt, evtM, evtO, evtA, evtN));
             }
             agentEvt.stream().collect(Collectors.groupingBy(EventSnapshot::getPath)).forEach((a, e) -> {
                 if (e.size() == 1) {
@@ -256,7 +257,7 @@ public class EventServiceFactory {
         return events;
     }
     
-    private Consumer<IEventObject> shareEvents(Long eventId, SortedSet<Long> evtIds, JobSchedulerUser user, Set<EventSnapshot> evt,
+    private Consumer<IEventObject> shareEvents(Long eventId, SortedSet<Long> evtIds, SOSAuthCurrentAccount account, Set<EventSnapshot> evt,
             Set<EventSnapshot> agentEvt, Set<EventMonitoring> evtM, Set<EventOrderMonitoring> evtO, Set<EventApprovalNotification> evtA,
             Set<EventNoteNotification> evtN) {
         return e -> {
@@ -276,8 +277,8 @@ public class EventServiceFactory {
                     evtA.add((EventApprovalNotification) e);
                 } else if (e instanceof EventNoteNotification) {
                     try {
-                        String account = ((EventNoteNotification) e).getAccount();
-                        if (account != null && account.equals(user.getSOSAuthCurrentAccount().getAccountname())) {
+                        String eventAccount = ((EventNoteNotification) e).getAccount();
+                        if (eventAccount != null && eventAccount.equals(account.getAccountname())) {
                             evtN.add((EventNoteNotification) e);
                         }
                     } catch (Exception ex) {
@@ -289,11 +290,11 @@ public class EventServiceFactory {
         };
     }
     
-    private void setApprovalUpdatedEvent(boolean evtIdIsEmpty, JobSchedulerUser user) {
+    private void setApprovalUpdatedEvent(boolean evtIdIsEmpty, SOSAuthCurrentAccount account) {
         // create events after login if EventService not started
         approvalUpdatedEvent = Optional.empty();
         if (eventServices.isEmpty() || evtIdIsEmpty) {
-            approvalUpdatedEvent = user.getSOSAuthCurrentAccount().createApprovalUpdatedEvent();
+            approvalUpdatedEvent = account.createApprovalUpdatedEvent();
         }
     }
     
@@ -301,11 +302,11 @@ public class EventServiceFactory {
         approvalUpdatedEvent.ifPresent(EventBus.getInstance()::post);
     }
     
-    private void setNoteUpdatedEvent(boolean evtIdIsEmpty, JobSchedulerUser user) {
+    private void setNoteUpdatedEvent(boolean evtIdIsEmpty, SOSAuthCurrentAccount account) {
         // create events after login if EventService not started
         noteUpdatedEvent = Optional.empty();
         if (eventServices.isEmpty() || evtIdIsEmpty) {
-            noteUpdatedEvent = user.getSOSAuthCurrentAccount().createNoteUpdatedEvent();
+            noteUpdatedEvent = account.createNoteUpdatedEvent();
         }
     }
     

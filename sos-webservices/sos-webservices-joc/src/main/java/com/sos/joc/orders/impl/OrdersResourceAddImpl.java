@@ -95,7 +95,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors
                     .toSet());
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p
                     .getOrders().getCreate()), workflows);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -110,7 +110,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
                 setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
 
-                jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+                jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                         .getManagePositions()), workflows);
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;
@@ -154,7 +154,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             
             final ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
             
-            final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccount());
+            final String defaultOrderName = SOSCheckJavaVariableName.makeStringRuleConform(getAccountName());
             final boolean allowEmptyArguments = ClusterSettings.getAllowEmptyArguments(Globals.getConfigurationGlobalsJoc());
             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
             Consumer<AddOrder> workflowNameToPath = o -> o.setWorkflowPath(WorkflowPaths.getPath(JocInventory.pathToName(o.getWorkflowPath())));

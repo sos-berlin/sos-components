@@ -128,10 +128,9 @@ public class EnciphermentUtils {
         return jr;
     }
 
-    public static byte[] createDeployFilter(List<String> controllerIds, String jobResourcePath, AuditParams audit) throws JsonProcessingException {
+    public static DeployFilter createDeployFilter(List<String> controllerIds, String jobResourcePath) {
         DeployFilter deployFilter = new DeployFilter();
         deployFilter.setControllerIds(controllerIds);
-        deployFilter.setAuditLog(audit);
         DeployablesValidFilter toStore = new DeployablesValidFilter();
         Config jobResourceConfig = new Config();
         Configuration jobResourceDraft = new Configuration();
@@ -140,7 +139,7 @@ public class EnciphermentUtils {
         jobResourceConfig.setConfiguration(jobResourceDraft);
         toStore.getDraftConfigurations().add(jobResourceConfig);
         deployFilter.setStore(toStore);
-        return Globals.objectMapper.writeValueAsBytes(deployFilter);
+        return deployFilter;
     }
 
 }

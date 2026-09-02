@@ -60,8 +60,7 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             byte[] fakeRequest = String.format("{\"filename\":\"%s\"}", PublishUtils.getImportFilename(body)).getBytes(StandardCharsets.UTF_8);
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

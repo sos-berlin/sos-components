@@ -39,7 +39,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
             removeCredentialsFilter = initLogging(API_CALL, removeCredentialsFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(removeCredentialsFilter, RemoveCredentialsFilter.class);
             RemoveCredentialsFilter filter = Globals.objectMapper.readValue(removeCredentialsFilter, RemoveCredentialsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -50,7 +50,7 @@ public class GitCredentialsRemoveImpl extends JOCResourceImpl implements IGitCre
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                account = getAccountName();
             }
             JocConfigurationDbLayer dbLayer = new JocConfigurationDbLayer(hibernateSession);
             JocConfigurationFilter dbFilter = new JocConfigurationFilter();

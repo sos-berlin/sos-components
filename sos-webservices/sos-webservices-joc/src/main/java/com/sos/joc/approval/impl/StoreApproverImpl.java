@@ -28,7 +28,7 @@ public class StoreApproverImpl extends JOCResourceImpl implements IStoreApprover
             filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, Approver.class);
             Approver filter = Globals.objectMapper.readValue(filterBytes, Approver.class);
-            JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
+            JOCDefaultResponse response = initManageAccountPermissions();
             if (response != null) {
                 return response;
             }
