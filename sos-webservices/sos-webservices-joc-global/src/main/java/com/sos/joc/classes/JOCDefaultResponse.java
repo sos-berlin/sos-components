@@ -381,14 +381,13 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
+    public static SOSAuthCurrentAccountAnswer getError401Schema(SOSAuthCurrentAccount currentAccount, JocError err) {
         String apiCall = Optional.ofNullable(err).map(JocError::getApiCall).orElse(null);
-        return getError401Schema(sosJobschedulerUser, err, apiCall);
+        return getError401Schema(currentAccount, err, apiCall);
     }
 
-    private static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err, String apiCall) {
+    private static SOSAuthCurrentAccountAnswer getError401Schema(SOSAuthCurrentAccount currentAccount, JocError err, String apiCall) {
         SOSAuthCurrentAccountAnswer entity = new SOSAuthCurrentAccountAnswer();
-        SOSAuthCurrentAccount sosAuthCurrentAccountAnswer = null;
         String message = "Authentication failure";
         if (err != null) {
             if (err.getMessage() != null) {
@@ -398,23 +397,20 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
                 LOGGER.info(err.printMetaInfo());
             }
         }
-        try {
-            sosAuthCurrentAccountAnswer = sosJobschedulerUser.getSOSAuthCurrentAccount();
-        } catch (SessionNotExistException e) {
-            message += ": " + e.getMessage();
-        }
-        if (sosAuthCurrentAccountAnswer != null) {
-            entity.setAccessToken(sosAuthCurrentAccountAnswer.getAccessToken());
-            entity.setAccount(sosAuthCurrentAccountAnswer.getAccountname());
-            entity.setRole(String.join(", ", sosAuthCurrentAccountAnswer.getRoles()));
-            entity.setHasRole(!sosAuthCurrentAccountAnswer.getRoles().isEmpty());
+        if (currentAccount != null) {
+            entity.setAccessToken(currentAccount.getAccessToken());
+            entity.setAccount(currentAccount.getAccountname());
+            entity.setRole(String.join(", ", currentAccount.getRoles()));
+            entity.setHasRole(!currentAccount.getRoles().isEmpty());
+            entity.setIsAuthenticated(true);
         } else {
             entity.setAccessToken("");
             entity.setAccount("");
             entity.setHasRole(false);
+            entity.setIsAuthenticated(false);
+            message += ": Session doesn't exist";
         }
         entity.setIsPermitted(false);
-        entity.setIsAuthenticated(sosJobschedulerUser.isAuthenticated());
         entity.setMessage(message);
         entity.setApiCall(apiCall);
         return entity;

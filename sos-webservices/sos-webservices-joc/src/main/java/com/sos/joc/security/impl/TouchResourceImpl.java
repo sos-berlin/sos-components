@@ -28,15 +28,14 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
     public JOCDefaultResponse postTouch(String accessToken) {
         try {
             initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
-            if (!jobschedulerUser.isAuthenticated()) {
-                return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, getJocError()));
-            }
             try {
                  jobschedulerUser.resetTimeOut();
             } catch (SessionNotExistException e) {
                 LOGGER.info(e.getMessage());
             }
             return responseStatusJSOk(null);
+        } catch (SessionNotExistException e) {
+            return responseStatus401(JOCDefaultResponse.getError401Schema(null, getJocError()));
         } catch (DBConnectionRefusedException e) {
         	LOGGER.info(e.getMessage());
         	return responseStatusJSOk(null);

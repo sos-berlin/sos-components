@@ -480,7 +480,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerReleased = new HashMap<>();
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerDeployed = new HashMap<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-        cancelOrderImpl.setCurrentAccount(getCurrentAccount());
+        cancelOrderImpl.setCurrentAccount(this);
         
         if(!orderFilterDeployed.getWorkflowPaths().isEmpty()) {
             ordersPerControllerDeployed.putAll(cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilterDeployed));
@@ -498,7 +498,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(ordersPerController);
 
         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
-        deleteOrdersImpl.setCurrentAccount(getCurrentAccount());
+        deleteOrdersImpl.setCurrentAccount(this);
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             cancelOrderResponsePerController.putIfAbsent(controllerId, CompletableFuture.completedFuture(new ControllerCommandResponse(
                     controllerId)));

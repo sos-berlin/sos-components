@@ -79,8 +79,17 @@ public class JOCResourceImpl {
 
     private JocError jocError = new JocError();
     
-    public void setCurrentAccount(SOSAuthCurrentAccount currentAccount) {
-        this.currentAccount = currentAccount;
+    public void setCurrentAccount(JOCResourceImpl obj) {
+        this.currentAccount = obj.getCurrentAccount();
+        this.folderPermissions = currentAccount.getSosAuthFolderPermissions();
+        this.headerAccessToken = currentAccount.getAccessToken();
+        this.jobschedulerUser = new JobSchedulerUser(this.headerAccessToken);
+        if (obj.getJocError() != null) {
+            this.jocError = obj.getJocError();
+        }
+        if (obj.getJocAuditTrail() != null) {
+            this.jocAuditLog = obj.getJocAuditTrail();
+        }
     }
     
     public SOSAuthCurrentAccount getCurrentAccount() {
@@ -89,7 +98,10 @@ public class JOCResourceImpl {
     
     public void checkCurrentAccount() throws SessionNotExistException {
         if (currentAccount == null) {
-            throw new SessionNotExistException("Session doesn't exist [" + headerAccessToken + "]");
+            if (jobschedulerUser == null) {
+                jobschedulerUser = new JobSchedulerUser(headerAccessToken);
+            }
+            currentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
         }
     }
 
@@ -379,7 +391,7 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse accessDeniedResponse(String message) {
         jocError.setMessage(message);
-        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(getCurrentAccount(), jocError));
     }
     
     public JOCDefaultResponse accessDeniedResponseByUnsupported4EyesPrinciple() {
@@ -388,7 +400,7 @@ public class JOCResourceImpl {
                 "An approval should be requested according to the permissions configuration '%s' (Role: %s) but this is unsupported. Access denied.",
                 "joc:adminstration:accounts:manage", approvalRequestorRole);
         jocError.setMessage(message);
-        return responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        return responseStatus403(JOCDefaultResponse.getError401Schema(getCurrentAccount(), jocError));
     }
     
     public byte[] initLogging(String request, byte[] maskedBody, byte[] originBody, String accessToken, CategoryType category) throws Exception {
@@ -413,7 +425,7 @@ public class JOCResourceImpl {
         if (sosAuthCurrentAccountAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
-        
+        currentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
         return body;
     }
     
@@ -424,15 +436,11 @@ public class JOCResourceImpl {
     private byte[] initLogging2(String request, byte[] body, String accessToken, CategoryType category) throws Exception {
         String user;
         try {
-            currentAccount = jobschedulerUser.getSOSAuthCurrentAccount();
-            user = getAccountName();
+            user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
         } catch (Exception e) {
             user = "-";
         }
-        if (request == null || request.isEmpty()) {
-            request = "-";
-        }
-        
+
         Either<Exception, byte[]> fourEyesBody = getApprovalRequestBody(request, user, body);
         if (fourEyesBody.isRight()) {
             body = fourEyesBody.get();
@@ -594,8 +602,8 @@ public class JOCResourceImpl {
             throws JocException {
         JOCDefaultResponse jocDefaultResponse = null;
         
-        if (currentAccount == null) {
-            return responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
+        if (!jobschedulerUser.isAuthenticated()) {
+            return responseStatus401(JOCDefaultResponse.getError401Schema(null, jocError));
         }
 
         if (!permission) {

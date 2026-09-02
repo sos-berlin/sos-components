@@ -34,6 +34,9 @@ public class JobSchedulerUser {
 
 	public boolean resetTimeOut() throws SessionNotExistException {
 
+	    if (sosAuthCurrentAccount == null) {
+	        isAuthenticated();
+	    }
 		if (sosAuthCurrentAccount != null) {
 			SOSSessionHandler sosSessionHandler = new SOSSessionHandler(sosAuthCurrentAccount);
 			sosSessionHandler.touch();

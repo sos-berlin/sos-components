@@ -790,8 +790,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-            //cancelOrderImpl.setCurrentAccount(this.);
+            cancelOrderImpl.setCurrentAccount(this);
             DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+            deleteOrdersImpl.setCurrentAccount(this);
 
             DailyPlanOrderFilterDef orderFilter = new DailyPlanOrderFilterDef();
             if ("now".equals(filter.getAddOrdersDateFrom().toLowerCase())) {
@@ -844,6 +845,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private void recreateOrders(ReleaseFilter filter, List<String> schedulePaths, Set<String> controllerIds, String xAccessToken, SOSHibernateSession session) {
         if (filter.getAddOrdersDateFrom() != null && !filter.getAddOrdersDateFrom().isEmpty()) {
             DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
+            ordersGenerate.setCurrentAccount(this);
             boolean successful = false;
             if (schedulePaths != null && !schedulePaths.isEmpty()) {
                 try {
