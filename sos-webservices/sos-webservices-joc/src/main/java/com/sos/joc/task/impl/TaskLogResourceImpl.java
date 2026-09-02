@@ -62,6 +62,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
             Long now = Instant.now().toEpochMilli();
 
             historyId = taskLog.getTaskId();
@@ -70,11 +72,14 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 
             RunningTaskLogs r = RunningTaskLogs.getInstance();
             if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "start")) {
-                disable(taskLog);
+                if (isDebugEnabled) {
+                    LOGGER.debug("[postRollingTaskLog][start][historyId=" + historyId + "][eventId=" + taskLog.getEventId() + "]disable ...");
+                }
+                disable(taskLog, isDebugEnabled);
             } else {
                 RunningTaskLogs.Mode mode = r.hasEvents(accessToken, taskLog.getEventId(), historyId);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("[postRollingTaskLog][historyId=" + historyId + "][eventId=" + taskLog.getEventId() + "]mode=" + mode.name());
+                if (isDebugEnabled) {
+                    LOGGER.debug("[postRollingTaskLog][start][historyId=" + historyId + "][eventId=" + taskLog.getEventId() + "]mode=" + mode.name());
                 }
 
                 switch (mode) {
@@ -86,9 +91,9 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 case COMPLETE:
                     taskLog = r.getRunningTaskLog(accessToken, taskLog);
                     if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "mode=complete")) {
-                        disable(taskLog);
+                        disable(taskLog, isDebugEnabled);
                     } else {
-                        if (LOGGER.isDebugEnabled()) {
+                        if (isDebugEnabled) {
                             LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ", complete=" + taskLog.getComplete());
                         }
                     }
@@ -108,10 +113,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                         taskLog = r.getRunningTaskLog(accessToken, taskLog);
                         // additional check due to waiting time and possibly changed taskLog.getEventId()
                         if (r.isBeforeSubscriptionStartTime(accessToken, historyId, taskLog.getEventId(), now, "mode=false")) {
-                            disable(taskLog);
+                            disable(taskLog, isDebugEnabled);
                         } else {
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ",complete=" + taskLog.getComplete());
+                            if (isDebugEnabled) {
+                                LOGGER.debug("  [after]eventId=" + taskLog.getEventId() + ", complete=" + taskLog.getComplete());
                             }
                         }
                     }
@@ -120,6 +125,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     taskLog.setComplete(true); // to avoid endless calls
                     break;
                 }
+            }
+            if (isDebugEnabled) {
+                LOGGER.debug("[postRollingTaskLog][end][historyId=" + historyId + "][eventId=" + taskLog.getEventId() + "]complete=" + taskLog
+                        .getComplete());
             }
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(taskLog));
         } catch (Exception e) {
@@ -239,8 +248,11 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         }
     }
 
-    private void disable(RunningTaskLog taskLog) {
+    private void disable(RunningTaskLog taskLog, boolean isDebugEnabled) {
         taskLog.setComplete(true);
         taskLog.setLog(null);
+        if (isDebugEnabled) {
+            LOGGER.debug(" [disable][historyId=" + historyId + "][eventId=" + taskLog.getEventId() + "]complete=" + taskLog.getComplete());
+        }
     }
 }

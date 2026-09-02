@@ -286,13 +286,14 @@ public class RunningTaskLogs {
         StringBuilder log = new StringBuilder();
         r.setComplete(false);
 
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         events.getOrDefault(getEventKey(sessionIdentifier, r.getTaskId()), new CopyOnWriteArraySet<RunningTaskLog>()).forEach(e -> {
             if (e.getEventId() != null && r.getEventId() < e.getEventId()) {
                 if (e.getComplete()) {
                     r.setComplete(true);
                 }
 
-                if (LOGGER.isDebugEnabled()) {
+                if (isDebugEnabled) {
                     LOGGER.debug("[getRunningTaskLog][historyId=" + r.getTaskId() + "]complete=" + r.getComplete());
                 }
 
@@ -354,7 +355,7 @@ public class RunningTaskLogs {
         if (events.get(eventKey).add(event)) {
             EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete(), sessionIdentifier));
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[addEvent][historyId=" + event.getTaskId() + "]event posted");
+                LOGGER.debug("[addEvent][historyId=" + event.getTaskId() + "][complete=" + event.getComplete() + "]event posted");
             }
         }
     }

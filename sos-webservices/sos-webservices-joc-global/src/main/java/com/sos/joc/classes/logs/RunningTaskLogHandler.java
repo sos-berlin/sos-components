@@ -365,7 +365,9 @@ public class RunningTaskLogHandler {
                     }
                 }
             }
-            unsubscribe(content.isComplete());
+            // do not unsubscribe here
+            // - because if unsubscibed, RunningTaskLogs.createHistoryTaskEvent can't be executed properly(the complete is never reached in this case)
+            // unsubscribe(content.isComplete());
             if (isDebugEnabled) {
                 LOGGER.debug(logPrefix + "[" + thread + "][FINALLY][Thread]end");
             }
