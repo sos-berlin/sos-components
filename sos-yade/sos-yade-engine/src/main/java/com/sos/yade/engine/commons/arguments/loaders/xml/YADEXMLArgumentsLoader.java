@@ -10,6 +10,7 @@ import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSMapVariableReplacer;
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -126,6 +127,24 @@ public class YADEXMLArgumentsLoader extends AYADEArgumentsLoader {
             return;
         }
         arg.setValue(Boolean.parseBoolean(getValue(node)));
+    }
+
+    protected void setBooleanArgumentValue(SOSArgument<Boolean> arg, String value) {
+        if (arg == null || !SOSString.isBoolean(value)) {
+            return;
+        }
+        arg.setValue(Boolean.parseBoolean(value));
+    }
+
+    protected void setBooleanArgumentValueFromEnv(SOSArgument<Boolean> arg, String envVar) {
+        if (arg == null) {
+            return;
+        }
+        String value = System.getenv(envVar);
+        if (!SOSString.isBoolean(value)) {
+            return;
+        }
+        arg.setValue(Boolean.parseBoolean(value));
     }
 
     protected void setOppositeBooleanArgumentValue(SOSArgument<Boolean> arg, Node node) {

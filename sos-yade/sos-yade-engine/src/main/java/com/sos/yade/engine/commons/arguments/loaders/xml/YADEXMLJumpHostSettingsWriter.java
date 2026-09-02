@@ -497,6 +497,11 @@ public class YADEXMLJumpHostSettingsWriter {
             sb.append("<SOCKS5Proxy>");
             sb.append(generateProtocolFragmentPartBasicConnection(args.getHost(), args.getPort(), args.getConnectTimeout()));
             sb.append(generateProtocolFragmentPartBasicAuthentication(args.getUser(), args.getPassword()));
+            if (args.getSocksResolveHostname().isDirty()) {
+                sb.append("<ResolveHostname>");
+                sb.append(args.getSocksResolveHostname().getValue());
+                sb.append("</ResolveHostname>");
+            }
             sb.append("</SOCKS5Proxy>");
         }
         sb.append("</").append(elementName).append(">");

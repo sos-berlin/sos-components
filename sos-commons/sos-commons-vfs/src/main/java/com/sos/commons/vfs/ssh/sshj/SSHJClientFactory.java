@@ -49,7 +49,7 @@ public class SSHJClientFactory {
             config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
         }
         // SSH Client
-        SSHClient client = new SSHClient(config);
+        SSHClient client = createClient(provider, config); // with PROXY
         setHostKeyVerifier(provider.getArguments(), client);
         setCompression(provider.getArguments(), client);
         // CHARSET
@@ -57,8 +57,19 @@ public class SSHJClientFactory {
         // TIMEOUT
         client.setTimeout(provider.getArguments().getSocketTimeoutAsMillis());
         client.setConnectTimeout(provider.getArguments().getConnectTimeoutAsMillis());
-        // PROXY
-        if (provider.getProxyConfig() != null) {
+        return client;
+    }
+
+    private static SSHClient createClient(SSHJProvider provider, Config config) {
+        SSHClient client = null;
+        if (provider.getProxyConfig() == null) {
+            client = new SSHClient(config);
+        } else {
+            if (provider.getProxyConfig().shouldResolveSocksHostname()) {
+                client = new SSHClient(config);
+            } else {
+                client = new SSHJFqdnSSHClient(config);
+            }
             client.setSocketFactory(new ProxySocketFactory(provider.getProxyConfig()));
         }
         return client;

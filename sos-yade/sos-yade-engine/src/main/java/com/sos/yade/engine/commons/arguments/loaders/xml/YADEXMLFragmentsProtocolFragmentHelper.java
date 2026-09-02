@@ -851,6 +851,7 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
 
     private static void parseProxy(YADEXMLArgumentsLoader argsLoader, ProxyConfigArguments args, Node proxy) throws Exception {
         NodeList nl = proxy.getChildNodes();
+        boolean resolveHostnameConfigured = false;
         for (int i = 0; i < nl.getLength(); i++) {
             Node n = nl.item(i);
             if (n.getNodeType() == Node.ELEMENT_NODE) {
@@ -861,8 +862,15 @@ public class YADEXMLFragmentsProtocolFragmentHelper {
                 case "BasicAuthentication":
                     parseProxyBasicAuthentication(argsLoader, args, n);
                     break;
+                case "ResolveHostname":
+                    resolveHostnameConfigured = true;
+                    argsLoader.setBooleanArgumentValue(args.getSocksResolveHostname(), n);
+                    break;
                 }
             }
+        }
+        if (!resolveHostnameConfigured) {
+            argsLoader.setBooleanArgumentValueFromEnv(args.getSocksResolveHostname(), ProxyConfigArguments.ENV_VAR_PROXY_SOCKS_RESOLVE_HOSTNAME);
         }
     }
 

@@ -27,6 +27,7 @@ public class ProxyConfig {
     private final String user;
     private final String password;
     private final int connectTimeoutAsMillis;
+    private final boolean socksResolveHostname;
 
     private Charset charset = Charset.defaultCharset();
 
@@ -47,12 +48,29 @@ public class ProxyConfig {
         this.user = args.getUser().getValue();
         this.password = args.getPassword().getValue();
         this.connectTimeoutAsMillis = (int) SOSArgumentHelper.asMillis(args.getConnectTimeout());
+        this.socksResolveHostname = args.getSocksResolveHostname().isTrue();
 
         this.proxy = new java.net.Proxy(args.getType().getValue(), new InetSocketAddress(this.host, this.port));
     }
 
     public java.net.Proxy getProxy() {
         return proxy;
+    }
+
+    public boolean isSOCKS() {
+        return java.net.Proxy.Type.SOCKS.equals(proxy.type());
+    }
+
+    public boolean isHTTP() {
+        return java.net.Proxy.Type.HTTP.equals(proxy.type());
+    }
+
+    public boolean isDIRECT() {
+        return java.net.Proxy.Type.DIRECT.equals(proxy.type());
+    }
+
+    public boolean shouldResolveSocksHostname() {
+        return socksResolveHostname && isSOCKS();
     }
 
     public String getHost() {
@@ -87,20 +105,25 @@ public class ProxyConfig {
         return charset;
     }
 
+    public boolean socksResolveHostname() {
+        return socksResolveHostname;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName()).append("[");
         if (proxy != null) {
             sb.append("type=").append(proxy.type());
         }
-        sb.append(",host=").append(host);
-        sb.append(",port=").append(port);
-        sb.append(",user=").append(user);
+        sb.append(", host=").append(host);
+        sb.append(", port=").append(port);
+        sb.append(", user=").append(user);
         if (!SOSString.isEmpty(password)) {
-            sb.append(",password=").append(DisplayMode.MASKED.getValue());
+            sb.append(", password=").append(DisplayMode.MASKED.getValue());
         }
-        sb.append(",charset=").append(charset);
-        sb.append(",getConnectTimeoutAsMillis=").append(getConnectTimeoutAsMillis());
+        sb.append(", charset=").append(charset);
+        sb.append(", getConnectTimeoutAsMillis=").append(getConnectTimeoutAsMillis());
+        sb.append(", socksResolveHostname=").append(socksResolveHostname);
         sb.append("]");
         return sb.toString();
     }
@@ -124,6 +147,9 @@ public class ProxyConfig {
             sb.append("@");
         }
         sb.append(host).append(":").append(port);
+        if (socksResolveHostname) {
+            sb.append(" with hostname resolution");
+        }
         return sb.toString();
     }
 

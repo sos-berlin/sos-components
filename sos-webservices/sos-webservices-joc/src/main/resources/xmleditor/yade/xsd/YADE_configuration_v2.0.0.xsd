@@ -79,25 +79,50 @@
 			      <xs:selector xpath=".//DecryptionFragment"/>
 			      <xs:field xpath="@name"/>
 		    </xs:key>
+        <xs:key name="ProfileKey">
+			      <xs:selector xpath=".//Profile"/>
+			      <xs:field xpath="@profile_id"/>
+		    </xs:key>
         <xs:keyref name="AzureBlobStorageFragmentKeyRef"
                  refer="AzureBlobStorageFragmentKey">
 			      <xs:selector xpath=".//AzureBlobStorageFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="AzureBlobStorageFragmentAlternativeKeyRef"
+                 refer="AzureBlobStorageFragmentKey">
+			      <xs:selector xpath=".//AzureBlobStorageFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>        
 		    <xs:keyref name="FTPFragmentKeyRef" refer="FTPFragmentKey">
 			      <xs:selector xpath=".//FTPFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="FTPFragmentAlternativeKeyRef" refer="FTPFragmentKey">
+			      <xs:selector xpath=".//FTPFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="FTPSFragmentKeyRef" refer="FTPSFragmentKey">
 			      <xs:selector xpath=".//FTPSFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="FTPSFragmentAlternativeKeyRef" refer="FTPSFragmentKey">
+			      <xs:selector xpath=".//FTPSFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="HTTPFragmentKeyRef" refer="HTTPFragmentKey">
 			      <xs:selector xpath=".//HTTPFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="HTTPFragmentAlternativeKeyRef" refer="HTTPFragmentKey">
+			      <xs:selector xpath=".//HTTPFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="HTTPSFragmentKeyRef" refer="HTTPSFragmentKey">
 			      <xs:selector xpath=".//HTTPSFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="HTTPSFragmentAlternativeKeyRef" refer="HTTPSFragmentKey">
+			      <xs:selector xpath=".//HTTPSFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="JumpFragmentKeyRef" refer="JumpFragmentKey">
@@ -108,12 +133,24 @@
 			      <xs:selector xpath=".//SFTPFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="SFTPFragmentAlternativeKeyRef" refer="SFTPFragmentKey">
+			      <xs:selector xpath=".//SFTPFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="SMBFragmentKeyRef" refer="SMBFragmentKey">
 			      <xs:selector xpath=".//SMBFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
+        <xs:keyref name="SMBFragmentAlternativeKeyRef" refer="SMBFragmentKey">
+			      <xs:selector xpath=".//SMBFragmentAlternativeRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
 		    <xs:keyref name="WebDAVFragmentKeyRef" refer="WebDAVFragmentKey">
 			      <xs:selector xpath=".//WebDAVFragmentRef"/>
+			      <xs:field xpath="@ref"/>
+		    </xs:keyref>
+        <xs:keyref name="WebDAVFragmentAlternativeKeyRef" refer="WebDAVFragmentKey">
+			      <xs:selector xpath=".//WebDAVFragmentAlternativeRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
 		    <xs:keyref name="MailFragmentKeyRef" refer="MailFragmentKey">
@@ -132,7 +169,11 @@
 			      <xs:selector xpath=".//DecryptionFragmentRef"/>
 			      <xs:field xpath="@ref"/>
 		    </xs:keyref>
-	  </xs:element>
+        <xs:keyref name="ProfileKeyRef" refer="ProfileKey">
+			      <xs:selector xpath=".//Profile"/>
+			      <xs:field xpath="@alternative_profile"/>
+		    </xs:keyref>
+    </xs:element>
 	  <!-- ################## -->
 	  <!-- # 1st-Level ###### -->
 	  <!-- ################## -->
@@ -1642,12 +1683,27 @@
 			A <em>Profile</em> specifies the operation and the settings that are used for a file transfer. 
 			Multiple profiles can be included in a YADE configuration.
 		</p>
-               <p>
-			Profiles are distinguished by YADE based on their <em>profile_id</em>.
-		</p>
-               <p>
-			When invoking YADE the respective <em>Profile</em> for the file transfer operation is specified. 
-		</p>
+               <p/>
+               <p>Profiles are distinguished by YADE based on their <em>
+                     <strong>profile_id</strong>
+                  </em>.</p>
+               <p>When invoking YADE the respective <em>Profile</em> for the file transfer operation is specified.</p>
+               <p/>
+               <p>The <em>
+                     <strong>alternative_profile</strong>
+                  </em> attribute defines a fallback profile that is considered only during the initial connection establishment. 
+        They are not used for reconnect attempts or for failures that occur after a connection has already been established, including failures during data transfer.</p>
+               <ul>
+                  <li>Alternative profiles are evaluated only if the current profile cannot establish either the source or the target connection.</li>
+                  <li>If the source or target protocol fragment defines protocol-specific alternatives (such as <em>SFTPProtocolAlternatives</em>), those alternatives are tried first.
+                <ul>
+                        <li>The <em>alternative_profile</em> is considered only after all protocol-specific alternatives have been exhausted without successfully establishing a connection.</li>
+                     </ul>
+                  </li>
+                  <li>If an alternative profile defines its own <em>alternative_profile</em>, it is evaluated recursively.</li>
+                  <li>To prevent circular references and duplicate processing, each referenced profile is evaluated at most once during the resolution process. If a profile has already been processed, it is skipped.</li>
+                  <li>The profile that successfully establishes the connection is used for the subsequent file transfer.</li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -1664,9 +1720,30 @@
                   <div xmlns="http://www.w3.org/1999/xhtml">
                      <p>
 		A profile is identified by this attribute value that is specified when invoking YADE. 
-		As multiple profiles can be stored in a YADE configuration this value is a unique identifier 
-		for the settings that are grouped in a profile.
+		As multiple profiles can be stored in a YADE configuration this value is a unique identifier for the settings that are grouped in a profile.
 		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+            <xs:attribute name="alternative_profile" type="xs:NMTOKEN">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>The <em>alternative_profile</em> attribute defines a fallback profile that is considered only during the initial connection establishment.</p>
+                     <p>They are not used for reconnect attempts or for failures that occur after a connection has already been established, including failures during data transfer.</p>
+                     <ul>
+                        <li>Alternative profiles are evaluated only if the current profile cannot establish either the source or the target connection.</li>
+                        <li>If the source or target protocol fragment defines protocol-specific alternatives (such as <em>SFTPProtocolAlternatives</em>), those alternatives are tried first.
+                <ul>
+                              <li>The <em>alternative_profile</em> is considered only after all protocol-specific alternatives have been exhausted without successfully establishing a connection.</li>
+                           </ul>
+                        </li>
+                        <li>If an alternative profile defines its own <em>alternative_profile</em>, it is evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced profile is evaluated at most once during the resolution process. If a profile has already been processed, it is skipped.</li>
+                        <li>The profile that successfully establishes the connection is used for the subsequent file transfer.</li>
+                     </ul>
                   </div>
                </xs:documentation>
             </xs:annotation>
@@ -1722,7 +1799,9 @@
 				        <xs:element ref="ProxyForAzure" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL" minOccurs="0"/>                
+                <xs:element ref="SSL" minOccurs="0"/>
+
+                <xs:element ref="AzureBlobStorageFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -1787,7 +1866,7 @@
       </xs:annotation>
 		    <xs:complexType>
 			      <xs:sequence>
-				        <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
+			         <xs:element ref="CredentialStoreFragmentRef" minOccurs="0"/>
                 <xs:element ref="DecryptionFragmentRef" minOccurs="0"/>
                 <xs:element ref="JumpFragmentRef" minOccurs="0"/>
 				
@@ -1798,6 +1877,8 @@
                 
 				        <xs:element ref="PassiveMode" minOccurs="0"/>
 				        <xs:element ref="TransferMode" minOccurs="0"/>
+                
+                <xs:element ref="FTPFragmentAlternatives" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -1900,9 +1981,11 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
-                <xs:element ref="SSL"/>                
-        	</xs:sequence>
-			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
+                <xs:element ref="SSL"/>
+
+                <xs:element ref="FTPFragmentAlternatives" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
                   <div xmlns="http://www.w3.org/1999/xhtml">
@@ -1971,7 +2054,9 @@
 				        <xs:element ref="ProxyForHTTP" minOccurs="0"/>
 				
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-			      </xs:sequence>
+                
+                <xs:element ref="HTTPFragmentAlternatives" minOccurs="0"/>
+        	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2041,7 +2126,9 @@
                 <xs:element ref="ProxyForHTTP" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL"/>                
+                <xs:element ref="SSL"/>
+
+                <xs:element ref="HTTPFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2112,7 +2199,9 @@
 				        <xs:element ref="ProxyForWebDAV" minOccurs="0"/>
                 
                 <xs:element ref="HTTPHeaders" minOccurs="0"/>
-                <xs:element ref="SSL" minOccurs="0"/>                
+                <xs:element ref="SSL" minOccurs="0"/>
+
+                <xs:element ref="WebDAVFragmentAlternatives" minOccurs="0"/>
             </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2247,6 +2336,7 @@
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
              	<xs:element ref="ConfigurationFiles" minOccurs="0"/>					
                 
+                <xs:element ref="SFTPFragmentAlternatives" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -2318,8 +2408,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                 <xs:element name="KeepAlive" type="SFTPKeepAliveType" minOccurs="0"/>
                 <xs:element ref="StrictHostkeyChecking" minOccurs="0"/>
                 <xs:element ref="ConfigurationFiles" minOccurs="0"/>
-                <xs:element ref="DisableAutoDetectShell" minOccurs="0"/>             				
-			      </xs:sequence>
+                <xs:element ref="DisableAutoDetectShell" minOccurs="0"/>
+
+                <xs:element ref="SFTPFragmentAlternatives" minOccurs="0"/>
+        	</xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2381,7 +2473,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="SMBAuthentication"/>
 				
                 <xs:element ref="ConfigurationFiles" minOccurs="0"/>
-			      </xs:sequence>
+                
+                <xs:element ref="SMBFragmentAlternatives" minOccurs="0"/>
+            </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -2400,7 +2494,558 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:attribute>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="CredentialStoreFragmentRef">
+    <!-- ProtocolFragments alternative fragments -->
+    <xs:element name="AzureBlobStorageFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/AzureBlobStorageFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="AzureBlobStorageFragmentAlternativeRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="FTPFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="FTPFragmentAlternativeRef"/>
+                <xs:element ref="FTPSFragmentAlternativeRef"/>
+           </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="HTTPFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="HTTPFragmentAlternativeRef"/>
+                <xs:element ref="HTTPSFragmentAlternativeRef"/>
+           </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="SFTPFragmentAlternatives">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTPFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p/>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="SFTPFragmentAlternativeRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="SMBFragmentAlternatives">
+        <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SMBFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="SMBFragmentAlternativeRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <xs:element name="WebDAVFragmentAlternatives">
+         <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/WebDAVFragmentAlternatives">
+                <Note include="ProtocolFragment-Alternatives"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+                <p>
+                  <strong>Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>Protocol fragment alternatives define fallback protocol fragments that are considered <strong>only during the initial connection establishment</strong>.
+                <ul>
+                        <li>Alternatives are evaluated only if the current protocol fragment cannot establish a connection.
+                        <ul>
+                              <li>If <em>RetryOnConnectionError</em> is configured, the current protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                           </ul>
+                        </li>
+                        <li>They are <strong>not</strong> used after a connection has been established and therefore do not apply to reconnects or failures that occur during data transfer.</li>
+                     </ul>
+                  </li>
+                  <li>The order of the child elements determines the order in which alternatives are evaluated. 
+                <ul>
+                        <li>If an alternative protocol fragment defines its own alternatives, they are evaluated recursively.</li>
+                        <li>To prevent circular references and duplicate processing, each referenced protocol fragment is evaluated at most once during the resolution process. If a protocol fragment has already been processed, it is skipped.</li>
+                        <li>If <em>RetryOnConnectionErrors</em> is configured, each protocol fragment is retried according to the configured retry policy before the next alternative is evaluated.</li>
+                        <li>Evaluation stops as soon as a connection has been established successfully.</li>
+                        <li>The protocol fragment that established the connection is used for the subsequent file transfer.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Jump Host and Protocol Fragment Alternatives</strong>
+               </p>
+               <ul>
+                  <li>A <em>JumpFragment</em> supports <em>SFTPFragmentAlternatives</em> according to the behavior described in <strong>Protocol Fragment Alternatives</strong>.</li>
+                  <li>If the <em>Source</em> or <em>Target</em> protocol fragment defines alternatives, the connection to an alternative protocol fragment is established from the Jump Host. 
+                <ul>
+                        <li>Consequently, any references to local resources (for example, <em>ConfigurationFiles</em>, <code>CredentialStore</code>, local key files, or similar resources) are resolved on the Jump Host.</li>
+                        <li>These resources must therefore be available on the Jump Host at the configured locations.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <p/>
+               <p>
+                  <strong>Example: Alternative Evaluation.</strong>
+               </p>
+               <ul>
+                  <li>Given the following relationships:
+                <ul>
+                        <li>
+                           <strong>A</strong> -&gt; alternatives: <strong>B</strong>, <strong>C</strong>
+                        </li>
+                        <li>
+                           <strong>B</strong> -&gt; alternative: <strong>D</strong>
+                        </li>
+                        <li>
+                           <strong>C</strong> -&gt; no alternatives</li>
+                        <li>
+                           <strong>D</strong> -&gt; no alternatives</li>
+                     </ul>
+                  </li>
+                  <li>The evaluation order is:
+                <ol>
+                        <li>A</li>
+                        <li>B</li>
+                        <li>D</li>
+                        <li>C</li>
+                     </ol>
+                     <ul>
+                        <li>If <strong>D</strong> were also listed as an alternative of <strong>A</strong>, it would still be evaluated only once.</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="WebDAVFragmentAlternativeRef" maxOccurs="unbounded"/>
+           </xs:sequence>
+        </xs:complexType>
+	  </xs:element>
+    <!-- ProtocolFragments refs -->
+    <xs:element name="CredentialStoreFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/CredentialStoreFragments/Ref/CredentialStoreFragmentRef">
                 <Note include="CredentialStore-JumpHost"/>
@@ -2646,7 +3291,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="ConfigurationFile">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/Configuration/ConfigurationFile"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/Configuration/ConfigurationFile">
+                 <Note include="ConfigurationFile-Format"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -2663,25 +3310,25 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>
 			An application configuration file contains settings that are specific to an app.
         </p>
-            <p/>
-            <p>The settings are supplied in a simple INI-style configuration format.</p>
-            <p>This element supports the following input formats:</p>
-            <ul>
-               <li>
-                  <strong>File path</strong>
-                  <ul>
-                     <li>The file must be accessible on the machine where YADE is running.</li>
-                     <li>The file name and extension are arbitrary and have no functional meaning.</li>
-                  </ul>
-               </li>
-               <li>
-                  <strong>Inline configuration content</strong>
-                  <ul>
-                     <li>To ensure that the value is interpreted as configuration content rather than a file path, the content must contain at least two non-empty lines.</li>
-                     <li>A non-empty line is any line that is not blank. For example, a line starting with the comment character <em>#</em> is considered non-empty.</li>
-                  </ul>
-               </li>
-            </ul>
+                 <p/>
+               <p>The settings are supplied in a simple INI-style configuration format.</p>
+               <p>This element supports the following input formats:</p>
+               <ul>
+                  <li>
+                     <strong>File path</strong>
+                     <ul>
+                        <li>The file must be accessible on the machine where YADE is running.</li>
+                        <li>The file name and extension are arbitrary and have no functional meaning.</li>
+                     </ul>
+                  </li>
+                  <li>
+                     <strong>Inline configuration content</strong>
+                     <ul>
+                        <li>To ensure that the value is interpreted as configuration content rather than a file path, the content must contain at least two non-empty lines.</li>
+                        <li>A non-empty line is any line that is not blank. For example, a line starting with the comment character <em>#</em> is considered non-empty.</li>
+                     </ul>
+                  </li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -3062,10 +3709,10 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>This value is used as the socket timeout parameter, and also as the default connection timeout.</p>
                <p>A value of <em>0</em> (the default value) indicates <em>no timeout</em>.</p>
                <!---
-        includes/Duration-Values.xhtml will be included (see work.xsd)
+        includes/Duration-Seconds-Values.xhtml will be included (see work.xsd)
         -->
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -3078,7 +3725,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -3625,7 +4273,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="SOCKSProxy" type="AuthenticatedProxyType">
+	  <xs:element name="SOCKSProxy" type="AuthenticatedSocksProxyType">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/common/Proxy/SOCKSProxy"/>
          <xs:documentation>
@@ -3643,8 +4291,53 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>
                   <em>SOCKS</em> Proxy is a network protocol that routes traffic between a client and server through a proxy server.<br/>
-        It works at the transport layer (Layer 5 of the OSI model), forwarding any type of traffic (e.g., HTTP, FTP) without interpreting it.<br/>
+        SOCKS operates at the session layer (Layer 5 of the OSI model) and forwards network traffic without interpreting the application-layer protocol, such as HTTP, FTP, or SSH.<br/>
         This makes it versatile and protocol-independent.</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="ResolveHostname" type="BooleanOrVarType" default="false">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/Proxy/SOCKSProxy/ResolveHostname">
+                <Release starting="2.8.5, 2.9.1" issue="YADE-662"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+                  <li>Release:
+            <ul>
+                        <li>
+                           <a target="_blank" href="https://change.sos-berlin.com/browse/YADE-662">YADE-662</a> Availability starting with 2.8.5, 2.9.1.</li>
+                     </ul>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>Controls whether the destination hostname is resolved locally when using a SOCKS proxy.</p>
+               <p/>
+               <ul>
+                  <li>
+                     <strong>false</strong>: The destination hostname is passed to the SOCKS proxy without local resolution. 
+                The SOCKS proxy resolves the hostname using its own DNS configuration. 
+                This allows connections to hostnames that are only resolvable from the proxy's network and allows hostname-based proxy rules, such as whitelists, to be applied. 
+                However, this can fail when using a SOCKS4-only proxy server, as SOCKS4 requires an IP address rather than a hostname.
+            </li>
+                  <li>
+                     <strong>true</strong>: The destination hostname is resolved locally before the connection is established. 
+                The SOCKS proxy receives the resulting IP address. 
+                This can be required when using a SOCKS4-only proxy server, but can fail if the hostname cannot be resolved locally or if the SOCKS proxy uses hostname-based rules, such as a whitelist.
+            </li>
+               </ul>
+               <p/>
+               <p>Setting Scope and Precedence.</p>
+               <ol>
+                  <li>If this setting is explicitly configured, it takes precedence over the corresponding environment variable <code>PROXY_SOCKS_RESOLVE_HOSTNAME</code>.</li>
+                  <li>The value is overridden when the corresponding argument is specified in the YADE JITL job or as a YADE CLI argument.</li>
+               </ol>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -4039,9 +4732,11 @@ A fragment is referenced via this attribute value by a transfer profile.
       </xs:annotation>
 	  </xs:element>
     <!-- common SocketTimeout -->
-    <xs:element name="SocketTimeout" default="0s">
+    <xs:element name="SocketTimeout" default="0">
 		    <xs:annotation>
-         <xs:appinfo source="Fragments/ProtocolFragments/common/SocketTimeout"/>
+         <xs:appinfo source="Fragments/ProtocolFragments/common/SocketTimeout">
+                <Note include="Duration-Seconds-Values"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -4053,9 +4748,15 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>Read Timeout	- Maximum time to wait for a response after the connection is established.</p>
                <p>If <em>0</em>, the system will wait indefinitely for a response (i.e., no timeout will be applied).</p>
-               <p> </p>
-               <p>	Possible values:
+               <!---
+        includes/Duration-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats (case-insensitive):
 			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                     </li>
                      <li>
                         <em>&lt;n&gt;s</em> - duration in seconds, e.g.: <em>30s</em>
                      </li>
@@ -4064,7 +4765,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -4911,8 +5613,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
-	  </xs:element>
-    
+	  </xs:element>    
     <xs:element name="SharedKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/SharedKey"/>
@@ -5287,8 +5988,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
-	  </xs:element>
-    
+	  </xs:element>    
     <xs:element name="AccountKey">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Authentication/AccountKey">
@@ -5698,7 +6398,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <p>Sets the duration to wait between sending control connection keepalive messages when processing file upload or download.</p>
                <p>If zero is specified, any keep-alive message must not be sent.</p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (milliseconds), e.g.: <em>60000</em>
@@ -5714,7 +6414,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -8886,7 +9587,9 @@ A fragment is referenced via this attribute value by a transfer profile.
 	  </xs:element>
 	  <xs:element name="SystemPropertyFile">
 		    <xs:annotation>
-         <xs:appinfo source="General/SystemPropertyFiles/SystemPropertyFile"/>
+         <xs:appinfo source="General/SystemPropertyFiles/SystemPropertyFile">
+                <Note include="ConfigurationFile-Format"/>
+            </xs:appinfo>
          <xs:documentation>
             <div xmlns="http://www.w3.org/1999/xhtml">
                <strong>References</strong>
@@ -8921,7 +9624,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </ul>
                   </li>
                </ul>
-               <p/>
+                <p/>
                <p>The settings are supplied in a simple INI-style configuration format.</p>
                <p>This element supports the following input formats:</p>
                <ul>
@@ -9721,7 +10424,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <!-- Source - Local -->
+   <!-- Source - Local -->
 	  <xs:element name="LocalSource">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/Ref/LocalSource"/>
@@ -9752,7 +10455,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		    </xs:complexType>
 	  </xs:element>    
     <!-- AZURE -->
-	  <xs:element name="AzureBlobStorageFragmentRef">
+    <xs:element name="AzureBlobStorageFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Ref/AzureBlobStorageFragmentRef"/>
          <xs:documentation>
@@ -9798,9 +10501,52 @@ A fragment is referenced via this attribute value by a transfer profile.
                 
             </xs:attribute>
 		    </xs:complexType>
-	  </xs:element>    
+	  </xs:element>
+    <xs:element name="AzureBlobStorageFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/AZURE/Ref/AzureBlobStorageFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an Azure Blob Storage file transfer operation.
+		</p>
+               <p>
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+AzureBlobStorageFragment"
+                     shape="rect">AzureBlobStorageFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>AzureBlobStorageFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the Azure Blob Storage.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- FTP -->
-	  <xs:element name="FTPFragmentRef">
+    <xs:element name="FTPFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPFragmentRef"/>
          <xs:documentation>
@@ -9903,8 +10649,51 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="FTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTP file transfer operation.
+		</p>
+               <p>
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FTPFragment"
+                     shape="rect">FTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>FTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the FTP protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>	
 	  <!-- FTPS -->
-	  <xs:element name="FTPSFragmentRef">
+   <xs:element name="FTPSFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPSFragmentRef"/>
          <xs:documentation>
@@ -9951,8 +10740,49 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:attribute>
 		    </xs:complexType>
 	  </xs:element>
+    <xs:element name="FTPSFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/FTP/Ref/FTPSFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTPS file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+FTPSFragment"
+                     shape="rect">FTPSFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>FTPSFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the FTPS protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- HTTP -->
-	  <xs:element name="HTTPFragmentRef">
+    <xs:element name="HTTPFragmentRef">
 		    <xs:annotation>
          <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPFragmentRef"/>
          <xs:documentation>
@@ -9983,6 +10813,47 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="Rename" minOccurs="0"/>
 				        <xs:element ref="HTTPHeaders" minOccurs="0"/>
 			      </xs:sequence>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the HTTP protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    <xs:element name="HTTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an HTTP file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPFragment"
+                     shape="rect">HTTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>HTTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
 			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -10029,6 +10900,47 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="Rename" minOccurs="0"/>
 				        <xs:element ref="HTTPHeaders" minOccurs="0"/>
 			      </xs:sequence>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the HTTPS protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
+    <xs:element name="HTTPSFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/HTTP/Ref/HTTPSFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an FTPS file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+HTTPSFragment"
+                     shape="rect">HTTPSFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>HTTPSFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
 			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
             <xs:annotation>
                <xs:documentation>
@@ -10126,6 +11038,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="SFTPFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SFTP/Ref/SFTPFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an SFTP file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+SFTPFragment"
+                     shape="rect">SFTPFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>SFTPFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the SFTP protocol.
+		</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- SMB -->
 	  <xs:element name="SMBFragmentRef">
 		    <xs:annotation>
@@ -10214,6 +11167,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
+    <xs:element name="SMBFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/SMB/Ref/SMBFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an SMB file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+SMBFragment"
+                     shape="rect">SMBFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>SMBFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the SMB protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- WEBDAV -->
 	  <xs:element name="WebDAVFragmentRef">
 		    <xs:annotation>
@@ -10291,7 +11285,47 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-
+    <xs:element name="WebDAVFragmentAlternativeRef">
+		    <xs:annotation>
+         <xs:appinfo source="Fragments/ProtocolFragments/WEBDAV/Ref/WebDAVFragmentRef"/>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>
+			This element references the fragment that is used for an WebDAV file transfer operation.
+			Any number of reusable <a target="_blank"
+                     href="https://kb.sos-berlin.com/display/PKB/YADE+Parameter+Reference+-+WebDAVFragment"
+                     shape="rect">WebDAVFragment</a> 
+			elements can be configured and are distinguished by YADE based on their <em>name</em> attribute.
+		</p>
+               <p>
+			The reference to a fragment is based on the value of the <em>ref</em> attribute of this element 
+			to the corresponding <em>name</em> attribute of the <em>WebDAVFragment</em> element.
+		</p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+		    <xs:complexType>
+			      <xs:attribute name="ref" type="xs:NMTOKEN" use="required">
+            <xs:annotation>
+               <xs:documentation>
+                  <div xmlns="http://www.w3.org/1999/xhtml">
+                     <p>
+			This attribute identifies the fragment that is used for the WebDAV protocol.
+			</p>
+                  </div>
+               </xs:documentation>
+            </xs:annotation>
+                
+            </xs:attribute>
+		    </xs:complexType>
+	  </xs:element>
 	  <!-- SourceFileOptions -->
 	  <xs:element name="SourceFileOptions">
 		    <xs:annotation>
@@ -10328,6 +11362,10 @@ A fragment is referenced via this attribute value by a transfer profile.
 				        <xs:element ref="Polling" minOccurs="0"/>
 				        <xs:element ref="ResultSet" minOccurs="0"/>
 				        <xs:element ref="MaxFiles" minOccurs="0"/>
+                <xs:element ref="MinFileAge" minOccurs="0"/>
+                <xs:element ref="MaxFileAge" minOccurs="0"/>
+                <xs:element ref="MinFileSize" minOccurs="0"/>
+                <xs:element ref="MaxFileSize" minOccurs="0"/>
 				        <xs:element ref="CheckIntegrityHash" minOccurs="0"/>
 			      </xs:sequence>
 		    </xs:complexType>
@@ -10402,6 +11440,244 @@ A fragment is referenced via this attribute value by a transfer profile.
             </xs:restriction>
 		    </xs:simpleType>
 	  </xs:element>
+    <xs:element name="MinFileAge" type="DurationAbsIsoOrDaySecondsOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MinFileAge">
+                <Note include="Duration-AbsIso-Or-Days-Seconds-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the minimum last-modified age of files that are considered for transfer.</p>
+               <p>Files younger than this limit are skipped during file transfer.</p>
+               <!---
+        includes/Duration-Days-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats:</p>
+               <ul>
+                  <li>Relative duration (case-insensitive):
+            <ul>
+                        <li>
+                           <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;s</em> - seconds, e.g.: <em>30s</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;m</em> - minutes, e.g.: <em>1m</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;h</em> - hours, e.g.: <em>1h</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;d</em> - days, e.g.: <em>1d</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Composite relative values (space-separated):
+            <ul>
+                        <li>e.g.: <em>1m 30s</em>
+                        </li>
+                        <li>e.g.: <em>1d 2h 3m 4s</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Absolute timestamp (ISO-8601, UTC or with offset):
+            <ul>
+                        <li>
+                           <em>2026-05-12T14:30:00Z</em> (UTC, must use uppercase Z)</li>
+                        <li>
+                           <em>2026-05-12T14:30:00+02:00</em> (with timezone offset)</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MaxFileAge" type="DurationAbsIsoOrDaySecondsOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MaxFileAge">
+                <Note include="Duration-AbsIso-Or-Days-Seconds-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the maximum last-modified age of files that are considered for transfer.</p>
+               <p>Files older than this limit are skipped during file transfer.</p>
+               <!---
+        includes/Duration-Days-Seconds-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats:</p>
+               <ul>
+                  <li>Relative duration (case-insensitive):
+            <ul>
+                        <li>
+                           <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;s</em> - seconds, e.g.: <em>30s</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;m</em> - minutes, e.g.: <em>1m</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;h</em> - hours, e.g.: <em>1h</em>
+                        </li>
+                        <li>
+                           <em>&lt;n&gt;d</em> - days, e.g.: <em>1d</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Composite relative values (space-separated):
+            <ul>
+                        <li>e.g.: <em>1m 30s</em>
+                        </li>
+                        <li>e.g.: <em>1d 2h 3m 4s</em>
+                        </li>
+                     </ul>
+                  </li>
+                  <li>Absolute timestamp (ISO-8601, UTC or with offset):
+            <ul>
+                        <li>
+                           <em>2026-05-12T14:30:00Z</em> (UTC, must use uppercase Z)</li>
+                        <li>
+                           <em>2026-05-12T14:30:00+02:00</em> (with timezone offset)</li>
+                     </ul>
+                  </li>
+               </ul>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MinFileSize" type="FileSizeOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MinFileSize">
+                <Note include="FileSize-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the minimum file size of files that are considered for transfer.</p>
+               <p>Files smaller than this limit will be ignored.</p>
+               <!---
+        includes/FileSize-Values.xhtml will be included (see work.xsd)
+        -->
+                <p/>
+               <p>Allowed formats (case-insensitive):
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (bytes), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;B</em> - file size in bytes, e.g.: <em>1B</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;KB</em> - file size in kilobytes, e.g.: <em>1KB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;MB</em> - file size in megabytes, e.g.: <em>1MB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;GB</em> - file size in gigabytes, e.g.: <em>1GB</em>
+                     </li>
+                  </ul>
+               </p>
+               <p/>
+               <p>Decimal values may use either dot or comma as separator:
+            <ul>
+                     <li>e.g.: <em>1.5GB</em> or <em>1,5GB</em>
+                     </li>
+                  </ul>
+		             </p>
+               <p/>
+               <p>Composite values (space-separated):
+            <ul>
+                     <li>e.g.: <em>1GB 200MB 5KB 10B</em>
+                     </li>
+                  </ul>
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>
+	  </xs:element>
+    <xs:element name="MaxFileSize" type="FileSizeOrVarType">
+		    <xs:annotation>
+         <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/MaxFileSize">
+            <Note include="FileSize-Values"/>
+            </xs:appinfo>
+         <xs:documentation>
+            <div xmlns="http://www.w3.org/1999/xhtml">
+               <strong>References</strong>
+               <ul>
+                  <li>
+                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
+                  </li>
+               </ul>
+               <strong>Notes</strong>
+               <p>This parameter specifies the maximum file size of files that are considered for transfer.</p>
+               <p>Files larger than this limit will be ignored.</p>
+               <!---
+        includes/FileSize-Values.xhtml will be included (see work.xsd)
+        -->
+               <p/>
+               <p>Allowed formats (case-insensitive):
+			<ul>
+                     <li>
+                        <em>&lt;n&gt;</em> - plain number (bytes), e.g.: <em>1</em>, <em>30</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;B</em> - file size in bytes, e.g.: <em>1B</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;KB</em> - file size in kilobytes, e.g.: <em>1KB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;MB</em> - file size in megabytes, e.g.: <em>1MB</em>
+                     </li>
+                     <li>
+                        <em>&lt;n&gt;GB</em> - file size in gigabytes, e.g.: <em>1GB</em>
+                     </li>
+                  </ul>
+               </p>
+               <p/>
+               <p>Decimal values may use either dot or comma as separator:
+            <ul>
+                     <li>e.g.: <em>1.5GB</em> or <em>1,5GB</em>
+                     </li>
+                  </ul>
+		             </p>
+               <p/>
+               <p>Composite values (space-separated):
+            <ul>
+                     <li>e.g.: <em>1GB 200MB 5KB 10B</em>
+                     </li>
+                  </ul>
+		             </p>
+            </div>
+         </xs:documentation>
+      </xs:annotation>		
+	  </xs:element>
 	  <!-- SourceFileOptions - CheckSteadyState -->
 	  <xs:element name="CheckSteadyState">
 		    <xs:annotation>
@@ -10474,7 +11750,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 		of incoming files.
 		</p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -10487,7 +11763,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -10675,7 +11952,7 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      </xs:sequence>
 		    </xs:complexType>
 	  </xs:element>
-	  <xs:element name="PollInterval" default="60" type="DurationSecondsOrVarType">
+	  <xs:element name="PollInterval" default="1m" type="DurationSecondsOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollInterval">
                 <Note include="Duration-Seconds-Values"/>
@@ -10691,7 +11968,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                <strong>Notes</strong>
                <p>This parameter specifies the wait time before a new poll for files is carried out. </p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (seconds), e.g.: <em>1</em>, <em>30</em>
@@ -10704,7 +11981,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1m 30s</em>
                      </li>
@@ -10714,7 +11992,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>		
 	  </xs:element>
-	  <xs:element name="PollTimeout" default="0" type="DurationMinutesOrVarType">
+	  <xs:element name="PollTimeout" default="1m" type="DurationMinutesOrVarType">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollTimeout">
                 <Note include="Duration-Minutes-Values"/>
@@ -10740,7 +12018,7 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </ul>
 		             </p>
                 <p/>
-               <p>Allowed formats:
+               <p>Allowed formats (case-insensitive):
 			<ul>
                      <li>
                         <em>&lt;n&gt;</em> - plain number (minutes), e.g.: <em>1</em>, <em>30</em>
@@ -10753,7 +12031,8 @@ A fragment is referenced via this attribute value by a transfer profile.
                      </li>
                   </ul>
                </p>
-               <p>Combined values (with blank as separator):
+               <p/>
+               <p>Composite values (space-separated):
             <ul>
                      <li>e.g.: <em>1h 30m 30s</em>
                      </li>
@@ -10775,11 +12054,11 @@ A fragment is referenced via this attribute value by a transfer profile.
                   </li>
                </ul>
                <strong>Notes</strong>
-               <p>
-			This parameter specifies the minimum number of files that have to be found during the polling period in order to
-			cause the transfer to start. This parameter becomes effective with the 
-			<em>PollTimeout</em> parameter.
-		</p>
+               <ul>
+                  <li>This parameter specifies the minimum number of files that have to be found during the polling period in order to cause the transfer to start.</li>
+                  <li>This parameter becomes effective with the <em>PollTimeout</em> parameter.</li>
+                  <li>If the minimum number of files is not reached in any polling period, all files currently available are transferred when the polling server run ends.</li>
+               </ul>
             </div>
          </xs:documentation>
       </xs:annotation>
@@ -10844,7 +12123,7 @@ A fragment is referenced via this attribute value by a transfer profile.
          </xs:documentation>
       </xs:annotation>
 	  </xs:element>
-	  <xs:element name="PollingServerDuration" default="0">
+	  <xs:element name="PollingServerDuration" default="1m">
 		    <xs:annotation>
          <xs:appinfo source="Profiles/Profile/Operation/Source/SourceFileOptions/Polling/PollingServerDuration"/>
          <xs:documentation>
@@ -13845,6 +15124,13 @@ A fragment is referenced via this attribute value by a transfer profile.
 			      <xs:element ref="BasicAuthentication" minOccurs="0"/>
 		    </xs:sequence>
 	  </xs:complexType>
+    <xs:complexType name="AuthenticatedSocksProxyType">
+		    <xs:sequence>
+			      <xs:element ref="BasicConnection"/>
+			      <xs:element ref="BasicAuthentication" minOccurs="0"/>
+            <xs:element ref="ResolveHostname" minOccurs="0"/>
+		    </xs:sequence>
+	  </xs:complexType>
 	  <xs:complexType name="WriteableFragmentRefType">
 		    <xs:choice>
             <xs:element ref="AzureBlobStorageFragmentRef"/>
@@ -13894,6 +15180,12 @@ A fragment is referenced via this attribute value by a transfer profile.
             <xs:pattern value="true|false|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="DurationAbsIsoOrDaySecondsOrVarType">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s, 1d 30m, 1d 20h 30m), ISO-8601 datetime or ${VAR} -->
+            <xs:pattern value="([0-9]+)|([0-9]+[smhd](\s+[0-9]+[smhd])*)|(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2}))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="DurationSecondsOrVarType">
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (seconds)), duration formats (e.g., 30s, 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
@@ -13904,6 +15196,12 @@ A fragment is referenced via this attribute value by a transfer profile.
         <xs:restriction base="xs:string">
             <!-- plain numbers >= 0 (e.g., 0, 30, 100 (minutes)), duration formats (e.g., 1m, 1m 30s, 1h, 1h 30m 45s), or ${VAR} -->
             <xs:pattern value="([0-9]+)|(([0-9]+[mh](\s+[0-9]+[smh])*))|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="FileSizeOrVarType">
+        <xs:restriction base="xs:string">
+            <!-- plain numbers >= 0 (e.g., 0, 30, 100 (bytes)), file size formats (e.g., 1KB, 1mb 30kb, 1.5GB, 1,5GB), or ${VAR} -->
+            <xs:pattern value="([0-9]+)|(([0-9]+([.,][0-9]+)?)\s*([Gg][Bb]|[Mm][Bb]|[Kk][Bb]|[Bb])(\s+([0-9]+([.,][0-9]+)?)\s*([Gg][Bb]|[Mm][Bb]|[Kk][Bb]|[Bb]))*)|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
         </xs:restriction>
     </xs:simpleType>
     <!-- not used because GUI does not support showing values for union types(<xs:simpleType><xs:union memberTypes="VarType"><xs:simpleType><xs:restriction base="xs:int">...) or XSD 1.1 variables (<xs:variable ...) -->

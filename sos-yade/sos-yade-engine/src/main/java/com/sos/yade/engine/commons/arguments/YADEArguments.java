@@ -7,6 +7,7 @@ import com.sos.commons.util.SOSMapVariableReplacer;
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
+import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
 
 public class YADEArguments extends ASOSArguments {
@@ -50,6 +51,9 @@ public class YADEArguments extends ASOSArguments {
 
     public static final String STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED = "settings_replacer_keep_unresolved";
     public static final Boolean STARTUP_ARG_SETTINGS_REPLACER_KEEP_UNRESOLVED_DEFAULT = Boolean.valueOf(true);
+
+    // PROXY
+    public static final String STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME = ProxyConfigArguments.ARG_PROXY_SOCKS_RESOLVE_HOSTNAME;
 
     /** Other ---------------------------------------------------------------------------- */
     public final static String LABEL = "Transfer";
