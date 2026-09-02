@@ -1,5 +1,11 @@
 package com.sos.joc.descriptor.impl;
 
+import java.net.URI;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
+import com.sos.inventory.model.descriptor.DeploymentDescriptor;
+import com.sos.inventory.model.descriptor.Descriptor;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -28,6 +34,20 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                 throw new JocBadRequestException("wrong object type, only DEPLOYMENTDESCRIPTOR or DESCRIPTORFOLDER are allowed.");
             }
             if (response == null) {
+                if(filter.getObjectType().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR)) {
+                    try {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter.getConfiguration()), URI.create(JocInventory.SCHEMA_LOCATION.get(filter.getObjectType())));
+                    } catch (Exception e) {
+                        DeploymentDescriptor deploymentDescriptor = (DeploymentDescriptor)filter.getConfiguration();
+                        if(deploymentDescriptor.getDescriptor() != null) {
+                            Descriptor descriptor = deploymentDescriptor.getDescriptor();
+                            Predicate<String> predicate = Pattern.compile("^[^<>]*$").asPredicate().negate();
+                            if(predicate.test(descriptor.getTitle()) || predicate.test(descriptor.getAccount())) {
+                                throw e;
+                            }
+                        }
+                    }
+                }
                 response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE);
             }
             return response;
