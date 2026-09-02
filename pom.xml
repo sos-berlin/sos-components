@@ -71,7 +71,8 @@
     <io.vavr.version>0.10.6</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-    <bouncycastle.version>1.84</bouncycastle.version>
+    <bouncycastle.version>1.85</bouncycastle.version>
+    <bouncycastle.provider.version>1.85.2</bouncycastle.provider.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
@@ -792,7 +793,7 @@
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>  
-        <version>${bouncycastle.version}</version>
+        <version>${bouncycastle.provider.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
