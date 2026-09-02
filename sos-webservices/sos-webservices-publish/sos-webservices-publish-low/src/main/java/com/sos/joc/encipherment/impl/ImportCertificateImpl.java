@@ -12,7 +12,6 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -71,8 +70,7 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(fakeRequest, ImportCertificateRequestFilter.class);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -91,12 +89,12 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
                     .createRelatedJobResource(hibernateSession, filter, certificateFromFile, auditLog.getId());
             
             // Deploy the JobResource to all controllers
-            new Thread(() -> {
-                byte[] deployFilter = createDeployFilter(xAccessToken, generatedJobResource, filter.getAuditLog());
-                if (deployFilter != null) {
-                    new DeployImpl().postDeploy(xAccessToken, deployFilter);
-                }
-            }).start();
+            DeployFilter deployFilter = createDeployFilter(generatedJobResource);
+            if (deployFilter != null) {
+                DeployImpl deployImpl = new DeployImpl();
+                deployImpl.setCurrentAccount(this);
+                deployImpl.deploy(xAccessToken, deployFilter, auditLog);
+            }
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocConcurrentAccessException e) {
             ProblemHelper.postMessageAsHintIfExist(e.getMessage(), xAccessToken, getJocError(), null);
@@ -108,28 +106,21 @@ public class ImportCertificateImpl extends JOCResourceImpl implements IImportCer
         }
     }
 
-    private byte[] createDeployFilter (String xAccessToken, DBItemInventoryConfiguration jobResource, AuditParams audit) {
-        try {
-            DeployFilter deployFilter = new DeployFilter();
-            Set<String> allowedControllerIds = Collections.emptySet();
-            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-                    .filter(availableController -> getBasicControllerPermissions(availableController, xAccessToken)
-                            .getDeployments().getDeploy()).collect(Collectors.toSet());
-            deployFilter.setControllerIds(new ArrayList<String>(allowedControllerIds));
-            deployFilter.setAuditLog(audit);
-            DeployablesValidFilter toStore = new DeployablesValidFilter();
-            deployFilter.setStore(toStore);
-            Config jobResourceConfig = new Config();
-            Configuration jobResourceDraft = new Configuration();
-            jobResourceDraft.setPath(jobResource.getPath());
-            jobResourceDraft.setObjectType(ConfigurationType.JOBRESOURCE);
-            jobResourceConfig.setConfiguration(jobResourceDraft);
-            toStore.getDraftConfigurations().add(jobResourceConfig);
-            return Globals.objectMapper.writeValueAsBytes(deployFilter);
-        } catch (JsonProcessingException e) {
-            LOGGER.warn("error creating DeployFilter to deploy newly generated JobResource.");
-            return null;
-        }
+    private DeployFilter createDeployFilter(DBItemInventoryConfiguration jobResource) {
+        DeployFilter deployFilter = new DeployFilter();
+        Set<String> allowedControllerIds = Collections.emptySet();
+        allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getBasicControllerPermissions(
+                availableController).getDeployments().getDeploy()).collect(Collectors.toSet());
+        deployFilter.setControllerIds(new ArrayList<String>(allowedControllerIds));
+        DeployablesValidFilter toStore = new DeployablesValidFilter();
+        deployFilter.setStore(toStore);
+        Config jobResourceConfig = new Config();
+        Configuration jobResourceDraft = new Configuration();
+        jobResourceDraft.setPath(jobResource.getPath());
+        jobResourceDraft.setObjectType(ConfigurationType.JOBRESOURCE);
+        jobResourceConfig.setConfiguration(jobResourceDraft);
+        toStore.getDraftConfigurations().add(jobResourceConfig);
+        return deployFilter;
     }
     
 }

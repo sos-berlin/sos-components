@@ -25,7 +25,7 @@ public class ChangesShowImpl extends AShowChange implements IChangesShow {
             JsonValidator.validate(filter, ShowChangesFilter.class);
             ShowChangesFilter showFilter = Globals.objectMapper.readValue(filter, ShowChangesFilter.class);
             
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(xAccessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 response = showChange(showFilter, API_CALL);
             }

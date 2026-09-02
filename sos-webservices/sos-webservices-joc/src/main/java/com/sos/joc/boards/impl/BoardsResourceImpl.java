@@ -65,8 +65,8 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardsFilter.class);
             BoardsFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
-                    accessToken).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
+                    .getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
@@ -147,7 +147,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 }
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, filter.getCompact() == Boolean.TRUE, filter.getLimit(), controllerState);
-                Map<String, HasNote> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccount());
+                Map<String, HasNote> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccountName());
                 
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {

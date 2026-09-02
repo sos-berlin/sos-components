@@ -45,8 +45,7 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
             
             DBItemJocApprovalRequest item = dbLayer.getApprovalRequest(in.getId());
-            String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
-            if (!item.getRequestor().equals(curAccountName)) {
+            if (!item.getRequestor().equals(getAccountName())) {
                 throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + in.getId());
             }
             

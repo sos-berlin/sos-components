@@ -79,8 +79,8 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId(),
-                    accessToken).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
+                    .getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
@@ -106,7 +106,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             JsonValidator.validateFailFast(filterBytes, PlansOpenCloseFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             // this API is called also if add order dialog is started -> add order::create
-            ControllerPermissions perms = getBasicControllerPermissions(filter.getControllerId(), accessToken);
+            ControllerPermissions perms = getBasicControllerPermissions(filter.getControllerId());
             boolean permitted = perms.getNoticeBoards().getView() || perms.getOrders().getCreate();
             JOCDefaultResponse response = initPermissions(filter.getControllerId(), permitted);
             if (response != null) {
@@ -290,7 +290,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
-                Map<String, HasNote> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccount());
+                Map<String, HasNote> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccountName());
                 
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {

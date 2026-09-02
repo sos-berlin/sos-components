@@ -32,7 +32,7 @@ public class FavoritesOrderingImpl extends JOCResourceImpl implements IFavorites
                 return jocDefaultResponse;
             }
 
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
             Globals.beginTransaction(connection);

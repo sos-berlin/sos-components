@@ -25,13 +25,13 @@ public class DeleteNotificationImpl extends JOCResourceImpl implements IDeleteNo
             deleteNotificationFilter = initLogging(API_CALL, deleteNotificationFilter, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(deleteNotificationFilter, DeleteNotificationFilter.class);
             DeleteConfiguration in = Globals.objectMapper.readValue(deleteNotificationFilter, DeleteConfiguration.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getNotification().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }
             DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog());
             in.setObjectType(ObjectType.NOTIFICATION);
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(DeleteResourceImpl.handleStandardConfiguration(in, getAccount(), auditLog
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(DeleteResourceImpl.handleStandardConfiguration(in, getAccountName(), auditLog
                     .getId())));
         } catch (Exception e) {
             return responseStatusJSError(e);

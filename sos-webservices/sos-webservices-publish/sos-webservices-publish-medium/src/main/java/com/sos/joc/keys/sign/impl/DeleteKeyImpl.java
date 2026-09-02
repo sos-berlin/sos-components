@@ -29,17 +29,15 @@ public class DeleteKeyImpl extends JOCResourceImpl implements IDeleteKey {
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, DeleteKeyFilter.class);
             DeleteKeyFilter deleteKeyFilter = Globals.objectMapper.readValue(filter, DeleteKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
             storeAuditLog(deleteKeyFilter.getAuditLog());
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            DBItemDepKeys signatureKeyPair = dbLayerKeys.getDbItemDepKeys(account, JocSecurityLevel.MEDIUM);
+            DBItemDepKeys signatureKeyPair = dbLayerKeys.getDbItemDepKeys(getAccountName(), JocSecurityLevel.MEDIUM);
             if (signatureKeyPair != null) {
                 hibernateSession.delete(signatureKeyPair);
             }

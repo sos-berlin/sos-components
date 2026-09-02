@@ -73,12 +73,11 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             session.setAutoCommit(false);
             ApprovalDBLayer dbLayer = new ApprovalDBLayer(session);
 
-            final String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
             List<DBItemJocApprovalRequest> items = dbLayer.getApprovalRequests(in.getIds());
             Map<Boolean, List<Either<Err419, DBItemJocApprovalRequest>>> result = items.stream().map(item -> {
                 Either<Err419, DBItemJocApprovalRequest> either = null;
                 try {
-                    if (!item.getRequestor().equals(curAccountName)) {
+                    if (!item.getRequestor().equals(getAccountName())) {
                         throw new JocBadRequestException("The current user is not the requestor of the approval request with id " + item.getId());
                     }
                     if (RequestorState.EXECUTED.equals(item.getRequestorStateAsEnum())) {
@@ -137,7 +136,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
             if (response != null) {
                 return response;
             }
-            if (!jobschedulerUser.getSOSAuthCurrentAccount().isApprover()) {
+            if (!getCurrentAccount().isApprover()) {
                 throw new JocAccessDeniedException("The current user is not an approver.");
             }
 
@@ -151,7 +150,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
 
             List<DBItemJocApprovalRequest> items = dbLayer.getApprovalRequests(in.getIds());
             final ApproverState newState = action.equals(Action.APPROVE) ? ApproverState.APPROVED : ApproverState.REJECTED;
-            final String curAccountName = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
+            final String curAccountName = getAccountName();
             
             Map<Boolean, List<Either<Err419, DBItemJocApprovalRequest>>> result = items.stream().map(item -> {
                 Either<Err419, DBItemJocApprovalRequest> either = null;

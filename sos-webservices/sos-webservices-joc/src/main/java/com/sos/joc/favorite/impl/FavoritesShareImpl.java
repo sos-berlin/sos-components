@@ -43,7 +43,7 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
                 return jocDefaultResponse;
             }
             
-            String account = getAccount();
+            String account = getAccountName();
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             connection.setAutoCommit(false);
             connection.beginTransaction();

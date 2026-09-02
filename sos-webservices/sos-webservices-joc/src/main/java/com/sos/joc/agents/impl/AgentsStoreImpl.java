@@ -62,7 +62,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             filterBytes = initLogging(action, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
-            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
+            Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
@@ -138,7 +138,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
 
             JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
             StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
-            Stream<Boolean> permission = getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers().getManage());
+            Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);

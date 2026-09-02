@@ -110,7 +110,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.INVENTORY); 
             JsonValidator.validate(fakeRequest, ImportFilter.class);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getInventory().getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -129,7 +129,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog());
             Long auditLogId = dbAuditItem.getId();
             
-            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+            String account = getAccountName();
             stream = body.getEntityAs(InputStream.class);
             ArchiveValues values = null;
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();

@@ -56,7 +56,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             filterBytes = initLogging(API_CALL_RUN, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterServiceRun.class);
             ClusterServiceRun in = Globals.objectMapper.readValue(filterBytes, ClusterServiceRun.class);
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
+            JOCDefaultResponse response = initPermissions("", getJocPermissions().map(p -> p.getCluster().getManage()));
             if (response == null) {
                 storeAuditLog(in.getAuditLog());
                 response = processAnswer(in.getType(), JocClusterService.getInstance().runServiceNow(in, StartupMode.run_now));
@@ -74,7 +74,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             filterBytes = initLogging(API_CALL_RESTART, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
-            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
+            JOCDefaultResponse response = initPermissions("", getJocPermissions().map(p -> p.getCluster().getManage()));
             if (response == null) {
                 storeAuditLog(in.getAuditLog());
                 if (in.getType().equals(ClusterServices.cluster)) { // all services
@@ -98,7 +98,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             filterBytes = initLogging(API_CALL_SWITCH, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getCluster().getManage()));
             if (response == null) {
                 checkSwitchingControllerIds();
                 storeAuditLog(in.getAuditLog());
@@ -133,7 +133,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).map(p -> p.getCluster().getManage()));
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getCluster().getManage()));
             if (response == null) {
                 storeAuditLog(in.getAuditLog());
                 session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);

@@ -36,8 +36,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, SetRootCaForSigningFilter.class);
             SetRootCaForSigningFilter setRootCaFilter = Globals.objectMapper.readValue(filter, SetRootCaForSigningFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -47,7 +46,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             if (JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 accountName = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                accountName =  jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                accountName =  getAccountName();
             }
             X509Certificate cert;
             try {

@@ -58,7 +58,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            boolean settingsPermission = getBasicJocPermissions(accessToken).getAdministration().getSettings().getManage();
+            boolean settingsPermission = getBasicJocPermissions().getAdministration().getSettings().getManage();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             storeAuditLog(filter.getAuditLog());
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(hibernateSession);

@@ -80,7 +80,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             } else if(JocSecurityLevel.LOW.equals(secLvl)) {
                 account =  ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = this.getAccount();
+                account = this.getAccountName();
             }
             if(account == null) {
                 JocError error = new JocError("cannot determine account for signing.");
@@ -96,7 +96,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
-                    getBasicControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+                    getBasicControllerPermissions(availableController).getDeployments().getDeploy()).collect(Collectors.toSet());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer  = new DBLayerDeploy(session);

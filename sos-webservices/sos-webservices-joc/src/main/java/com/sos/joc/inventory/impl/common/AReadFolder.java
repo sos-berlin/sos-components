@@ -185,7 +185,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in, boolean permission) throws Exception {
+    public JOCDefaultResponse checkPermissions(final RequestFolder in, boolean permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later

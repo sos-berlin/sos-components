@@ -63,7 +63,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
             InventoryNoteItem invItem = NoteImpl.getInvItem(dbLayer, in, folderPermissions);
             
-            String user = getAccount();
+            String user = getAccountName();
             Date now = Date.from(Instant.now());
             Author author = NoteImpl.newAuthor(user);
             NoteResponse note = new NoteResponse();

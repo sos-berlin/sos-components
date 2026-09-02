@@ -52,7 +52,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p
                     .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -149,7 +149,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -182,14 +182,14 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 }
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).map(p -> p
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId).map(p -> p
                     .getSwitchOver()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
             storeAuditLog(body.getAuditLog(), controllerId);
-            ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccount(), accessToken, getJocError());
+            ClusterWatch.getInstance().confirmNodeLoss(controllerId, getAccountName(), accessToken, getJocError());
             
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

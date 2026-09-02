@@ -45,7 +45,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             cloneFilter = initLogging(API_CALL, cloneFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(cloneFilter, CloneFilter.class);
             CloneFilter filter = Globals.objectMapper.readValue(cloneFilter, CloneFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -62,7 +62,7 @@ public class GitCommandCloneImpl extends JOCResourceImpl implements IGitCommandC
             if(JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel())) {
                 account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             } else {
-                account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
+                account = getAccountName();
             }
 
             Path backupPath = GitCommandUtils.backupGitGlobalConfigFile();

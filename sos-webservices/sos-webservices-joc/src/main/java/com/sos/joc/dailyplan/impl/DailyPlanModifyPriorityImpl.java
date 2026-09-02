@@ -69,7 +69,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             DailyPlanChangePriority in = Globals.objectMapper.readValue(filterBytes, DailyPlanChangePriority.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getModify()));
             if (response != null) {
                 return response;

@@ -199,7 +199,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setConfigurationDraftJson(null);
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(Long.valueOf(0));// TODO
-        item.setAccount(getAccount());
+        item.setAccount(getAccountName());
         item.setCreated(new Date());
         item.setModified(item.getCreated());
         session.save(item);
@@ -213,7 +213,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setConfigurationDraftJson(null);
         item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
-        item.setAccount(getAccount());
+        item.setAccount(getAccountName());
         item.setModified(new Date());
         session.update(item);
         return item;

@@ -94,8 +94,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validateFailFast(body, FidoRegistrationFilter.class);
             FidoRegistrationFilter fidoRegistrationFilter = Globals.objectMapper.readValue(body, FidoRegistrationFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -653,7 +652,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validate(body, FidoRegistrationsFilter.class);
             FidoRegistrationsFilter fidoRegistrationsFilter = Globals.objectMapper.readValue(body, FidoRegistrationsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -708,8 +707,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validateFailFast(body, AccountListFilter.class);
             FidoRegistrationListFilter accountFilter = Globals.objectMapper.readValue(body, FidoRegistrationListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -765,8 +763,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             body = initLogging(API_CALL_APPROVE, body, accessToken, CategoryType.IDENTITY);
             JsonValidator.validate(body, FidoRegistrationsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(accessToken).getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -887,7 +884,7 @@ public class FidoResourceImpl extends JOCResourceImpl implements IFidoResource {
             JsonValidator.validate(body, FidoRegistrationsFilter.class);
             fidoRegistrationsFilter = Globals.objectMapper.readValue(body, FidoRegistrationsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initManageAccountPermissions();
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

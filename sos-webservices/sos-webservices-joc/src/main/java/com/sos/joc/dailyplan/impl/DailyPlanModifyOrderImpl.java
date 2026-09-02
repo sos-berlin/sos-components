@@ -124,13 +124,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             ModifyOrdersHelper in = Globals.objectMapper.readValue(filterBytes, ModifyOrdersHelper.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getModify()));
             if (response != null) {
                 return response;
             }
 
-            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId, accessToken).map(p -> p.getOrders()
+            List<Boolean> hasManagePositionsPermission = getControllerPermissions(controllerId).map(p -> p.getOrders()
                     .getManagePositions()).toList();
             if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty())
                     || in.getBlockPosition() != null)) {
@@ -1209,7 +1209,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     private DailyPlanRunner getDailyPlanRunner(boolean withSubmit, Date dailyPlanDate) {
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        settings.setUserAccount(getAccountName());
         settings.setOverwrite(true);
         settings.setSubmit(withSubmit);
         settings.setTimeZone(getSettings().getTimeZone());
@@ -1383,7 +1383,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+            settings.setUserAccount(getAccountName());
             settings.setOverwrite(false);
             settings.setSubmit(true);
             settings.setTimeZone(getSettings().getTimeZone());
@@ -1419,7 +1419,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dailyPlanDate);
-        item.setUserAccount(getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
+        item.setUserAccount(getAccountName());
         item.setCreated(new Date());
         return item;
     }

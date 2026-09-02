@@ -45,7 +45,7 @@ public class StandardNotificationReleaseResourceImpl extends ACommonResourceImpl
             }
 
             // step 2 - update db/reread and post event
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccount(), 0L)));
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in, getAccountName(), 0L)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }

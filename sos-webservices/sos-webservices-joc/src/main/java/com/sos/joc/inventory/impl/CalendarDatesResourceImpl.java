@@ -31,7 +31,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
             JsonValidator.validate(inBytes, CalendarDatesFilter.class, true);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions(accessToken).getInventory().getView());
+            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(read(in)));
             }

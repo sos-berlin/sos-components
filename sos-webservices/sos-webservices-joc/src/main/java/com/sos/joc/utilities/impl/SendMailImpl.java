@@ -39,7 +39,7 @@ public class SendMailImpl extends JOCOrderResourceImpl implements ISendMailResou
             JsonValidator.validateFailFast(filterBytes, SendMail.class);
             SendMail sendMail = Globals.objectMapper.readValue(filterBytes, SendMail.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

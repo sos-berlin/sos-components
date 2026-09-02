@@ -64,12 +64,12 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                 if (in.getControllerIds() != null && !in.getControllerIds().isEmpty()) {
                     controllerIds = controllerIds.filter(availableController -> in.getControllerIds().contains(availableController));
                 }
-                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController, accessToken)
-                        .getOrders().getView()).collect(Collectors.toSet());
+                allowedControllers = controllerIds.filter(availableController -> getBasicControllerPermissions(availableController).getOrders()
+                        .getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
             }
             if (permitted) {
-                JocPermissions perms = getBasicJocPermissions(accessToken);
+                JocPermissions perms = getBasicJocPermissions();
                 permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
             }
 

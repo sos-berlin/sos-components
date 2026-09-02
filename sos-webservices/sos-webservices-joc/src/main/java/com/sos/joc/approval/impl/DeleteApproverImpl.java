@@ -28,7 +28,7 @@ public class DeleteApproverImpl extends JOCResourceImpl implements IDeleteApprov
             filterBytes = initLogging(API_CALL, filterBytes, xAccessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, DeleteApproverFilter.class);
             DeleteApproverFilter filter = Globals.objectMapper.readValue(filterBytes, DeleteApproverFilter.class);
-            JOCDefaultResponse response = initManageAccountPermissions(xAccessToken);
+            JOCDefaultResponse response = initManageAccountPermissions();
             if (response != null) {
                 return response;
             }

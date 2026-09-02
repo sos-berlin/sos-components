@@ -39,7 +39,7 @@ public abstract class AStoreChange extends JOCResourceImpl {
         if (existingChange != null) {
             Optional.ofNullable(request.getStore()).map(ChangeIdentifier::getState).map(ChangeState::intValue).ifPresent(existingChange::setState);
             if (ChangeState.PUBLISHED.equals(request.getStore().getState())) {
-                existingChange.setPublishedBy(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
+                existingChange.setPublishedBy(getAccountName());
             }
             existingChange.setTitle(request.getStore().getTitle());
             Date now = Date.from(Instant.now());
@@ -52,7 +52,7 @@ public abstract class AStoreChange extends JOCResourceImpl {
             DBItemInventoryChange newChange = new DBItemInventoryChange();
             newChange.setName(request.getStore().getName());
             newChange.setState(ChangeState.OPEN.intValue());
-            newChange.setOwner(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
+            newChange.setOwner(getAccountName());
             newChange.setTitle(request.getStore().getTitle());
             Date now = Date.from(Instant.now());
             newChange.setCreated(now);

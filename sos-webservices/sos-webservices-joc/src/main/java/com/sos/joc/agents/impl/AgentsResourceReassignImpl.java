@@ -51,7 +51,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             
             String controllerId = body.getControllerId();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

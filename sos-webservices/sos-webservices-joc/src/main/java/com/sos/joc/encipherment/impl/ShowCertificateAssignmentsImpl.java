@@ -30,8 +30,7 @@ public class ShowCertificateAssignmentsImpl extends JOCResourceImpl implements I
             showAssignmentFilter = initLogging(API_CALL, showAssignmentFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validate(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
             ShowAgentAssignmentsRequestFilter filter = Globals.objectMapper.readValue(showAssignmentFilter, ShowAgentAssignmentsRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getCertificates().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

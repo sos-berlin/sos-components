@@ -64,7 +64,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     StandardCharsets.UTF_8);
             initLogging(API_CALL, fakeRequest, xAccessToken, CategoryType.DOCUMENTATIONS);
             //4-eyes principle cannot support uploads
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions(xAccessToken).getDocumentations().getManage(), false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getDocumentations().getManage(), false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
