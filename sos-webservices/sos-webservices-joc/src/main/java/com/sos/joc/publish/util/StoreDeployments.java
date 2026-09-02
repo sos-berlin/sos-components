@@ -27,6 +27,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -169,11 +170,13 @@ public class StoreDeployments {
         }
     }
 
-    public static void processAfterAdd(Either<Problem, ?> either, String account, String commitId, String controllerId, String accessToken,
-            JocError jocError, String wsIdentifier, String dailyPlanDate, boolean includeLate, String transactionId) {
+    public static void processAfterAdd(Either<Problem, ?> either, String account, String commitId, String controllerId, JOCResourceImpl impl,
+            String wsIdentifier, String dailyPlanDate, boolean includeLate, String transactionId) {
         // asynchronous processing: this method is called from a CompletableFuture and therefore
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
+        String accessToken = impl.getAccessToken();
+        JocError jocError = impl.getJocError();
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(wsIdentifier);
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
@@ -186,6 +189,7 @@ public class StoreDeployments {
                 List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
                 if (dailyPlanDate != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
+                    ordersGenerate.setCurrentAccount(impl);
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
@@ -288,29 +292,31 @@ public class StoreDeployments {
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier)
+            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier, null,
+        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, impl, wsIdentifier, null,
                 false, null);
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String transactionId)
+            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier, String transactionId)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, accessToken, jocError, wsIdentifier, null,
+        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, impl, wsIdentifier, null,
                 false, transactionId);
     }
 
     public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier, String dailyPlanDate,
-            boolean includeLate, String transactionId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        
+            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier, String dailyPlanDate,
+            boolean includeLate, String transactionId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException,
+            CertificateException {
+
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically
             DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null, account, signedItemsSpec.getAuditlogId());
             if (!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
-                storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer, false);
+                storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, impl.getAccessToken(), impl.getJocError(), dbLayer,
+                        false);
             }
 
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
@@ -329,9 +335,9 @@ public class StoreDeployments {
                 BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations1).thenAccept(either -> processAfterAdd(either, account,
-                                commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
+                                commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                     } else {
-                        processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
+                        processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                     }
                 });
                 break;
@@ -351,9 +357,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations2).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
+                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
+                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     } else {
@@ -364,9 +370,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations3).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
+                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
+                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     }
@@ -390,9 +396,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations4).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
+                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
+                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     } else {
@@ -403,9 +409,9 @@ public class StoreDeployments {
                         BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
                             if (e.isRight()) {
                                 UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations5).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId));
+                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
                             } else {
-                                processAfterAdd(e, account, commitId, controllerId, accessToken, jocError, wsIdentifier, dailyPlanDate, includeLate, transactionId);
+                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
                             }
                         });
                     }

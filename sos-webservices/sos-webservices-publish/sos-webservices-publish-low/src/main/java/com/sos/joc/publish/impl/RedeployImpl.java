@@ -208,7 +208,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptySet(), account, commitId, controllerId,
-                        getAccessToken(), getJocError(), action);
+                        this, action);
             }
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {

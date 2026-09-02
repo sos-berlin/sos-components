@@ -155,7 +155,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                             .collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.mapping(DBItemDeploymentHistory::getName, Collectors.toSet())));
                         
                         List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
-                                CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter, getApplyFunction(workflowsPerController.get(controllerId)));
+                                CancelOrdersPublishHelper.getCancelOrderFutures(this, orderFilter, getApplyFunction(workflowsPerController.get(controllerId)));
                         
                         CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)

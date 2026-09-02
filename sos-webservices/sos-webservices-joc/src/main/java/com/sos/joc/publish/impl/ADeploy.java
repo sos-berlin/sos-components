@@ -281,7 +281,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                         LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed from order filter");
                         LOGGER.debug("DEPLOY: order cancel - future started");
 
-                        List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(xAccessToken, orderFilter, null);
+                        List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(this, orderFilter, null);
                         
                         CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
@@ -299,9 +299,10 @@ public abstract class ADeploy extends JOCResourceImpl {
                                 // call updateRepo command via ControllerApi for given controller
                                 SOSHibernateSession sessionAfterCancel = null;
                                 try {
-                                    sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders"); 
-                                    StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                            getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
+                                    sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders");
+                                    StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec,
+                                            renamedOriginalHistoryEntries, account, commitId, controllerId, this, apiCall, deployFilter
+                                                    .getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
                                 } catch (Exception e) {
                                     throw new JocDeployException(e);
                                 } finally {
@@ -315,9 +316,10 @@ public abstract class ADeploy extends JOCResourceImpl {
                         // call updateRepo command via ControllerApi for given controller
                         SOSHibernateSession sessionWithoutCancel = null;
                         try {
-                            sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy"); 
-                            StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec, renamedOriginalHistoryEntries, account, commitId, controllerId,
-                                    getAccessToken(), getJocError(), apiCall, deployFilter.getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
+                            sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy");
+                            StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec,
+                                    renamedOriginalHistoryEntries, account, commitId, controllerId, this, apiCall, deployFilter
+                                            .getAddOrdersDateFrom(), deployFilter.getIncludeLate(), deployFilter.getTransactionId());
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         } finally {

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.impl.DailyPlanCancelOrderImpl;
@@ -39,7 +40,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 
 public class CancelOrdersPublishHelper {
 
-    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(String xAccessToken, DailyPlanOrderFilterDef orderFilter,
+    public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(JOCResourceImpl impl, DailyPlanOrderFilterDef orderFilter,
             Function<ControllerCommandResponse, ControllerCommandResponse> apply) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, SOSHibernateException, ExecutionException {
@@ -50,7 +51,9 @@ public class CancelOrdersPublishHelper {
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+        cancelOrderImpl.setCurrentAccount(impl);
         DailyPlanDeleteOrdersImpl deleteOrdersImpl = new DailyPlanDeleteOrdersImpl();
+        deleteOrdersImpl.setCurrentAccount(impl);
         Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
         Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
                 ordersPerController);
