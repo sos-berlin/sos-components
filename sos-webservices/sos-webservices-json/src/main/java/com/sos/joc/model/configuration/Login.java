@@ -32,7 +32,7 @@ public class Login {
     @JsonProperty("title")
     private String title;
     @JsonProperty("enableRememberMe")
-    private Boolean enableRememberMe = true;
+    private Boolean enableRememberMe = false;
     /**
      * login logo
      * <p>
