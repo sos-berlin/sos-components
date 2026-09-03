@@ -158,7 +158,6 @@ public class SOSMail {
             }
         }
         this.smtpProperties = smtpProperties;
-        init();
     }
 
     public SOSMail(final String smtpHost) throws Exception {
@@ -1254,6 +1253,7 @@ public class SOSMail {
             break;
         }
     }
+    
     public void setAlternativeBody(final String alternativeBody) {
         this.alternativeBody = alternativeBody;
     }
