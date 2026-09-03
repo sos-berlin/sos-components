@@ -1,17 +1,13 @@
-package com.sos.jitl.jobs.mail;
+package com.sos.commons.mail;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public enum MailPriority {
-    VERY_HIGH(1),
+    HIGHEST(1),
     HIGH(2),
-    NORMAL(3),
     LOW(4),
-    VERY_LOW(5);
+    LOWEST(5);
 
     private final Integer intValue;
     private final static Map<String, MailPriority> CONSTANTS = new HashMap<String, MailPriority>();
@@ -38,7 +34,6 @@ public enum MailPriority {
         return this.name();
     }
 
-    @JsonValue
     public String value() {
         return this.name();
     }
@@ -47,7 +42,6 @@ public enum MailPriority {
         return this.intValue;
     }
 
-    @JsonCreator
     public static MailPriority fromValue(String value) {
         MailPriority constant = CONSTANTS.get(value);
         if (constant == null) {
