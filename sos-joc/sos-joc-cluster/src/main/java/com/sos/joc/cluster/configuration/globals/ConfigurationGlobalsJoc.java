@@ -34,7 +34,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     private ConfigurationEntry defaultProfileAccount = new ConfigurationEntry("default_profile_account", "root",
             GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry enableRememberMe = new ConfigurationEntry("enable_remember_me", "true", GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry enableRememberMe = new ConfigurationEntry("enable_remember_me", "false", GlobalSettingsSectionValueType.BOOLEAN);
 
     private ConfigurationEntry copyPasteSuffix = new ConfigurationEntry("copy_paste_suffix", "copy", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry copyPastePrefix = new ConfigurationEntry("copy_paste_prefix", "copy", GlobalSettingsSectionValueType.STRING);
