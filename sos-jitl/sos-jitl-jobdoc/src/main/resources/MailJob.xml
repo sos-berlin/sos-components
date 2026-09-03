@@ -120,8 +120,8 @@
                 <note>
                     <title>Priority of the mail. Will set the X-Priority header as processed by some email clients, e.g. MS Outlook</title>
                     <p>
-                        By default the value NORMAL is used. Possible values are:<br/>
-                        VERY_HIGH<br/>HIGH<br/>NORMAL<br/>LOW<br/>VERY_LOW<br/>
+                        Possible values are:<br/>
+                        HIGHEST<br/>HIGH<br/>LOW<br/>LOWEST<br/>
                     </p>
                 </note>
             </param>

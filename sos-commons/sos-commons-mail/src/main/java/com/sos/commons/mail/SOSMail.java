@@ -1223,43 +1223,34 @@ public class SOSMail {
         changed = true;
     }
 
-    public void setPriority(int priority) throws MessagingException {
+    public void setPriority(MailPriority priority) throws MessagingException {
         switch(priority) {
-        case 1:
+        case HIGHEST:
             message.setHeader("Priority", "urgent");
             message.setHeader("X-Priority", "1 (Highest)");
             message.setHeader("X-MSMail-Priority", "Highest");
             changed = true;
             break;
-        case 2:
+        case HIGH:
             message.setHeader("Priority", "urgent");
             message.setHeader("X-Priority", "2 (High)");
             message.setHeader("X-MSMail-Priority", "Highest");
             changed = true;
             break;
-        case 3:
-            message.setHeader("Priority", "normal");
-            message.setHeader("X-Priority", "3 (Normal)");
-            message.setHeader("X-MSMail-Priority", "Normal");
-            changed = true;
-            break;
-        case 4:
+        case LOW:
             message.setHeader("Priority", "non-urgent");
             message.setHeader("X-Priority", "4 (Low)");
             message.setHeader("X-MSMail-Priority", "Low");
             changed = true;
             break;
-        case 5:
+        case LOWEST:
             message.setHeader("Priority", "non-urgent");
             message.setHeader("X-Priority", "5 (Lowest)");
             message.setHeader("X-MSMail-Priority", "Low");
             changed = true;
             break;
         default:
-            message.setHeader("Priority", "normal");
-            message.setHeader("X-Priority", "3 (Normal)");
-            message.setHeader("X-MSMail-Priority", "Normal");
-            changed = true;
+            changed = false;
             break;
         }
     }

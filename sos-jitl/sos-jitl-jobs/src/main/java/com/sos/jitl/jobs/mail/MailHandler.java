@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.mail.MailPriority;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.commons.util.loggers.base.ISOSLogger;
@@ -46,12 +47,13 @@ public class MailHandler {
             }
 
             sosMail = new SOSMail(smtpProperties);
+            sosMail.init();
+            sosMail.setQueueMailOnError(false);
             sosMail.setCredentialStoreArguments(csArgs);
             sosMail.setFrom(args.getFrom());
-            sosMail.setQueueMailOnError(false);
             
             if (args.getPriority() != null) {
-                sosMail.setPriority(MailPriority.fromValue(args.getPriority()).intValue());
+                sosMail.setPriority(args.getPriority());
            }
             if (args.getContentType() != null) {
                 sosMail.setContentType(args.getContentType());

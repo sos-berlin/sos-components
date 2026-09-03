@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.mail;
 import java.util.List;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
+import com.sos.commons.mail.MailPriority;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -34,7 +35,7 @@ public class MailJobArguments extends JobArguments {
     private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
     private JobArgument<List<String>> attachment = new JobArgument<List<String>>("attachment", false);
 
-    private JobArgument<String> priority = new JobArgument<String>("priority", false, "NORMAL");
+    private JobArgument<MailPriority> priority = new JobArgument<>("priority", false);
 
     public MailJobArguments() {
         super(new CredentialStoreArguments());
@@ -137,12 +138,12 @@ public class MailJobArguments extends JobArguments {
     }
 
     
-    public String getPriority() {
+    public MailPriority getPriority() {
         return priority.getValue();
     }
 
     
-    public void setPriority(String priority) {
+    public void setPriority(MailPriority priority) {
         this.priority.setValue(priority);
     }
 
