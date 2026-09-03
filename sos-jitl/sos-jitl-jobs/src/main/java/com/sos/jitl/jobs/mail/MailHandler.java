@@ -52,9 +52,6 @@ public class MailHandler {
             sosMail.setCredentialStoreArguments(csArgs);
             sosMail.setFrom(args.getFrom());
             
-            if (args.getPriority() != null) {
-                sosMail.setPriority(args.getPriority());
-           }
             if (args.getContentType() != null) {
                 sosMail.setContentType(args.getContentType());
             }
@@ -111,10 +108,14 @@ public class MailHandler {
                     sosMail.addAttachment(attachment);
                 }
             }
-            logger.info("sending mail: \n" + sosMail.dumpMessageAsString());
+            if (args.getPriority() != null) {
+                sosMail.setPriority(args.getPriority());
+            }
 
             if (!sosMail.send()) {
                 logger.info("mail server is unavailable, mail for recipient [" + args.getTo() + "]" + sosMail.getLastError());
+            } else {
+                logger.info("sending mail: \n" + sosMail.dumpMessageAsString());
             }
             if (args.getCleanupAttachment()) {
                 for (String attachment : args.getAttachments()) {
