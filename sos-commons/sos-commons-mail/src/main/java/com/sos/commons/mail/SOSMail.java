@@ -59,6 +59,13 @@ public class SOSMail {
     public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
     public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
     public static final String PROPERTY_NAME_SMTP_CONNECTION_TIMEOUT = "mail.smtp.connectiontimeout";
+    
+    public enum MailPriority {
+        HIGHEST,
+        HIGH,
+        LOW,
+        LOWEST;
+    }
 
     private CredentialStoreArguments credentialStoreArguments;
     protected String subject = "";
@@ -105,6 +112,7 @@ public class SOSMail {
     private Session session = null;
     private Properties smtpProperties = null;
 
+    
     abstract class MydataSource implements DataSource {
 
         final String name;
@@ -1223,6 +1231,9 @@ public class SOSMail {
     }
 
     public void setPriority(MailPriority priority) throws MessagingException {
+        if(priority == null) {
+            return;
+        }
         switch(priority) {
         case HIGHEST:
             message.setHeader("Priority", "urgent");
@@ -1249,7 +1260,6 @@ public class SOSMail {
             changed = true;
             break;
         default:
-            changed = false;
             break;
         }
     }
