@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.mail.MailPriority;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.commons.util.loggers.base.ISOSLogger;
