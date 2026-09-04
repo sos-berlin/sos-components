@@ -48,24 +48,14 @@ public class SOSMail {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMail.class);
 
-    public static final int PRIORITY_HIGHEST = 1;
-    public static final int PRIORITY_HIGH = 2;
-    public static final int PRIORITY_NORMAL = 3;
-    public static final int PRIORITY_LOW = 4;
-    public static final int PRIORITY_LOWEST = 5;
-
     public static final String PROPERTY_NAME_SMTP_HOST = "mail.smtp.host";
     public static final String PROPERTY_NAME_SMTP_PORT = "mail.smtp.port";
     public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
     public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
     public static final String PROPERTY_NAME_SMTP_CONNECTION_TIMEOUT = "mail.smtp.connectiontimeout";
-    
+
     public enum MailPriority {
-        HIGHEST,
-        HIGH,
-        LOW,
-        LOWEST,
-        NORMAL;
+        HIGHEST, HIGH, LOW, LOWEST, NORMAL;
     }
 
     private CredentialStoreArguments credentialStoreArguments;
@@ -108,12 +98,10 @@ public class SOSMail {
     private String loadedMessageId = "";
     private boolean messageReady = false;
     private boolean queueMailOnError = true;
-    private int priority = -1;
     private String securityProtocol = "";
     private Session session = null;
     private Properties smtpProperties = null;
 
-    
     abstract class MydataSource implements DataSource {
 
         final String name;
@@ -196,25 +184,6 @@ public class SOSMail {
         init();
     }
 
-    private void initPriority() throws MessagingException {
-        switch (priority) {
-        case PRIORITY_HIGHEST:
-            this.setPriorityHighest();
-            break;
-        case PRIORITY_HIGH:
-            this.setPriorityHigh();
-            break;
-        case PRIORITY_LOW:
-            this.setPriorityLow();
-            break;
-        case PRIORITY_LOWEST:
-            this.setPriorityLowest();
-            break;
-        default:
-            break;
-        }
-    }
-
     public void init() throws Exception {
         dateFormats.put("de", "dd.MM.yyyy");
         dateFormats.put("en", "MM/dd/yyyy");
@@ -228,7 +197,6 @@ public class SOSMail {
 
     private void initMessage() throws Exception {
         createMessage(createSession());
-        initPriority();
     }
 
     private Session createSession() throws Exception {
@@ -1196,46 +1164,26 @@ public class SOSMail {
         this.initMessage();
     }
 
-    public void setPriorityHighest() throws MessagingException {
-        message.setHeader("Priority", "urgent");
-        message.setHeader("X-Priority", "1 (Highest)");
-        message.setHeader("X-MSMail-Priority", "Highest");
-        changed = true;
-    }
+    public void setPriority(String priority) throws MessagingException {
+        if (priority == null) {
+            return;
+        }
 
-    public void setPriorityHigh() throws MessagingException {
-        message.setHeader("Priority", "urgent");
-        message.setHeader("X-Priority", "2 (High)");
-        message.setHeader("X-MSMail-Priority", "Highest");
-        changed = true;
-    }
+        MailPriority mp = null;
+        try {
+            mp = MailPriority.valueOf(priority.toUpperCase());
+        } catch (Exception e) {
+            LOGGER.error(String.format("[setPriority][unknown priority=%s]%s", priority, e.toString()), e);
+        }
 
-    public void setPriorityNormal() throws MessagingException {
-        message.setHeader("Priority", "normal");
-        message.setHeader("X-Priority", "3 (Normal)");
-        message.setHeader("X-MSMail-Priority", "Normal");
-        changed = true;
-    }
-
-    public void setPriorityLow() throws MessagingException {
-        message.setHeader("Priority", "non-urgent");
-        message.setHeader("X-Priority", "4 (Low)");
-        message.setHeader("X-MSMail-Priority", "Low");
-        changed = true;
-    }
-
-    public void setPriorityLowest() throws MessagingException {
-        message.setHeader("Priority", "non-urgent");
-        message.setHeader("X-Priority", "5 (Lowest)");
-        message.setHeader("X-MSMail-Priority", "Low");
-        changed = true;
+        setPriority(mp);
     }
 
     public void setPriority(MailPriority priority) throws MessagingException {
-        if(priority == null) {
+        if (priority == null) {
             return;
         }
-        switch(priority) {
+        switch (priority) {
         case HIGHEST:
             message.setHeader("Priority", "urgent");
             message.setHeader("X-Priority", "1 (Highest)");
@@ -1264,7 +1212,7 @@ public class SOSMail {
             break;
         }
     }
-    
+
     public void setAlternativeBody(final String alternativeBody) {
         this.alternativeBody = alternativeBody;
     }
@@ -1325,22 +1273,4 @@ public class SOSMail {
         return credentialStoreArguments;
     }
 
-    public static void main(final String[] args) throws Exception {
-        SOSMail sosMail = new SOSMail("smtp.sos");
-        sosMail.setPriorityLowest();
-        sosMail.setQueueDir("c:/");
-        sosMail.setFrom("xyz@sos-berlin.com");
-        sosMail.setEncoding("8bit");
-        sosMail.setattachmentEncoding("Base64");
-        sosMail.setSubject("Betreff");
-        sosMail.setReplyTo("xyz@sos-berlin.com");
-        String s = "Hello\\nWorld";
-        sosMail.setBody(s);
-        sosMail.addRecipient("xyz@sos-berlin.com");
-        sosMail.setPriorityLowest();
-        if (!sosMail.send()) {
-            LOGGER.warn(sosMail.getLastError());
-        }
-        sosMail.clearRecipients();
-    }
 }

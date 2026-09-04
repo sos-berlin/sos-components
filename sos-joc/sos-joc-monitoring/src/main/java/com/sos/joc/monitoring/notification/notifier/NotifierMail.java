@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.mail.SOSMail;
-import com.sos.commons.mail.SOSMail.MailPriority;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.notification.JobNotification;
 import com.sos.inventory.model.job.notification.JobNotificationMail;
@@ -295,11 +294,7 @@ public class NotifierMail extends ANotifier {
             return;
         }
 
-        try {
-            mail.setPriority(MailPriority.valueOf(monitor.getPriority().toUpperCase()));
-        } catch (Exception e) {
-            LOGGER.error(String.format("%s[setMailPriority][priority=%s]%s", Configuration.LOG_INTENT, monitor.getPriority(), e.toString()), e);
-        }
+        mail.setPriority(monitor.getPriority());
     }
 
     private NotifyResult checkJobNotification(NotificationType type, DBItemMonitoringOrderStep mos) {
