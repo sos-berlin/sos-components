@@ -40,8 +40,7 @@ public class YADEJobArguments extends JobArguments {
     // Target
     private JobArgument<String> targetDir = new JobArgument<>(YADEArguments.STARTUP_ARG_TARGET_DIR, false);
     // PROXY
-    private JobArgument<Boolean> proxySocksResolveHostname = new JobArgument<>(YADEArguments.STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME, false,
-            Boolean.FALSE);
+    private JobArgument<Boolean> proxySocksResolveHostname = new JobArgument<>(YADEArguments.STARTUP_ARG_PROXY_SOCKS_RESOLVE_HOSTNAME, false);
 
     /** Settings - replacement behavior */
     private JobArgument<Boolean> settingsReplacerCaseSensitive = new JobArgument<>(YADEArguments.STARTUP_ARG_SETTINGS_REPLACER_CASE_SENSITIVE, false,
