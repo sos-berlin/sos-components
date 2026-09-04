@@ -161,11 +161,18 @@ public class TestPeriodResolver {
                 // executeTestDayIsInPlan("Europe/Berlin", "06:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
                 // "01:59:59", "03:30:00", "00:15:00")));
 
+                // executeTestDayIsInPlan("Europe/Berlin", "06:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
+                // "02:00:00"), new TestPeriod("02:15:00"), new TestPeriod("02:30:00"), new TestPeriod("02:45:00"), new TestPeriod("03:00:00"),
+                // new TestPeriod("03:30:00"), new TestPeriod("03:45:00"), new TestPeriod("04:00:00")));
+
+                executeTestDayIsInPlan("Europe/Berlin", "06:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
+                        "02:00:00", "04:00:00", "00:15:00")));
+
                 // executeTestDayIsInPlan("Europe/Berlin", "00:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
                 // "00:00:00", "24:00:00", "00:01:00")));
 
-                executeTestDayIsInPlan("Europe/Berlin", "00:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
-                        "00:00:00"), new TestPeriod("01:00:00"), new TestPeriod("02:00:00"), new TestPeriod("23:00:00"), new TestPeriod("02:00:00")));
+                // executeTestDayIsInPlan("Europe/Berlin", "00:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
+                // "00:00:00"), new TestPeriod("01:00:00"), new TestPeriod("02:00:00"), new TestPeriod("23:00:00"), new TestPeriod("02:00:00")));
 
                 // executeTestDayIsInPlan("Europe/Berlin", "06:00:00", getDailyPlanDays(dailyPlanDays), "Europe/Berlin", Arrays.asList(new TestPeriod(
                 // "00:00:00"), new TestPeriod("01:00:00"), new TestPeriod("02:00:00"), new TestPeriod("23:00:00"), new TestPeriod("00:00:00",
