@@ -58,49 +58,52 @@ public class SOSMail {
         HIGHEST, HIGH, LOW, LOWEST, NORMAL;
     }
 
-    private CredentialStoreArguments credentialStoreArguments;
-    protected String subject = "";
-    protected String from;
-    protected String fromName;
-    protected String replyTo;
-    protected String queueDir;
-    protected String body = "";
-    protected String alternativeBody;
-    protected String language = "de";
-    protected String dateFormat = "dd.MM.yyyy";
-    protected String datetimeFormat = "dd.MM.yyyy HH:mm";
-    protected HashMap<String, String> dateFormats = new HashMap<String, String>();
-    protected HashMap<String, String> datetimeFormats = new HashMap<String, String>();
-    protected String attachmentCharset = "iso-8859-1";
-    protected String charset = "iso-8859-1";
-    protected String alternativeCharset = "iso-8859-1";
-    protected String contentType = "text/plain";
-    protected String alternativeContentType = "text/html";
-    protected String encoding = "7bit";
-    protected String alternativeEncoding = "7bit";
-    protected String attachmentEncoding = "Base64";
-    protected String attachmentContentType = "application/octet-stream";
-    protected LinkedList<String> toList = new LinkedList<String>();
-    protected LinkedList<String> ccList = new LinkedList<String>();
-    protected LinkedList<String> bccList = new LinkedList<String>();
-    protected TreeMap<String, SOSMailAttachment> attachmentList = new TreeMap<String, SOSMailAttachment>();
-    private boolean sendToOutputStream = false;
-    private byte[] messageBytes;
-    private MimeMessage message = null;
-    private SOSMailAuthenticator authenticator = null;
     private final ArrayList<FileInputStream> fileInputStreams = new ArrayList<FileInputStream>();
-    private ByteArrayOutputStream rawEmailByteStream = null;
-    private String lastError = "";
-    private boolean changed = false;
     private final String queuePattern = "yyyy-MM-dd.HHmmss.S";
+
+    private CredentialStoreArguments credentialStoreArguments;
+    private SOSMailAuthenticator authenticator = null;
+    private Session session = null;
+    private MimeMessage message = null;
+    private Properties smtpProperties = null;
+    private ByteArrayOutputStream rawEmailByteStream = null;
+
+    private HashMap<String, String> dateFormats = new HashMap<String, String>();
+    private HashMap<String, String> datetimeFormats = new HashMap<String, String>();
+    private LinkedList<String> toList = new LinkedList<String>();
+    private LinkedList<String> ccList = new LinkedList<String>();
+    private LinkedList<String> bccList = new LinkedList<String>();
+    private TreeMap<String, SOSMailAttachment> attachmentList = new TreeMap<String, SOSMailAttachment>();
+
+    private String subject = "";
+    private String from;
+    private String fromName;
+    private String replyTo;
+    private String queueDir;
+    private String body = "";
+    private String alternativeBody;
+    private String language = "de";
+    private String dateFormat = "dd.MM.yyyy";
+    private String datetimeFormat = "dd.MM.yyyy HH:mm";
+    private String attachmentCharset = "iso-8859-1";
+    private String charset = "iso-8859-1";
+    private String alternativeCharset = "iso-8859-1";
+    private String contentType = "text/plain";
+    private String alternativeContentType = "text/html";
+    private String encoding = "7bit";
+    private String alternativeEncoding = "7bit";
+    private String attachmentEncoding = "Base64";
+    private String attachmentContentType = "application/octet-stream";
+    private String lastError = "";
     private String queuePraefix = "sos.";
     private String lastGeneratedFileName = "";
     private String loadedMessageId = "";
+    private String securityProtocol = "";
+    private byte[] messageBytes;
+    private boolean sendToOutputStream = false;
+    private boolean changed = false;
     private boolean messageReady = false;
     private boolean queueMailOnError = true;
-    private String securityProtocol = "";
-    private Session session = null;
-    private Properties smtpProperties = null;
 
     abstract class MydataSource implements DataSource {
 
