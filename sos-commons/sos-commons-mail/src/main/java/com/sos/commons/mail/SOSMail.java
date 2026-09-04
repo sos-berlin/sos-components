@@ -64,7 +64,8 @@ public class SOSMail {
         HIGHEST,
         HIGH,
         LOW,
-        LOWEST;
+        LOWEST,
+        NORMAL;
     }
 
     private CredentialStoreArguments credentialStoreArguments;
