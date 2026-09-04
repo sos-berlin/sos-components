@@ -17,6 +17,7 @@ import com.sos.joc.audit.resource.IAuditLogResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.common.StringSanitizer;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.audit.AuditLogDBItem;
 import com.sos.joc.db.audit.AuditLogDBLayer;
@@ -158,7 +159,9 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         try {
             if (sr != null) {
                 while (sr.next()) {
-                    auditLogItems.add(sr.get());
+                    AuditLogDBItem dbItem = sr.get();
+                    dbItem.setParameters(StringSanitizer.sanitize(dbItem.getParameters()));
+                    auditLogItems.add(dbItem);
                 }
             }
         } catch (Exception e) {
