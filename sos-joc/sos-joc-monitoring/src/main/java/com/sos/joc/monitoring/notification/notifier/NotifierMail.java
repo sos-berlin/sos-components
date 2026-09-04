@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.mail.MessagingException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -233,8 +231,7 @@ public class NotifierMail extends ANotifier {
         addReplayTo(res);
 
         setMailRecipients(res);
-        setMailPriority();
-
+        mail.setPriority(monitor.getPriority());
     }
 
     private void addFrom(MailResource res) throws Exception {
@@ -287,14 +284,6 @@ public class NotifierMail extends ANotifier {
             }
             mail.addBCC(monitor.getBCC());
         }
-    }
-
-    private void setMailPriority() throws MessagingException {
-        if (SOSString.isEmpty(monitor.getPriority())) {
-            return;
-        }
-
-        mail.setPriority(monitor.getPriority());
     }
 
     private NotifyResult checkJobNotification(NotificationType type, DBItemMonitoringOrderStep mos) {

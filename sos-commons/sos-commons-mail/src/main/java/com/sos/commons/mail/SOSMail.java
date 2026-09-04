@@ -1164,8 +1164,8 @@ public class SOSMail {
         this.initMessage();
     }
 
-    public void setPriority(String priority) throws MessagingException {
-        if (priority == null) {
+    public void setPriority(String priority) throws Exception {
+        if (SOSString.isEmpty(priority)) {
             return;
         }
 
@@ -1173,7 +1173,7 @@ public class SOSMail {
         try {
             mp = MailPriority.valueOf(priority.toUpperCase());
         } catch (Exception e) {
-            LOGGER.error(String.format("[setPriority][unknown priority=%s]%s", priority, e.toString()), e);
+            throw new Exception(String.format("[unknown priority=%s]%s", priority, e.toString()), e);
         }
 
         setPriority(mp);

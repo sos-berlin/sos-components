@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.MessagingException;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSParameterSubstitutor;
@@ -205,8 +203,8 @@ public class FidoConfirmationMail {
         }
 
         addFrom(res);
-        setMailPriority(fidoProperties.getIamFidoEmailSettings().getPriority());
 
+        mail.setPriority(fidoProperties.getIamFidoEmailSettings().getPriority());
     }
 
     private void addFrom(MailResource res) throws Exception {
@@ -214,12 +212,5 @@ public class FidoConfirmationMail {
         if (!SOSString.isEmpty(res.getFromName())) {
             mail.setFromName(res.getFromName());
         }
-    }
-
-    private void setMailPriority(String priority) throws MessagingException {
-        if (SOSString.isEmpty(priority)) {
-            return;
-        }
-        mail.setPriority(priority);
     }
 }
