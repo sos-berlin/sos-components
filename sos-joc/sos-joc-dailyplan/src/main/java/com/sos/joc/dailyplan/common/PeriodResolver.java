@@ -168,7 +168,6 @@ public class PeriodResolver {
 
                 startLocal = startLocal.plusDays(1);
                 startZoned = startLocal.atZone(scheduleZone);
-                // startZoned = startZoned.plusDays(1);
                 startUTC = startZoned.toInstant();
 
                 // Check
