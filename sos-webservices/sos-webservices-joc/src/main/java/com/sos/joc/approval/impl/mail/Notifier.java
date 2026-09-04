@@ -45,57 +45,58 @@ public class Notifier {
     private static final String DefaultEncoding = "7bit";
     private static final EmailPriority DefaultPriority = EmailPriority.NORMAL;
     private static final String DefaultSubject = "JS7 Request for Approval";
-    private static final String DefaultBody = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <style>
-        .tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}
-        .tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}
-        .tg th {font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#f38630;}
-    </style>
-    <title>JS7 JobScheduler Notification</title>
-</head>
-<body>
-    <table class="tg">
-        <tr>
-            <th colspan="4">JS7 Request for Approval</th>
-        </tr>
-        <tr>
-            <td>Title:</td>
-            <td colspan="3">${Title}</td>
-        </tr>
-        <tr>
-            <td>Reason:</td>
-            <td colspan="3">${Reason}</td>
-        </tr>
-        <tr>
-            <td>Request URI:</td>
-            <td colspan="3">${RequestURI}</td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td colspan="3">${RequestBody}</td>
-        </tr>
-        <tr>
-            <td>JOC Cockpit Link:</td>
-            <td colspan="3">${jocURL}</td>
-        </tr>
-        <tr>
-            <td>Requestor Account:</td>
-            <td>${Requestor}</td>
-            <td>Category:</td>
-            <td>${Category}</td>
-        </tr>
-        <tr>
-            <td>Request Status:</td>
-            <td>${RequestStatus}</td>
-            <td>Request Status Date:</td>
-            <td>${RequestStatusDate}</td>
-        </tr>
-    </table>
-</body>""";
+    private static final String DefaultBody =
+            """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+                        <style>
+                            .tg {border-collapse:collapse;border-spacing:0;border-color:#aaa;}
+                            .tg td {font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#333;background-color:#fff;}
+                            .tg th {font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aaa;color:#fff;background-color:#f38630;}
+                        </style>
+                        <title>JS7 JobScheduler Notification</title>
+                    </head>
+                    <body>
+                        <table class="tg">
+                            <tr>
+                                <th colspan="4">JS7 Request for Approval</th>
+                            </tr>
+                            <tr>
+                                <td>Title:</td>
+                                <td colspan="3">${Title}</td>
+                            </tr>
+                            <tr>
+                                <td>Reason:</td>
+                                <td colspan="3">${Reason}</td>
+                            </tr>
+                            <tr>
+                                <td>Request URI:</td>
+                                <td colspan="3">${RequestURI}</td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td colspan="3">${RequestBody}</td>
+                            </tr>
+                            <tr>
+                                <td>JOC Cockpit Link:</td>
+                                <td colspan="3">${jocURL}</td>
+                            </tr>
+                            <tr>
+                                <td>Requestor Account:</td>
+                                <td>${Requestor}</td>
+                                <td>Category:</td>
+                                <td>${Category}</td>
+                            </tr>
+                            <tr>
+                                <td>Request Status:</td>
+                                <td>${RequestStatus}</td>
+                                <td>Request Status Date:</td>
+                                <td>${RequestStatusDate}</td>
+                            </tr>
+                        </table>
+                    </body>""";
 
     public static ReadEmailSettings readEmailSettings(SOSHibernateSession session) throws SOSHibernateException, JsonMappingException,
             JsonProcessingException {
@@ -114,7 +115,7 @@ public class Notifier {
                 entity.setBody(DefaultBody);
             }
             if (SOSString.isEmpty(entity.getSubject())) {
-                entity.setSubject(DefaultSubject); 
+                entity.setSubject(DefaultSubject);
             }
         } else {
             entity = getDefaultEmailSettings();
@@ -122,7 +123,7 @@ public class Notifier {
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
     }
-    
+
     private static ReadEmailSettings getDefaultEmailSettings() {
         ReadEmailSettings _default = new ReadEmailSettings();
         _default.setBody(DefaultBody);
@@ -133,7 +134,7 @@ public class Notifier {
         _default.setPriority(DefaultPriority);
         _default.setSubject(DefaultSubject);
         return _default;
-        
+
     }
 
     public static void send(DBItemJocApprovalRequest item, ApprovalDBLayer dbLayer, JocError jocError) {
@@ -187,17 +188,15 @@ public class Notifier {
         if (template == null) {
             return null;
         }
-        return template.replaceAll("(?i)\\$\\{Requestor\\}", item.getRequestor())
-                .replaceAll("(?i)\\$\\{Request(?:UR[LI])?\\}", item.getRequest())
-                .replaceAll("(?i)\\$\\{RequestBody\\}", item.getParameters())
-                .replaceAll("(?i)\\$\\{Request(?:Status|State)?Date\\}", item.getRequestorStateDate().toInstant().toString())
-                .replaceAll("(?i)\\$\\{Request(?:Status|State)\\}", item.getRequestorStateAsEnum().value())
-                .replaceAll("(?i)\\$\\{Title\\}", item.getTitle())
-                .replaceAll("(?i)\\$\\{Category\\}", item.getCategoryTypeAsEnum().value())
-                .replaceAll("(?i)\\$\\{Reason\\}", Optional.ofNullable(item.getComment()).orElse(""))
-                .replaceAll("(?i)\\$\\{RequestBody\\}", Optional.ofNullable(item.getParameters()).orElse(""))
-                .replaceAll("(?i)\\$\\{jocUr[li]\\}", getArgValue("js7JocUrl", jobResourceArgs))
-                .replaceAll("(?i)\\$\\{joc(?:Ur[li])?ReverseProxy\\}", getArgValue("js7JocUrlReverseProxy", jobResourceArgs));
+        return template.replaceAll("(?i)\\$\\{Requestor\\}", item.getRequestor()).replaceAll("(?i)\\$\\{Request(?:UR[LI])?\\}", item.getRequest())
+                .replaceAll("(?i)\\$\\{RequestBody\\}", item.getParameters()).replaceAll("(?i)\\$\\{Request(?:Status|State)?Date\\}", item
+                        .getRequestorStateDate().toInstant().toString()).replaceAll("(?i)\\$\\{Request(?:Status|State)\\}", item
+                                .getRequestorStateAsEnum().value()).replaceAll("(?i)\\$\\{Title\\}", item.getTitle()).replaceAll(
+                                        "(?i)\\$\\{Category\\}", item.getCategoryTypeAsEnum().value()).replaceAll("(?i)\\$\\{Reason\\}", Optional
+                                                .ofNullable(item.getComment()).orElse("")).replaceAll("(?i)\\$\\{RequestBody\\}", Optional.ofNullable(
+                                                        item.getParameters()).orElse("")).replaceAll("(?i)\\$\\{jocUr[li]\\}", getArgValue(
+                                                                "js7JocUrl", jobResourceArgs)).replaceAll("(?i)\\$\\{joc(?:Ur[li])?ReverseProxy\\}",
+                                                                        getArgValue("js7JocUrlReverseProxy", jobResourceArgs));
     }
 
     private static MailResource getMailResource(String jobResourceName, Environment jobResourceArgs) throws Exception {
@@ -245,23 +244,7 @@ public class Notifier {
             mail.setEncoding(emailSettings.getEncoding());
         }
         if (emailSettings.getPriority() != null) {
-            switch (emailSettings.getPriority()) {
-            case NORMAL:
-                mail.setPriorityNormal();
-                break;
-            case HIGH:
-                mail.setPriorityHigh();
-                break;
-            case HIGHEST:
-                mail.setPriorityHighest();
-                break;
-            case LOW:
-                mail.setPriorityLow();
-                break;
-            case LOWEST:
-                mail.setPriorityLowest();
-                break;
-            }
+            mail.setPriority(emailSettings.getPriority().name());
         }
         mail.setFrom(mailResource.getFrom());
         if (!SOSString.isEmpty(mailResource.getFromName())) {

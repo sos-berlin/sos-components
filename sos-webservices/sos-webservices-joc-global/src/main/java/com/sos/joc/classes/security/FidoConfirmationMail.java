@@ -182,7 +182,7 @@ public class FidoConfirmationMail {
 
     private void setMailHeaders(MailResource res) throws Exception {
 
-        //Values from mail --> JobResource --> FidoSettings
+        // Values from mail --> JobResource --> FidoSettings
         if (res.getCharset() != null && !res.getCharset().isEmpty()) {
             mail.setCharset(res.getCharset());
         }
@@ -220,19 +220,6 @@ public class FidoConfirmationMail {
         if (SOSString.isEmpty(priority)) {
             return;
         }
-        switch (priority.toUpperCase()) {
-        case "HIGHEST":
-            mail.setPriorityHighest();
-            break;
-        case "HIGH":
-            mail.setPriorityHigh();
-            break;
-        case "LOW":
-            mail.setPriorityLow();
-            break;
-        case "LOWEST":
-            mail.setPriorityLowest();
-            break;
-        }
+        mail.setPriority(priority);
     }
 }
