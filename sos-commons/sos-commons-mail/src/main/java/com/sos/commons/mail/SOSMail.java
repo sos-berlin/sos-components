@@ -48,71 +48,63 @@ public class SOSMail {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMail.class);
 
-    public static final int PRIORITY_HIGHEST = 1;
-    public static final int PRIORITY_HIGH = 2;
-    public static final int PRIORITY_NORMAL = 3;
-    public static final int PRIORITY_LOW = 4;
-    public static final int PRIORITY_LOWEST = 5;
-
     public static final String PROPERTY_NAME_SMTP_HOST = "mail.smtp.host";
     public static final String PROPERTY_NAME_SMTP_PORT = "mail.smtp.port";
     public static final String PROPERTY_NAME_SMTP_USER = "mail.smtp.user";
     public static final String PROPERTY_NAME_SMTP_PASSWORD = "mail.smtp.password";
     public static final String PROPERTY_NAME_SMTP_CONNECTION_TIMEOUT = "mail.smtp.connectiontimeout";
-    
+
     public enum MailPriority {
-        HIGHEST,
-        HIGH,
-        LOW,
-        LOWEST;
+        HIGHEST, HIGH, LOW, LOWEST, NORMAL;
     }
 
-    private CredentialStoreArguments credentialStoreArguments;
-    protected String subject = "";
-    protected String from;
-    protected String fromName;
-    protected String replyTo;
-    protected String queueDir;
-    protected String body = "";
-    protected String alternativeBody;
-    protected String language = "de";
-    protected String dateFormat = "dd.MM.yyyy";
-    protected String datetimeFormat = "dd.MM.yyyy HH:mm";
-    protected HashMap<String, String> dateFormats = new HashMap<String, String>();
-    protected HashMap<String, String> datetimeFormats = new HashMap<String, String>();
-    protected String attachmentCharset = "iso-8859-1";
-    protected String charset = "iso-8859-1";
-    protected String alternativeCharset = "iso-8859-1";
-    protected String contentType = "text/plain";
-    protected String alternativeContentType = "text/html";
-    protected String encoding = "7bit";
-    protected String alternativeEncoding = "7bit";
-    protected String attachmentEncoding = "Base64";
-    protected String attachmentContentType = "application/octet-stream";
-    protected LinkedList<String> toList = new LinkedList<String>();
-    protected LinkedList<String> ccList = new LinkedList<String>();
-    protected LinkedList<String> bccList = new LinkedList<String>();
-    protected TreeMap<String, SOSMailAttachment> attachmentList = new TreeMap<String, SOSMailAttachment>();
-    private boolean sendToOutputStream = false;
-    private byte[] messageBytes;
-    private MimeMessage message = null;
-    private SOSMailAuthenticator authenticator = null;
     private final ArrayList<FileInputStream> fileInputStreams = new ArrayList<FileInputStream>();
-    private ByteArrayOutputStream rawEmailByteStream = null;
-    private String lastError = "";
-    private boolean changed = false;
     private final String queuePattern = "yyyy-MM-dd.HHmmss.S";
+
+    private CredentialStoreArguments credentialStoreArguments;
+    private SOSMailAuthenticator authenticator = null;
+    private Session session = null;
+    private MimeMessage message = null;
+    private Properties smtpProperties = null;
+    private ByteArrayOutputStream rawEmailByteStream = null;
+
+    private HashMap<String, String> dateFormats = new HashMap<String, String>();
+    private HashMap<String, String> datetimeFormats = new HashMap<String, String>();
+    private LinkedList<String> toList = new LinkedList<String>();
+    private LinkedList<String> ccList = new LinkedList<String>();
+    private LinkedList<String> bccList = new LinkedList<String>();
+    private TreeMap<String, SOSMailAttachment> attachmentList = new TreeMap<String, SOSMailAttachment>();
+
+    private String subject = "";
+    private String from;
+    private String fromName;
+    private String replyTo;
+    private String queueDir;
+    private String body = "";
+    private String alternativeBody;
+    private String language = "de";
+    private String dateFormat = "dd.MM.yyyy";
+    private String datetimeFormat = "dd.MM.yyyy HH:mm";
+    private String attachmentCharset = "iso-8859-1";
+    private String charset = "iso-8859-1";
+    private String alternativeCharset = "iso-8859-1";
+    private String contentType = "text/plain";
+    private String alternativeContentType = "text/html";
+    private String encoding = "7bit";
+    private String alternativeEncoding = "7bit";
+    private String attachmentEncoding = "Base64";
+    private String attachmentContentType = "application/octet-stream";
+    private String lastError = "";
     private String queuePraefix = "sos.";
     private String lastGeneratedFileName = "";
     private String loadedMessageId = "";
+    private String securityProtocol = "";
+    private byte[] messageBytes;
+    private boolean sendToOutputStream = false;
+    private boolean changed = false;
     private boolean messageReady = false;
     private boolean queueMailOnError = true;
-    private int priority = -1;
-    private String securityProtocol = "";
-    private Session session = null;
-    private Properties smtpProperties = null;
 
-    
     abstract class MydataSource implements DataSource {
 
         final String name;
@@ -195,25 +187,6 @@ public class SOSMail {
         init();
     }
 
-    private void initPriority() throws MessagingException {
-        switch (priority) {
-        case PRIORITY_HIGHEST:
-            this.setPriorityHighest();
-            break;
-        case PRIORITY_HIGH:
-            this.setPriorityHigh();
-            break;
-        case PRIORITY_LOW:
-            this.setPriorityLow();
-            break;
-        case PRIORITY_LOWEST:
-            this.setPriorityLowest();
-            break;
-        default:
-            break;
-        }
-    }
-
     public void init() throws Exception {
         dateFormats.put("de", "dd.MM.yyyy");
         dateFormats.put("en", "MM/dd/yyyy");
@@ -227,7 +200,6 @@ public class SOSMail {
 
     private void initMessage() throws Exception {
         createMessage(createSession());
-        initPriority();
     }
 
     private Session createSession() throws Exception {
@@ -1195,46 +1167,26 @@ public class SOSMail {
         this.initMessage();
     }
 
-    public void setPriorityHighest() throws MessagingException {
-        message.setHeader("Priority", "urgent");
-        message.setHeader("X-Priority", "1 (Highest)");
-        message.setHeader("X-MSMail-Priority", "Highest");
-        changed = true;
-    }
+    public void setPriority(String priority) throws Exception {
+        if (SOSString.isEmpty(priority)) {
+            return;
+        }
 
-    public void setPriorityHigh() throws MessagingException {
-        message.setHeader("Priority", "urgent");
-        message.setHeader("X-Priority", "2 (High)");
-        message.setHeader("X-MSMail-Priority", "Highest");
-        changed = true;
-    }
+        MailPriority mp = null;
+        try {
+            mp = MailPriority.valueOf(priority.toUpperCase());
+        } catch (Exception e) {
+            throw new Exception(String.format("[unknown priority=%s]%s", priority, e.toString()), e);
+        }
 
-    public void setPriorityNormal() throws MessagingException {
-        message.setHeader("Priority", "normal");
-        message.setHeader("X-Priority", "3 (Normal)");
-        message.setHeader("X-MSMail-Priority", "Normal");
-        changed = true;
-    }
-
-    public void setPriorityLow() throws MessagingException {
-        message.setHeader("Priority", "non-urgent");
-        message.setHeader("X-Priority", "4 (Low)");
-        message.setHeader("X-MSMail-Priority", "Low");
-        changed = true;
-    }
-
-    public void setPriorityLowest() throws MessagingException {
-        message.setHeader("Priority", "non-urgent");
-        message.setHeader("X-Priority", "5 (Lowest)");
-        message.setHeader("X-MSMail-Priority", "Low");
-        changed = true;
+        setPriority(mp);
     }
 
     public void setPriority(MailPriority priority) throws MessagingException {
-        if(priority == null) {
+        if (priority == null) {
             return;
         }
-        switch(priority) {
+        switch (priority) {
         case HIGHEST:
             message.setHeader("Priority", "urgent");
             message.setHeader("X-Priority", "1 (Highest)");
@@ -1263,7 +1215,7 @@ public class SOSMail {
             break;
         }
     }
-    
+
     public void setAlternativeBody(final String alternativeBody) {
         this.alternativeBody = alternativeBody;
     }
@@ -1324,22 +1276,4 @@ public class SOSMail {
         return credentialStoreArguments;
     }
 
-    public static void main(final String[] args) throws Exception {
-        SOSMail sosMail = new SOSMail("smtp.sos");
-        sosMail.setPriorityLowest();
-        sosMail.setQueueDir("c:/");
-        sosMail.setFrom("xyz@sos-berlin.com");
-        sosMail.setEncoding("8bit");
-        sosMail.setattachmentEncoding("Base64");
-        sosMail.setSubject("Betreff");
-        sosMail.setReplyTo("xyz@sos-berlin.com");
-        String s = "Hello\\nWorld";
-        sosMail.setBody(s);
-        sosMail.addRecipient("xyz@sos-berlin.com");
-        sosMail.setPriorityLowest();
-        if (!sosMail.send()) {
-            LOGGER.warn(sosMail.getLastError());
-        }
-        sosMail.clearRecipients();
-    }
 }

@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.mail.MessagingException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,7 @@ public class NotifierMail extends ANotifier {
                 }
             }
             return result;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Instant end = Instant.now();
             result.setError(getOrderNotificationExecutionFailedInfo(start, end, mo, mos, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
@@ -131,7 +129,7 @@ public class NotifierMail extends ANotifier {
                 }
             }
             return result;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Instant end = Instant.now();
             result.setError(getSystemNotificationExecutionFailedInfo(start, end, event, "[" + monitor.getInfo().toString() + "]" + e.toString()), e);
             return result;
@@ -171,7 +169,7 @@ public class NotifierMail extends ANotifier {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("%s[%s][known properties]%s", Configuration.LOG_INTENT, monitor.getInfo(), mr.getMaskedMailProperties()));
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             mail = null;
             throw e;
         }
@@ -233,8 +231,7 @@ public class NotifierMail extends ANotifier {
         addReplayTo(res);
 
         setMailRecipients(res);
-        setMailPriority();
-
+        mail.setPriority(monitor.getPriority());
     }
 
     private void addFrom(MailResource res) throws Exception {
@@ -289,33 +286,13 @@ public class NotifierMail extends ANotifier {
         }
     }
 
-    private void setMailPriority() throws MessagingException {
-        if (SOSString.isEmpty(monitor.getPriority())) {
-            return;
-        }
-        switch (monitor.getPriority().toUpperCase()) {
-        case "HIGHEST":
-            mail.setPriorityHighest();
-            break;
-        case "HIGH":
-            mail.setPriorityHigh();
-            break;
-        case "LOW":
-            mail.setPriorityLow();
-            break;
-        case "LOWEST":
-            mail.setPriorityLowest();
-            break;
-        }
-    }
-
     private NotifyResult checkJobNotification(NotificationType type, DBItemMonitoringOrderStep mos) {
         if (mos != null && !SOSString.isEmpty(mos.getJobNotification())) {
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
             JobNotification jn = null;
             try {
                 jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.error(String.format("%s[%s][job=%s][error on read job notification][%s]%s", Configuration.LOG_INTENT, ANotifier
                         .getTypeAsString(type, null), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
@@ -361,7 +338,7 @@ public class NotifierMail extends ANotifier {
                 if (bcc.length() > 0) {
                     mail.addBCC(bcc);
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.error(String.format("%s[%s][job=%s][error on set mail recipients][%s]%s", Configuration.LOG_INTENT, ANotifier.getTypeAsString(
                         type, null), mos.getJobName(), mos.getJobNotification(), e.toString()), e);
             }
