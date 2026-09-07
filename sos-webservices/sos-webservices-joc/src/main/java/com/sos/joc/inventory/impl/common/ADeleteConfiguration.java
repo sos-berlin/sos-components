@@ -353,7 +353,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
 
         if (!released.isEmpty() || !deployments.isEmpty()) {
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getDeploy()));
-            if (response == null) {
+            if (response != null) {
                 return response;
             }
         }
