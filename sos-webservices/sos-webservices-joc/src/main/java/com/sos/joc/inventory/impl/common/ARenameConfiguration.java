@@ -151,10 +151,10 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
-                    updated.add(config);
                 } else {
                     JocInventory.updateConfiguration(dbLayer, config);
                 }
+                updated.add(config);
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
@@ -165,14 +165,12 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     if (deletedIds.remove(item.getId())) {
                         config.setId(null);
                         JocInventory.insertConfiguration(dbLayer, item);
-                        updated.add(item);
                     } else {
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
                 
                 updateMovedReleasedItems(dbLayer, oldPath, Paths.get(newPath));
-                DependencyResolver.updateDependencies(updated);
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 
@@ -204,7 +202,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
-                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
                 
                 //rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
@@ -221,6 +218,8 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 }
                 
                 JocInventory.updateConfiguration(dbLayer, config);
+                updated.add(config);
+                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
@@ -243,7 +242,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
-
+            DependencyResolver.updateDependencies(updated);
             response.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(response);
         } catch (Throwable e) {
