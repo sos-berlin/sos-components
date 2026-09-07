@@ -61,9 +61,9 @@ public class ClusterSettings {
     }
     
     public static boolean getEnableRememberMe(ConfigurationGlobalsJoc settings) {
-        // default true
+        // default false
         String rememberMe = settings.getEnableRememberMe().getValue();
-        return rememberMe == null || rememberMe.equalsIgnoreCase("true");
+        return rememberMe != null && rememberMe.equalsIgnoreCase("true");
     }
     
     public static ShowViewProperties getShowViews(ConfigurationGlobalsJoc settings) {
