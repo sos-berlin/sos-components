@@ -139,10 +139,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 return responseStatusJSOk(Date.from(Instant.now()));
             }
 
-            deleteAfterCancel(request, accessToken, session, configs, null, released, scheduleNames, deployments, workflowInvIds, dbAuditLog,
+            return deleteAfterCancel(request, accessToken, session, configs, null, released, scheduleNames, deployments, workflowInvIds, dbAuditLog,
                     auditLogObjectsLogging, in.getCancelOrdersDateFrom());
 
-            return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -201,7 +200,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     }
                 }
                 
-                deleteAfterCancel(request, accessToken, session, configs, folder.getPath(), released, scheduleNames, deployments, workflowInvIds,
+                return deleteAfterCancel(request, accessToken, session, configs, folder.getPath(), released, scheduleNames, deployments, workflowInvIds,
                         dbAuditLog, auditLogObjectsLogging, in.getCancelOrdersDateFrom());
 
             } else {
@@ -213,8 +212,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 JocInventory.deleteEmptyFolders(dbLayer, folder.getPath(), forDescriptors);
                 auditLogObjectsLogging.log();
                 postEvents(folder, workflowInvIds, session);
+                
+                return responseStatusJSOk(Date.from(Instant.now()));
             }
-            return responseStatusJSOk(Date.from(Instant.now()));
         } finally {
             Globals.disconnect(session);
         }
@@ -344,11 +344,19 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         return i;
     }
     
-    private void deleteAfterCancel(String request, String accessToken, SOSHibernateSession session, Collection<DBItemInventoryConfiguration> configs,
-            String folder, Map<Long, DBItemInventoryReleasedConfiguration> released, Set<String> scheduleNames, Set<DBItemDeploymentHistory> deployments,
-            List<Long> workflowInvIds, DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, String cancelOrdersDateFrom)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, SOSHibernateException, ExecutionException {
+    private JOCDefaultResponse deleteAfterCancel(String request, String accessToken, SOSHibernateSession session,
+            Collection<DBItemInventoryConfiguration> configs, String folder, Map<Long, DBItemInventoryReleasedConfiguration> released,
+            Set<String> scheduleNames, Set<DBItemDeploymentHistory> deployments, List<Long> workflowInvIds, DBItemJocAuditLog dbAuditLog,
+            JocAuditObjectsLog auditLogObjectsLogging, String cancelOrdersDateFrom) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, SOSHibernateException, ExecutionException {
+
+        if (!released.isEmpty() || !deployments.isEmpty()) {
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getDeploy()));
+            if (response == null) {
+                return response;
+            }
+        }
         
         String dateFormatted = cancelOrdersDateFrom;
         
@@ -444,6 +452,8 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                 }
             }
         });
+        
+        return responseStatusJSOk(Date.from(Instant.now()));
     }
     
     public static Optional<List<String>> addScheduleNames(DBItemInventoryReleasedConfiguration config, InventoryDBLayer dbLayer)
