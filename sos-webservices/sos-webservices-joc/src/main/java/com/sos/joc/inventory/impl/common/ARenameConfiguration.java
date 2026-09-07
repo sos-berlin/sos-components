@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl.common;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -22,6 +24,7 @@ import com.sos.joc.classes.audit.JocAuditObjectsLog;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryTagging;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.InventoryJobTagDBLayer;
@@ -32,6 +35,7 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.deploy.DeploymentHistoryMoveEvent;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.rename.RequestFilter;
@@ -105,6 +109,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, JocInventory
                         .isDescriptor(config.getTypeAsEnum()));
+                
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
                     auditLogDetails.add(new AuditLogDetail(oldItem.getPath(), oldItem.getType()));
                     if (JocInventory.isWorkflow(oldItem.getType())) {
@@ -165,6 +170,8 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
+                
+                updateMovedReleasedItems(dbLayer, oldPath, Paths.get(newPath));
                 DependencyResolver.updateDependencies(updated);
                 response.setPath(config.getPath());
                 response.setId(config.getId());
@@ -197,6 +204,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
+                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
                 
                 //rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
@@ -214,7 +222,6 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
-                
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
                     JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId(), ConfigurationType.DESCRIPTORFOLDER);
@@ -271,6 +278,29 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
         }
     }
 
+    private static void setReleasedItem(DBItemInventoryReleasedConfiguration oldItem, java.nio.file.Path newPath) {
+        oldItem.setPath(newPath.toString().replace('\\', '/'));
+        oldItem.setFolder(newPath.getParent().toString().replace('\\', '/'));
+        oldItem.setModified(Date.from(Instant.now()));
+    }
+
+    private static void updateMovedReleasedItems(InventoryDBLayer dbLayer, Path oldPath, Path newPath) throws SOSHibernateException {
+        List<DBItemInventoryReleasedConfiguration> released = dbLayer.getReleasedFolderContent(oldPath.toString().replace('\\', '/'), false, null, false);
+        released.stream().peek(item -> setReleasedItem(item, newPath)).forEach(updated -> {
+            try {
+                dbLayer.getSession().update(updated);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e);
+            }
+        });
+    }
+    
+    private static void updateMovedReleasedItem(InventoryDBLayer dbLayer, Path newPath, Long invConfigId) throws SOSHibernateException {
+        DBItemInventoryReleasedConfiguration released = dbLayer.getReleasedItemByConfigurationId(invConfigId);
+        setReleasedItem(released, newPath);
+        dbLayer.getSession().update(released);
+    }
+    
     private static void postNewDepHistoryEntryEvent(String name, String folder, Integer objectType, Long inventoryId, Long auditLogId) {
         EventBus.getInstance().post(new DeploymentHistoryMoveEvent(name, folder, objectType, inventoryId, auditLogId));
     }

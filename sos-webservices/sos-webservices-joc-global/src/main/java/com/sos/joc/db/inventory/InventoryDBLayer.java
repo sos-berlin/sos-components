@@ -1171,6 +1171,17 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getReleasedFolderContent(String folder, boolean recursive, Collection<Integer> types, boolean isDescriptor)
+            throws SOSHibernateException {
+        List<DBItemInventoryReleasedConfiguration> folderContent = getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        final Predicate<DBItemInventoryReleasedConfiguration> filter = i -> JocInventory.isDescriptor(i.getTypeAsEnum()); 
+        if(isDescriptor) {
+            return folderContent.stream().filter(filter).collect(Collectors.toList());
+        } else {
+            return folderContent.stream().filter(filter.negate()).collect(Collectors.toList());
+        }
+    }
+
     private <T> List<T> getFolderContent(String folder, boolean recursive, Collection<Integer> types, String tableName) throws SOSHibernateException {
         if (folder == null) {
             folder = "/";
