@@ -202,8 +202,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 DBItemJocAuditLogDetails auditLogDetail = JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()),
                         session, dbAuditLog);
                 setItem(config, p, dbAuditLog.getId());
-                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
-                updated.add(config);
+                
                 //rename TAGGINGS
                 boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
                 if (isRename && ConfigurationType.WORKFLOW.equals(config.getTypeAsEnum())) {
@@ -219,6 +218,8 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 }
                 
                 JocInventory.updateConfiguration(dbLayer, config);
+                updated.add(config);
+                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
@@ -231,7 +232,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 
                 events.add(newFolder);
             }
-            DependencyResolver.updateDependencies(updated);
+            
             Globals.commit(session);
             events.forEach(JocInventory::postEvent);
             folderEvents.forEach(JocInventory::postFolderEvent);
@@ -241,7 +242,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
                 dbTagLayer.getTags(workflowInvIds).stream().distinct().forEach(JocInventory::postTaggingEvent);
             }
-
+            DependencyResolver.updateDependencies(updated);
             response.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(response));
         } catch (Throwable e) {
