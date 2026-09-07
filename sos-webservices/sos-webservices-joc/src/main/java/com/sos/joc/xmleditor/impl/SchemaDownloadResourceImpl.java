@@ -3,13 +3,6 @@ package com.sos.joc.xmleditor.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -28,36 +21,11 @@ import jakarta.ws.rs.core.StreamingOutput;
 public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements ISchemaDownloadResource {
 
     @Override
-    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String objectType, String show, String schemaIdentifier) {
+    public JOCDefaultResponse process(final String accessToken, byte[] filterBytes) {
         try {
-            accessToken = getAccessToken(xAccessToken, accessToken);
-
-            JsonObjectBuilder builder = Json.createObjectBuilder();
-            List<String> queryParams = new ArrayList<>(3);
-            if (objectType != null) {
-                builder.add("objectType", objectType);
-                queryParams.add("objectType=" + objectType);
-            }
-            
-            builder.add("show", show == null ? false : Boolean.parseBoolean(show));
-            if (show != null) {
-                queryParams.add("show=" + show);
-            }
-
-            if (schemaIdentifier != null) {
-                builder.add("schemaIdentifier", URLDecoder.decode(schemaIdentifier, JocXmlEditor.CHARSET));
-                queryParams.add("schemaIdentifier=" + schemaIdentifier);
-            }
-            
-            String json = builder.build().toString();
-            String query = "";
-            if (!queryParams.isEmpty()) {
-                query = queryParams.stream().collect(Collectors.joining("&", "?", ""));
-            }
-            
-            initLogging(IMPL_PATH + query, null, accessToken, CategoryType.SETTINGS);
-            JsonValidator.validateFailFast(json.getBytes(), SchemaDownloadConfiguration.class);
-            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json.getBytes(), SchemaDownloadConfiguration.class);
+            filterBytes = initLogging(IMPL_PATH, filterBytes, accessToken, CategoryType.SETTINGS);
+            JsonValidator.validateFailFast(filterBytes, SchemaDownloadConfiguration.class);
+            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaDownloadConfiguration.class);
 
             checkRequiredParameters(in);
 
@@ -130,8 +98,8 @@ public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements I
                 }
             }
         };
-        
-        if (in.getShow()) {
+
+        if (in.getShow() != null && in.getShow()) {
             return JOCDefaultResponse.responsePlainStatus200(fileStream, null, getJocAuditTrail());
         } else {
             return responseOctetStreamDownloadStatus200(fileStream, downloadFileName);
