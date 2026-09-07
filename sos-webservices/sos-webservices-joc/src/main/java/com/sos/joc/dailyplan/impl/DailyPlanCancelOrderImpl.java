@@ -15,6 +15,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +32,7 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
@@ -91,22 +93,27 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in)
-            throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+    public Map<String, List<DBItemDailyPlanOrder>> getSubmittedOrderIdsFromDailyplanDate(DailyPlanOrderFilterDef in) throws SOSHibernateException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         setSettings(IMPL_PATH);
+        Map<String, Set<Folder>> permittedFolders = getCurrentAccount().getSosAuthFolderPermissions().getListOfFolders(Proxies
+                .getControllerDbInstances().keySet());
+        AtomicInteger numOfOrders = new AtomicInteger(0);
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, getSettings(), IMPL_PATH)
-                .stream().collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
+                .stream().peek(i -> numOfOrders.incrementAndGet()).filter(item -> folderIsPermitted(item.getWorkflowFolder(), permittedFolders.get(
+                        item.getControllerId()))).collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
 
         if (!ordersPerControllerIds.isEmpty()) {
             ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getBasicControllerPermissions(
-                    availableController.getKey()).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue));
+                    availableController.getKey()).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
             if (ordersPerControllerIds.isEmpty()) {
-                throw new JocAccessDeniedException("No permissions to cancel dailyplan orders");
+                throw new JocAccessDeniedException("No controller permissions to cancel dailyplan orders");
             }
+        } else if (numOfOrders.get() > 0) { // all workflows are not permitted
+            throw new JocAccessDeniedException("No folder permissions to cancel dailyplan orders");
         }
         return ordersPerControllerIds;
     }
@@ -121,29 +128,29 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             List<DBItemDailyPlanOrder> orders = entry.getValue();
             final Set<String> orderIds = orders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
             final JControllerProxy proxy = Proxy.of(controllerId);
-            
-            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
-            .thenApply(either -> {
-                if (either.isRight()) {
-                    try {
-                        updateDailyPlan(orderIds, false);
-                        return new ControllerCommandResponse(controllerId);
-                    } catch (Exception ex) {
-                        return new ControllerCommandResponse(controllerId, Optional.of(ex));
-                    }
-                } else {
-                    return new ControllerCommandResponse(controllerId, Optional.of(ProblemHelper.getExceptionOfProblem(either.getLeft())));
-                }
-            });
+
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId).thenApply(
+                    either -> {
+                        if (either.isRight()) {
+                            try {
+                                updateDailyPlan(orderIds, false);
+                                return new ControllerCommandResponse(controllerId);
+                            } catch (Exception ex) {
+                                return new ControllerCommandResponse(controllerId, Optional.of(ex));
+                            }
+                        } else {
+                            return new ControllerCommandResponse(controllerId, Optional.of(ProblemHelper.getExceptionOfProblem(either.getLeft())));
+                        }
+                    });
             futures.put(controllerId, response);
         }
         return futures;
     }
 
     private Collection<CompletableFuture<ControllerCommandResponse>> cancelOrders(Map<String, List<DBItemDailyPlanOrder>> ordersPerController,
-            String accessToken, AuditParams auditLog) throws SOSHibernateException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+            String accessToken, AuditParams auditLog) throws SOSHibernateException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
 
         Map<String, CompletableFuture<ControllerCommandResponse>> futures = new HashMap<>();
 
@@ -156,41 +163,40 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
         for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
             String controllerId = entry.getKey();
             List<DBItemDailyPlanOrder> orders = entry.getValue();
-            
+
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
             Set<DBItemDailyPlanOrder> permittedOrders = orders.stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(), permittedFolders))
                     .collect(Collectors.toSet());
             final Set<String> orderIds = permittedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());
-            
+
             final JControllerProxy proxy = Proxy.of(controllerId);
-            
-            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId)
-            .thenApply(either -> {
-                if (either.isRight()) {
-                    try {
-                        updateDailyPlan(orderIds, true);
-                        return new ControllerCommandResponse(controllerId);
-                    } catch (Exception ex) {
-                        return new ControllerCommandResponse(controllerId, Optional.of(ex));
-                    }
-                } else {
-                    return new ControllerCommandResponse(controllerId, Optional.of(ProblemHelper.getExceptionOfProblem(either.getLeft())));
-                }
-            }).thenCompose(ccr -> {
-                if (ccr.getException().isEmpty()) {
-                    return OrdersHelper.storeAuditLogDetails(permittedOrders.stream()
-                            .map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.getWorkflowPath()), o.getOrderId(), controllerId))
-                            .toList(), auditLogId).thenApply(e -> {
-                        if (e.isRight()) {
-                            return ccr; 
+
+            CompletableFuture<ControllerCommandResponse> response = OrdersHelper.cancelFreshOrders(proxy, orderIds, controllerId).thenApply(
+                    either -> {
+                        if (either.isRight()) {
+                            try {
+                                updateDailyPlan(orderIds, true);
+                                return new ControllerCommandResponse(controllerId);
+                            } catch (Exception ex) {
+                                return new ControllerCommandResponse(controllerId, Optional.of(ex));
+                            }
                         } else {
-                            return new ControllerCommandResponse(controllerId, Optional.of(e.getLeft()));
+                            return new ControllerCommandResponse(controllerId, Optional.of(ProblemHelper.getExceptionOfProblem(either.getLeft())));
                         }
-                    }); 
-                } else {
-                    return CompletableFuture.completedStage(ccr);
-                }
-            });
+                    }).thenCompose(ccr -> {
+                        if (ccr.getException().isEmpty()) {
+                            return OrdersHelper.storeAuditLogDetails(permittedOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o
+                                    .getWorkflowPath()), o.getOrderId(), controllerId)).toList(), auditLogId).thenApply(e -> {
+                                        if (e.isRight()) {
+                                            return ccr;
+                                        } else {
+                                            return new ControllerCommandResponse(controllerId, Optional.of(e.getLeft()));
+                                        }
+                                    });
+                        } else {
+                            return CompletableFuture.completedStage(ccr);
+                        }
+                    });
             futures.put(controllerId, response);
         }
 
@@ -200,9 +206,9 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
     private void cancelOrders(DailyPlanOrderFilterDef in, String accessToken) throws SOSHibernateException, ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
-        
+
         Map<String, List<DBItemDailyPlanOrder>> ordersPerController = getSubmittedOrderIdsFromDailyplanDate(in);
-        
+
         if (in.getOrderIds() != null && !in.getOrderIds().isEmpty()) {
             Set<String> cyclicOrderIdMainParts = in.getOrderIds().stream().filter(OrdersHelper::isCyclicOrderId).map(
                     OrdersHelper::getCyclicOrderIdMainPart).collect(Collectors.toSet());
@@ -217,7 +223,8 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 if (in.getDailyPlanDateTo() != null) {
                     dateTo = Arrays.asList(dateTo, in.getDailyPlanDateTo()).stream().sorted().toList().get(0);
                 }
-                FilterDailyPlannedOrders filter = DailyPlanUtils.getFilterDailyPlannedOrders(in, null); // TODO null: see TODO in method getFilterDailyPlannedOrders
+                FilterDailyPlannedOrders filter = DailyPlanUtils.getFilterDailyPlannedOrders(in, null); // TODO null: see TODO in method
+                                                                                                        // getFilterDailyPlannedOrders
                 filter.setOrderIds(null);
                 filter.setStartMode(1); // only all cyclic orders
                 filter.setSubmissionForDateFrom(JobSchedulerDate.getDateFrom(dateFrom + "T00:00:00Z", "UTC"));
