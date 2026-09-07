@@ -42,6 +42,7 @@ import com.sos.inventory.model.calendar.Repetition;
 import com.sos.inventory.model.calendar.RepetitionText;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WeeklyDay;
+import com.sos.joc.Globals;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
 
@@ -95,7 +96,7 @@ public class FrequencyResolver {
             SOSInvalidDataException {
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[resolve][start]from=%s,to=%s", from, to));
+            LOGGER.debug(String.format("[resolveCalendar][start]from=%s,to=%s", from, to));
         }
 
         init(calendar, nonWorkingDayCalendars, from, to, null);
@@ -151,7 +152,7 @@ public class FrequencyResolver {
             d.setDates(new ArrayList<String>());
         }
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[resolve][end][dates][size=%s]%s", d.getDates().size(), String.join(",", d.getDates())));
+            LOGGER.debug(String.format("[resolveCalendar][end][dates][size=%s]%s", d.getDates().size(), String.join(",", d.getDates())));
         }
         d.setDeliveryDate(Date.from(Instant.now()));
         return d;
@@ -395,6 +396,18 @@ public class FrequencyResolver {
         return d;
     }
 
+    private com.sos.inventory.model.calendar.Calendar copy(com.sos.inventory.model.calendar.Calendar original, boolean isDebugEnabled,
+            String debugLabel) {
+        if (original == null) {
+            return null;
+        }
+        com.sos.inventory.model.calendar.Calendar copy = Globals.objectMapper.convertValue(original, com.sos.inventory.model.calendar.Calendar.class);
+        if (isDebugEnabled) {
+            LOGGER.debug("[" + debugLabel + "][using copy]" + SOSString.toString(copy));
+        }
+        return copy;
+    }
+
     private void init(com.sos.inventory.model.calendar.Calendar baseCalendar,
             Map<String, com.sos.inventory.model.calendar.Calendar> nonWorkingDayCalendars, String from, String to,
             com.sos.inventory.model.calendar.Calendar restrictionsCalendar) throws SOSMissingDataException, SOSInvalidDataException {
@@ -404,7 +417,7 @@ public class FrequencyResolver {
 
         setDateFrom(from, baseCalendar.getFrom());
         setDateTo(to, baseCalendar.getTo());
-        mergeBaseCalendarExcludesFromRestrictionsCalendar(baseCalendar, restrictionsCalendar);
+        baseCalendar = mergeBaseCalendarExcludesFromRestrictionsCalendar(baseCalendar, restrictionsCalendar);
 
         this.baseCalendarIncludes = baseCalendar.getIncludes();
         this.baseCalendarExcludes = baseCalendar.getExcludes();
@@ -422,18 +435,23 @@ public class FrequencyResolver {
         Set<String> mergedNames = new HashSet<>(); // without duplicates
         Optional.ofNullable(baseCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
         Optional.ofNullable(restrictionsCalendar.getExcludes()).map(e -> e.getNonWorkingDayCalendars()).ifPresent(mergedNames::addAll);
-        if (mergedNames.size() > 0) {
-            Frequencies excludes = baseCalendar.getExcludes();
-            if (excludes == null) {
-                excludes = new Frequencies();
-            }
-            excludes.setNonWorkingDayCalendars(mergedNames);
-            baseCalendar.setExcludes(excludes);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[mergeBaseCalendarExcludesFromRestrictionsCalendar][baseCalendar excludes]nonWorkingDayCalendars=" + mergedNames);
-            }
+
+        if (mergedNames.size() == 0) {
+            return baseCalendar;
         }
 
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
+        baseCalendar = copy(baseCalendar, isDebugEnabled, "mergeBaseCalendarExcludesFromRestrictionsCalendar-baseCalendar");
+        Frequencies excludes = baseCalendar.getExcludes();
+        if (excludes == null) {
+            excludes = new Frequencies();
+        }
+        excludes.setNonWorkingDayCalendars(mergedNames);
+        baseCalendar.setExcludes(excludes);
+        if (isDebugEnabled) {
+            LOGGER.debug("[mergeBaseCalendarExcludesFromRestrictionsCalendar][baseCalendar excludes]nonWorkingDayCalendars=" + mergedNames);
+        }
         return baseCalendar;
     }
 

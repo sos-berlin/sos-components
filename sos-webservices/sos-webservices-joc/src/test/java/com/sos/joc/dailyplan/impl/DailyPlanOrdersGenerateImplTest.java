@@ -1,5 +1,7 @@
 package com.sos.joc.dailyplan.impl;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -17,7 +19,11 @@ public class DailyPlanOrdersGenerateImplTest {
 
     @Ignore
     @Test
-    public void testPostOrdersGenerateDST() throws Exception {
+    public void testPostOrdersGenerate() throws Exception {
+        String controllerId = "js7.x";
+        controllerId = "js7-2.8.x-52899";
+
+        Set<String> dailyPlanDates = new HashSet<>();
         // DST
         // - America-Anchorage
         // -- 2026: 2026-03-08,2026-11-01
@@ -28,23 +34,27 @@ public class DailyPlanOrdersGenerateImplTest {
         // - Europe-Berlin
         // -- 2026: 2026-03-29,2026-10-25
         // -- 2027: 2027-03-28,2027-10-31
-        String dailyPlanDate = "2026-03-08";
+        dailyPlanDates.add("2026-09-12");
+
+        // Schedule or Workflow paths
         PathItem item = new PathItem();
-        item.getSingles().add("/dailyplan/dailyplan_DST/CLI-DailyPlan-WorkflowDST-America-Anchorage");
+        // item.getSingles().add("/dailyplan/dailyplan_DST/CLI-DailyPlan-WorkflowDST-America-Anchorage");
         // item.getSingles().add("/dailyplan/dailyplan_DST/CLI-DailyPlan-WorkflowDST-Pacific-Norfolk");
         // item.getSingles().add("/dailyplan/dailyplan_DST/CLI-DailyPlan-WorkflowDST-Europe-Berlin");
+        item.getSingles().add("/JOC-ISSUE/JOC-2280/JOC-2280-w1");
 
         // ------------------------------------------------------------------
         GenerateRequest in = new GenerateRequest();
-        in.setControllerId("js7.x");
-        in.setDailyPlanDate(dailyPlanDate);
+        in.setControllerId(controllerId);
+        in.setDailyPlanDates(dailyPlanDates);
 
-        in.setSchedulePaths(item);
+        in.setSchedulePaths(null);
+        in.setWorkflowPaths(item);
         in.setOverwrite(false);
         in.setWithSubmit(false);
 
         UnitTestSimpleWSImplHelper h = new UnitTestSimpleWSImplHelper(new DailyPlanOrdersGenerateImpl());
-        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.mysql.xml");
+        h.setHibernateConfigurationFileFromWebservicesGlobal("hibernate.cfg.pgsql.xml");
         try {
             h.init();
 
