@@ -47,7 +47,7 @@ public class SOSPermissionsCreator {
     }
 
     public Map<String, List<String>> getMapOfFolder() {
-        Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
+        Map<String, List<String>> resultMap = new HashMap<>();
 
         if (currentAccount.getCurrentSubject().getMapOfFolderPermissions() != null) {
             resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());

@@ -13,7 +13,7 @@ import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
 public class SOSInternAuthLogin implements ISOSLogin {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
     private String msg = "";
@@ -26,16 +26,15 @@ public class SOSInternAuthLogin implements ISOSLogin {
 
     public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
         try {
-            SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
-            sosInternAuthWebserviceCredentials.setIdentityService(identityService);
-            sosInternAuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
+            SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials(currentAccount
+                    .getAccountname(), identityService.getIdentityServiceId());
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled) {
-                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount, sosInternAuthWebserviceCredentials, pwd);
+                sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials, pwd);
             }
 
             sosInternAuthSubject = new SOSInternAuthSubject();
