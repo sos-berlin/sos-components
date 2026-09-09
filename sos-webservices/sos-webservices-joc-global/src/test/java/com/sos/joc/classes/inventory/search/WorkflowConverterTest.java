@@ -17,7 +17,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 public class WorkflowConverterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowConverterTest.class);
-    private static final Path WORKFLOW_FILE = Paths.get("src/test/resources/workflow.json");
+    private static final Path WORKFLOW_FILE = Paths.get("src/test/resources/workflow-with-list-map-args.json");
 
     @Ignore
     @Test
