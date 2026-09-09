@@ -43,7 +43,8 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                             if(deploymentDescriptor.getDescriptor() != null) {
                                 Descriptor descriptor = deploymentDescriptor.getDescriptor();
                                 Predicate<String> predicate = Pattern.compile("^[^<>]*$").asPredicate().negate();
-                                if(predicate.test(descriptor.getTitle()) || predicate.test(descriptor.getAccount())) {
+                                if((descriptor.getTitle() != null && predicate.test(descriptor.getTitle())) 
+                                        || (descriptor.getAccount() != null && predicate.test(descriptor.getAccount()))) {
                                     throw e;
                                 }
                             }
