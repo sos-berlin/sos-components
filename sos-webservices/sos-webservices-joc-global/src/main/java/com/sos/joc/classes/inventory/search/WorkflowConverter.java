@@ -16,6 +16,9 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ConsumeNotices;
@@ -31,11 +34,14 @@ import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.job.JobTemplateRef;
+import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.inventory.NoticeToNoticesConverter;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 public class WorkflowConverter {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(WorkflowConverter.class);
 
     private final OrderPreparation orderPreparation;
     private final Jobs jobs;
@@ -57,6 +63,14 @@ public class WorkflowConverter {
             jobs.process(w.getJobs(), w.getJobResourceNames());
             instructions.process(w.getInstructions());
             toJson();
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[process][result][arguments]" + argInfo);
+                LOGGER.debug("[process][result][jobs][mainInfo]" + jobs.mainInfo);
+                LOGGER.debug("[process][result][jobs][scripts]" + jobs.scriptInfo);
+                LOGGER.debug("[process][result][instructions][mainInfo]" + instructions.mainInfo);
+                LOGGER.debug("[process][result][instructions][arguments]" + instructions.argInfo);
+            }
         }
     }
 
@@ -64,6 +78,7 @@ public class WorkflowConverter {
         jsonArgInfo();
     }
 
+    // The Instructions arguments are used separately - see JocInventory.convert(...)
     private void jsonArgInfo() {
         JsonObjectBuilder builder = Json.createObjectBuilder();
         jsonAddStringValues(builder, "orderPreparationParamNames", orderPreparation.paramNames);
@@ -111,19 +126,58 @@ public class WorkflowConverter {
                 return;
             }
             preparation.getParameters().getAdditionalProperties().forEach((name, param) -> {
-                paramNames.add(name);
-                if (param.getDefault() != null) {
-                    try {
-                        paramValues.add(param.getDefault().toString());
-                    } catch (Throwable e) {
+                handleParameter(name, param);
+            });
+        }
+
+        private void handleParameter(String paramName, Parameter param) {
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
+            if (isDebugEnabled) {
+                LOGGER.debug("[handleParameter][" + paramName + "]TYPE=" + param.getType() + ", default=" + param.getDefault() + ", final=" + param
+                        .getFinal());
+            }
+
+            paramNames.add(paramName);
+            if (param.getDefault() != null) { // String, Boolean, Number with defaults
+                try {
+                    paramValues.add(param.getDefault().toString());
+                } catch (Exception e) {
+                }
+            } else if (param.getFinal() != null) { // Final
+                paramValues.add(param.getFinal());
+            } else {
+                // String, Boolean, Number without defaults - no longer of interest, as no value was specified.
+                // + List, Map
+                if (param.getType() != null) { // null if Final - has already been handled, but check to be safe
+                    switch (param.getType()) {
+                    case List:
+                    case Map:
+                        if (param.getListParameters() != null && param.getListParameters().getAdditionalProperties() != null) {
+                            param.getListParameters().getAdditionalProperties().forEach((listParamName, listParam) -> {
+                                // can only be: String, Boolean, Number
+                                if (isDebugEnabled) {
+                                    LOGGER.debug("    [" + listParamName + "]LIST TYPE=" + listParam.getType() + ", default=" + listParam
+                                            .getDefault());
+                                }
+
+                                paramNames.add(listParamName);
+                                if (listParam.getDefault() != null) { // String, Boolean, Number with defaults
+                                    try {
+                                        paramValues.add(listParam.getDefault().toString());
+                                    } catch (Exception e) {
+                                    }
+                                }
+                            });
+                        }
+                        break;
+                    case Boolean:
+                    case Number:
+                    case String:
+                    default:
+                        break;
                     }
                 }
-                if (param.getListParameters() != null && param.getListParameters().getAdditionalProperties() != null) {
-                    param.getListParameters().getAdditionalProperties().forEach((listParamName, listParam) -> {
-                        paramNames.add(listParamName);
-                    });
-                }
-            });
+            }
         }
 
         private void removeDuplicates() {
@@ -260,7 +314,7 @@ public class WorkflowConverter {
             if (jobResourceNames != null && !jobResourceNames.isEmpty()) {
                 jobResources.addAll(jobResourceNames);
             }
-            
+
             jobs.getAdditionalProperties().forEach((jobName, job) -> {
                 names.add(jobName);
                 if (!SOSString.isEmpty(job.getTitle())) {
@@ -590,7 +644,7 @@ public class WorkflowConverter {
                 }
             }
         }
-        
+
         private void handleAddOrderInstructions(List<Instruction> instructions) {
             if (instructions == null) {
                 return;
@@ -663,7 +717,7 @@ public class WorkflowConverter {
         map.forEach((k, v) -> b.add(k, v));
         return b;
     }
-    
+
     private static JsonObjectBuilder getJsonObjectOfStringArray(Map<String, Set<String>> map) {
         JsonObjectBuilder b = Json.createObjectBuilder();
         map.forEach((k, v) -> b.add(k, getJsonArray(v)));

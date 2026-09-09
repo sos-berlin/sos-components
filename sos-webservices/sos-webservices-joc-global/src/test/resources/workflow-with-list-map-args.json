@@ -1,0 +1,93 @@
+{
+    "version": "1.9.1",
+    "timeZone": "Europe/Berlin",
+    "orderPreparation": {
+        "parameters": {
+            "my_var_string": {
+                "type": "String",
+                "default": "\"my_var_string_value\""
+            },
+            "my_var_list": {
+                "type": "List",
+                "listParameters": {
+                    "my_var_list_1": {
+                        "type": "String",
+                        "default": "my_var_list_1_v"
+                    },
+                    "my_var_list_2": {
+                        "type": "String",
+                        "default": "my_var_list_2v"
+                    }
+                }
+            },
+            "my_var_list_2": {
+                "type": "List",
+                "listParameters": {
+                    "my_var_list_1": {
+                        "type": "String",
+                        "default": "my_var_list_1_from_2"
+                    },
+                    "my_var_list_2": {
+                        "type": "Number",
+                        "default": 1
+                    }
+                }
+            },
+            "my_var_boolean": {
+                "type": "Boolean",
+                "default": "false"
+            },
+            "my_var_number": {
+                "type": "Number",
+                "default": "1"
+            },
+            "my_var_final": {
+                "final": "\"a\""
+            },
+            "my_var_map": {
+                "type": "Map",
+                "listParameters": {
+                    "my_var_map_1": {
+                        "type": "String",
+                        "default": "my_var_map_1_val"
+                    }
+                }
+            },
+            "my_var_string_without_default": {
+                "type": "String"
+            }
+        },
+        "allowUndeclared": false
+    },
+    "instructions": [
+        {
+            "TYPE": "Execute.Named",
+            "jobName": "job",
+            "defaultArguments": {
+                "node_arg": "\"node_arg_value\""
+            },
+            "label": "job"
+        }
+    ],
+    "jobs": {
+        "job": {
+            "agentName": "primaryAgent",
+            "withSubagentClusterIdExpr": false,
+            "executable": {
+                "TYPE": "ShellScriptExecutable",
+                "script": "echo 123",
+                "env": {
+                    "JOB_ENV": "\"job_env_value\""
+                },
+                "v1Compatible": false
+            },
+            "skipIfNoAdmissionForOrderDay": false,
+            "killAtEndOfAdmissionPeriod": false,
+            "parallelism": 1,
+            "graceTimeout": 1,
+            "failOnErrWritten": false,
+            "warnOnErrWritten": false,
+            "isNotRestartable": false
+        }
+    }
+}
