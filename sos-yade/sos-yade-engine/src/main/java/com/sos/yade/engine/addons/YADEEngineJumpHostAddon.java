@@ -568,7 +568,7 @@ public class YADEEngineJumpHostAddon {
         private boolean getJumpHostTransactional() {
             Map<String, String> jumpHostClientArgs = SOSCLIArgumentsParser.parse(argsLoader.getJumpHostArgs().getYADEClientCommand().getValue()
                     .toLowerCase());
-            String transactional = jumpHostClientArgs.get(argsLoader.getArgs().getTransactional().getName());
+            String transactional = jumpHostClientArgs.get(argsLoader.getArgs().getTransactional().getName().toLowerCase());
             if (transactional == null) {
                 return argsLoader.getArgs().getTransactional().getValue();
             } else {
