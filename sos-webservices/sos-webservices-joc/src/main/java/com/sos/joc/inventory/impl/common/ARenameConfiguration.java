@@ -219,7 +219,9 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                 
                 JocInventory.updateConfiguration(dbLayer, config);
                 updated.add(config);
-                updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
+                if(JocInventory.isReleasable(config.getTypeAsEnum())) {
+                    updateMovedReleasedItem(dbLayer, Paths.get(newPath), config.getId());
+                }
                 JocAuditObjectsLog.log(auditLogDetail, dbAuditLog.getId());
                 if(config.getTypeAsEnum().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR) 
                         || config.getTypeAsEnum().equals(ConfigurationType.DESCRIPTORFOLDER)) {
