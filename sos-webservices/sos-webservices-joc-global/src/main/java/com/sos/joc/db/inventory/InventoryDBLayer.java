@@ -141,6 +141,18 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getReleasedItemByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid in (:configIds)");
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("configIds", configIds);
+        List<DBItemInventoryReleasedConfiguration> results = getSession().getResultList(query);
+        if((results == null) ) {
+            return Collections.emptyList();
+        }
+        return results;
+    }
+
     public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Integer> types, String folder,
             boolean recursive, Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
