@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -169,7 +170,8 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
                     }
                 }
                 
-                updateMovedReleasedItems(dbLayer, oldPath, Paths.get(newPath));
+                updateMovedReleasedItems(dbLayer, oldDBFolderContent.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()),
+                        Paths.get(newPath));
                 response.setPath(config.getPath());
                 response.setId(config.getId());
 
@@ -278,12 +280,18 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
     }
 
     private static void setReleasedItem(DBItemInventoryReleasedConfiguration oldItem, java.nio.file.Path newPath) {
-        oldItem.setPath(newPath.toString().replace('\\', '/'));
-        oldItem.setFolder(newPath.getParent().toString().replace('\\', '/'));
+        Path path = null;
+        if(newPath.getFileName().toString().equals(oldItem.getName())) {
+            path = newPath;
+        } else {
+            path = newPath.resolve(oldItem.getName());
+        }
+        oldItem.setPath(path.toString().replace('\\', '/'));
+        oldItem.setFolder(path.getParent().toString().replace('\\', '/'));
     }
 
-    private static void updateMovedReleasedItems(InventoryDBLayer dbLayer, Path oldPath, Path newPath) throws SOSHibernateException {
-        List<DBItemInventoryReleasedConfiguration> released = dbLayer.getReleasedFolderContent(oldPath.toString().replace('\\', '/'), false, null, false);
+    private static void updateMovedReleasedItems(InventoryDBLayer dbLayer, Collection<Long> invIds, Path newPath) throws SOSHibernateException {
+        List<DBItemInventoryReleasedConfiguration> released = dbLayer.getReleasedItemByConfigurationIds(invIds);
         released.stream().peek(item -> setReleasedItem(item, newPath)).forEach(updated -> {
             try {
                 dbLayer.getSession().update(updated);
