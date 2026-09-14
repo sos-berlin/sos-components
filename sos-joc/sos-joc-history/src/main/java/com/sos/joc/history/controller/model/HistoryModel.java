@@ -718,7 +718,7 @@ public class HistoryModel {
     }
 
     private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
-        postEvent("postEventOrderLog", new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry, null));
+        postEvent("postEventOrderLog", new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderMainParentId(), orderEntry, null));
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {

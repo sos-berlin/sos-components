@@ -127,12 +127,19 @@ public class RunningOrderLogs {
         SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
         List<OrderLogEntry> logEvents = new ArrayList<>();
         r.setComplete(false);
+
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (events.containsKey(r.getHistoryId())) {
             events.get(r.getHistoryId()).iterator().forEachRemaining(e -> {
                 if (e.getEventId() != null && r.getEventId() < e.getEventId()) {
                     if (e.getComplete()) {
                         r.setComplete(true);
                     }
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug("[getRunningTaskLog][historyId=" + r.getHistoryId() + "]complete=" + r.getComplete());
+                    }
+
                     logEvents.add(e.getLogEvent());
                     evtIds.add(e.getEventId());
                 }
@@ -148,15 +155,17 @@ public class RunningOrderLogs {
     @Subscribe({ HistoryOrderLog.class })
     public void createHistoryOrderEvent(HistoryOrderLog evt) {
         if (isSubscribed(evt.getHistoryOrderId())) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("log event for historyId '" + evt.getHistoryOrderId() + "' arrived");
-            }
             try {
                 RunningOrderLogEvent r = new RunningOrderLogEvent();
                 r.setHistoryId(evt.getHistoryOrderId());
                 r.setEventId(evt.getEventId());
                 r.setComplete(completeTypes.contains(EventType.fromValue(evt.getKey())));
                 r.setLogEvent((OrderLogEntry) evt.getOrderLogEntry());
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[createHistoryOrderEvent][" + evt.getKey() + "][historyId=" + r.getHistoryId() + "]complete=" + r.getComplete());
+                }
+
                 addEvent(evt.getSessionIdentifier(), r);
                 if (r.getComplete()) {
                     addCompleteness(r.getHistoryId());
@@ -173,14 +182,12 @@ public class RunningOrderLogs {
     }
 
     private synchronized void addEvent(String sessionIdentifier, RunningOrderLogEvent event) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("try to add log event for historyId '" + event.getHistoryId() + "'");
-        }
+        // LOGGER.debug("try to add log event for historyId '" + event.getHistoryId() + "'");
         events.putIfAbsent(event.getHistoryId(), new CopyOnWriteArraySet<RunningOrderLogEvent>());
         if (events.get(event.getHistoryId()).add(event)) {
             EventBus.getInstance().post(new HistoryOrderLogArrived(event.getHistoryId(), event.getComplete(), sessionIdentifier));
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("log event for historyId '" + event.getHistoryId() + "' published");
+                LOGGER.debug("[addEvent][historyId=" + event.getHistoryId() + "][complete=" + event.getComplete() + "]event posted");
             }
         }
     }
