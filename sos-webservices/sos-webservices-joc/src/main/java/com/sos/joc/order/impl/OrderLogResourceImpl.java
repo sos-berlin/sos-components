@@ -132,14 +132,16 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 return jocDefaultResponse;
             }
 
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
             historyId = orderLog.getHistoryId();
             orderLog.setComplete(false);
             orderLog.setLogEvents(Collections.emptyList());
 
             RunningOrderLogs r = RunningOrderLogs.getInstance();
             RunningOrderLogs.Mode mode = r.hasEvents(orderLog.getEventId(), historyId);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[postRollingOrderLog][historyId=" + historyId + "][eventId=" + orderLog.getEventId() + "]mode=" + mode.name());
+            if (isDebugEnabled) {
+                LOGGER.debug("[postRollingOrderLog][start][historyId=" + historyId + "][eventId=" + orderLog.getEventId() + "]mode=" + mode.name());
             }
             switch (mode) {
             case TRUE:
@@ -149,15 +151,15 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 }
             case COMPLETE:
                 orderLog = r.getRunningOrderLog(orderLog);
+                if (isDebugEnabled) {
+                    LOGGER.debug("  [after]eventId=" + orderLog.getEventId() + ", complete=" + orderLog.getComplete());
+                }
                 break;
             case FALSE:
                 EventBus.getInstance().register(this);
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
 
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("  [end of waiting events]eventArrived=" + eventArrived.get() + ", complete=" + complete.get());
-                }
                 if (eventArrived.get()) {
                     if (!complete.get()) {
                         try {
@@ -166,11 +168,20 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                         }
                     }
                     orderLog = r.getRunningOrderLog(orderLog);
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug("  [after]eventId=" + orderLog.getEventId() + ", complete=" + orderLog.getComplete());
+                    }
                 }
                 break;
             case BROKEN:
                 orderLog.setComplete(true); // to avoid endless calls
                 break;
+            }
+
+            if (isDebugEnabled) {
+                LOGGER.debug("[postRollingOrderLog][end][historyId=" + historyId + "][eventId=" + orderLog.getEventId() + "]complete=" + orderLog
+                        .getComplete());
             }
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(orderLog));
@@ -183,10 +194,11 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
 
     @Subscribe({ HistoryOrderLogArrived.class })
     public void createHistoryOrderEvent(HistoryOrderLogArrived evt) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[createHistoryOrderEvent][evt.historyOrderId=" + evt.getHistoryOrderId() + "]historyId=" + historyId);
-        }
         if (historyId != null && historyId.equals(evt.getHistoryOrderId())) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[createHistoryOrderEvent]historyId=" + historyId);
+            }
+
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
