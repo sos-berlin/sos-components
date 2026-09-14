@@ -15,7 +15,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.common.AuthFolder;
 import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.auth.records.PermissionsPerRole;
+import com.sos.auth.records.UniqueRole;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
@@ -73,6 +76,7 @@ public class SOSAuthCurrentAccount {
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
+    private SOSAuthDetailedFolderPermissions sosAuthDetailedFolderPermissions;
     private Permissions sos4EyesPermissions;
 
     public SOSAuthCurrentAccount(String accountName) {
@@ -408,27 +412,43 @@ public class SOSAuthCurrentAccount {
     }
 
     public void initFolders() {
-        sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        if (sosAuthFolderPermissions == null) {
+            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        }
+        if (sosAuthDetailedFolderPermissions == null) {
+            sosAuthDetailedFolderPermissions = new SOSAuthDetailedFolderPermissions();
+        }
+    }
+    
+    public void addFolders() {
+        if (sosAuthFolderPermissions == null) {
+            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        }
+        Optional.ofNullable(currentSubject.getMapOfFolderPermissions()).orElse(Collections.emptyMap()).forEach((role, folders) -> addFolders(role,
+                folders));
+        addDetailedFolders();
     }
 
-    public void addFolder(String role, String folders) {
-        if (sosAuthFolderPermissions == null) {
-            this.initFolders();
-        }
+    private void addFolders(UniqueRole role, Set<AuthFolder> folders) {
+        if (hasRole(role.roleName())) {
+            LOGGER.debug(String.format("Adding folders %s for role %s", folders.toString(), role));
 
-        String jobSchedulerId = "";
-        if (role.contains("|")) {
-            String[] s = role.split("\\|");
-            if (s.length > 1) {
-                jobSchedulerId = s[0];
-                role = s[1];
-            }
+            folders.stream().collect(Collectors.groupingBy(AuthFolder::getControllerId)).forEach((cId, f) -> sosAuthFolderPermissions.setFolders(cId,
+                    f));
         }
-
-        if (hasRole(role)) {
-            LOGGER.debug(String.format("Adding folders %s for role %s", folders, role));
-            sosAuthFolderPermissions.setFolders(jobSchedulerId, folders);
+    }
+    
+    private void addDetailedFolders() {
+        Stream.of(currentSubject.getMapOfFolderPermissions().keySet(), currentSubject.getMapOfAccountPermissions().keySet()).flatMap(Set::stream)
+                .distinct().forEach(this::addDetailedFolders);
+    }
+    
+    private void addDetailedFolders(UniqueRole role) {
+        if (sosAuthDetailedFolderPermissions == null) {
+            sosAuthDetailedFolderPermissions = new SOSAuthDetailedFolderPermissions();
         }
+        sosAuthDetailedFolderPermissions.putPermission(role, new PermissionsPerRole(role, currentSubject.getFolderPermissionsOfRole(role), currentSubject
+                .getAccountPermissionsOfRole(role)));
     }
 
     public boolean withAuthorization() {

@@ -20,15 +20,10 @@ public class SOSLdapLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
-    private SOSLdapSubject sosLdapSubject;
 
-    public SOSLdapLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
-
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
+        SOSLdapSubject sosLdapSubject = null;
         SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
         try {
 
@@ -78,11 +73,12 @@ public class SOSLdapLogin implements ISOSLogin {
         } finally {
             sosLdapHandler.close();
         }
-
+        return sosLdapSubject;
     }
 
-    public void simulateLogin(String account) {
-
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        SOSLdapSubject sosLdapSubject = null;
         SOSLdapHandler sosLdapHandler = new SOSLdapHandler();
         try {
 
@@ -107,13 +103,14 @@ public class SOSLdapLogin implements ISOSLogin {
             LOGGER.error("", e);
         } finally {
         }
-
+        return sosLdapSubject;
     }
 
+    @Override
     public void logout() {
-
     }
 
+    @Override
     public String getMsg() {
         return msg;
     }
@@ -122,15 +119,6 @@ public class SOSLdapLogin implements ISOSLogin {
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
-    }
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
-        return sosLdapSubject;
-    }
-
-    public void setIdentityService(SOSIdentityService identityService) {
-        this.identityService = identityService;
     }
 
 }

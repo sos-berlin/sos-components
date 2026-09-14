@@ -1,8 +1,6 @@
 package com.sos.auth.classes;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -44,16 +42,6 @@ public class SOSPermissionsCreator {
     public SOSPermissionsCreator(SOSAuthCurrentAccount currentAccount) {
         super();
         this.currentAccount = currentAccount;
-    }
-
-    public Map<String, List<String>> getMapOfFolder() {
-        Map<String, List<String>> resultMap = new HashMap<>();
-
-        if (currentAccount.getCurrentSubject().getMapOfFolderPermissions() != null) {
-            resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());
-        }
-
-        return resultMap;
     }
 
     public Permissions createJocCockpitPermissionControllerObjectList(SecurityConfiguration secConf) {

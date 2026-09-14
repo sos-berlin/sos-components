@@ -85,9 +85,7 @@ public class SOSManageIdentityService {
             securityConfigurationAccount.setIdentityServiceId(dbItemIamIdentityService.getId());
         }
 
-        SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-
-        SecurityConfiguration securityConfigurationOut = sosSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration,
+        SecurityConfiguration securityConfigurationOut = SOSSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration,
                 dbItemIamIdentityService);
 
         return securityConfigurationOut;
@@ -245,8 +243,7 @@ public class SOSManageIdentityService {
             dbItemIamIdentityService.setRequired(false);
             sosHibernateSession.save(dbItemIamIdentityService);
 
-            SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-            sosSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+            SOSSecurityDBConfiguration.importConfiguration(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
             return true;
         }
         return false;

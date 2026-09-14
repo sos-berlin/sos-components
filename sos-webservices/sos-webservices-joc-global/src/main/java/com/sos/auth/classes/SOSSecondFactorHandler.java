@@ -28,13 +28,13 @@ public class SOSSecondFactorHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSecondFactorHandler.class);
 
-    public static Boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, String identityServiceName) throws SOSHibernateException {
+    public static Boolean checkSecondFactor(SOSAuthCurrentAccount currentAccount, DBItemIamIdentityService dbItemIdentityService)
+            throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         SOSLoginUserName sosLoginUserName = new SOSLoginUserName(currentAccount.getAccountname());
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(SOSSecondFactorHandler.class.getName());
-            DBItemIamIdentityService dbItemIdentityService = SOSAuthHelper.getIdentityService(sosHibernateSession, identityServiceName);
             Boolean secondFactorSuccess = null;
 
             if (dbItemIdentityService != null && dbItemIdentityService.isTwoFactor()) {

@@ -9,12 +9,10 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.client.ClientCertificateHandler;
+import com.sos.auth.common.AuthFolder;
+import com.sos.auth.records.UniqueRole;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -268,23 +268,23 @@ public class SOSAuthHelper {
         return success;
     }
 
-    public static Map<String, List<String>> getMapOfFolderPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        Map<String, List<String>> mapOfFolderPermissions = new HashMap<String, List<String>>();
-        for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-
-            if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
-                if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
-                    mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
-                }
-                if (dbItemSOSPermissionWithName.getRecursive()) {
-                    mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission()
-                            + "/*");
-                } else {
-                    mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
-                }
-            }
+    public static Map<UniqueRole, Set<AuthFolder>> getMapOfFolderPermissions(List<DBItemIamPermissionWithName> listOfPermissions,
+            Long identityServiceId) {
+        return listOfPermissions.stream().filter(i -> i.getFolderPermission() != null).filter(i -> !i.getFolderPermission().isEmpty()).collect(
+                Collectors.groupingBy(i -> new UniqueRole(i.getRoleName(), identityServiceId), Collectors.mapping(AuthFolder::new, Collectors
+                        .toSet())));
+    }
+    
+    public static Map<UniqueRole, Set<String>> getMapOfPermissionsPerRole(List<DBItemIamPermissionWithName> listOfPermissions, Long identityServiceId) {
+        String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
+        Stream<DBItemIamPermissionWithName> stream = listOfPermissions.stream().filter(i -> i.getAccountPermission() != null).filter(i -> !i
+                .getAccountPermission().isEmpty());
+        if (approvalRequestorRole != null && !approvalRequestorRole.isEmpty()) {
+            Predicate<DBItemIamPermissionWithName> isNotApprovalRequestorRole = i -> !i.getRoleName().equals(approvalRequestorRole);
+            stream = stream.filter(isNotApprovalRequestorRole);
         }
-        return mapOfFolderPermissions;
+        return stream.collect(Collectors.groupingBy(i -> new UniqueRole(i.getRoleName(), identityServiceId), Collectors.mapping(i -> i
+                .getAccountPermissionWithControllerIdAndExludes().get(), Collectors.toSet())));
     }
 
     public static Set<String> getSetOfPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
@@ -294,33 +294,18 @@ public class SOSAuthHelper {
             Predicate<DBItemIamPermissionWithName> isNotApprovalRequestorRole = i -> !i.getRoleName().equals(approvalRequestorRole);
             stream = stream.filter(isNotApprovalRequestorRole);
         }
-        return stream.map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
+        return stream.map(DBItemIamPermissionWithName::getAccountPermissionWithControllerIdAndExludes).filter(Optional::isPresent).map(Optional::get)
+                .collect(Collectors.toSet());
     }
-    
+
     public static Set<String> getSetOf4EyesRolePermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
         String fourEyesRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         if (fourEyesRole == null || fourEyesRole.isEmpty()) {
             return Collections.emptySet();
         }
         Predicate<DBItemIamPermissionWithName> is4EyesRole = i -> i.getRoleName().equals(fourEyesRole);
-        return listOfPermissions.stream().filter(is4EyesRole).map(SOSAuthHelper::getPermission).filter(Optional::isPresent).map(Optional::get).collect(Collectors
-                .toSet());
-    }
-    
-    private static Optional<String> getPermission(DBItemIamPermissionWithName dbItemSOSPermissionWithName) {
-        if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-            String permission = "";
-            if (dbItemSOSPermissionWithName.getControllerId() != null && !dbItemSOSPermissionWithName.getControllerId().isEmpty()) {
-                permission = dbItemSOSPermissionWithName.getControllerId() + ":" + dbItemSOSPermissionWithName.getAccountPermission();
-            } else {
-                permission = dbItemSOSPermissionWithName.getAccountPermission();
-            }
-            if (dbItemSOSPermissionWithName.getExcluded()) {
-                permission = "-" + permission;
-            }
-            return Optional.of(permission);
-        }
-        return Optional.empty();
+        return listOfPermissions.stream().filter(is4EyesRole).map(DBItemIamPermissionWithName::getAccountPermissionWithControllerIdAndExludes).filter(
+                Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
     }
 
     public static boolean accountExist(String account, Long identityServiceId) {

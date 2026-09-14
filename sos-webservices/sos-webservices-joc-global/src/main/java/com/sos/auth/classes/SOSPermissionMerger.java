@@ -1,55 +1,29 @@
 package com.sos.auth.classes;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRole;
 import com.sos.joc.model.security.configuration.SecurityConfigurationRoles;
 import com.sos.joc.model.security.configuration.permissions.IniPermission;
-import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 public class SOSPermissionMerger {
 
-    private List<SOSIdentityService> identityServices;
-    private List<SecurityConfiguration> listOfSecurityConfigurations;
+    private Set<SecurityConfiguration> listOfSecurityConfigurations;
 
-    public void addIdentityService(String identityServiceName, IdentityServiceTypes identyServiceType) {
-        if (identityServices == null) {
-            identityServices = new ArrayList<SOSIdentityService>();
-        }
-        SOSIdentityService sosIdentityService = new SOSIdentityService(identityServiceName, identyServiceType);
-        if (!identityServices.contains(sosIdentityService)) {
-            identityServices.add(sosIdentityService);
-        }
-    }
-
-    public SecurityConfiguration addIdentityService(SOSIdentityService sosIdentityService) throws JocException,
-            SOSHibernateException, IOException {
-        if (identityServices == null) {
-            identityServices = new ArrayList<>();
-        }
-        if (!identityServices.contains(sosIdentityService)) {
-            identityServices.add(sosIdentityService);
-        }
-        SecurityConfiguration securityConfiguration = new SecurityConfiguration();
-        SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-
-        securityConfiguration = sosSecurityDBConfiguration.readConfiguration(null, sosIdentityService.getIdentityServiceName());
+    public SecurityConfiguration addIdentityService(SOSIdentityService sosIdentityService) throws SOSHibernateException {
+        
+        SecurityConfiguration securityConfiguration = SOSSecurityDBConfiguration.readConfiguration(sosIdentityService.getIdentityServiceId());
         if (listOfSecurityConfigurations == null) {
-            listOfSecurityConfigurations = new ArrayList<>();
+            listOfSecurityConfigurations = new HashSet<>();
         }
         listOfSecurityConfigurations.add(securityConfiguration);
         return securityConfiguration;
-    }
-
-    public List<SecurityConfiguration> getSecurityConfigurations() {
-        return listOfSecurityConfigurations;
     }
 
     public SecurityConfiguration mergePermissions() {

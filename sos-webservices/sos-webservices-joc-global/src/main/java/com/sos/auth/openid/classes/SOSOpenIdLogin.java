@@ -23,16 +23,10 @@ public class SOSOpenIdLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
 
-    SOSOpenIdSubject sosOpenIdSubject;
-
-    public SOSOpenIdLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
-
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
+        SOSOpenIdSubject sosOpenIdSubject = null;
         try {
             SOSOpenIdAccountAccessToken sosOpenIdAccountAccessToken = null;
             Set<String> setOfTokenRoles = new HashSet<String>();
@@ -97,16 +91,19 @@ public class SOSOpenIdLogin implements ISOSLogin {
             msg = e.toString();
             LOGGER.error("", e);
         }
+        return sosOpenIdSubject;
     }
 
-    public void simulateLogin(String account) {
-
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        return null;
     }
 
+    @Override
     public void logout() {
-
     }
 
+    @Override
     public String getMsg() {
         return msg;
     }
@@ -116,15 +113,5 @@ public class SOSOpenIdLogin implements ISOSLogin {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
     }
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
-        return sosOpenIdSubject;
-    }
-
-    @Override
-    public void setIdentityService(SOSIdentityService sosIdentityService) {
-        identityService = sosIdentityService;
-    }
-
+    
 }

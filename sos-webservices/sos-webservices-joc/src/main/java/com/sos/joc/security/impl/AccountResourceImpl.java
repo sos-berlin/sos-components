@@ -497,14 +497,9 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
                     LOGGER.debug("Login with identity service sosintern");
                 }
 
-                sosLogin.setIdentityService(sosIdentityService);
-                sosLogin.simulateLogin(currentAccount.getAccountname());
-
-                ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
-
+                ISOSAuthSubject sosAuthSubject = sosLogin.simulateLogin(currentAccount.getAccountname(), sosIdentityService);
                 currentAccount.setCurrentSubject(sosAuthSubject);
-                currentAccount.setIdentityService(new SOSIdentityService(dbItemIamIdentityServiceEntry.getId(), dbItemIamIdentityServiceEntry
-                        .getIdentityServiceName(), sosIdentityService.getIdentyServiceType()));
+                currentAccount.setIdentityService(sosIdentityService);
 
                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(sosIdentityService);
 

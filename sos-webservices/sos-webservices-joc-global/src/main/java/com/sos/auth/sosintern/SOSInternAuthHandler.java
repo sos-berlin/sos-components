@@ -18,8 +18,7 @@ public class SOSInternAuthHandler {
     public SOSInternAuthHandler() {
     }
 
-    public SOSAuthAccessToken login(SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials,
-            String password) throws SOSHibernateException {
+    public SOSAuthAccessToken login(String accountName, Long identityServiceId, String password) throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -29,8 +28,8 @@ public class SOSInternAuthHandler {
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
             forcePasswordChange = false;
             IamAccountFilter filter = new IamAccountFilter();
-            filter.setAccountName(sosInternAuthWebserviceCredentials.account());
-            filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.identityServiceId());
+            filter.setAccountName(accountName);
+            filter.setIdentityServiceId(identityServiceId);
 
             DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
 
