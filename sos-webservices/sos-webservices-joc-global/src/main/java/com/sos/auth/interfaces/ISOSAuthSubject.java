@@ -19,7 +19,7 @@ public interface ISOSAuthSubject {
     public Boolean isForcePasswordChange();
 
     public Map<UniqueRole, Set<AuthFolder>> getMapOfFolderPermissions();
-    public Set<AuthFolder> getFolderPermissionsOfRole(UniqueRole role);
+    public Map<String, Set<AuthFolder>> getFolderPermissionsOfRole(UniqueRole role);
 
     public Map<UniqueRole, Set<String>> getMapOfAccountPermissions();
     public Set<String> getAccountPermissionsOfRole(UniqueRole role);

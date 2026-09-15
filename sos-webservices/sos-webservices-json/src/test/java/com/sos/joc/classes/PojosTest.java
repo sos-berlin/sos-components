@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,6 +41,7 @@ import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.security.configuration.predicate.JocPermissionsPredicate;
 import com.sos.schema.JsonValidator;
 
 public class PojosTest {
@@ -47,7 +49,17 @@ public class PojosTest {
 	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 	
-    @Test
+	@Test
+    public void oh() throws Exception {
+	    Predicate<String> pred = new JocPermissionsPredicate().getAuditLog().getView();
+	    System.out.println(pred.test("sos:products"));
+	    System.out.println(pred.test("sos:products:joc"));
+	    System.out.println(pred.test("sos:products:joc:auditlog"));
+	    System.out.println(pred.test("sos:products:joc:auditlog:view"));
+	    System.out.println(pred.test("sos:products:joc:auditlog:mange"));
+	}
+	
+	@Test
     public void freshOrderTest() throws Exception {
         Variables vars = new Variables();
         FreshOrder order = new FreshOrder();

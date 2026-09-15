@@ -66,11 +66,12 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     }
     
     @Override
-    public Set<AuthFolder> getFolderPermissionsOfRole(UniqueRole role) {
+    public Map<String, Set<AuthFolder>> getFolderPermissionsOfRole(UniqueRole role) {
         if (folderPermissionsPerRole == null) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
-        return folderPermissionsPerRole.getOrDefault(role, Collections.emptySet());
+        return folderPermissionsPerRole.getOrDefault(role, Collections.emptySet()).stream().collect(Collectors.groupingBy(AuthFolder::getControllerId,
+                Collectors.toSet()));
     }
     
     @Override
