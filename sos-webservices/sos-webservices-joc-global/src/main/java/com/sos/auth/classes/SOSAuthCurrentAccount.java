@@ -458,6 +458,10 @@ public class SOSAuthCurrentAccount {
     public SOSAuthFolderPermissions getSosAuthFolderPermissions() {
         return sosAuthFolderPermissions;
     }
+    
+    public SOSAuthDetailedFolderPermissions getSOSAuthDetailedFolderPermissions() {
+        return sosAuthDetailedFolderPermissions;
+    }
 
     public String getCallerHostName() {
         if (sosLoginParameters.getRequest() != null) {

@@ -1,9 +1,9 @@
 
-package com.sos.joc.model.security.configuration.predicate.joc;
+package com.sos.auth.predicate.joc;
 
 import java.util.function.Predicate;
 
-import com.sos.joc.model.security.configuration.predicate.JocPermissionsPredicate;
+import com.sos.auth.predicate.JocPermissionsPredicate;
 
 public class Cluster {
 

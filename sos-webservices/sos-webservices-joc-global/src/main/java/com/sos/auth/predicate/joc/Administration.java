@@ -1,11 +1,11 @@
 
-package com.sos.joc.model.security.configuration.predicate.joc;
+package com.sos.auth.predicate.joc;
 
-import com.sos.joc.model.security.configuration.predicate.joc.admin.Accounts;
-import com.sos.joc.model.security.configuration.predicate.joc.admin.Certificates;
-import com.sos.joc.model.security.configuration.predicate.joc.admin.Controllers;
-import com.sos.joc.model.security.configuration.predicate.joc.admin.Customization;
-import com.sos.joc.model.security.configuration.predicate.joc.admin.Settings;
+import com.sos.auth.predicate.joc.admin.Accounts;
+import com.sos.auth.predicate.joc.admin.Certificates;
+import com.sos.auth.predicate.joc.admin.Controllers;
+import com.sos.auth.predicate.joc.admin.Customization;
+import com.sos.auth.predicate.joc.admin.Settings;
 
 public class Administration {
     

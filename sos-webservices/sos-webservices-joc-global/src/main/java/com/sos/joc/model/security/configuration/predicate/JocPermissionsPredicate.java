@@ -3,10 +3,10 @@ package com.sos.joc.model.security.configuration.predicate;
 
 import java.util.function.Predicate;
 
-import com.sos.joc.model.security.configuration.predicate.joc.AuditLog;
-import com.sos.joc.model.security.configuration.predicate.joc.Calendars;
-import com.sos.joc.model.security.configuration.predicate.joc.Cluster;
-import com.sos.joc.model.security.configuration.predicate.joc.DailyPlan;
+import com.sos.auth.predicate.joc.AuditLog;
+import com.sos.auth.predicate.joc.Calendars;
+import com.sos.auth.predicate.joc.Cluster;
+import com.sos.auth.predicate.joc.DailyPlan;
 
 
 public class JocPermissionsPredicate {

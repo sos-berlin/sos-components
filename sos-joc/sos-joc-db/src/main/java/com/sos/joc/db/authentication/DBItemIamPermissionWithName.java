@@ -15,6 +15,10 @@ public class DBItemIamPermissionWithName {
     public String getControllerId() {
         return controllerId;
     }
+    
+    public String getNonNullControllerId() {
+        return Optional.ofNullable(controllerId).orElse("");
+    }
 
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
@@ -35,7 +39,7 @@ public class DBItemIamPermissionWithName {
     
     public Optional<String> getAccountPermissionWithControllerIdAndExludes() {
         if (accountPermission != null && !accountPermission.isEmpty()) {
-            String permission = accountPermission;
+            String permission = accountPermission.replace(":adminstration:", ":administration:"); // because of typo in the past
             if (controllerId != null && !controllerId.isEmpty()) {
                 permission = controllerId + ":" + permission;
             }

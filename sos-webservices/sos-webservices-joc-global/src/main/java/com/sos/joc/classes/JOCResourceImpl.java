@@ -20,7 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.predicate.JocPermissionsPredicate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -64,6 +66,7 @@ public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
     private SOSAuthCurrentAccount currentAccount;
+    protected SOSAuthDetailedFolderPermissions detailedFolderPermissions;
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     // private String accessToken;
@@ -88,6 +91,7 @@ public class JOCResourceImpl {
     public void setCurrentAccount(JOCResourceImpl obj) {
         this.currentAccount = obj.getCurrentAccount();
         this.folderPermissions = currentAccount.getSosAuthFolderPermissions();
+        this.detailedFolderPermissions = currentAccount.getSOSAuthDetailedFolderPermissions();
         this.headerAccessToken = currentAccount.getAccessToken();
         this.jobschedulerUser = new JobSchedulerUser(this.headerAccessToken);
         if (obj.getJocError() != null) {
@@ -154,6 +158,10 @@ public class JOCResourceImpl {
     protected Stream<JocPermissions> getJocPermissions() throws JocException {
         checkCurrentAccount();
         return Stream.of(currentAccount.getJocPermissions(), currentAccount.get4EyesJocPermissions());
+    }
+    
+    protected JocPermissionsPredicate getJocPermissionsPredicate() throws JocException {
+        return new JocPermissionsPredicate();
     }
     
     protected JocPermissions get4EyesJocPermissions() throws JocException {

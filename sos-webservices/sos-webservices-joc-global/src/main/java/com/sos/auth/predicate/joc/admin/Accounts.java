@@ -1,16 +1,16 @@
 
-package com.sos.joc.model.security.configuration.predicate.joc;
+package com.sos.auth.predicate.joc.admin;
 
 import java.util.function.Predicate;
 
-import com.sos.joc.model.security.configuration.predicate.JocPermissionsPredicate;
+import com.sos.auth.predicate.JocPermissionsPredicate;
 
-public class FileTransfer {
+public class Accounts {
 
     private final String prefix;
 
-    public FileTransfer(String parentPrefix) {
-        prefix = parentPrefix + ":" + "filetransfer";
+    public Accounts(String parentPrefix) {
+        prefix = parentPrefix + ":" + "accounts";
     }
     
     public Predicate<String> getView() {

@@ -50,7 +50,7 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                         }
                     }
                 }
-                response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE);
+                response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE, getJocPermissionsPredicate().getInventory().getManage());
             }
             return response;
         } catch (Exception e) {

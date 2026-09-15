@@ -275,7 +275,8 @@ public class SOSAuthHelper {
                         .toSet())));
     }
     
-    public static Map<UniqueRole, Set<String>> getMapOfPermissionsPerRole(List<DBItemIamPermissionWithName> listOfPermissions, Long identityServiceId) {
+    public static Map<UniqueRole, Map<String, Set<String>>> getMapOfPermissionsPerRole(List<DBItemIamPermissionWithName> listOfPermissions,
+            Long identityServiceId) {
         String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         Stream<DBItemIamPermissionWithName> stream = listOfPermissions.stream().filter(i -> i.getAccountPermission() != null).filter(i -> !i
                 .getAccountPermission().isEmpty());
@@ -283,19 +284,9 @@ public class SOSAuthHelper {
             Predicate<DBItemIamPermissionWithName> isNotApprovalRequestorRole = i -> !i.getRoleName().equals(approvalRequestorRole);
             stream = stream.filter(isNotApprovalRequestorRole);
         }
-        return stream.collect(Collectors.groupingBy(i -> new UniqueRole(i.getRoleName(), identityServiceId), Collectors.mapping(i -> i
-                .getAccountPermissionWithControllerIdAndExludes().get(), Collectors.toSet())));
-    }
-
-    public static Set<String> getSetOfPermissions(List<DBItemIamPermissionWithName> listOfPermissions) {
-        String approvalRequestorRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
-        Stream<DBItemIamPermissionWithName> stream = listOfPermissions.stream();
-        if (approvalRequestorRole != null && !approvalRequestorRole.isEmpty()) {
-            Predicate<DBItemIamPermissionWithName> isNotApprovalRequestorRole = i -> !i.getRoleName().equals(approvalRequestorRole);
-            stream = stream.filter(isNotApprovalRequestorRole);
-        }
-        return stream.map(DBItemIamPermissionWithName::getAccountPermissionWithControllerIdAndExludes).filter(Optional::isPresent).map(Optional::get)
-                .collect(Collectors.toSet());
+        return stream.collect(Collectors.groupingBy(i -> new UniqueRole(i.getRoleName(), identityServiceId), Collectors.groupingBy(
+                DBItemIamPermissionWithName::getNonNullControllerId, Collectors.mapping(i -> i.getAccountPermissionWithControllerIdAndExludes().get(),
+                        Collectors.toSet()))));
     }
 
     public static Set<String> getSetOf4EyesRolePermissions(List<DBItemIamPermissionWithName> listOfPermissions) {

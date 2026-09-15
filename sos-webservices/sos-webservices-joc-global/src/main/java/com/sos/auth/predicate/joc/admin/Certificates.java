@@ -1,16 +1,16 @@
 
-package com.sos.joc.model.security.configuration.predicate.joc.admin;
+package com.sos.auth.predicate.joc.admin;
 
 import java.util.function.Predicate;
 
-import com.sos.joc.model.security.configuration.predicate.JocPermissionsPredicate;
+import com.sos.auth.predicate.JocPermissionsPredicate;
 
-public class Settings {
+public class Certificates {
 
     private final String prefix;
 
-    public Settings(String parentPrefix) {
-        prefix = parentPrefix + ":" + "settings";
+    public Certificates(String parentPrefix) {
+        prefix = parentPrefix + ":" + "certificates";
     }
     
     public Predicate<String> getView() {
@@ -20,5 +20,5 @@ public class Settings {
     public Predicate<String> getManage() {
         return JocPermissionsPredicate.createPredicate(prefix, "manage");
     }
-
+    
 }

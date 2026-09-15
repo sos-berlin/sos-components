@@ -14,7 +14,7 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     private Boolean authenticated = false;
     protected Boolean isForcePasswordChange = false;
     protected Map<UniqueRole, Set<AuthFolder>> folderPermissionsPerRole;
-    protected Map<UniqueRole, Set<String>> accountPermissionsPerRole;
+    protected Map<UniqueRole, Map<String, Set<String>>> accountPermissionsPerRole;
     protected Set<String> setOfRoles;
     protected Set<String> setOf4EyesRolePermissions;
     private Set<String> accountPermissions;
@@ -28,7 +28,8 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     public boolean isPermitted(final String permission) {
         if (accountPermissionsPerRole != null) {
             if (accountPermissions == null) {
-                accountPermissions = accountPermissionsPerRole.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+                accountPermissions = accountPermissionsPerRole.values().stream().map(Map::entrySet).flatMap(Set::stream).map(Map.Entry::getValue)
+                        .flatMap(Set::stream).collect(Collectors.toSet());
             }
         }
         return isPermitted(permission, accountPermissions);
@@ -84,11 +85,12 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
         if (accountPermissionsPerRole == null) {
             return Collections.emptySet();
         }
-        return accountPermissionsPerRole.values().stream().flatMap(Set::stream).collect(Collectors.toSet());
+        return accountPermissionsPerRole.values().stream().map(Map::entrySet).flatMap(Set::stream).map(Map.Entry::getValue).flatMap(Set::stream)
+                .collect(Collectors.toSet());
     }
     
     @Override
-    public Map<UniqueRole, Set<String>> getMapOfAccountPermissions() {
+    public Map<UniqueRole, Map<String, Set<String>>> getMapOfAccountPermissions() {
         if (accountPermissionsPerRole == null) {
             return Collections.emptyMap();
         }
@@ -96,11 +98,11 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     }
     
     @Override
-    public Set<String> getAccountPermissionsOfRole(UniqueRole role) {
+    public Map<String, Set<String>> getAccountPermissionsOfRole(UniqueRole role) {
         if (accountPermissionsPerRole == null) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
-        return accountPermissionsPerRole.getOrDefault(role, Collections.emptySet());
+        return accountPermissionsPerRole.getOrDefault(role, Collections.emptyMap());
     }
     
     @Override

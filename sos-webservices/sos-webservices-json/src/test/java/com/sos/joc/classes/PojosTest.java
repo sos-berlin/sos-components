@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.auth.predicate.JocPermissionsPredicate;
 import com.sos.controller.model.command.CancelOrder;
 import com.sos.controller.model.command.JSBatchCommands;
 import com.sos.controller.model.order.FreshOrder;
@@ -41,7 +42,6 @@ import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.security.configuration.predicate.JocPermissionsPredicate;
 import com.sos.schema.JsonValidator;
 
 public class PojosTest {

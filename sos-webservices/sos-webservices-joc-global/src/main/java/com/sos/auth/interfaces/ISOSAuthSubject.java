@@ -21,8 +21,8 @@ public interface ISOSAuthSubject {
     public Map<UniqueRole, Set<AuthFolder>> getMapOfFolderPermissions();
     public Map<String, Set<AuthFolder>> getFolderPermissionsOfRole(UniqueRole role);
 
-    public Map<UniqueRole, Set<String>> getMapOfAccountPermissions();
-    public Set<String> getAccountPermissionsOfRole(UniqueRole role);
+    public Map<UniqueRole, Map<String, Set<String>>> getMapOfAccountPermissions();
+    public Map<String, Set<String>> getAccountPermissionsOfRole(UniqueRole role);
 
     public Set<String> getListOfAccountPermissions();
 

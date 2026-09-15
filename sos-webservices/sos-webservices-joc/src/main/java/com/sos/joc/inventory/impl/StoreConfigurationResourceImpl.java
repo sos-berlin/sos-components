@@ -33,7 +33,7 @@ public class StoreConfigurationResourceImpl extends AStoreConfiguration implemen
     }
     
     public JOCDefaultResponse store(ConfigurationObject in) throws Exception {
-        return store(in, ConfigurationType.FOLDER, IMPL_PATH);
+        return store(in, ConfigurationType.FOLDER, IMPL_PATH, getJocPermissionsPredicate().getInventory().getManage());
     }
 
 }

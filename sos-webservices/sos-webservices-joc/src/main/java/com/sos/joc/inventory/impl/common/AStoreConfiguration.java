@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSDate;
@@ -41,6 +42,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -50,7 +52,13 @@ import com.sos.joc.model.inventory.common.ItemStateEnum;
 
 public abstract class AStoreConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType, String request) throws Exception {
+    public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType, String request, Predicate<String> permPred) throws Exception {
+        
+        SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
+        if (!fPerms.isPermitted(in.getPath(), fPerms.getPermittedFoldersByJocPermissions(permPred))) {
+            throw new JocFolderPermissionsException("Access denied");
+        }
+        
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
