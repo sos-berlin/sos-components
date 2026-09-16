@@ -25,15 +25,10 @@ public class SOSFidoAuthLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSFidoAuthLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
-    private SOSInternAuthSubject sosInternAuthSubject;
 
-    public SOSFidoAuthLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
-
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
             SOSFidoAuthWebserviceCredentials sosFidoAuthWebserviceCredentials = new SOSFidoAuthWebserviceCredentials();
             sosFidoAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
@@ -86,10 +81,12 @@ public class SOSFidoAuthLogin implements ISOSLogin {
                 IOException e) {
             LOGGER.error("", e);
         }
-
+        return sosInternAuthSubject;
     }
 
-    public void simulateLogin(String account) {
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
             sosInternAuthSubject = new SOSInternAuthSubject();
             sosInternAuthSubject.setAuthenticated(true);
@@ -97,28 +94,22 @@ public class SOSFidoAuthLogin implements ISOSLogin {
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
         }
+        return sosInternAuthSubject;
     }
 
+    @Override
     public void logout() {
-
     }
 
+    @Override
     public String getMsg() {
         return msg;
     }
 
+    @Override
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
-    }
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
-        return sosInternAuthSubject;
-    }
-
-    public void setIdentityService(SOSIdentityService identityService) {
-        this.identityService = identityService;
     }
 
 }

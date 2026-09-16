@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc.admin;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,6 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Customization {
 
+    @JsonIgnore
+    private final String prefix;
+    
     @JsonProperty("view")
     private Boolean view = false;
     @JsonProperty("manage")
@@ -29,24 +35,23 @@ public class Customization {
     @JsonPropertyDescription("share/makePrvate")
     private Boolean share = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Customization() {
+    public Customization(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "customization");
     }
-
-    /**
-     * 
-     * @param view
-     * @param share
-     * @param manage
-     */
-    public Customization(Boolean view, Boolean manage, Boolean share) {
-        super();
-        this.view = view;
-        this.manage = manage;
-        this.share = share;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getManageString() {
+        return JocPermissions.getPermissionString(prefix, "manage");
+    }
+    
+    @JsonIgnore
+    public String getShareString() {
+        return JocPermissions.getPermissionString(prefix, "share");
     }
 
     @JsonProperty("view")

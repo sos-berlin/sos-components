@@ -5,6 +5,7 @@ import org.hibernate.type.NumericBooleanConverter;
 import com.sos.commons.hibernate.annotations.SOSIdGenerator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.security.identityservice.IdentityServiceAuthenticationScheme;
+import com.sos.joc.model.security.identityservice.IdentityServiceTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -95,6 +96,15 @@ public class DBItemIamIdentityService {
 
     public String getIdentityServiceType() {
         return identityServiceType;
+    }
+    
+    @Transient
+    public IdentityServiceTypes getIdentityServiceTypeAsEnum() {
+        try {
+            return IdentityServiceTypes.fromValue(identityServiceType);
+        } catch (IllegalArgumentException e) {
+            return IdentityServiceTypes.UNKNOWN;
+        }
     }
 
     public void setIdentityServiceType(String identityServiceType) {

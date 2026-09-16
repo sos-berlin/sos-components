@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -15,6 +18,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Locks {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * show resource tab 'locks'
      * 
@@ -23,20 +29,13 @@ public class Locks {
     @JsonPropertyDescription("show resource tab 'locks'")
     private Boolean view = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Locks() {
+    public Locks(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "locks");
     }
-
-    /**
-     * 
-     * @param view
-     */
-    public Locks(Boolean view) {
-        super();
-        this.view = view;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
     }
 
     /**

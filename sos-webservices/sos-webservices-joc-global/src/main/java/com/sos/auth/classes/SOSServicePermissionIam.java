@@ -35,7 +35,6 @@ import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -564,17 +563,10 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             return "Access denied";
         }
 
-        SOSIdentityService sosIdentityService = null;
-        ISOSAuthSubject sosAuthSubject = null;
-
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
         }
-        IdentityServiceTypes identityServiceType = null;
-        try {
-            identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
-        } catch (IllegalArgumentException e) {
-        }
+        IdentityServiceTypes identityServiceType = dbItemIdentityService.getIdentityServiceTypeAsEnum();
 
         if (identityServiceType != null) {
             String identityServiceName = dbItemIdentityService.getIdentityServiceName();
@@ -615,17 +607,14 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 LOGGER.debug("Login with identity service sosintern");
             }
 
-            sosIdentityService = new SOSIdentityService(dbItemIdentityService);
+            SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIdentityService);
 
-            sosLogin.setIdentityService(sosIdentityService);
-
-            sosLogin.login(currentAccount, password);
+            ISOSAuthSubject sosAuthSubject = sosLogin.login(currentAccount, password, sosIdentityService);
             String msg = sosLogin.getMsg();
 
-            sosAuthSubject = sosLogin.getCurrentSubject();
             Boolean secondFactorSuccess = null;
             try {
-                secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService.getIdentityServiceName());
+                secondFactorSuccess = SOSSecondFactorHandler.checkSecondFactor(currentAccount, dbItemIdentityService);
                 if (secondFactorSuccess != null && !secondFactorSuccess) {
                     LOGGER.info("Login: second factor failed");
                     sosAuthSubject = null;
@@ -636,8 +625,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             }
 
             currentAccount.setCurrentSubject(sosAuthSubject);
-            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
-                    identityServiceType));
+            currentAccount.setIdentityService(new SOSIdentityService(dbItemIdentityService));
 
             if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
                 SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
@@ -668,9 +656,9 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
             currentAccount.setAccessToken(identityServiceName, accessToken);
 
             boolean authorization = true;
-            if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                if (currentAccount.getCurrentSubject().getListOfAccountPermissions().size() == 0) {
-                    if (currentAccount.getRoles().size() == 0) {
+            if (currentAccount.getCurrentSubject() != null) {
+                if (currentAccount.getCurrentSubject().getListOfAccountPermissions().isEmpty()) {
+                    if (currentAccount.getRoles().isEmpty()) {
                         sosLogin.setMsg("login denied: no role assignment found");
                         currentAccount.setCurrentSubject(null);
                     } else {
@@ -754,17 +742,6 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
         }
 
         return pwd;
-    }
-
-    private void addFolder(SOSAuthCurrentAccount currentAccount) {
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-
-        Map<String, List<String>> fs = sosPermissionsCreator.getMapOfFolder();
-        for (String role : fs.keySet()) {
-            for (String folder : fs.get(role)) {
-                currentAccount.addFolder(role, folder);
-            }
-        }
     }
 
     private String getClientId(String idToken, com.sos.joc.model.security.properties.Properties properties) throws Exception {
@@ -865,11 +842,9 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                         dbItemIamIdentityService));
                                 currentAccount.setRoles(securityConfiguration);
-                                if (currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
-                                    setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
-                                }
+                                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
                                 setOf4EyesRolePermissions.addAll(currentAccount.getCurrentSubject().getListOf4EyesRolePermissions());
-                                addFolder(currentAccount);
+                                currentAccount.addFolders();
                             } else {
                                 authenticationResult.put(dbItemIamIdentityService.getIdentityServiceName(), msg);
                                 currentAccount.setCurrentSubject(null);
@@ -926,7 +901,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
 
                                     LOGGER.info("Authentication with Identity Service " + dbItemIamIdentityService.getIdentityServiceName()
                                             + " successful." + kid);
-                                    addFolder(currentAccount);
+                                    currentAccount.addFolders();
                                     break;
                                 }
 
@@ -1087,14 +1062,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                         }
 
                         SOSOpenIdWebserviceCredentials sosOpenIdWebserviceCredentials = new SOSOpenIdWebserviceCredentials();
-                        SOSIdentityService sosIdentityService;
-                        if (sosLoginParameters.isFirstPathOfTwoFactor()) {
-                            sosIdentityService = new SOSIdentityService(sosLoginParameters.getIdentityService(), IdentityServiceTypes.fromValue(
-                                    dbItemIamIdentityService.getIdentityServiceType()));
-                        } else {
-                            sosIdentityService = new SOSIdentityService(sosLoginParameters.getFirstIdentityService(), IdentityServiceTypes.fromValue(
-                                    dbItemIamIdentityService.getIdentityServiceType()));
-                        }
+                        SOSIdentityService sosIdentityService = new SOSIdentityService(dbItemIamIdentityService);
                         sosOpenIdWebserviceCredentials.setValuesFromProfile(sosIdentityService);
                         sosOpenIdWebserviceCredentials.setIdToken(sosLoginParameters.getIdToken());
                         sosOpenIdWebserviceCredentials.setOpenidConfiguration(sosLoginParameters.getOpenidConfiguration());

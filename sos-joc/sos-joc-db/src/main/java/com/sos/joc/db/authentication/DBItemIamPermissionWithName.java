@@ -1,5 +1,7 @@
 package com.sos.joc.db.authentication;
 
+import java.util.Optional;
+
 public class DBItemIamPermissionWithName {
 
     private String controllerId;
@@ -12,6 +14,10 @@ public class DBItemIamPermissionWithName {
 
     public String getControllerId() {
         return controllerId;
+    }
+    
+    public String getNonNullControllerId() {
+        return Optional.ofNullable(controllerId).orElse("");
     }
 
     public void setControllerId(String controllerId) {
@@ -29,6 +35,20 @@ public class DBItemIamPermissionWithName {
 
     public String getAccountPermission() {
         return accountPermission;
+    }
+    
+    public Optional<String> getAccountPermissionWithControllerIdAndExludes() {
+        if (accountPermission != null && !accountPermission.isEmpty()) {
+            String permission = accountPermission.replace(":adminstration:", ":administration:"); // because of typo in the past
+            if (controllerId != null && !controllerId.isEmpty()) {
+                permission = controllerId + ":" + permission;
+            }
+            if (Boolean.TRUE == excluded) {
+                permission = "-" + permission;
+            }
+            return Optional.of(permission);
+        }
+        return Optional.empty();
     }
 
     public void setAccountPermission(String accountPermission) {

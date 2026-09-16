@@ -28,17 +28,11 @@ public class SOSKeycloakLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeycloakLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
 
-    SOSKeycloakSubject sosKeycloakSubject;
-
-    public SOSKeycloakLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
         KeyStore truststore = null;
-
+        SOSKeycloakSubject sosKeycloakSubject = null;
         try {
             SOSKeycloakWebserviceCredentials webserviceCredentials = new SOSKeycloakWebserviceCredentials();
             webserviceCredentials.setValuesFromProfile(identityService);
@@ -99,10 +93,13 @@ public class SOSKeycloakLogin implements ISOSLogin {
             msg = e.toString();
             LOGGER.error("", e);
         }
+        
+        return sosKeycloakSubject;
     }
 
-    public void simulateLogin(String account) {
-
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        SOSKeycloakSubject sosKeycloakSubject = null;
         try {
             sosKeycloakSubject = new SOSKeycloakSubject(account, identityService);
             sosKeycloakSubject.setAuthenticated(true);
@@ -118,25 +115,16 @@ public class SOSKeycloakLogin implements ISOSLogin {
         } catch (Exception e) {
             LOGGER.error("", e);
         }
-    }
-
-    public void logout() {
-
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
         return sosKeycloakSubject;
     }
 
     @Override
-    public void setIdentityService(SOSIdentityService sosIdentityService) {
-        identityService = sosIdentityService;
+    public void logout() {
+    }
+
+    @Override
+    public String getMsg() {
+        return msg;
     }
 
     @Override

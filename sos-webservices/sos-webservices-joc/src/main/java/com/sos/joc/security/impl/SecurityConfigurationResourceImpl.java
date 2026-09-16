@@ -43,14 +43,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 return jocDefaultResponse;
             }
 
-            IdentityServiceFilter identityServiceFilter = null;
+            IdentityServiceFilter identityServiceFilter = new IdentityServiceFilter();
             if (body != null && body.length > 0) {
                 JsonValidator.validate(body, IdentityServiceFilter.class);
                 identityServiceFilter = Globals.objectMapper.readValue(body, IdentityServiceFilter.class);
-            } else {
-                identityServiceFilter = new IdentityServiceFilter();
             }
-            SecurityConfiguration securityConfiguration = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
                 IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
@@ -62,23 +59,16 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                             + ">");
                 }
 
-                SOSSecurityDBConfiguration sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-
-                securityConfiguration = sosSecurityDBConfiguration.readConfiguration(dbItemIamIdentityService.getId(), dbItemIamIdentityService
-                        .getIdentityServiceName());
+                SecurityConfiguration securityConfiguration = SOSSecurityDBConfiguration.readConfiguration(dbItemIamIdentityService .getId());
 
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
                 JocConfigurationFilter filter = new JocConfigurationFilter();
                 filter.setConfigurationType("PROFILE");
 
                 securityConfiguration.setProfiles(jocConfigurationDBLayer.getJocConfigurationProfiles(filter));
-
                 securityConfiguration.setDeliveryDate(Date.from(Instant.now()));
-
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
             } finally {
-                identityServiceFilter = null;
-                securityConfiguration = null;
                 Globals.disconnect(sosHibernateSession);
             }
 
@@ -117,8 +107,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 return jocDefaultResponse;
             }
 
-            SOSSecurityDBConfiguration sosSecurityDBConfiguration = null;
-
             SOSHibernateSession sosHibernateSession = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
@@ -131,8 +119,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     throw new JocObjectNotExistException("Couldn't find the Identity Service <" + identityServiceName + ">");
                 }
 
-                sosSecurityDBConfiguration = new SOSSecurityDBConfiguration();
-                sosSecurityDBConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+                SOSSecurityDBConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
 
                 storeAuditLog(securityConfiguration.getAuditLog());
 

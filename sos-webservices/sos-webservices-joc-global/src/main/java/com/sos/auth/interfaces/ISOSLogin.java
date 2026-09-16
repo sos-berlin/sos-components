@@ -5,7 +5,7 @@ import com.sos.auth.classes.SOSIdentityService;
 
 public interface ISOSLogin {
 
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd);
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService sosIdentityService);
 
     public void logout();
 
@@ -13,10 +13,6 @@ public interface ISOSLogin {
 
     public void setMsg(String msg);
 
-    public ISOSAuthSubject getCurrentSubject();
-
-    public void setIdentityService(SOSIdentityService sosIdentityService);
-
-    public void simulateLogin(String string);
+    public ISOSAuthSubject simulateLogin(String string, SOSIdentityService sosIdentityService);
 
 }

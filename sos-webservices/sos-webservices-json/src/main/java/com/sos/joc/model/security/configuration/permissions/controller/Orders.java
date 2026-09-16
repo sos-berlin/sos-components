@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,6 +24,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "confirm"
 })
 public class Orders {
+
+    @JsonIgnore
+    private final String prefix;
 
     /**
      * show order/task widget, overview, order/task history
@@ -60,34 +66,48 @@ public class Orders {
     @JsonProperty("confirm")
     private Boolean confirm = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Orders() {
+    public Orders(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "orders");
     }
-
-    /**
-     * 
-     * @param view
-     * @param create
-     * @param cancel
-     * @param suspendResume
-     * @param resumeFailed
-     * @param modify
-     * @param managePositions
-     * @param confirm
-     */
-    public Orders(Boolean view, Boolean create, Boolean cancel, Boolean suspendResume, Boolean resumeFailed, Boolean modify, Boolean managePositions, Boolean confirm) {
-        super();
-        this.view = view;
-        this.create = create;
-        this.cancel = cancel;
-        this.suspendResume = suspendResume;
-        this.resumeFailed = resumeFailed;
-        this.modify = modify;
-        this.managePositions = managePositions;
-        this.confirm = confirm;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getCreateString() {
+        return JocPermissions.getPermissionString(prefix, "create");
+    }
+    
+    @JsonIgnore
+    public String getCancelString() {
+        return JocPermissions.getPermissionString(prefix, "cancel");
+    }
+    
+    @JsonIgnore
+    public String getSuspendResumeString() {
+        return JocPermissions.getPermissionString(prefix, "suspend_resume");
+    }
+    
+    @JsonIgnore
+    public String getResumeFailedString() {
+        return JocPermissions.getPermissionString(prefix, "resume_failed");
+    }
+    
+    @JsonIgnore
+    public String getModifyString() {
+        return JocPermissions.getPermissionString(prefix, "modify");
+    }
+    
+    @JsonIgnore
+    public String getManagePositionsString() {
+        return JocPermissions.getPermissionString(prefix, "manage_positions");
+    }
+    
+    @JsonIgnore
+    public String getConfirmString() {
+        return JocPermissions.getPermissionString(prefix, "confirm");
     }
 
     /**

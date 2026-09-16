@@ -40,7 +40,7 @@ public class SOSInternAuthSubject extends ASOSAuthSubject {
         getInternAuthSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(String accountName, SOSIdentityService identityServiceId) throws SOSHibernateException {
+    public void setPermissionAndRoles(String accountName, SOSIdentityService identityService) throws SOSHibernateException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -48,13 +48,13 @@ public class SOSInternAuthSubject extends ASOSAuthSubject {
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName, identityServiceId
+            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName, identityService
                     .getIdentityServiceId());
             setOfRoles = listOfRoles.stream().map(DBItemIamPermissionWithName::getRoleName).collect(Collectors.toSet());
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityServiceId
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
-            mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
-            setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
+            folderPermissionsPerRole = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions, identityService.getIdentityServiceId());
+            accountPermissionsPerRole = SOSAuthHelper.getMapOfPermissionsPerRole(listOfPermissions, identityService.getIdentityServiceId());
             setOf4EyesRolePermissions = SOSAuthHelper.getSetOf4EyesRolePermissions(listOfPermissions);
             
         } finally {

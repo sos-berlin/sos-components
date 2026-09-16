@@ -15,7 +15,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.common.AuthFolder;
 import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.auth.records.PermissionsPerRole;
+import com.sos.auth.records.UniqueRole;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
@@ -27,29 +30,6 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
-import com.sos.joc.model.security.configuration.permissions.controller.Agents;
-import com.sos.joc.model.security.configuration.permissions.controller.Deployments;
-import com.sos.joc.model.security.configuration.permissions.controller.Locks;
-import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
-import com.sos.joc.model.security.configuration.permissions.controller.Orders;
-import com.sos.joc.model.security.configuration.permissions.controller.Workflows;
-import com.sos.joc.model.security.configuration.permissions.joc.Administration;
-import com.sos.joc.model.security.configuration.permissions.joc.AuditLog;
-import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
-import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
-import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
-import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
-import com.sos.joc.model.security.configuration.permissions.joc.Encipherment;
-import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
-import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
-import com.sos.joc.model.security.configuration.permissions.joc.Notification;
-import com.sos.joc.model.security.configuration.permissions.joc.Others;
-import com.sos.joc.model.security.configuration.permissions.joc.Reports;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -73,6 +53,7 @@ public class SOSAuthCurrentAccount {
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosAuthFolderPermissions;
+    private SOSAuthDetailedFolderPermissions sosAuthDetailedFolderPermissions;
     private Permissions sos4EyesPermissions;
 
     public SOSAuthCurrentAccount(String accountName) {
@@ -311,13 +292,8 @@ public class SOSAuthCurrentAccount {
     }
 
     private Permissions initPermissions() {
-        Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
-                new Customization());
-        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
-                new Agents(), new NoticeBoards(), new Locks(), new Workflows());
-        JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(),
-                new AuditLog(), new DailyPlan(), new FileTransfer(), new Notification(), new Encipherment(), new Reports(), new Others());
-        return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.configuration.permissions.Controllers());
+        return new Permissions(getRoles(), new JocPermissions(), new ControllerPermissions(),
+                new com.sos.joc.model.security.configuration.permissions.Controllers());
     }
 
     private boolean getExcludedController(String permission, String controllerId) {
@@ -408,27 +384,43 @@ public class SOSAuthCurrentAccount {
     }
 
     public void initFolders() {
-        sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        if (sosAuthFolderPermissions == null) {
+            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        }
+        if (sosAuthDetailedFolderPermissions == null) {
+            sosAuthDetailedFolderPermissions = new SOSAuthDetailedFolderPermissions();
+        }
+    }
+    
+    public void addFolders() {
+        if (sosAuthFolderPermissions == null) {
+            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
+        }
+        Optional.ofNullable(currentSubject.getMapOfFolderPermissions()).orElse(Collections.emptyMap()).forEach((role, folders) -> addFolders(role,
+                folders));
+        addDetailedFolders();
     }
 
-    public void addFolder(String role, String folders) {
-        if (sosAuthFolderPermissions == null) {
-            this.initFolders();
-        }
+    private void addFolders(UniqueRole role, Set<AuthFolder> folders) {
+        if (hasRole(role.roleName())) {
+            LOGGER.debug(String.format("Adding folders %s for role %s", folders.toString(), role));
 
-        String jobSchedulerId = "";
-        if (role.contains("|")) {
-            String[] s = role.split("\\|");
-            if (s.length > 1) {
-                jobSchedulerId = s[0];
-                role = s[1];
-            }
+            folders.stream().collect(Collectors.groupingBy(AuthFolder::getControllerId)).forEach((cId, f) -> sosAuthFolderPermissions.setFolders(cId,
+                    f));
         }
-
-        if (hasRole(role)) {
-            LOGGER.debug(String.format("Adding folders %s for role %s", folders, role));
-            sosAuthFolderPermissions.setFolders(jobSchedulerId, folders);
+    }
+    
+    private void addDetailedFolders() {
+        Stream.of(currentSubject.getMapOfFolderPermissions().keySet(), currentSubject.getMapOfAccountPermissions().keySet()).flatMap(Set::stream)
+                .distinct().forEach(this::addDetailedFolders);
+    }
+    
+    private void addDetailedFolders(UniqueRole role) {
+        if (sosAuthDetailedFolderPermissions == null) {
+            sosAuthDetailedFolderPermissions = new SOSAuthDetailedFolderPermissions();
         }
+        sosAuthDetailedFolderPermissions.putPermission(role, new PermissionsPerRole(role, currentSubject.getFolderPermissionsOfRole(role), currentSubject
+                .getAccountPermissionsOfRole(role)));
     }
 
     public boolean withAuthorization() {
@@ -437,6 +429,10 @@ public class SOSAuthCurrentAccount {
 
     public SOSAuthFolderPermissions getSosAuthFolderPermissions() {
         return sosAuthFolderPermissions;
+    }
+    
+    public SOSAuthDetailedFolderPermissions getSOSAuthDetailedFolderPermissions() {
+        return sosAuthDetailedFolderPermissions;
     }
 
     public String getCallerHostName() {

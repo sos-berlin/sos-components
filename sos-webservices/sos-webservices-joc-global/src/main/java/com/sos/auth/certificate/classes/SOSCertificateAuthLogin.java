@@ -20,14 +20,10 @@ public class SOSCertificateAuthLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSCertificateAuthLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
-    private SOSInternAuthSubject sosInternAuthSubject;
 
-    public SOSCertificateAuthLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
             SOSCertificateAuthWebserviceCredentials sosCertificateAuthWebserviceCredentials = new SOSCertificateAuthWebserviceCredentials();
             sosCertificateAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
@@ -59,14 +55,16 @@ public class SOSCertificateAuthLogin implements ISOSLogin {
                 sosInternAuthSubject.setPermissionAndRoles(currentAccount.getAccountname(), identityService);
                 sosInternAuthSubject.setAccessToken(sosCertificateAuthAccessToken.getAccessToken());
             }
-
+            
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
         }
-
+        return sosInternAuthSubject;
     }
 
-    public void simulateLogin(String account) {
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
             sosInternAuthSubject = new SOSInternAuthSubject();
             sosInternAuthSubject.setAuthenticated(true);
@@ -74,28 +72,22 @@ public class SOSCertificateAuthLogin implements ISOSLogin {
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
         }
+        return sosInternAuthSubject;
     }
 
+    @Override
     public void logout() {
-
     }
 
+    @Override
     public String getMsg() {
         return msg;
     }
 
+    @Override
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
-    }
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
-        return sosInternAuthSubject;
-    }
-
-    public void setIdentityService(SOSIdentityService identityService) {
-        this.identityService = identityService;
     }
 
 }

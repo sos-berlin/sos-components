@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -15,6 +18,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Encipherment {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * configuration tab
      * 
@@ -23,20 +29,13 @@ public class Encipherment {
     @JsonPropertyDescription("configuration tab")
     private Boolean encrypt = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Encipherment() {
+    public Encipherment(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "encipherment");
     }
-
-    /**
-     * 
-     * @param encrypt
-     */
-    public Encipherment(Boolean encrypt) {
-        super();
-        this.encrypt = encrypt;
+    
+    @JsonIgnore
+    public String getEncryptString() {
+        return JocPermissions.getPermissionString(prefix, "encrypt");
     }
 
     /**

@@ -1,6 +1,11 @@
 
 package com.sos.joc.model.security.configuration.permissions;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -16,9 +21,6 @@ import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
 import com.sos.joc.model.security.configuration.permissions.joc.Notification;
 import com.sos.joc.model.security.configuration.permissions.joc.Others;
 import com.sos.joc.model.security.configuration.permissions.joc.Reports;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -38,6 +40,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class JocPermissions {
 
+    @JsonIgnore
+    public static final String mainPrefix = "sos:products";
+    @JsonIgnore
+    public static final String prefix = mainPrefix + ":joc";
+    
     @JsonProperty("getLog")
     private Boolean getLog = false;
     @JsonProperty("administration")
@@ -70,39 +77,28 @@ public class JocPermissions {
      * 
      */
     public JocPermissions() {
+        this.administration = new Administration(prefix);
+        this.cluster = new Cluster(prefix);
+        this.inventory = new Inventory(prefix);
+        this.calendars = new Calendars(prefix);
+        this.documentations = new Documentations(prefix);
+        this.auditLog = new AuditLog(prefix);
+        this.dailyPlan = new DailyPlan(prefix);
+        this.fileTransfer = new FileTransfer(prefix);
+        this.notification = new Notification(prefix);
+        this.encipherment = new Encipherment(prefix);
+        this.reports = new Reports(prefix);
+        this.others = new Others(prefix);
     }
-
-    /**
-     * 
-     * @param encipherment
-     * @param cluster
-     * @param reports
-     * @param auditLog
-     * @param fileTransfer
-     * @param getLog
-     * @param administration
-     * @param documentations
-     * @param inventory
-     * @param notification
-     * @param dailyPlan
-     * @param calendars
-     * @param others
-     */
-    public JocPermissions(Boolean getLog, Administration administration, Cluster cluster, Inventory inventory, Calendars calendars, Documentations documentations, AuditLog auditLog, DailyPlan dailyPlan, FileTransfer fileTransfer, Notification notification, Encipherment encipherment, Reports reports, Others others) {
-        super();
-        this.getLog = getLog;
-        this.administration = administration;
-        this.cluster = cluster;
-        this.inventory = inventory;
-        this.calendars = calendars;
-        this.documentations = documentations;
-        this.auditLog = auditLog;
-        this.dailyPlan = dailyPlan;
-        this.fileTransfer = fileTransfer;
-        this.notification = notification;
-        this.encipherment = encipherment;
-        this.reports = reports;
-        this.others = others;
+    
+    @JsonIgnore
+    public static String getPermissionString(String prefix, String perm) {
+        return prefix + ":" + perm;
+    }
+    
+    @JsonIgnore
+    public String getGetLogString() {
+        return getPermissionString(prefix, "get_log");
     }
 
     @JsonProperty("getLog")

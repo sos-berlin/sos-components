@@ -1,9 +1,12 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -13,24 +16,20 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "manage"
 })
 public class Cluster {
+    
+    @JsonIgnore
+    private final String prefix;
 
     @JsonProperty("manage")
     private Boolean manage = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Cluster() {
+    public Cluster(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "cluster");
     }
-
-    /**
-     * 
-     * @param manage
-     */
-    public Cluster(Boolean manage) {
-        super();
-        this.manage = manage;
+    
+    @JsonIgnore
+    public String getManageString() {
+        return JocPermissions.getPermissionString(prefix, "manage");
     }
 
     @JsonProperty("manage")

@@ -13,29 +13,21 @@ import com.sos.auth.sosintern.SOSInternAuthHandler;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
 public class SOSInternAuthLogin implements ISOSLogin {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
     private String msg = "";
-    private SOSIdentityService identityService;
-    private SOSInternAuthSubject sosInternAuthSubject;
 
-    public SOSInternAuthLogin() {
-
-    }
-
-    public void login(SOSAuthCurrentAccount currentAccount, String pwd) {
+    @Override
+    public ISOSAuthSubject login(SOSAuthCurrentAccount currentAccount, String pwd, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
-            SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
-            sosInternAuthWebserviceCredentials.setIdentityService(identityService);
-            sosInternAuthWebserviceCredentials.setAccount(currentAccount.getAccountname());
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
-
             SOSAuthAccessToken sosInternAuthAccessToken = null;
 
             boolean disabled = SOSAuthHelper.accountIsDisabled(identityService.getIdentityServiceId(), currentAccount.getAccountname());
             if (!disabled) {
-                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount, sosInternAuthWebserviceCredentials, pwd);
+                sosInternAuthAccessToken = sosInternAuthHandler.login(currentAccount.getAccountname(), identityService.getIdentityServiceId(), pwd);
             }
 
             sosInternAuthSubject = new SOSInternAuthSubject();
@@ -52,10 +44,12 @@ public class SOSInternAuthLogin implements ISOSLogin {
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
         }
-
+        return sosInternAuthSubject;
     }
 
-    public void simulateLogin(String account) {
+    @Override
+    public ISOSAuthSubject simulateLogin(String account, SOSIdentityService identityService) {
+        SOSInternAuthSubject sosInternAuthSubject = null;
         try {
             sosInternAuthSubject = new SOSInternAuthSubject();
             sosInternAuthSubject.setAuthenticated(true);
@@ -63,12 +57,14 @@ public class SOSInternAuthLogin implements ISOSLogin {
         } catch (SOSHibernateException e) {
             LOGGER.error("", e);
         }
+        return sosInternAuthSubject;
     }
 
+    @Override
     public void logout() {
-
     }
 
+    @Override
     public String getMsg() {
         return msg;
     }
@@ -77,15 +73,6 @@ public class SOSInternAuthLogin implements ISOSLogin {
     public void setMsg(String msg) {
         LOGGER.debug("sosLogin: setMsg=" + msg);
         this.msg = msg;
-    }
-
-    @Override
-    public ISOSAuthSubject getCurrentSubject() {
-        return sosInternAuthSubject;
-    }
-
-    public void setIdentityService(SOSIdentityService identityService) {
-        this.identityService = identityService;
     }
 
 }

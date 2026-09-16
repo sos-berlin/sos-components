@@ -11,24 +11,18 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.sos.auth.common.AuthFolder;
 import com.sos.joc.model.common.Folder;
 
 public class SOSAuthFolderPermissions {
 
     private Map<String, Set<Folder>> listOfFoldersForInstance;
     private Map<String, Set<String>> listOfNotPermittedParentFoldersForInstance;
-    private String objectFilter = "";
     private String controllerId;
 
     public SOSAuthFolderPermissions() {
         listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
         listOfNotPermittedParentFoldersForInstance = new HashMap<String, Set<String>>();
-    }
-
-    public SOSAuthFolderPermissions(String objectFilter) {
-        listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
-        listOfNotPermittedParentFoldersForInstance = new HashMap<String, Set<String>>();
-        this.objectFilter = objectFilter;
     }
 
     public Set<Folder> getListOfFolders(String controllerId) {
@@ -71,10 +65,6 @@ public class SOSAuthFolderPermissions {
         return listOfFoldersForInstance.entrySet().stream().filter(e -> c2.contains(e.getKey())).mapToInt(s -> s.getValue().size()).sum() == 0;
     }
     
-    public Map<String, Set<Folder>> getListsOfFoldersForInstance() {
-        return listOfFoldersForInstance;
-    }
-    
     public Map<String, Set<String>> getNotPermittedParentFolders() {
         if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
             listOfFoldersForInstance.forEach((k, v) -> {
@@ -93,36 +83,9 @@ public class SOSAuthFolderPermissions {
         return listOfNotPermittedParentFoldersForInstance;
     }
 
-    public void setFolders(String controllerId, String folders) {
-        String[] stringlistOfFolders = folders.split(",");
-        Set<Folder> listOfFolders = listOfFoldersForInstance.get(controllerId);
-        if (listOfFolders == null) {
-            listOfFolders = new HashSet<Folder>();
-        }
-
-        for (int i = 0; i < stringlistOfFolders.length; i++) {
-            String f = stringlistOfFolders[i].trim();
-            if (f == null || f.isEmpty()) {
-                continue;
-            }
-            Folder filterFolder = new Folder();
-            filterFolder.setRecursive(f.endsWith("/*"));
-            filterFolder.setFolder(normalizeFolder(f));
-            if (!objectFilter.isEmpty()) {
-                if (filterFolder.getFolder().startsWith("/*" + objectFilter)) {
-                    String g = filterFolder.getFolder();
-                    g = g.replaceFirst("/\\*" + objectFilter, "");
-                    filterFolder.setFolder(g);
-                    listOfFolders.add(filterFolder);
-                }
-            } else {
-                if (!filterFolder.getFolder().startsWith("/*")) {
-                    listOfFolders.add(filterFolder);
-                }
-
-            }
-        }
-        listOfFoldersForInstance.put(controllerId, listOfFolders);
+    protected void setFolders(String controllerId, Collection<AuthFolder> folders) {
+        listOfFoldersForInstance.putIfAbsent(controllerId, new HashSet<Folder>());
+        listOfFoldersForInstance.get(controllerId).addAll(folders);
     }
 
     private static String normalizeFolder(String folder) {

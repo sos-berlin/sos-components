@@ -22,8 +22,6 @@ public class SOSLdapSubject extends ASOSAuthSubject {
 
     public SOSLdapSubject() {
         super();
-        setOfRoles = new HashSet<>();
-        setOfAccountPermissions = new HashSet<>();
     }
 
     private SOSInternAuthSession getInternAuthSession() {
@@ -63,8 +61,8 @@ public class SOSLdapSubject extends ASOSAuthSubject {
 
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
-            mapOfFolderPermissions = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions);
-            setOfAccountPermissions = SOSAuthHelper.getSetOfPermissions(listOfPermissions);
+            folderPermissionsPerRole = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions, identityService.getIdentityServiceId());
+            accountPermissionsPerRole = SOSAuthHelper.getMapOfPermissionsPerRole(listOfPermissions, identityService.getIdentityServiceId());
             setOf4EyesRolePermissions = SOSAuthHelper.getSetOf4EyesRolePermissions(listOfPermissions);
 
         } finally {
