@@ -39,7 +39,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class ControllerPermissions {
 
     @JsonIgnore
-    private final String prefix = "sos:product:controller";
+    private static final String prefix = JocPermissions.mainPrefix + ":controller";
     
     @JsonProperty("view")
     private Boolean view = false;

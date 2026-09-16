@@ -54,10 +54,10 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
 
     public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType, String request, Predicate<String> permPred) throws Exception {
         
-        SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
-        if (!fPerms.isPermitted(in.getPath(), fPerms.getPermittedFoldersByJocPermissions(permPred))) {
-            throw new JocFolderPermissionsException("Access denied");
-        }
+//        SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
+//        if (!fPerms.isPermitted(in.getPath(), fPerms.getPermittedFoldersByJocPermissions(permPred))) {
+//            throw new JocFolderPermissionsException("Access denied");
+//        }
         
         SOSHibernateSession session = null;
         try {

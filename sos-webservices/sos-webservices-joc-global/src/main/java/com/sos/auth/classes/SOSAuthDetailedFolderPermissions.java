@@ -15,6 +15,7 @@ import com.sos.auth.records.PermissionsPerRole;
 import com.sos.auth.records.UniqueRole;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 
 public class SOSAuthDetailedFolderPermissions {
 
@@ -118,8 +119,9 @@ public class SOSAuthDetailedFolderPermissions {
     }
 
     private Set<String> getJocPermissions(UniqueRole role, PermissionsPerRole perms) {
-        jocPermissions.putIfAbsent(role, perms.permissions().getOrDefault("", Collections.emptySet()).stream().filter(perm -> perm.startsWith(
-                "sos:products:joc") || perm.equals("sos:products")).collect(Collectors.toSet()));
+        Predicate<String> isJocPermission = perm -> perm.startsWith(JocPermissions.prefix) || perm.equals(JocPermissions.mainPrefix);
+        jocPermissions.putIfAbsent(role, perms.permissions().getOrDefault("", Collections.emptySet()).stream().filter(isJocPermission).collect(
+                Collectors.toSet()));
         return jocPermissions.get(role);
     }
 

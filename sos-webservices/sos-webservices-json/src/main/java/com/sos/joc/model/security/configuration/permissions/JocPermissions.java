@@ -41,7 +41,9 @@ import com.sos.joc.model.security.configuration.permissions.joc.Reports;
 public class JocPermissions {
 
     @JsonIgnore
-    private final String prefix = "sos:product:joc";
+    public static final String mainPrefix = "sos:products";
+    @JsonIgnore
+    public static final String prefix = mainPrefix + ":joc";
     
     @JsonProperty("getLog")
     private Boolean getLog = false;
