@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,6 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Inventory {
 
+    @JsonIgnore
+    private final String prefix;
+
     @JsonProperty("view")
     private Boolean view = false;
     /**
@@ -24,7 +30,6 @@ public class Inventory {
      * 
      */
     @JsonProperty("manage")
-    @JsonPropertyDescription("edit/restore/assign documentation")
     private Boolean manage = false;
     /**
      * publishing depoyables and releasables
@@ -34,24 +39,23 @@ public class Inventory {
     @JsonPropertyDescription("publishing depoyables and releasables")
     private Boolean deploy = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Inventory() {
+    public Inventory(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "inventory");
     }
-
-    /**
-     * 
-     * @param view
-     * @param manage
-     * @param deploy
-     */
-    public Inventory(Boolean view, Boolean manage, Boolean deploy) {
-        super();
-        this.view = view;
-        this.manage = manage;
-        this.deploy = deploy;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getManageString() {
+        return JocPermissions.getPermissionString(prefix, "manage");
+    }
+    
+    @JsonIgnore
+    public String getDeployString() {
+        return JocPermissions.getPermissionString(prefix, "deploy");
     }
 
     @JsonProperty("view")
@@ -64,19 +68,11 @@ public class Inventory {
         this.view = view;
     }
 
-    /**
-     * edit/restore/assign documentation
-     * 
-     */
     @JsonProperty("manage")
     public Boolean getManage() {
         return manage;
     }
 
-    /**
-     * edit/restore/assign documentation
-     * 
-     */
     @JsonProperty("manage")
     public void setManage(Boolean manage) {
         this.manage = manage;

@@ -1,9 +1,12 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -14,23 +17,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class AuditLog {
 
+    @JsonIgnore
+    private final String prefix;
+    
     @JsonProperty("view")
     private Boolean view = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public AuditLog() {
+    public AuditLog(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "auditlog");
     }
-
-    /**
-     * 
-     * @param view
-     */
-    public AuditLog(Boolean view) {
-        super();
-        this.view = view;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
     }
 
     @JsonProperty("view")

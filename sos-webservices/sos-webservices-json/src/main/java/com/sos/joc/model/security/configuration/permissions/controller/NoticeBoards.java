@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,6 +20,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class NoticeBoards {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * show resource tab 'notice boards'
      * 
@@ -39,24 +45,23 @@ public class NoticeBoards {
     @JsonPropertyDescription("delete notice")
     private Boolean delete = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public NoticeBoards() {
+    public NoticeBoards(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "noticeBoards");
     }
-
-    /**
-     * 
-     * @param view
-     * @param post
-     * @param delete
-     */
-    public NoticeBoards(Boolean view, Boolean post, Boolean delete) {
-        super();
-        this.view = view;
-        this.post = post;
-        this.delete = delete;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getPostString() {
+        return JocPermissions.getPermissionString(prefix, "post");
+    }
+    
+    @JsonIgnore
+    public String getDeleteString() {
+        return JocPermissions.getPermissionString(prefix, "delete");
     }
 
     /**

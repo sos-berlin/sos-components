@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -16,6 +19,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class DailyPlan {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * show tab, planned orders, history
      * 
@@ -31,22 +37,18 @@ public class DailyPlan {
     @JsonPropertyDescription("create daily plan, delete submissions")
     private Boolean manage = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public DailyPlan() {
+    public DailyPlan(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "dailyplan");
     }
-
-    /**
-     * 
-     * @param view
-     * @param manage
-     */
-    public DailyPlan(Boolean view, Boolean manage) {
-        super();
-        this.view = view;
-        this.manage = manage;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getManageString() {
+        return JocPermissions.getPermissionString(prefix, "manage");
     }
 
     /**

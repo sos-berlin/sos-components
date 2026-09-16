@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -22,7 +21,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.auth.predicate.JocPermissionsPredicate;
 import com.sos.controller.model.command.CancelOrder;
 import com.sos.controller.model.command.JSBatchCommands;
 import com.sos.controller.model.order.FreshOrder;
@@ -48,16 +46,6 @@ public class PojosTest {
 	
 	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-	
-	@Test
-    public void oh() throws Exception {
-	    Predicate<String> pred = new JocPermissionsPredicate().getAuditLog().getView();
-	    System.out.println(pred.test("sos:products"));
-	    System.out.println(pred.test("sos:products:joc"));
-	    System.out.println(pred.test("sos:products:joc:auditlog"));
-	    System.out.println(pred.test("sos:products:joc:auditlog:view"));
-	    System.out.println(pred.test("sos:products:joc:auditlog:mange"));
-	}
 	
 	@Test
     public void freshOrderTest() throws Exception {

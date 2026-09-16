@@ -30,29 +30,6 @@ import com.sos.joc.model.security.configuration.SecurityConfiguration;
 import com.sos.joc.model.security.configuration.permissions.ControllerPermissions;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.configuration.permissions.Permissions;
-import com.sos.joc.model.security.configuration.permissions.controller.Agents;
-import com.sos.joc.model.security.configuration.permissions.controller.Deployments;
-import com.sos.joc.model.security.configuration.permissions.controller.Locks;
-import com.sos.joc.model.security.configuration.permissions.controller.NoticeBoards;
-import com.sos.joc.model.security.configuration.permissions.controller.Orders;
-import com.sos.joc.model.security.configuration.permissions.controller.Workflows;
-import com.sos.joc.model.security.configuration.permissions.joc.Administration;
-import com.sos.joc.model.security.configuration.permissions.joc.AuditLog;
-import com.sos.joc.model.security.configuration.permissions.joc.Calendars;
-import com.sos.joc.model.security.configuration.permissions.joc.Cluster;
-import com.sos.joc.model.security.configuration.permissions.joc.DailyPlan;
-import com.sos.joc.model.security.configuration.permissions.joc.Documentations;
-import com.sos.joc.model.security.configuration.permissions.joc.Encipherment;
-import com.sos.joc.model.security.configuration.permissions.joc.FileTransfer;
-import com.sos.joc.model.security.configuration.permissions.joc.Inventory;
-import com.sos.joc.model.security.configuration.permissions.joc.Notification;
-import com.sos.joc.model.security.configuration.permissions.joc.Others;
-import com.sos.joc.model.security.configuration.permissions.joc.Reports;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Customization;
-import com.sos.joc.model.security.configuration.permissions.joc.admin.Settings;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -315,13 +292,8 @@ public class SOSAuthCurrentAccount {
     }
 
     private Permissions initPermissions() {
-        Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
-                new Customization());
-        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
-                new Agents(), new NoticeBoards(), new Locks(), new Workflows());
-        JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(),
-                new AuditLog(), new DailyPlan(), new FileTransfer(), new Notification(), new Encipherment(), new Reports(), new Others());
-        return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.configuration.permissions.Controllers());
+        return new Permissions(getRoles(), new JocPermissions(), new ControllerPermissions(),
+                new com.sos.joc.model.security.configuration.permissions.Controllers());
     }
 
     private boolean getExcludedController(String permission, String controllerId) {

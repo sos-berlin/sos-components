@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -15,6 +18,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Agents {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * show resource tab 'agents'
      * 
@@ -23,20 +29,13 @@ public class Agents {
     @JsonPropertyDescription("show resource tab 'agents'")
     private Boolean view = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Agents() {
+    public Agents(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "agents");
     }
-
-    /**
-     * 
-     * @param view
-     */
-    public Agents(Boolean view) {
-        super();
-        this.view = view;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
     }
 
     /**

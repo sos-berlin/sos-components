@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.security.configuration.permissions.controller;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -16,6 +19,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Deployments {
 
+    @JsonIgnore
+    private final String prefix;
+    
     /**
      * show deployment history
      * 
@@ -31,22 +37,18 @@ public class Deployments {
     @JsonPropertyDescription("add/update/remove releasable and deployable objects")
     private Boolean deploy = false;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Deployments() {
+    public Deployments(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "deployment");
     }
-
-    /**
-     * 
-     * @param view
-     * @param deploy
-     */
-    public Deployments(Boolean view, Boolean deploy) {
-        super();
-        this.view = view;
-        this.deploy = deploy;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getDeployString() {
+        return JocPermissions.getPermissionString(prefix, "deploy");
     }
 
     /**

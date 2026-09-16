@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.security.configuration.permissions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -37,6 +38,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class ControllerPermissions {
 
+    @JsonIgnore
+    private final String prefix = "sos:product:controller";
+    
     @JsonProperty("view")
     private Boolean view = false;
     @JsonProperty("restart")
@@ -60,40 +64,38 @@ public class ControllerPermissions {
     @JsonProperty("workflows")
     private Workflows workflows;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
     public ControllerPermissions() {
+        this.deployments = new Deployments(prefix);
+        this.orders = new Orders(prefix);
+        this.agents = new Agents(prefix);
+        this.noticeBoards = new NoticeBoards(prefix);
+        this.locks = new Locks(prefix);
+        this.workflows = new Workflows(prefix);
     }
-
-    /**
-     * 
-     * @param view
-     * @param switchOver
-     * @param deployments
-     * @param restart
-     * @param getLog
-     * @param orders
-     * @param terminate
-     * @param workflows
-     * @param locks
-     * @param agents
-     * @param noticeBoards
-     */
-    public ControllerPermissions(Boolean view, Boolean restart, Boolean terminate, Boolean getLog, Boolean switchOver, Deployments deployments, Orders orders, Agents agents, NoticeBoards noticeBoards, Locks locks, Workflows workflows) {
-        super();
-        this.view = view;
-        this.restart = restart;
-        this.terminate = terminate;
-        this.getLog = getLog;
-        this.switchOver = switchOver;
-        this.deployments = deployments;
-        this.orders = orders;
-        this.agents = agents;
-        this.noticeBoards = noticeBoards;
-        this.locks = locks;
-        this.workflows = workflows;
+    
+    @JsonIgnore
+    public String getViewString() {
+        return JocPermissions.getPermissionString(prefix, "view");
+    }
+    
+    @JsonIgnore
+    public String getRestartString() {
+        return JocPermissions.getPermissionString(prefix, "restart");
+    }
+    
+    @JsonIgnore
+    public String getTerminateString() {
+        return JocPermissions.getPermissionString(prefix, "terminate");
+    }
+    
+    @JsonIgnore
+    public String getGetLogString() {
+        return JocPermissions.getPermissionString(prefix, "get_log");
+    }
+    
+    @JsonIgnore
+    public String getSwithOverString() {
+        return JocPermissions.getPermissionString(prefix, "switch_over");
     }
 
     @JsonProperty("view")

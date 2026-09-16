@@ -1,9 +1,11 @@
 
 package com.sos.joc.model.security.configuration.permissions.joc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Accounts;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Certificates;
 import com.sos.joc.model.security.configuration.permissions.joc.admin.Controllers;
@@ -23,6 +25,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 })
 public class Administration {
 
+    @JsonIgnore
+    private final String prefix;
+    
     @JsonProperty("accounts")
     private Accounts accounts;
     @JsonProperty("settings")
@@ -34,28 +39,13 @@ public class Administration {
     @JsonProperty("customization")
     private Customization customization;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Administration() {
-    }
-
-    /**
-     * 
-     * @param settings
-     * @param certificates
-     * @param customization
-     * @param controllers
-     * @param accounts
-     */
-    public Administration(Accounts accounts, Settings settings, Controllers controllers, Certificates certificates, Customization customization) {
-        super();
-        this.accounts = accounts;
-        this.settings = settings;
-        this.controllers = controllers;
-        this.certificates = certificates;
-        this.customization = customization;
+    public Administration(String prefix) {
+        this.prefix = JocPermissions.getPermissionString(prefix, "administration");
+        this.accounts = new Accounts(this.prefix);
+        this.settings = new Settings(this.prefix);
+        this.controllers = new Controllers(this.prefix);
+        this.certificates = new Certificates(this.prefix);
+        this.customization = new Customization(this.prefix);
     }
 
     @JsonProperty("accounts")
