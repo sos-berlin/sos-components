@@ -11,10 +11,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.sos.auth.common.AuthFolder;
+import com.sos.auth.records.AuthFolders;
 import com.sos.auth.records.PermissionsPerRole;
 import com.sos.auth.records.UniqueRole;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.configuration.permissions.JocPermissions;
 
 public class SOSAuthDetailedFolderPermissions {
@@ -31,21 +31,22 @@ public class SOSAuthDetailedFolderPermissions {
         return null; // TODO
     }
     
-    public Optional<Set<AuthFolder>> getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> expectedPermission) {
+    public AuthFolders getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> expectedPermission) {
         return getPermittedFolders(controllerId, false, Collections.singleton(expectedPermission));
     }
 
-    public Optional<Set<AuthFolder>> getPermittedFoldersByControllerPermissions(String controllerId,
+    public AuthFolders getPermittedFoldersByControllerPermissions(String controllerId,
             Collection<Predicate<String>> expectedPermissions) {
         return getPermittedFolders(controllerId, false, expectedPermissions);
     }
     
-    public Optional<Set<AuthFolder>> getPermittedFoldersByJocPermissions(Predicate<String> expectedPermission) {
+    public AuthFolders getPermittedFoldersByJocPermissions(Predicate<String> expectedPermission) {
         return getPermittedFoldersByJocPermissions(Collections.singleton(expectedPermission));
     }
     
-    public Optional<Set<AuthFolder>> getPermittedFoldersByJocPermissions(Collection<Predicate<String>> expectedPermissions) {
-        Set<AuthFolder> folders = new HashSet<>();
+    public AuthFolders getPermittedFoldersByJocPermissions(Collection<Predicate<String>> expectedPermissions) {
+        Set<AuthFolder> allowedFolders = new HashSet<>();
+        Set<AuthFolder> deniedFolders = new HashSet<>();
         boolean foldersAreSpecified = false;
 
         for (Map.Entry<UniqueRole, PermissionsPerRole> permission : permissions.entrySet()) {
@@ -53,24 +54,46 @@ public class SOSAuthDetailedFolderPermissions {
                 foldersAreSpecified = true;
                 Set<String> jocPermissionsOfRole = getJocPermissions(permission.getKey(), permission.getValue());
                 if (expectedPermissionsAreAllowed(expectedPermissions, jocPermissionsOfRole)) {
-                    folders.addAll(permission.getValue().folders().get(""));
+                    allowedFolders.addAll(permission.getValue().folders().get(""));
+                }
+                if (expectedPermissionsAreDenied(expectedPermissions, jocPermissionsOfRole)) {
+                    deniedFolders.addAll(permission.getValue().folders().get(""));
                 }
             }
         }
-
-        if (foldersAreSpecified && folders.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(folders);
+        
+//        if (foldersAreSpecified && allowedFolders.isEmpty()) {
+//            return Optional.empty();
+//        } else {
+//            // maybe not necessary, because API is already checked with general permissions (folder independent)
+////            boolean permissionsAreAllowed = false;
+////            for (Map.Entry<UniqueRole, PermissionsPerRole> permission : permissions.entrySet()) {
+////                if (!hasFolders(permission.getValue(), "")) {
+////                    Set<String> jocPermissionsOfRole = getJocPermissions(permission.getKey(), permission.getValue());
+////                    if (expectedPermissionsAreAllowed(expectedPermissions, jocPermissionsOfRole)) {
+////                        permissionsAreAllowed = true;
+////                    }
+////                }
+////            }
+////            if (!permissionsAreAllowed) {
+////                return Optional.empty();
+////            }
+//        }
+        
+        Optional<Set<AuthFolder>> allowedFoldersOpt = (foldersAreSpecified && allowedFolders.isEmpty()) ? Optional.empty() : Optional.of(
+                allowedFolders);
+        Optional<Set<AuthFolder>> deniedFoldersOpt = deniedFolders.isEmpty() ? Optional.empty() : Optional.of(deniedFolders);
+        return new AuthFolders(allowedFoldersOpt, deniedFoldersOpt);
     }
 
-    public Optional<Set<AuthFolder>> getPermittedFolders(String controllerId, boolean withJocPermissions,
+    public AuthFolders getPermittedFolders(String controllerId, boolean withJocPermissions,
             Collection<Predicate<String>> expectedPermissions) {
         if (controllerId == null) {
             controllerId = "";
         }
         // TODO exception if controllerId is empty?
-        Set<AuthFolder> folders = new HashSet<>();
+        Set<AuthFolder> allowedFolders = new HashSet<>();
+        Set<AuthFolder> deniedFolders = new HashSet<>();
         boolean foldersAreSpecified = false;
         boolean permissionsOfControllerIdAreSpecified = false;
 
@@ -90,7 +113,10 @@ public class SOSAuthDetailedFolderPermissions {
                         permissions.addAll(jocPermissionsOfRole); // add joc permissions
                     }
                     if (expectedPermissionsAreAllowed(expectedPermissions, permissions)) {
-                        folders.addAll(permission.getValue().folders().get(controllerId));
+                        allowedFolders.addAll(permission.getValue().folders().get(controllerId));
+                    }
+                    if (expectedPermissionsAreDenied(expectedPermissions, permissions)) {
+                        deniedFolders.addAll(permission.getValue().folders().get(controllerId));
                     }
                 }
             }
@@ -101,21 +127,28 @@ public class SOSAuthDetailedFolderPermissions {
                     if (hasFolders(permission.getValue(), "")) {
                         foldersAreSpecified = true;
                         if (expectedPermissionsAreAllowed(expectedPermissions, permissions)) {
-                            folders.addAll(permission.getValue().folders().get(""));
+                            allowedFolders.addAll(permission.getValue().folders().get(""));
+                        }
+                        if (expectedPermissionsAreDenied(expectedPermissions, permissions)) {
+                            deniedFolders.addAll(permission.getValue().folders().get(""));
                         }
                     }
                 }
             }
         }
 
-        if (foldersAreSpecified && folders.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(folders);
+        Optional<Set<AuthFolder>> allowedFoldersOpt = (foldersAreSpecified && allowedFolders.isEmpty()) ? Optional.empty() : Optional.of(
+                allowedFolders);
+        Optional<Set<AuthFolder>> deniedFoldersOpt = deniedFolders.isEmpty() ? Optional.empty() : Optional.of(deniedFolders);
+        return new AuthFolders(allowedFoldersOpt, deniedFoldersOpt);
     }
 
     private boolean expectedPermissionsAreAllowed(Collection<Predicate<String>> expectedPermissions, Set<String> perms) {
-        return expectedPermissions.stream().map(ep -> isPermitted(perms, ep)).allMatch(Boolean.TRUE::equals);
+        return expectedPermissions.stream().map(ep -> isAllowed(perms, ep)).allMatch(Boolean.TRUE::equals);
+    }
+    
+    private boolean expectedPermissionsAreDenied(Collection<Predicate<String>> expectedPermissions, Set<String> perms) {
+        return expectedPermissions.stream().map(ep -> isDenied(perms, ep)).allMatch(Boolean.TRUE::equals);
     }
 
     private Set<String> getJocPermissions(UniqueRole role, PermissionsPerRole perms) {
@@ -125,23 +158,30 @@ public class SOSAuthDetailedFolderPermissions {
         return jocPermissions.get(role);
     }
 
-    private boolean isPermitted(Set<String> permissions, Predicate<String> expectedPermission) {
+    private boolean isAllowed(Set<String> permissions, Predicate<String> expectedPermission) {
         if (permissions.stream().anyMatch(expectedPermission)) {
-            if (!permissions.stream().filter(excludes).map(p -> p.substring(1)).anyMatch(expectedPermission)) {
+            if (!isDenied(permissions, expectedPermission)) {
                 return true;
             }
         }
         return false;
     }
+    
+    private boolean isDenied(Set<String> permissions, Predicate<String> expectedPermission) {
+        return permissions.stream().filter(excludes).map(p -> p.substring(1)).anyMatch(expectedPermission);
+    }
 
-    public <T extends Folder> boolean isPermitted(String folder, Optional<Set<T>> folders) {
-        if (folders == null || folders.isEmpty()) {
+    public boolean isPermitted(String folder, AuthFolders folders) {
+        if (folders == null) {
             return false;
         }
-        return isSubfolder(folder, folders.get());
+        if (!isSubfolder(folder, folders.deny())) {
+            return isSubfolder(folder, folders.allow());
+        }
+        return false;
     }
     
-    public <T extends Folder> void throwIfUnpermitted(String folder, Optional<Set<T>> folders) {
+    public void throwIfUnpermitted(String folder, AuthFolders folders) {
         if (!isPermitted(folder, folders)) {
             throw new JocFolderPermissionsException(String.format("Access denied for folder '%s'", folder));
         }
@@ -233,11 +273,18 @@ public class SOSAuthDetailedFolderPermissions {
     // return folders.stream().anyMatch(f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
     // .getFolder() + "/"))));
     // }
-
-    private static <T extends Folder> boolean isSubfolder(String folder, Set<T> folders) {
-        // if (folders.isEmpty()) {
-        // return true; //TODO or not?
-        // }
+    
+    private static boolean isSubfolder(String folder, Optional<Set<AuthFolder>> folders) {
+        if (folders.isEmpty()) {
+            return false;
+        }
+        return isSubfolder(folder, folders.get());
+    }
+    
+    private static boolean isSubfolder(String folder, Set<AuthFolder> folders) {
+        if (folders.isEmpty()) {
+            return true;
+        }
         if (folder == null || folder.isEmpty()) {
             return false; // TODO or not?
         }
