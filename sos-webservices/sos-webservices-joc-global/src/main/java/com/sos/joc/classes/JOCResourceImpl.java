@@ -724,8 +724,11 @@ public class JOCResourceImpl {
         if (path == null || !path.startsWith("/")) {
             return false;
         }
-        if (SOSAuthDetailedFolderPermissions.isPermitted(getParent(path), permittedFolders)) {
-            
+        String folder = getParent(path);
+        if (SOSAuthDetailedFolderPermissions.isPermitted(folder, permittedFolders)) {
+            if (SOSAuthDetailedFolderPermissions.isSubfolder(folder, requestedFolders)) {
+                return true;
+            }
         }
         return false;
     }

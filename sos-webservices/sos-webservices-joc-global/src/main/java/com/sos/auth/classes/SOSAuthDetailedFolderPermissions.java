@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.auth.records.AuthFolders;
 import com.sos.auth.records.PermissionsPerRole;
@@ -344,7 +345,22 @@ public class SOSAuthDetailedFolderPermissions {
         if (folder == null || !folder.startsWith("/")) {
             return false; // TODO or not?
         }
-        return folders.stream().anyMatch(f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+        return isSubFolder(folder, folders.stream());
+    }
+    
+    private static boolean isSubFolder(String folder, Stream<Folder> folders) {
+        return folders.anyMatch(f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
                 .getFolder() + "/"))));
+    }
+    
+    // use in JOCResourceImpl
+    public static boolean isSubfolder(String folder, Collection<Folder> folders) {
+        if (folders == null || folders.isEmpty()) {
+            return true;
+        }
+        if (folder == null || !folder.startsWith("/")) {
+            return false; // TODO or not?
+        }
+        return isSubFolder(folder, folders.stream());
     }
 }
