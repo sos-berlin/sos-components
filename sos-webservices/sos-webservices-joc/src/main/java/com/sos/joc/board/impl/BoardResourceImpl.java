@@ -61,7 +61,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             if (response != null) {
                 return response;
             }
-            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
                     .getNoticeBoards().getView());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter, permittedFolders)));
         } catch (Exception e) {
