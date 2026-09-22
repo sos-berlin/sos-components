@@ -1,8 +1,10 @@
 package com.sos.auth.common;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
@@ -102,7 +104,16 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
         if (accountPermissionsPerRole == null) {
             return Collections.emptyMap();
         }
-        return accountPermissionsPerRole.getOrDefault(role, Collections.emptyMap());
+        Map<String, Set<String>> m = new HashMap<>();
+        accountPermissionsPerRole.getOrDefault(role, Collections.emptyMap()).forEach((cId, perms) -> {
+            if (!cId.isEmpty()) {
+                m.put(cId, perms.stream().map(perm -> perm.replaceFirst("^(-)?" + Pattern.quote(cId + ":") + "sos:products:", "$1sos:products:"))
+                        .collect(Collectors.toSet()));
+            } else {
+                m.put(cId, perms);
+            }
+        });
+        return m;
     }
     
     @Override

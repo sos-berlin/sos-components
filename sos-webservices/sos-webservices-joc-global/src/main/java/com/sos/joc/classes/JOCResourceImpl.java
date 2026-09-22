@@ -69,7 +69,7 @@ public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
     private SOSAuthCurrentAccount currentAccount;
-    protected SOSAuthDetailedFolderPermissions detailedFolderPermissions;
+    private SOSAuthDetailedFolderPermissions detailedFolderPermissions;
     @Deprecated
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
@@ -168,8 +168,8 @@ public class JOCResourceImpl {
         return new JocPermissionsPredicate();
     }
     
-    protected ControllerPermissionsPredicate getControllerPermissionsPredicate(String controllerId) throws JocException {
-        return new ControllerPermissionsPredicate(controllerId);
+    protected ControllerPermissionsPredicate getControllerPermissionsPredicate() throws JocException {
+        return new ControllerPermissionsPredicate();
     }
     
     protected JocPermissions get4EyesJocPermissions() throws JocException {
@@ -713,7 +713,7 @@ public class JOCResourceImpl {
         SOSAuthDetailedFolderPermissions.throwIfUnpermitted(getParent(path), permittedFolders);
     }
     
-    protected static boolean canAdd(String path, AuthFolders permittedFolders) {
+    public static boolean canAdd(String path, AuthFolders permittedFolders) {
         if (path == null || !path.startsWith("/")) {
             return false;
         }

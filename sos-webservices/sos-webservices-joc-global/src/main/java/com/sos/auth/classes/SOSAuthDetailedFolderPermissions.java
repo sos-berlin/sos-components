@@ -229,7 +229,7 @@ public class SOSAuthDetailedFolderPermissions {
 
     public static boolean isPermitted(String folder, AuthFolders folders) {
         if (folders == null) {
-            return false;
+            return true;
         }
         if (!isSubfolder(folder, folders.deny())) {
             return isSubfolder(folder, folders.allow());

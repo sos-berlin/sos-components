@@ -20,8 +20,7 @@ public class ControllerPermissionsPredicate {
     private Locks locks;
     private Workflows workflows;
 
-    public ControllerPermissionsPredicate(String controllerId) {
-        prefix = controllerId + ":" + prefix;
+    public ControllerPermissionsPredicate() {
         agents = new Agents(prefix);
         deployments = new Deployments(prefix);
         locks = new Locks(prefix);
