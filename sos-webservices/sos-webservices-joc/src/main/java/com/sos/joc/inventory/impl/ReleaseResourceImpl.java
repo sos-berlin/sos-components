@@ -215,12 +215,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, true));
                     }
+                    releaseAndReaquireSemaphore(in.getTransactionId());
                     // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                         errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, false));
                     }
-                    releaseAndReaquireSemaphore(in.getTransactionId());
                     if (!errors.isEmpty()) {
                         throw errors.get(0);
                     }
