@@ -101,7 +101,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
             
             SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
-            AuthFolders permittedFolders = fPerms.getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+            AuthFolders permittedFolders = fPerms.getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
                     .getOrders().getView());
 
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();

@@ -60,7 +60,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
                     .getWorkflows().getView());
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
