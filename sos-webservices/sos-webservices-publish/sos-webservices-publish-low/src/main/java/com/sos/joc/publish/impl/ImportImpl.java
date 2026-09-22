@@ -20,6 +20,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -42,7 +43,6 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.inventory.impl.RevalidateResourceImpl;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.validate.Report;
@@ -157,8 +157,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             Set<String> agentNames = agentDbLayer.getVisibleAgentNames();
-            
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
             final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             List<DBItemInventoryConfiguration> storedConfigurations = new ArrayList<DBItemInventoryConfiguration>();
@@ -173,7 +172,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                         // filter according to folder permissions on target folder
                     }
                     filteredConfigurations = cfgStream.filter(configuration 
-                            -> canAdd(configuration.getPath(), permittedFolders)).collect(Collectors.toSet());
+                            -> canAdd(configuration.getPath(), authFolders)).collect(Collectors.toSet());
                     if (!filteredConfigurations.isEmpty()) {
                         Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
                                 .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
@@ -215,7 +214,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 for (ConfigurationObject configuration : configurationObjectsByType) {
                                     DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(),
                                             configuration.getObjectType());
-                                    if (canAdd(configuration.getPath(), permittedFolders)) {
+                                    if (canAdd(configuration.getPath(), authFolders)) {
                                         filteredConfigurations.add(configuration);
                                         UpdateableConfigurationObject updateable = ImportUtils.createUpdateableConfiguration(
                                                 existingConfiguration, configuration, configurationsByType, filter.getPrefix(), 
@@ -266,12 +265,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                             if(!configuration.getPath().startsWith(filter.getTargetFolder())) {
                                                 configuration.setPath(filter.getTargetFolder() + configuration.getPath());
                                             }
-                                            if (canAdd(configuration.getPath(), permittedFolders)) {
+                                            if (canAdd(configuration.getPath(), authFolders)) {
                                                 filteredConfigurations.add(configuration);
                                                 storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
                                             }
                                         } else {
-                                            if (canAdd(configuration.getPath(), permittedFolders)) {
+                                            if (canAdd(configuration.getPath(), authFolders)) {
                                                 filteredConfigurations.add(configuration);
                                                 storedConfigurations.add(dbLayer.saveInventoryConfiguration(configuration, account, auditLogId, agentNames));
                                             }
