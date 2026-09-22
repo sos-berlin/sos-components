@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
@@ -25,7 +26,6 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.note.common.Severity;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
@@ -53,7 +53,9 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+                    .getWorkflows().getView());
+            
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             String versionId = workflowFilter.getWorkflowId().getVersionId();
             boolean compact = workflowFilter.getCompact() == Boolean.TRUE;
@@ -85,7 +87,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
                 String path = WorkflowPaths.getPath(content.getName());
-                checkFolderPermissions(path, folderPermissions.getListOfFolders());
+                checkFolderPermissions(path, permittedFolders);
                 workflow.setPath(path);
                 workflow.setHasNote(new InventoryNotesDBLayer(connection).hasNote(content.getInvId(), getAccountName()));
                 workflow.setVersionDate(content.getCreated());

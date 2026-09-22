@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.inventory.model.descriptor.DeploymentDescriptor;
 import com.sos.inventory.model.descriptor.Descriptor;
 import com.sos.joc.Globals;
@@ -37,7 +38,8 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                 if(filter.getObjectType().equals(ConfigurationType.DEPLOYMENTDESCRIPTOR)) {
                     if(filter.getConfiguration() != null) {
                         try {
-                            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter.getConfiguration()), URI.create(JocInventory.SCHEMA_LOCATION.get(filter.getObjectType())));
+                            JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(filter.getConfiguration()), URI.create(
+                                    JocInventory.SCHEMA_LOCATION.get(filter.getObjectType())));
                         } catch (Exception e) {
                             DeploymentDescriptor deploymentDescriptor = (DeploymentDescriptor)filter.getConfiguration();
                             if(deploymentDescriptor.getDescriptor() != null) {
@@ -51,7 +53,8 @@ public class StoreDescriptorImpl extends AStoreConfiguration implements IStoreDe
                         }
                     }
                 }
-                response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE, getJocPermissionsPredicate().getInventory().getManage());
+                AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = store(filter, ConfigurationType.DESCRIPTORFOLDER, IMPL_PATH_STORE, permittedFolders);
             }
             return response;
         } catch (Exception e) {

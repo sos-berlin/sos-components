@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import com.sos.auth.common.AuthFolder;
 import com.sos.joc.model.common.Folder;
 
+@Deprecated
 public class SOSAuthFolderPermissions {
 
     private Map<String, Set<Folder>> listOfFoldersForInstance;

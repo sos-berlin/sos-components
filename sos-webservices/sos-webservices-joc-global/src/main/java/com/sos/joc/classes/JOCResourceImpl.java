@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,7 +23,9 @@ import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.predicate.ControllerPermissionsPredicate;
 import com.sos.auth.predicate.JocPermissionsPredicate;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -67,6 +70,7 @@ public class JOCResourceImpl {
     protected JobSchedulerUser jobschedulerUser;
     private SOSAuthCurrentAccount currentAccount;
     protected SOSAuthDetailedFolderPermissions detailedFolderPermissions;
+    @Deprecated
     protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     // private String accessToken;
@@ -162,6 +166,10 @@ public class JOCResourceImpl {
     
     protected JocPermissionsPredicate getJocPermissionsPredicate() throws JocException {
         return new JocPermissionsPredicate();
+    }
+    
+    protected ControllerPermissionsPredicate getControllerPermissionsPredicate(String controllerId) throws JocException {
+        return new ControllerPermissionsPredicate(controllerId);
     }
     
     protected JocPermissions get4EyesJocPermissions() throws JocException {
@@ -662,6 +670,7 @@ public class JOCResourceImpl {
         return initPermissions(controllerId, permission, fourEyesPermission, false);
     }
     
+    @Deprecated
     public void setFolderPermissions(String controllerId) {
         folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
         folderPermissions.setSchedulerId(controllerId);
@@ -691,21 +700,44 @@ public class JOCResourceImpl {
         setFolderPermissions(controllerId);
         return jocDefaultResponse;
     }
-
-//    private void updateUserInMetaInfo() {
-//        try {
-//            if (jocError != null) {
-//                String userMetaInfo = "USER: " + jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
-//                List<String> metaInfo = jocError.getMetaInfo();
-//                if (metaInfo.size() > 2) {
-//                    metaInfo.remove(2);
-//                    metaInfo.add(2, userMetaInfo);
-//                }
-//            }
-//        } catch (Exception e) {
-//        }
-//    }
-
+    
+    protected AuthFolders getPermittedFoldersByJocPermissions(Predicate<String> pred) {
+        return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByJocPermissions(pred);
+    }
+    
+    protected AuthFolders getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> pred) {
+        return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerId, pred);
+    }
+    
+    protected static void checkFolderPermissions(String path, AuthFolders permittedFolders) {
+        SOSAuthDetailedFolderPermissions.throwIfUnpermitted(getParent(path), permittedFolders);
+    }
+    
+    protected static boolean canAdd(String path, AuthFolders permittedFolders) {
+        if (path == null || !path.startsWith("/")) {
+            return false;
+        }
+        return SOSAuthDetailedFolderPermissions.isPermitted(getParent(path), permittedFolders);
+    }
+    
+    protected static boolean canAdd(String path, AuthFolders permittedFolders, Collection<Folder> requestedFolders) {
+        if (path == null || !path.startsWith("/")) {
+            return false;
+        }
+        if (SOSAuthDetailedFolderPermissions.isPermitted(getParent(path), permittedFolders)) {
+            
+        }
+        return false;
+    }
+    
+    protected static boolean folderIsPermitted(String folder, AuthFolders permittedFolders) {
+        return SOSAuthDetailedFolderPermissions.isPermitted(folder, permittedFolders);
+    }
+    
+    /**
+     * @deprecated  As of JOC-2255, replaced by above {@link #checkFolderPermissions()}
+     */
+    @Deprecated
     protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
         String folder = getParent(path);
         if (!folderPermissions.isPermittedForFolder(folder)) {
@@ -713,13 +745,10 @@ public class JOCResourceImpl {
         }
     }
 
-    protected static void checkFolderPermissions(String path, Collection<Folder> listOfFolders) throws JocFolderPermissionsException {
-        String folder = getParent(path);
-        if (!SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders)) {
-            throw new JocFolderPermissionsException(folder);
-        }
-    }
-
+    /**
+     * @deprecated  As of JOC-2255, replaced by {@link #canAdd()}
+     */
+    @Deprecated
     public static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || !path.startsWith("/")) {
             return false;
@@ -730,14 +759,26 @@ public class JOCResourceImpl {
         return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
+    /**
+     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #canAdd()} with requestedFolders
+     */
+    @Deprecated
     protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
         return folderPermissions.getPermittedFolders(folders);
     }
 
+    /**
+     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #canAdd()} with requestedFolders
+     */
+    @Deprecated
     protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
         return folderPermissions.getPermittedFolders(folders);
     }
 
+    /**
+     * @deprecated  As of JOC-2255, replaced by above {@link #folderIsPermitted()}
+     */
+    @Deprecated
     protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
         return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
     }

@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -725,6 +727,114 @@ public class JocInventory {
             String s = folder.toString().replace('\\', '/');
             return SOSString.isEmpty(s) ? ROOT_FOLDER : s;
         }
+    }
+    
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
+            AuthFolders permittedFolders) throws Exception {
+        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), permittedFolders);
+    }
+    
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+            AuthFolders permittedFolders) throws Exception {
+        return getConfiguration(dbLayer, id, path, type, permittedFolders, false);
+    }
+    
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+            AuthFolders permittedFolders, boolean withIsNotPermittedParentFolder) throws Exception {
+        DBItemInventoryConfiguration config = null;
+        String name = null;
+
+        if (id != null) {
+            config = dbLayer.getConfiguration(id);
+            if (config == null) {
+                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
+            }
+            if (isFolder(config.getType())) {
+                boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(config.getPath(), permittedFolders);
+                if (!isPermittedForFolder && !isNotPermittedParentFolder(permittedFolders, config.getPath(), withIsNotPermittedParentFolder)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
+                }
+            } else if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getFolder(), permittedFolders)) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+            }
+            // temp. because of rename error on root folder
+            config.setPath(config.getPath().replaceAll("//+", "/"));
+        } else {
+            if (!isFolder(type) && path != null && !path.contains("/")) {
+                name = path;
+                path = null;
+            }
+            if (path != null) {
+                if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
+                    config = new DBItemInventoryConfiguration();
+                    config.setId(0L);
+                    config.setPath(path);
+                    config.setName("");
+                    config.setType(type);
+                    config.setFolder(path);
+                    config.setDeleted(false);
+                    config.setValid(true);
+                    config.setDeployed(false);
+                    config.setReleased(false);
+                } else {
+                    Path p = normalizePath(path);
+                    path = p.toString().replace('\\', '/');
+
+                    if (isFolder(type)) {
+                        boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(path, permittedFolders);
+                        if (!isPermittedForFolder && !isNotPermittedParentFolder(permittedFolders, path, withIsNotPermittedParentFolder)) {
+                            throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                        }
+                    } else if (ROOT_FOLDER.equals(path)) {
+                        throw new JocBadRequestException(String.format("Invalid object name '%1$s'.", path));
+                    } else if (!SOSAuthDetailedFolderPermissions.isPermitted(p.getParent().toString().replace('\\', '/'), permittedFolders)) {
+                        throw new JocFolderPermissionsException("Access denied for folder: " + p.getParent().toString().replace('\\', '/'));
+                    }
+                    config = dbLayer.getConfiguration(path, type.intValue());
+                    if (config == null) {
+                        throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
+                    }
+                }
+            } else if (name != null) {// name
+                List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
+                if (configs == null || configs.isEmpty()) {
+                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), name));
+                }
+                config = configs.get(0); // TODO
+                if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getFolder(), permittedFolders)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+                }
+                // temp. because of rename error on root folder
+                config.setPath(config.getPath().replaceAll("//+", "/"));
+            }
+        }
+        return config;
+    }
+    
+    public static void checkFolderPermissions(DBItemInventoryConfiguration item, AuthFolders permittedFolders) {
+        checkFolderPermissions(item, permittedFolders, false);
+    }
+    
+    public static void checkFolderPermissions(DBItemInventoryConfiguration item, AuthFolders permittedFolders,
+            boolean withIsNotPermittedParentFolder) {
+        if (isFolder(item.getTypeAsEnum())) {
+            if (!ROOT_FOLDER.equals(item.getPath())) {
+                boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(item.getPath(), permittedFolders);
+                if (!isPermittedForFolder && !isNotPermittedParentFolder(permittedFolders, item.getPath(), withIsNotPermittedParentFolder)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + item.getPath());
+                }
+            }
+        } else if (!SOSAuthDetailedFolderPermissions.isPermitted(item.getFolder(), permittedFolders)) {
+            throw new JocFolderPermissionsException("Access denied for folder: " + item.getFolder());
+        }
+    }
+    
+    private static boolean isNotPermittedParentFolder(AuthFolders permittedFolders, String path, boolean withIsNotPermittedParentFolder) {
+        if (!withIsNotPermittedParentFolder) {
+            return true;
+        }
+        Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(permittedFolders);
+        return notPermittedParentFolders.contains(path);
     }
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,

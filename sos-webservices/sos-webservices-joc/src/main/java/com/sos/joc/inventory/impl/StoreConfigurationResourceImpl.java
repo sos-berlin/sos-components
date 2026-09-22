@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -33,7 +34,8 @@ public class StoreConfigurationResourceImpl extends AStoreConfiguration implemen
     }
     
     public JOCDefaultResponse store(ConfigurationObject in) throws Exception {
-        return store(in, ConfigurationType.FOLDER, IMPL_PATH, getJocPermissionsPredicate().getInventory().getManage());
+        AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+        return store(in, ConfigurationType.FOLDER, IMPL_PATH, permittedFolders);
     }
 
 }

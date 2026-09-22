@@ -260,14 +260,18 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<String> getOrderIds() throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<String> getOrderIds() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<String> query = createQuery(new StringBuilder().append("select orderId from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                     getOrdersWhere()).toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
-            return executeResultList(query);
+            List<String> result = executeResultList(query);
+            if (result == null) {
+                return Collections.emptySet();
+            }
+            return result.stream().collect(Collectors.toSet());
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.commons.util.SOSDate;
@@ -42,7 +42,6 @@ import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -52,12 +51,11 @@ import com.sos.joc.model.inventory.common.ItemStateEnum;
 
 public abstract class AStoreConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType, String request, Predicate<String> permPred) throws Exception {
-        
-//        SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
-//        if (!fPerms.isPermitted(in.getPath(), fPerms.getPermittedFoldersByJocPermissions(permPred))) {
-//            throw new JocFolderPermissionsException("Access denied");
-//        }
+    public JOCDefaultResponse store(ConfigurationObject in, ConfigurationType folderType, String request, AuthFolders permittedFolders)
+            throws Exception {
+
+        // TODO too early -> in.getPath can be undefined -> JocInventory.getConfiguration with AuthFolders
+        //JOCResourceImpl.throwIfFolderIsUnpermitted(in.getPath(), permittedFolders);
         
         SOSHibernateSession session = null;
         try {
@@ -68,7 +66,8 @@ public abstract class AStoreConfiguration extends JOCResourceImpl {
             session.beginTransaction();
             DBItemInventoryConfiguration item;
             try {
-                item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions, true);
+                item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), permittedFolders, true);
+                //JocInventory.checkFolderPermissions(item, permittedFolders, true);
                 item = setProperties(in, item, dbLayer, false);
                 DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(
                         new AuditLogDetail(item.getPath(), item.getType())));

@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -55,18 +56,20 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardFilter.class);
             BoardFilter filter = Globals.objectMapper.readValue(filterBytes, BoardFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
-                    .getNoticeBoards().getView());
+            String controllerId = filter.getControllerId();
+            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter)));
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+                    .getNoticeBoards().getView());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoard(filter, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
     
-    private Board getBoard(BoardFilter filter) throws Exception {
+    private Board getBoard(BoardFilter filter, AuthFolders permittedFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             Board answer = new Board();
@@ -83,7 +86,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Notice board '%s' doesn't exist", filter.getNoticeBoardPath()));
             }
-            checkFolderPermissions(dc.getPath());
+            checkFolderPermissions(dc.getPath(), permittedFolders);
             
             BoardPath boardPath = BoardPath.of(dc.getName());
             if (currentState != null) {

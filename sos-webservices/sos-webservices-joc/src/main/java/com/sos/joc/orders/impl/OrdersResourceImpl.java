@@ -24,6 +24,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
@@ -41,7 +43,6 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
@@ -91,7 +92,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withStateDate = ordersFilter.getStateDateFrom() != null || ordersFilter.getStateDateTo() != null;
             boolean withOrderTags = ordersFilter.getOrderTags() != null && !ordersFilter.getOrderTags().isEmpty();
             boolean withWorkflowTags = ordersFilter.getWorkflowTags() != null && !ordersFilter.getWorkflowTags().isEmpty();
-            //boolean orderStreamIsEmpty = false;
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000);
             }
@@ -99,9 +99,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setFolders(null);
                 ordersFilter.setLimit(-1);
             }
+            
+            SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
+            AuthFolders permittedFolders = fPerms.getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+                    .getOrders().getView());
 
-            boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
-            final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
             JControllerState currentState = Proxy.of(controllerId).currentState();
@@ -249,10 +251,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 if (!withStatesFilter || lookingForBlocked || lookingForInProgress) {
                     blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter));
                 }
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permissions
-                // orderStream = currentState.ordersBy(JOrderPredicates.none());
-                //orderStreamIsEmpty = true;
             } else {
                 if (notCycledOrderFilter != null) {
                     orderStream = currentState.ordersBy(notCycledOrderFilter);
@@ -349,12 +347,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                 // consider limit per workflow (not over all)
-                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders))
-                        .flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(ordersFilter
-                                .getLimit().longValue()));
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), permittedFolders,
+                        ordersFilter.getFolders())).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed())
+                                .limit(ordersFilter.getLimit().longValue()));
             } else {
-                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
-                        folders)).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor).reversed());
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), permittedFolders,
+                        ordersFilter.getFolders())).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor)
+                                .reversed());
                 if (ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                     orderStream = orderStream.limit(ordersFilter.getLimit().longValue());
                 }
@@ -392,12 +391,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     HistoryFilter filter = new HistoryFilter();
                     filter.setControllerIds(Collections.singleton(controllerId));
-                    filter.addFolders(folders);
+                    filter.addFolders(ordersFilter.getFolders());
                     filter.setOrderState(states);
                     filter.setStateFrom(JobSchedulerDate.getDateFrom(ordersFilter.getStateDateFrom(), ordersFilter.getTimeZone()));
                     filter.setStateTo(JobSchedulerDate.getDateTo(ordersFilter.getStateDateTo(), ordersFilter.getTimeZone()));
                     JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(connection, filter);
-                    List<String> stateDateOrderIds = dbLayer.getOrderIds();
+                    Set<String> stateDateOrderIds = dbLayer.getOrderIds();
 
                     orderStream = orderStream.filter(o -> stateDateOrderIds.contains(o.id().string()));
                 }

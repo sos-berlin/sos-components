@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
@@ -59,6 +60,8 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate(controllerId)
+                    .getWorkflows().getView());
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             String versionId = workflowFilter.getWorkflowId().getVersionId();
@@ -80,7 +83,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 com.sos.controller.model.workflow.WorkflowDeps workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.WorkflowDeps.class);
                 String path = WorkflowPaths.getPath(content.getName()); 
-                checkFolderPermissions(path, folderPermissions.getListOfFolders());
+                checkFolderPermissions(path, permittedFolders);
                 workflow.setPath(path);
                 workflow.setVersionDate(content.getCreated());
                 workflow.setVersionId(content.getCommitId());

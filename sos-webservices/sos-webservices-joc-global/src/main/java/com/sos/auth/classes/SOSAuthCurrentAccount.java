@@ -427,6 +427,7 @@ public class SOSAuthCurrentAccount {
         return withAuthorization;
     }
 
+    @Deprecated
     public SOSAuthFolderPermissions getSosAuthFolderPermissions() {
         return sosAuthFolderPermissions;
     }
