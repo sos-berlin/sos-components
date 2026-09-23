@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -128,10 +129,17 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             JControllerState currentState = proxy.currentState();
 
             // DailyPlan Orders: orderIds.get(Boolean.TRUE), Adhoc Orders: orderIds.get(Boolean.FALSE)
-            Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#[PC][0-9]+-.*"), Collectors
-                    .toSet()));
+            Map<Boolean, Set<String>> orderIds = in.getOrderIds().stream().collect(Collectors.groupingBy(id -> id.matches(".*#[PC][0-9]+-.*"),
+                    Collectors.toSet()));
             orderIds.putIfAbsent(Boolean.TRUE, Collections.emptySet());
             orderIds.putIfAbsent(Boolean.FALSE, Collections.emptySet());
+            
+            boolean withModifyPositions = (in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) || in
+                    .getBlockPosition() != null);
+            
+            AuthFolders permittedFolders = withModifyPositions ? getPermittedFoldersByControllerPermissions(controllerId,
+                    getControllerPermissionsPredicate().getOrders().getManagePositions()) : getPermittedFoldersByControllerPermissions(controllerId,
+                            getControllerPermissionsPredicate().getOrders().getModify());
 
             Set<String> workflowNames = new HashSet<>();
             
@@ -141,9 +149,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
             if (dailyPlanOrderItems == null) {
                 dailyPlanOrderItems = Collections.emptyList();
+            } else if (!dailyPlanOrderItems.isEmpty()) {
+                dailyPlanOrderItems = dailyPlanOrderItems.stream().filter(item -> folderIsPermitted(item.getWorkflowFolder(), permittedFolders))
+                        .collect(Collectors.toList());
             }
             
             workflowNames.addAll(dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct().toList());
+            
             
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
                 workflowNames.addAll(OrdersHelper.getWorkflowNamesOfFreshOrders(in.getOrderIds(), currentState).toList());
@@ -155,8 +167,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
             
-            if ((in.getStartPosition() != null || (in.getEndPositions() != null && !in.getEndPositions().isEmpty()) || in
-                    .getBlockPosition() != null)) {
+            if (withModifyPositions) {
                 setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
                 setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
                 
@@ -208,7 +219,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             setSettings(IMPL_PATH);
             ZoneId zoneId = getZoneId(IMPL_PATH);
             Either<List<Err419>, OrderIdMap> adhocCall = OrdersHelper.cancelAndAddFreshOrder(orderIds.get(Boolean.FALSE), in, accessToken,
-                    getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, blockPositions, folderPermissions);
+                    getJocError(), auditlog.getId(), proxy, currentState, zoneId, labelMap, blockPositions, permittedFolders);
             OrderIdMap dailyPlanResult = null;
 
             if (!dailyPlanOrderItems.isEmpty()) {

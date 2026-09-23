@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -47,6 +48,9 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return response;
             }
             
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                    .getOrders().getView());
+            
             if (in.getSelector() == null) {
                 Folder root = new Folder();
                 root.setFolder("/");
@@ -63,8 +67,9 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             if (in.getSelector().getWorkflowPaths() != null) {
                 workflowSingles = in.getSelector().getWorkflowPaths().stream().collect(Collectors.toSet());
             }
-            final Set<Folder> permittedFolders = addPermittedFolder(in.getSelector().getFolders());
-            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, permittedFolders,
+            Set<Folder> requestedFolders = in.getSelector().getFolders() == null ? Collections.emptySet() : in.getSelector().getFolders().stream()
+                    .collect(Collectors.toSet());
+            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, requestedFolders, permittedFolders,
                     new HashMap<>());
 
             SchedulesList answer = new SchedulesList();
@@ -82,7 +87,8 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
     }
 
     private Collection<DailyPlanSchedule> getSchedules(String controllerId, Set<String> scheduleSingles, Set<String> workflowSingles,
-            Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) throws IOException, SOSHibernateException {
+            Set<Folder> requestedFolders, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) throws IOException,
+            SOSHibernateException {
 
         SOSHibernateSession session = null;
         boolean hasSelectedSchedules = scheduleSingles != null && scheduleSingles.size() > 0;
@@ -94,16 +100,16 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             // selected schedules
             List<DBBeanReleasedSchedule2DeployedWorkflow> scheduleItems = null;
             if (!hasSelectedSchedules && !hasSelectedWorkflows) {
-                scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, permittedFolders);
+                scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, requestedFolders);
             } else {
                 // selected schedules
                 if (hasSelectedSchedules) {
-                    scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, permittedFolders, scheduleSingles, true);
+                    scheduleItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId, requestedFolders, scheduleSingles, true);
                 }
                 // selected workflows
                 if (hasSelectedWorkflows) {
                     List<DBBeanReleasedSchedule2DeployedWorkflow> workflowItems = dbLayer.getReleasedSchedule2DeployedWorkflows(controllerId,
-                            permittedFolders, workflowSingles, false);
+                            requestedFolders, workflowSingles, false);
                     if (workflowItems != null && workflowItems.size() > 0) {
                         if (scheduleItems == null || scheduleItems.size() == 0) {
                             scheduleItems = workflowItems;

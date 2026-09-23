@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.cluster.ClusterState;
@@ -66,7 +67,6 @@ import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.agent.SubagentV;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
 import com.sos.schema.JsonValidator;
 
@@ -182,8 +182,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getAgentStates(agentsParam, folderPermissions.getListOfFolders())));
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getView());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getAgentStates(agentsParam, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         } finally {
@@ -192,7 +193,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
     }
     
     @SuppressWarnings("unchecked")
-    private static <T> T getAgentStates(ReadAgentsV agentsParam, Set<Folder> permittedFolders)
+    private static <T> T getAgentStates(ReadAgentsV agentsParam, AuthFolders permittedFolders)
             throws ControllerConnectionResetException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             DBInvalidDataException, DBConnectionRefusedException, ExecutionException, SOSHibernateException {
         boolean withClusterLicense = AgentHelper.hasClusterLicense();
@@ -254,7 +255,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(jOrders.stream().map(JOrder::id).collect(Collectors
                                 .toSet()), currentState);
                         Map<String, Set<String>> orderTags = OrderTags.getTags(controllerId, jOrders, connection);
-
+                        
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
                                 return OrdersHelper.mapJOrderToOrderV(o, currentState, true, permittedFolders, orderTags, waitingOrders, null,

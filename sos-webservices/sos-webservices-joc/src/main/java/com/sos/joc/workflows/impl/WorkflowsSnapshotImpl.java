@@ -5,12 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -23,7 +23,6 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.model.workflow.WorkflowsSnapshot;
@@ -52,17 +51,18 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getWorkflows()
+                    .getView());
+            
             WorkflowsSnapshot workflows = new WorkflowsSnapshot();
             workflows.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 workflows.setSurveyDate(Date.from(currentstate.instant()));
             }
-            final Set<Folder> folders = folderPermissions.getListOfFolders();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             
-            Map<SyncStateText, Long> summary = getWorkflows(controllerId, new DeployedConfigurationDBLayer(connection), currentstate, folders);
+            Map<SyncStateText, Long> summary = getWorkflows(controllerId, new DeployedConfigurationDBLayer(connection), currentstate, permittedFolders);
 
             WorkflowsSummary wSummary = new WorkflowsSummary();
             wSummary.setNotSynchronized(summary.getOrDefault(SyncStateText.NOT_IN_SYNC, 0L).intValue());
@@ -82,7 +82,7 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
     }
 
     public static Map<SyncStateText, Long> getWorkflows(String controllerId, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
 
         WorkflowsFilter workflowsFilter = new WorkflowsFilter();
         workflowsFilter.setControllerId(controllerId);

@@ -2,6 +2,7 @@ package com.sos.joc.order.impl;
 
 import java.util.List;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.Workflow;
@@ -50,6 +51,9 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
                 return jocDefaultResponse;
             }
             
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getView());
+
             JPosition position = null;
             JControllerState currentState = Proxy.of(controllerId).currentState();
             
@@ -77,7 +81,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             }
             
             CheckedResumeOrdersPositions cop = new CheckedResumeOrdersPositions();
-            cop.get(orderFilter.getOrderId(), currentState, folderPermissions.getListOfFolders(), position, false);
+            cop.get(orderFilter.getOrderId(), currentState, permittedFolders, position, false);
             cop.setOrderIds(null);
             cop.setDisabledPositionChange(null);
             cop.setPositions(null);

@@ -709,7 +709,7 @@ public class JOCResourceImpl {
         return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerId, pred);
     }
     
-    protected static void checkFolderPermissions(String path, AuthFolders permittedFolders) {
+    public static void checkFolderPermissions(String path, AuthFolders permittedFolders) {
         SOSAuthDetailedFolderPermissions.throwIfUnpermitted(getParent(path), permittedFolders);
     }
     

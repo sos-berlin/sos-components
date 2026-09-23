@@ -131,8 +131,8 @@ public class LockEntryHelper {
                     List<JOrder> lockQueuedJOrders = controllerState.ordersBy(o -> lockQueuedOrderIds.contains(o.id())).sorted(Comparator
                             .comparingLong(compareScheduleFor).reversed()).collect(Collectors.toList());
 
-                    ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = Stream.of(lockJOrders, lockQueuedJOrders).flatMap(l -> l
-                            .stream()).map(JOrder::workflowId).distinct().collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper
+                    ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = Stream.of(lockJOrders, lockQueuedJOrders).flatMap(
+                            List::stream).map(JOrder::workflowId).distinct().collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper
                                     .getFinalParameters(w, controllerState)));
 
                     Map<String, Set<String>> lockOrderTags = OrderTags.getTags(controllerState.asScala().controllerId().string(), lockJOrders,
@@ -144,6 +144,7 @@ public class LockEntryHelper {
                         ordersHoldingLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersHoldingLocksCount <= limit) {
+                            // TODO JOC-2255 missing folder permission check
                             lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, controllerState, true, lockOrderTags, finalParamsPerWorkflow,
                                     surveyDateMillis, zoneId));
                         }

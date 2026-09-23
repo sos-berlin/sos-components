@@ -12,12 +12,14 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -27,8 +29,6 @@ import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.BlockPosition;
 import com.sos.joc.model.order.OrdersPositions;
 import com.sos.joc.model.order.Position;
@@ -50,22 +50,20 @@ public class CheckedAddOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, Set<Folder> permittedFolders)
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, AuthFolders permittedFolders)
             throws JsonParseException, JsonMappingException, IOException, JocException {
         return get(workflowId, controllerId, currentState, permittedFolders, null);
     }
     
     @JsonIgnore
-    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, Set<Folder> permittedFolders,
+    public CheckedAddOrdersPositions get(WorkflowId workflowId, String controllerId, JControllerState currentState, AuthFolders permittedFolders,
             List<Object> afterPosition) throws JsonParseException, JsonMappingException, IOException, JocException {
 
         WorkflowPath wPath = WorkflowPath.of(JocInventory.pathToName(workflowId.getPath()));
         String path = WorkflowPaths.getPath(wPath.string());
         workflowId.setPath(path);
         
-        if (!OrdersHelper.canAdd(path, permittedFolders)) {
-            throw new JocFolderPermissionsException("Access denied");
-        }
+        JOCResourceImpl.checkFolderPermissions(path, permittedFolders);
 
         Either<Problem, JWorkflow> e = null;
         if (workflowId.getVersionId() != null && !workflowId.getVersionId().isEmpty()) {

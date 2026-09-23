@@ -1,7 +1,6 @@
 package com.sos.joc.orders.impl;
 
-import java.util.Set;
-
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -36,10 +35,11 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
                 return jocDefaultResponse;
             }
             
-            Set<String> orders = ordersFilter.getOrderIds();
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getView());
 
-            CheckedResumeOrdersPositions entity = new CheckedResumeOrdersPositions().get(orders, Proxy.of(controllerId).currentState(), folderPermissions
-                    .getListOfFolders());
+            CheckedResumeOrdersPositions entity = new CheckedResumeOrdersPositions().get(ordersFilter.getOrderIds(), Proxy.of(controllerId)
+                    .currentState(), permittedFolders);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
@@ -61,9 +61,12 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getView());
 
             CheckedAddOrdersPositions entity = new CheckedAddOrdersPositions().get(workflowFilter.getWorkflowId(), controllerId, Proxy.of(
-                    controllerId).currentState(), folderPermissions.getListOfFolders());
+                    controllerId).currentState(), permittedFolders);
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 

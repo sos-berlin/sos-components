@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncState;
@@ -346,7 +347,7 @@ public class WorkflowsHelper {
     }
 
     public static Stream<JWorkflowId> getWorkflowIdsStreamFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
 
         WorkflowsFilter workflowsFilter = new WorkflowsFilter();
         workflowsFilter.setControllerId(controllerId);
@@ -364,21 +365,21 @@ public class WorkflowsHelper {
     }
 
     public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, List<Folder> folders,
-            JControllerState currentstate, Set<Folder> permittedFolders) {
+            JControllerState currentstate, AuthFolders permittedFolders) {
 
         return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::asScala).collect(Collectors
                 .toSet());
     }
 
     public static Set<WorkflowPath> getWorkflowPathsFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
 
         return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::path).collect(Collectors
                 .toSet());
     }
 
     public static Stream<DeployedContent> getDeployedContents(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
-            JControllerState currentstate, Set<Folder> permittedFolders) {
+            JControllerState currentstate, AuthFolders permittedFolders) {
 
         List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, permittedFolders);
         if (currentstate != null) {
@@ -418,7 +419,7 @@ public class WorkflowsHelper {
     }
     
     public static Stream<DeployedContent> getDeployedContentsStream(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
-            JControllerState currentstate, List<DeployedContent> contents, Set<Folder> permittedFolders) {
+            JControllerState currentstate, List<DeployedContent> contents, AuthFolders permittedFolders) {
 
         Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
         
@@ -471,7 +472,7 @@ public class WorkflowsHelper {
     }
 
     private static List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
         DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
         dbFilter.setControllerId(workflowsFilter.getControllerId());
         dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
@@ -485,7 +486,6 @@ public class WorkflowsHelper {
             workflowsFilter.setWorkflowTags(null);
             workflowIdsStream = workflowIds.stream().peek(w -> w.setPath(JocInventory.pathToName(w.getPath()))).distinct();
         }
-        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
         List<DeployedContent> contents = null;
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
@@ -527,13 +527,10 @@ public class WorkflowsHelper {
                     contents.addAll(dbLayer.getDeployedInventory(dbFilter));
                 }
             }
-        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
-            // no folder permissions
-        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            dbFilter.setFolders(permittedFolders);
-            contents = dbLayer.getDeployedInventory(dbFilter);
         } else {
-            contents = dbLayer.getDeployedInventory(dbFilter);
+            dbFilter.setFolders(workflowsFilter.getFolders());
+            contents = dbLayer.getDeployedInventory(dbFilter).stream().filter(dc -> JOCResourceImpl.canAdd(dc.getPath(), permittedFolders)).collect(
+                    Collectors.toList());
         }
         if (contents == null) {
             return Collections.emptyList();
@@ -542,17 +539,14 @@ public class WorkflowsHelper {
     }
 
     private static Stream<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, Set<String> workflowNames, JControllerState currentState,
-            DeployedConfigurationDBLayer dbLayer, Set<Folder> permittedFolders) {
+            DeployedConfigurationDBLayer dbLayer, AuthFolders permittedFolders) {
         
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
         List<DeployedContent> contents = null;
-        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setRegex(null);
             // only permanent info
-        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
-            // no folder permissions
         } else {
 
             List<WorkflowId> wIds = oldWorkflowIds(currentState).filter(wId -> workflowNames.contains(wId.getPath())).collect(Collectors.toList());
@@ -589,7 +583,7 @@ public class WorkflowsHelper {
         }
 
         Stream<DeployedContent> stream = contents.stream().peek(i -> i.setPath(WorkflowPaths.getPath(i.getName())));
-        if (permittedFolders != null && !permittedFolders.isEmpty()) {
+        if (permittedFolders != null) {
             stream = stream.filter(i -> JOCResourceImpl.canAdd(i.getPath(), permittedFolders));
         }
         

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.fileordersource.FileOrderSource;
@@ -34,7 +35,6 @@ import com.sos.joc.db.inventory.InventoryNotesDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.note.common.HasNote;
 import com.sos.joc.model.workflow.Workflows;
@@ -65,17 +65,18 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getWorkflows()
+                    .getView());
+            
             Workflows workflows = new Workflows();
             workflows.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
                 workflows.setSurveyDate(Date.from(currentstate.instant()));
             }
-            final Set<Folder> folders = folderPermissions.getPermittedFolders(workflowsFilter.getFolders());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
-                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders, getJocError(),
+                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, permittedFolders, getJocError(),
                         getAccountName());
                 Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, ws.stream().map(Workflow::getPath).map(
                         JocInventory::pathToName));
@@ -86,7 +87,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflows.setWorkflows(ws);
                 }
             } else {
-                workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
+                workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, permittedFolders,
                         getJocError(), getAccountName()));
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));
@@ -101,7 +102,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     }
 
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
-            Set<Folder> permittedFolders, JocError jocError, String account) {
+            AuthFolders permittedFolders, JocError jocError, String account) {
         boolean compact = workflowsFilter.getCompact() == Boolean.TRUE;
         String controllerId = workflowsFilter.getControllerId();
         
@@ -124,8 +125,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         boolean withSkippedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.SKIPPED);
         boolean withStoppedInstructionStateFilter = workflowsFilter.getInstructionStates().contains(InstructionStateText.STOPPED);
 
-        return WorkflowsHelper.getDeployedContentsStream(workflowsFilter, dbLayer, currentstate, contents,
-                permittedFolders).map(w -> {
+        return WorkflowsHelper.getDeployedContentsStream(workflowsFilter, dbLayer, currentstate, contents, permittedFolders).map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
                     throw new DBMissingDataException("doesn't exist");

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
@@ -648,13 +649,13 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     // DailyPlanOrdersGenerateImpl, SchedulesImpl
-    public static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, Set<Folder> permittedFolders,
+    public static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, AuthFolders permittedFolders,
             Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically, boolean infoOnMissingDeployedWorkflow) {
         return convert(items, onlyPlanOrderAutomatically, true, permittedFolders, checkedFolders, infoOnMissingDeployedWorkflow);
     }
 
     private static Collection<DailyPlanSchedule> convert(List<DBBeanReleasedSchedule2DeployedWorkflow> items, boolean onlyPlanOrderAutomatically,
-            boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow) {
+            boolean checkPermissions, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders, boolean infoOnMissingDeployedWorkflow) {
         if (items == null || items.size() == 0) {
             return new ArrayList<DailyPlanSchedule>();
         }
@@ -792,7 +793,7 @@ public class DailyPlanRunner extends TimerTask {
         return result;
     }
 
-    private static boolean isWorkflowPermitted(String workflowPath, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private static boolean isWorkflowPermitted(String workflowPath, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) {
         if (checkedFolders == null) {// from service
             return true;
         }

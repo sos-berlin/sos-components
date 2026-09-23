@@ -100,8 +100,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setLimit(-1);
             }
             
-            SOSAuthDetailedFolderPermissions fPerms = getCurrentAccount().getSOSAuthDetailedFolderPermissions();
-            AuthFolders permittedFolders = fPerms.getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
                     .getOrders().getView());
 
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
@@ -230,11 +229,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (withOrderIdFilter) {
                 ordersFilter.setRegex(null);
+                ordersFilter.setWorkflowIds(null);
+                ordersFilter.setFolders(null);
+                ordersFilter.setStates(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
                 blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
 
             } else if (withWorkflowIdFilter) {
                 ordersFilter.setRegex(null);
+                ordersFilter.setFolders(null);
+                ordersFilter.setStates(null);
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
                 Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
                         .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
@@ -347,9 +351,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                 // consider limit per workflow (not over all)
-                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), permittedFolders,
-                        ordersFilter.getFolders())).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed())
-                                .limit(ordersFilter.getLimit().longValue()));
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()),
+                        permittedFolders)).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(
+                                ordersFilter.getLimit().longValue()));
             } else {
                 orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), permittedFolders,
                         ordersFilter.getFolders())).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor)

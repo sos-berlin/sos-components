@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -100,11 +101,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog()).getId() : 0L;
 
-        if (folderPermissions == null) {
-            folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
-        }
-        folderPermissions.setSchedulerId(controllerId);
-
         Set<Folder> scheduleFolders = null;
         Set<String> scheduleSingles = null;
         Set<Folder> workflowFolders = null;
@@ -124,7 +120,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             }
         }
 
-        final Set<Folder> permittedFolders = addPermittedFolder(null);
+        AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders().getCreate());
         Map<String, Boolean> checkedFolders = new HashMap<>();
         if (in.getWorkflowPaths() != null) {
             workflowFolders = FolderPath.filterByUniqueFolder(in.getWorkflowPaths().getFolders());
@@ -227,7 +223,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     }
 
     private Collection<DailyPlanSchedule> getSchedules(String controllerId, Set<Folder> scheduleFolders,
-            Set<String> scheduleSingles, Set<Folder> workflowFolders, Set<String> workflowSingles, Set<Folder> permittedFolders,
+            Set<String> scheduleSingles, Set<Folder> workflowFolders, Set<String> workflowSingles, AuthFolders permittedFolders,
             Map<String, Boolean> checkedFolders, boolean onlyPlanOrderAutomatically) throws IOException, SOSHibernateException {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -281,7 +277,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         }
     }
 
-    private boolean isPermitted(Folder folder, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private boolean isPermitted(Folder folder, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) {
         Boolean result = checkedFolders.get(folder.getFolder());
         if (result == null) {
             result = canAdd(folder.getFolder(), permittedFolders);

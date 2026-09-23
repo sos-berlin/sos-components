@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.board.Board;
@@ -37,7 +38,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsFilter;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.note.common.HasNote;
 import com.sos.joc.model.order.OrderV;
@@ -79,16 +79,19 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
+            String controllerId = filter.getControllerId();
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(controllerId)
                     .getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
-            currentState = Proxy.of(filter.getControllerId()).currentState();
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                    .getNoticeBoards().getView());
+            currentState = Proxy.of(controllerId).currentState();
             Plans entity = new Plans();
             entity.setSurveyDate(Date.from(currentState.instant()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            entity.setPlans(get(filter));
+            entity.setPlans(get(filter, permittedFolders));
             
             entity.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -134,7 +137,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         return PlanHelper.getFilteredPlan(pId, jp, filter);
     }
     
-    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp, PlansFilter filter) {
+    private com.sos.joc.model.plan.Plan getPlan(PlanId pId, JPlan jp, PlansFilter filter, AuthFolders permittedFolders) {
         Plan plan = PlanHelper.getFilteredPlan(pId, jp, filter);
         if (plan == null) {
             return null;
@@ -144,7 +147,9 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         
         
         if (filter.getIncludeOrders()) {
-            Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), folderPermissions.getListOfFolders(), currentState);
+            AuthFolders permittedFoldersForOrders = getPermittedFoldersByControllerPermissions(filter.getControllerId(),
+                    getControllerPermissionsPredicate().getOrders().getView());
+            Stream<JOrder> jOrders = OrdersHelper.getPermittedJOrdersFromOrderIds(jp.orderIds(), permittedFoldersForOrders, currentState);
             Map<JWorkflowId, Set<JOrder>> workflowToOrder = jOrders.collect(Collectors.groupingBy(JOrder::workflowId, Collectors.toSet()));
 
             jOrders = workflowToOrder.values().stream().flatMap(Set::stream);
@@ -182,7 +187,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             plan.setNumOfOrders(null);
         }
 
-        plan.setNoticeBoards(getBoards(jp.toPlannedBoard(), filter, orders));
+        plan.setNoticeBoards(getBoards(jp.toPlannedBoard(), filter, orders, permittedFolders));
         
         return plan;
     }
@@ -201,9 +206,10 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
         return orderTags;
     }
     
-    private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<OrderId, OrderV> orders) {
+    private List<Board> getBoards(Map<BoardPath, JPlannedBoard> jBoards, PlansFilter filter, Map<OrderId, OrderV> orders,
+            AuthFolders permittedFolders) {
         try {
-            
+        
             Stream<String> availableBoardNames = jBoards.keySet().stream().map(BoardPath::string);
             if (filter.getNoticeBoardPaths() != null && !filter.getNoticeBoardPaths().isEmpty()) {
                 Set<String> requestedBoardNames = filter.getNoticeBoardPaths().stream().map(JocInventory::pathToName).collect(Collectors.toSet());
@@ -219,31 +225,30 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             bFilter.setNoticeBoardPaths(boardNames);
             bFilter.setLimit(filter.getLimit());
             
-            return getBoards(bFilter, jBoards, orders, Boolean.TRUE == filter.getCompact());
+            return getBoards(bFilter, jBoards, orders, permittedFolders, Boolean.TRUE == filter.getCompact());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
     
-    private List<Plan> get(PlansFilter filter) throws Exception {
-        return currentState.toPlan().entrySet().stream().map(e -> getPlan(e.getKey(), e.getValue(), filter)).filter(Objects::nonNull).collect(
-                Collectors.toList());
+    private List<Plan> get(PlansFilter filter, AuthFolders permittedFolders) throws Exception {
+        return currentState.toPlan().entrySet().stream().map(e -> getPlan(e.getKey(), e.getValue(), filter, permittedFolders)).filter(
+                Objects::nonNull).collect(Collectors.toList());
     }
     
-    private List<Board> getBoards(BoardsFilter filter, Map<BoardPath, JPlannedBoard> jBoards, Map<OrderId, OrderV> orders, boolean compact)
-            throws Exception {
+    private List<Board> getBoards(BoardsFilter filter, Map<BoardPath, JPlannedBoard> jBoards, Map<OrderId, OrderV> orders,
+            AuthFolders permittedFolders, boolean compact) throws Exception {
         try {
             String controllerId = filter.getControllerId();
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(controllerId);
             dbFilter.setObjectTypes(Collections.singleton(DeployType.NOTICEBOARD.intValue()));
+            dbFilter.setFolders(filter.getFolders());
 
             List<String> paths = filter.getNoticeBoardPaths();
             if (paths != null && !paths.isEmpty()) {
                 filter.setFolders(null);
             }
-            boolean withFolderFilter = filter.getFolders() != null && !filter.getFolders().isEmpty();
-            final Set<Folder> folders = addPermittedFolder(filter.getFolders());
 
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             List<DeployedContent> contents = null;
@@ -251,16 +256,9 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 dbFilter.setNames(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permissions
-            } else if (folders != null && !folders.isEmpty()) {
-                dbFilter.setFolders(folders);
-                contents = dbLayer.getDeployedInventory(dbFilter);
             } else {
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
-            
-            final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
             
             JocError jocError = getJocError();
             if (contents != null) {
@@ -268,13 +266,13 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 if ((orders == null || orders.isEmpty()) && !compact) {
                     orders = Collections.emptyMap();
                     if (filter.getCompact() != Boolean.TRUE) {
-                        
-                        Set<OrderId> eos = jBoards.values().stream().map(JPlannedBoard::toNoticePlace).map(Map::values)
-                                .flatMap(Collection::stream).map(JNoticePlace::expectingOrderIds).flatMap(Collection::stream).collect(Collectors.toSet());
+
+                        Set<OrderId> eos = jBoards.values().stream().map(JPlannedBoard::toNoticePlace).map(Map::values).flatMap(Collection::stream)
+                                .map(JNoticePlace::expectingOrderIds).flatMap(Collection::stream).collect(Collectors.toSet());
 
                         Map<String, Set<String>> orderTags = OrderTags.getTagsByOrderIds(controllerId, eos.stream().map(OrderId::string), session);
                         final Long surveyDateMillis = currentState.instant().toEpochMilli();
-                                
+
                         Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                             try {
                                 return OrdersHelper.mapJOrderToOrderV(o, currentState, true, orderTags, null, surveyDateMillis, zoneId);
@@ -283,15 +281,18 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                             }
                         };
 
-                        orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, permittedFolders, currentState).map(mapJOrderToOrderV).filter(
-                                Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
+                        AuthFolders permittedFoldersForOrders = getPermittedFoldersByControllerPermissions(controllerId,
+                                getControllerPermissionsPredicate().getOrders().getView());
+                        orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, permittedFoldersForOrders, currentState).map(mapJOrderToOrderV)
+                                .filter(Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
                     }
                 }
                 
                 
                 PlannedBoards plB = new PlannedBoards(jBoards, orders, compact, filter.getLimit());
-                Map<String, HasNote> boardNotes =  new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(), getAccountName());
-                
+                Map<String, HasNote> boardNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.NOTICEBOARD.intValue(),
+                        getAccountName());
+
                 return contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {

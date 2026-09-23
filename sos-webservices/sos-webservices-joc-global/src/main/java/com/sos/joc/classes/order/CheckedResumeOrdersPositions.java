@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
@@ -32,6 +33,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -44,7 +46,6 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectNotExistException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrdersResumePositions;
 import com.sos.joc.model.order.Position;
 import com.sos.joc.model.order.PositionChange;
@@ -92,7 +93,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public CheckedResumeOrdersPositions get(Set<String> orders, JControllerState currentState, Set<Folder> permittedFolders) throws JsonParseException,
+    public CheckedResumeOrdersPositions get(Set<String> orders, JControllerState currentState, AuthFolders permittedFolders) throws JsonParseException,
             JsonMappingException, IOException, JocException {
         
         if (orders.size() == 1) {
@@ -119,7 +120,8 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             JWorkflow w = e.get();
             
             JsonNode node = Globals.objectMapper.readTree(w.withPositions().toJson());
-            List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
+            List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {})
+                    .readValue(node.get("instructions"));
             Set<String> implicitEnds = WorkflowsHelper.extractDisallowedImplicitEnds(instructions);
             
             OrderPreparation orderPreparation = node.get("orderPreparation") != null ? Globals.objectMapper.reader().forType(
@@ -218,7 +220,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public CheckedResumeOrdersPositions get(String order, JControllerState currentState, Set<Folder> permittedFolders, JPosition position,
+    public CheckedResumeOrdersPositions get(String order, JControllerState currentState, AuthFolders permittedFolders, JPosition position,
             boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
             JocFolderPermissionsException {
 
@@ -230,7 +232,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     @JsonIgnore
-    public CheckedResumeOrdersPositions get(JOrder jOrder, JControllerState currentState, Set<Folder> permittedFolders, JPosition position,
+    public CheckedResumeOrdersPositions get(JOrder jOrder, JControllerState currentState, AuthFolders permittedFolders, JPosition position,
             boolean withStatusCheck) throws JsonParseException, JsonMappingException, IOException, JocBadRequestException,
             JocFolderPermissionsException {
 
@@ -239,7 +241,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             throw new JocBadRequestException("The order is not resumable."); 
         }
         
-        if (!OrdersHelper.canAdd(WorkflowPaths.getPath(jOrder.workflowId()), permittedFolders)) {
+        if (!JOCResourceImpl.canAdd(WorkflowPaths.getPath(jOrder.workflowId()), permittedFolders)) {
             throw new JocFolderPermissionsException("Access denied");
         }
 
@@ -415,12 +417,12 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     public static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Set<String> orders, JControllerState currentState,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
         return getResumableOrders(o -> orders.contains(o.id().string()), currentState, permittedFolders);
     }
     
     private static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Function1<Order<Order.State>, Object> containsFilter,
-            JControllerState currentState, Set<Folder> permittedFolders) {
+            JControllerState currentState, AuthFolders permittedFolders) {
         
         Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.and(containsFilter, OrdersHelper::isResumable);
         ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
@@ -430,7 +432,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
             throw new JocBadRequestException("The orders are neither failed nor suspended");
         }
 
-        Set<JWorkflowId> notPermittedWorkflows = resumableOrders.keySet().stream().filter(wId -> !OrdersHelper.canAdd(WorkflowPaths.getPath(
+        Set<JWorkflowId> notPermittedWorkflows = resumableOrders.keySet().stream().filter(wId -> !JOCResourceImpl.canAdd(WorkflowPaths.getPath(
                 wId), permittedFolders)).collect(Collectors.toSet());
         for (JWorkflowId notPermittedWorkflow : notPermittedWorkflows) {
             resumableOrders.remove(notPermittedWorkflow);
@@ -444,7 +446,7 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     public Map<JOrder, Optional<JPosition>> filterOrdersbyLabelOrPosition(Set<String> orders, Object positionOrLabel, boolean force,
-            JControllerState currentState, Set<Folder> permittedFolders) {
+            JControllerState currentState, AuthFolders permittedFolders) {
         if (positionOrLabel != null) {
             if (positionOrLabel instanceof String) {
                 return filterOrdersbyLabel(orders, (String) positionOrLabel, force, currentState, permittedFolders);
@@ -460,12 +462,12 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
     }
     
     private Map<JOrder, Optional<JPosition>> filterOrdersbyLabel(Set<String> orders, String label, boolean force, JControllerState currentState,
-            Set<Folder> permittedFolders) {
+            AuthFolders permittedFolders) {
         return filterOrdersbyLabel(getResumableOrders(orders, currentState, permittedFolders), label, force, currentState);
     }
     
-    private Map<JOrder, Optional<JPosition>> filterOrdersbyPosition(Set<String> orders, List<Object> position, boolean force, JControllerState currentState,
-            Set<Folder> permittedFolders) {
+    private Map<JOrder, Optional<JPosition>> filterOrdersbyPosition(Set<String> orders, List<Object> position, boolean force,
+            JControllerState currentState, AuthFolders permittedFolders) {
         return filterOrdersbyPosition(getResumableOrders(orders, currentState, permittedFolders), position, force, currentState);
     }
     

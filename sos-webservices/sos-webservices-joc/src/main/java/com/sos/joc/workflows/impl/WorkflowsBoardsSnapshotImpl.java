@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.board.PlannedBoard;
 import com.sos.inventory.model.board.BoardType;
@@ -82,11 +83,12 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             if (response != null) {
                 return response;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                    .getNoticeBoards().getView());
+            
             currentState = Proxy.of(controllerId).currentState();
             Set<OrderId> orderIds = new HashSet<>();
             Set<String> expectingOrderIds = new HashSet<>();
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
             WorkflowsBoardsV entity = new WorkflowsBoardsV();
             entity.setSurveyDate(Date.from(currentState.instant()));
@@ -151,7 +153,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
             entity.setNoticeBoards(pbs);
             
             Map<String, WorkflowBoards> wbsMap = WorkflowRefs.getWorkflowNamesWithBoards(controllerId);
-            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            if (permittedFolders != null) {
                 wbsMap = wbsMap.entrySet().stream().filter(e -> canAdd(e.getValue().getPath(), permittedFolders)).collect(Collectors.toMap(
                         Map.Entry::getKey, Map.Entry::getValue));
             }
@@ -225,8 +227,10 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
                 idToOrder.getAdditionalProperties().putAll(jOrdersPerWorkflowFuturePresent);
             });
             
+            AuthFolders permittedFoldersForOrders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                    .getOrders().getView());
             idToOrder.getAdditionalProperties().putAll(getExpectingOrders(OrdersHelper.getPermittedJOrdersFromOrderIds(expectingOrderIds.stream().map(
-                    OrderId::of), permittedFolders, currentState)));
+                    OrderId::of), permittedFoldersForOrders, currentState)));
 
             entity.setPostingWorkflows(postingWorkflows);
             entity.setExpectingWorkflows(expectingWorkflows);

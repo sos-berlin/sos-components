@@ -11,6 +11,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -54,7 +55,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getView());
+            
             JControllerState currentState = Proxy.of(controllerId).currentState();
             Instant surveyDateInstant = currentState.instant();
             JOrder jOrder = currentState.idToOrder().get(OrderId.of(orderFilter.getOrderId()));
@@ -66,10 +69,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
                 Map<List<Object>, String> positionToLabelsMap = getPositionToLabelsMap(controllerId, jOrder.workflowId());
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), permittedFolders,
                         orderTags, waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
                                 currentState)), surveyDateInstant.toEpochMilli(), OrdersHelper.getDailyPlanTimeZone());
-                checkFolderPermissions(o.getWorkflowId().getPath());
                 o.setLabel(positionToLabelsMap.get(o.getPosition()));
                 o.setHasChildOrders(currentState.orderIds().stream().map(OrderId::string).anyMatch(s -> s.startsWith(o.getOrderId() + "|")));
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {

@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.order.ExpectedNotice;
@@ -91,7 +91,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.AddOrder;
@@ -526,7 +525,7 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact,
-            Set<Folder> listOfFolders, Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
+            AuthFolders permittedFolders, Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
@@ -698,7 +697,7 @@ public class OrdersHelper {
             o.setScheduledFor(surveyDateMillis);
         }
         wId.setPath(WorkflowPaths.getPath(oItem.getWorkflowPosition().getWorkflowId()));
-        if (listOfFolders != null && !canAdd(wId.getPath(), listOfFolders)) {
+        if (permittedFolders != null && !JOCResourceImpl.canAdd(wId.getPath(), permittedFolders)) {
             throw new JocFolderPermissionsException("Access denied for folder: " + getParent(wId.getPath()));
         }
         o.setWorkflowId(wId);
@@ -776,13 +775,13 @@ public class OrdersHelper {
         return null;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, AuthFolders permittedFolders,
             Map<String, Set<String>> orderTags, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis, ZoneId zoneId) throws JsonMappingException,
             JsonProcessingException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, orderTags, blockedButWaitingForAdmissionOrderIds,
+        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, permittedFolders, orderTags, blockedButWaitingForAdmissionOrderIds,
                 finalParameters, surveyDateMillis, zoneId);
     }
 
@@ -1206,26 +1205,10 @@ public class OrdersHelper {
         return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).distinct();
     }
 
-    // public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
-    // DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, ZoneId zoneId,
-    // SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-    // DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-    // ExecutionException {
-    //
-    // Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
-    // if (temporaryOrderIds.isEmpty()) {
-    // return result;
-    // }
-    // JControllerProxy proxy = Proxy.of(dailyplanModifyOrder.getControllerId());
-    // JControllerState currentState = proxy.currentState();
-    // return cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, jocError, auditlogId, proxy, currentState,
-    // zoneId, folderPermissions);
-    // }
-
     public static Either<List<Err419>, OrderIdMap> cancelAndAddFreshOrder(Collection<String> temporaryOrderIds,
             DailyPlanModifyOrder dailyplanModifyOrder, String accessToken, JocError jocError, Long auditlogId, JControllerProxy proxy,
             JControllerState currentState, ZoneId zoneId, Map<String, List<Object>> labelMap, Set<BlockPosition> availableBlockPositions,
-            SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            AuthFolders permittedFolders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             JocConfigurationException, ExecutionException {
 
         Either<List<Err419>, OrderIdMap> result = Either.right(new OrderIdMap());
@@ -1256,7 +1239,7 @@ public class OrdersHelper {
                 Either<Problem, JWorkflow> e = currentState.repo().idToCheckedWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(workflowName);
-                if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
+                if (!JOCResourceImpl.canAdd(workflowPath, permittedFolders)) {
                     throw new JocFolderPermissionsException(workflowPath);
                 }
 
@@ -1635,13 +1618,6 @@ public class OrdersHelper {
             String controllerId) {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(workflowName), orderId, controllerId)),
                 auditlogId);
-    }
-
-    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
-        if (path == null || !path.startsWith("/")) {
-            return false;
-        }
-        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
     private static String getParent(String path) {
@@ -2100,18 +2076,20 @@ public class OrdersHelper {
         return endPoss;
     }
     
-    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Collection<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
-        return getPermittedJOrdersFromOrderIds(orderids.stream(), permittedFolders, controllerState);
+    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Collection<OrderId> orderids, AuthFolders permittedFoldersForOrders,
+            JControllerState controllerState) {
+        return getPermittedJOrdersFromOrderIds(orderids.stream(), permittedFoldersForOrders, controllerState);
     }
     
     public static Stream<JOrder> getJOrdersFromOrderIds(Stream<OrderId> orderids, JControllerState controllerState) {
         return orderids.map(o -> controllerState.idToOrder().get(o)).filter(Objects::nonNull);
     }
     
-    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Stream<OrderId> orderids, Set<Folder> permittedFolders, JControllerState controllerState) {
+    public static Stream<JOrder> getPermittedJOrdersFromOrderIds(Stream<OrderId> orderids, AuthFolders permittedFoldersForOrders,
+            JControllerState controllerState) {
         Stream<JOrder> orders = getJOrdersFromOrderIds(orderids, controllerState);
-        if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            orders = orders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
+        if (permittedFoldersForOrders != null) {
+            orders = orders.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFoldersForOrders));
         }
         return orders;
     }

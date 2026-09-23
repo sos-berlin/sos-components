@@ -127,7 +127,9 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
                     }
                 };
 
-                orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, folderPermissions.getListOfFolders(), currentState).map(mapJOrderToOrderV)
+                AuthFolders permittedFoldersForOrders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                        .getOrders().getView());
+                orders = OrdersHelper.getPermittedJOrdersFromOrderIds(eos, permittedFoldersForOrders, currentState).map(mapJOrderToOrderV)
                         .filter(Objects::nonNull).collect(Collectors.toMap(o -> OrderId.of(o.getOrderId()), Function.identity()));
             }
             
