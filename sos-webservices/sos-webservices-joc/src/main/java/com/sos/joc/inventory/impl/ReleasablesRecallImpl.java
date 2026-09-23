@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.schedule.Schedule;
@@ -85,6 +86,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
                 recallFilter.setTransactionId(UUID.randomUUID().toString());
             }
+            // TODO: JOC-2255 folder permission check is missing
            
             new Thread(() -> {
                 SOSHibernateSession hibernateSession = null;
@@ -144,7 +146,8 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             InventoryDBLayer dbInvLayer = new InventoryDBLayer(hibernateSession);
             DBLayerDeploy dbDepLayer = new DBLayerDeploy(hibernateSession);
             
-            if (!folderPermissions.isPermittedForFolder(recallFilter.getPath())) {
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
+            if (!folderIsPermitted(recallFilter.getPath(), authFolders)) {
                 throw new JocFolderPermissionsException("Access denied: " + recallFilter.getPath());
             }
             

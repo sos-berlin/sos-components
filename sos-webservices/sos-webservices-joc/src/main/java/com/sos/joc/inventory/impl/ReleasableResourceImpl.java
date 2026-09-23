@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -45,7 +46,8 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
 
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasable(in)));
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(releasable(in, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -53,13 +55,13 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         }
     }
 
-    private ResponseReleasable releasable(ReleasableFilter in) throws Exception {
+    private ResponseReleasable releasable(ReleasableFilter in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
+            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
 
             if (ConfigurationType.FOLDER.equals(type)) {
