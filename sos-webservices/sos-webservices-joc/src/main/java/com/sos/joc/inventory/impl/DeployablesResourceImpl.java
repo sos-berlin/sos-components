@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -66,7 +66,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, false)));
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, false, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -88,7 +89,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 if (in.getFolder().isEmpty()) {
                     in.setFolder("/");
                 }
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, true)));
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(deployables(in, true, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -96,7 +98,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private ResponseDeployables deployables(DeployablesFilter in, boolean withTree) throws Exception {
+    private ResponseDeployables deployables(DeployablesFilter in, boolean withTree, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             if (in.getWithoutDeployed() == Boolean.TRUE && in.getWithoutDrafts() == Boolean.TRUE) {
@@ -110,7 +112,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 return result;
             }
             
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
@@ -125,7 +126,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
             if (folder != null && folder.getDeleted()) {
-                deployables.addAll(getResponseStreamOfDeletedItem(Arrays.asList(folder), Collections.emptyList(), permittedFolders));
+                deployables.addAll(getResponseStreamOfDeletedItem(Arrays.asList(folder), Collections.emptyList(), authFolders));
             } else {
                 // get deleted folders
                 List<String> deletedFolders = dbLayer.getDeletedFolders();
@@ -134,10 +135,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Collections.singleton(
                             ConfigurationType.FOLDER.intValue()), false);
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
-                            .getRecursive(), deletedFolders), folders, permittedFolders));
+                            .getRecursive(), deletedFolders), folders, authFolders));
                 }
                 deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(deployableTypes, in.getFolder(), in
-                        .getRecursive(), deletedFolders), in.getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(),
+                        .getRecursive(), deletedFolders), in.getOnlyValidObjects(), authFolders, in.getWithoutDrafts(), in.getWithoutDeployed(),
                         in.getLatest()));
             }
             
@@ -162,7 +163,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 Path folderPath = Paths.get(in.getFolder());
                 SortedSet<ResponseDeployables> responseDeployablesFolder = initTreeByFolder(folderPath, in.getRecursive(), in.getOnlyValidObjects(),
                         deployableTypes, dbLayer).stream().filter(fld -> {
-                            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(fld.getPath(), permittedFolders);
+                            boolean isPermittedForFolder = folderIsPermitted(fld.getPath(), authFolders);
                             boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(fld.getPath());
 
                             return isPermittedForFolder || isNotPermittedParentFolder;
@@ -199,11 +200,11 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     }
     
     private Set<ResponseDeployableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
-            List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
+            List<DBItemInventoryConfiguration> folders, AuthFolders authFolders) {
         if (deletedConfs != null) {
             Map<String, DBItemInventoryConfiguration> foldersMap = folders.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
                     Function.identity()));
-            Set<ResponseDeployableTreeItem> items = deletedConfs.stream().filter(item -> folderIsPermitted(item.getFolder(), permittedFolders)).map(
+            Set<ResponseDeployableTreeItem> items = deletedConfs.stream().filter(item -> folderIsPermitted(item.getFolder(), authFolders)).map(
                     item -> DeployableResourceImpl.getResponseDeployableTreeItem(item)).collect(Collectors.toSet());
             // add parent folders
             Set<ResponseDeployableTreeItem> parentFolders = new HashSet<>();
@@ -223,7 +224,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     }
     
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map,
-            Boolean onlyValidObjects, Set<Folder> permittedFolders, Boolean withoutDrafts, Boolean withoutDeployed, Boolean onlyLatest) {
+            Boolean onlyValidObjects, AuthFolders authFolders, Boolean withoutDrafts, Boolean withoutDeployed, Boolean onlyLatest) {
         if (map != null) {
             Set<DBItemInventoryConfiguration> toRemoves = new HashSet<>();
             
@@ -261,7 +262,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             };
             return map.entrySet().stream()
                     .filter(folderIsNotEmpty)
-                    .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), permittedFolders))
+                    .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), authFolders))
                     .map(entry -> {
                         DBItemInventoryConfiguration conf = entry.getKey();
                         Set<InventoryDeploymentItem> deployments = entry.getValue();

@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -37,7 +38,8 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
-                response = read(in);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = read(in, authFolders);
             }
             return response;
 
@@ -46,14 +48,14 @@ public class ReadAddOrderPositionsImpl extends JOCResourceImpl implements IReadA
         }
     }
 
-    private JOCDefaultResponse read(RequestWorkflowFilter in) throws Exception {
+    private JOCDefaultResponse read(RequestWorkflowFilter in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getWorkflowPath(), ConfigurationType.WORKFLOW,
-                    folderPermissions);
+                    authFolders);
 
             OrdersPositions entry = new OrdersPositions();
             entry.setSurveyDate(SOSDate.toUtcDate(config.getModified()));
