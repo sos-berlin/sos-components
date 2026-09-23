@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
@@ -39,7 +40,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
     private static final String INVENTORY_TRASH_IMPL_PATH = JocInventory.getResourceImplPath("trash/read/folder");
     private static final String DESCRIPTOR_TRASH_IMPL_PATH = "./descriptor/trash/read/folder";
 
-    public ResponseFolder readFolder(RequestFolder in, String action) throws Exception {
+    public ResponseFolder readFolder(RequestFolder in, String action, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(action);
@@ -78,8 +79,6 @@ public abstract class AReadFolder extends JOCResourceImpl {
                 }
             }
 
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-
             if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem item : items) {
                     ResponseFolderItem config = item.toResponseFolderItem();
@@ -87,7 +86,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
                         continue;
                     }
                     // for in.getRecursive() == false: the folder permissions are already checked earlier
-                    if (in.getRecursive() == Boolean.TRUE && !canAdd(config.getPath(), permittedFolders)) {
+                    if (in.getRecursive() == Boolean.TRUE && !canAdd(config.getPath(), authFolders)) {
                         continue;
                     }
                     ConfigurationType type = config.getObjectType();
@@ -185,12 +184,12 @@ public abstract class AReadFolder extends JOCResourceImpl {
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public JOCDefaultResponse checkPermissions(final RequestFolder in, boolean permission) throws Exception {
+    public JOCDefaultResponse checkPermissions(final RequestFolder in, boolean permission, AuthFolders authFolders) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {
-                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getPath())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderIsPermitted(in.getPath(), authFolders)) {
                     ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getPath());
@@ -198,7 +197,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
                 }
 
             } else {
-                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getPath())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderIsPermitted(in.getPath(), authFolders)) {
                     response = accessDeniedResponse();
                 }
             }

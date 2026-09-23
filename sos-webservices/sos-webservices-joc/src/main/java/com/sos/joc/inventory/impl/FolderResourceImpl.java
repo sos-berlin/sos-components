@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -21,11 +22,13 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
-
+            
             in.setPath(normalizeFolder(in.getPath()));
-            JOCDefaultResponse response = checkPermissions(in, getBasicJocPermissions().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            
+            JOCDefaultResponse response = checkPermissions(in, getBasicJocPermissions().getInventory().getView(), authFolders);
             if (response == null) {
-                ResponseFolder folder = readFolder(in, IMPL_PATH);
+                ResponseFolder folder = readFolder(in, IMPL_PATH, authFolders);
                 folder.setDeploymentDescriptors(null);
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(folder));
             }
@@ -41,11 +44,13 @@ public class FolderResourceImpl extends AReadFolder implements IFolderResource {
             inBytes = initLogging(TRASH_IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
-
+            
             in.setPath(normalizeFolder(in.getPath()));
-            JOCDefaultResponse response = checkPermissions(in, getBasicJocPermissions().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            
+            JOCDefaultResponse response = checkPermissions(in, getBasicJocPermissions().getInventory().getView(), authFolders);
             if (response == null) {
-                ResponseFolder folder = readFolder(in, TRASH_IMPL_PATH);
+                ResponseFolder folder = readFolder(in, TRASH_IMPL_PATH, authFolders);
                 folder.setDeploymentDescriptors(null);
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(folder));
             }
