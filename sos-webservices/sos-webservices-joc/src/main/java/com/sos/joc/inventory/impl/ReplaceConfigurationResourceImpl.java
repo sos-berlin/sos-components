@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
@@ -50,7 +51,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = replace(in);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = replace(in, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -67,7 +69,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = replaceFolder(in);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = replaceFolder(in, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -75,7 +78,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse replaceFolder(RequestFolder in) throws Exception {
+    private JOCDefaultResponse replaceFolder(RequestFolder in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_FOLDER);
@@ -84,7 +87,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             session.beginTransaction();
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
-                    folderPermissions);
+                    authFolders);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             String search = in.getSearch().replaceAll("%", ".*");
@@ -138,7 +141,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse replace(RequestFilters in) throws Exception {
+    private JOCDefaultResponse replace(RequestFilters in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
 
@@ -160,7 +163,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
 
             for (RequestFilter r : requests) {
-                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
+                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, authFolders);
 
                 String newName = config.getName().replaceAll(search, replace);
                 final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(newName);

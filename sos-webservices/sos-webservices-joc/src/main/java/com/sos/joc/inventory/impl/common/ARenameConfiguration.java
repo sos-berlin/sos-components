@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -43,7 +44,7 @@ import com.sos.joc.model.inventory.rename.RequestFilter;
 
 public abstract class ARenameConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse rename(RequestFilter in, String request) throws Exception {
+    public JOCDefaultResponse rename(RequestFilter in, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         List<DBItemInventoryConfiguration> updated = new ArrayList<DBItemInventoryConfiguration>(); 
         try {
@@ -52,7 +53,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             session.beginTransaction();
-            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
+            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
 
             if (JocInventory.isFolder(type) && JocInventory.ROOT_FOLDER.equals(config.getPath())) {
@@ -86,11 +87,11 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
 
             // Check folder permissions
             if (JocInventory.isFolder(type)) {
-                if (!folderPermissions.isPermittedForFolder(newPath)) {
+                if (!folderIsPermitted(newPath, authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newPath);
                 }
             } else {
-                if (!folderPermissions.isPermittedForFolder(newFolder)) {
+                if (!folderIsPermitted(newFolder, authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
                 }
             }
