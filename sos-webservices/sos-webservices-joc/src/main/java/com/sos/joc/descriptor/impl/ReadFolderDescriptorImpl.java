@@ -2,6 +2,7 @@ package com.sos.joc.descriptor.impl;
 
 import java.util.Arrays;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IReadFolderDescriptor;
@@ -25,9 +26,10 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
             JsonValidator.validate(body, RequestFolder.class);
             com.sos.joc.model.inventory.common.RequestFolder filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
-            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView(), authFolders);
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, false)));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, false, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -44,9 +46,10 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.common.RequestFolder.class);
 
             filter.setPath(normalizeFolder(filter.getPath()));
-            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            JOCDefaultResponse response = checkPermissions(filter, getBasicJocPermissions().getInventory().getView(), authFolders);
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, true)));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(readFolder(accessToken, filter, true, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -54,16 +57,16 @@ public class ReadFolderDescriptorImpl extends AReadFolder implements IReadFolder
         }
     }
 
-    private ResponseFolder readFolder (String accessToken, com.sos.joc.model.inventory.common.RequestFolder filter, boolean forTrash)
-            throws Exception {
+    private ResponseFolder readFolder (String accessToken, com.sos.joc.model.inventory.common.RequestFolder filter, boolean forTrash, 
+            AuthFolders authFolders) throws Exception {
         filter.setPath(normalizeFolder(filter.getPath()));
         filter.setObjectTypes(Arrays.asList(new ConfigurationType[]{ConfigurationType.DEPLOYMENTDESCRIPTOR}));
         filter.setControllerId(null);
         ResponseFolder folder = null;
         if(forTrash) {
-            folder = readFolder(filter, IMPL_PATH_TRASH_READ_FOLDER);
+            folder = readFolder(filter, IMPL_PATH_TRASH_READ_FOLDER, authFolders);
         } else {
-            folder = readFolder(filter, IMPL_PATH_READ_FOLDER);
+            folder = readFolder(filter, IMPL_PATH_READ_FOLDER, authFolders);
         }
         folder.setCalendars(null);
         folder.setFileOrderSources(null);

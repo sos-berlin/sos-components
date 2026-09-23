@@ -1,5 +1,6 @@
 package com.sos.joc.descriptor.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IReadDescriptor;
@@ -26,7 +27,8 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 filter.setObjectType(ConfigurationType.DEPLOYMENTDESCRIPTOR);
-                response = read(filter, IMPL_PATH_READ);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = read(filter, IMPL_PATH_READ, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -45,7 +47,8 @@ public class ReadDescriptorImpl extends AReadConfiguration implements IReadDescr
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 filter.setObjectType(ConfigurationType.DEPLOYMENTDESCRIPTOR);
-                response = readTrash(filter, PATH_TRASH_READ);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = readTrash(filter, PATH_TRASH_READ, authFolders);
             }
             return response;
         } catch (Exception e) {

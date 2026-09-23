@@ -1,5 +1,6 @@
 package com.sos.joc.descriptor.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRestoreDescriptor;
@@ -23,7 +24,8 @@ public class RestoreDescriptorImpl extends ARestoreConfiguration implements IRes
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.restore.RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = restore(filter, IMPL_PATH_RESTORE, true);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = restore(filter, IMPL_PATH_RESTORE, true, authFolders);
             }
             return response;
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.sos.joc.descriptor.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRenameDescriptor;
@@ -23,7 +24,8 @@ public class RenameDescriptorImpl extends ARenameConfiguration implements IRenam
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.rename.RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = rename(filter, IMPL_PATH_RENAME);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = rename(filter, IMPL_PATH_RENAME, authFolders);
             }
             return response;
         } catch (Exception e) {

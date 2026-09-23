@@ -1,5 +1,6 @@
 package com.sos.joc.descriptor.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.ICopyDescriptor;
@@ -24,7 +25,8 @@ public class CopyDescriptorImpl extends ACopyConfiguration implements ICopyDescr
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = copy(in, true, IMPL_PATH_COPY);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = copy(in, true, IMPL_PATH_COPY, authFolders);
             }
             return response;
         } catch (Exception e) {

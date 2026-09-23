@@ -3,6 +3,7 @@ package com.sos.joc.descriptor.impl;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.descriptor.resource.IRemoveDescriptor;
@@ -30,7 +31,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             com.sos.joc.model.inventory.delete.RequestFilters in = mapTo(filters);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = remove(accessToken, in, IMPL_PATH_REMOVE);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = remove(accessToken, in, IMPL_PATH_REMOVE, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -49,7 +51,8 @@ public class RemoveDescriptorImpl extends ADeleteConfiguration implements IRemov
             in.setObjectTypes(Arrays.asList(new ConfigurationType[] {ConfigurationType.DEPLOYMENTDESCRIPTOR, ConfigurationType.DESCRIPTORFOLDER}));
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = removeFolder(accessToken, in, true, IMPL_PATH_REMOVE_FOLDER);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = removeFolder(accessToken, in, true, IMPL_PATH_REMOVE_FOLDER, authFolders);
             }
             return response;
         } catch (Exception e) {
