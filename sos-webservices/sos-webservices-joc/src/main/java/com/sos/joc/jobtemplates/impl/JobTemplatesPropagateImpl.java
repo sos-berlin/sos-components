@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
@@ -75,12 +76,13 @@ public class JobTemplatesPropagateImpl extends JOCResourceImpl implements IJobTe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             List<String> jobTemplateNames = jobTemplatesFilter.getJobTemplates().stream().map(JobTemplatePropagateFilter::getPath).map(
                     JocInventory::pathToName).distinct().collect(Collectors.toList());
