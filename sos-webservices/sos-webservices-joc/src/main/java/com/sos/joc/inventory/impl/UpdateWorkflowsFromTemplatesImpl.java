@@ -7,11 +7,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.job.Job;
@@ -31,7 +31,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.inventory.resource.IUpdateWorkflowsFromTemplates;
 import com.sos.joc.jobtemplates.impl.JobTemplatesResourceImpl;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolder;
 import com.sos.joc.model.jobtemplate.propagate.JobReportStateText;
@@ -53,9 +52,10 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             WorkflowPropagateFilter in = Globals.objectMapper.readValue(inBytes, WorkflowPropagateFilter.class);
 
             in.setFolder(normalizeFolder(in.getFolder()));
-            JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions().map(p -> p.getInventory().getManage()));
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getJocPermissions().map(p -> p.getInventory().getManage()), authFolders);
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private Report update(WorkflowPropagateFilter in) throws Exception {
+    private Report update(WorkflowPropagateFilter in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -79,9 +79,8 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             } else {
                 dbWorkflows = dbLayer.getUsedWorkflowsByJobTemplateNames(in.getFolder(), in.getRecursive() == Boolean.TRUE, null);
             }
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            JobTemplatesPropagate propagate = new JobTemplatesPropagate(in, permittedFolders);
+            JobTemplatesPropagate propagate = new JobTemplatesPropagate(in, authFolders);
 
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
@@ -91,7 +90,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
             JocError jocError = getJocError();
             if (dbWorkflows != null && !dbWorkflows.isEmpty()) {
                 for (DBItemInventoryConfiguration dbWorkflow : dbWorkflows) {
-                    if (!folderIsPermitted(dbWorkflow.getFolder(), permittedFolders)) {
+                    if (!folderIsPermitted(dbWorkflow.getFolder(), authFolders)) {
                         WorkflowReport wr = new WorkflowReport();
                         wr.setPath(dbWorkflow.getPath());
                         wr.setState(JobTemplatesPropagate.getState(JobReportStateText.PERMISSION_DENIED));
@@ -144,13 +143,14 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission)
+    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission, 
+            AuthFolders authFolders)
             throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null && in.getFolder() != null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getFolder())) {
-                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getFolder())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderIsPermitted(in.getFolder(), authFolders)) {
                     ResponseFolder entity = new ResponseFolder();
                     entity.setDeliveryDate(Date.from(Instant.now()));
                     entity.setPath(in.getFolder());
@@ -158,7 +158,7 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
                 }
 
             } else {
-                if (in.getRecursive() != Boolean.TRUE && !folderPermissions.isPermittedForFolder(in.getFolder())) {
+                if (in.getRecursive() != Boolean.TRUE && !folderIsPermitted(in.getFolder(), authFolders)) {
                     response = accessDeniedResponse();
                 }
             }

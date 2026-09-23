@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.joc.Globals;
@@ -60,7 +61,8 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
             }
             
             // Check folder permissions
-            if (JocInventory.isFolder(in.getObjectType()) && !folderPermissions.isPermittedForFolder(p)) {
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+            if (JocInventory.isFolder(in.getObjectType()) && !folderIsPermitted(p, authFolders)) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + p);
             }
             

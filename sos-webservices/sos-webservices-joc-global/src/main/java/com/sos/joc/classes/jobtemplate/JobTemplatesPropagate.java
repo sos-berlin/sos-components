@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.instruction.AdmissionTime;
@@ -50,7 +51,6 @@ import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.propagate.Actions;
 import com.sos.joc.model.jobtemplate.propagate.JobReport;
@@ -97,14 +97,14 @@ public class JobTemplatesPropagate {
     private boolean overwriteValues = false;
     private boolean withOptionalArgs = false;
     private boolean deleteUnknownNodeProps = false;
-    private Set<Folder> permittedFolders = null;
+    private AuthFolders permittedFolders = null;
     private Set<DBItemInventoryConfiguration> changedWorkflowDbItems = new HashSet<>();
 
     public JobTemplatesPropagate() {
         //
     }
 
-    public JobTemplatesPropagate(JobTemplatesPropagateBaseFilter filter, Set<Folder> permittedFolders) {
+    public JobTemplatesPropagate(JobTemplatesPropagateBaseFilter filter, AuthFolders permittedFolders) {
         this.withAdmissionTime = filter.getOverwriteAdmissionTime() == Boolean.TRUE;
         this.withNotification = filter.getOverwriteNotification() == Boolean.TRUE;
         this.overwriteValues = filter.getOverwriteValues() == Boolean.TRUE;
