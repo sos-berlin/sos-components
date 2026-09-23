@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
@@ -78,7 +79,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(ADeleteConfiguration.class);
     private static final String SEMAPHORE_ID = "REMOVE";
     
-    public JOCDefaultResponse remove(String accessToken, RequestFilters in, String request) throws Exception {
+    public JOCDefaultResponse remove(String accessToken, RequestFilters in, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -98,7 +99,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             List<Long> workflowInvIds = new ArrayList<>();
                     
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
-                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
+                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, authFolders);
                 configs.add(config);
                 
                 if (JocInventory.isReleasable(config.getTypeAsEnum())) {
@@ -148,11 +149,12 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
     
-    public JOCDefaultResponse removeFolder(String accessToken, RequestFolder in, String request) throws Exception {
-        return removeFolder(accessToken, in, false, request);
+    public JOCDefaultResponse removeFolder(String accessToken, RequestFolder in, String request, AuthFolders authFolders) throws Exception {
+        return removeFolder(accessToken, in, false, request, authFolders);
     }
 
-    public JOCDefaultResponse removeFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request) throws Exception {
+    public JOCDefaultResponse removeFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request, AuthFolders authFolders)
+            throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -166,6 +168,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             
             if (!forDescriptors) {
                 DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
+                // TODO: Missing Folder permission check
                 List<DBItemInventoryConfiguration> configs = dbLayer.getFolderContent(folder.getPath(), true, null, false);
                 Map<Long, DBItemInventoryReleasedConfiguration> released = new HashMap<>();
                 Set<String> scheduleNames = new HashSet<>();
@@ -203,6 +206,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                         dbAuditLog, auditLogObjectsLogging, in.getCancelOrdersDateFrom());
 
             } else {
+                // TODO: Missing Folder permission check
                 List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, Collections.singleton(
                         ConfigurationType.DEPLOYMENTDESCRIPTOR.intValue()), forDescriptors);
                 for (DBItemInventoryConfiguration descriptor : folderContent) {

@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -25,7 +26,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = remove(accessToken, in, IMPL_PATH_DELETE);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = remove(accessToken, in, IMPL_PATH_DELETE, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -43,7 +45,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = removeFolder(accessToken, in, IMPL_PATH_FOLDER_DELETE);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = removeFolder(accessToken, in, IMPL_PATH_FOLDER_DELETE, authFolders);
             }
             return response;
         } catch (Exception e) {

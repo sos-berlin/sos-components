@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -58,7 +59,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = delete(in);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = delete(in, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -75,7 +77,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = deleteFolder(in, true);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = deleteFolder(in, true, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -83,7 +86,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private JOCDefaultResponse delete(RequestFilters in) throws Exception {
+    private JOCDefaultResponse delete(RequestFilters in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -103,7 +106,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             for (RequestFilter r : requests) {
-                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
+                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, authFolders);
                 if (config.getDeployed() || config.getReleased()) {
                     if (requests.size() == 1) {
                         throw new DBMissingDataException(String.format("Draft of [%s] doesn't exist", config.getPath()));
@@ -147,7 +150,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private JOCDefaultResponse deleteFolder(RequestFolder in, boolean withDeletionOfEmptyFolders) throws Exception {
+    private JOCDefaultResponse deleteFolder(RequestFolder in, boolean withDeletionOfEmptyFolders, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_FOLDER);
@@ -157,7 +160,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Globals.beginTransaction(session);
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
-                    folderPermissions);
+                    authFolders);
             ResponseItem entity = new ResponseItem();
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null, false);
