@@ -36,6 +36,7 @@ public class DailyPlanSettings {
     private boolean overwrite = false;
     private boolean submit = true;
 
+    @Deprecated
     private Set<Folder> permittedFolders;
 
     private int daysAheadPlan = 0;
