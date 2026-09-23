@@ -37,6 +37,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
             JsonValidator.validateFailFast(body, PathFilter.class);
             PathFilter filter = Globals.objectMapper.readValue(body, PathFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getView());
+            // TODO: JOC-2255 folder permission check is missing
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

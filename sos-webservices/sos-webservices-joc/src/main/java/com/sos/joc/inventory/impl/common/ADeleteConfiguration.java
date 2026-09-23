@@ -168,7 +168,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             
             if (!forDescriptors) {
                 DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
-                // TODO: Missing Folder permission check
+                // TODO: JOC-2255 Missing Folder permission check
                 List<DBItemInventoryConfiguration> configs = dbLayer.getFolderContent(folder.getPath(), true, null, false);
                 Map<Long, DBItemInventoryReleasedConfiguration> released = new HashMap<>();
                 Set<String> scheduleNames = new HashSet<>();

@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -24,7 +25,8 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
-                response = read(in, IMPL_PATH);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = read(in, IMPL_PATH, authFolders);
             }
             return response;
 
@@ -43,7 +45,8 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
-                response = readTrash(in, TRASH_IMPL_PATH);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = readTrash(in, TRASH_IMPL_PATH, authFolders);
             }
             return response;
 

@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -38,13 +39,13 @@ import js7.data_for_java.controller.JControllerState;
 
 public abstract class AReadConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse read(RequestFilter in, String request) throws Exception {
+    public JOCDefaultResponse read(RequestFilter in, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
+            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
 
             ConfigurationObject item = new ConfigurationObject();
@@ -183,12 +184,12 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
         }
     }
 
-    public JOCDefaultResponse readTrash(RequestFilter in, String request) throws Exception {
+    public JOCDefaultResponse readTrash(RequestFilter in, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
+            // TODO: JOC-2255 Adjust JocInventory.getTrashConfiguration to use AuthFolders instead
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
 

@@ -38,6 +38,7 @@ public class ReferenceResourceImpl extends JOCResourceImpl implements IReference
 
     @Override
     public JOCDefaultResponse post(final String accessToken, String objectType, byte[] inBytes) {
+        // TODO: JOC-2255 folder permission check is missing
         try {
             String apiCall = String.format("./%s/%s/%s", JocInventory.APPLICATION_PATH, objectType, "references"); 
             inBytes = initLogging(apiCall, inBytes, accessToken, CategoryType.INVENTORY);
