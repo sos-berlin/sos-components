@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -37,12 +38,14 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Statistics entity = new Statistics();
             entity.setSurveyDate(Date.from(Instant.now()));
+            // TODO: JOC-2255 adjust dblayer methods to use AuthFolders instead
             Map<ConfigurationType, Long> numOfDeployed = dbLayer.getNumOfDeployedObjects(controllerId, permittedFolders);
             Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects(controllerId, permittedFolders);
             entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -40,7 +41,7 @@ import com.sos.joc.model.inventory.restore.RequestFilter;
 
 public abstract class ARestoreConfiguration extends JOCResourceImpl {
 
-    public JOCDefaultResponse restore(RequestFilter in, String request, boolean forDescriptors) throws Exception {
+    public JOCDefaultResponse restore(RequestFilter in, String request, boolean forDescriptors, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
@@ -49,6 +50,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
             
             session.beginTransaction();
+            // TODO: JOC-2255 adjust JocInventory.getTrashConfiguration method to use AuthFolders instead
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             
@@ -75,7 +77,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             Set<DBItemInventoryConfiguration> updated = new HashSet<>();
             if (JocInventory.isFolder(type)) {
                 
-                if (!folderPermissions.isPermittedForFolder(newPathWithoutFix)) {
+                if (!folderIsPermitted(newPathWithoutFix, authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newPathWithoutFix);
                 }
                 
@@ -165,7 +167,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
                 
             } else {
                 
-                if (!folderPermissions.isPermittedForFolder(newFolder)) {
+                if (!folderIsPermitted(newFolder, authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
                 }
                 

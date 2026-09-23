@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.job.Job;
@@ -47,7 +48,8 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in)));
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(update(in, authFolders)));
             }
             return response;
         } catch (Exception e) {
@@ -55,7 +57,7 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
         }
     }
 
-    private JobReport update(JobPropagateFilter in) throws Exception {
+    private JobReport update(JobPropagateFilter in, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -64,9 +66,9 @@ public class UpdateJobFromTemplatesImpl extends JOCResourceImpl implements IUpda
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getWorkflowPath(), ConfigurationType.WORKFLOW,
-                    folderPermissions);
+                    authFolders);
 
-            JobTemplatesPropagate propagate = new JobTemplatesPropagate(in, folderPermissions.getListOfFolders());
+            JobTemplatesPropagate propagate = new JobTemplatesPropagate(in, authFolders);
 
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 

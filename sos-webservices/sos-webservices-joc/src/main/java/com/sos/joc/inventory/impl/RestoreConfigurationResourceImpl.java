@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -23,7 +24,8 @@ public class RestoreConfigurationResourceImpl extends ARestoreConfiguration impl
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = restore(in, TRASH_IMPL_PATH, false);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = restore(in, TRASH_IMPL_PATH, false, authFolders);
             }
             return response;
         } catch (Exception e) {

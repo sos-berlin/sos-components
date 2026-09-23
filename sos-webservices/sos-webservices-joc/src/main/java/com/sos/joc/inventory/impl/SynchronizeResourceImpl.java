@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -53,6 +54,7 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             if(filter.getAuditLog() != null) {
                 storeAuditLog(filter.getAuditLog());
             }
@@ -75,7 +77,6 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
                 // Map<objectType, Map<InventoryId, name>>
                 Map<Integer, Map<Long, String>> deployedNames = deployedDbLayer.getDeployedNames(deployedFilter);
                 
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 Set<String> parentFolders = new HashSet<String>();
                 boolean updated = false;
                 if (items != null) {
@@ -83,7 +84,7 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
                         if (item == null) {// e.g. unknown type
                             continue;
                         }
-                        if (filter.getRecursive() && !canAdd(item.getPath(), permittedFolders)) {
+                        if (filter.getRecursive() && !canAdd(item.getPath(), authFolders)) {
                             continue;
                         }
                         SyncState syncState = SyncStateHelper.getState(currentstate, item.getId(), item.getObjectType(),
