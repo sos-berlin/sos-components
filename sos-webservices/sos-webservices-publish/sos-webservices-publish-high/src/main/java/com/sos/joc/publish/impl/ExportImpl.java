@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -22,7 +23,6 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ControllerObject;
@@ -87,11 +87,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (forSigning != null) {
                 commitId = UUID.randomUUID().toString();
                 controllerId = forSigning.getControllerId();
-                folderPermissions.setSchedulerId(controllerId);
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                        getDeployments().getDeploy());
 
                 deployablesForSigning = ExportUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId, account);
-                deployablesForSigning = deployablesForSigning.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(
+                deployablesForSigning = deployablesForSigning.stream().filter(item -> canAdd(item.getPath(), authFolders)).filter(
                         Objects::nonNull).collect(Collectors.toSet());
                 final String controllerIdUsed = controllerId;
 
@@ -114,12 +114,12 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                         .intValue())), dbAudit.getId()));
             } else { // shallow copy
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
                 deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
-                deployablesForShallowCopy = deployablesForShallowCopy.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(
+                deployablesForShallowCopy = deployablesForShallowCopy.stream().filter(item -> canAdd(item.getPath(), authFolders)).filter(
                         Objects::nonNull).collect(Collectors.toSet());
                 releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
-                releasables = releasables.stream().filter(Objects::nonNull).filter(item -> canAdd(item.getPath(), permittedFolders)).collect(
+                releasables = releasables.stream().filter(Objects::nonNull).filter(item -> canAdd(item.getPath(), authFolders)).collect(
                         Collectors.toSet());
                 final Stream<ConfigurationObject> stream = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream());
                 CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()

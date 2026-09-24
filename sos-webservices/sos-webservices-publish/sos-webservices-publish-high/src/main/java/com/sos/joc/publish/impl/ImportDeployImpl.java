@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -41,6 +42,7 @@ import com.sos.joc.classes.board.BoardConverter;
 import com.sos.joc.classes.calendar.ControllerSettings;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.WorkflowConverter;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -126,6 +128,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             
             String account = getAccountName();
             stream = body.getEntityAs(InputStream.class);
+            String controllerId = filter.getControllerId();
+            Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
+                    getBasicControllerPermissions(availableController).getDeployments().getDeploy()).collect(Collectors.toSet());
+            if (!allowedControllerIds.contains(controllerId)) {
+                throw new JocDeployException("missing controller permissions to deploy to " + controllerId);
+            }
             Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();
 
@@ -151,7 +159,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             Map<ControllerObject, DBItemDepSignatures> importedObjects = new HashMap<ControllerObject, DBItemDepSignatures>();
-            String controllerId = filter.getControllerId();
+
             boolean foundWorkflow = false;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
                 if (commitId == null) {
@@ -180,7 +188,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(
                     Collectors.toSet());
             Set<DBItemInventoryConfiguration> objectsToCheckPathRenaming = new HashSet<DBItemInventoryConfiguration>();
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getDeployments().getDeploy());
             for (ControllerObject config : objectsWithSignature.keySet()) {
+                if(!canAdd(config.getPath(), authFolders)) {
+                    LOGGER.warn("missing controller folder permissions for path: " + config.getPath());
+                    continue;
+                }
                 SignaturePath signaturePath = objectsWithSignature.get(config);
                 switch (config.getObjectType()) {
                 case WORKFLOW:
