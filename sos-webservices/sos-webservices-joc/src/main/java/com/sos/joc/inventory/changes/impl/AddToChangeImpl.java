@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.changes.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,7 +28,8 @@ public class AddToChangeImpl extends AAddToChange implements IAddToChange {
             
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = addToChange(addFilter, API_CALL);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = addToChange(addFilter, API_CALL, authFolders);
             }
             return response;
         } catch (Exception e) {
