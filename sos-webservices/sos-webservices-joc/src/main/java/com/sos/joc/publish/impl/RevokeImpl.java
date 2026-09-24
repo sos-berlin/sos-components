@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -37,7 +38,6 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -129,18 +129,18 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
                         if (!allowedControllerIds.contains(controllerId)) {
                             continue;
                         }
+                        AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                                getControllerPermissionsPredicate().getDeployments().getDeploy());
                         List<DBItemDeploymentHistory> filteredDepHistoryItemsToRevoke = new ArrayList<DBItemDeploymentHistory>();
-                        folderPermissions.setSchedulerId(controllerId);
-                        Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         // store history entries for delete operation optimistically
                         if (depHistoryDBItemsToRevoke != null && !depHistoryDBItemsToRevoke.isEmpty()) {
                             filteredDepHistoryItemsToRevoke.addAll(depHistoryDBItemsToRevoke.stream()
-                                    .filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList()));
+                                    .filter(history -> canAdd(history.getPath(), authFolders)).collect(Collectors.toList()));
                         }
                         if (itemsPerControllerToRevokeFromFolder != null && !itemsPerControllerToRevokeFromFolder.isEmpty()) {
                             if(itemsPerControllerToRevokeFromFolder.containsKey(controllerId)) {
                                 filteredDepHistoryItemsToRevoke.addAll(itemsPerControllerToRevokeFromFolder.get(controllerId).stream()
-                                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders))
+                                        .filter(fromFolder -> canAdd(fromFolder.getPath(), authFolders))
                                         .filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
                                         .collect(Collectors.toList()));
                             }

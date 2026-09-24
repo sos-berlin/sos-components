@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -41,7 +42,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocNotImplementedException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -72,6 +72,7 @@ public abstract class ADeploy extends JOCResourceImpl {
 
     public void deploy(String xAccessToken, DeployFilter deployFilter, DBItemJocAuditLog dbAuditlog, JocSecurityLevel secLvl, String apiCall)
             throws Exception {
+        
         String account;
         SOSHibernateSession session = null;
         try {
@@ -198,8 +199,11 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if (!allowedControllerIds.contains(controllerId)) {
                     continue;
                 }
-                folderPermissions.setSchedulerId(controllerId);
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                        getControllerPermissionsPredicate().getDeployments().getDeploy());
+
+//                folderPermissions.setSchedulerId(controllerId);
+//                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
                 // sign deployed configurations with new versionId
                 Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
@@ -215,7 +219,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 }
                 if (unsignedDrafts != null) {
                     List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                            .filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                            .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders))
                             .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
                             .collect(Collectors.toList());
                     if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
@@ -240,7 +244,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                     // filter regarding folder permissions
                     List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                            .filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(dbItem -> cloneToNew(dbItem))
+                            .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders)).map(dbItem -> cloneToNew(dbItem))
                             .peek(item -> {
                                 try {
                                     item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
@@ -339,12 +343,15 @@ public abstract class ADeploy extends JOCResourceImpl {
             // loop 1: store db entries optimistically
             for (String controllerId : allowedControllerIds) {
                 List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
-                folderPermissions.setSchedulerId(controllerId);
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                        getControllerPermissionsPredicate().getDeployments().getDeploy());
+                
+//                folderPermissions.setSchedulerId(controllerId);
+//                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 // store history entries for delete operation optimistically
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                     filteredDepHistoryItemsToDelete.addAll(depHistoryDBItemsToDeployDelete.stream()
-                            .filter(history -> canAdd(history.getPath(), permittedFolders))
+                            .filter(history -> canAdd(history.getPath(), permittedAuthFolders))
                             .collect(Collectors.toList()));
                 }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
@@ -352,7 +359,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                     // second filter for not already deleted
                     // remember filtered items for later
                     filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
-                            .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders))
+                            .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedAuthFolders))
                             .filter(item -> item.getControllerId().equals(controllerId) 
                                     && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
                             .collect(Collectors.toList()));

@@ -7,10 +7,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -19,7 +21,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DepHistoryItem;
@@ -62,9 +63,6 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                             availableController -> getBasicControllerPermissions(availableController).getDeployments().getView())
                             .collect(Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
-                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                        allowedControllers = Collections.emptySet();
-                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -82,12 +80,14 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemDeploymentHistory> dbHistoryItems = new ArrayList<DBItemDeploymentHistory>();
-            Map<String, Set<Folder>> permittedFolders = folderPermissions.getListOfFolders(allowedControllers.isEmpty() ? Proxies
-                    .getControllerDbInstances().keySet() : allowedControllers);
-
+            Map<String, AuthFolders> authFoldersByController = 
+            allowedControllers.stream().collect(Collectors.toMap(Function.identity(), controller -> 
+                    getPermittedFoldersByControllerPermissions(controller, getControllerPermissionsPredicate().getDeployments().getDeploy()),
+                    (o1, o2) -> o1));
+            
             Predicate<DBItemDeploymentHistory> canAdd = item -> {
-                Set<Folder> pFolders = permittedFolders.get(item.getControllerId());
-                return pFolders != null && canAdd(item.getPath(), pFolders);
+                AuthFolders authFolders = authFoldersByController.get(item.getControllerId());
+                return authFolders != null && canAdd(item.getPath(), authFolders);
             };
             
             Stream<DepHistoryItem> dbHistoryItemStream = Stream.empty();

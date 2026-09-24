@@ -69,8 +69,8 @@ public class RevalidateResourceImpl extends JOCResourceImpl implements IRevalida
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
-            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
 
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             if (!folderIsPermitted(in.getPath(), authFolders)) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + in.getPath());
             }
