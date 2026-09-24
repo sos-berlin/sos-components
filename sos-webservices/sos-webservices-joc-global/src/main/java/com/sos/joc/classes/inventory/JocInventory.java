@@ -929,6 +929,52 @@ public class JocInventory {
     }
 
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
+            AuthFolders authFolders) throws Exception {
+        return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), authFolders);
+    }
+
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+            AuthFolders authFolders) throws Exception {
+        DBItemInventoryConfigurationTrash config = null;
+        if (id != null) {
+            config = dbLayer.getTrashConfiguration(id);
+            if (config == null) {
+                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
+            }
+            if (isFolder(config.getType())) {
+                if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getPath(), authFolders)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
+                }
+            } else if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getFolder(), authFolders)) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+            }
+        } else if (path != null) {
+            if (JocInventory.ROOT_FOLDER.equals(path) && (ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type))) {
+                config = new DBItemInventoryConfigurationTrash();
+                config.setId(0L);
+                config.setPath(path);
+                config.setType(type);
+                config.setFolder(path);
+                config.setValid(true);
+            } else {
+                path = normalizePath(path).toString().replace('\\', '/');
+                config = dbLayer.getTrashConfiguration(path, type.intValue());
+                if (config == null) {
+                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
+                }
+                if (isFolder(config.getType())) {
+                    if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getPath(), authFolders)) {
+                        throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
+                    }
+                } else if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getFolder(), authFolders)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+                }
+            }
+        }
+        return config;
+    }
+
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSAuthFolderPermissions folderPermissions) throws Exception {
         return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }

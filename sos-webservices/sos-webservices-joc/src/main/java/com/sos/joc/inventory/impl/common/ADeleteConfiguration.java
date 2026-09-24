@@ -162,7 +162,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             
-            DBItemInventoryConfiguration folder = getFolder(dbLayer, in.getPath(), forDescriptors);
+            DBItemInventoryConfiguration folder = getFolder(dbLayer, in.getPath(), forDescriptors, authFolders);
             List<Long> workflowInvIds = new ArrayList<>();
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             
@@ -235,14 +235,14 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
     
-    private DBItemInventoryConfiguration getFolder (InventoryDBLayer dbLayer, String path, boolean forDescriptors) throws Exception {
+    private DBItemInventoryConfiguration getFolder (InventoryDBLayer dbLayer, String path, boolean forDescriptors, AuthFolders authFolders) throws Exception {
         if(forDescriptors) {
-            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
+            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.DESCRIPTORFOLDER, authFolders);
         } else {
-            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.FOLDER, folderPermissions);
+            return JocInventory.getConfiguration(dbLayer, null, path, ConfigurationType.FOLDER, authFolders);
         }
     }
-    public JOCDefaultResponse delete(String accessToken, RequestFilters in, String request) throws Exception {
+    public JOCDefaultResponse delete(String accessToken, RequestFilters in, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -262,7 +262,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             Set<String> foldersForEvent = new HashSet<>();
             JocAuditObjectsLog auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
-                DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
+                DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, authFolders);
                 deleteTaggings(config.getName(), config.getTypeAsEnum(), dbLayer, dbTagLayer, dbJobTagLayer);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
@@ -286,11 +286,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
         }
     }
     
-    public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, String request) throws Exception {
-        return deleteFolder(accessToken, in, false, request);
+    public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, String request, AuthFolders authFolders) throws Exception {
+        return deleteFolder(accessToken, in, false, request, authFolders);
     }
     
-    public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request) throws Exception {
+    public JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in, boolean forDescriptors, String request, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
@@ -302,9 +302,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             session.beginTransaction();
             DBItemInventoryConfigurationTrash config = null;
             if(forDescriptors) {
-                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, folderPermissions);
+                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.DESCRIPTORFOLDER, authFolders);
             } else {
-                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
+                config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, authFolders);
             }
             deleteTaggingsOfFolder(config, dbLayer, dbTagLayer, dbJobTagLayer);
             dbLayer.deleteTrashFolder(config.getPath());

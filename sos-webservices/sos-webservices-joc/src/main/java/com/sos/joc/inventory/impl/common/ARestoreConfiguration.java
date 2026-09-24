@@ -51,7 +51,7 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             
             session.beginTransaction();
             // TODO: JOC-2255 adjust JocInventory.getTrashConfiguration method to use AuthFolders instead
-            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
+            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
             
             final java.nio.file.Path oldPath = Paths.get(config.getPath());

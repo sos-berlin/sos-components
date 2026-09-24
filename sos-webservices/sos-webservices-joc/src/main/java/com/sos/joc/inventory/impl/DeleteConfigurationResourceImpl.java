@@ -64,7 +64,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE, authFolders);
             }
             return response;
         } catch (Exception e) {
@@ -82,7 +83,8 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
-                response = deleteFolder(accessToken, in, IMPL_PATH_TRASH_DELETE);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+                response = deleteFolder(accessToken, in, IMPL_PATH_TRASH_DELETE, authFolders);
             }
             return response;
         } catch (Exception e) {
