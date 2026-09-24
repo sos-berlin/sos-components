@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -49,7 +50,8 @@ public class LinkFolderImpl extends JOCResourceImpl implements ILinkFolder {
             }
             
             storeAuditLog(filter.getAuditLog());
-            if (folderIsPermitted(filter.getFolder(), folderPermissions.getListOfFolders())) {
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+            if (folderIsPermitted(filter.getFolder(), authFolders)) {
                 Path repositoriesBaseLocal = Globals.sosCockpitProperties.resolvePath("repositories").resolve("local");
                 Path repositoriesBaseRollout = Globals.sosCockpitProperties.resolvePath("repositories").resolve("rollout");
                 

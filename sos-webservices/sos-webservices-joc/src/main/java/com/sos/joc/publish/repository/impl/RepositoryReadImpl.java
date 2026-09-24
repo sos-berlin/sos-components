@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -25,7 +25,6 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.publish.repository.ReadFromFilter;
 import com.sos.joc.model.publish.repository.ResponseFolder;
 import com.sos.joc.model.publish.repository.ResponseFolderItem;
@@ -68,8 +67,8 @@ public class RepositoryReadImpl extends JOCResourceImpl implements IRepositoryRe
                 repo = repositoriesBase.resolve(filter.getFolder());
             }
             final Path repository = repo;
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(Globals.normalizePath(repository.toString()), permittedFolders);
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
+            boolean isPermittedForFolder = folderIsPermitted(Globals.normalizePath(repository.toString()), authFolders);
             if(!isPermittedForFolder) {
                 throw new JocFolderPermissionsException();
             }

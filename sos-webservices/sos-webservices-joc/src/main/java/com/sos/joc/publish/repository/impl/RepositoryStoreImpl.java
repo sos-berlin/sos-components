@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -19,7 +20,6 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.publish.repository.CopyToFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -58,14 +58,14 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog());
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories");
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             Set<ConfigurationObject> deployables = RepositoryUtil.getDeployableRolloutConfigurationsFromDB(filter, dbLayer, null);
             deployables.addAll(RepositoryUtil.getDeployableLocalConfigurationsFromDB(filter, dbLayer, null));
-            deployables = deployables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+            deployables = deployables.stream().filter(item -> canAdd(item.getPath(), authFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             Set<ConfigurationObject> releasables = RepositoryUtil.getReleasableRolloutConfigurationsFromDB(filter, dbLayer);
             releasables.addAll(RepositoryUtil.getReleasableLocalConfigurationsFromDB(filter, dbLayer));
-            releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+            releasables = releasables.stream().filter(item -> canAdd(item.getPath(), authFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             if (filter.getRollout() != null && filter.getLocal() != null) {
 //              both
                 RepositoryUtil.writeToRepository(deployables, releasables, repositoriesBase, StoreItemsCategory.BOTH);

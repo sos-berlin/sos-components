@@ -199,11 +199,8 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if (!allowedControllerIds.contains(controllerId)) {
                     continue;
                 }
-                AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, 
                         getControllerPermissionsPredicate().getDeployments().getDeploy());
-
-//                folderPermissions.setSchedulerId(controllerId);
-//                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
                 // sign deployed configurations with new versionId
                 Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
@@ -211,7 +208,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                 Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
                 Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
                 // determine all (latest) entries from the given folders
-
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
                     itemsFromFolderToDelete.addAll(foldersToDelete.stream().map(Config::getConfiguration).flatMap(item -> dbLayer
                             .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).collect(Collectors.toSet()));
@@ -219,7 +215,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 }
                 if (unsignedDrafts != null) {
                     List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                            .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders))
+                            .filter(draft -> canAdd(draft.getPath(), authFolders))
                             .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
                             .collect(Collectors.toList());
                     if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
@@ -244,7 +240,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                     // filter regarding folder permissions
                     List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                            .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders)).map(dbItem -> cloneToNew(dbItem))
+                            .filter(draft -> canAdd(draft.getPath(), authFolders)).map(dbItem -> cloneToNew(dbItem))
                             .peek(item -> {
                                 try {
                                     item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item

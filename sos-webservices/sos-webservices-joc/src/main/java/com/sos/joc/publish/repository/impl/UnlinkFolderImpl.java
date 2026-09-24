@@ -47,7 +47,7 @@ public class UnlinkFolderImpl extends JOCResourceImpl implements IUnlinkFolder {
             if(filter.getAuditLog() != null) {
                 storeAuditLog(filter.getAuditLog());
             }
-            if (folderIsPermitted(filter.getFolder(), folderPermissions.getListOfFolders())) {
+            if (folderIsPermitted(filter.getFolder(), getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage()))) {
                 Path repositoriesBaseLocal = Globals.sosCockpitProperties.resolvePath("repositories").resolve("local");
                 Path repositoriesBaseRollout = Globals.sosCockpitProperties.resolvePath("repositories").resolve("rollout");
                 

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -22,7 +23,6 @@ import com.sos.joc.classes.publish.GitSemaphore;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocConcurrentAccessException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.repository.DeleteFromFilter;
 import com.sos.joc.publish.repository.git.commands.GitCommandUtils;
@@ -61,15 +61,13 @@ public class RepositoryDeleteImpl extends JOCResourceImpl implements IRepository
             InventoryDBLayer dbLayer = new InventoryDBLayer(hibernateSession);
 
             storeAuditLog(filter.getAuditLog());
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
             Path repositoriesBase = Globals.sosCockpitProperties.resolvePath("repositories").resolve(getSubrepositoryFromFilter(filter));
             
             Set<Path> toDelete = RepositoryUtil.getPathsToDeleteFromFS(filter, repositoriesBase);
-            toDelete = toDelete.stream().filter(item -> canAdd(
-                    Globals.normalizePath(
-                                    Paths.get("/").resolve(repositoriesBase.relativize(RepositoryUtil.stripFileExtensionFromPath(item))).toString()),
-                    permittedFolders))
-                .filter(Objects::nonNull).collect(Collectors.toSet());
+            toDelete = toDelete.stream().filter(item -> canAdd(Globals.normalizePath(
+                        Paths.get("/").resolve(repositoriesBase.relativize(RepositoryUtil.stripFileExtensionFromPath(item))).toString()),
+                    authFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             toDelete.forEach(path -> {
                 try {
                     if (!Files.isDirectory(repositoriesBase.resolve(path))) {
