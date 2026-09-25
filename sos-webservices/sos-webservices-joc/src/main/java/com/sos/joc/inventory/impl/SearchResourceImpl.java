@@ -56,9 +56,53 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             return responseStatusJSError(e);
         }
     }
+    
+//    private List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in) throws Exception {
+//        boolean deployedOrReleased = Boolean.TRUE == in.getDeployedOrReleased();
+//        AuthFolders permittedFolders = null;
+//        if (deployedOrReleased) {
+//            switch (in.getReturnType()) {
+//            case FILEORDERSOURCE:
+//                permittedFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate().getLocks()
+//                        .getView());
+//                break;
+//            case INCLUDESCRIPT:
+//            case JOBRESOURCE:
+//            case JOBTEMPLATE:
+//            case SCHEDULE:
+//                break;
+//            case LOCK:
+//                permittedFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate().getLocks()
+//                        .getView());
+//                break;
+//            case NONWORKINGDAYSCALENDAR:
+//            case WORKINGDAYSCALENDAR:
+//            case CALENDAR:
+//                permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView());
+//                break;
+//            case NOTICEBOARD:
+//                permittedFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate()
+//                        .getNoticeBoards().getView());
+//                break;
+//            case REPORT:
+//                permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView());
+//                break;
+//            case WORKFLOW:
+//                permittedFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate().getWorkflows()
+//                        .getView());
+//                break;
+//            }
+//        }
+//        if (permittedFolders == null) {
+//            permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+//        }
+//
+//        return getSearchResult(in, permittedFolders);
+//    }
 
     public static List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in, AuthFolders authFolders)
             throws Exception {
+        
         return SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in, authFolders) : getAdvancedSearch(in, authFolders);
     }
 

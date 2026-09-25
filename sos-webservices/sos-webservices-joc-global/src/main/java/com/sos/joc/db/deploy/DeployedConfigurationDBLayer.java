@@ -656,13 +656,13 @@ public class DeployedConfigurationDBLayer {
         return getUsedWorkflowsByNoticeBoards(null, controllerId).collect(Collectors.toList());
     }
 
-    public List<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId, Set<String> boardNames) throws DBConnectionRefusedException,
+    public Stream<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String controllerId, Set<String> boardNames) throws DBConnectionRefusedException,
             DBInvalidDataException {
         Stream<WorkflowBoards> wbs = getUsedWorkflowsByNoticeBoards(null, controllerId);
         if (boardNames != null && !boardNames.isEmpty()) {
             wbs = wbs.filter(wb -> wb.getNoticeBoardNames().stream().anyMatch(boardNames::contains));
         }
-        return wbs.collect(Collectors.toList());
+        return wbs;
     }
 
     public Stream<WorkflowBoards> getUsedWorkflowsByNoticeBoards(String boardName, String controllerId) throws DBConnectionRefusedException,

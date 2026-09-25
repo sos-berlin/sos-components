@@ -56,6 +56,8 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
     private BoardDeps getBoard(BoardPathFilter filter) throws Exception {
         AuthFolders authFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate().
                 getNoticeBoards().getView());
+        AuthFolders authWorkflowFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate().
+                getWorkflows().getView());
         SOSHibernateSession session = null;
         try {
             String controllerId = filter.getControllerId();
@@ -76,8 +78,9 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
             board.setVersionDate(dc.getCreated());
             board.setVersion(null);
             
-            List<WorkflowBoards> wbs = dbLayer.getUsedWorkflowsByNoticeBoards(dc.getName(), controllerId).collect(Collectors.toList());
-            
+            List<WorkflowBoards> wbs = dbLayer.getUsedWorkflowsByNoticeBoards(dc.getName(), controllerId).filter(wb -> canAdd(wb.getPath(),
+                    authWorkflowFolders)).toList();
+
             List<WorkflowIdAndTags> wcIds = new ArrayList<>();
             List<WorkflowIdAndTags> weIds = new ArrayList<>();
             List<WorkflowIdAndTags> wpIds = new ArrayList<>();

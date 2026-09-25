@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,29 +73,33 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
     }
     
     private BoardsDeps getBoards(String controllerId, Set<String> boardNames, SOSHibernateSession session) throws Exception {
-        AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
-                getNoticeBoards().getView());
-        session = Globals.createSosHibernateStatelessConnection(API_CALL);
-        
+        AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getNoticeBoards()
+                .getView());
+        AuthFolders authWorkflowFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getWorkflows()
+                .getView());
         BoardsDeps answer = new BoardsDeps();
-        answer.setNoticeBoards(getDepsPerBoard(controllerId, boardNames, authFolders, session));
+        answer.setNoticeBoards(getDepsPerBoard(controllerId, boardNames, authFolders, authWorkflowFolders, session));
         answer.setDeliveryDate(Date.from(Instant.now()));
         return answer;
     }
     
-    private static DepsPerBoard getDepsPerBoard(String controllerId, Set<String> boardNames, AuthFolders authFolders,
+    private static DepsPerBoard getDepsPerBoard(String controllerId, Set<String> boardNames, AuthFolders authFolders, AuthFolders authWorkflowFolders,
             SOSHibernateSession session) {
+        session = Globals.createSosHibernateStatelessConnection(API_CALL);
+
         DeployedConfigurationFilter confFilter = new DeployedConfigurationFilter();
         confFilter.setControllerId(controllerId);
         confFilter.setObjectTypes(Collections.singleton(DeployType.NOTICEBOARD.intValue()));
         confFilter.setNames(boardNames);
 
         DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-        List<DeployedContent> dcs = dbLayer.getDeployedInventory(confFilter);
-        
-        List<WorkflowBoards> wbs = getWorkflowsWithBoards(controllerId, boardNames, dbLayer);
+        Set<String> permittedBoardNames = new HashSet<>();
+        Stream<DeployedContent> dcs = dbLayer.getDeployedInventory(confFilter).stream().filter(dc -> canAdd(dc.getPath(), authFolders)).peek(
+                dc -> permittedBoardNames.add(dc.getName()));
 
-        return getDepsPerBoard(dcs.stream().filter(dc -> canAdd(dc.getPath(), authFolders)), wbs);
+        List<WorkflowBoards> wbs = getWorkflowsWithBoards(controllerId, permittedBoardNames, authWorkflowFolders, dbLayer);
+
+        return getDepsPerBoard(dcs, wbs);
     }
     
     private static DepsPerBoard getDepsPerBoard(Stream<DeployedContent> dcs, List<WorkflowBoards> wbs) {
@@ -116,14 +121,17 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
         return dpb;
     }
     
-    public static List<WorkflowBoards> getWorkflowsWithBoards(String controllerId, Set<String> boardNames, DeployedConfigurationDBLayer dbLayer) {
-        List<WorkflowBoards> wbs = dbLayer.getUsedWorkflowsByNoticeBoards(controllerId, boardNames);
+    public static List<WorkflowBoards> getWorkflowsWithBoards(String controllerId, Set<String> boardNames, AuthFolders permittedFolders,
+            DeployedConfigurationDBLayer dbLayer) {
+
+        List<WorkflowBoards> wbs = dbLayer.getUsedWorkflowsByNoticeBoards(controllerId, boardNames).filter(wb -> JOCResourceImpl.canAdd(wb.getPath(),
+                permittedFolders)).toList();
 
         if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
             Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(dbLayer.getSession(), getWorkflowNamesStream(wbs));
             wbs = addTags(wbs, wTags);
         }
-        
+
         return wbs;
     }
     
