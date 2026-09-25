@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -41,14 +41,15 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = checkPermissions(accessToken, in, getBasicJocPermissions().getInventory().getView(), authFolders);
             if (response != null) {
                 return response;
             }
             //TODO: JOC-2255
             ResponseSearch answer = new ResponseSearch();
-            answer.setResults(getSearchResult(in, folderPermissions));
+            answer.setResults(getSearchResult(in, authFolders));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
@@ -56,12 +57,12 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    public static List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+    public static List<ResponseSearchItem> getSearchResult(final RequestSearchFilter in, AuthFolders authFolders)
             throws Exception {
-        return SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in, folderPermissions) : getAdvancedSearch(in, folderPermissions);
+        return SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in, authFolders) : getAdvancedSearch(in, authFolders);
     }
 
-    private static List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+    private static List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, AuthFolders authFolders)
             throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -81,7 +82,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
 
             List<ResponseSearchItem> r = Collections.emptyList();
             if (items != null) {
-                r = items.stream().map(item -> toResponseSearchItem(item, folderPermissions)).sorted(Comparator.comparing(
+                r = items.stream().map(item -> toResponseSearchItem(item, authFolders)).sorted(Comparator.comparing(
                         ResponseSearchItem::getPath)).collect(Collectors.toList());
             }
             return r;
@@ -92,7 +93,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private static List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, SOSAuthFolderPermissions folderPermissions)
+    private static List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, AuthFolders authFolders)
             throws Exception {
         SOSHibernateSession session = null;
         try {
@@ -205,7 +206,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         }
                     }
 
-                    ResponseSearchItem ri = toResponseSearchItem(item, folderPermissions);
+                    ResponseSearchItem ri = toResponseSearchItem(item, authFolders);
                     r.add(ri);
                 }
             }
@@ -312,12 +313,12 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         return item;
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission) {
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission, AuthFolders authFolders) {
         JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
         if (response == null) {
             if (in.getFolders() != null) {
                 for (String folder : in.getFolders()) {
-                    if (!folderPermissions.isPermittedForFolder(folder)) {
+                    if (!folderIsPermitted(folder, authFolders)) {
                         throw new JocFolderPermissionsException(folder);
                     }
                 }
@@ -326,7 +327,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         return response;
     }
 
-    private static ResponseSearchItem toResponseSearchItem(InventorySearchItem item, SOSAuthFolderPermissions folderPermissions) {
+    private static ResponseSearchItem toResponseSearchItem(InventorySearchItem item, AuthFolders authFolders) {
         ResponseSearchItem ri = new ResponseSearchItem();
         ri.setId(item.getId());
         ri.setPath(item.getPath());
@@ -340,7 +341,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         ri.setReleased(item.isReleased());
         ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
         ri.setHasReleases(item.getCountReleased().intValue() > 0);
-        ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
+        ri.setPermitted(folderIsPermitted(item.getFolder(), authFolders));
         return ri;
     }
 }

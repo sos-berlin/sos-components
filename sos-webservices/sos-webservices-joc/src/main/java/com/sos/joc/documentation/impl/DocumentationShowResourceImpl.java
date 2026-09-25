@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.nio.charset.StandardCharsets;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -43,7 +44,8 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             if (!path.contains("/")) {
                 path = getPathFromRef(path);
             }
-            checkFolderPermissions(path);
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getDocumentations().getView());
+            checkFolderPermissions(path, authFolders);
 //            String entity = String.format(
 //                    "<!DOCTYPE html>%n<html>%n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
 //                    JOCJsonCommand.urlEncodedPath(path.replaceFirst("^/", "")));

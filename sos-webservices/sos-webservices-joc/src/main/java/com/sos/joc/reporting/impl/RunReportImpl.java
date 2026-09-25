@@ -3,9 +3,9 @@ package com.sos.joc.reporting.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -17,7 +17,6 @@ import com.sos.joc.classes.reporting.RunReport;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.RunReports;
@@ -44,7 +43,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             }
             
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             
             storeAuditLog(in.getAuditLog());
             
@@ -52,7 +51,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
             List<DBItemInventoryReleasedConfiguration> dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT);
             for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
-                if (!canAdd(dbItem.getFolder(), permittedFolders)) {
+                if (!canAdd(dbItem.getFolder(), authFolders)) {
                     continue;
                 }
                 

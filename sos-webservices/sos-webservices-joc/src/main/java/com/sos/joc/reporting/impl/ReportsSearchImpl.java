@@ -3,6 +3,7 @@ package com.sos.joc.reporting.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -37,16 +38,17 @@ public class ReportsSearchImpl extends JOCResourceImpl implements ISearchResourc
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView());
             if (in.getFolders() != null) {
                 for (String folder : in.getFolders()) {
-                    if (!folderPermissions.isPermittedForFolder(folder)) {
+                    if (!folderIsPermitted(folder, authFolders)) {
                         throw new JocFolderPermissionsException(folder);
                     }
                 }
             }
 
             ResponseSearch answer = new ResponseSearch();
-            answer.setResults(SearchResourceImpl.getSearchResult(in, folderPermissions));
+            answer.setResults(SearchResourceImpl.getSearchResult(in, authFolders));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {

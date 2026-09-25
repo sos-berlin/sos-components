@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -302,7 +303,8 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             dbLayer.setSession(session);
 
             TagsUsedBy entity = new TagsUsedBy();
-            entity.setAdditionalProperties(getUsedBy(in.getFolders(), folderPermissions.getListOfFolders(), dbLayer));
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            entity.setAdditionalProperties(getUsedBy(in.getFolders(), authFolders, dbLayer));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
@@ -478,9 +480,9 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         return Globals.objectMapper.readValue(filterBytes, RequestFilters.class);
     }
 
-    private Map<String, Set<String>> getUsedBy(Collection<Folder> folders, Set<Folder> permittedFolders, ATagDBLayer<T> dbLayer)
+    private Map<String, Set<String>> getUsedBy(Collection<Folder> folders, AuthFolders authFolders, ATagDBLayer<T> dbLayer)
             throws SOSHibernateException {
-        return dbLayer.getTagsByFolders(folders, true).stream().filter(i -> folderIsPermitted(i.getFolder(), permittedFolders)).collect(Collectors
+        return dbLayer.getTagsByFolders(folders, true).stream().filter(i -> folderIsPermitted(i.getFolder(), authFolders)).collect(Collectors
                 .groupingBy(InventoryTagItem::getNullableName, Collectors.mapping(InventoryTagItem::getPath, Collectors.toSet())));
     }
 

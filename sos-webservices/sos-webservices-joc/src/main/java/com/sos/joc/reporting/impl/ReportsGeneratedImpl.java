@@ -6,13 +6,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,7 +21,6 @@ import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.db.reporting.items.ReportDbItem;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportHistoryFilter;
 import com.sos.joc.model.reporting.ReportItem;
 import com.sos.joc.model.reporting.ReportItems;
@@ -53,12 +52,11 @@ public class ReportsGeneratedImpl extends JOCResourceImpl implements IReportsGen
             if (response != null) {
                 return response;
             }
-            
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             
             Function<ReportDbItem, ReportItem> mapToReportItem = dbItem -> {
                 try {
-                    if (!canAdd(dbItem.getPath(), permittedFolders)) {
+                    if (!canAdd(dbItem.getPath(), authFolders)) {
                        return null; 
                     }
                     if (in.getCompact() != Boolean.TRUE) {

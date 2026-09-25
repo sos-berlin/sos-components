@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -24,7 +25,6 @@ import com.sos.joc.db.inventory.IDBItemTag;
 import com.sos.joc.db.inventory.common.ATagDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestTag;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
@@ -45,7 +45,8 @@ public abstract class AReadTag extends JOCResourceImpl {
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
-                ResponseTag tag = readTag(in, action, forTrash, dbLayer);
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                ResponseTag tag = readTag(in, action, forTrash, dbLayer, authFolders);
                 response = responseStatus200(Globals.objectMapper.writeValueAsBytes(tag));
             }
             return response;
@@ -54,7 +55,7 @@ public abstract class AReadTag extends JOCResourceImpl {
         }
     }
 
-    private ResponseTag readTag(RequestTag in, String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer) throws Exception {
+    private ResponseTag readTag(RequestTag in, String action, boolean forTrash, ATagDBLayer<? extends IDBItemTag> dbLayer, AuthFolders authFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(action);
@@ -85,15 +86,13 @@ public abstract class AReadTag extends JOCResourceImpl {
                 }
             }
 
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-
             if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem item : items) {
                     ResponseFolderItem config = item.toResponseFolderItem();
                     if (config == null) {// e.g. unknown type
                         continue;
                     }
-                    if (!canAdd(config.getPath(), permittedFolders)) {
+                    if (!canAdd(config.getPath(), authFolders)) {
                         continue;
                     }
                     config.setWorkflowNames(null);

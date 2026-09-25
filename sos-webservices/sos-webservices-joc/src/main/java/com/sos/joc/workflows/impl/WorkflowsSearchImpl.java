@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -57,16 +58,18 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate().
+                    getWorkflows().getView());
             if (in.getFolders() != null) {
                 for (String folder : in.getFolders()) {
-                    if (!folderPermissions.isPermittedForFolder(folder)) {
+                    if (!folderIsPermitted(folder, authFolders)) {
                         throw new JocFolderPermissionsException(folder);
                     }
                 }
             }
             
             ResponseSearch answer = new ResponseSearch();
-            answer.setResults(SearchResourceImpl.getSearchResult(in, folderPermissions));
+            answer.setResults(SearchResourceImpl.getSearchResult(in, authFolders));
             
             if (in.getStates() != null) {
                 in.getStates().remove(SyncStateText.UNKNOWN);

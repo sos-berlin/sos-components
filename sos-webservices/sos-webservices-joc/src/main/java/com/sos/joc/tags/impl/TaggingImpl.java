@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -33,7 +34,6 @@ import com.sos.joc.event.bean.inventory.InventoryTagAddEvent;
 import com.sos.joc.event.bean.inventory.InventoryTagEvent;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tag.Tags;
 import com.sos.joc.model.tag.tagging.RequestFilter;
@@ -58,13 +58,14 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }
             
             storeAuditLog(in.getAuditLog());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGGING);
             session.setAutoCommit(false);
             session.beginTransaction();
             InventoryTagDBLayer dbTagLayer = new InventoryTagDBLayer(session);
             
-            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session), authFolders);
             Set<InventoryTagEvent> tagEvents = storeTaggings(in.getTags(), config, dbTagLayer);
             
             Globals.commit(session);
@@ -164,6 +165,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }
             
             storeAuditLog(in.getAuditLog());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_FOLDER_TAGGING);
             session.setAutoCommit(false);
@@ -190,9 +192,8 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             newDbTagItems.addAll(dbTags);
             Set<Long> newTagIds = newDbTagItems.stream().map(DBItemInventoryTag::getId).collect(Collectors.toSet());
             
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             List<InventoryTagItem> tagsByFolders = dbTagLayer.getTagsByFolders(in.getFolders(), false).stream().filter(
-                    i -> folderIsPermitted(i.getFolder(), permittedFolders)).collect(Collectors.toList());
+                    i -> folderIsPermitted(i.getFolder(), authFolders)).collect(Collectors.toList());
             Map<String, List<InventoryTagItem>> workflowsPerTag = tagsByFolders.stream().collect(Collectors.groupingBy(
                     InventoryTagItem::getNullableName));
 
@@ -255,7 +256,8 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             }
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGS);
-            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session), authFolders);
             
             Tags entity = new Tags();
             entity.setTags(new InventoryTagDBLayer(session).getTagsWithGroups(config.getId()));
@@ -275,11 +277,11 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         return Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
     }
     
-    private DBItemInventoryConfiguration getConfiguration(String path, InventoryDBLayer dbLayer) throws Exception {
+    private DBItemInventoryConfiguration getConfiguration(String path, InventoryDBLayer dbLayer, AuthFolders authFolders) throws Exception {
         com.sos.joc.model.inventory.common.RequestFilter filter = new com.sos.joc.model.inventory.common.RequestFilter();
         filter.setObjectType(ConfigurationType.WORKFLOW);
         filter.setPath(path);
-        return JocInventory.getConfiguration(dbLayer, filter, folderPermissions);
+        return JocInventory.getConfiguration(dbLayer, filter, authFolders);
     }
     
 }
