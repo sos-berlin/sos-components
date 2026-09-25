@@ -1,5 +1,6 @@
 package com.sos.joc.calendar.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Calendar;
@@ -46,6 +47,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
     }
 
     private Dates read(CalendarDatesFilter in) throws Exception {
+        AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView());
         SOSHibernateSession session = null;
         try {
 
@@ -70,10 +72,10 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
                     }
                     in.setId(calendarItem.getId());
                 }
-                checkFolderPermissions(in.getPath());
+                checkFolderPermissions(in.getPath(), authFolders);
                 in.setCalendar(Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class));
             } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
-                checkFolderPermissions(in.getCalendar().getPath());
+                checkFolderPermissions(in.getCalendar().getPath(), authFolders);
             }
             if (in.getCalendar() == null) {
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");

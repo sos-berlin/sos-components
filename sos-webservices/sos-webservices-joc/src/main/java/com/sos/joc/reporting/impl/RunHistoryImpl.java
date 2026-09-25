@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
@@ -27,7 +28,6 @@ import com.sos.joc.db.reporting.DBItemReportRun;
 import com.sos.joc.db.reporting.ReportingDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.reporting.ReportRunState;
 import com.sos.joc.model.reporting.ReportRunStateText;
 import com.sos.joc.model.reporting.RunHistoryFilter;
@@ -69,7 +69,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
                 return response;
             }
 
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             ReportingDBLayer dbLayer = new ReportingDBLayer(session);
@@ -78,7 +78,7 @@ public class RunHistoryImpl extends JOCResourceImpl implements IRunHistoryResour
 
             Function<DBItemReportRun, RunItem> mapToRunItem = dbItem -> {
                 try {
-                    if (!folderIsPermitted(dbItem.getFolder(), permittedFolders)) {
+                    if (!folderIsPermitted(dbItem.getFolder(), authFolders)) {
                         return null;
                     }
                     RunItem item = new RunItem();
