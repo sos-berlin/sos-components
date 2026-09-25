@@ -50,7 +50,6 @@ public abstract class ARestoreConfiguration extends JOCResourceImpl {
             InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(session);
             
             session.beginTransaction();
-            // TODO: JOC-2255 adjust JocInventory.getTrashConfiguration method to use AuthFolders instead
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
             

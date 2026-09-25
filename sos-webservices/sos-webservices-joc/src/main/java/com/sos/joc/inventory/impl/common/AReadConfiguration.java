@@ -189,7 +189,6 @@ public abstract class AReadConfiguration extends JOCResourceImpl {
         try {
             session = Globals.createSosHibernateStatelessConnection(request);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            // TODO: JOC-2255 Adjust JocInventory.getTrashConfiguration to use AuthFolders instead
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, authFolders);
             ConfigurationType type = config.getTypeAsEnum();
 
