@@ -78,7 +78,8 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             if (!allowedControllers.contains(item.getControllerId())) {
                 return accessDeniedResponse();
             }
-            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(item.getControllerId(), getControllerPermissionsPredicate().getView());
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(item.getControllerId(), getControllerPermissionsPredicate()
+                    .getWorkflows().getView());
             if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
                 if (!canAdd(item.getWorkflowPath(), authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + item.getWorkflowPath().replaceFirst("/[^/]+$", "/"));
@@ -161,10 +162,12 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
                     }
                 }
                 boolean compact = in.getCompact() == Boolean.TRUE;
-                Map<String, List<DBItemYadeTransfer>> itemsByControllerId = items.stream().collect(Collectors.groupingBy(DBItemYadeTransfer::getControllerId));
+                Map<String, List<DBItemYadeTransfer>> itemsByControllerId = items.stream().collect(Collectors.groupingBy(
+                        DBItemYadeTransfer::getControllerId));
                 for(Entry<String, List<DBItemYadeTransfer>> entry : itemsByControllerId.entrySet()) {
                     String controller = entry.getKey();
-                    AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controller, getControllerPermissionsPredicate().getView());
+                    AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controller, getControllerPermissionsPredicate()
+                            .getWorkflows().getView());
                     for (DBItemYadeTransfer item : entry.getValue()) {
                         if (withSourceTargetFilter && !filteredTransferIds.remove(item.getId())) {
                             continue;

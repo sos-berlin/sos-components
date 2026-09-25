@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -21,7 +20,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.reporting.Report;
 import com.sos.joc.model.reporting.Reports;
@@ -64,7 +62,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 }
             };
             
-            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders, in.getFolders());
+            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders);
             
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);

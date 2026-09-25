@@ -50,7 +50,6 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
 
             boolean calendarIdIsDefined = in.getId() != null;
             boolean calendarPathIsDefined = !SOSString.isEmpty(in.getPath());
-            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -75,10 +74,10 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
                     }
                     in.setId(calendarItem.getId());
                 }
-                folderIsPermitted(calendarItem.getPath(), authFolders);
+                checkFolderPermissions(calendarItem.getPath(), permittedFolders);
                 in.setCalendar(Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class));
-            } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
-                folderIsPermitted(in.getCalendar().getPath(), authFolders);
+            } else if (in.getCalendar() != null && !SOSString.isEmpty(in.getCalendar().getPath())) {
+                checkFolderPermissions(in.getCalendar().getPath(), permittedFolders);
             }
 
             if (in.getCalendar() == null) {

@@ -109,9 +109,9 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
 
                     Set<DBItemInventoryReleasedConfiguration> releasedItems = recallFilter.getReleasables().stream()
                             .map(r -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType()))
-                            .filter(item -> canAdd(item.getPath(), authFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                            .filter(Objects::nonNull).filter(item -> canAdd(item.getPath(), authFolders)).collect(Collectors.toSet());
                     Set<String> workflownames = getSchedulesWithWorkflowNames(releasedItems).entrySet()
-                            .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
+                            .stream().map(Map.Entry::getValue).flatMap(Collection::stream).collect(Collectors.toSet());
 
                     RemoveSemaphore.getInstance().getSemaphore(recallFilter.getTransactionId()).ifPresent(sem -> sem.setWorkflowNames(workflownames));
                     LOGGER.debug("add workflownames to Semaphore from " + SEMAPHORE_ID + ".");

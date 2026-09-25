@@ -74,7 +74,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
                 }
                 checkFolderPermissions(in.getPath(), authFolders);
                 in.setCalendar(Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class));
-            } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
+            } else if (in.getCalendar() != null && !SOSString.isEmpty(in.getCalendar().getPath())) {
                 checkFolderPermissions(in.getCalendar().getPath(), authFolders);
             }
             if (in.getCalendar() == null) {
