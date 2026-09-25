@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -47,9 +48,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 return response;
             }
             
-            final Set<Folder> permittedFolders = folderPermissions.getPermittedFolders(in.getFolders());
-            
-            boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView());
             
             Stream<DBItemInventoryReleasedConfiguration> dbItems = Stream.empty();
             
@@ -65,25 +64,22 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 }
             };
             
-            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders);
+            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders, in.getFolders());
             
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);
             
             if (in.getReportPaths() != null && !in.getReportPaths().isEmpty()) {
                 List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
-                dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT).stream().filter(isPermitted);
-            } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
-                // no folder permissions
-            } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                // isPermitted is already made with above folderPermissions.getPermittedFolders(in.getFolders());
-                dbItems = dbLayer.getReleasedConfigurationsByFolder(permittedFolders, ConfigurationType.REPORT).stream();
+                dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT).stream();
+            } else if (in.getFolders() != null && !in.getFolders().isEmpty()) {
+                dbItems = dbLayer.getReleasedConfigurationsByFolder(in.getFolders(), ConfigurationType.REPORT).stream();
             } else {
-                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT).stream().filter(isPermitted);
+                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT).stream();
             }
             
             Reports reports = new Reports();
-            reports.setReports(dbItems.map(mapDbItemToReport).filter(Objects::nonNull).collect(Collectors.toList()));
+            reports.setReports(dbItems.filter(isPermitted).map(mapDbItemToReport).filter(Objects::nonNull).collect(Collectors.toList()));
             reports.setDeliveryDate(Date.from(Instant.now()));
             
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(reports));
