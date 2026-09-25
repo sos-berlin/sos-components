@@ -3,6 +3,7 @@ package com.sos.joc.workflow.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -56,7 +57,11 @@ public class WorkflowModifyImpl extends AWorkflowModify implements IWorkflowModi
     }
 
     private void postWorkflowModify(Action action, ModifyWorkflow workflowFilter) throws Exception {
+        
         String controllerId = workflowFilter.getControllerId();
+        AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                .getManagePositions());
+        
         DBItemJocAuditLog dbAuditLog = storeAuditLog(workflowFilter.getAuditLog(), controllerId);
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
@@ -77,7 +82,7 @@ public class WorkflowModifyImpl extends AWorkflowModify implements IWorkflowModi
         if (versionId.equals(curWorkflowE.get().id().versionId().string())) {
             throw new JocBadRequestException("The requested versionId is the current version. Use an older version.");
         }
-        checkFolderPermissions(WorkflowPaths.getPath(workflowId.path().string()));
+        checkFolderPermissions(WorkflowPaths.getPath(workflowId.path().string()), permittedFolders);
         
         proxy.api().executeCommand(JControllerCommand.transferOrders(workflowId)).thenAccept(either -> thenAcceptHandler(either, controllerId,
                 workflow.id(), dbAuditLog));

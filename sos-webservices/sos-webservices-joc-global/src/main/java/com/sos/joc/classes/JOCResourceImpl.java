@@ -737,16 +737,16 @@ public class JOCResourceImpl {
         return SOSAuthDetailedFolderPermissions.isPermitted(folder, permittedFolders);
     }
     
-    /**
-     * @deprecated  As of JOC-2255, replaced by above {@link #checkFolderPermissions()}
-     */
-    @Deprecated
-    protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
-        String folder = getParent(path);
-        if (!folderPermissions.isPermittedForFolder(folder)) {
-            throw new JocFolderPermissionsException(folder);
-        }
-    }
+//    /**
+//     * @deprecated  As of JOC-2255, replaced by above {@link #checkFolderPermissions()}
+//     */
+//    @Deprecated
+//    protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
+//        String folder = getParent(path);
+//        if (!folderPermissions.isPermittedForFolder(folder)) {
+//            throw new JocFolderPermissionsException(folder);
+//        }
+//    }
 
     /**
      * @deprecated  As of JOC-2255, replaced by {@link #canAdd()}

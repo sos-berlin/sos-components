@@ -6,6 +6,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -39,17 +40,20 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LockFilter.class);
             LockFilter filter = Globals.objectMapper.readValue(filterBytes, LockFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId()).getLocks().getView());
+            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId()).getLocks()
+                    .getView());
             if (response != null) {
                 return response;
             }
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLock(filter)));
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate()
+                    .getLocks().getView());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLock(filter, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
 
-    private Lock getLock(LockFilter filter) throws Exception {
+    private Lock getLock(LockFilter filter, AuthFolders permittedFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             Lock answer = new Lock();
@@ -66,7 +70,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", filter.getLockPath()));
             }
-            checkFolderPermissions(dc.getPath());
+            checkFolderPermissions(dc.getPath(), permittedFolders);
             
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit(), OrdersHelper
                     .getDailyPlanTimeZone(), session);

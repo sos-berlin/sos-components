@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.calendar.Calendar;
@@ -18,7 +19,8 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public abstract class ACalendarBaseResourceImpl extends JOCResourceImpl {
 
-    public Map<String, Calendar> getNonWorkingDayCalendars(InventoryDBLayer dbLayer, Calendar baseCalendar) throws Exception {
+    public Map<String, Calendar> getNonWorkingDayCalendars(InventoryDBLayer dbLayer, Calendar baseCalendar, AuthFolders permittedFolders)
+            throws Exception {
         Map<String, Calendar> map = new HashMap<>();
         if (baseCalendar.getExcludes() == null || SOSCollection.isEmpty(baseCalendar.getExcludes().getNonWorkingDayCalendars())) {
             return map;
@@ -35,7 +37,7 @@ public abstract class ACalendarBaseResourceImpl extends JOCResourceImpl {
         }
 
         for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
-            checkFolderPermissions(dbItem.getPath());
+            checkFolderPermissions(dbItem.getPath(), permittedFolders);
 
             Calendar c = Globals.objectMapper.readValue(dbItem.getContent(), Calendar.class);
             c.setType(CalendarType.NONWORKINGDAYSCALENDAR);
