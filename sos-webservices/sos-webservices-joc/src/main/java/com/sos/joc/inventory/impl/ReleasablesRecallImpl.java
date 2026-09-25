@@ -86,11 +86,11 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
             if(recallFilter.getTransactionId() == null || recallFilter.getTransactionId().isEmpty()) {
                 recallFilter.setTransactionId(UUID.randomUUID().toString());
             }
-            // TODO: JOC-2255 folder permission check is missing
            
             new Thread(() -> {
                 SOSHibernateSession hibernateSession = null;
-                try {
+                AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
+               try {
                     if(!recallFilter.getKeepOrders()) {
                         RemoveSemaphore.tryAcquire(recallFilter.getTransactionId(), SEMAPHORE_ID);
                         LOGGER.debug("acquire semaphore from recall with transactionId " + recallFilter.getTransactionId());
@@ -109,7 +109,7 @@ public class ReleasablesRecallImpl extends JOCResourceImpl implements IReleasabl
 
                     Set<DBItemInventoryReleasedConfiguration> releasedItems = recallFilter.getReleasables().stream()
                             .map(r -> dbLayer.getReleasedConfiguration(JocInventory.pathToName(r.getPath()), r.getObjectType()))
-                            .filter(Objects::nonNull).collect(Collectors.toSet());
+                            .filter(item -> canAdd(item.getPath(), authFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                     Set<String> workflownames = getSchedulesWithWorkflowNames(releasedItems).entrySet()
                             .stream().map(entry -> entry.getValue()).flatMap(Collection::stream).collect(Collectors.toSet());
 
