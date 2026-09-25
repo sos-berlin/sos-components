@@ -3,9 +3,9 @@ package com.sos.joc.workflows.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -13,7 +13,6 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersSummary;
 import com.sos.joc.model.workflow.WorkflowOrderCount;
@@ -41,7 +40,8 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getWorkflows().getView());
 
             final JControllerState currentstate = Proxy.of(controllerId).currentState();;
             final Instant surveyInstant = currentstate.instant();
@@ -50,7 +50,7 @@ public class WorkflowsOrderCountImpl extends JOCResourceImpl implements IWorkflo
             workflows.setSurveyDate(Date.from(surveyInstant));
             OrdersSummary allOrders = new OrdersSummary();
             init(allOrders);
-            workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, permittedFolders, OrdersHelper
+            workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, authFolders, OrdersHelper
                     .getDailyPlanTimeZone()).entrySet().stream().map(e -> {
                         WorkflowOrderCount w = new WorkflowOrderCount();
                         w.setPath(e.getKey().path().string());

@@ -8,11 +8,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.model.common.Folder;
 
 import js7.data.board.BoardPath;
 import js7.data.board.NoticeId;
@@ -181,7 +181,7 @@ public class BoardHelper {
     }
     
     public static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Set<BoardPath> boardPaths,
-            Set<Folder> permittedFolders) {
+            AuthFolders authFolders) {
         if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();
         }
@@ -189,9 +189,7 @@ public class BoardHelper {
                 e -> boardPaths.contains(e.boardPath())).map(e -> new ExpectingOrder(order, e));
         
         Stream<JOrder> jOrderStream = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotices.class)).parallel();
-        if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            jOrderStream = jOrderStream.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
-        }
+        jOrderStream = jOrderStream.filter(o -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(o.workflowId()), authFolders));
         return jOrderStream.flatMap(mapper).filter(Objects::nonNull);
         
 //        if (permittedFolders == null || permittedFolders.isEmpty()) {

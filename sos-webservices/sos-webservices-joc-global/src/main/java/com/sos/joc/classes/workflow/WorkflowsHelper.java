@@ -1854,7 +1854,7 @@ public class WorkflowsHelper {
     }
 
     public static ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> getGroupedOrdersCountPerWorkflow(JControllerState currentstate,
-            WorkflowOrderCountFilter workflowsFilter, Set<Folder> permittedFolders, ZoneId zoneId) {
+            WorkflowOrderCountFilter workflowsFilter, AuthFolders authFolders, ZoneId zoneId) {
 
         final Instant surveyInstant = currentstate.instant();
         long surveyDateMillis = surveyInstant.toEpochMilli();
@@ -1888,7 +1888,7 @@ public class WorkflowsHelper {
         }
 
         Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(
-                WorkflowPaths.getPath(w), permittedFolders)).map(w -> {
+                WorkflowPaths.getPath(w), authFolders)).map(w -> {
                     if (w.getVersionId() == null || w.getVersionId().isEmpty()) {
                         return currentstate.repo().pathToCheckedWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
                     } else {

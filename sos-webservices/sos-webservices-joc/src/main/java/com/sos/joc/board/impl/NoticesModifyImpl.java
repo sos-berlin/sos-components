@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.board.resource.INoticesModify;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -161,6 +162,8 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             }
             
             storeAuditLog(in.getAuditLog(), controllerId);
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getNoticeBoards().getView());
 
             JControllerProxy proxy = Proxy.of(controllerId);
             Set<BoardPath> boardPaths = proxy.currentState().pathToBoardState().keySet();
@@ -174,7 +177,7 @@ public class NoticesModifyImpl extends JOCResourceImpl implements INoticesModify
             
             if (!expectedNotices.isEmpty()) {
                 Stream<ExpectingOrder> expectingOrdersStream = BoardHelper.getExpectingOrdersStream(proxy.currentState(), expectedNotices.keySet(),
-                        folderPermissions.getListOfFolders());
+                        authFolders);
                 Predicate<ExpectingOrder> filterWorkflow = o -> {
                     Set<String> workflows = expectedNotices.getOrDefault(BoardPath.of(o.getBoardPath()), Collections.emptySet());
                     return workflows.isEmpty() || workflows.contains(o.getJOrder().workflowId().path().string());
