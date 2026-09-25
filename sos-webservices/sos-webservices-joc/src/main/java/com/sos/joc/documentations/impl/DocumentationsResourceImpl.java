@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -45,6 +46,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getDocumentations().getView());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
@@ -74,8 +76,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 }
             }
             Documentations documentations = new Documentations();
-            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), folderPermissions
-                    .getListOfFolders()));
+            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), authFolders));
             documentations.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(documentations));
         } catch (Exception e) {
@@ -86,8 +87,8 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
     }
 
     private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Boolean onlyWithAssignReference,
-            Set<Folder> permittedFolders) {
-        Stream<Documentation> docs = dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
+            AuthFolders authFolders) {
+        Stream<Documentation> docs = dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), authFolders)).map(dbDoc -> {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
             doc.setName(dbDoc.getName());

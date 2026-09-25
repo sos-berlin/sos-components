@@ -7,9 +7,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -27,7 +29,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.yade.Operation;
 import com.sos.joc.model.yade.Protocol;
@@ -77,9 +78,9 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             if (!allowedControllers.contains(item.getControllerId())) {
                 return accessDeniedResponse();
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(item.getControllerId(), getControllerPermissionsPredicate().getView());
             if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders(item.getControllerId());
-                if (!canAdd(item.getWorkflowPath(), permittedFolders)) {
+                if (!canAdd(item.getWorkflowPath(), authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + item.getWorkflowPath().replaceFirst("/[^/]+$", "/"));
                 }
             }
@@ -115,7 +116,6 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
                 return response;
             }
 
-            Map<String, Set<Folder>> permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
             if (controllerId.isEmpty() && allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
@@ -161,16 +161,21 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
                     }
                 }
                 boolean compact = in.getCompact() == Boolean.TRUE;
-                for (DBItemYadeTransfer item : items) {
-                    if (withSourceTargetFilter && !filteredTransferIds.remove(item.getId())) {
-                        continue;
-                    }
-                    if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
-                        if (!canAdd(item.getWorkflowPath(), permittedFoldersMap.get(item.getControllerId()))) {
+                Map<String, List<DBItemYadeTransfer>> itemsByControllerId = items.stream().collect(Collectors.groupingBy(DBItemYadeTransfer::getControllerId));
+                for(Entry<String, List<DBItemYadeTransfer>> entry : itemsByControllerId.entrySet()) {
+                    String controller = entry.getKey();
+                    AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controller, getControllerPermissionsPredicate().getView());
+                    for (DBItemYadeTransfer item : entry.getValue()) {
+                        if (withSourceTargetFilter && !filteredTransferIds.remove(item.getId())) {
                             continue;
                         }
+                        if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
+                            if (!canAdd(item.getWorkflowPath(), authFolders)) {
+                                continue;
+                            }
+                        }
+                        transfers.add(fillTransfer(dbLayer, item, compact));
                     }
-                    transfers.add(fillTransfer(dbLayer, item, compact));
                 }
             }
             entity.setTransfers(transfers);

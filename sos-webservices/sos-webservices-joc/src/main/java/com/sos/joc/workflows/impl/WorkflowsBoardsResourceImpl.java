@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -23,7 +24,6 @@ import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.WorkflowsBoards;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.workflows.resource.IWorkflowsBoardsResource;
@@ -59,7 +59,7 @@ public class WorkflowsBoardsResourceImpl extends JOCResourceImpl implements IWor
             List<com.sos.controller.model.workflow.WorkflowBoards> consumingWorkflows = new ArrayList<>();
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getWorkflows().getView());
 //            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
 //            List<DeployedWorkflowWithBoards> workflows = dbLayer.getWorkflowsWithBoards(controllerId);
             
@@ -97,7 +97,7 @@ public class WorkflowsBoardsResourceImpl extends JOCResourceImpl implements IWor
             
             Map<String, LinkedHashSet<String>> wTags = getMapOfTagsPerWorkflow(connection, wbs.keySet());
             
-            wbs.values().stream().filter(w -> canAdd(w.getPath(), permittedFolders)).filter(onlySynchronized2).peek(w -> w.setWorkflowTags(wTags.get(
+            wbs.values().stream().filter(w -> canAdd(w.getPath(), authFolders)).filter(onlySynchronized2).peek(w -> w.setWorkflowTags(wTags.get(
                     JocInventory.pathToName(w.getPath())))).peek(w -> w.setNoticeBoardNames(null)).forEach(w -> {
                         if (w.hasConsumeNotice() > 0) {
                             consumingWorkflows.add(w);
