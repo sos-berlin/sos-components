@@ -353,7 +353,7 @@ public class SOSAuthDetailedFolderPermissions {
                 .getFolder() + "/"))));
     }
     
-    // use in JOCResourceImpl
+    // use in JOCResourceImpl for requested folders
     public static boolean isSubfolder(String folder, Collection<Folder> folders) {
         if (folders == null || folders.isEmpty()) {
             return true;

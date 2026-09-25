@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSCheckJavaVariableName;
@@ -184,12 +185,14 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
                 return jocDefaultResponse;
             }
             
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
+            
             SOSCheckJavaVariableName.test("$.newJobName", in.getNewJobName());
             
             String workflowName = JocInventory.pathToName(in.getPath());
             String workflowPath = WorkflowPaths.getPath(workflowName);
             
-            checkFolderPermissions(workflowPath);
+            checkFolderPermissions(workflowPath, permittedFolders);
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_RENAME_TAGGING);
             session.setAutoCommit(false);

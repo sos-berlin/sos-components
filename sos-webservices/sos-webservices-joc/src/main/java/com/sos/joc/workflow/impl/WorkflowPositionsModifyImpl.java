@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -86,6 +87,9 @@ public class WorkflowPositionsModifyImpl extends AWorkflowModify implements IWor
         SOSHibernateSession connection = null;
         try {
             String controllerId = modifyWorkflow.getControllerId();
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getManagePositions());
+
             DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId);
             JControllerState currentState = Proxy.of(controllerId).currentState();
 
@@ -102,7 +106,7 @@ public class WorkflowPositionsModifyImpl extends AWorkflowModify implements IWor
             }
 
             JWorkflow workflow = workflowE.get();
-            checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()));
+            checkFolderPermissions(WorkflowPaths.getPath(workflow.id().path().string()), permittedFolders);
 
             // TODO JOC-1453 consider labels
             if (modifyWorkflow.getPositions() == null) {

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -29,7 +30,6 @@ import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.history.MainRequest;
 import com.sos.joc.model.dailyplan.history.MainResponse;
 import com.sos.joc.model.dailyplan.history.SubmissionsOrdersRequest;
@@ -69,8 +69,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     permitted = getBasicControllerDefaultPermissions().getOrders().getView();
                 } else {
                     allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                            availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(
-                                    Collectors.toSet());
+                            availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(Collectors
+                                    .toSet());
                     permitted = !allowedControllers.isEmpty();
                     if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                         allowedControllers = Collections.emptySet();
@@ -170,7 +170,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders()
+                    .getView());
             if (response != null) {
                 return response;
             }
@@ -224,11 +225,13 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsOrdersRequest.class);
             SubmissionsOrdersRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsOrdersRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders()
+                    .getView());
             if (response != null) {
                 return response;
             }
-
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(in.getControllerId(), getControllerPermissionsPredicate()
+                    .getOrders().getView());
             Date date = toUTCDate(in.getDate());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SUBMISSIONS);
@@ -238,7 +241,6 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             session.close();
             session = null;
 
-            final Set<Folder> permittedFolders = addPermittedFolder(null);
             Map<String, Boolean> checkedFolders = new HashMap<>();
             SubmissionsOrdersResponse answer = new SubmissionsOrdersResponse();
             answer.setDeliveryDate(new Date());
@@ -293,7 +295,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         return limit == null || limit < 0 ? DEFAULT_LIMIT : limit.intValue();
     }
 
-    private boolean isPermitted(DBItemDailyPlanHistory item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private boolean isPermitted(DBItemDailyPlanHistory item, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) {
         Boolean result = checkedFolders.get(item.getWorkflowFolder());
         if (result == null) {
             result = canAdd(item.getWorkflowPath(), permittedFolders);

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -112,12 +113,14 @@ public class WorkflowLabelsModifyImpl extends AWorkflowModify implements IWorkfl
     private void postWorkflowJobsModify(Action action, ModifyWorkflowLabels modifyWorkflow) throws Exception {
 
         String controllerId = modifyWorkflow.getControllerId();
+        AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                .getManagePositions());
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyWorkflow.getAuditLog(), controllerId);
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
 
         WorkflowJobs wj = new WorkflowJobs(modifyWorkflow);
-        checkFolderPermissions(WorkflowPaths.getPath(wj.getPath()));
+        checkFolderPermissions(WorkflowPaths.getPath(wj.getPath()), permittedFolders);
         
         Either<Problem, JWorkflow> workflowV = currentState.repo().pathToCheckedWorkflow(wj.getWorkflowPath());
         if (workflowV == null || workflowV.isLeft()) {

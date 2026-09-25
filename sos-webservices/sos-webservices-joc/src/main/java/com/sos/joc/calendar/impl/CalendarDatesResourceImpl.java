@@ -81,7 +81,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");
             }
 
-            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar()));
+            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar(), authFolders));
         } finally {
             Globals.disconnect(session);
         }

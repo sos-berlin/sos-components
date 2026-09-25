@@ -7,12 +7,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -30,7 +30,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
@@ -57,26 +56,26 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             if (response != null) {
                 return response;
             }
-
-            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLocks(filter)));
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate()
+                    .getLocks().getView());
+            return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLocks(filter, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
 
-    private Locks getLocks(LocksFilter filter) throws Exception {
+    private Locks getLocks(LocksFilter filter, AuthFolders permittedFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(filter.getControllerId());
             dbFilter.setObjectTypes(Collections.singleton(DeployType.LOCK.intValue()));
+            dbFilter.setFolders(filter.getFolders());
 
             List<String> paths = filter.getLockPaths();
             if (paths != null && !paths.isEmpty()) {
                 filter.setFolders(null);
             }
-            boolean withFolderFilter = filter.getFolders() != null && !filter.getFolders().isEmpty();
-            final Set<Folder> folders = addPermittedFolder(filter.getFolders());
             ZoneId zoneId = OrdersHelper.getDailyPlanTimeZone();
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -86,11 +85,6 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
                 dbFilter.setNames(paths.stream().map(p -> JocInventory.pathToName(p)).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permissions
-            } else if (folders != null && !folders.isEmpty()) {
-                dbFilter.setFolders(folders);
-                contents = dbLayer.getDeployedInventory(dbFilter);
             } else {
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
@@ -106,7 +100,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             if (contents != null) {
                 Map<String, HasNote> lockNotes = new InventoryNotesDBLayer(session).hasNote(ConfigurationType.LOCK.intValue(), getAccountName());
                 
-                answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
+                answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders, filter.getFolders())).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");

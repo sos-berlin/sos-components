@@ -34,7 +34,8 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
 
             JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
             if (response == null) {
-                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(read(in)));
+                AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                response = responseStatus200(Globals.objectMapper.writeValueAsBytes(read(in, permittedFolders)));
             }
             return response;
 
@@ -43,7 +44,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
         }
     }
 
-    private Dates read(CalendarDatesFilter in) throws Exception {
+    private Dates read(CalendarDatesFilter in, AuthFolders permittedFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
 
@@ -84,7 +85,7 @@ public class CalendarDatesResourceImpl extends ACalendarBaseResourceImpl impleme
                 throw new JocMissingRequiredParameterException("undefined 'calendar'");
             }
 
-            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar()));
+            return new FrequencyResolver().resolveCalendar(in, getNonWorkingDayCalendars(dbLayer, in.getCalendar(), permittedFolders));
         } finally {
             Globals.disconnect(session);
         }
