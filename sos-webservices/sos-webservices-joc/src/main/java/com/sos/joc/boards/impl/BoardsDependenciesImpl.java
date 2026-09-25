@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.board.BoardDeps;
 import com.sos.controller.model.workflow.WorkflowId;
@@ -31,7 +32,6 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.board.BoardsDeps;
 import com.sos.joc.model.board.BoardsPathFilter;
 import com.sos.joc.model.board.DepsPerBoard;
-import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -72,16 +72,17 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
     }
     
     private BoardsDeps getBoards(String controllerId, Set<String> boardNames, SOSHibernateSession session) throws Exception {
-        Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+        AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                getNoticeBoards().getView());
         session = Globals.createSosHibernateStatelessConnection(API_CALL);
         
         BoardsDeps answer = new BoardsDeps();
-        answer.setNoticeBoards(getDepsPerBoard(controllerId, boardNames, permittedFolders, session));
+        answer.setNoticeBoards(getDepsPerBoard(controllerId, boardNames, authFolders, session));
         answer.setDeliveryDate(Date.from(Instant.now()));
         return answer;
     }
     
-    private static DepsPerBoard getDepsPerBoard(String controllerId, Set<String> boardNames, Set<Folder> permittedFolders,
+    private static DepsPerBoard getDepsPerBoard(String controllerId, Set<String> boardNames, AuthFolders authFolders,
             SOSHibernateSession session) {
         DeployedConfigurationFilter confFilter = new DeployedConfigurationFilter();
         confFilter.setControllerId(controllerId);
@@ -93,7 +94,7 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
         
         List<WorkflowBoards> wbs = getWorkflowsWithBoards(controllerId, boardNames, dbLayer);
 
-        return getDepsPerBoard(dcs.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)), wbs);
+        return getDepsPerBoard(dcs.stream().filter(dc -> canAdd(dc.getPath(), authFolders)), wbs);
     }
     
     private static DepsPerBoard getDepsPerBoard(Stream<DeployedContent> dcs, List<WorkflowBoards> wbs) {

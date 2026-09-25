@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
 import com.sos.inventory.model.deploy.DeployType;
@@ -53,6 +54,8 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
     }
     
     private BoardDeps getBoard(BoardPathFilter filter) throws Exception {
+        AuthFolders authFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate().
+                getNoticeBoards().getView());
         SOSHibernateSession session = null;
         try {
             String controllerId = filter.getControllerId();
@@ -64,7 +67,7 @@ public class BoardDependenciesImpl extends JOCResourceImpl implements IBoardDepe
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Notice board '%s' doesn't exist", filter.getNoticeBoardPath()));
             }
-            checkFolderPermissions(dc.getPath());
+            checkFolderPermissions(dc.getPath(), authFolders);
 
             com.sos.controller.model.board.BoardDeps board = Globals.objectMapper.readValue(dc.getContent(),
                     com.sos.controller.model.board.BoardDeps.class);

@@ -1,7 +1,6 @@
 package com.sos.joc.inventory.impl;
 
 import java.io.IOException;
-
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -64,8 +63,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.dependencies.DBLayerDependencies;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-
-
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -78,7 +75,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocReleaseException;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.audit.CategoryType;
-
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.generate.GenerateRequest;
@@ -154,6 +150,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         try {
             SOSHibernateSession session = null;
             InventoryDBLayer dbLayer;
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             DBItemJocAuditLog dbAuditLog;
             JocAuditObjectsLog auditLogObjectsLogging;
@@ -163,7 +160,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 dbLayer = new InventoryDBLayer(session);
                 // released schedules with referenced workflows
-                renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer);
+                renamedOldSchedulePathsWithWorkflowNames = getReleasedSchedulePathsWithWorkflowNames(in, dbLayer, authFolders);
                 // schedules from the request
                 Set<String> inSchedulesPaths = in.getUpdate().stream().filter(r -> r.getObjectType().equals(ConfigurationType.SCHEDULE)).map(
                         RequestFilter::getPath).collect(Collectors.toSet());
@@ -172,7 +169,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 
                 dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 auditLogObjectsLogging = new JocAuditObjectsLog(dbAuditLog.getId());
-                schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer);
+                schedulePathsWithWorkflowNames = getSchedulePathsWithWorkflowNames(in, dbLayer, authFolders);
             } finally {
                 Globals.disconnect(session);
             }
@@ -207,7 +204,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     if (in.getDelete() != null && !in.getDelete().isEmpty()) {
                         futureSession.setAutoCommit(false);
                         Globals.beginTransaction(futureSession);
-                        errors.addAll(delete(in.getDelete(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                        errors.addAll(delete(in.getDelete(), futureDbLayer, authFolders, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders));
                         if (!errors.isEmpty()) {
                             Globals.rollback(futureSession);
@@ -218,13 +215,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     }
                     // call update for preDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                        errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                        errors.addAll(update(in.getUpdate(), futureDbLayer, authFolders, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, true));
                     }
                     releaseAndReaquireSemaphore(in.getTransactionId());
                     // call update for postDeploy
                     if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
-                        errors.addAll(update(in.getUpdate(), futureDbLayer, folderPermissions, getJocError(), dbAuditLog, auditLogObjectsLogging,
+                        errors.addAll(update(in.getUpdate(), futureDbLayer, authFolders, getJocError(), dbAuditLog, auditLogObjectsLogging,
                                 withDeletionOfEmptyFolders, false));
                     }
                     if (!errors.isEmpty()) {
@@ -292,7 +289,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         LOGGER.debug("RELEASE: reacquired semaphore with transactionId " + transactionId);
     }
 
-    private static List<Throwable> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
+    private static List<Throwable> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, AuthFolders authFolders,
             JocError jocError, DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders) {
         Set<DBItemInventoryConfiguration> updateDependenciesFor = new HashSet<>();
         List<Throwable> bulkErrors = new ArrayList<>();
@@ -301,7 +298,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 continue;
             }
             try {
-                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, authFolders);
                 updateDependenciesFor.add(conf);
                 delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, auditLogObjectsLogging, true);
             } catch (DBMissingDataException ex) {
@@ -361,7 +358,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         // TODO post event: InventoryTaggingUpdated ??
     }
 
-    private List<Throwable> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions, JocError jocError,
+    private List<Throwable> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, AuthFolders authFolders, JocError jocError,
             DBItemJocAuditLog dbAuditLog, JocAuditObjectsLog auditLogObjectsLogging, boolean withDeletionOfEmptyFolders, boolean preDeploy) {
 
         List<Throwable> bulkErrors = new ArrayList<>();
@@ -371,7 +368,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 continue;
             }
             try {
-                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, authFolders);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
                     bulkErrors.addAll(updateReleasedFolder(conf, dbLayer, cachedWorkflows, dbAuditLog, auditLogObjectsLogging, preDeploy));
                     JocInventory.postEvent(conf.getFolder());
@@ -688,7 +685,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
 
-    private Map<String, List<String>> getReleasedSchedulePathsWithWorkflowNames(ReleaseFilter in, InventoryDBLayer dbLayer) {
+    private Map<String, List<String>> getReleasedSchedulePathsWithWorkflowNames(ReleaseFilter in, InventoryDBLayer dbLayer ,AuthFolders authFolders) {
         // in case a schedule has been renamed, this collects the schedules with their old names to be able to delete orders referencing this
         Map<String, List<String>> schedulePathsWithWorkflowNames = new HashMap<String, List<String>>();
         List<RequestFilter> all = Stream.concat(in.getDelete().stream(), in.getUpdate().stream()).collect(Collectors.toList());
@@ -697,7 +694,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 continue;
             }
             try {
-                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, authFolders);
                 if (conf != null) {
                     DBItemInventoryReleasedConfiguration releasedConf = dbLayer.getReleasedItemByConfigurationId(conf.getId());
                     if (releasedConf != null) {
@@ -741,7 +738,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return schedulePathsWithWorkflowNames;
     }
     
-    private Map<String, List<String>> getSchedulePathsWithWorkflowNames(ReleaseFilter in, InventoryDBLayer dbLayer) {
+    private Map<String, List<String>> getSchedulePathsWithWorkflowNames(ReleaseFilter in, InventoryDBLayer dbLayer ,AuthFolders authFolders) {
         Map<String, List<String>> schedulePathsWithWorkflowNames = new HashMap<String, List<String>>();
         List<RequestFilter> all = Stream.concat(in.getDelete().stream(), in.getUpdate().stream()).collect(Collectors.toList());
         for (RequestFilter requestFilter : all) {
@@ -749,7 +746,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 continue;
             }
             try {
-                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, authFolders);
                 if (conf != null) {
                     if (ConfigurationType.SCHEDULE.equals(conf.getTypeAsEnum())) {
                         // only add if planOrderAutomatically = true
