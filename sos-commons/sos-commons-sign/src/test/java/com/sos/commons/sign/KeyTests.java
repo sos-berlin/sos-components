@@ -1422,36 +1422,36 @@ public class KeyTests {
         }
     }
 
-    //@Test
-    public void test36CreateAndValidateKyberKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
-        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair with Kyber and check secret  *************************");
-        String username = "test";
-        LOGGER.info("****************  Create KeyPair  **************************************************************");
-        KeyPair keyPair = KeyUtil.createMLKyberKeyPairBC(KyberParameterSpec.kyber768);
-        JocKeyPair jocKeyPair = KeyUtil.createMLKyberJocKeyPairBC(keyPair, username, null);
-        LOGGER.info("KeyPair generation was successful!");
-        LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
-        LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
-        // Transport Object
-
-        PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
-                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
-         KeyGenerator keyGenSender = KeyGenerator.getInstance("Kyber", "BCPQC");
-        keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
-        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
-
-        LOGGER.info("****************  Verify  **********************************************************************");
-        KeyGenerator keyGenReceiver = KeyGenerator.getInstance("Kyber", "BCPQC");
-
-        PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
-                KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
-        keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
-        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
-        if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
-            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
-        }
-    }
+//    //@Test
+//    public void test36CreateAndValidateKyberKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+//            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
+//        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair with Kyber and check secret  *************************");
+//        String username = "test";
+//        LOGGER.info("****************  Create KeyPair  **************************************************************");
+//        KeyPair keyPair = KeyUtil.createMLKyberKeyPairBC(KyberParameterSpec.kyber768);
+//        JocKeyPair jocKeyPair = KeyUtil.createMLKyberJocKeyPairBC(keyPair, username, null);
+//        LOGGER.info("KeyPair generation was successful!");
+//        LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
+//        LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
+//        // Transport Object
+//
+//        PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
+//                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+//         KeyGenerator keyGenSender = KeyGenerator.getInstance("Kyber", "BCPQC");
+//        keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
+//        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
+//
+//        LOGGER.info("****************  Verify  **********************************************************************");
+//        KeyGenerator keyGenReceiver = KeyGenerator.getInstance("Kyber", "BCPQC");
+//
+//        PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
+//                KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
+//        keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
+//        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
+//        if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
+//            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
+//        }
+//    }
 
     @Ignore
     @Test
