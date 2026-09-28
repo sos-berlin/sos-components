@@ -59,7 +59,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCSException;
-import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec;
+//import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
