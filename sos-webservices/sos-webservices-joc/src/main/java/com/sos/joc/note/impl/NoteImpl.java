@@ -8,11 +8,11 @@ import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryNote;
 import com.sos.joc.db.inventory.DBItemInventoryNoteNotification;
@@ -23,10 +23,11 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.note.NoteDeleteEvent;
 import com.sos.joc.event.bean.note.NoteEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.joc.PolicyValue;
 import com.sos.joc.model.note.DisplayPreferencesRequest;
 import com.sos.joc.model.note.NoteResponse;
 import com.sos.joc.model.note.Notification;
@@ -53,6 +54,9 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         SOSHibernateSession session = null;
         try {
             body = initLogging(API_CALL_READ, body, accessToken, CategoryType.INVENTORY);
+            
+            throwIfPolicyDisabled();
+            
             JsonValidator.validateFailFast(body, NoteIdentifier.class);
             NoteIdentifier in = Globals.objectMapper.readValue(body, NoteIdentifier.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
@@ -64,7 +68,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-            InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            InventoryNoteItem invItem = getInvItem(dbLayer, in);
             DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             DBItemInventoryNoteNotification notification = dbLayer.getNoteNotification(getAccountName(), invItem.getNoteId());
             if (notification != null) {
@@ -86,6 +90,19 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         }
     }
     
+    private static boolean isPolicyEnabled() {
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+        }
+        return PolicyValue.enabled.equals(PolicyValue.fromValue(Globals.sosCockpitProperties.getProperty("policy_user_notes", "enabled")));
+    }
+    
+    protected static void throwIfPolicyDisabled() {
+        if (!isPolicyEnabled()) {
+            throw new JocAccessDeniedException("Access denied by policy");
+        }
+    }
+    
     private static NoteResponse getNoteResponse(DBItemInventoryNote dbItem, NoteIdentifier in, String path) throws JsonMappingException,
             JsonProcessingException {
         if (dbItem == null) {
@@ -100,13 +117,10 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         }
     }
     
-    protected static InventoryNoteItem getInvItem(InventoryNotesDBLayer dbLayer, NoteIdentifier in, SOSAuthFolderPermissions folderPermissions) {
+    protected static InventoryNoteItem getInvItem(InventoryNotesDBLayer dbLayer, NoteIdentifier in) {
         InventoryNoteItem invItem = dbLayer.getInvItem(in);
         if (invItem == null) {
             throw new DBMissingDataException(String.format("Couldn't find %s: %s", in.getObjectType().name().toLowerCase(), in.getName()));
-        }
-        if (!folderPermissions.isPermittedForFolder(invItem.getFolder())) {
-            throw new JocFolderPermissionsException(invItem.getFolder());
         }
         return invItem;
     }
@@ -128,6 +142,9 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         SOSHibernateSession session = null;
         try {
             body = initLogging(API_CALL_DELETE, body, accessToken, CategoryType.INVENTORY);
+            
+            throwIfPolicyDisabled();
+            
             JsonValidator.validateFailFast(body, ModifyRequest.class);
             ModifyRequest in = Globals.objectMapper.readValue(body, ModifyRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
@@ -140,7 +157,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             storeAuditLog(in.getAuditLog());
             session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-            InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            InventoryNoteItem invItem = getInvItem(dbLayer, in);
             DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             if (dbItem != null) {
                 session.delete(dbItem);
@@ -165,6 +182,9 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         SOSHibernateSession session = null;
         try {
             body = initLogging(API_CALL_PREFS, body, accessToken, CategoryType.INVENTORY);
+            
+            throwIfPolicyDisabled();
+            
             JsonValidator.validateFailFast(body, DisplayPreferencesRequest.class);
             DisplayPreferencesRequest in = Globals.objectMapper.readValue(body, DisplayPreferencesRequest.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
@@ -176,7 +196,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL_PREFS);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-            InventoryNoteItem invItem = getInvItem(dbLayer, in, folderPermissions);
+            InventoryNoteItem invItem = getInvItem(dbLayer, in);
             DBItemInventoryNote dbItem = dbLayer.getNote(invItem.getNoteId());
             NoteResponse note = getNoteResponse(dbItem, in, invItem.getPath());
             
@@ -207,6 +227,9 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_USERS, null, accessToken, CategoryType.IDENTITY);
+            
+            throwIfPolicyDisabled();
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -228,6 +251,9 @@ public class NoteImpl extends JOCResourceImpl implements INote {
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_NOTIFICATIONS, null, accessToken, CategoryType.INVENTORY);
+            
+            throwIfPolicyDisabled();
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

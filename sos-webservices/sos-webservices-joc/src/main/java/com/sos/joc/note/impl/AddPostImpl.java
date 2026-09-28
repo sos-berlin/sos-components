@@ -49,6 +49,9 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
         SOSHibernateSession session = null;
         try {
             body = initLogging(API_CALL, body, accessToken, CategoryType.INVENTORY);
+            
+            NoteImpl.throwIfPolicyDisabled();
+            
             JsonValidator.validateFailFast(body, AddPost.class);
             AddPost in = Globals.objectMapper.readValue(body, AddPost.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
@@ -61,7 +64,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             in.setName(JocInventory.pathToName(in.getName()));
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryNotesDBLayer dbLayer = new InventoryNotesDBLayer(session);
-            InventoryNoteItem invItem = NoteImpl.getInvItem(dbLayer, in, folderPermissions);
+            InventoryNoteItem invItem = NoteImpl.getInvItem(dbLayer, in);
             
             String user = getAccountName();
             Date now = Date.from(Instant.now());
