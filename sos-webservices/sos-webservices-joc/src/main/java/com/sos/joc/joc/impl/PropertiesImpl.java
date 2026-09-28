@@ -13,9 +13,11 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsKiosk;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.joc.resource.IPropertiesResource;
+import com.sos.joc.model.Policies;
 import com.sos.joc.model.Properties;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.joc.LicenseType;
+import com.sos.joc.model.joc.PolicyValue;
 
 import jakarta.ws.rs.Path;
 
@@ -57,6 +59,11 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setAllowUndeclaredVariables(jocSettings.getAllowUndeclaredVariables());
             entity.setNumOfTagsDisplayedAsOrderId(jocSettings.getNumOfTagsDisplayedAsOrderId());
             entity.setNumOfWorkflowTagsDisplayed(jocSettings.getNumOfWorkflowTagsDisplayed());
+            
+            Policies policies = new Policies();
+            policies.setUserNotes(PolicyValue.fromValue(Globals.sosCockpitProperties.getProperty("policy_user_notes", "enabled")));
+            policies.setLinkInObjectTitle(PolicyValue.fromValue(Globals.sosCockpitProperties.getProperty("policy_link_in_object_title", "enabled")));
+            entity.setPolicies(policies);
             
             ConfigurationGlobalsKiosk kioskSettings = Globals.getConfigurationGlobalsKiosk();
             entity.setKioskRole(ClusterSettings.getKioskRole(kioskSettings));
