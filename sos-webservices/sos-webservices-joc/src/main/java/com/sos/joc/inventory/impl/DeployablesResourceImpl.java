@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
@@ -149,8 +150,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     deployableTypes, session);
 
             if (withTree) {
-                final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
-                        .emptySet());
+                final Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(authFolders);
                 Stream<ResponseDeployableTreeItem> deployablesStream = deployables.stream().filter(item -> !JocInventory.isFolder(item
                         .getObjectType()));
                 if (withSync) {
