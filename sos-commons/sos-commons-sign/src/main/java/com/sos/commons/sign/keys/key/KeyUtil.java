@@ -110,8 +110,8 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
 import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
-import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
-import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec;
+//import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
+//import org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -1692,18 +1692,18 @@ public abstract class KeyUtil {
         return createMLKEMJocKeyPairBC(kp, account, dn);
     }
 
-    public static KeyPair createMLKyberKeyPairBC(KyberParameterSpec algorithmSpec)
-            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        Security.addProvider(new BouncyCastlePQCProvider());
-        // Generate ML-KEM key pair
-        KeyPairGenerator kpGen = KeyPairGenerator.getInstance(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, SOSKeyConstants.MLKEM_KYB_PROVIDER);
-        if (algorithmSpec == null) {
-            // Default
-            algorithmSpec = KyberParameterSpec.kyber768;
-        }
-        kpGen.initialize(algorithmSpec, new SecureRandom());
-        return kpGen.generateKeyPair();
-    }
+//    public static KeyPair createMLKyberKeyPairBC(KyberParameterSpec algorithmSpec)
+//            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+//        Security.addProvider(new BouncyCastlePQCProvider());
+//        // Generate ML-KEM key pair
+//        KeyPairGenerator kpGen = KeyPairGenerator.getInstance(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, SOSKeyConstants.MLKEM_KYB_PROVIDER);
+//        if (algorithmSpec == null) {
+//            // Default
+//            algorithmSpec = KyberParameterSpec.kyber768;
+//        }
+//        kpGen.initialize(algorithmSpec, new SecureRandom());
+//        return kpGen.generateKeyPair();
+//    }
 
     public static JocKeyPair createMLKyberJocKeyPairBC(KeyPair keyPair, String account, String dn)
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
@@ -1719,10 +1719,10 @@ public abstract class KeyUtil {
         return jocKeyPair;
     }
 
-    public static JocKeyPair createMLKyberJocKeyPairBC(KyberParameterSpec algorithmSpec, String account, String dn)
-            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        KeyPair kp = createMLKyberKeyPairBC(algorithmSpec);
-        return createMLKyberJocKeyPairBC(kp, account, dn);
-    }
+//    public static JocKeyPair createMLKyberJocKeyPairBC(KyberParameterSpec algorithmSpec, String account, String dn)
+//            throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+//        KeyPair kp = createMLKyberKeyPairBC(algorithmSpec);
+//        return createMLKyberJocKeyPairBC(kp, account, dn);
+//    }
 
 }
