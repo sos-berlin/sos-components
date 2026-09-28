@@ -41,7 +41,7 @@
     <sos.license.version>1.1.2</sos.license.version>
 
     <jackson.version>2.22</jackson.version>
-    <jackson.databind.version>2.22.2</jackson.databind.version>
+    <jackson.databind.version>2.22.3</jackson.databind.version>
     <jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
     <junit.version>4.13.1</junit.version>
     <slf4j.version>2.0.19</slf4j.version>
@@ -70,8 +70,8 @@
     <io.vavr.version>1.0.1</io.vavr.version>
     <txtmark.version>0.13</txtmark.version>
     <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-    <bouncycastle.version>1.85</bouncycastle.version>
-    <bouncycastle.provider.version>1.85.2</bouncycastle.provider.version>
+    <bouncycastle.version>1.86</bouncycastle.version>
+    <bouncycastle.provider.version>1.86</bouncycastle.provider.version>
     <dom4j.version>2.1.3</dom4j.version>
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
