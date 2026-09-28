@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.ScrollableResults;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -25,7 +26,6 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.monitoring.notification.common.AcknowledgementItem;
 import com.sos.joc.model.monitoring.notification.order.OrderNotificationsAnswer;
 import com.sos.joc.model.monitoring.notification.order.OrderNotificationsFilter;
@@ -75,7 +75,8 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
             }
 
             List<Integer> types = getTypes(in);
-            Map<String, Set<Folder>> permittedFolders = folderPermissions.getListOfFolders(allowedControllers);
+            Map<String, AuthFolders> permittedFolders = getPermittedFoldersByControllerPermissions(allowedControllers,
+                    getControllerPermissionsPredicate().getOrders().getView());
             if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }

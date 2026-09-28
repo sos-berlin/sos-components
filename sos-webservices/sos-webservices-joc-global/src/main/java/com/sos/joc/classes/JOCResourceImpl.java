@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -164,11 +165,11 @@ public class JOCResourceImpl {
         return Stream.of(currentAccount.getJocPermissions(), currentAccount.get4EyesJocPermissions());
     }
     
-    protected JocPermissionsPredicate getJocPermissionsPredicate() throws JocException {
+    protected static JocPermissionsPredicate getJocPermissionsPredicate() throws JocException {
         return new JocPermissionsPredicate();
     }
     
-    protected ControllerPermissionsPredicate getControllerPermissionsPredicate() throws JocException {
+    protected static ControllerPermissionsPredicate getControllerPermissionsPredicate() throws JocException {
         return new ControllerPermissionsPredicate();
     }
     
@@ -707,6 +708,10 @@ public class JOCResourceImpl {
     
     protected AuthFolders getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> pred) {
         return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerId, pred);
+    }
+    
+    protected Map<String, AuthFolders> getPermittedFoldersByControllerPermissions(Set<String> controllerIds, Predicate<String> pred) {
+        return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerIds, pred);
     }
     
     public static void checkFolderPermissions(String path, AuthFolders permittedFolders) {

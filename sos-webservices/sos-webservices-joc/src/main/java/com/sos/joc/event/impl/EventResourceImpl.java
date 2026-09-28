@@ -6,11 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.interfaces.ISOSSession;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.inventory.model.deploy.DeployType;
@@ -26,7 +27,6 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.event.Controller;
 import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventSnapshot;
@@ -65,7 +65,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity.setEventSnapshots(Collections.emptyList());
 
             entity = processAfter(EventServiceFactory.getEvents(controllerId, evtIdIsEmpty, eventId, session, getCurrentAccount()),
-                    folderPermissions.getListOfFolders(), accessToken);
+                    accessToken, controllerId, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             
             try {
                 entity.setSurveyDate(Date.from(Proxy.of(controllerId).currentState().instant()));
@@ -118,7 +118,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         }
     }
 
-    private static Event processAfter(Event evt, Set<Folder> permittedFolders, String accessToken) {
+    private static Event processAfter(Event evt, String accessToken, String controllerId, SOSAuthDetailedFolderPermissions detailedPermission) {
         SOSHibernateSession connection = null;
         try {
             if (EventServiceFactory.isClosed.get()) {
@@ -160,30 +160,41 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 // DeployType.JOBRESOURCE.intValue());
 
                 // Map<WorkflowId, String> namePathWorkflowMap = WorkflowPaths.getNamePathMap();
+                
+                AuthFolders permittedLockFolders = (lockNames.isEmpty()) ? null : detailedPermission.getPermittedFoldersByControllerPermissions(
+                        controllerId, getControllerPermissionsPredicate().getLocks().getView());
+                AuthFolders permittedBoardFolders = (noticeBoardNames.isEmpty()) ? null : detailedPermission
+                        .getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getNoticeBoards().getView());
+                AuthFolders permittedWorkflowFolders = (evt.getEventSnapshots().stream().anyMatch(e -> EventType.WORKFLOW.equals(e.getObjectType())
+                        || e.getWorkflow() != null)) ? detailedPermission.getPermittedFoldersByControllerPermissions(controllerId,
+                                getControllerPermissionsPredicate().getWorkflows().getView()) : null;
+                AuthFolders permittedDocuFolders = (evt.getEventSnapshots().stream().anyMatch(e -> EventType.FOLDER.equals(e.getObjectType()) && e
+                        .getEventType().toLowerCase().contains("documentation"))) ? detailedPermission.getPermittedFoldersByJocPermissions(
+                                getJocPermissionsPredicate().getDocumentations().getView()) : null;
 
                 evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
                     // LOGGER.info(e.toString());
                     if (e.getWorkflow() != null) {
                         e.setWorkflow(WorkflowPaths.getWorkflowId(e.getWorkflow()));
                         // LOGGER.info("workflowPath: " + e.getWorkflow().getPath());
-                        if (!canAdd(e.getWorkflow().getPath(), permittedFolders)) {
+                        if (!canAdd(e.getWorkflow().getPath(), permittedWorkflowFolders)) {
                             // LOGGER.info("event skipped");
                             return null;
                         }
                     }
                     String path = e.getPath();
-                    if (path != null) {
+                    if (path != null && !e.getEventType().toLowerCase().contains("inventory")) {
                         if (EventType.WORKFLOW.equals(e.getObjectType())) {
                             e.setPath(WorkflowPaths.getPath(path));
                             // LOGGER.info("workflowPath2: " + e.getPath());
-                            if (!canAdd(e.getPath(), permittedFolders)) {
+                            if (!canAdd(e.getPath(), permittedWorkflowFolders)) {
                                 // LOGGER.info("event skipped");
                                 return null;
                             }
                         } else if (EventType.LOCK.equals(e.getObjectType())) {
                             e.setPath(namePathLockMap.getOrDefault(path, path));
                             // LOGGER.info("lockPath: " + e.getPath());
-                            if (!canAdd(e.getPath(), permittedFolders)) {
+                            if (!canAdd(e.getPath(), permittedLockFolders)) {
                                 // LOGGER.info("event skipped");
                                 return null;
                             }
@@ -199,12 +210,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                             // }
                         } else if (EventType.NOTICEBOARD.equals(e.getObjectType())) {
                             e.setPath(namePathNoticeBoardMap.getOrDefault(path, path));
-                            if (!canAdd(e.getPath(), permittedFolders)) {
+                            if (!canAdd(e.getPath(), permittedBoardFolders)) {
                                 return null;
                             }
-                        } else if (EventType.FOLDER.equals(e.getObjectType())) {
+                        } else if (EventType.FOLDER.equals(e.getObjectType()) && e.getEventType().toLowerCase().contains("documentation")) {
                             // LOGGER.info("folder: " + path);
-                            if (!folderIsPermitted(path, permittedFolders)) {
+                            if (!folderIsPermitted(path, permittedDocuFolders)) {
                                 // LOGGER.info("event skipped");
                                 return null;
                             }

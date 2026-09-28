@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCheckJavaVariableName;
 import com.sos.inventory.model.deploy.DeployType;
@@ -50,7 +51,6 @@ import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.BlockPosition;
@@ -101,6 +101,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 return jocDefaultResponse;
             }
             
+            Predicate<String> pred = getControllerPermissionsPredicate().getOrders().getCreate();
+
             Predicate<AddOrder> requestHasStartPositionSettings = o -> o.getStartPosition() != null;
             Predicate<AddOrder> requestHasEndPositionSettings = o -> o.getEndPositions() != null && !o.getEndPositions().isEmpty();
             Predicate<AddOrder> requestHasBlockPositionSettings = o -> o.getBlockPosition() != null;
@@ -115,8 +117,12 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;
                 }
+                
+                pred = getControllerPermissionsPredicate().getOrders().getManagePositions();
             }
             
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, pred);
+
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId);
             
             Map<String, Map<String, List<Object>>> workflowsWithLabelsMap = new HashMap<>();
@@ -143,10 +149,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     }
                 }
             }
-
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-//            final Predicate<AddOrder> permissions = order -> canAdd(WorkflowPaths.getPath(JocInventory.pathToName(order.getWorkflowPath())),
-//                    permittedFolders);
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
