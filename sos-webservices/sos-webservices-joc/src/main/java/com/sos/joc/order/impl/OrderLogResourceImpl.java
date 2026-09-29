@@ -15,6 +15,7 @@ import javax.json.JsonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -55,8 +56,10 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(orderHistoryFilter.getControllerId(), 
+                    getControllerPermissionsPredicate().getOrders().getView());
 
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), authFolders, accessToken);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(logOrderContent.getOrderLog()));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -89,8 +92,10 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(orderHistoryFilter.getControllerId(), 
+                    getControllerPermissionsPredicate().getOrders().getView());
 
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions, accessToken);
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), authFolders, accessToken);
             return responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(), logOrderContent
                     .getUnCompressedLength());
         } catch (Exception e) {

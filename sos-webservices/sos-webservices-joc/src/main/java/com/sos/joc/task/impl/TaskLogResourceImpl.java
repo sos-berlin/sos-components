@@ -15,6 +15,7 @@ import javax.json.JsonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -185,8 +186,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate().
+                    getOrders().getView());
 
-            LogTaskContent logTaskContent = new LogTaskContent(filter, folderPermissions, accessToken);
+            LogTaskContent logTaskContent = new LogTaskContent(filter, authFolders, accessToken);
             if (IMPL_PATH_LOG.equals(implPath)) {
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(false), logTaskContent.getHeaders(),
                         getJocAuditTrail());

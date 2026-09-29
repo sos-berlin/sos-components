@@ -57,6 +57,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
             
             storeAuditLog(in.getAuditLog());
             
@@ -65,7 +66,7 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             session.beginTransaction();
             InventoryJobTagDBLayer dbTagLayer = new InventoryJobTagDBLayer(session);
             
-            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session), authFolders);
             // without checking if job exists because Workflow is not completely stored when this API is called.
 //            Workflow workflow = WorkflowConverter.convertInventoryWorkflow(config.getContent());
 //            Jobs jobs = workflow.getJobs();
@@ -218,9 +219,10 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TAGS);
-            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session));
+            DBItemInventoryConfiguration config = getConfiguration(in.getPath(), new InventoryDBLayer(session), authFolders);
             
             InventoryJobTagDBLayer dbLayer = new InventoryJobTagDBLayer(session);
             JobsTags entity = new JobsTags();
@@ -246,11 +248,11 @@ public class TaggingImpl extends JOCResourceImpl implements ITagging {
         return Globals.objectMapper.readValue(filterBytes, clazz);
     }
     
-    private DBItemInventoryConfiguration getConfiguration(String path, InventoryDBLayer dbLayer) throws Exception {
+    private DBItemInventoryConfiguration getConfiguration(String path, InventoryDBLayer dbLayer, AuthFolders authFolders) throws Exception {
         com.sos.joc.model.inventory.common.RequestFilter filter = new com.sos.joc.model.inventory.common.RequestFilter();
         filter.setObjectType(ConfigurationType.WORKFLOW);
         filter.setPath(path);
-        return JocInventory.getConfiguration(dbLayer, filter, folderPermissions);
+        return JocInventory.getConfiguration(dbLayer, filter, authFolders);
     }
     
 }
