@@ -1,5 +1,6 @@
 package com.sos.joc.workflows.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,9 +33,11 @@ public class WorkflowTagSearchImpl extends JOCResourceImpl implements ITagSearch
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getWorkflows().getView());
             
             in.setSearch(new GroupedTag(in.getSearch()).getTag());
-            ResponseQuickSearch answer = QuickSearchStore.getTagsAnswer(in, ConfigurationType.WORKFLOW, accessToken, folderPermissions);
+            ResponseQuickSearch answer = QuickSearchStore.getTagsAnswer(in, ConfigurationType.WORKFLOW, accessToken, authFolders);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);
