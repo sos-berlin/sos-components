@@ -21,6 +21,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
@@ -139,8 +140,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
 
             if (withTree) {
                 // TODO: JOC-2255 Adjust to use AuthFolders
-                final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
-                        .emptySet());
+                final Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(authFolders);
                 final Map<String, TreeSet<ResponseReleasableTreeItem>> groupedReleasables = releasables.stream().filter(item -> !JocInventory
                         .isFolder(item.getObjectType())).collect(Collectors.groupingBy(ResponseReleasableTreeItem::getFolder, Collectors.toCollection(
                                 () -> new TreeSet<>(comp))));
