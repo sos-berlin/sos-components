@@ -24,12 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.history.HistoryLogMapper;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -59,12 +60,12 @@ public class LogOrderContent {
     private Long mainParentHistoryId;
     private String orderId;
     private Long unCompressedLength = null;
-    private final SOSAuthFolderPermissions folderPermissions;
+    private final AuthFolders authFolders;
 
-    public LogOrderContent(Long historyId, SOSAuthFolderPermissions folderPermissions, String accessToken) {
+    public LogOrderContent(Long historyId, AuthFolders authFolders, String accessToken) {
         this.historyId = historyId;
         this.accessToken = accessToken;
-        this.folderPermissions = folderPermissions;
+        this.authFolders = authFolders;
     }
 
     public Long getUnCompressedLength() {
@@ -156,7 +157,7 @@ public class LogOrderContent {
              // throw new DBMissingDataException(String.format("Couldn't find the MainOrder (Id:%d)", historyId));
              // }
              // }
-            if (!folderPermissions.isPermittedForFolder(historyOrderItem.getWorkflowFolder())) {
+            if (!JOCResourceImpl.folderIsPermitted(historyOrderItem.getWorkflowFolder(), authFolders)) {
                 throw new JocFolderPermissionsException("folder access denied: " + historyOrderItem.getWorkflowFolder());
             }
             mainParentHistoryId = historyOrderItem.getMainParentId();

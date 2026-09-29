@@ -2,6 +2,7 @@ package com.sos.joc.calendars.impl;
 
 import java.util.Collections;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -31,9 +32,10 @@ public class CalendarQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView());
             
             in.setReturnTypes(Collections.singletonList(RequestSearchReturnType.CALENDAR));
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, folderPermissions, false);
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, authFolders, false);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

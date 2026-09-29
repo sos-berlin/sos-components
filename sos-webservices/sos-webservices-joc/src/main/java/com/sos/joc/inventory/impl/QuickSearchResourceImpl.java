@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,8 +28,9 @@ public class QuickSearchResourceImpl extends JOCResourceImpl implements IQuickSe
             if (response != null) {
                 return response;
             }
-            
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, folderPermissions, true);
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, authFolders, true);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

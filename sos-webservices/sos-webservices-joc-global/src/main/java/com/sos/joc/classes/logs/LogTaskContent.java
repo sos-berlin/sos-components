@@ -17,10 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -37,7 +38,7 @@ public class LogTaskContent {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
 
-    private final SOSAuthFolderPermissions folderPermissions;
+    private final AuthFolders authFolders;
     private final Long historyId;
     private final String sessionIdentifier;
     private final Long maxLogSize;// 10 * 1024 * 1024L; // 10MB
@@ -53,17 +54,17 @@ public class LogTaskContent {
 
     private boolean logReadedFromDb = false;
 
-    public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
+    public LogTaskContent(TaskFilter taskFilter, AuthFolders authFolders, String sessionIdentifier) {
         this.historyId = taskFilter.getTaskId();
         this.sessionIdentifier = sessionIdentifier;
-        this.folderPermissions = folderPermissions;
+        this.authFolders = authFolders;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
-    public LogTaskContent(Long historyId, SOSAuthFolderPermissions folderPermissions, String sessionIdentifier) {
+    public LogTaskContent(Long historyId, AuthFolders authFolders, String sessionIdentifier) {
         this.historyId = historyId;
         this.sessionIdentifier = sessionIdentifier;
-        this.folderPermissions = folderPermissions;
+        this.authFolders = authFolders;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
 
     }
@@ -71,7 +72,7 @@ public class LogTaskContent {
     public LogTaskContent(Long historyId, String sessionIdentifier) {
         this.historyId = historyId;
         this.sessionIdentifier = sessionIdentifier;
-        this.folderPermissions = null;
+        this.authFolders = null;
         this.maxLogSize = Globals.getConfigurationGlobalsJoc().getMaxDisplaySizeInBytes();
     }
 
@@ -204,7 +205,7 @@ public class LogTaskContent {
             if (step == null) {
                 throw new DBMissingDataException(String.format("Couldn't find the Task (Id:%d)", historyId));
             }
-            if (folderPermissions != null && !folderPermissions.isPermittedForFolder(step.getWorkflowFolder())) {
+            if (authFolders != null && !JOCResourceImpl.folderIsPermitted(step.getWorkflowFolder(), authFolders)) {
                 throw new JocFolderPermissionsException("folder access denied: " + step.getWorkflowFolder());
             }
             orderId = step.getHistoryOrderId();

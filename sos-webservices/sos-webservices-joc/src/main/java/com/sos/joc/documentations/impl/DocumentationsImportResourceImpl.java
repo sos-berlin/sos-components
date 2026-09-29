@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -78,8 +79,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             }
             
             FilenameSanitizer.test("folder", folder);
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getDocumentations().getManage());
             
-            if (!folderPermissions.isPermittedForFolder(folder)) {
+            if (!folderIsPermitted(folder, authFolders)) {
                 throw new JocFolderPermissionsException(folder);
             }
 

@@ -111,8 +111,7 @@ public class SOSAuthDetailedFolderPermissions {
         return new AuthFolders(allowedFoldersOpt, deniedFoldersOpt);
     }
 
-    public AuthFolders getPermittedFolders(String controllerId, boolean withJocPermissions,
-            Collection<Predicate<String>> expectedPermissions) {
+    public AuthFolders getPermittedFolders(String controllerId, boolean withJocPermissions, Collection<Predicate<String>> expectedPermissions) {
         if (controllerId == null) {
             controllerId = "";
         }
