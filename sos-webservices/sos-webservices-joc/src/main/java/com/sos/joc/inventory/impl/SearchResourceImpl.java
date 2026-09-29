@@ -47,7 +47,6 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             if (response != null) {
                 return response;
             }
-            //TODO: JOC-2255
             ResponseSearch answer = new ResponseSearch();
             answer.setResults(getSearchResult(in, authFolders));
             answer.setDeliveryDate(Date.from(Instant.now()));
