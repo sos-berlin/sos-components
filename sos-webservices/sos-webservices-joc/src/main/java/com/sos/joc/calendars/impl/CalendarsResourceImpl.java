@@ -2,11 +2,9 @@ package com.sos.joc.calendars.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -15,6 +13,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
@@ -29,7 +28,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.calendar.Calendars;
 import com.sos.joc.model.calendar.CalendarsFilter;
-import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
 import jakarta.ws.rs.Path;
@@ -45,11 +43,6 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
         return postCalendars(accessToken, calendarsFilter, false);
     }
 
-    // @Override
-    // public JOCDefaultResponse postUsedBy(String accessToken, byte[] calendarsFilter) {
-    // return postCalendars(accessToken, calendarsFilter, true);
-    // }
-
     public JOCDefaultResponse postCalendars(String accessToken, byte[] filterBytes, boolean withUsedBy) {
         SOSHibernateSession session = null;
         try {
@@ -61,64 +54,65 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryReleasedConfiguration> dbCalendars = null;
-
-            boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
-            final Set<Folder> folders = folderPermissions.getPermittedFolders(calendarsFilter.getFolders());
-
-            if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
-                calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(p -> JocInventory.pathToName(p))
-                        .distinct().collect(Collectors.toList()));
-
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permission
-            } else {
-                Collection<Integer> types = Arrays.asList(CalendarType.WORKINGDAYSCALENDAR.intValue(), CalendarType.NONWORKINGDAYSCALENDAR
-                        .intValue());
-                if (calendarsFilter.getType() != null) {
-                    types = Arrays.asList(calendarsFilter.getType().intValue());
-                }
-                dbCalendars = dbLayer.getReleasedConfigurationsByType(types);
-            }
+            
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView(), calendarsFilter
+                    .getFolders());
 
             Calendars entity = new Calendars();
+            if (hasPermittedFolders(permittedFolders)) {
 
-            if (dbCalendars != null && !dbCalendars.isEmpty()) {
-                JocError jocError = getJocError();
-                Stream<DBItemInventoryReleasedConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
+                session = Globals.createSosHibernateStatelessConnection(API_CALL);
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                List<DBItemInventoryReleasedConfiguration> dbCalendars = null;
 
-                if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
-                    Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE)
-                            .asPredicate();
-                    stream = stream.filter(item -> regex.test(item.getPath()));
-                }
-                
-                entity.setCalendars(stream.map(item -> {
-                    try {
-                        Calendar cal = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
-                        cal.setId(item.getId());
-                        cal.setPath(item.getPath());
-                        cal.setName(item.getName());
-                        cal.setTitle(item.getTitle());
-                        cal.setType(CalendarType.fromValue(item.getType()));
-                        if (calendarsFilter.getCompact() == Boolean.TRUE) {
-                            cal.setIncludes(null);
-                            cal.setExcludes(null);
-                        }
-                        return cal;
-                    } catch (Exception e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
-                        }
-                        LOGGER.error(String.format("[%s] %s", item.getPath(), e.toString()));
-                        return null;
+                if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
+                    calendarsFilter.setRegex(null);
+                    dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(JocInventory::pathToName)
+                            .distinct().collect(Collectors.toList()));
+
+                } else {
+                    List<Integer> types = Arrays.asList(CalendarType.WORKINGDAYSCALENDAR.intValue(), CalendarType.NONWORKINGDAYSCALENDAR
+                            .intValue());
+                    if (calendarsFilter.getType() != null) {
+                        types = Arrays.asList(calendarsFilter.getType().intValue());
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                    dbCalendars = dbLayer.getReleasedConfigurationsByType(types);
+                }
+
+                if (dbCalendars != null && !dbCalendars.isEmpty()) {
+                    JocError jocError = getJocError();
+                    Stream<DBItemInventoryReleasedConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(),
+                            permittedFolders));
+
+                    if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
+                        Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE)
+                                .asPredicate();
+                        stream = stream.filter(item -> regex.test(item.getPath()));
+                    }
+
+                    entity.setCalendars(stream.map(item -> {
+                        try {
+                            Calendar cal = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
+                            cal.setId(item.getId());
+                            cal.setPath(item.getPath());
+                            cal.setName(item.getName());
+                            cal.setTitle(item.getTitle());
+                            cal.setType(CalendarType.fromValue(item.getType()));
+                            if (calendarsFilter.getCompact() == Boolean.TRUE) {
+                                cal.setIncludes(null);
+                                cal.setExcludes(null);
+                            }
+                            return cal;
+                        } catch (Exception e) {
+                            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                                LOGGER.info(jocError.printMetaInfo());
+                                jocError.clearMetaInfo();
+                            }
+                            LOGGER.error(String.format("[%s] %s", item.getPath(), e.toString()));
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
+                }
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));

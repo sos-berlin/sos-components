@@ -45,7 +45,6 @@ import com.sos.joc.exceptions.JocAccessDeniedException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -706,8 +705,18 @@ public class JOCResourceImpl {
         return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByJocPermissions(pred);
     }
     
+    protected AuthFolders getPermittedFoldersByJocPermissions(Predicate<String> pred, Collection<Folder> requestedFolders) {
+        AuthFolders af = getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByJocPermissions(pred);
+        return SOSAuthDetailedFolderPermissions.getPermittedFolders(requestedFolders, af);
+    }
+    
     protected AuthFolders getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> pred) {
         return getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerId, pred);
+    }
+    
+    protected AuthFolders getPermittedFoldersByControllerPermissions(String controllerId, Predicate<String> pred, Collection<Folder> requestedFolders) {
+        AuthFolders af = getCurrentAccount().getSOSAuthDetailedFolderPermissions().getPermittedFoldersByControllerPermissions(controllerId, pred);
+        return SOSAuthDetailedFolderPermissions.getPermittedFolders(requestedFolders, af);
     }
     
     protected Map<String, AuthFolders> getPermittedFoldersByControllerPermissions(Set<String> controllerIds, Predicate<String> pred) {
@@ -742,6 +751,18 @@ public class JOCResourceImpl {
         return SOSAuthDetailedFolderPermissions.isPermitted(folder, permittedFolders);
     }
     
+    protected static AuthFolders getPermittedFolders(Set<Folder> folders, AuthFolders permittedFolders) {
+        return SOSAuthDetailedFolderPermissions.getPermittedFolders(folders, permittedFolders);
+    }
+    
+    protected static AuthFolders getPermittedFolders(Collection<Folder> folders, AuthFolders permittedFolders) {
+        return SOSAuthDetailedFolderPermissions.getPermittedFolders(folders, permittedFolders);
+    }
+    
+    protected static boolean hasPermittedFolders(AuthFolders permittedFolders) {
+        return permittedFolders.allow().isPresent();
+    }
+    
 //    /**
 //     * @deprecated  As of JOC-2255, replaced by above {@link #checkFolderPermissions()}
 //     */
@@ -768,7 +789,7 @@ public class JOCResourceImpl {
     }
 
     /**
-     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #canAdd()} with requestedFolders
+     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
      */
     @Deprecated
     protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
@@ -776,7 +797,7 @@ public class JOCResourceImpl {
     }
 
     /**
-     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #canAdd()} with requestedFolders
+     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
      */
     @Deprecated
     protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {

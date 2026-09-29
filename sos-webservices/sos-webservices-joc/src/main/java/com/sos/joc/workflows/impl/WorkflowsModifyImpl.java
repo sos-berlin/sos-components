@@ -55,7 +55,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             ModifyWorkflows modifyWorkflows = initRequest(Action.SUSPEND, accessToken, filterBytes);
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyWorkflows.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getSuspendResume());
+                    getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyWorkflows.getFolders());
             
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.SUSPEND, modifyWorkflows, permittedFolders);
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(

@@ -66,7 +66,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 return jocDefaultResponse;
             }
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
-                    .getOrders().getView());
+                    .getOrders().getView(), body.getFolders());
             boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> requestedFolders = body.getFolders() == null ? Collections.emptySet() : body.getFolders().stream().collect(Collectors.toSet());
 

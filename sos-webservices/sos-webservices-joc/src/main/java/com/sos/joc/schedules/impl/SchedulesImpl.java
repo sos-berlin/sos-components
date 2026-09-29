@@ -27,7 +27,6 @@ import com.sos.joc.schedules.resource.ISchedulesResource;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
-import com.sos.webservices.order.initiator.model.SchedulesSelector;
 
 import jakarta.ws.rs.Path;
 
@@ -48,17 +47,11 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return response;
             }
             
+            Set<Folder> requestedFolders = in.getSelector().getFolders() == null ? Collections.emptySet() : in.getSelector().getFolders().stream()
+                    .collect(Collectors.toSet());
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
-                    .getOrders().getView());
+                    .getOrders().getView(), requestedFolders);
             
-            if (in.getSelector() == null) {
-                Folder root = new Folder();
-                root.setFolder("/");
-                root.setRecursive(true);
-                in.setSelector(new SchedulesSelector());
-                in.getSelector().setFolders(Collections.singletonList(root));
-            }
-
             Set<String> scheduleSingles = null;
             Set<String> workflowSingles = null;
             if (in.getSelector().getSchedulePaths() != null) {
@@ -67,8 +60,6 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             if (in.getSelector().getWorkflowPaths() != null) {
                 workflowSingles = in.getSelector().getWorkflowPaths().stream().collect(Collectors.toSet());
             }
-            Set<Folder> requestedFolders = in.getSelector().getFolders() == null ? Collections.emptySet() : in.getSelector().getFolders().stream()
-                    .collect(Collectors.toSet());
             Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, requestedFolders, permittedFolders,
                     new HashMap<>());
 

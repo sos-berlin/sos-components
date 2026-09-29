@@ -194,6 +194,13 @@ public class SOSAuthDetailedFolderPermissions {
     private boolean isDenied(Set<String> permissions, Predicate<String> expectedPermission) {
         return permissions.stream().filter(excludes).map(p -> p.substring(1)).anyMatch(expectedPermission);
     }
+    
+    public static AuthFolders getPermittedFolders(Collection<Folder> requestedFolders, AuthFolders authFolders) {
+        if (requestedFolders == null || requestedFolders.isEmpty()) {
+            return authFolders;
+        }
+        return getPermittedFolders(requestedFolders.stream().collect(Collectors.toSet()), authFolders);
+    }
 
     public static AuthFolders getPermittedFolders(Set<Folder> requestedFolders, AuthFolders authFolders) {
         if (requestedFolders == null || requestedFolders.isEmpty()) {
