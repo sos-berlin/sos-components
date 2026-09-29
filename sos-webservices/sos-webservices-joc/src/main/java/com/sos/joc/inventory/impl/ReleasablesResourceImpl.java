@@ -139,7 +139,6 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             }
 
             if (withTree) {
-                // TODO: JOC-2255 Adjust to use AuthFolders
                 final Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(authFolders);
                 final Map<String, TreeSet<ResponseReleasableTreeItem>> groupedReleasables = releasables.stream().filter(item -> !JocInventory
                         .isFolder(item.getObjectType())).collect(Collectors.groupingBy(ResponseReleasableTreeItem::getFolder, Collectors.toCollection(
