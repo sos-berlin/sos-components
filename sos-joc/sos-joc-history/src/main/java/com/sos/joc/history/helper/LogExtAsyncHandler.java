@@ -21,7 +21,6 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
@@ -50,7 +49,6 @@ public class LogExtAsyncHandler {
 
     private final JocHistoryConfiguration conf;
     private final String jocVariableName;
-    private final SOSAuthFolderPermissions folderPermissions;
 
     private CopyOnWriteArraySet<LogExt> logs = new CopyOnWriteArraySet<>();
     private CopyOnWriteArraySet<LogExt> notProcessed = new CopyOnWriteArraySet<>();
@@ -63,7 +61,6 @@ public class LogExtAsyncHandler {
         HistoryService.setLogger();
         this.conf = conf;
         this.jocVariableName = jocVariableName;
-        this.folderPermissions = new SOSAuthFolderPermissions();
     }
 
     public void start(ThreadGroup threadGroup) {
@@ -213,7 +210,7 @@ public class LogExtAsyncHandler {
     private void processTaskLog(LogExt l) {
         Path t = conf.getLogExtDir().resolve(getTaskLogName(l));
         if (l.isDeserialized()) {
-            LogTaskContent lc = new LogTaskContent(l.getTaskHistoryId(), folderPermissions, null);
+            LogTaskContent lc = new LogTaskContent(l.getTaskHistoryId(), null, null);
             try {
                 lc.toFile(t);
             } catch (Throwable e) {
@@ -273,7 +270,7 @@ public class LogExtAsyncHandler {
     private void handleOrderLog(LogExt l) {
         Path t = conf.getLogExtDir().resolve(getOrderLogName(l, LogExt.Type.order));
         try {
-            LogOrderContent lc = new LogOrderContent(l.getOrderHistoryId(), folderPermissions, null);
+            LogOrderContent lc = new LogOrderContent(l.getOrderHistoryId(), null, null);
             lc.toFile(t);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[handleOrderLog][%s]%s", t, e.toString()), e);
