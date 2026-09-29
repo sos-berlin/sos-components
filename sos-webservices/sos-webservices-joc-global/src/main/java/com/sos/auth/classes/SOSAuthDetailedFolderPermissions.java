@@ -195,39 +195,61 @@ public class SOSAuthDetailedFolderPermissions {
     private boolean isDenied(Set<String> permissions, Predicate<String> expectedPermission) {
         return permissions.stream().filter(excludes).map(p -> p.substring(1)).anyMatch(expectedPermission);
     }
-    
-//    public Optional<Folder> isPermitted(Folder folder, AuthFolders authFolders) {
-//        if (isPermitted(folder.getFolder(), authFolders)) {
-//            if (Boolean.TRUE == folder.getRecursive()) {
-//                
-//            } else {
-//                return Optional.of(folder);
-//            }
-//        }
-////        if (Boolean.TRUE == folder.getRecursive()) {
-////            if (isSubfolder(folder.getFolder(), authFolders.deny())) {
-////                
-////            }
-////            
-////        } else if (isPermitted(folder.getFolder(), authFolders)) {
-////            return Optional.of(folder);
-////        }
-//        return Optional.empty();
-//    }
-    
-//    public boolean isPermitted(Collection<Folder> folders, AuthFolders authFolders) {
-//        if (authFolders == null) {
-//            return false;
-//        }
-//        if (folders == null || folders.isEmpty()) {
-//            return true;
-//        }
-//        if (!isSubfolder(folder, authFolders.deny())) {
-//            return isSubfolder(folder, authFolders.allow());
-//        }
-//        return isPermitted;
-//    }
 
+    public static AuthFolders getPermittedFolders(Set<Folder> requestedFolders, AuthFolders authFolders) {
+        if (requestedFolders == null || requestedFolders.isEmpty()) {
+            return authFolders;
+        }
+        if (authFolders == null) {
+            return new AuthFolders(Optional.of(requestedFolders), Optional.empty());
+        }
+        // no permissions to any folder
+        if (authFolders.allow().isEmpty()) {
+            return authFolders;
+        }
+        // all folders permitted (except deny)
+        if (authFolders.allow().get().isEmpty()) {
+            return new AuthFolders(Optional.of(requestedFolders), authFolders.deny());
+        }
+        
+        Set<Folder> allowed = new HashSet<>();
+        authFolders.allow().get().forEach(af -> {
+            if (Boolean.TRUE == af.getRecursive()) {
+                requestedFolders.forEach(rf -> {
+                    // if (rf is subfolder of af(recursive)) -> allowed.add(rf)
+                    // else if (af(recursive) is subfolder of rf(recursive) -> allowed.add(af); example: af = /a/b/c/*, rf = /a/b/*
+                    // else if (af(recursive) is subfolder of rf(not recursive) -> allowed.add(rf); example: af = /a/b/c/*, rf = /a/b
+                    
+                    if (isSubFolder(rf.getFolder()).test(af)) {
+                        allowed.add(rf);
+                    } else if (isSubFolder(af.getFolder()).test(rf)) {
+                        if (Boolean.TRUE == rf.getRecursive()) {
+                            allowed.add(af);
+                        } else {
+                            allowed.add(rf);
+                        }
+                    }
+                });
+            } else {
+                requestedFolders.forEach(rf -> {
+                    // if (af(not recursive) is subfolder of rf) -> allowed.add(af); af = /a/b/c rf = /a/b/*
+                    
+                    if (isSubFolder(af.getFolder()).test(rf)) {
+                        allowed.add(af);
+                    }
+                });
+            }
+        });
+        
+        if (authFolders.deny().isPresent()) {
+            authFolders.allow().get().stream().filter(Folder::getRecursive).forEach(df -> {
+                // if (alloweditem is subfolder of df(recursive)) -> allowed.remove(alloweditem)
+                allowed.removeIf(allowItem -> isSubFolder(allowItem.getFolder()).test(df));
+            });
+        }
+        return new AuthFolders(allowed.isEmpty() ? Optional.empty() : Optional.of(allowed), authFolders.deny());
+    }
+    
     public static boolean isPermitted(String folder, AuthFolders folders) {
         if (folders == null) {
             return true;
@@ -349,8 +371,12 @@ public class SOSAuthDetailedFolderPermissions {
     }
     
     private static boolean isSubFolder(String folder, Stream<Folder> folders) {
-        return folders.anyMatch(f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/"))));
+        return folders.anyMatch(isSubFolder(folder));
+    }
+    
+    private static Predicate<Folder> isSubFolder(String folder) {
+        return f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+                .getFolder() + "/")));
     }
     
     // use in JOCResourceImpl for requested folders
