@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.jobtemplate.JobTemplate;
 import com.sos.inventory.model.jobtemplate.Parameter;
@@ -46,6 +47,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -56,7 +58,7 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
 
             if (dbJobTemplates != null && !dbJobTemplates.isEmpty()) {
                 DBItemInventoryReleasedConfiguration item = dbJobTemplates.get(0);
-                if (!folderPermissions.isPermittedForFolder(item.getFolder())) {
+                if (!folderIsPermitted(item.getFolder(), authFolders)) {
                     throw new JocFolderPermissionsException(item.getFolder());
                 }
                 JobTemplate jt = Globals.objectMapper.readValue(item.getContent(), JobTemplate.class);
@@ -120,7 +122,5 @@ public class JobTemplateResourceImpl extends JOCResourceImpl implements IJobTemp
             Globals.disconnect(session);
         }
     }
-        SOSHibernateSession session = null;
-        
 
 }
