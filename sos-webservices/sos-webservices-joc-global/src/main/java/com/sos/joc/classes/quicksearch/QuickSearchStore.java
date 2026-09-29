@@ -16,11 +16,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -100,17 +101,17 @@ public class QuickSearchStore {
     }
     
     public static ResponseQuickSearch getAnswer(RequestQuickSearchFilter in, final String accessToken,
-            final SOSAuthFolderPermissions folderPermissions, boolean forInventory) throws SOSHibernateException {
+            final AuthFolders folderPermissions, boolean forInventory) throws SOSHibernateException {
         return getAnswer(in, accessToken, folderPermissions, forInventory, null);
     }
     
     public static ResponseQuickSearch getAnswer(RequestQuickSearchFilter in, final String accessToken,
-            final SOSAuthFolderPermissions folderPermissions, boolean forInventory, String controllerId) throws SOSHibernateException {
+            final AuthFolders authFolders, boolean forInventory, String controllerId) throws SOSHibernateException {
         ResponseQuickSearch answer = new ResponseQuickSearch();
 
         if (!in.getQuit()) {
             in = checkToken(in, accessToken);
-            answer.setResults(getBasicReleasedOrInventoryObjectsSearch(in, folderPermissions, forInventory, controllerId));
+            answer.setResults(getBasicReleasedOrInventoryObjectsSearch(in, authFolders, forInventory, controllerId));
         } else {
             answer.setResults(Collections.emptyList());
         }
@@ -134,12 +135,12 @@ public class QuickSearchStore {
     }
     
     public static ResponseQuickSearch getAnswer(DeployedObjectQuickSearchFilter in, final ConfigurationType type, final String accessToken,
-            final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
+            final AuthFolders authFolders) throws SOSHibernateException {
         ResponseQuickSearch answer = new ResponseQuickSearch();
 
         if (!in.getQuit()) {
             in = checkToken(in, type.value(), accessToken);
-            answer.setResults(getBasicDeployedObjectsSearch(in, type, folderPermissions));
+            answer.setResults(getBasicDeployedObjectsSearch(in, type, authFolders));
         } else {
             answer.setResults(Collections.emptyList());
         }
@@ -163,8 +164,8 @@ public class QuickSearchStore {
     }
     
     public static ResponseQuickSearch getTagsAnswer(DeployedObjectQuickSearchFilter in, final ConfigurationType type, final String accessToken,
-            final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
-        return getTagsAnswer(in, type, null, accessToken, folderPermissions);
+            final AuthFolders authFolders) throws SOSHibernateException {
+        return getTagsAnswer(in, type, null, accessToken, authFolders);
     }
 
     public static ResponseQuickSearch getOrderTagsAnswer(DeployedObjectQuickSearchFilter in, final String accessToken) throws SOSHibernateException {
@@ -172,7 +173,7 @@ public class QuickSearchStore {
     }
     
     public static ResponseQuickSearch getTagsAnswer(DeployedObjectQuickSearchFilter in, final ConfigurationType type,
-            final String nonConfigurationType, final String accessToken, final SOSAuthFolderPermissions folderPermissions)
+            final String nonConfigurationType, final String accessToken, final AuthFolders authFolders)
             throws SOSHibernateException {
         ResponseQuickSearch answer = new ResponseQuickSearch();
         
@@ -181,7 +182,7 @@ public class QuickSearchStore {
 
         if (!in.getQuit()) {
             in = checkToken(in, returnType, accessToken);
-            answer.setResults(getBasicTagsSearch(in, type, nonConfigurationType, folderPermissions));
+            answer.setResults(getBasicTagsSearch(in, type, nonConfigurationType, authFolders));
         } else {
             answer.setResults(Collections.emptyList());
         }
@@ -318,7 +319,7 @@ public class QuickSearchStore {
     }
     
     private static List<ResponseBaseSearchItem> getBasicReleasedOrInventoryObjectsSearch(RequestQuickSearchFilter in,
-            final SOSAuthFolderPermissions folderPermissions, boolean forInventory, String controllerId) throws SOSHibernateException {
+            final AuthFolders authFolders, boolean forInventory, String controllerId) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
 
@@ -366,7 +367,7 @@ public class QuickSearchStore {
             }
 
             if (itemsStream != null) {
-                Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
+                Predicate<InventoryQuickSearchItem> isPermitted = item -> JOCResourceImpl.folderIsPermitted(item.getFolder(), authFolders);
                 Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getLowerCasePath);
                 // if (in.getReturnType() == null) {
                 // comp = comp.thenComparingInt(i -> i.getObjectType() == null ? 99 : i.getObjectType().intValue());
@@ -385,7 +386,7 @@ public class QuickSearchStore {
     }
     
     private static List<ResponseBaseSearchItem> getBasicDeployedObjectsSearch(DeployedObjectQuickSearchFilter in, final ConfigurationType type,
-            final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
+            final AuthFolders authFolders) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
 
@@ -406,7 +407,7 @@ public class QuickSearchStore {
                     .intValue()), in.getSearch());
 
             if (items != null) {
-                Predicate<InventoryQuickSearchItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
+                Predicate<InventoryQuickSearchItem> isPermitted = item -> JOCResourceImpl.folderIsPermitted(item.getFolder(), authFolders);
                 Comparator<InventoryQuickSearchItem> comp = Comparator.comparing(InventoryQuickSearchItem::getLowerCasePath);
                 // if (in.getReturnType() == null) {
                 // comp = comp.thenComparingInt(i -> i.getObjectType() == null ? 99 : i.getObjectType().intValue());
@@ -421,7 +422,7 @@ public class QuickSearchStore {
     }
     
     private static List<ResponseBaseSearchItem> getBasicTagsSearch(DeployedObjectQuickSearchFilter in, final ConfigurationType type,
-            final String nonConfigurationType, final SOSAuthFolderPermissions folderPermissions) throws SOSHibernateException {
+            final String nonConfigurationType, final AuthFolders authFolders) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
 
@@ -443,7 +444,7 @@ public class QuickSearchStore {
                 List<InventoryTagItem> items = dbLayer.getTagSearch(in.getControllerId(), Collections.singleton(type.intValue()), in.getSearch());
                 if (items != null) {
                     Comparator<ResponseBaseSearchItem> comp = Comparator.comparingInt(ResponseBaseSearchItem::getOrdering);
-                    Predicate<InventoryTagItem> isPermitted = item -> folderPermissions.isPermittedForFolder(item.getFolder());
+                    Predicate<InventoryTagItem> isPermitted = item -> JOCResourceImpl.folderIsPermitted(item.getFolder(), authFolders);
                     return items.stream().filter(isPermitted).peek(item -> item.setFolder(null)).distinct().sorted(comp).collect(Collectors.toList());
                 } else {
                     return Collections.emptyList();

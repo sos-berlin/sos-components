@@ -738,7 +738,7 @@ public class JOCResourceImpl {
         return false;
     }
     
-    protected static boolean folderIsPermitted(String folder, AuthFolders permittedFolders) {
+    public static boolean folderIsPermitted(String folder, AuthFolders permittedFolders) {
         return SOSAuthDetailedFolderPermissions.isPermitted(folder, permittedFolders);
     }
     

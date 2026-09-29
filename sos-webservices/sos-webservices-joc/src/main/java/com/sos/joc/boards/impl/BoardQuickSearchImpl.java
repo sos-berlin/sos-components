@@ -1,5 +1,6 @@
 package com.sos.joc.boards.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.boards.resource.IQuickSearchResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,8 +31,10 @@ public class BoardQuickSearchImpl extends JOCResourceImpl implements IQuickSearc
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getNoticeBoards().getView());
             
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.NOTICEBOARD, accessToken, folderPermissions);
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.NOTICEBOARD, accessToken, authFolders);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

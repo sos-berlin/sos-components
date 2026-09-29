@@ -1,5 +1,6 @@
 package com.sos.joc.locks.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -30,7 +31,9 @@ public class LockQuickSearchImpl extends JOCResourceImpl implements IQuickSearch
             if (response != null) {
                 return response;
             }
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.LOCK, accessToken, folderPermissions);
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getLocks().getView());
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.LOCK, accessToken, authFolders);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

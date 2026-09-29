@@ -1,5 +1,6 @@
 package com.sos.joc.workflows.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -30,8 +31,10 @@ public class WorkflowQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getWorkflows().getView());
             
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.WORKFLOW, accessToken, folderPermissions);
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, ConfigurationType.WORKFLOW, accessToken, authFolders);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

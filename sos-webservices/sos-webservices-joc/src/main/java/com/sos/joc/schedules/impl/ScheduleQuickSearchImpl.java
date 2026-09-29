@@ -2,6 +2,7 @@ package com.sos.joc.schedules.impl;
 
 import java.util.Collections;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -40,7 +41,9 @@ public class ScheduleQuickSearchImpl extends JOCResourceImpl implements IQuickSe
             filter.setSearch(in.getSearch());
             filter.setToken(in.getToken());
             
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(filter, accessToken, folderPermissions, false, controllerId);
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().
+                    getOrders().getView());
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(filter, accessToken, authFolders, false, controllerId);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);

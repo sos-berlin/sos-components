@@ -1,5 +1,6 @@
 package com.sos.joc.documentations.impl;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -28,8 +29,9 @@ public class DocumentationQuickSearchImpl extends JOCResourceImpl implements IQu
             if (response != null) {
                 return response;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getDocumentations().getView());
             in.setReturnTypes(null);
-            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, folderPermissions, false);
+            ResponseQuickSearch answer = QuickSearchStore.getAnswer(in, accessToken, authFolders, false);
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (Exception e) {
             return responseStatusJSError(e);
