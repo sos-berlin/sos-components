@@ -290,7 +290,7 @@ public class JobHistoryDBLayer {
         return getCounts(state, authFoldersPerController, DBLayer.DBITEM_HISTORY_ORDERS);
     }
 
-    public Long getCounts(HistoryStateText state, Map<String, AuthFolders> authFoldersPerController, String tableName)
+    private Long getCounts(HistoryStateText state, Map<String, AuthFolders> authFoldersPerController, String tableName)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setState(state);
