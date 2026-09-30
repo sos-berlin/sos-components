@@ -188,19 +188,19 @@ public class JobHistoryDBLayer {
         try {
             filter.setState(state);
             if (permittedFolders == null || permittedFolders.isEmpty()) {
-                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
-                        .append(getOrderStepsWhere()).toString());
+                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ")
+                        .append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(getOrderStepsWhere()).toString());
                 return session.getSingleResult(query);
             } else {
-                Query<String[]> query = createQuery(new StringBuilder().append("select controllerId, workflowFolder from ")
+                Query<Object[]> query = createQuery(new StringBuilder().append("select controllerId, workflowFolder from ")
                         .append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(getOrderStepsWhere()).toString());
-                List<String[]> result = executeResultList(query);
+                List<Object[]> result = executeResultList(query);
                 if (result == null) {
                     return 0L;
                 } else {
-                    return result.stream().filter(folderPerController -> folderPerController[0] != null && folderPerController[0].isEmpty())
-                            .filter(folderPerController -> JOCResourceImpl.folderIsPermitted(folderPerController[1], 
-                                    permittedFolders.get(folderPerController[0]))).count();
+                    return result.stream().filter(folderPerController -> folderPerController[0] != null)
+                            .filter(folderPerController -> JOCResourceImpl.folderIsPermitted((String)folderPerController[1], 
+                                    permittedFolders.get((String)folderPerController[0]))).count();
                 }
             }
         } catch (SOSHibernateInvalidSessionException ex) {
