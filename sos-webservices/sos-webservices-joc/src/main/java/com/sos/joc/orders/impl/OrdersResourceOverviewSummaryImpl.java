@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -62,12 +64,14 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
-            
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
+            Map<String, AuthFolders> authFoldersPerController = getCurrentAccount().getSOSAuthDetailedFolderPermissions()
+                    .getPermittedFoldersByControllerPermissions(allowedControllers, getControllerPermissionsPredicate().getOrders().getView());
+
             OrdersHistoricSummary ordersHistoricSummary = new OrdersHistoricSummary();
             OrdersOverView entity = new OrdersOverView();
             if (Proxies.getControllerDbInstances().isEmpty()) {
@@ -84,11 +88,7 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                 return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
             }
             
-            Map<String, Set<Folder>> permittedFoldersMap = null;
             if (controllerId.isEmpty()) {
-                if (!folderPermissions.noFolderRestrictionAreSpecified(allowedControllers)) {
-                    permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
-                }
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                     allowedControllers = Collections.emptySet();
                 }
@@ -96,9 +96,6 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setControllerIds(allowedControllers);
-            if (!controllerId.isEmpty()) {
-                historyFilter.setFolders(folderPermissions.getListOfFolders(controllerId));
-            }
             historyFilter.setMainOrder(true);
 
             if (ordersFilter.getDateFrom() != null) {
@@ -114,8 +111,8 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             entity.setOrders(ordersHistoricSummary);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
-            ordersHistoricSummary.setFailed(jobHistoryDBLayer.getCountOrders(HistoryStateText.FAILED, permittedFoldersMap));
-            ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL, permittedFoldersMap));
+            ordersHistoricSummary.setFailed(jobHistoryDBLayer.getCountOrders(HistoryStateText.FAILED, authFoldersPerController));
+            ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL, authFoldersPerController));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

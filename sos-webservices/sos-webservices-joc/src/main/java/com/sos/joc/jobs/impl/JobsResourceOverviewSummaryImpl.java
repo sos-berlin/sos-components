@@ -3,12 +3,14 @@ package com.sos.joc.jobs.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,7 +23,6 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSummary;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.JobsHistoricSummary;
@@ -56,9 +57,6 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                             availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(
                                     Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
-                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                        allowedControllers = Collections.emptySet();
-                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
@@ -69,6 +67,8 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            Map<String, AuthFolders> authFoldersPerController = getCurrentAccount().getSOSAuthDetailedFolderPermissions()
+                    .getPermittedFoldersByControllerPermissions(allowedControllers, getControllerPermissionsPredicate().getOrders().getView());
             
             JobsHistoricSummary jobsHistoricSummary = new JobsHistoricSummary();
             JobsOverView entity = new JobsOverView();
@@ -87,6 +87,9 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             }
             
             HistoryFilter historyFilter = new HistoryFilter();
+            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                allowedControllers = Collections.emptySet();
+            }
             historyFilter.setControllerIds(allowedControllers);
             
             if (jobsFilter.getDateFrom() != null) {
@@ -96,14 +99,13 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                 historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
             }
             
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setJobs(jobsHistoricSummary);
             
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, historyFilter);
-            long failed = dbLayer.getCountJobs(HistoryStateText.FAILED, permittedFolders);
-            long successful = dbLayer.getCountJobs(HistoryStateText.SUCCESSFUL, permittedFolders);
+            long failed = dbLayer.getCountJobs(HistoryStateText.FAILED, authFoldersPerController);
+            long successful = dbLayer.getCountJobs(HistoryStateText.SUCCESSFUL, authFoldersPerController);
             session.close();
             session = null;
             
