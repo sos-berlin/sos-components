@@ -107,7 +107,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             try {
                 session = Globals.createSosHibernateStatelessConnection(caller == null ? "deleteOrdersFromPlan" : caller);
                 if (schedules != null && !schedules.isEmpty()) {
-                    filter.setScheduleNames(schedules.stream().map(JocInventory::pathToName).distinct().collect(Collectors.toList()));
+                    filter.setScheduleNames(schedules.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
                     deleteOrders(filter, session);
                     filter.setScheduleNames(null);
                 }

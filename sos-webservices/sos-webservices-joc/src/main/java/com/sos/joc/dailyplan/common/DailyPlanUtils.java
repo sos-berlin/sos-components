@@ -49,8 +49,8 @@ public class DailyPlanUtils {
         filter.setControllerIds(in.getControllerIds());
         filter.setOrderIds(in.getOrderIds());
         if (in.getSchedulePaths() != null) {
-            filter.setScheduleNames(in.getSchedulePaths().stream().map(path -> JocInventory.pathToName(path)).distinct().collect(Collectors
-                    .toList()));
+            filter.setScheduleNames(in.getSchedulePaths().stream().map(path -> JocInventory.pathToName(path)).collect(Collectors
+                    .toSet()));
         }
         if (in.getWorkflowPaths() != null) {
             filter.setWorkflowNames(in.getWorkflowPaths().stream().map(path -> JocInventory.pathToName(path)).distinct().collect(Collectors

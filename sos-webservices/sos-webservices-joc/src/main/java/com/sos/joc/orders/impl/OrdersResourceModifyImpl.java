@@ -385,6 +385,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         
         if (withOrders) {
             jOrders = currentState.ordersBy(o -> orders.contains(o.id().string()));
+            if (orders.size() == 1) { //throw FolderException if only one Order requested
+                Optional.ofNullable(currentState.idToOrder().get(OrderId.of(orders.iterator().next()))).map(JOrder::workflowId).map(
+                        WorkflowPaths::getPath).ifPresent(o -> {
+                            checkFolderPermissions(o, permittedFolders);
+                        });
+            }
         } else if (workflowIds != null && !workflowIds.isEmpty()) {
             Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
             Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
@@ -408,7 +414,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
         }
         
-        return jOrders.collect(Collectors.toSet());
+        return jOrders.filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders)).collect(Collectors.toSet());
     }
 
     @SuppressWarnings("unchecked")
@@ -869,6 +875,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, AuthFolders permittedFolders, boolean withPostProblem) {
         final Set<JOrder> jOrders = getJOrders(action, orderStream, withPostProblem);
+        if (jOrders.size() == 1) { //throw FolderException if only one Order requested
+            checkFolderPermissions(WorkflowPaths.getPath(jOrders.iterator().next().workflowId()), permittedFolders);
+        }
         return jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders)).collect(Collectors.toSet());
     }
 

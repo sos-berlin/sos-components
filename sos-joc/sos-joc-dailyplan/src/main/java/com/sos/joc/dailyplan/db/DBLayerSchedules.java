@@ -16,8 +16,11 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.common.FolderPath;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.OperationType;
 
 public class DBLayerSchedules extends DBLayer {
 
@@ -187,53 +190,5 @@ public class DBLayerSchedules extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-
-    @Deprecated
-    public Map<String, String> getSchedulePathNameMap(List<String> scheduleNamesOrPaths) throws SOSHibernateException {
-
-        if (scheduleNamesOrPaths == null || scheduleNamesOrPaths.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        if (scheduleNamesOrPaths.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
-            Map<String, String> result = new HashMap<>();
-            for (int i = 0; i < scheduleNamesOrPaths.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                result.putAll(getSchedulePathNameMap(SOSHibernate.getInClausePartition(i, scheduleNamesOrPaths)));
-            }
-            return result;
-        } else {
-            Map<Boolean, List<String>> namesAndPaths = scheduleNamesOrPaths.stream().filter(s -> s != null && !s.isEmpty()).collect(Collectors
-                    .groupingBy(s -> s.startsWith("/")));
-
-            StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where");
-            if (namesAndPaths.containsKey(true)) { // paths
-                sql.append(" path in (:paths)");
-            }
-            if (namesAndPaths.containsKey(true) && namesAndPaths.containsKey(false)) { // paths and names
-                sql.append(" or");
-            }
-            if (namesAndPaths.containsKey(false)) { // names
-                sql.append(" name in (:names)");
-            }
-
-            sql.append(" and type=:type");
-
-            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(sql);
-            query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-
-            if (namesAndPaths.containsKey(true)) { // paths
-                query.setParameterList("paths", namesAndPaths.get(true));
-            }
-            if (namesAndPaths.containsKey(false)) { // names
-                query.setParameterList("names", namesAndPaths.get(false));
-            }
-
-            List<DBItemInventoryReleasedConfiguration> resultset = getSession().getResultList(query);
-            if (resultset == null || resultset.isEmpty()) {
-                return Collections.emptyMap();
-            }
-
-            return resultset.stream().distinct().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getPath,
-                    DBItemInventoryReleasedConfiguration::getName));
-        }
-    }
+    
 }

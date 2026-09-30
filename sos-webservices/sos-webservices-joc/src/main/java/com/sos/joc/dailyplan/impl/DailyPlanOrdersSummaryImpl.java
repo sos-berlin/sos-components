@@ -11,9 +11,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
@@ -62,8 +64,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             }
 
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
-            setSettings(IMPL_PATH);
-
+            
             if (isDebugEnabled) {
                 // TODO LOGGER.debug("Reading the daily plan for day " + in.getFilter().getDailyPlanDate());
             }
@@ -74,6 +75,12 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             answer.setSubmittedLate(0);
             answer.setPlanned(0);
             answer.setPlannedLate(0);
+            
+            if (noControllerAvailable) {
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            }
+            
+            setSettings(IMPL_PATH);
 
             Date dateFrom = toUTCDate(in.getDailyPlanDateFrom());
             Date dateTo = toUTCDate(in.getDailyPlanDateTo());
@@ -91,8 +98,11 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 // }
                 // continue;
                 // }
+                
+                AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                        .getOrders().getView());
 
-                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, in, true);
+                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, permittedFolders, in, true);
                 if (filter == null) {
                     continue;
                 }
@@ -108,7 +118,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 filter.setLate(null);
 
                 List<PlannedOrderItem> result = new ArrayList<>();
-                List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, false);
+                List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, false).stream().filter(i -> JOCResourceImpl.canAdd(i
+                        .getWorkflowPath(), permittedFolders)).toList();
                 addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result);
 
                 for (PlannedOrderItem p : result) {

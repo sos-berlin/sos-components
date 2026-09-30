@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -20,10 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -86,17 +89,25 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 return response;
             }
             
-            submitOrdersToController(in, allowedControllers, accessToken, true);
+            if (noControllerAvailable) {
+                return responseStatusJSOk(new Date());
+            }
+            
+            Map<String, AuthFolders> authFoldersPerController = getCurrentAccount().getSOSAuthDetailedFolderPermissions()
+                    .getPermittedFoldersByControllerPermissions(allowedControllers, getControllerPermissionsPredicate().getOrders().getCreate());
+            
+            submitOrdersToController(in, allowedControllers, authFoldersPerController, accessToken, true);
             return responseStatusJSOk(new Date());
         } catch (Exception e) {
             return responseStatusJSError(e);
         }
     }
 
-    private void submitOrdersToController(DailyPlanOrderFilterDef in, Collection<String> allowedControllers, String accessToken, boolean withEvent)
-            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, IOException,
-            ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+    private void submitOrdersToController(DailyPlanOrderFilterDef in, Collection<String> allowedControllers,
+            Map<String, AuthFolders> authFoldersPerController, String accessToken, boolean withEvent) throws JsonParseException, JsonMappingException,
+            DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
+            InterruptedException, ExecutionException, TimeoutException {
 
         DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog());
         setSettings(IMPL_PATH);
@@ -119,9 +130,9 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         Set<AuditLogDetail> auditLogDetails = new HashSet<>();
         
         for (String controllerId : allowedControllers) {
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            folderPermissions.setSchedulerId(controllerId);
-            evaluator.getPermittedNames(folderPermissions, controllerId, filter);
+            
+            AuthFolders permittedFolders = authFoldersPerController.get(controllerId);
+            FilterDailyPlannedOrders filter = evaluator.getPermittedNames(permittedFolders);
 
             if (evaluator.isHasPermission()) {
                 List<String> orderIds = new ArrayList<String>();
@@ -146,8 +157,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 filter.setSubmissionForDateTo(toUTCDate(in.getDailyPlanDateTo()));
                 filter.setSubmissionIds(in.getSubmissionHistoryIds());
 
-                filter.setWorkflowNames(evaluator.getPermittedWorkflowNames());
-                filter.setScheduleNames(evaluator.getPermittedScheduleNames());
                 filter.setControllerId(controllerId);
 
                 SOSHibernateSession session = null;
@@ -155,7 +164,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 try {
                     session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                     dbLayer.setSession(session);
-                    items = dbLayer.getDailyPlanList(filter, 0);
+                    items = dbLayer.getDailyPlanList(filter, 0).stream().filter(i -> JOCResourceImpl.folderIsPermitted(i.getWorkflowFolder(),
+                            permittedFolders)).toList();
                 } finally {
                     Globals.disconnect(session);
                 }

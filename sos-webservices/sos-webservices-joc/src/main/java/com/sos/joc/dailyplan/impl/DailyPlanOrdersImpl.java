@@ -14,9 +14,11 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.order.OrderTags;
 import com.sos.joc.classes.proxy.Proxies;
@@ -65,7 +67,13 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             if (response != null) {
                 return response;
             }
-
+            
+            PlannedOrders answer = new PlannedOrders();
+            if (noControllerAvailable) {
+                answer.setDeliveryDate(Date.from(Instant.now()));
+                return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+            }
+            
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
             setSettings(IMPL_PATH);
@@ -87,6 +95,10 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             Set<String> workflowNames = new HashSet<>();
             
             for (String controllerId : allowedControllers) {
+                
+                AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate()
+                        .getOrders().getView());
+
                 List<Long> submissions = dbLayer.getSubmissionIds(controllerId, dateFrom, dateTo);
                 if (submissions == null || submissions.size() == 0) {
                     if (isDebugEnabled) {
@@ -101,7 +113,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                     }
                     continue;
                 }
-                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, in, true);
+                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, permittedFolders, in, true);
                 if (filter == null) {
                     continue;
                 }
@@ -114,13 +126,13 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 filter.setSubmissionForDateFrom(dateFrom);
                 filter.setSubmissionForDateTo(dateTo);
 
-                List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, true);
+                List<DBItemDailyPlanWithHistory> orders = getOrders(session, filter, true).stream().filter(i -> JOCResourceImpl.canAdd(i
+                        .getWorkflowPath(), permittedFolders)).toList();
                 Map<String, Set<String>> orderTags = orders == null ? Collections.emptyMap() : OrderTags.getTagsByOrderIds(controllerId, orders
                         .stream().map(DBItemDailyPlanWithHistory::getOrderId), session);
                 workflowNames.addAll(addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true, orderTags, true));
             }
 
-            PlannedOrders answer = new PlannedOrders();
             answer.setPlannedOrderItems(result);
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setWorkflowTagsPerWorkflow(WorkflowsHelper.getTagsPerWorkflow(session, workflowNames));

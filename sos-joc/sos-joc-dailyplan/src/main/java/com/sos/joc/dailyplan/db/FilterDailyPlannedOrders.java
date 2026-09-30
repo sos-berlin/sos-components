@@ -27,7 +27,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     private List<Long> submissionIds;
     private Set<String> cyclicOrdersMainParts;
     private List<String> workflowNames;
-    private List<String> scheduleNames;
+    private Set<String> scheduleNames;
     private List<String> controllerIds;
 
     private Date plannedStart;
@@ -326,11 +326,11 @@ public class FilterDailyPlannedOrders extends DBFilter {
         workflowNames = val;
     }
 
-    public List<String> getScheduleNames() {
+    public Set<String> getScheduleNames() {
         return scheduleNames;
     }
 
-    public void setScheduleNames(List<String> val) {
+    public void setScheduleNames(Set<String> val) {
         scheduleNames = val;
     }
     
