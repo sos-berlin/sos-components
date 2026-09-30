@@ -71,7 +71,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 return response;
             }
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate()
-                    .getNoticeBoards().getView());
+                    .getNoticeBoards().getView(), filter.getFolders());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(getBoards(filter, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -85,7 +85,6 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(controllerId);
             dbFilter.setObjectTypes(Collections.singleton(DeployType.NOTICEBOARD.intValue()));
-            dbFilter.setFolders(filter.getFolders());
 
             List<String> paths = filter.getNoticeBoardPaths();
             if (paths != null && !paths.isEmpty()) {
@@ -99,7 +98,10 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 dbFilter.setNames(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
+            } else if (permittedFolders.allow().isEmpty()) {
+                // no folder permissions
             } else {
+                dbFilter.setFolders(permittedFolders.allow().get());
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
 

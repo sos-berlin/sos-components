@@ -109,7 +109,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getModify());
+                    getControllerPermissionsPredicate().getOrders().getModify(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CONTINUE, modifyOrders, currentState, permittedFolders);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
@@ -131,7 +131,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getSuspendResume());
+                    getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.SUSPEND, modifyOrders, currentState, permittedFolders);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
@@ -156,7 +156,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Predicate<String> predResumeFailed = getControllerPermissionsPredicate().getOrders().getResumeFailed();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(), predSuspendResume.or(
-                    predResumeFailed));
+                    predResumeFailed), modifyOrders.getFolders());
 
             Set<JOrder> jOrders = getOrdersForResume(modifyOrders, currentState, permittedFolders);
             boolean hasNotFailedOrders = jOrders.stream().anyMatch(OrdersHelper::isNotFailed);
@@ -192,7 +192,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getCancel());
+                    getControllerPermissionsPredicate().getOrders().getCancel(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CANCEL, modifyOrders, currentState, permittedFolders);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
@@ -214,7 +214,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getConfirm());
+                    getControllerPermissionsPredicate().getOrders().getConfirm(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.ANSWER_PROMPT, modifyOrders, currentState, permittedFolders);
 
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
@@ -236,7 +236,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getModify());
+                    getControllerPermissionsPredicate().getOrders().getModify(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CHANGE, modifyOrders, currentState, permittedFolders);
             
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
@@ -263,7 +263,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getView());
+                    getControllerPermissionsPredicate().getOrders().getView(), modifyOrders.getFolders());
             
             JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             Set<JOrder> jOrders = getJOrders(Action.REMOVE_WHEN_TERMINATED, modifyOrders, currentState, permittedFolders);
@@ -315,7 +315,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState, zoneId);
 
+        } else if (permittedFolders.allow().isEmpty()) {
+            // no folder permissions
         } else {
+            modifyOrders.setFolders(permittedFolders.allow().get());
             Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, modifyOrders.getFolders(),
                     currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
@@ -392,7 +395,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .workflowId().path()));
             jOrders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId))
                     .parallel().filter(getDateToFilter(modifyOrders, Action.RESUME));
+        } else if (permittedFolders.allow().isEmpty()) {
+            // no folder permissions
         } else {
+            modifyOrders.setFolders(permittedFolders.allow().get());
             Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(modifyOrders.getControllerId(), modifyOrders
                     .getFolders(), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {

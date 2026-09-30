@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobtemplate.JobTemplate;
@@ -23,7 +24,6 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.jobtemplates.resource.IAssignedWorkflows;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.JobTemplateState;
 import com.sos.joc.model.jobtemplate.JobTemplateStateText;
@@ -54,12 +54,13 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
         }
     });
     
-    private static final Map<JobTemplateWorkflowStateText, Integer> WORKFLOW_STATES = Collections.unmodifiableMap(new HashMap<JobTemplateWorkflowStateText, Integer>() {
+    private static final Map<JobTemplateWorkflowStateText, Integer> WORKFLOW_STATES = Collections.unmodifiableMap(
+            new HashMap<JobTemplateWorkflowStateText, Integer>() {
 
-        private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-        {
-            put(JobTemplateWorkflowStateText.IN_SYNC, 6);
+                {
+                    put(JobTemplateWorkflowStateText.IN_SYNC, 6);
             put(JobTemplateWorkflowStateText.NOT_IN_SYNC, 5);
         }
     });
@@ -77,11 +78,12 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
                 return jocDefaultResponse;
             }
 
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView(),
+                    jobTemplatesFilter.getFolders());
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            final Set<Folder> folders = folderPermissions.getPermittedFolders(jobTemplatesFilter.getFolders());
             
-            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = JobTemplatesResourceImpl.getDbJobTemplates(jobTemplatesFilter, folders,
+            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = JobTemplatesResourceImpl.getDbJobTemplates(jobTemplatesFilter, permittedFolders,
                     dbLayer);
             JobTemplatesUsedBy entity = new JobTemplatesUsedBy();
 
@@ -91,7 +93,7 @@ public class AssignedWorkflowsImpl extends JOCResourceImpl implements IAssignedW
                 List<JobTemplateUsedBy> jobTemplates = new ArrayList<>();
                 
                 for (DBItemInventoryReleasedConfiguration dbJobTemplate : dbJobTemplates) {
-                    if (!folderIsPermitted(dbJobTemplate.getFolder(), folders)) {
+                    if (!folderIsPermitted(dbJobTemplate.getFolder(), permittedFolders)) {
                         continue;
                     }
                         

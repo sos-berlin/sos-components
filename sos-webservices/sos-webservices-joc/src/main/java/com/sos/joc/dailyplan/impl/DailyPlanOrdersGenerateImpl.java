@@ -98,6 +98,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         if (!getBasicControllerPermissions(controllerId).getOrders().getCreate()) {
             return false;
         }
+        
+        // TODO JOC-2255
 
         Long auditLogId = withAudit ? storeAuditLog(in.getAuditLog()).getId() : 0L;
 

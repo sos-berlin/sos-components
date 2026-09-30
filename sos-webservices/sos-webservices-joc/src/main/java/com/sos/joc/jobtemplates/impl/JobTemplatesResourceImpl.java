@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,7 +23,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.jobtemplates.resource.IJobTemplatesResource;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.jobtemplate.JobTemplates;
 import com.sos.joc.model.jobtemplate.JobTemplatesFilter;
@@ -50,13 +48,13 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView(), jobTemplatesFilter
+                    .getFolders());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            final Set<Folder> folders = folderPermissions.getPermittedFolders(jobTemplatesFilter.getFolders());
             
-            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = getDbJobTemplates(jobTemplatesFilter, folders, dbLayer);
+            List<DBItemInventoryReleasedConfiguration> dbJobTemplates = getDbJobTemplates(jobTemplatesFilter, authFolders, dbLayer);
             JobTemplates entity = new JobTemplates();
 
             if (dbJobTemplates != null && !dbJobTemplates.isEmpty()) {
@@ -108,17 +106,16 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
         }
     }
     
-    public static List<DBItemInventoryReleasedConfiguration> getDbJobTemplates(JobTemplatesFilter jobTemplatesFilter, Set<Folder> folders,
+    public static List<DBItemInventoryReleasedConfiguration> getDbJobTemplates(JobTemplatesFilter jobTemplatesFilter, AuthFolders permittedFolders,
             InventoryDBLayer dbLayer) throws SOSHibernateException {
 
         List<DBItemInventoryReleasedConfiguration> dbJobTemplates = null;
-        boolean withFolderFilter = jobTemplatesFilter.getFolders() != null && !jobTemplatesFilter.getFolders().isEmpty();
 
         if (jobTemplatesFilter.getJobTemplatePaths() != null && !jobTemplatesFilter.getJobTemplatePaths().isEmpty()) {
             dbJobTemplates = dbLayer.getReleasedJobTemplatesByNames(jobTemplatesFilter.getJobTemplatePaths().stream().map(p -> JocInventory
                     .pathToName(p)).distinct().collect(Collectors.toList()));
 
-        } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
+        } else if (permittedFolders.allow().isEmpty()) {
             // no folder permission
         } else {
             dbJobTemplates = dbLayer.getReleasedConfigurationsByType(Collections.singletonList(ConfigurationType.JOBTEMPLATE.intValue()));

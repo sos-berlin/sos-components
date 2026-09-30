@@ -1,7 +1,6 @@
 package com.sos.joc.reporting.impl;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -46,8 +45,8 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 return response;
             }
             
-            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView());
-            
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getReports().getView(), in.getFolders());
+
             Stream<DBItemInventoryReleasedConfiguration> dbItems = Stream.empty();
             
             Function<DBItemInventoryReleasedConfiguration, Report> mapDbItemToReport = dbItem -> {
@@ -70,14 +69,14 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
             if (in.getReportPaths() != null && !in.getReportPaths().isEmpty()) {
                 List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
                 dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT).stream();
-            } else if (in.getFolders() != null && !in.getFolders().isEmpty()) {
-                dbItems = dbLayer.getReleasedConfigurationsByFolder(in.getFolders(), ConfigurationType.REPORT).stream();
+            } else if (permittedFolders.allow().isEmpty()) {
+                // no folder permissions
             } else {
-                dbItems = dbLayer.getReleasedConfigurations(Collections.emptyList(), ConfigurationType.REPORT).stream();
+                dbItems = dbLayer.getReleasedConfigurationsByFolder(permittedFolders.allow().get(), ConfigurationType.REPORT).stream();
             }
             
             Reports reports = new Reports();
-            reports.setReports(dbItems.filter(isPermitted).map(mapDbItemToReport).filter(Objects::nonNull).collect(Collectors.toList()));
+            reports.setReports(dbItems.filter(isPermitted).map(mapDbItemToReport).filter(Objects::nonNull).toList());
             reports.setDeliveryDate(Date.from(Instant.now()));
             
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(reports));

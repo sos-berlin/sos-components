@@ -57,7 +57,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
                 return response;
             }
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(filter.getControllerId(), getControllerPermissionsPredicate()
-                    .getLocks().getView());
+                    .getLocks().getView(), filter.getFolders());
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(getLocks(filter, permittedFolders)));
         } catch (Exception e) {
             return responseStatusJSError(e);
@@ -70,7 +70,6 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(filter.getControllerId());
             dbFilter.setObjectTypes(Collections.singleton(DeployType.LOCK.intValue()));
-            dbFilter.setFolders(filter.getFolders());
 
             List<String> paths = filter.getLockPaths();
             if (paths != null && !paths.isEmpty()) {
@@ -85,7 +84,11 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
                 dbFilter.setNames(paths.stream().map(p -> JocInventory.pathToName(p)).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
+            } else if (permittedFolders.allow().isEmpty()) {
+                // no Folder Permissions
+                
             } else {
+                dbFilter.setFolders(permittedFolders.allow().get());
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
 
