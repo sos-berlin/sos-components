@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.jobtemplate.JobTemplate;
@@ -49,6 +50,7 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -60,7 +62,7 @@ public class JobTemplatesResourceImpl extends JOCResourceImpl implements IJobTem
             if (dbJobTemplates != null && !dbJobTemplates.isEmpty()) {
                 JocError jocError = getJocError();
 
-                entity.setJobTemplates(dbJobTemplates.stream().filter(item -> folderIsPermitted(item.getFolder(), folders)).map(
+                entity.setJobTemplates(dbJobTemplates.stream().filter(item -> folderIsPermitted(item.getFolder(), authFolders)).map(
                         item -> getJobTemplate(item, jobTemplatesFilter.getCompact(), jocError)).filter(Objects::nonNull).collect(Collectors
                                 .toList()));
             }
