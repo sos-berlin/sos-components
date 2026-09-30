@@ -290,32 +290,32 @@ public class JobHistoryDBLayer {
         return getCounts(state, authFoldersPerController, DBLayer.DBITEM_HISTORY_ORDERS);
     }
 
-    public Long getCounts(HistoryStateText state, Map<String, AuthFolders> authFoldersPerController, String tableName) throws DBConnectionRefusedException,
-    DBInvalidDataException {
-try {
-    filter.setState(state);
-    if (authFoldersPerController == null || authFoldersPerController.isEmpty()) {
-        Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(tableName).append(
-                getOrdersWhere()).toString());
-        return session.getSingleResult(query);
-    } else {
-        Query<HistoryGroupedSummary> query = createQuery(new StringBuilder().append("select new ").append(HistoryGroupedSummary.class
-                .getName()).append("(count(id), controllerId, workflowFolder) from ").append(tableName).append(
-                        getOrdersWhere()).append(" group by controllerId, workflowFolder").toString());
+    public Long getCounts(HistoryStateText state, Map<String, AuthFolders> authFoldersPerController, String tableName)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            filter.setState(state);
+            if (authFoldersPerController == null || authFoldersPerController.isEmpty()) {
+                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(tableName).append(getOrdersWhere())
+                        .toString());
+                return session.getSingleResult(query);
+            } else {
+                Query<HistoryGroupedSummary> query = createQuery(new StringBuilder().append("select new ").append(HistoryGroupedSummary.class
+                        .getName()).append("(count(id), controllerId, workflowFolder) from ").append(tableName).append(getOrdersWhere()).append(
+                                " group by controllerId, workflowFolder").toString());
 
-        List<HistoryGroupedSummary> result = executeResultList(query);
-        if (result != null) {
-            return result.stream().filter(s -> JOCResourceImpl.folderIsPermitted(s.getFolder(), authFoldersPerController
-                    .get(s.getControllerId()))).mapToLong(s -> s.getCount()).sum();
+                List<HistoryGroupedSummary> result = executeResultList(query);
+                if (result != null) {
+                    return result.stream().filter(s -> JOCResourceImpl.folderIsPermitted(s.getFolder(), authFoldersPerController.get(s
+                            .getControllerId()))).mapToLong(s -> s.getCount()).sum();
+                }
+                return 0L;
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
-        return 0L;
     }
-} catch (SOSHibernateInvalidSessionException ex) {
-    throw new DBConnectionRefusedException(ex);
-} catch (Exception ex) {
-    throw new DBInvalidDataException(ex);
-}
-}
 
     public Map<String, List<JobsPerAgent>> getCountJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
