@@ -243,7 +243,6 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(controllerId);
             dbFilter.setObjectTypes(Collections.singleton(DeployType.NOTICEBOARD.intValue()));
-            dbFilter.setFolders(filter.getFolders());
 
             List<String> paths = filter.getNoticeBoardPaths();
             if (paths != null && !paths.isEmpty()) {
@@ -256,12 +255,15 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
                 dbFilter.setNames(paths.stream().map(JocInventory::pathToName).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
+            } else if (permittedFolders.allow().isEmpty()) {
+                //no folder permissions
             } else {
+                dbFilter.setFolders(permittedFolders.allow().get());
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
             
-            JocError jocError = getJocError();
             if (contents != null) {
+                JocError jocError = getJocError();
                 
                 if ((orders == null || orders.isEmpty()) && !compact) {
                     orders = Collections.emptyMap();

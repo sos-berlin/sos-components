@@ -1107,9 +1107,9 @@ public class InventoryDBLayer extends DBLayer {
         return getReleasedConfigurationsByFolder(folders, type == null ? Collections.emptyList() : Collections.singleton(type));
     }
     
-    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurationsByFolder(Collection<Folder> folders, Collection<ConfigurationType> types)
-            throws SOSHibernateException {
-        
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurationsByFolder(Collection<Folder> folders,
+            Collection<ConfigurationType> types) throws SOSHibernateException {
+
         if (folders == null) {
             folders = Collections.emptySet();
         }

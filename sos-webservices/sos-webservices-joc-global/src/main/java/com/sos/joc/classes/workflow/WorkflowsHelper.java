@@ -346,7 +346,7 @@ public class WorkflowsHelper {
         return r;
     }
 
-    public static Stream<JWorkflowId> getWorkflowIdsStreamFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
+    public static Stream<JWorkflowId> getWorkflowIdsStreamFromFolders(String controllerId, Set<Folder> folders, JControllerState currentstate,
             AuthFolders permittedFolders) {
 
         WorkflowsFilter workflowsFilter = new WorkflowsFilter();
@@ -364,17 +364,10 @@ public class WorkflowsHelper {
         }
     }
 
-    public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, List<Folder> folders,
+    public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, Set<Folder> folders,
             JControllerState currentstate, AuthFolders permittedFolders) {
 
         return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::asScala).collect(Collectors
-                .toSet());
-    }
-
-    public static Set<WorkflowPath> getWorkflowPathsFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
-            AuthFolders permittedFolders) {
-
-        return getWorkflowIdsStreamFromFolders(controllerId, folders, currentstate, permittedFolders).map(JWorkflowId::path).collect(Collectors
                 .toSet());
     }
 

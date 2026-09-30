@@ -61,13 +61,14 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
             String controllerId = workflowsFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getWorkflows()
-                    .getView());
-            
+                    .getView(), workflowsFilter.getFolders());
+
             Workflows workflows = new Workflows();
             workflows.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
@@ -76,8 +77,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (WorkflowsHelper.withWorkflowTagsDisplayed()) {
-                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, permittedFolders, getJocError(),
-                        getAccountName());
+                List<Workflow> ws = getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, permittedFolders,
+                        getJocError(), getAccountName());
                 Map<String, LinkedHashSet<String>> wTags = WorkflowsHelper.getMapOfTagsPerWorkflow(connection, ws.stream().map(Workflow::getPath).map(
                         JocInventory::pathToName));
                 if (!wTags.isEmpty()) {

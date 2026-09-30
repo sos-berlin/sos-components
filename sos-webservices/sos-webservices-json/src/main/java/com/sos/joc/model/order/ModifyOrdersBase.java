@@ -57,7 +57,8 @@ public class ModifyOrdersBase {
      * 
      */
     @JsonProperty("folders")
-    private List<Folder> folders = new ArrayList<Folder>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<Folder> folders = new LinkedHashSet<Folder>();
     /**
      * auditParams
      * <p>
@@ -128,7 +129,7 @@ public class ModifyOrdersBase {
      * 
      */
     @JsonProperty("folders")
-    public List<Folder> getFolders() {
+    public Set<Folder> getFolders() {
         return folders;
     }
 
@@ -139,7 +140,7 @@ public class ModifyOrdersBase {
      * 
      */
     @JsonProperty("folders")
-    public void setFolders(List<Folder> folders) {
+    public void setFolders(Set<Folder> folders) {
         this.folders = folders;
     }
 

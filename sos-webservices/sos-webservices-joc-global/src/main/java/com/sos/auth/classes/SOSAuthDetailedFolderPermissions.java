@@ -248,7 +248,7 @@ public class SOSAuthDetailedFolderPermissions {
         });
         
         if (authFolders.deny().isPresent()) {
-            authFolders.allow().get().stream().filter(Folder::getRecursive).forEach(df -> {
+            authFolders.deny().get().stream().filter(Folder::getRecursive).forEach(df -> {
                 // if (alloweditem is subfolder of df(recursive)) -> allowed.remove(alloweditem)
                 allowed.removeIf(allowItem -> isSubFolder(allowItem.getFolder()).test(df));
             });

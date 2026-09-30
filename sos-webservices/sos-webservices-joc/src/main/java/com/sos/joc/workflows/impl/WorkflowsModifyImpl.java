@@ -78,7 +78,7 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             ModifyWorkflows modifyWorkflows = initRequest(Action.RESUME, accessToken, filterBytes);
             
             AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(modifyWorkflows.getControllerId(),
-                    getControllerPermissionsPredicate().getOrders().getSuspendResume());
+                    getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyWorkflows.getFolders());
             
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.RESUME, modifyWorkflows, permittedFolders);
             JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(
@@ -119,8 +119,9 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
         }
     }
     
-    private Map<Boolean, List<WorkflowPath>> getWorkflows(Action action, ModifyWorkflows modifyWorkflows, AuthFolders permittedFolders) throws Exception {
-        
+    private Map<Boolean, List<WorkflowPath>> getWorkflows(Action action, ModifyWorkflows modifyWorkflows, AuthFolders permittedFolders)
+            throws Exception {
+
         String controllerId = modifyWorkflows.getControllerId();
         
         if (modifyWorkflows.getAll() == Boolean.TRUE) {
@@ -151,7 +152,10 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
             workflowsStream = workflowPaths.stream().map(JocInventory::pathToName).filter(w -> canAdd(WorkflowPaths.getPath(w), permittedFolders))
                     .map(WorkflowPath::of).filter(w -> WorkflowsHelper.workflowCurrentlyExists(currentState, w));
 
+        } else if (permittedFolders.allow().isEmpty()) {
+            // no folder permissions
         } else {
+            modifyWorkflows.setFolders(permittedFolders.allow().get());
             workflowsStream = WorkflowsHelper.getWorkflowIdsStreamFromFolders(controllerId, modifyWorkflows.getFolders(), currentState,
                     permittedFolders).map(JWorkflowId::path);
         }

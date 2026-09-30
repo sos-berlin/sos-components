@@ -60,8 +60,8 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             if (in.getSelector().getWorkflowPaths() != null) {
                 workflowSingles = in.getSelector().getWorkflowPaths().stream().collect(Collectors.toSet());
             }
-            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, requestedFolders, permittedFolders,
-                    new HashMap<>());
+            Collection<DailyPlanSchedule> dailyPlanSchedules = getSchedules(controllerId, scheduleSingles, workflowSingles, requestedFolders,
+                    permittedFolders, new HashMap<>());
 
             SchedulesList answer = new SchedulesList();
             answer.setSchedules(Collections.emptyList());
@@ -80,6 +80,11 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
     private Collection<DailyPlanSchedule> getSchedules(String controllerId, Set<String> scheduleSingles, Set<String> workflowSingles,
             Set<Folder> requestedFolders, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) throws IOException,
             SOSHibernateException {
+        
+        if (permittedFolders.allow().isEmpty()) {
+            // no folder permissions
+            return Collections.emptyList();
+        }
 
         SOSHibernateSession session = null;
         boolean hasSelectedSchedules = scheduleSingles != null && scheduleSingles.size() > 0;

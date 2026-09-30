@@ -53,7 +53,8 @@ public class ModifyWorkflows {
      * 
      */
     @JsonProperty("folders")
-    private List<Folder> folders = new ArrayList<Folder>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<Folder> folders = new LinkedHashSet<Folder>();
     /**
      * tags
      * <p>
@@ -118,7 +119,7 @@ public class ModifyWorkflows {
      * 
      */
     @JsonProperty("folders")
-    public List<Folder> getFolders() {
+    public Set<Folder> getFolders() {
         return folders;
     }
 
@@ -129,7 +130,7 @@ public class ModifyWorkflows {
      * 
      */
     @JsonProperty("folders")
-    public void setFolders(List<Folder> folders) {
+    public void setFolders(Set<Folder> folders) {
         this.folders = folders;
     }
 
