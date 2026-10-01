@@ -281,6 +281,13 @@ public class SOSPathUtils {
         return getDirectoryWithTrailingSeparator(toWindowsStyle(path), PATH_SEPARATOR_WINDOWS);
     }
 
+    public static String getDirectoryWithTrailingSeparator(String path) {
+        if (path == null) {
+            return null;
+        }
+        return getDirectoryWithTrailingSeparator(path, getPathSeparator(path));
+    }
+
     public static String getDirectoryWithTrailingSeparator(String path, String pathSeparator) {
         if (path == null) {
             return null;
