@@ -37,7 +37,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
         SOSHibernateSession sosHibernateSession = null;
         try {
             body = initLogging(API_CALL_READ, body, accessToken, CategoryType.IDENTITY);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

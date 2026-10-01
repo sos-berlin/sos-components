@@ -36,11 +36,11 @@ public class OrderNotificationImpl extends JOCResourceImpl implements IOrderNoti
 
             // 1) notification view permitted
             if (!getBasicJocPermissions().getNotification().getView()) {
-                return initPermissions(in.getControllerId(), false);
+                return initPermissions(false);
             }
             // 2) controller permitted (because of controller related monitoring entries)
             if (!getBasicControllerPermissions(in.getControllerId()).getOrders().getView()) {
-                return initPermissions(in.getControllerId(), false);
+                return initPermissions(false);
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

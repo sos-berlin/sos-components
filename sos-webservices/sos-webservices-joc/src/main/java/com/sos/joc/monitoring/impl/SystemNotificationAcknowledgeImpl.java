@@ -35,7 +35,7 @@ public class SystemNotificationAcknowledgeImpl extends JOCResourceImpl implement
             SystemNotificationAcknowledgeFilter in = Globals.objectMapper.readValue(inBytes, SystemNotificationAcknowledgeFilter.class);
 
             // 1) notification view changes permitted
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getNotification().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getNotification().getManage()));
             if (response != null) {
                 return response;
             }

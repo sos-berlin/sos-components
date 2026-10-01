@@ -25,6 +25,7 @@ import java.util.zip.GZIPOutputStream;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -125,10 +126,13 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
                 permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
             }
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(allowedControllers,
+                    getControllerPermissionsPredicate().getOrders().getView());
 
             Long monthFromAsLong = in.getDateFrom() != null ? getMonth(in.getDateFrom()) : null;
             Long monthToAsLong = in.getDateTo() != null ? getMonth(in.getDateTo()) : null;
@@ -167,7 +171,7 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
                 Set<String> permittedSchedules = new HashSet<>();
                 final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNames, in
-                        .getScheduleFolders(), workflowNames, in.getWorkflowFolders(), permittedSchedules, folderPermissions);
+                        .getScheduleFolders(), workflowNames, in.getWorkflowFolders(), permittedSchedules, permittedFoldersPerController);
 
                 Set<String> schedulesExcludedFromProjection = getSchedulesExcludedFromProjection(metaContentOpt, false);
                 for (DBItemDailyPlanProjection item : items) {
@@ -249,9 +253,9 @@ public class DailyPlanProjectionsImpl extends ProjectionsImpl implements IDailyP
 
     private boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, Optional<Set<String>> scheduleNames,
             List<Folder> scheduleFolders, Optional<Set<String>> workflowNames, List<Folder> workflowFolders, Set<String> permittedSchedules,
-            SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
+            Map<String, AuthFolders> permittedFoldersPerController) throws DBMissingDataException {
         return setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNames, scheduleFolders, Optional.empty(), workflowNames,
-                workflowFolders, permittedSchedules, folderPermissions);
+                workflowFolders, permittedSchedules, permittedFoldersPerController);
     }
 
     private void removeObsoleteSchedulesFromMetaData(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, boolean invertedProjection,

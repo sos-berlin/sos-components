@@ -64,7 +64,7 @@ public class JocProfilesResourceImpl extends JOCResourceImpl implements IJocProf
             if (!onlyActAccount) {
                 jocDefaultResponse = initManageAccountPermissions();
             } else {
-                jocDefaultResponse = initPermissions("", true, false);
+                jocDefaultResponse = initPermissions(true, false);
             }
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

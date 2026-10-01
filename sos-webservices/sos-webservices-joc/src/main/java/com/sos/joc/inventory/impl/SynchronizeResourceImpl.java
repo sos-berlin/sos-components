@@ -50,7 +50,7 @@ public class SynchronizeResourceImpl extends JOCResourceImpl implements ISynchro
             RequestFilter filter = Globals.objectMapper.readValue(requestBody, RequestFilter.class);
 
             filter.setFolder(normalizeFolder(filter.getFolder()));
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

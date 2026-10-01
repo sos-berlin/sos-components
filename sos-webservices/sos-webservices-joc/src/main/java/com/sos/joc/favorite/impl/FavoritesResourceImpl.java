@@ -40,7 +40,7 @@ public class FavoritesResourceImpl extends JOCResourceImpl implements IFavorites
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ReadFavoritesFilter.class);
             ReadFavoritesFilter favoritesFilter = Globals.objectMapper.readValue(filterBytes, ReadFavoritesFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

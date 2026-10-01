@@ -47,7 +47,7 @@ public class WorkflowsSnapshotImpl extends JOCResourceImpl implements IWorkflows
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq in = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = in.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getWorkflows().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getWorkflows().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

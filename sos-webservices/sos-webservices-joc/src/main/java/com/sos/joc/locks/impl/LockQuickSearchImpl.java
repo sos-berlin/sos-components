@@ -27,7 +27,7 @@ public class LockQuickSearchImpl extends JOCResourceImpl implements IQuickSearch
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getLocks().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getLocks().getView());
             if (response != null) {
                 return response;
             }

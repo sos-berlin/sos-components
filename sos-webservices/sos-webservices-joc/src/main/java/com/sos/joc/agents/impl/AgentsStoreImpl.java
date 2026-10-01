@@ -65,7 +65,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -141,7 +141,7 @@ public class AgentsStoreImpl extends JOCResourceImpl implements IAgentsStore {
             Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             String controllerId = agentStoreParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

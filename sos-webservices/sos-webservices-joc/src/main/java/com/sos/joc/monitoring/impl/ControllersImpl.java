@@ -43,7 +43,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             JsonValidator.validateFailFast(inBytes, ControllersFilter.class);
             ControllersFilter in = Globals.objectMapper.readValue(inBytes, ControllersFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
+            JOCDefaultResponse response = initPermissions(getPermitted(accessToken, in));
             if (response != null) {
                 return response;
             }

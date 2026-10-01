@@ -57,7 +57,7 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             JsonValidator.validateFailFast(filterBytes, BoardFilter.class);
             BoardFilter filter = Globals.objectMapper.readValue(filterBytes, BoardFilter.class);
             String controllerId = filter.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }

@@ -3,7 +3,6 @@ package com.sos.joc.controller.impl;
 import java.time.Instant;
 import java.util.Date;
 
-import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSSessionHandler;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -31,7 +30,7 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
             JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
             ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicControllerPermissions(controllerId).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

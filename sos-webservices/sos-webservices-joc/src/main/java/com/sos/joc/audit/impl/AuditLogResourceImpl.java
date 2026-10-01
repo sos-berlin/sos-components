@@ -43,7 +43,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
 
             String controllerId = auditLogFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

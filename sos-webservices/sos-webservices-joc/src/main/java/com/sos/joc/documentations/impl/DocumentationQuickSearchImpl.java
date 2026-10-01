@@ -25,7 +25,7 @@ public class DocumentationQuickSearchImpl extends JOCResourceImpl implements IQu
             JsonValidator.validateFailFast(inBytes, RequestQuickSearchFilter.class);
             RequestQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestQuickSearchFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getDocumentations().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getDocumentations().getView());
             if (response != null) {
                 return response;
             }

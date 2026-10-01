@@ -50,7 +50,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             JsonValidator.validateFailFast(filterBytes, CalendarsFilter.class);
             CalendarsFilter calendarsFilter = Globals.objectMapper.readValue(filterBytes, CalendarsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getCalendars().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getCalendars().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

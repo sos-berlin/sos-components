@@ -22,7 +22,7 @@ public class RenameDescriptorImpl extends ARenameConfiguration implements IRenam
             JsonValidator.validate(body, RequestFilter.class, true);
             com.sos.joc.model.inventory.rename.RequestFilter filter = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.rename.RequestFilter.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = rename(filter, IMPL_PATH_RENAME, authFolders);

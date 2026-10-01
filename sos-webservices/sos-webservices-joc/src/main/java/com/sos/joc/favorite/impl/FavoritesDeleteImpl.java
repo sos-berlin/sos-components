@@ -28,7 +28,7 @@ public class FavoritesDeleteImpl extends JOCResourceImpl implements IFavoritesDe
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

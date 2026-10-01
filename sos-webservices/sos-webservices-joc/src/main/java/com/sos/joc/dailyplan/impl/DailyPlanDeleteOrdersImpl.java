@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -21,7 +22,6 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.schema.JsonValidator;
@@ -50,8 +50,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 String controllerId = entry.getKey();
                 Set<String> workflows = ordersPerController.getOrDefault(controllerId, Collections.emptyList()).stream().map(
                         DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet());
-                response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
-                        .getCreate()), workflows);
+                response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getCreate()), workflows);
                 if (response != null) {
                     return response;
                 }
@@ -70,13 +69,17 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         
         synchronized (deleteLock) {
             if (!ordersPerController.isEmpty()) {
+                
+                Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(ordersPerController.keySet(),
+                        getControllerPermissionsPredicate().getOrders().getCreate());
+
                 SOSHibernateSession session = null;
                 try {
                     session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                     DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                     for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
                         String controllerId = entry.getKey();
-                        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
+                        final AuthFolders permittedFolders = permittedFoldersPerController.get(controllerId);
                         List<DBItemDailyPlanOrder> permittedOrders = entry.getValue().stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(),
                                 permittedFolders)).distinct().toList();
                         deleteOrders(controllerId, permittedOrders, dbLayer);

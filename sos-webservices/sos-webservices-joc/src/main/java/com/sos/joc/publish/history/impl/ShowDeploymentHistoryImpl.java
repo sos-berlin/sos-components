@@ -68,7 +68,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getBasicControllerPermissions(controllerId).getDeployments().getView();
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

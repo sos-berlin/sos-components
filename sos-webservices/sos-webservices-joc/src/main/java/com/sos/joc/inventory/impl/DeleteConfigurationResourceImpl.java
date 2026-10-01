@@ -24,7 +24,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = remove(accessToken, in, IMPL_PATH_DELETE, authFolders);
@@ -43,7 +43,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = removeFolder(accessToken, in, IMPL_PATH_FOLDER_DELETE, authFolders);
@@ -62,7 +62,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = delete(accessToken, in, IMPL_PATH_TRASH_DELETE, authFolders);
@@ -81,7 +81,7 @@ public class DeleteConfigurationResourceImpl extends ADeleteConfiguration implem
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = deleteFolder(accessToken, in, IMPL_PATH_TRASH_DELETE, authFolders);

@@ -33,7 +33,7 @@ public class ReleaseNotificationImpl extends JOCResourceImpl implements IRelease
             inBytes = initLogging(API_CALL, inBytes, xAccessToken, CategoryType.MONITORING);
             JsonValidator.validateFailFast(inBytes, ReleaseNotificationFilter.class);
             ReleaseConfiguration in = Globals.objectMapper.readValue(inBytes, ReleaseConfiguration.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getNotification().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getNotification().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -1,6 +1,5 @@
 package com.sos.joc.keys.sign.impl;
 
-import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
@@ -38,7 +37,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             generateKeyFilter = initLogging(API_CALL, generateKeyFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
             GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration()
                     .getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

@@ -50,6 +50,6 @@ public class ACommonResourceImpl extends JOCResourceImpl {
     }
 
     public JOCDefaultResponse initPermissions(String accessToken, ObjectType type, Role role) {
-        return initPermissions(null, getPermission(accessToken, type, role));
+        return initPermissions(getPermission(accessToken, type, role));
     }
 }

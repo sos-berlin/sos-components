@@ -271,7 +271,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     protected JOCDefaultResponse postTagsOrGroups(ResponseObject responseObject, String apiCall, String accessToken, ATagDBLayer<T> dbLayer) {
         try {
             initLogging(apiCall, "{}".getBytes(), accessToken, CategoryType.INVENTORY);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getInventory().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -292,7 +292,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
         SOSHibernateSession session = null;
         try {
             filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.INVENTORY);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getInventory().getView());
             JsonValidator.validateFailFast(filterBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(filterBytes, RequestFolder.class);
             if (jocDefaultResponse != null) {
@@ -342,7 +342,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
             JsonValidator.validateFailFast(filterBytes, RequestFilter.class);
             RequestFilter modifyTag = Globals.objectMapper.readValue(filterBytes, RequestFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -471,7 +471,7 @@ public abstract class ATagsModifyImpl<T extends IDBItemTag> extends JOCResourceI
     }
 
     private JOCDefaultResponse initPermissions() {
-        return initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+        return initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
     }
 
     private RequestFilters initModifyRequest(String apiCall, Action action, String accessToken, byte[] filterBytes) throws Exception {

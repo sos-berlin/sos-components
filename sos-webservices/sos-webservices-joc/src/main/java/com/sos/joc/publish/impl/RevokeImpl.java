@@ -69,7 +69,7 @@ public class RevokeImpl extends JOCResourceImpl implements IRevoke {
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.DEPLOYMENT);
             JsonValidator.validate(filter, RevokeFilter.class);
             RevokeFilter revokeFilter = Globals.objectMapper.readValue(filter, RevokeFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

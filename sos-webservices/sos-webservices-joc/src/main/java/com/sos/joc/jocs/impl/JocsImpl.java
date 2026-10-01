@@ -46,7 +46,7 @@ public class JocsImpl extends JOCResourceImpl implements IJocsResource {
             CockpitFilter in = Globals.objectMapper.readValue(filterBytes, CockpitFilter.class);
 
             // TODO what permission should be used
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

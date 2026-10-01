@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
@@ -47,17 +48,21 @@ public class ScheduleRuntimeImpl extends JOCResourceImpl implements IScheduleRun
             JsonValidator.validate(filterBytes, ScheduleRunTimeRequest.class);
             ScheduleRunTimeRequest in = Globals.objectMapper.readValue(filterBytes, ScheduleRunTimeRequest.class);
             JocPermissions perms = getBasicJocPermissions();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, perms.getCalendars().getView() || perms.getDailyPlan().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(perms.getCalendars().getView() || perms.getDailyPlan().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+//            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView().or(
+//                    getJocPermissionsPredicate().getDailyPlan().getView()));
+            AuthFolders permittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getCalendars().getView());
 
             ScheduleRunTimeResponse entity = new ScheduleRunTimeResponse();
             entity.setDates(new DailyPlanDates());
 
             if (!SOSCollection.isEmpty(in.getCalendars()) && in.getDateFrom() != null && in.getDateTo() != null) {
                 DailyPlanSettings settings = JOCOrderResourceImpl.getDailyPlanSettings(API_CALL);
-                settings.setPermittedFolders(folderPermissions.getListOfFolders());
+                settings.setPermittedFolders(permittedFolders);
 
                 final DailyPlanRunner runner = new DailyPlanRunner(settings);
                 List<DailyPlanSchedule> dailyPlanSchedules = List.of(toDailyPlanSchedule(in));

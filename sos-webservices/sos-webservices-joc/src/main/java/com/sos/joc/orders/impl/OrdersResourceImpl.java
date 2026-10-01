@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
@@ -78,7 +77,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = ordersFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

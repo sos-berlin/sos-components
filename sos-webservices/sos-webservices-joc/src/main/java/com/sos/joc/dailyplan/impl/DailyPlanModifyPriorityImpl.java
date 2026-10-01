@@ -15,6 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.schedule.OrderParameterisation;
@@ -41,7 +42,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanChangePriority;
 import com.sos.joc.orders.impl.OrdersResourceModifyImpl;
 import com.sos.schema.JsonValidator;
@@ -70,10 +70,10 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
             JsonValidator.validate(filterBytes, DailyPlanChangePriority.class);
             DailyPlanChangePriority in = Globals.objectMapper.readValue(filterBytes, DailyPlanChangePriority.class);
             String controllerId = in.getControllerId();
-
+            
             Map<Boolean, List<String>> orderIds = in.getOrderIds().stream().distinct().collect(Collectors.groupingBy(id -> id.matches(".*#[PC][0-9]+-.*")));
-            orderIds.putIfAbsent(Boolean.FALSE, Collections.emptyList());
-            orderIds.putIfAbsent(Boolean.TRUE, Collections.emptyList());
+            orderIds.putIfAbsent(Boolean.FALSE, Collections.emptyList()); // non-dailyplan Orders
+            orderIds.putIfAbsent(Boolean.TRUE, Collections.emptyList()); // dailyplan Orders
 
             List<JOrder> jOrders = Collections.emptyList();
             List<DBItemDailyPlanOrder> dbOrders = Collections.emptyList();
@@ -96,27 +96,25 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
                 workflowNames.addAll(dbOrders.stream().map(DBItemDailyPlanOrder::getWorkflowName).distinct().toList());
             }
             
-            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
-                    .getModify()), workflowNames);
+            JOCDefaultResponse response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getModify()),
+                    workflowNames);
             if (response != null) {
                 return response;
             }
             
+            AuthFolders permittedFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders()
+                    .getModify());
+            
             DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId());
             
             Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio = new HashSet<>();
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             List<AuditLogDetail> auditLogDetails = Collections.emptyList();
             List<AuditLogDetail> auditLogDetails2 = Collections.emptyList();
             
             if (!orderIds.get(Boolean.FALSE).isEmpty()) {
 
-                Stream<JOrder> jOrdersStream = jOrders.stream();
-                if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                    jOrdersStream = jOrdersStream.filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders));
-                }
-                auditLogDetails2 = jOrdersStream.map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id().string(),
-                        controllerId)).toList();
+                auditLogDetails2 = jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders)).map(
+                        o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId()), o.id().string(), controllerId)).toList();
             }
 
             
@@ -141,7 +139,7 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
 
             List<AuditLogDetail> auditLogDetails3 = Stream.concat(auditLogDetails.stream(), auditLogDetails2.stream()).toList();
 
-            command(in, submittedOrdersWithChangedPrio, auditLogDetails2).thenAccept(either -> {
+            command(in, submittedOrdersWithChangedPrio, auditLogDetails3).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     if (!submittedOrdersWithChangedPrio.isEmpty()) {
@@ -209,11 +207,11 @@ public class DailyPlanModifyPriorityImpl extends JOCOrderResourceImpl implements
     }
 
     private CompletableFuture<Either<Problem, ControllerCommand.Response>> command(DailyPlanChangePriority in,
-            Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio, List<AuditLogDetail> auditLogDetails2)
+            Set<DBItemDailyPlanOrder> submittedOrdersWithChangedPrio, List<AuditLogDetail> auditLogDetails)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
-        Stream<OrderId> oIdsStream = auditLogDetails2.stream().map(AuditLogDetail::getOrderId).map(OrderId::of);
+        Stream<OrderId> oIdsStream = auditLogDetails.stream().map(AuditLogDetail::getOrderId).map(OrderId::of);
 
         if (!submittedOrdersWithChangedPrio.isEmpty()) {
             if (currentState == null) {

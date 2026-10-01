@@ -86,7 +86,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                 permitted = getBasicControllerPermissions(controllerId).getView();
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

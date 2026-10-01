@@ -76,7 +76,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
                         controllerId).getView() || adminPermitted;
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

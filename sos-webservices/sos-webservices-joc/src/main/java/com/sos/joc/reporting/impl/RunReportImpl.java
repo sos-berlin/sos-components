@@ -37,7 +37,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             JsonValidator.validateFailFast(filterBytes, RunReports.class);
             RunReports in = Globals.objectMapper.readValue(filterBytes, RunReports.class);
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getReports().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getReports().getManage()));
             if (response != null) {
                 return response;
             }
@@ -83,7 +83,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             JsonValidator.validateFailFast(filterBytes, Report.class);
             
             
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getReports().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getReports().getManage()));
             if (response != null) {
                 return response;
             }

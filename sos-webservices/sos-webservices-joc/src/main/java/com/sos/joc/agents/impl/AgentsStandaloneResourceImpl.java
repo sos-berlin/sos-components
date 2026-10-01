@@ -75,7 +75,7 @@ public class AgentsStandaloneResourceImpl extends JOCResourceImpl implements IAg
                         controllerId).getView() || adminPermitted;
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

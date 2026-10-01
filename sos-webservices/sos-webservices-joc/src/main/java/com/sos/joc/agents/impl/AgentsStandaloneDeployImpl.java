@@ -53,7 +53,7 @@ public class AgentsStandaloneDeployImpl extends JOCResourceImpl implements IAgen
             DeployAgents agentDeployParameter = Globals.objectMapper.readValue(filterBytes, DeployAgents.class);
             Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

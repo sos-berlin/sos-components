@@ -71,7 +71,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JsonValidator.validate(filterBytes, GenerateRequest.class, true);
             GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), true);
+            JOCDefaultResponse response = initPermissions(true);
             if (response != null) {
                 return response;
             }

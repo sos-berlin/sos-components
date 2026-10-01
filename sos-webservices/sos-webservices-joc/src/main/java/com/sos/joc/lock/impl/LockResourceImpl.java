@@ -40,7 +40,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, LockFilter.class);
             LockFilter filter = Globals.objectMapper.readValue(filterBytes, LockFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId()).getLocks()
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(filter.getControllerId()).getLocks()
                     .getView());
             if (response != null) {
                 return response;

@@ -46,7 +46,7 @@ public class OrderNotificationAcknowledgeImpl extends JOCResourceImpl implements
             boolean perm = getBasicJocPermissions().getNotification().getManage() && getBasicControllerPermissions(in.getControllerId()).getOrders()
                     .getView();
             boolean fourEyesPerm = get4EyesJocPermissions().getNotification().getManage();
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), perm, fourEyesPerm);
+            JOCDefaultResponse response = initPermissions(perm, fourEyesPerm);
             if (response != null) {
                 return response;
             }

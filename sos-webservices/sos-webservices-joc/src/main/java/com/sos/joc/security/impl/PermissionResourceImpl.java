@@ -47,8 +47,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             JsonValidator.validateFailFast(body, PermissionFilter.class);
             PermissionFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -104,7 +103,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             
             // only basic permissions because if someone has this permission and has configured the approval requestor role
             // with this permission == true too then he cannot roll back this setting.
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getBasicJocPermissions().getAdministration().getAccounts().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -261,7 +260,7 @@ public class PermissionResourceImpl extends JOCResourceImpl implements IPermissi
             JsonValidator.validateFailFast(body, PermissionListFilter.class);
             PermissionListFilter permissionFilter = Globals.objectMapper.readValue(body, PermissionListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

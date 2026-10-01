@@ -38,7 +38,7 @@ public class FavoritesShareImpl extends JOCResourceImpl implements IFavoritesSha
             filterBytes = initLogging(apiCall, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, FavoriteIdentifiers.class);
             FavoriteIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteIdentifiers.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

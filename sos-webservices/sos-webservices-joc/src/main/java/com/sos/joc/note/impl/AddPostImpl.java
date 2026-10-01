@@ -54,7 +54,7 @@ public class AddPostImpl extends JOCResourceImpl implements IAddPost {
             
             JsonValidator.validateFailFast(body, AddPost.class);
             AddPost in = Globals.objectMapper.readValue(body, AddPost.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

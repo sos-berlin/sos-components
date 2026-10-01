@@ -37,7 +37,7 @@ public class RequestImpl extends JOCResourceImpl implements IRequestResource {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequest.class);
             FourEyesRequest in = Globals.objectMapper.readValue(filterBytes, FourEyesRequest.class);
-            JOCDefaultResponse response = initPermissions(null, true);
+            JOCDefaultResponse response = initPermissions(true);
             if (response != null) {
                 return response;
             }

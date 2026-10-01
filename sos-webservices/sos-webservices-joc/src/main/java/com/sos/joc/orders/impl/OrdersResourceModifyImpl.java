@@ -112,8 +112,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getControllerPermissionsPredicate().getOrders().getModify(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CONTINUE, modifyOrders, currentState, permittedFolders);
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId()).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyOrders.getControllerId()).map(p -> p
+                    .getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -134,8 +134,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.SUSPEND, modifyOrders, currentState, permittedFolders);
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflowNamesFromJOrders(jOrders));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyOrders.getControllerId()).map(p -> p
+                    .getOrders().getSuspendResume()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -167,12 +167,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             
             JOCDefaultResponse jocDefaultResponse = null;
             if (hasNotFailedOrders) {
-                jocDefaultResponse = initWorkflowPermissions(controllerId, permSuspendResume.get(0), permSuspendResume.get(1),
-                        getWorkflowNamesFromJOrders(jOrders));
+                jocDefaultResponse = initWorkflowPermissions(permSuspendResume.get(0), permSuspendResume.get(1), getWorkflowNamesFromJOrders(
+                        jOrders));
                 permittedFolders = getPermittedFoldersByControllerPermissions(modifyOrders.getControllerId(), predSuspendResume);
             } else {
-                jocDefaultResponse = initWorkflowPermissions(controllerId, permResumeFailed.get(0) || permSuspendResume.get(0),
-                        permResumeFailed.get(1) && permSuspendResume.get(1), getWorkflowNamesFromJOrders(jOrders));
+                jocDefaultResponse = initWorkflowPermissions(permResumeFailed.get(0) || permSuspendResume.get(0), permResumeFailed.get(1)
+                        && permSuspendResume.get(1), getWorkflowNamesFromJOrders(jOrders));
             }
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -195,8 +195,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getControllerPermissionsPredicate().getOrders().getCancel(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CANCEL, modifyOrders, currentState, permittedFolders);
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId()).map(p -> p.getOrders().getCancel()), getWorkflowNamesFromJOrders(jOrders));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyOrders.getControllerId()).map(p -> p
+                    .getOrders().getCancel()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -217,8 +217,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getControllerPermissionsPredicate().getOrders().getConfirm(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.ANSWER_PROMPT, modifyOrders, currentState, permittedFolders);
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId()).map(p -> p.getOrders().getConfirm()), getWorkflowNamesFromJOrders(jOrders));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyOrders.getControllerId()).map(p -> p
+                    .getOrders().getConfirm()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -239,8 +239,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getControllerPermissionsPredicate().getOrders().getModify(), modifyOrders.getFolders());
             Set<JOrder> jOrders = getJOrders(Action.CHANGE, modifyOrders, currentState, permittedFolders);
             
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyOrders.getControllerId(), getControllerPermissions(modifyOrders
-                    .getControllerId()).map(p -> p.getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyOrders.getControllerId()).map(p -> p
+                    .getOrders().getModify()), getWorkflowNamesFromJOrders(jOrders));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -256,8 +256,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersRemoveWhenTerminated(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), getBasicControllerPermissions(modifyOrders
-                    .getControllerId()).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(modifyOrders.getControllerId()).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

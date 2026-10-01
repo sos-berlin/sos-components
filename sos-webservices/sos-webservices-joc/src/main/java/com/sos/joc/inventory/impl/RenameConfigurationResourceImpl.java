@@ -22,7 +22,7 @@ public class RenameConfigurationResourceImpl extends ARenameConfiguration implem
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = rename(in, IMPL_PATH, authFolders);

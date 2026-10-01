@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -52,7 +53,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.schema.JsonValidator;
@@ -82,7 +82,7 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
                 String controllerId = entry.getKey();
                 Set<String> workflows = ordersPerController.getOrDefault(controllerId, Collections.emptyList()).stream().map(
                         DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet());
-                response = initWorkflowPermissions(accessToken, getControllerPermissions(controllerId).map(p -> p.getOrders()
+                response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders()
                         .getCancel()), workflows);
                 if (response != null) {
                     return response;
@@ -100,18 +100,17 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
             throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
-        Map<String, Set<Folder>> permittedFolders = getCurrentAccount().getSosAuthFolderPermissions().getListOfFolders(Proxies
-                .getControllerDbInstances().keySet());
+        Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(Proxies.getControllerDbInstances()
+                .keySet(), getControllerPermissionsPredicate().getOrders().getCancel());
+        
         AtomicInteger numOfOrders = new AtomicInteger(0);
         Map<String, List<DBItemDailyPlanOrder>> ordersPerControllerIds = DailyPlanUtils.getOrderIdsFromDailyplanDate(in, IMPL_PATH).stream().peek(
-                i -> numOfOrders.incrementAndGet()).filter(item -> folderIsPermitted(item.getWorkflowFolder(), permittedFolders.get(item
+                i -> numOfOrders.incrementAndGet()).filter(item -> folderIsPermitted(item.getWorkflowFolder(), permittedFoldersPerController.get(item
                         .getControllerId()))).collect(Collectors.groupingBy(DBItemDailyPlanOrder::getControllerId));
 
         if (!ordersPerControllerIds.isEmpty()) {
-            ordersPerControllerIds = ordersPerControllerIds.entrySet().stream().filter(availableController -> getBasicControllerPermissions(
-                    availableController.getKey()).getOrders().getCancel()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-            if (ordersPerControllerIds.keySet().isEmpty()) {
+            ordersPerControllerIds.keySet().removeIf(cId -> !getBasicControllerPermissions(cId).getOrders().getCancel());
+            if (ordersPerControllerIds.isEmpty()) {
                 throw new JocAccessDeniedException("No controller permissions to cancel dailyplan orders");
             }
         } else if (numOfOrders.get() > 0) { // all workflows are not permitted
@@ -159,15 +158,14 @@ public class DailyPlanCancelOrderImpl extends JOCOrderResourceImpl implements ID
 
         Long auditLogId = storeAuditLog(auditLog).getId();
 
-        if (folderPermissions == null) {
-            folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosAuthFolderPermissions();
-        }
+        Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(ordersPerController.keySet(),
+                getControllerPermissionsPredicate().getOrders().getCancel());
 
         for (Map.Entry<String, List<DBItemDailyPlanOrder>> entry : ordersPerController.entrySet()) {
             String controllerId = entry.getKey();
             List<DBItemDailyPlanOrder> orders = entry.getValue();
             
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
+            final AuthFolders permittedFolders = permittedFoldersPerController.get(controllerId);
             Set<DBItemDailyPlanOrder> permittedOrders = orders.stream().filter(o -> folderIsPermitted(o.getWorkflowFolder(), permittedFolders))
                     .collect(Collectors.toSet());
             final Set<String> orderIds = permittedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet());

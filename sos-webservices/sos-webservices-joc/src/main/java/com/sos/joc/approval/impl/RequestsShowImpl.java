@@ -40,7 +40,7 @@ public class RequestsShowImpl extends JOCResourceImpl implements IRequestsShowRe
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, ApprovalsFilter.class);
             ApprovalsFilter in = Globals.objectMapper.readValue(filterBytes, ApprovalsFilter.class);
-            JOCDefaultResponse response = initPermissions(null, true);
+            JOCDefaultResponse response = initPermissions(true);
             if (response != null) {
                 return response;
             }

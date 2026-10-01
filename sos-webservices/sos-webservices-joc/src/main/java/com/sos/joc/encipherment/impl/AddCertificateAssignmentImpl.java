@@ -27,8 +27,8 @@ public class AddCertificateAssignmentImpl extends JOCResourceImpl implements IAd
             agentAssignmentFilter = initLogging(API_CALL, agentAssignmentFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
             AgentAssignmentRequestFilter filter = Globals.objectMapper.readValue(agentAssignmentFilter, AgentAssignmentRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getCertificates()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

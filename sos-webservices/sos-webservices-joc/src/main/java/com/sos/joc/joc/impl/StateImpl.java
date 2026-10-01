@@ -22,7 +22,7 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
     public JOCDefaultResponse postIsActive(String accessToken) {
         try {
             initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

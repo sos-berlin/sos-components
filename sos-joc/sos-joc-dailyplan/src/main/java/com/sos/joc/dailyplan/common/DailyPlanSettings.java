@@ -9,6 +9,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
@@ -36,8 +37,7 @@ public class DailyPlanSettings {
     private boolean overwrite = false;
     private boolean submit = true;
 
-    @Deprecated
-    private Set<Folder> permittedFolders;
+    private AuthFolders permittedFolders;
 
     private int daysAheadPlan = 0;
     private int daysAheadSubmit = 0;
@@ -255,11 +255,11 @@ public class DailyPlanSettings {
         return caller;
     }
 
-    public Set<Folder> getPermittedFolders() {
+    public AuthFolders getPermittedFolders() {
         return permittedFolders;
     }
 
-    public void setPermittedFolders(Set<Folder> val) {
+    public void setPermittedFolders(AuthFolders val) {
         permittedFolders = val;
     }
 

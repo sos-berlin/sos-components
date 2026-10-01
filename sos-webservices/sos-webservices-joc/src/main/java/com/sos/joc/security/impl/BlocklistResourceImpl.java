@@ -102,7 +102,7 @@ public class BlocklistResourceImpl extends JOCResourceImpl implements IBlocklist
             JsonValidator.validateFailFast(body, BlockedAccountsFilter.class);
             BlockedAccountsFilter blocklistFilter = Globals.objectMapper.readValue(body, BlockedAccountsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -36,14 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
@@ -99,7 +97,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.cluster.common.state.JocClusterState;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 import js7.data.plan.PlanId;
@@ -807,10 +804,10 @@ public class DailyPlanRunner extends TimerTask {
     }
 
     private boolean isCalendarPermitted(Calendar calendar) {
-        if (calendar.getPath() == null || SOSCollection.isEmpty(settings.getPermittedFolders())) {
+        if (calendar.getPath() == null || settings.getPermittedFolders() == null) {
             return true;
         }
-        return SOSAuthFolderPermissions.isPermittedForFolder(DailyPlanHelper.getFolderFromPath(calendar.getPath()), settings.getPermittedFolders());
+        return JOCResourceImpl.canAdd(calendar.getPath(), settings.getPermittedFolders());
     }
 
     private static List<DBItemDailyPlanSubmission> getSubmissionsForDate(String controllerId, java.util.Calendar calendar)

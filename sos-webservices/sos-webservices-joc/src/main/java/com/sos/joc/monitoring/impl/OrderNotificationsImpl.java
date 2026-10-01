@@ -50,7 +50,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
 
             // 1) notification view permitted
             if (!getBasicJocPermissions().getNotification().getView()) {
-                return initPermissions(in.getControllerId(), false);
+                return initPermissions(false);
             }
             // 2) controller permitted (because of controller related monitoring entries)
             String controllerId = in.getControllerId();
@@ -66,7 +66,7 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
 
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
             }

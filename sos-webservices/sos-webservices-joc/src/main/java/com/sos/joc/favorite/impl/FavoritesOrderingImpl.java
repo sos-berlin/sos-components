@@ -27,7 +27,7 @@ public class FavoritesOrderingImpl extends JOCResourceImpl implements IFavorites
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validateFailFast(filterBytes, OrderingFavorites.class);
             OrderingFavorites orderingParam = Globals.objectMapper.readValue(filterBytes, OrderingFavorites.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

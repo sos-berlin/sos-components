@@ -51,7 +51,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
             String controllerId = orderFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -29,7 +29,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             OrderIdsFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrderIdsFilter.class);
             String controllerId = ordersFilter.getControllerId();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -56,7 +56,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
             String controllerId = workflowFilter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

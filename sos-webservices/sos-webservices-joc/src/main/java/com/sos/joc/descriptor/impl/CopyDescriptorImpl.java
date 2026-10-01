@@ -23,7 +23,7 @@ public class CopyDescriptorImpl extends ACopyConfiguration implements ICopyDescr
             com.sos.joc.model.inventory.copy.RequestFilter in = 
                     Globals.objectMapper.readValue(body, com.sos.joc.model.inventory.copy.RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = copy(in, true, IMPL_PATH_COPY, authFolders);

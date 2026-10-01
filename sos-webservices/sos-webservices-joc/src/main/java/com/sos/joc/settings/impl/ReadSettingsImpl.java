@@ -40,7 +40,7 @@ public class ReadSettingsImpl extends JOCResourceImpl implements IReadSettings {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, "{}".getBytes(), xAccessToken, CategoryType.SETTINGS);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

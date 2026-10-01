@@ -63,7 +63,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
             Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
                     availableController -> getBasicControllerPermissions(availableController).getView()).collect(Collectors.toSet());
 
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
@@ -112,7 +112,7 @@ public class YADETransfersResourceImpl extends JOCResourceImpl implements IYADET
                 allowedControllers = Collections.singleton(controllerId);
             }
 
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

@@ -1,6 +1,5 @@
 package com.sos.joc.dailyplan.common;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,7 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.common.Folder;
@@ -74,7 +73,8 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
 
     public boolean setPermittedSchedules(Optional<MetaItem> metaContentOpt, Set<String> allowedControllers, Optional<Set<String>> scheduleNames,
             List<Folder> scheduleFolders, Optional<Set<String>> nonPeriodScheduleNames, Optional<Set<String>> workflowNames,
-            List<Folder> workflowFolders, Set<String> permittedSchedules, SOSAuthFolderPermissions folderPermissions) throws DBMissingDataException {
+            List<Folder> workflowFolders, Set<String> permittedSchedules, Map<String, AuthFolders> permittedFoldersPerController)
+            throws DBMissingDataException {
 
         boolean schedulesRemoved = false;
         MetaItem metaItem = metaContentOpt.orElse(null);
@@ -83,7 +83,7 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
                 schedulesRemoved = true;
             }
             for (String controllerId : allowedControllers) {
-                Set<Folder> permittedFolders = folderPermissions == null ? Collections.emptySet() : folderPermissions.getListOfFolders(controllerId);
+                AuthFolders permittedFolders = permittedFoldersPerController == null ? null : permittedFoldersPerController.get(controllerId);
                 if (filterPermittedSchedules(metaItem.getAdditionalProperties().get(controllerId), permittedFolders, scheduleNames, scheduleFolders,
                         nonPeriodScheduleNames, workflowNames, workflowFolders, permittedSchedules)) {
                     schedulesRemoved = true;
@@ -149,7 +149,8 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
         return controllerRemoved;
     }
 
-    private void filterPermittedWorkflows(WorkflowsItem workflowsItem, Set<Folder> permittedFolders, Optional<Set<String>> workflowNames) {
+    private void filterPermittedWorkflows(WorkflowsItem workflowsItem, AuthFolders permittedFolders, Optional<Set<String>> workflowNames,
+            List<Folder> workflowFolders) {
         // boolean workflowsRemoved = false;
 
         if (workflowsItem != null && workflowsItem.getAdditionalProperties() != null) {
@@ -158,9 +159,7 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
             workflowNames.ifPresent(wn -> workflowsItem.getAdditionalProperties().keySet().removeIf(workflow -> !wn.contains(JocInventory.pathToName(
                     workflow))));
 
-            if (!permittedFolders.isEmpty()) {
-                workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders));
-            }
+            workflowsItem.getAdditionalProperties().keySet().removeIf(wPath -> !canAdd(wPath, permittedFolders, workflowFolders));
 
             // int newNumOfWorkflow = workflowsItem.getAdditionalProperties().keySet().size();
             // if (numOfWorkflow > newNumOfWorkflow) {
@@ -171,7 +170,7 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
         // return workflowsRemoved;
     }
 
-    private boolean filterPermittedSchedules(ControllerInfoItem cii, Set<Folder> permittedFolders, Optional<Set<String>> scheduleNames,
+    private boolean filterPermittedSchedules(ControllerInfoItem cii, AuthFolders permittedFolders, Optional<Set<String>> scheduleNames,
             List<Folder> scheduleFolders, Optional<Set<String>> nonPeriodScheduleNames, Optional<Set<String>> workflowNames,
             List<Folder> workflowFolders, Set<String> permittedSchedules) {
         boolean schedulesRemoved = false;
@@ -184,34 +183,18 @@ public class ProjectionsImpl extends JOCOrderResourceImpl {
 
             nonPeriodScheduleNames.ifPresent(sn -> cii.getAdditionalProperties().keySet().removeIf(schedule -> sn.contains(JocInventory.pathToName(
                     schedule))));
+            
+            /*
+             * We don't have a folderPermission for schedules here; maybe joc:inventory::deploy or joc:dailyplan::view ??
+             * Above permittedFolders are folder from controller:orders:view
+             */
+//            cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders, scheduleFolders));
 
-            Set<Folder> permittedFolders1 = new HashSet<>();
-            if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
-                permittedFolders1.addAll(SOSAuthFolderPermissions.getPermittedFolders(scheduleFolders, permittedFolders));
-                if (permittedFolders1.isEmpty()) { // no folder permissions
-                    cii.getAdditionalProperties().clear();
-                }
-            } else {
-                permittedFolders1.addAll(permittedFolders);
-            }
-            if (!permittedFolders1.isEmpty()) {
-                cii.getAdditionalProperties().keySet().removeIf(schedule -> !canAdd(schedule, permittedFolders1));
-            }
-
-            Set<Folder> permittedFolders2 = new HashSet<>();
-            if (workflowFolders != null && !workflowFolders.isEmpty()) {
-                permittedFolders2.addAll(SOSAuthFolderPermissions.getPermittedFolders(workflowFolders, permittedFolders));
-                if (permittedFolders2.isEmpty()) { // no folder permissions
-                    cii.getAdditionalProperties().clear();
-                }
-            } else {
-                permittedFolders2.addAll(permittedFolders);
-            }
 
             cii.getAdditionalProperties().values().forEach(sii -> {
                 if (sii != null) {
-                    if (!permittedFolders2.isEmpty() || workflowNames.isPresent()) {
-                        filterPermittedWorkflows(sii.getWorkflows(), permittedFolders2, workflowNames);
+                    if (workflowNames.isPresent()) {
+                        filterPermittedWorkflows(sii.getWorkflows(), permittedFolders, workflowNames, workflowFolders);
                     }
                     if (sii.getWorkflows() != null) {
                         sii.setWorkflowPaths(sii.getWorkflows().getAdditionalProperties().keySet());

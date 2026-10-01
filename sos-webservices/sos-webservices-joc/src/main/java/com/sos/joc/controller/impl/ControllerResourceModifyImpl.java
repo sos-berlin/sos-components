@@ -101,7 +101,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
 
     private JOCDefaultResponse executeModifyJobSchedulerCommand(String request, Command cmd, UrlParameter urlParameter, String accessToken,
             Stream<Boolean> permission) throws JsonProcessingException, JocException {
-        JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+        JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
         if (jocDefaultResponse != null) {
             return jocDefaultResponse;
         }

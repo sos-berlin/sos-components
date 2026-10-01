@@ -40,7 +40,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
             JsonValidator.validateFailFast(filterBytes, ReportsFilter.class);
             ReportsFilter in = Globals.objectMapper.readValue(filterBytes, ReportsFilter.class);
             
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getReports().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getReports().getView());
             if (response != null) {
                 return response;
             }

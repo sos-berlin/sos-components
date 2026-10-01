@@ -95,8 +95,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Set<String> workflows = addOrders.getOrders().stream().map(AddOrder::getWorkflowPath).map(JocInventory::pathToName).collect(Collectors
                     .toSet());
 
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p
-                    .getOrders().getCreate()), workflows);
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders()
+                    .getCreate()), workflows);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -112,8 +112,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 setAccessDeniedMessage("Access denied for setting start-/end-/blockpositions");
                 setApprovalRequestMessage("4-eyes principle: Operation needs approval process for setting start-/end-/blockpositions");
 
-                jocDefaultResponse = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
-                        .getManagePositions()), workflows);
+                jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getManagePositions()),
+                        workflows);
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;
                 }

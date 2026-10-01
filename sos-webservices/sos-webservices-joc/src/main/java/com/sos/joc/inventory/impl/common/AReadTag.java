@@ -43,7 +43,7 @@ public abstract class AReadTag extends JOCResourceImpl {
             JsonValidator.validateFailFast(inBytes, RequestTag.class);
             RequestTag in = Globals.objectMapper.readValue(inBytes, RequestTag.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
                 ResponseTag tag = readTag(in, action, forTrash, dbLayer, authFolders);

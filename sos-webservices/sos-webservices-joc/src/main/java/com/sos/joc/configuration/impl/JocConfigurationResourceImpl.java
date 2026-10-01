@@ -61,7 +61,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_SAVE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -260,7 +260,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             ConfigurationRead configuration = getConfigurationRead(API_CALL_READ, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -350,7 +350,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_DELETE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -387,8 +387,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
-                JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getSettings()
-                        .getManage()));
+                JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getAdministration().getSettings().getManage()));
                 if (response != null) {
                     return response;
                 }
@@ -407,11 +406,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     // }
                     JOCDefaultResponse response1 = null;
                     if (!dbItem.getShared()) {
-                        response1 = initPermissions(null, andPermissions(getJocPermissions().map(p -> p.getAdministration()
+                        response1 = initPermissions(andPermissions(getJocPermissions().map(p -> p.getAdministration()
                                 .getCustomization().getManage()), getJocPermissions().map(p -> p.getAdministration().getCustomization()
                                         .getShare())));
                     } else {
-                        response1 = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCustomization()
+                        response1 = initPermissions(getJocPermissions().map(p -> p.getAdministration().getCustomization()
                                 .getManage()));
                     }
                     if (response1 != null) {
@@ -439,7 +438,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_SHARE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -496,7 +495,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_PRIVATE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

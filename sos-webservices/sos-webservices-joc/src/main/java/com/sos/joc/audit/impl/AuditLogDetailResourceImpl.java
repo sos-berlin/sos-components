@@ -43,7 +43,7 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
             JsonValidator.validateFailFast(bytes, AuditLogDetailFilter.class);
             AuditLogDetailFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogDetailFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAuditLog().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

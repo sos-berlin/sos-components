@@ -357,7 +357,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission, AuthFolders authFolders) {
-        JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
+        JOCDefaultResponse response = initPermissions(permission);
         if (response == null) {
             if (in.getFolders() != null) {
                 for (String folder : in.getFolders()) {

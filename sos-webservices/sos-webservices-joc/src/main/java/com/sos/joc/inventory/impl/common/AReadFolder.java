@@ -185,7 +185,7 @@ public abstract class AReadFolder extends JOCResourceImpl {
     }
 
     public JOCDefaultResponse checkPermissions(final RequestFolder in, boolean permission, AuthFolders authFolders) throws Exception {
-        JOCDefaultResponse response = initPermissions(null, permission);
+        JOCDefaultResponse response = initPermissions(permission);
         if (response == null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {

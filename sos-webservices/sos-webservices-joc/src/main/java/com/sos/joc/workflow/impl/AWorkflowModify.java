@@ -38,7 +38,7 @@ public abstract class AWorkflowModify extends JOCResourceImpl {
     }
 
     protected JOCDefaultResponse initPermission(String controllerId, String workflow, String accessToken) {
-        return initWorkflowPermissions(controllerId, hasPermission(controllerId), Collections.singleton(JocInventory.pathToName(
+        return initWorkflowPermissions(hasPermission(controllerId), Collections.singleton(JocInventory.pathToName(
                 workflow)));
     }
 

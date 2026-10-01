@@ -44,7 +44,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getBasicJocPermissions(), getBasicControllerPermissions(
                     controllerId), treeForInventory, treeForInventoryTrash, treeForDescriptors, treeForDescriptorsTrash);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, types.size() > 0);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(types.size() > 0);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

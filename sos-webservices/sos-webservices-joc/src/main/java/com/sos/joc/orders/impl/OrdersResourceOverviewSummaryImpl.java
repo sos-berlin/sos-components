@@ -64,7 +64,7 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

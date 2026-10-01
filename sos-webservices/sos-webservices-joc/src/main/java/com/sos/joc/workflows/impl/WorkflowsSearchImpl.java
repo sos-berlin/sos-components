@@ -54,7 +54,7 @@ public class WorkflowsSearchImpl extends JOCResourceImpl implements ISearchResou
             in.setDeployedOrReleased(true);
 
             boolean permission = getBasicControllerPermissions(in.getControllerId()).getWorkflows().getView();
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
+            JOCDefaultResponse response = initPermissions(permission);
             if (response != null) {
                 return response;
             }

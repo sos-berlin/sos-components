@@ -37,7 +37,7 @@ public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 
-            JOCDefaultResponse response = initPermissions("", getBasicJocPermissions().getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

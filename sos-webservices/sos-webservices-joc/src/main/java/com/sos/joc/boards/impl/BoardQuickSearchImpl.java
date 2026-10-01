@@ -27,7 +27,7 @@ public class BoardQuickSearchImpl extends JOCResourceImpl implements IQuickSearc
             DeployedObjectQuickSearchFilter in = Globals.objectMapper.readValue(inBytes, DeployedObjectQuickSearchFilter.class);
 
             String controllerId = in.getControllerId();
-            JOCDefaultResponse response = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }

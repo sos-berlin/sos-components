@@ -178,7 +178,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             String controllerId = agentsParam.getControllerId();
             boolean permission = getBasicControllerPermissions(controllerId).getAgents().getView();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

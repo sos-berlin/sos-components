@@ -58,9 +58,9 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
                     getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyWorkflows.getFolders());
             
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.SUSPEND, modifyWorkflows, permittedFolders);
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(
-                    modifyWorkflows.getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.SUSPEND, workflows).stream()
-                            .map(WorkflowPath::string).collect(Collectors.toSet()));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyWorkflows.getControllerId()).map(p -> p
+                    .getOrders().getSuspendResume()), getWorkflows(Action.SUSPEND, workflows).stream().map(WorkflowPath::string).collect(Collectors
+                            .toSet()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -81,9 +81,9 @@ public class WorkflowsModifyImpl extends JOCResourceImpl implements IWorkflowsMo
                     getControllerPermissionsPredicate().getOrders().getSuspendResume(), modifyWorkflows.getFolders());
             
             Map<Boolean, List<WorkflowPath>> workflows = getWorkflows(Action.RESUME, modifyWorkflows, permittedFolders);
-            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(modifyWorkflows.getControllerId(), getControllerPermissions(
-                    modifyWorkflows.getControllerId()).map(p -> p.getOrders().getSuspendResume()), getWorkflows(Action.RESUME, workflows).stream()
-                            .map(WorkflowPath::string).collect(Collectors.toSet()));
+            JOCDefaultResponse jocDefaultResponse = initWorkflowPermissions(getControllerPermissions(modifyWorkflows.getControllerId()).map(p -> p
+                    .getOrders().getSuspendResume()), getWorkflows(Action.RESUME, workflows).stream().map(WorkflowPath::string).collect(Collectors
+                            .toSet()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

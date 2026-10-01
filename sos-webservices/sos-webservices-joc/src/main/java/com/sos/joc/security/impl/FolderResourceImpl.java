@@ -47,7 +47,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validateFailFast(body, FolderFilter.class);
             FolderFilter folderFilter = Globals.objectMapper.readValue(body, FolderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -249,7 +249,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             JsonValidator.validateFailFast(body, FolderListFilter.class);
             FolderListFilter folderListFilter = Globals.objectMapper.readValue(body, FolderListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

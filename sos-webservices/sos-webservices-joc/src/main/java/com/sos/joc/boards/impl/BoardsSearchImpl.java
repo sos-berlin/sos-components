@@ -34,7 +34,7 @@ public class BoardsSearchImpl extends JOCResourceImpl implements ISearchResource
             in.setDeployedOrReleased(true);
 
             boolean permission = getBasicControllerPermissions(in.getControllerId()).getNoticeBoards().getView();
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
+            JOCDefaultResponse response = initPermissions(permission);
             if (response != null) {
                 return response;
             }

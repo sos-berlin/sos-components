@@ -33,7 +33,7 @@ public class LocksSearchImpl extends JOCResourceImpl implements ISearchResource 
             in.setReturnType(RequestSearchReturnType.LOCK);
             in.setDeployedOrReleased(true);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getLocks().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(in.getControllerId()).getLocks().getView());
             if (response != null) {
                 return response;
             }

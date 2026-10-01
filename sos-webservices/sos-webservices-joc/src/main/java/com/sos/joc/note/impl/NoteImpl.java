@@ -59,7 +59,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             
             JsonValidator.validateFailFast(body, NoteIdentifier.class);
             NoteIdentifier in = Globals.objectMapper.readValue(body, NoteIdentifier.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -147,7 +147,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             
             JsonValidator.validateFailFast(body, ModifyRequest.class);
             ModifyRequest in = Globals.objectMapper.readValue(body, ModifyRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -187,7 +187,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             
             JsonValidator.validateFailFast(body, DisplayPreferencesRequest.class);
             DisplayPreferencesRequest in = Globals.objectMapper.readValue(body, DisplayPreferencesRequest.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -230,7 +230,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             
             throwIfPolicyDisabled();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -254,7 +254,7 @@ public class NoteImpl extends JOCResourceImpl implements INote {
             
             throwIfPolicyDisabled();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

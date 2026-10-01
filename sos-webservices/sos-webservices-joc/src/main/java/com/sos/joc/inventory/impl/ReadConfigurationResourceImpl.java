@@ -23,7 +23,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
                 response = read(in, IMPL_PATH, authFolders);
@@ -43,7 +43,7 @@ public class ReadConfigurationResourceImpl extends AReadConfiguration implements
             JsonValidator.validate(inBytes, RequestFilter.class, true);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getInventory().getView());
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
                 response = readTrash(in, TRASH_IMPL_PATH, authFolders);

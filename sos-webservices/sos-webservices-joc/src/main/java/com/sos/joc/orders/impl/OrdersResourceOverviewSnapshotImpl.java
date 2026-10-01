@@ -60,7 +60,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             OrdersFilterV body = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
             String controllerId = body.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getBasicControllerPermissions(controllerId).getOrders()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(controllerId).getOrders()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

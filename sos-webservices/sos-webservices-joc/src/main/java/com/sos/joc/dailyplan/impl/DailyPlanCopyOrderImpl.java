@@ -121,8 +121,8 @@ public class DailyPlanCopyOrderImpl extends JOCOrderResourceImpl implements IDai
                 dailyPlanOrderItems = Collections.emptyList();
             }
 
-            JOCDefaultResponse response = initWorkflowPermissions(controllerId, getControllerPermissions(controllerId).map(p -> p.getOrders()
-                    .getCreate()), dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet()));
+            JOCDefaultResponse response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getCreate()),
+                    dailyPlanOrderItems.stream().map(DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet()));
             if (response != null) {
                 return response;
             }

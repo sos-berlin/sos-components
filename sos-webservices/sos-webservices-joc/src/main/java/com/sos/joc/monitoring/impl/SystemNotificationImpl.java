@@ -36,7 +36,7 @@ public class SystemNotificationImpl extends JOCResourceImpl implements ISystemNo
 
             // 1) notification view permitted
             if (!getBasicJocPermissions().getNotification().getView()) {
-                return initPermissions(null, false);
+                return initPermissions(false);
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

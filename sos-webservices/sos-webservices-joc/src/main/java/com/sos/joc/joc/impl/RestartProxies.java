@@ -23,7 +23,7 @@ public class RestartProxies extends JOCResourceImpl implements IRestartProxiesRe
 
         try {
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
-            JOCDefaultResponse jocDefaultResponse = initOrPermissions("", getJocPermissions().map(p -> p.getCluster().getManage()),
+            JOCDefaultResponse jocDefaultResponse = initOrPermissions(getJocPermissions().map(p -> p.getCluster().getManage()),
                     getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

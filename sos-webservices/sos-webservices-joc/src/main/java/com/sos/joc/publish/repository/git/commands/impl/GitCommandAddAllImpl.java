@@ -45,7 +45,7 @@ public class GitCommandAddAllImpl extends JOCResourceImpl implements IGitCommand
             commonFilter = initLogging(API_CALL, commonFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(commonFilter, CommonFilter.class);
             CommonFilter filter = Globals.objectMapper.readValue(commonFilter, CommonFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

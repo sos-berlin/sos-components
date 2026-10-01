@@ -26,8 +26,8 @@ public class DeleteCertificateImpl extends JOCResourceImpl implements IDeleteCer
             deleteCertificateFilter = initLogging(API_CALL, deleteCertificateFilter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
             DeleteCertificateRequestFilter filter = Globals.objectMapper.readValue(deleteCertificateFilter, DeleteCertificateRequestFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
-                    .getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getCertificates()
+                    .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -85,8 +85,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts()
-                    .getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -384,7 +383,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountListFilter.class);
             AccountListFilter accountFilter = Globals.objectMapper.readValue(body, AccountListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -449,7 +448,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validateFailFast(body, AccountFilter.class);
             AccountFilter accountFilter = Globals.objectMapper.readValue(body, AccountFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -595,7 +594,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             account = Globals.objectMapper.readValue(body, AccountChangePassword.class);
 
             // TODO why permissions == true? better adminstration:accouts:manage or not?
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -714,7 +713,7 @@ public class AccountResourceImpl extends JOCResourceImpl implements IAccountReso
             JsonValidator.validate(body, AccountsFilter.class);
             accountsFilter = Globals.objectMapper.readValue(body, AccountNamesFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

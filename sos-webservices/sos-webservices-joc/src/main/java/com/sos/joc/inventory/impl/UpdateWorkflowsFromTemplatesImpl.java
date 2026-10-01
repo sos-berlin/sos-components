@@ -143,10 +143,9 @@ public class UpdateWorkflowsFromTemplatesImpl extends JOCResourceImpl implements
         }
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission, 
-            AuthFolders authFolders)
-            throws Exception {
-        JOCDefaultResponse response = initPermissions(null, permission);
+    private JOCDefaultResponse checkPermissions(final String accessToken, final WorkflowPropagateFilter in, Stream<Boolean> permission,
+            AuthFolders authFolders) throws Exception {
+        JOCDefaultResponse response = initPermissions(permission);
         if (response == null && in.getFolder() != null) {
             // for in.getRecursive() == TRUE: folder permissions are checked later
             if (JocInventory.ROOT_FOLDER.equals(in.getFolder())) {

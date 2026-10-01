@@ -34,7 +34,7 @@ public class StandardYADEDeployResourceImpl extends ADeploy implements IStandard
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (response != null) {
                 return response;
             }

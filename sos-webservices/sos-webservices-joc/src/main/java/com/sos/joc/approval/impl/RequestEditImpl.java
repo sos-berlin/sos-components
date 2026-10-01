@@ -36,7 +36,7 @@ public class RequestEditImpl extends JOCResourceImpl implements IRequestEditReso
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.OTHERS);
             JsonValidator.validateFailFast(filterBytes, FourEyesRequestEdit.class);
             FourEyesRequestEdit in = Globals.objectMapper.readValue(filterBytes, FourEyesRequestEdit.class);
-            JOCDefaultResponse response = initPermissions(null, true);
+            JOCDefaultResponse response = initPermissions(true);
             if (response != null) {
                 return response;
             }

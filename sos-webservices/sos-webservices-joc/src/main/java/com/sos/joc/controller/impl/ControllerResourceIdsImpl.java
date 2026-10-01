@@ -30,7 +30,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
 
         try {
             initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.CONTROLLER);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

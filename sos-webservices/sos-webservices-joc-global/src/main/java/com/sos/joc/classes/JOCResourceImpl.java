@@ -555,36 +555,36 @@ public class JOCResourceImpl {
         return either;
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
-        return initPermissions(controllerId, permission, false);
+    public JOCDefaultResponse initPermissions(boolean permission) throws JocException {
+        return initPermissions(permission, false);
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, Stream<Boolean> permissions) throws JocException {
-        return initPermissions(controllerId, permissions.toList());
+    public JOCDefaultResponse initPermissions(Stream<Boolean> permissions) throws JocException {
+        return initPermissions(permissions.toList());
     }
     
-    public JOCDefaultResponse initWorkflowPermissions(String controllerId, Stream<Boolean> permissions, Set<String> workflowNames)
+    public JOCDefaultResponse initWorkflowPermissions(Stream<Boolean> permissions, Set<String> workflowNames)
             throws JocException {
-        return initWorkflowPermissions(controllerId, permissions.toList(), workflowNames);
+        return initWorkflowPermissions(permissions.toList(), workflowNames);
     }
 
     public JOCDefaultResponse initManageAccountPermissions() throws JocException {
         List<Boolean> perms = getJocPermissions().map(p -> p.getAdministration().getAccounts().getManage()).toList();
-        return initPermissions(null, perms.get(0), perms.get(1), true);
+        return initPermissions(perms.get(0), perms.get(1), true);
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, List<Boolean> permissions) throws JocException {
-        return initPermissions(controllerId, permissions.get(0), permissions.get(1));
+    public JOCDefaultResponse initPermissions(List<Boolean> permissions) throws JocException {
+        return initPermissions(permissions.get(0), permissions.get(1));
     }
     
-    public JOCDefaultResponse initWorkflowPermissions(String controllerId, List<Boolean> permissions, Set<String> workflowNames)
+    public JOCDefaultResponse initWorkflowPermissions(List<Boolean> permissions, Set<String> workflowNames)
             throws JocException {
-        return initWorkflowPermissions(controllerId, permissions.get(0), permissions.get(1), workflowNames);
+        return initWorkflowPermissions(permissions.get(0), permissions.get(1), workflowNames);
     }
 
     @SafeVarargs
-    public final JOCDefaultResponse initOrPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
-        return initPermissions(controllerId, orPermissions(permissions));
+    public final JOCDefaultResponse initOrPermissions(Stream<Boolean>... permissions) throws JocException {
+        return initPermissions(orPermissions(permissions));
     }
 
     @SafeVarargs
@@ -609,8 +609,8 @@ public class JOCResourceImpl {
     }
 
     @SafeVarargs
-    public final JOCDefaultResponse initAndPermissions(String controllerId, Stream<Boolean>... permissions) throws JocException {
-        return initPermissions(controllerId, andPermissions(permissions));
+    public final JOCDefaultResponse initAndPermissions(Stream<Boolean>... permissions) throws JocException {
+        return initPermissions(andPermissions(permissions));
     }
 
     @SafeVarargs
@@ -637,11 +637,11 @@ public class JOCResourceImpl {
         return Arrays.asList(p, p4eyes);
     }
 
-    public JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission) throws JocException {
-        return initPermissions(controllerId, permission, fourEyesPermission, false);
+    public JOCDefaultResponse initPermissions(boolean permission, boolean fourEyesPermission) throws JocException {
+        return initPermissions(permission, fourEyesPermission, false);
     }
     
-    public JOCDefaultResponse initWorkflowPermissions(String controllerId, boolean permission, boolean fourEyesPermission, Set<String> workflowNames)
+    public JOCDefaultResponse initWorkflowPermissions(boolean permission, boolean fourEyesPermission, Set<String> workflowNames)
             throws JocException {
         // JOC-2196 check if workflows have requiring approval tags
         if (fourEyesPermission) { // requestor role needs approval while workflows are processed
@@ -664,19 +664,13 @@ public class JOCResourceImpl {
                     }
                 }
             }
-            return initPermissions(controllerId, permission, perm, false);
+            return initPermissions(permission, perm, false);
 
         }
-        return initPermissions(controllerId, permission, fourEyesPermission, false);
-    }
-    
-    @Deprecated
-    public void setFolderPermissions(String controllerId) {
-        folderPermissions = getCurrentAccount().getSosAuthFolderPermissions();
-        folderPermissions.setSchedulerId(controllerId);
+        return initPermissions(permission, fourEyesPermission, false);
     }
 
-    private JOCDefaultResponse initPermissions(String controllerId, boolean permission, boolean fourEyesPermission, boolean unsupported4eyes)
+    private JOCDefaultResponse initPermissions(boolean permission, boolean fourEyesPermission, boolean unsupported4eyes)
             throws JocException {
         JOCDefaultResponse jocDefaultResponse = null;
 
@@ -697,7 +691,6 @@ public class JOCResourceImpl {
                 return jocDefaultResponse;
             }
         }
-        setFolderPermissions(controllerId);
         return jocDefaultResponse;
     }
     
@@ -774,43 +767,43 @@ public class JOCResourceImpl {
 //        }
 //    }
 
-    /**
-     * @deprecated  As of JOC-2255, replaced by {@link #canAdd()}
-     */
-    @Deprecated
-    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
-        if (path == null || !path.startsWith("/")) {
-            return false;
-        }
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
-    }
+//    /**
+//     * @deprecated  As of JOC-2255, replaced by {@link #canAdd()}
+//     */
+//    @Deprecated
+//    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
+//        if (path == null || !path.startsWith("/")) {
+//            return false;
+//        }
+//        if (listOfFolders == null || listOfFolders.isEmpty()) {
+//            return true;
+//        }
+//        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
+//    }
 
-    /**
-     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
-     */
-    @Deprecated
-    protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
-        return folderPermissions.getPermittedFolders(folders);
-    }
+//    /**
+//     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
+//     */
+//    @Deprecated
+//    protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
+//        return folderPermissions.getPermittedFolders(folders);
+//    }
 
-    /**
-     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
-     */
-    @Deprecated
-    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
-        return folderPermissions.getPermittedFolders(folders);
-    }
+//    /**
+//     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
+//     */
+//    @Deprecated
+//    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
+//        return folderPermissions.getPermittedFolders(folders);
+//    }
 
-    /**
-     * @deprecated  As of JOC-2255, replaced by above {@link #folderIsPermitted()}
-     */
-    @Deprecated
-    protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
-    }
+//    /**
+//     * @deprecated  As of JOC-2255, replaced by above {@link #folderIsPermitted()}
+//     */
+//    @Deprecated
+//    protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
+//        return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
+//    }
 
     public String getAccountName() {
         try {

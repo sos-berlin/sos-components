@@ -45,7 +45,7 @@ public class RepositoryStoreImpl extends JOCResourceImpl implements IRepositoryS
             copyToFilter = initLogging(API_CALL, copyToFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(copyToFilter, CopyToFilter.class);
             CopyToFilter filter = Globals.objectMapper.readValue(copyToFilter, CopyToFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

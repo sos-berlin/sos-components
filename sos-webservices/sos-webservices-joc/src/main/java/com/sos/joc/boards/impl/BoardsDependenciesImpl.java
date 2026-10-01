@@ -48,8 +48,7 @@ public class BoardsDependenciesImpl extends JOCResourceImpl implements IBoardsDe
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, BoardsPathFilter.class);
             BoardsPathFilter filter = Globals.objectMapper.readValue(filterBytes, BoardsPathFilter.class);
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(filter.getControllerId())
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(filter.getControllerId()).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }

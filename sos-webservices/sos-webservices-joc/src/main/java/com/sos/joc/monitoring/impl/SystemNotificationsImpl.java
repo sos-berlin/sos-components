@@ -43,7 +43,7 @@ public class SystemNotificationsImpl extends JOCResourceImpl implements ISystemN
 
             // 1) notification view permitted
             if (!getBasicJocPermissions().getNotification().getView()) {
-                return initPermissions(null, false);
+                return initPermissions(false);
             }
 
             if (in.getLimit() == null) {

@@ -141,7 +141,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 }
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -296,7 +296,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter controllerObj = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getControllers()
                     .getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -361,7 +361,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 throw new JocBadRequestException("$.url: does not match the url pattern " + isUrlPattern);
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getControllers().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getControllers().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

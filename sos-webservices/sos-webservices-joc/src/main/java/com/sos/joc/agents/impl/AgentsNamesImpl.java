@@ -73,7 +73,7 @@ public class AgentsNamesImpl extends JOCResourceImpl implements IAgentsNames {
                         controllerId).getView() || adminPermitted;
             }        
                     
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

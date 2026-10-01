@@ -36,7 +36,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
         try {
             String request = String.format("%s/%s", API_CALL_SHOW, path.replaceFirst("^/", ""));
             initLogging(request, null, accessToken, CategoryType.DOCUMENTATIONS);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getDocumentations().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

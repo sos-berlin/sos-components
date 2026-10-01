@@ -42,8 +42,7 @@ public class AgentsOrderingImpl extends JOCResourceImpl implements IAgentsOrderi
             JsonValidator.validateFailFast(filterBytes, OrderingAgents.class);
             OrderingAgents orderingParam = Globals.objectMapper.readValue(filterBytes, OrderingAgents.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration().getControllers()
-                    .getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getControllers().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

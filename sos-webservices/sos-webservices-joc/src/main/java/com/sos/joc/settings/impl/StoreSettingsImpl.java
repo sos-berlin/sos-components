@@ -54,7 +54,7 @@ public class StoreSettingsImpl extends JOCResourceImpl implements IStoreSettings
             storeSettingsFilter = initLogging(API_CALL, storeSettingsFilter, accessToken, CategoryType.SETTINGS);
             JsonValidator.validate(storeSettingsFilter, StoreSettingsFilter.class);
             StoreSettingsFilter filter = Globals.objectMapper.readValue(storeSettingsFilter, StoreSettingsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

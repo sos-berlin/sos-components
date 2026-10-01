@@ -45,7 +45,7 @@ public class GitCommandCheckoutImpl extends JOCResourceImpl implements IGitComma
             checkoutFilter = initLogging(API_CALL, checkoutFilter, xAccessToken, CategoryType.INVENTORY);
             JsonValidator.validate(checkoutFilter, CheckoutFilter.class);
             CheckoutFilter filter = Globals.objectMapper.readValue(checkoutFilter, CheckoutFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

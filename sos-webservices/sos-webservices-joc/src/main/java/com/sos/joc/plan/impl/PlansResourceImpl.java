@@ -80,8 +80,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             JsonValidator.validateFailFast(filterBytes, PlansFilter.class);
             PlansFilter filter = Globals.objectMapper.readValue(filterBytes, PlansFilter.class);
             String controllerId = filter.getControllerId();
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), getBasicControllerPermissions(controllerId)
-                    .getNoticeBoards().getView());
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(controllerId).getNoticeBoards().getView());
             if (response != null) {
                 return response;
             }
@@ -111,7 +110,7 @@ public class PlansResourceImpl extends JOCResourceImpl implements IPlansResource
             // this API is called also if add order dialog is started -> add order::create
             ControllerPermissions perms = getBasicControllerPermissions(filter.getControllerId());
             boolean permitted = perms.getNoticeBoards().getView() || perms.getOrders().getCreate();
-            JOCDefaultResponse response = initPermissions(filter.getControllerId(), permitted);
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
             }

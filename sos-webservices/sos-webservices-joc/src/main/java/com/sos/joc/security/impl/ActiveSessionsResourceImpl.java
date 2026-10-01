@@ -34,7 +34,7 @@ public class ActiveSessionsResourceImpl extends JOCResourceImpl implements IActi
             JsonValidator.validateFailFast(body, ActiveSessionsFilter.class);
             ActiveSessionsFilter activeSessionsFilter = Globals.objectMapper.readValue(body, ActiveSessionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

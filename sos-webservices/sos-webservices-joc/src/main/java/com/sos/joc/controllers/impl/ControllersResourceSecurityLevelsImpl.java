@@ -38,7 +38,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             boolean adminPermission = controllerPermissions.getManage();
             boolean showPermission = controllerPermissions.getView();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", adminPermission || showPermission, false);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(adminPermission || showPermission, false);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -73,7 +73,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             // TODO admin permissions to take over security level
             Stream<Boolean> permission = getJocPermissions().map(p -> p.getAdministration().getControllers().getManage());
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

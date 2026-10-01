@@ -51,8 +51,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             filterBytes = initLogging(IMPL_PATH_LOG, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
-                    orderHistoryFilter.getControllerId()).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(orderHistoryFilter.getControllerId()).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -87,8 +87,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             filterBytes = initLogging(IMPL_PATH_LOG_DOWNLOAD, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
-                    orderHistoryFilter.getControllerId()).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(orderHistoryFilter.getControllerId()).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -109,8 +109,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             filterBytes = initLogging(IMPL_PATH_LOG_UNSUBSCRIBE, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getBasicControllerPermissions(
-                    orderHistoryFilter.getControllerId()).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(orderHistoryFilter.getControllerId()).getOrders()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -131,8 +131,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             filterBytes = initLogging(IMPL_PATH_LOG_RUNNING, filterBytes, accessToken, CategoryType.CONTROLLER);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             RunningOrderLogEvents orderLog = Globals.objectMapper.readValue(filterBytes, RunningOrderLogEvents.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderLog.getControllerId(), getBasicControllerPermissions(orderLog
-                    .getControllerId()).getOrders().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicControllerPermissions(orderLog.getControllerId()).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

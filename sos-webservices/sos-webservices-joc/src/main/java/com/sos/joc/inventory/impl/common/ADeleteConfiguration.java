@@ -355,7 +355,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             DBConnectionRefusedException, SOSHibernateException, ExecutionException {
 
         if (!released.isEmpty() || !deployments.isEmpty()) {
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getDeploy()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getDeploy()));
             if (response != null) {
                 return response;
             }

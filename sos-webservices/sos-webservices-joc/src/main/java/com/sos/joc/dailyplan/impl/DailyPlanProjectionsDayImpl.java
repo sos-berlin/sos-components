@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSDate;
@@ -74,10 +75,13 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
                 permitted = perms.getCalendars().getView() || perms.getDailyPlan().getView();
             }
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(allowedControllers,
+                    getControllerPermissionsPredicate().getOrders().getView());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlanProjections dbLayer = new DBLayerDailyPlanProjections(session);
@@ -143,7 +147,7 @@ public class DailyPlanProjectionsDayImpl extends ProjectionsImpl implements IDai
 
                 final boolean unPermittedSchedulesExist = setPermittedSchedules(metaContentOpt, allowedControllers, scheduleNamesOpt, in
                         .getScheduleFolders(), nonPeriodScheduleNamesOpt, workflowNamesOpt, in.getWorkflowFolders(), permittedSchedules,
-                        folderPermissions);
+                        permittedFoldersPerController);
 
                 if (invertedProjection) {
                     entity.setNonPeriods(permittedSchedules.stream().map(s -> {

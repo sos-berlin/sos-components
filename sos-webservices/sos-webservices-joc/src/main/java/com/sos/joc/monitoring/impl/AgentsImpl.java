@@ -73,7 +73,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                 permitted = getBasicControllerPermissions(controllerId).getAgents().getView();
             }
 
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
             }

@@ -63,7 +63,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

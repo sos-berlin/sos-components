@@ -39,7 +39,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             filterBytes = initLogging(API_CALL_STORE, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, StoreFavorites.class);
             StoreFavorites favorites = Globals.objectMapper.readValue(filterBytes, StoreFavorites.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -77,7 +77,7 @@ public class FavoritesStoreImpl extends JOCResourceImpl implements IFavoritesSto
             filterBytes = initLogging(API_CALL_RENAME, filterBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(filterBytes, RenameFavorites.class);
             RenameFavorites favorites = Globals.objectMapper.readValue(filterBytes, RenameFavorites.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import org.hibernate.ScrollableResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -74,18 +76,22 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(
                                     Collectors.toSet());
                     permitted = !allowedControllers.isEmpty();
-                    if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                        allowedControllers = Collections.emptySet();
-                    }
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
-
-            JOCDefaultResponse response = initPermissions(controllerId, permitted);
+            
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
+            }
+            
+            Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(allowedControllers,
+                    getControllerPermissionsPredicate().getOrders().getView());
+            
+            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                allowedControllers = Collections.emptySet();
             }
 
             List<TaskHistoryItem> history = new ArrayList<>();
@@ -107,8 +113,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
             }
 
-            Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
-            HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFolders, session);
+            Set<Folder> foldersOfAllController = permittedFoldersPerController.values().stream().map(AuthFolders::allow).filter(
+                    Optional::isPresent).map(Optional::get).flatMap(Set::stream).collect(Collectors.toSet());
+            AuthFolders permittedFoldersOfAllController = new AuthFolders(Optional.of(foldersOfAllController), Optional.empty());
+            HistoryFilter dbFilter = getFilter(in, allowedControllers, permittedFoldersOfAllController, session);
 
             if (dbFilter.hasPermission()) {
 
@@ -144,7 +152,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             int i = 0;
                             Map<String, Boolean> checkedControllers = new HashMap<>();
                             boolean isControllerIdEmpty = (in.getControllerId() == null || in.getControllerId().isEmpty());
-                            Map<String, Boolean> checkedFolders = new HashMap<>();
+                            Map<String, Map<String, Boolean>> checkedFoldersPerController = new HashMap<>();
                             // List<Long> historyIdsForOrderTagging = new ArrayList<>(); //obsolete -> orderIds are not displayed in Task History
                             // boolean withTagsDisplayedAsOrderId = OrderTags.withTagsDisplayedAsOrderId();
                             Set<String> workflowNames = new HashSet<>();
@@ -161,7 +169,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 if (isControllerIdEmpty && !getControllerPermissions(item, checkedControllers)) {
                                     continue;
                                 }
-                                if (!dbFilter.isFolderPermissionsAreChecked() && !canAdd(item, permittedFolders, checkedFolders)) {
+                                if (!canAdd(item, permittedFoldersPerController, checkedFoldersPerController)) {
                                     continue;
                                 }
                                 // if (withTagsDisplayedAsOrderId) {
@@ -215,7 +223,14 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         return result;
     }
 
-    private boolean canAdd(DBItemHistoryOrderStep item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private boolean canAdd(DBItemHistoryOrderStep item, Map<String, AuthFolders> permittedFoldersPerController,
+            Map<String, Map<String, Boolean>> checkedFoldersPerController) {
+        checkedFoldersPerController.putIfAbsent(item.getControllerId(), new HashMap<>());
+        return canAdd(item, permittedFoldersPerController.get(item.getControllerId()), checkedFoldersPerController.get(item.getControllerId()));
+    }
+    
+    private boolean canAdd(DBItemHistoryOrderStep item, AuthFolders permittedFolders,
+            Map<String, Boolean> checkedFolders) {
         Boolean result = checkedFolders.get(item.getWorkflowFolder());
         if (result == null) {
             result = canAdd(item.getWorkflowPath(), permittedFolders);
@@ -237,7 +252,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 start, afterSelect), firstEntryDuration));
     }
 
-    public static HistoryFilter getFilter(JobsFilter in, Set<String> allowedControllers, Set<Folder> permittedFolders, SOSHibernateSession session)
+    public static HistoryFilter getFilter(JobsFilter in, Set<String> allowedControllers, AuthFolders permittedFolders, SOSHibernateSession session)
             throws SOSHibernateException {
         boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
 
@@ -279,7 +294,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).filter(job -> canAdd(WorkflowPaths.getPath(job.getWorkflowPath()),
                             permittedFolders)).peek(job -> job.setWorkflowPath(JocInventory.pathToName(job.getWorkflowPath()))).collect(Collectors
                                     .groupingBy(JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
-                    dbFilter.setFolderPermissionsAreChecked(true);
+                    //dbFilter.setFolderPermissionsAreChecked(true);
                 } else {
 
                     if (!in.getExcludeJobs().isEmpty()) {
@@ -288,12 +303,12 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                         JobPath::getJob, Collectors.toSet()))));
                     }
 
-                    if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+                    if (permittedFolders.allow().isEmpty()) {
                         dbFilter.setHasPermission(false);
-                    } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+                    } else if (withFolderFilter && permittedFolders != null) {
                         dbFilter.setFolders(in.getFolders().stream().filter(folder -> folderIsPermitted(folder.getFolder(), permittedFolders))
                                 .collect(Collectors.toSet()));
-                        dbFilter.setFolderPermissionsAreChecked(true);
+                        //dbFilter.setFolderPermissionsAreChecked(true);
                     }
 
                     dbFilter.setJobName(in.getJobName());

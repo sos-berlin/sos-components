@@ -32,7 +32,7 @@ public class HelpImpl extends JOCResourceImpl implements IHelpResource {
                 initLogging("." + resource, null, CategoryType.DOCUMENTATIONS);
             } else {
                 initLogging("." + resource, null, accessToken, CategoryType.DOCUMENTATIONS);
-                JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+                JOCDefaultResponse jocDefaultResponse = initPermissions(true);
                 if (jocDefaultResponse != null) {
                     return jocDefaultResponse;
                 }

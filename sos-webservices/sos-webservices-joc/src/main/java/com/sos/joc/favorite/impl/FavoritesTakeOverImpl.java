@@ -33,7 +33,7 @@ public class FavoritesTakeOverImpl extends JOCResourceImpl implements IFavorites
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, FavoriteSharedIdentifiers.class);
             FavoriteSharedIdentifiers favorites = Globals.objectMapper.readValue(filterBytes, FavoriteSharedIdentifiers.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

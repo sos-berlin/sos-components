@@ -31,7 +31,7 @@ public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRela
             JsonValidator.validateFailFast(filterBytes, RelativeDatesConverter.class);
             RelativeDatesConverter in = Globals.objectMapper.readValue(filterBytes, RelativeDatesConverter.class);
 
-            JOCDefaultResponse response = initPermissions(null, true);
+            JOCDefaultResponse response = initPermissions(true);
             if (response != null) {
                 return response;
             }

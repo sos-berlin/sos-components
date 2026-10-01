@@ -36,7 +36,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             JsonValidator.validateFailFast(body, Profile.class);
             Profile profile = Globals.objectMapper.readValue(body, Profile.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -90,7 +90,7 @@ public class JocProfileResourceImpl extends JOCResourceImpl implements IJocProfi
             JsonValidator.validateFailFast(body, ProfileFilter.class);
             ProfileFilter profileFilter = Globals.objectMapper.readValue(body, ProfileFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

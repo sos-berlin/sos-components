@@ -61,7 +61,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getInventory().getView());
 
             if (response == null) {
                 if (in.getFolder().isEmpty()) {
@@ -84,7 +84,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             JsonValidator.validate(inBytes, DeployablesFilter.class, true);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getBasicJocPermissions().getInventory().getView());
+            JOCDefaultResponse response = initPermissions(getBasicJocPermissions().getInventory().getView());
 
             if (response == null) {
                 if (in.getFolder().isEmpty()) {

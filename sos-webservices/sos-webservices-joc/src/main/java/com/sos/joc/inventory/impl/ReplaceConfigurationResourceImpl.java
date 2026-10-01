@@ -49,7 +49,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = replace(in, authFolders);
@@ -67,7 +67,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = replaceFolder(in, authFolders);

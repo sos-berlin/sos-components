@@ -30,7 +30,7 @@ public class DeleteSigningCaImpl extends JOCResourceImpl implements IDeleteSigni
             filter = initLogging(API_CALL, filter, xAccessToken, CategoryType.CERTIFICATES);
             JsonValidator.validateFailFast(filter, DeleteCaFilter.class);
             DeleteCaFilter deleteCaFilter = Globals.objectMapper.readValue(filter, DeleteCaFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration().getCertificates().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

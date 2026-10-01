@@ -34,7 +34,7 @@ public class CalendarsSearchImpl extends JOCResourceImpl implements ISearchResou
             in.setDeployedOrReleased(true);
 
             boolean permission = getBasicJocPermissions().getCalendars().getView();
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), permission);
+            JOCDefaultResponse response = initPermissions(permission);
             if (response != null) {
                 return response;
             }

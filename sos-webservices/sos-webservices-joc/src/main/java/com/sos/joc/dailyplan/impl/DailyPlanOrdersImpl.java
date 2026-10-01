@@ -63,7 +63,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 permitted = !allowedControllers.isEmpty();
             }
 
-            JOCDefaultResponse response = initPermissions(null, permitted);
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
             }

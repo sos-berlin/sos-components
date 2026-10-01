@@ -157,7 +157,7 @@ public class ModifyStateImpl extends JOCResourceImpl implements IModifyStateReso
     private JOCDefaultResponse init(Action action, String accessToken, byte[] filterBytes) throws Exception {
         filterBytes = initLogging(API_CALL + action.name().toLowerCase(), filterBytes, accessToken, CategoryType.OTHERS);
         JsonValidator.validateFailFast(filterBytes, FourEyesRequestId.class);
-        return initPermissions(null, true);
+        return initPermissions(true);
     }
 
 }

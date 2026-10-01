@@ -57,7 +57,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             inBytes = initLogging(IMPL_PATH, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFilters.class, true);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = delete(in, authFolders);
@@ -75,7 +75,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             inBytes = initLogging(IMPL_PATH_FOLDER, inBytes, accessToken, CategoryType.INVENTORY);
             JsonValidator.validate(inBytes, RequestFolder.class, true);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
-            JOCDefaultResponse response = initPermissions(null, getJocPermissions().map(p -> p.getInventory().getManage()));
+            JOCDefaultResponse response = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             if (response == null) {
                 AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getManage());
                 response = deleteFolder(in, true, authFolders);

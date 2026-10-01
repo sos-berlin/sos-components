@@ -58,9 +58,9 @@ public class ExportFolderImpl extends JOCResourceImpl implements IExportFolderRe
 
             JOCDefaultResponse jocDefaultResponse = null;
             if (filter.getForSigning() != null) {
-                jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getInventory().getManage()));
+                jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getInventory().getManage()));
             } else {
-                jocDefaultResponse = initPermissions("", getBasicJocPermissions().getInventory().getView());
+                jocDefaultResponse = initPermissions(getBasicJocPermissions().getInventory().getView());
             }
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

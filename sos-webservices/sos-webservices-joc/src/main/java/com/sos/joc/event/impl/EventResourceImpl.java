@@ -52,7 +52,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             Controller in = Globals.objectMapper.readValue(inBytes, Controller.class);
             String controllerId = in.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

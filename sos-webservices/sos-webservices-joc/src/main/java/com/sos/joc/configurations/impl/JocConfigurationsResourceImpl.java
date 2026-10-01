@@ -59,7 +59,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             filterBytes = initLogging(API_CALL, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsFilter.class);
             ConfigurationsFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -219,7 +219,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             filterBytes = initLogging(API_CALL_DELETE, filterBytes, accessToken, CategoryType.SETTINGS);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
             ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions().map(p -> p.getAdministration()
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getJocPermissions().map(p -> p.getAdministration()
                     .getCustomization().getManage()));
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

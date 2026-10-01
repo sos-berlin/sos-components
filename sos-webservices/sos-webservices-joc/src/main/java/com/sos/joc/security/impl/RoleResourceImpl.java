@@ -48,7 +48,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RoleFilter.class);
             RoleFilter roleFilter = Globals.objectMapper.readValue(body, RoleFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -246,7 +246,7 @@ public class RoleResourceImpl extends JOCResourceImpl implements IRoleResource {
             JsonValidator.validateFailFast(body, RoleListFilter.class);
             RoleListFilter roleListFilter = Globals.objectMapper.readValue(body, RoleListFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getBasicJocPermissions().getAdministration().getAccounts().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(getBasicJocPermissions().getAdministration().getAccounts().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

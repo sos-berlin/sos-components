@@ -81,7 +81,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 permitted = getBasicControllerPermissions(controllerId).getOrders().getView();
             }
 
-            JOCDefaultResponse response = initPermissions(controllerId, permitted);
+            JOCDefaultResponse response = initPermissions(permitted);
             if (response != null) {
                 return response;
             }
@@ -170,7 +170,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsRequest.class);
             SubmissionsRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders()
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(in.getControllerId()).getOrders()
                     .getView());
             if (response != null) {
                 return response;
@@ -225,7 +225,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, SubmissionsOrdersRequest.class);
             SubmissionsOrdersRequest in = Globals.objectMapper.readValue(inBytes, SubmissionsOrdersRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getBasicControllerPermissions(in.getControllerId()).getOrders()
+            JOCDefaultResponse response = initPermissions(getBasicControllerPermissions(in.getControllerId()).getOrders()
                     .getView());
             if (response != null) {
                 return response;

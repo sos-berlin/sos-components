@@ -31,7 +31,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
 
         try {
             initLogging(API_CALL, "{}".getBytes(), accessToken, CategoryType.OTHERS);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
