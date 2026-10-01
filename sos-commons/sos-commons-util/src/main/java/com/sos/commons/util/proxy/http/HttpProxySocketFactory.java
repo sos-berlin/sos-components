@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import com.sos.commons.util.proxy.ProxyConfig;
-import com.sos.commons.util.proxy.socket.DefaultSocketFactory;
+import com.sos.commons.util.socket.DefaultSocketFactory;
 
 public class HttpProxySocketFactory extends DefaultSocketFactory {
 

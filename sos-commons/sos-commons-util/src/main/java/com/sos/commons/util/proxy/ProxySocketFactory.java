@@ -1,32 +1,42 @@
-package com.sos.commons.util.proxy.socket;
+package com.sos.commons.util.proxy;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import com.sos.commons.util.proxy.ProxyConfig;
-import com.sos.commons.util.proxy.http.HttpProxySocketFactory;
+import javax.net.SocketFactory;
 
+import com.sos.commons.util.proxy.http.HttpProxySocketFactory;
+import com.sos.commons.util.socket.DefaultSocketFactory;
+
+/** A socket factory that delegates socket creation to a configured socket factory selected according to the proxy configuration.
+ *
+ * <p>
+ * All {@code createSocket(...)} overloads delegate to the parameterless {@link #createSocket()} method.<br />
+ * The parameters are intentionally ignored to ensure consistent socket creation through the configured factory. */
 public class ProxySocketFactory extends DefaultSocketFactory {
 
-    private final ProxyConfig config;
+    private final SocketFactory delegate;
 
     public ProxySocketFactory(ProxyConfig config) {
-        this.config = config;
+        this(createFactory(config));
+    }
+
+    public ProxySocketFactory(SocketFactory socketFactory) {
+        this.delegate = socketFactory;
+    }
+
+    private static SocketFactory createFactory(ProxyConfig config) {
+        return switch (config.getProxy().type()) {
+        case HTTP -> new HttpProxySocketFactory(config);
+        case SOCKS, DIRECT -> new DefaultSocketFactory(config.getProxy());
+        };
     }
 
     @Override
     public Socket createSocket() throws IOException {
-        switch (config.getProxy().type()) {
-        case HTTP:
-            return new HttpProxySocketFactory(config).createSocket();
-        case SOCKS:
-            return new DefaultSocketFactory(config.getProxy()).createSocket();
-        default:
-            break;
-        }
-        return null;
+        return delegate.createSocket();
     }
 
     @Override

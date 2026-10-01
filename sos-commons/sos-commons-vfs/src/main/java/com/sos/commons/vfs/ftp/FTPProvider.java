@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -37,8 +38,8 @@ import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
 import com.sos.commons.util.beans.SOSTimeout;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.proxy.socket.ProxySocketFactory;
-import com.sos.commons.util.ssl.SslContextFactory;
+import com.sos.commons.util.proxy.ProxySocketFactory;
+import com.sos.commons.util.socket.HostnamePreservingSocketFactory;
 import com.sos.commons.vfs.commons.AProvider;
 import com.sos.commons.vfs.commons.AProviderArguments.FileType;
 import com.sos.commons.vfs.commons.AProviderArguments.Protocol;
@@ -51,11 +52,12 @@ import com.sos.commons.vfs.exceptions.ProviderConnectException;
 import com.sos.commons.vfs.exceptions.ProviderDirectoryCreationException;
 import com.sos.commons.vfs.exceptions.ProviderException;
 import com.sos.commons.vfs.exceptions.ProviderInitializationException;
+import com.sos.commons.vfs.ftp.commons.FTPFTPSClient;
+import com.sos.commons.vfs.ftp.commons.FTPFqdnFTPClient;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolCommandListener;
 import com.sos.commons.vfs.ftp.commons.FTPProtocolReply;
 import com.sos.commons.vfs.ftp.commons.FTPProviderArguments;
 import com.sos.commons.vfs.ftp.commons.FTPProviderUtils;
-import com.sos.commons.vfs.ftp.commons.FTPSProviderArguments;
 
 /** TODO FTPS FileZilla<br/>
  * https://issues.apache.org/jira/browse/NET-408<br/>
@@ -136,7 +138,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 }
                 // Connect
                 client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
+
                 FTPProtocolReply reply = new FTPProtocolReply(client);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[connect][reply]%s", getLogPrefix(), reply);
+                }
                 if (!reply.isPositiveReply()) {
                     throw new Exception(String.format("%s[connect][FTP server refused connection]%s", getLogPrefix(), reply));
                 }
@@ -149,6 +155,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                     throw new ProviderAuthenticationException(e);
                 }
                 reply = new FTPProtocolReply(client);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[connect][login][reply]%s", getLogPrefix(), reply);
+                }
                 if (!reply.isPositiveReply()) {
                     throw new ProviderAuthenticationException(String.format("%s[login]%s", getLogPrefix(), reply));
                 }
@@ -258,6 +267,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             List<ProviderFile> result = new ArrayList<>();
             FTPProviderUtils.selectFiles(this, selection, directory, result);
             return result;
+        } catch (SocketException e) {
+            throwConnectException(e);
+            return null;
         } catch (ProviderException e) {
             throw e;
         } catch (Exception e) {
@@ -736,7 +748,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
     }
 
     private FTPClient createClient() throws Exception {
-        FTPClient client = isFTPS ? createFTPSClient() : createFTPClient();
+        FTPClient client = isFTPS ? FTPFTPSClient.create(this) : createFTPClient();
         applyPreConnectSettings(client);
         return client;
     }
@@ -746,13 +758,18 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         if (getProxyConfig() == null) {
             client = new FTPClient();
         } else {
-            // SOCKS PROXY
-            if (java.net.Proxy.Type.SOCKS.equals(getProxyConfig().getProxy().type())) {
-                client = new FTPClient();
-                client.setSocketFactory(new ProxySocketFactory(getProxyConfig()));
-            }
-            // HTTP PROXY
-            else {
+            if (getProxyConfig().isSOCKS()) { // SOCKS PROXY
+                ProxySocketFactory factory = null;
+                if (getProxyConfig().shouldResolveSocksHostname()) {
+                    client = new FTPClient();
+                    factory = new ProxySocketFactory(getProxyConfig());
+                } else {
+                    String host = getArguments().getHost().getValue();
+                    client = new FTPFqdnFTPClient(host);
+                    factory = new ProxySocketFactory(new HostnamePreservingSocketFactory(getLogger(), host, getProxyConfig().getProxy()));
+                }
+                client.setSocketFactory(factory);
+            } else { // HTTP PROXY
                 if (SOSString.isEmpty(getProxyConfig().getUser())) {
                     client = new FTPHTTPClient(getProxyConfig().getHost(), getProxyConfig().getPort());
                 } else {
@@ -760,35 +777,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                             .getPassword());
                 }
             }
-        }
-        return client;
-    }
-
-    // FileZilla - [425]425 Unable to build data connection: TLS session of data connection not resumed.
-    private FTPClient createFTPSClient() throws Exception {
-        // System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
-        // System.setProperty("jdk.tls.allowLegacyResumption", "true");
-        // System.setProperty("jdk.tls.useExtendedMasterSecret", "false");
-        // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
-        FTPSProviderArguments args = (FTPSProviderArguments) getArguments();
-        FTPSClient client = null;
-        if (args.getSsl().getTrustedSsl().isCustomStoresEnabled()) {
-            // tmp
-            // args.getSSL().getProtocols().setValue(List.of("TLSv1.2"));
-            // if (!args.getSSL().getJavaKeyStore().isEnabled()) {
-            // args.getSSL().getAcceptUntrustedCertificate().setValue(true);
-            // }
-            client = new FTPSClient(args.isSecurityModeImplicit(), SslContextFactory.create(getLogger(), args.getSsl()));
-        } else {
-            client = new FTPSClient(args.isSecurityModeImplicit());
-            if (!args.getSsl().getUntrustedSslVerifyCertificateHostname().isTrue()) {
-                client.setHostnameVerifier(null);
-                logIfHostnameVerificationDisabled(args.getSsl());
-            }
-        }
-
-        if (getProxyConfig() != null) {
-            client.setProxy(getProxyConfig().getProxy());
         }
         return client;
     }
@@ -810,25 +798,88 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         client.setControlKeepAliveTimeout(getKeepAliveTimeout());
     }
 
+    /** 1) Prepare passive mode.<br />
+     * - See {@link FTPFTPSClient#_openDataConnection_} , which sends EPSV/PASV and prefers EPSV for passive connections.<br />
+     * -- EPSV is required for IPv6 and is also preferred for IPv4.<br />
+     * 
+     * 2) Encrypt the data connection. */
+    private void postLoginOperationsIfFTPS(FTPClient client) throws Exception {
+        if (isFTPS) {
+            // 1) Prepare passive mode.
+            client.enterLocalPassiveMode();
+            client.setUseEPSVwithIPv4(true);
+
+            // 2) Encrypt the data connection.
+            FTPSClient ftps = (FTPSClient) client;
+            try {
+                ftps.execPBSZ(0);
+                debugCommand("execPBSZ(0)"); // configure protection for the data connection (set the protection buffer size to 0)
+            } catch (Exception e) {
+                getLogger().warn("[execPBSZ(0)]" + e);
+            }
+            try {
+                ftps.execPROT("P"); // encrypt the data connection (the control connection is already protected by TLS)
+                debugCommand("execPROT(P)");
+            } catch (Exception e) {
+                getLogger().warn("[execPROT(P)]" + e);
+            }
+
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
+            }
+        }
+    }
+
+    /** Sets passive mode if enabled.<br />
+     * - Sends EPSV/PASV and prefers EPSV for passive connections.<br />
+     * -- EPSV is required for IPv6 and is also preferred for IPv4.<br />
+     * 
+     * @implNote PASV may be rejected when the FTP server sees the control connection as IPv6.<br />
+     *           This can also occur when the client uses IPv4 but the SOCKS proxy establishes the connection to the FTP server over IPv6.<br />
+     *           For example, FileZilla reports: 500 You are connected using IPv6. PASV is only for IPv4. You have to use the EPSV command instead.
+     * 
+     * @param client
+     * @throws Exception */
+    private void postLoginOperationsIfFTP(FTPClient client) throws Exception {
+        // Passive Mode
+        if (getArguments().getPassiveMode().isTrue()) {
+            client.enterLocalPassiveMode();
+            client.setUseEPSVwithIPv4(true);
+
+            String command = "EPSV";
+            client.epsv();
+            FTPProtocolReply reply = new FTPProtocolReply(client); // a positive EPSV reply contains the data connection port, e.g. "|||54227|".
+            if (!reply.isPositiveReply()) {
+                String firstNegativeReplay = reply.toString();
+
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("%s[%s=true][%s][failed]%s", getLogPrefix(), getArguments().getPassiveMode().getName(), command,
+                            firstNegativeReplay);
+                    getLogger().debug("%s[%s=true]sent PASV ...", getLogPrefix(), getArguments().getPassiveMode().getName());
+                }
+
+                command = "PASV";
+                client.pasv();
+                reply = new FTPProtocolReply(client);
+                if (!reply.isPositiveReply()) {
+                    throw new ProviderException(String.format("%s[%s=true]EPSV=%s, PASV=%s", getLogPrefix(), getArguments().getPassiveMode()
+                            .getName(), firstNegativeReplay, reply));
+                }
+            }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("%s[%s=true][%s]%s", getLogPrefix(), getArguments().getPassiveMode().getName(), command, reply);
+            }
+        }
+    }
+
     private void postLoginOperations(FTPClient client) throws Exception {
+        /** FTP/FTPS */
         features(client);
 
         postLoginOperationsIfFTPS(client);
+        postLoginOperationsIfFTP(client);
 
         /** FTP/FTPS */
-        // Passive Mode
-        if (getArguments().getPassiveMode().isTrue()) {
-            client.pasv();
-            FTPProtocolReply reply = new FTPProtocolReply(client);
-            if (reply.isPositiveReply()) {
-                client.enterLocalPassiveMode();// TODO check - FTPS below
-            } else {
-                throw new ProviderException(String.format("%s[pasv]%s", getLogPrefix(), reply));
-            }
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[%s=true]pasv executed successfully", getLogPrefix(), getArguments().getPassiveMode().getName());
-            }
-        }
         // Transfer Mode
         if (getArguments().isBinaryTransferMode()) {
             if (!client.setFileType(FTP.BINARY_FILE_TYPE)) {
@@ -842,8 +893,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             }
         }
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug("%s[%s=%s]successfully set", getLogPrefix(), getArguments().getTransferMode().getName(), getArguments()
-                    .getTransferModeValue());
+            getLogger().debug("%s[%s=%s]%s", getLogPrefix(), getArguments().getTransferMode().getName(), getArguments().getTransferModeValue(),
+                    new FTPProtocolReply(client));
         }
 
         sendNoOp();
@@ -898,32 +949,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         }
     }
 
-    private void postLoginOperationsIfFTPS(FTPClient client) throws Exception {
-        if (isFTPS) {
-            client.enterLocalPassiveMode();
-            debugCommand("enterLocalPassiveMode");
-
-            // SSL login and data connection - execPBSZ(0),execPROT(P)
-            FTPSClient ftps = (FTPSClient) client;
-            try {
-                ftps.execPBSZ(0);
-                debugCommand("execPBSZ(0)");
-            } catch (Exception e) {
-                getLogger().warn("[execPBSZ(0)]" + e);
-            }
-            try {
-                ftps.execPROT("P");
-                debugCommand("execPROT(P)");
-            } catch (Exception e) {
-                getLogger().warn("[execPROT(P)]" + e);
-            }
-
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
-            }
-        }
-    }
-
     private String getConnectedInfos(FTPClient client) {
         if (client == null) {
             return "";
@@ -950,7 +975,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
     private String getServerInfo() {
         try {
-            return "Server " + client.getSystemType();
+            return client.getSystemType();
         } catch (IOException e) {
             return "";
         }

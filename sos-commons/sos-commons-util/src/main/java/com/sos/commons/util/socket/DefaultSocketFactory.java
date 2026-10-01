@@ -1,4 +1,4 @@
-package com.sos.commons.util.proxy.socket;
+package com.sos.commons.util.socket;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -11,29 +11,29 @@ import javax.net.SocketFactory;
 
 public class DefaultSocketFactory extends SocketFactory {
 
-    private final Proxy connProxy;
+    private final Proxy proxy;
 
     /** The default constructor. */
-    public DefaultSocketFactory() {
+    protected DefaultSocketFactory() {
         this(null);
     }
 
     public DefaultSocketFactory(final Proxy proxy) {
-        connProxy = proxy;
+        this.proxy = proxy;
     }
 
     @Override
     public Socket createSocket() throws IOException {
-        if (connProxy != null) {
-            return new Socket(connProxy);
+        if (proxy != null) {
+            return new Socket(proxy);
         }
         return new Socket();
     }
 
     @Override
     public Socket createSocket(final InetAddress address, final int port) throws IOException {
-        if (connProxy != null) {
-            final Socket s = new Socket(connProxy);
+        if (proxy != null) {
+            final Socket s = new Socket(proxy);
             s.connect(new InetSocketAddress(address, port));
             return s;
         }
@@ -42,8 +42,8 @@ public class DefaultSocketFactory extends SocketFactory {
 
     @Override
     public Socket createSocket(final InetAddress address, final int port, final InetAddress localAddr, final int localPort) throws IOException {
-        if (connProxy != null) {
-            final Socket s = new Socket(connProxy);
+        if (proxy != null) {
+            final Socket s = new Socket(proxy);
             s.bind(new InetSocketAddress(localAddr, localPort));
             s.connect(new InetSocketAddress(address, port));
             return s;
@@ -53,8 +53,8 @@ public class DefaultSocketFactory extends SocketFactory {
 
     @Override
     public Socket createSocket(final String host, final int port) throws UnknownHostException, IOException {
-        if (connProxy != null) {
-            final Socket s = new Socket(connProxy);
+        if (proxy != null) {
+            final Socket s = new Socket(proxy);
             s.connect(new InetSocketAddress(host, port));
             return s;
         }
@@ -64,8 +64,8 @@ public class DefaultSocketFactory extends SocketFactory {
     @Override
     public Socket createSocket(final String host, final int port, final InetAddress localAddr, final int localPort) throws UnknownHostException,
             IOException {
-        if (connProxy != null) {
-            final Socket s = new Socket(connProxy);
+        if (proxy != null) {
+            final Socket s = new Socket(proxy);
             s.bind(new InetSocketAddress(localAddr, localPort));
             s.connect(new InetSocketAddress(host, port));
             return s;

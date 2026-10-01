@@ -13,8 +13,8 @@
 			<AppenderRef ref="DefaultConsole" />
 		</Root>
 
-		<Logger name="net" level="trace" />
+		<Logger name="net" level="info" />
 		<Logger name="net.schmizz" level="info" />
-		<Logger name="com.sos" level="trace" />
+		<Logger name="com.sos" level="info" />
 	</Loggers>
 </Configuration>

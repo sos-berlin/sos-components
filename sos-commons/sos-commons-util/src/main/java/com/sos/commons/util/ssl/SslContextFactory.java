@@ -1,8 +1,10 @@
 package com.sos.commons.util.ssl;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,6 +101,44 @@ public class SslContextFactory {
         return sslContext;
     }
 
+    /** Creates an SSL context that validates server certificates for validity.
+     *
+     * <p>
+     * The trust manager checks the validity period of each certificate in the server certificate chain but does not perform CA trust validation.<br />
+     * </p>
+     *
+     * @return an SSL context configured for server certificate validation
+     * @throws GeneralSecurityException if the SSL context cannot be initialized */
+    public static SSLContext createValidatingServer(ISOSLogger logger) throws GeneralSecurityException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("[SslContextFactory][createValidatingServer]%s", DEFAULT_PROTOCOL);
+        }
+
+        SSLContext context = SSLContext.getInstance(DEFAULT_PROTOCOL);
+
+        context.init(null, new TrustManager[] { new X509TrustManager() {
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+                for (X509Certificate certificate : chain) {
+                    certificate.checkValidity();
+                }
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+        } }, null);
+
+        return context;
+    }
+
     /** Removes "TLS","SSL", accepts only e.g. "TLSv1.1", "TLSv1.2", "TLSv1.3" ... */
     public static String[] getFilteredEnabledProtocols(SslArguments args) {
         if (args == null || args.getEnabledProtocols().isEmpty()) {
@@ -108,14 +148,15 @@ public class SslContextFactory {
                 .equalsIgnoreCase(DEFAULT_PROTOCOL) && !s.equalsIgnoreCase("SSL")).toArray(String[]::new);
     }
 
-    private static KeyManager[] getKeyManagers(final KeyStoreContainer c) throws Exception {
+    private static KeyManager[] getKeyManagers(final KeyStoreContainer c) throws GeneralSecurityException {
         if (c == null) {
             return null;
         }
         return getKeyManagers(c.getKeyStore(), KeyManagerFactory.getDefaultAlgorithm(), c.getPasswordChars(), c.getAliases());
     }
 
-    public static KeyManager[] getKeyManagers(final KeyStore keystore, String algorithm, char[] passwd, List<String> aliases) throws Exception {
+    public static KeyManager[] getKeyManagers(final KeyStore keystore, String algorithm, char[] passwd, List<String> aliases)
+            throws GeneralSecurityException {
         if (keystore == null) {
             return null;
         }
@@ -133,19 +174,19 @@ public class SslContextFactory {
         return managers;
     }
 
-    private static TrustManager[] getDefaultJVMTrustManagers() throws Exception {
+    private static TrustManager[] getDefaultJVMTrustManagers() throws GeneralSecurityException {
         TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         // null = use the default KeyStore (from JVM Truststore)
         factory.init((KeyStore) null);
         return factory.getTrustManagers();
     }
 
-    private static TrustManager[] getTrustManagers(final List<KeyStoreContainer> containers) throws Exception {
+    private static TrustManager[] getTrustManagers(final List<KeyStoreContainer> containers) throws GeneralSecurityException {
         List<KeyStore> trustStores = Optional.ofNullable(containers).map(c -> c.stream().map(KeyStoreContainer::getKeyStore).toList()).orElse(null);
         return getTrustManagers(trustStores, TrustManagerFactory.getDefaultAlgorithm());
     }
 
-    public static TrustManager[] getTrustManagers(final List<KeyStore> truststores, String algorithm) throws Exception {
+    public static TrustManager[] getTrustManagers(final List<KeyStore> truststores, String algorithm) throws GeneralSecurityException {
         if (SOSCollection.isEmpty(truststores)) {
             return getDefaultJVMTrustManagers();
         }
@@ -168,8 +209,8 @@ public class SslContextFactory {
     /** Accepts all certificates - not includes disabling hostname verification
      * 
      * @return
-     * @throws Exception */
-    private static TrustManager[] getAcceptUntrustedCertificateTrustManagers() throws Exception {
+     * @throws GeneralSecurityException */
+    private static TrustManager[] getAcceptUntrustedCertificateTrustManagers() throws GeneralSecurityException {
         return new TrustManager[] { new X509TrustManager() {
 
             public X509Certificate[] getAcceptedIssuers() {
@@ -187,8 +228,8 @@ public class SslContextFactory {
     /** Accepts all certificates - includes disabling hostname verification
      * 
      * @return
-     * @throws Exception */
-    private static TrustManager[] getAcceptUntrustedCertificateAndHostnameTrustManagers() throws Exception {
+     * @throws GeneralSecurityException */
+    private static TrustManager[] getAcceptUntrustedCertificateAndHostnameTrustManagers() throws GeneralSecurityException {
         return new TrustManager[] { new X509ExtendedTrustManager() {
 
             @Override
