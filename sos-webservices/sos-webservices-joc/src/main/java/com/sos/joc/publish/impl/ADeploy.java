@@ -394,6 +394,23 @@ public abstract class ADeploy extends JOCResourceImpl {
                    }
                 }
             }
+        } catch(Exception e) {
+            if(deployFilter.getTransactionId() != null) {
+                try {
+                    PublishSemaphore.release(deployFilter.getTransactionId());
+                    LOGGER.debug("DEPLOY: error occurred - final release of semaphore from deploy with transactionId " 
+                    + deployFilter.getTransactionId());
+                    if(PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId())
+                            .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                        PublishSemaphore.remove(deployFilter.getTransactionId());
+                        LOGGER.debug("DEPLOY: error occurred - final remove of semaphore from deploy with transactionId " 
+                        + deployFilter.getTransactionId());
+                    }
+                } catch (Exception e1) {
+                    // DO NOTHING if semaphore release failed
+                }
+            }
+            throw e;
         } finally {
             Globals.disconnect(session);
         }
