@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
-import com.sos.commons.util.proxy.socket.ProxySocketFactory;
+import com.sos.commons.util.proxy.ProxySocketFactory;
 
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;

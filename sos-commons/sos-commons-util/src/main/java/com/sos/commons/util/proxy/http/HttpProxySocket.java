@@ -46,6 +46,7 @@ public class HttpProxySocket extends Socket {
         out.flush();
 
         InputStream in = this.getInputStream();
+        @SuppressWarnings("resource")
         String response = new LineNumberReader(new InputStreamReader(in)).readLine();
         if (response == null) {
             throw new SocketException(String.format("[%s]missing response", ((InetSocketAddress) config.getProxy().address()).getHostName()));
