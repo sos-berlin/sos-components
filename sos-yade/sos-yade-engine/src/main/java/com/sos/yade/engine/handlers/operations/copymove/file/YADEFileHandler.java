@@ -616,7 +616,7 @@ public class YADEFileHandler {
             }
         }
 
-        throw new YADEEngineTransferFileException(msg, e.getCause() == null ? e : e.getCause(), returnCode, delegator);
+        throw new YADEEngineTransferFileException(msg, e, returnCode, delegator);
     }
 
     private void throwExceptionOnSource(String fileTransferLogPrefix, Throwable e) throws YADEEngineTransferFileException {
