@@ -20,6 +20,9 @@ public class JS7AgentConverter {
     public static final String DEFAULT_AGENT_NAME = "default_agent";
     public static final String DEFAULT_AGENT_URL = "http://localhost:4445";
 
+    public static final String DEFAULT_AGENT_URL_HOST = "http://localhost";
+    public static final int DEFAULT_AGENT_URL_PORT = 4445;
+
     public static Agent convertStandaloneAgent(JS7Agent agent) {
         Agent a = JS7AgentHelper.copy(agent.getStandaloneAgent());
         if (a == null) {

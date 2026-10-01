@@ -27,6 +27,9 @@ public class JobConfig extends AConfigItem {
     private String forcedWindowsPowershellShebang = "@@findstr/v \"^@@f.*&\" \"%~f0\"|pwsh.exe -&goto:eof";
     private String forcedWindowsCommandPrefix;
 
+    private String forcedWarnIfShorter;
+    private String forcedWarnIfLonger;
+
     private String notificationMailDefaultTo;
     private String notificationMailDefaultCc;
     private String notificationMailDefaultBcc;
@@ -51,9 +54,17 @@ public class JobConfig extends AConfigItem {
         case "forced.failonerrwritten":
             withForcedFailOnErrWritten(Boolean.parseBoolean(val));
             break;
+        // WARN
         case "forced.warnonerrwritten":
             withForcedWarnOnErrWritten(Boolean.parseBoolean(val));
             break;
+        case "forced.warnifshorter":
+            withForcedWarnIfShorter(val);
+            break;
+        case "forced.warniflonger":
+            withForcedWarnIfLonger(val);
+            break;
+        // V1 - JS1 -> JS7
         case "forced.v1compatible":
             withForcedV1Compatible(Boolean.parseBoolean(val));
             break;
@@ -106,8 +117,9 @@ public class JobConfig extends AConfigItem {
 
     @Override
     public boolean isEmpty() {
-        return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null && forcedV1Compatible == null
-                && notificationMailDefaultTo == null && notificationMailDefaultCc == null && notificationMailDefaultBcc == null;
+        return forcedGraceTimeout == null && forcedParallelism == null && forcedFailOnErrWritten == null && forcedWarnIfShorter != null
+                && forcedWarnIfLonger != null && forcedV1Compatible == null && notificationMailDefaultTo == null && notificationMailDefaultCc == null
+                && notificationMailDefaultBcc == null;
     }
 
     public JobConfig withForcedJitlLogLevel(String val) {
@@ -132,6 +144,16 @@ public class JobConfig extends AConfigItem {
 
     public JobConfig withForcedWarnOnErrWritten(Boolean val) {
         this.forcedWarnOnErrWritten = val;
+        return this;
+    }
+
+    public JobConfig withForcedWarnIfShorter(String val) {
+        this.forcedWarnIfShorter = val;
+        return this;
+    }
+
+    public JobConfig withForcedWarnIfLonger(String val) {
+        this.forcedWarnIfLonger = val;
         return this;
     }
 
@@ -223,6 +245,14 @@ public class JobConfig extends AConfigItem {
 
     public Boolean getForcedWarnOnErrWritten() {
         return forcedWarnOnErrWritten;
+    }
+
+    public String getForcedWarnIfShorter() {
+        return forcedWarnIfShorter;
+    }
+
+    public String getForcedWarnIfLonger() {
+        return forcedWarnIfLonger;
     }
 
     public Boolean getForcedV1Compatible() {

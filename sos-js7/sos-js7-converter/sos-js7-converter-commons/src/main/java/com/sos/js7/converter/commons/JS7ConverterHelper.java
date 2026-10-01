@@ -581,6 +581,15 @@ public class JS7ConverterHelper {
         if (config.getJobConfig().getForcedFailOnErrWritten() != null) {
             j.setFailOnErrWritten(config.getJobConfig().getForcedFailOnErrWritten());
         }
+        if (config.getJobConfig().getForcedWarnOnErrWritten() != null) {
+            j.setWarnOnErrWritten(config.getJobConfig().getForcedWarnOnErrWritten());
+        }
+        if (!SOSString.isEmpty(config.getJobConfig().getForcedWarnIfShorter())) {
+            j.setWarnIfShorter(config.getJobConfig().getForcedWarnIfShorter());
+        }
+        if (!SOSString.isEmpty(config.getJobConfig().getForcedWarnIfLonger())) {
+            j.setWarnIfLonger(config.getJobConfig().getForcedWarnIfLonger());
+        }
         return j;
     }
 
