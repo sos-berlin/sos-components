@@ -1,105 +1,83 @@
 package com.sos.joc.reporting.impl;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPOutputStream;
-
-import org.hibernate.ScrollableResults;
-
-import com.sos.auth.classes.SOSAuthFolderPermissions;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.classes.reporting.CSVColumns;
-import com.sos.joc.db.history.HistoryFilter;
-import com.sos.joc.db.history.items.CSVItem;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.job.TaskIdOfOrder;
 import com.sos.joc.reporting.resource.IOrderStepsResource;
 
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.StreamingOutput;
 
 @Path(WebservicePaths.REPORTING)
 public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResource {
     
-    public final class MyStreamingOutput implements StreamingOutput {
+//    public final class MyStreamingOutput implements StreamingOutput {
 
-        private final boolean withGzipEncoding;
-        private final ScrollableResults<CSVItem> result;
-        private final SOSHibernateSession session;
-        private final boolean isFolderPermissionsAreChecked;
-        private final Set<Folder> permittedFolders;
-        private final String headline;
+//        private final boolean withGzipEncoding;
+//        private final ScrollableResults<CSVItem> result;
+//        private final SOSHibernateSession session;
+//        private final boolean isFolderPermissionsAreChecked;
+//        private final Set<Folder> permittedFolders;
+//        private final String headline;
 
 
-        public MyStreamingOutput(boolean withGzipEncoding, HistoryFilter filter, Collection<CSVColumns> osColumns,
-                List<TaskIdOfOrder> historyIds, Set<Folder> permittedFolders, String action) throws JocException, IOException {
-            this.withGzipEncoding = withGzipEncoding;
-            this.session = Globals.createSosHibernateStatelessConnection(action);
-            this.isFolderPermissionsAreChecked= filter.isFolderPermissionsAreChecked();
-            this.permittedFolders = permittedFolders;
-            this.headline = "";//osColumns.stream().map(CSVColumns::value).collect(Collectors.joining(";")) + "\n";
-            try {
-                result = null; //getResult(filter, osColumns.stream().map(CSVColumns::strValue), historyIds);
-            } catch (JocException e) {
-                Globals.disconnect(session);
-                throw e;
-            }
-        }
+//        public MyStreamingOutput(boolean withGzipEncoding, HistoryFilter filter, Collection<CSVColumns> osColumns,
+//                List<TaskIdOfOrder> historyIds, Set<Folder> permittedFolders, String action) throws JocException, IOException {
+//            this.withGzipEncoding = withGzipEncoding;
+//            this.session = Globals.createSosHibernateStatelessConnection(action);
+//            this.isFolderPermissionsAreChecked= filter.isFolderPermissionsAreChecked();
+//            this.permittedFolders = permittedFolders;
+//            this.headline = "";//osColumns.stream().map(CSVColumns::value).collect(Collectors.joining(";")) + "\n";
+//            try {
+//                result = null; //getResult(filter, osColumns.stream().map(CSVColumns::strValue), historyIds);
+//            } catch (JocException e) {
+//                Globals.disconnect(session);
+//                throw e;
+//            }
+//        }
 
-        @Override
-        public void write(OutputStream output) throws IOException {
-            try {
-                if (withGzipEncoding) {
-                    output = new GZIPOutputStream(output);
-                }
-                if (result != null) {
-                    Map<String, Boolean> checkedFolders = new HashMap<>();
-                    output.write(headline.getBytes(StandardCharsets.UTF_8));
-                    while (result.next()) {
-                        CSVItem item = result.get();
-                        if (!isFolderPermissionsAreChecked && !canAdd(item.getFolder(), permittedFolders, checkedFolders)) {
-                            continue;
-                        }
-                        output.write(item.getCsvBytes());
-                    }
-                }
-                output.flush();
-            } finally {
-                try {
-                    output.close();
-                } catch (Exception e) {
-                }
-                if (result != null) {
-                    result.close();
-                }
-                Globals.disconnect(session);
-            }
-        }
+//        @Override
+//        public void write(OutputStream output) throws IOException {
+//            try {
+//                if (withGzipEncoding) {
+//                    output = new GZIPOutputStream(output);
+//                }
+//                if (result != null) {
+//                    Map<String, Boolean> checkedFolders = new HashMap<>();
+//                    output.write(headline.getBytes(StandardCharsets.UTF_8));
+//                    while (result.next()) {
+//                        CSVItem item = result.get();
+//                        if (!isFolderPermissionsAreChecked && !canAdd(item.getFolder(), permittedFolders, checkedFolders)) {
+//                            continue;
+//                        }
+//                        output.write(item.getCsvBytes());
+//                    }
+//                }
+//                output.flush();
+//            } finally {
+//                try {
+//                    output.close();
+//                } catch (Exception e) {
+//                }
+//                if (result != null) {
+//                    result.close();
+//                }
+//                Globals.disconnect(session);
+//            }
+//        }
         
-        private boolean canAdd(String folder, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
-            if (folder == null || !folder.startsWith("/")) {
-                return false;
-            }
-            Boolean result = checkedFolders.get(folder);
-            if (result == null) {
-                result = SOSAuthFolderPermissions.isPermittedForFolder(folder, permittedFolders);
-                checkedFolders.put(folder, result);
-            }
-            return result;
-        }
+//        private boolean canAdd(String folder, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+//            if (folder == null || !folder.startsWith("/")) {
+//                return false;
+//            }
+//            Boolean result = checkedFolders.get(folder);
+//            if (result == null) {
+//                result = SOSAuthFolderPermissions.isPermittedForFolder(folder, permittedFolders);
+//                checkedFolders.put(folder, result);
+//            }
+//            return result;
+//        }
         
 //        private ScrollableResults<CSVItem> getResult(HistoryFilter filter, Stream<String> columns, List<TaskIdOfOrder> historyIds) {
 //            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, filter);
@@ -115,7 +93,7 @@ public class OrderStepsImpl extends JOCResourceImpl implements IOrderStepsResour
 //            return null;
 //        }
         
-    }
+//    }
     
     @Override
     public JOCDefaultResponse orderSteps(String accessToken, String acceptEncoding, byte[] filterBytes) {
