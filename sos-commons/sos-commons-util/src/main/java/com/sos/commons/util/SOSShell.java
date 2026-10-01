@@ -26,7 +26,9 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.exception.SOSTimeoutExeededException;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
@@ -435,9 +437,9 @@ public class SOSShell {
      * @return the total number of bytes
      * @throws NullPointerException if input is null
      * @throws SOSInvalidDataException if the input is invalid or partially malformed */
-    public static long parseByteSize(String input) throws SOSInvalidDataException {
+    public static long parseByteSize(String input) throws SOSException {
         if (input == null) {
-            throw new SOSInvalidDataException("input");
+            throw new SOSMissingDataException("input");
         }
 
         input = input.trim();
