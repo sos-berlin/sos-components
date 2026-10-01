@@ -103,13 +103,44 @@ public class FTPProviderUtils {
         return val != null && "true".equalsIgnoreCase(val);
     }
 
+    /** Lists the contents of the specified directory.
+     *
+     * <p>
+     * MLSD is preferred over LIST because it provides standardized, machine-readable directory information and avoids the need to interpret server-specific
+     * LIST formats.
+     * </p>
+     *
+     * <p>
+     * If MLSD is not supported by the server, the method falls back to LIST. The fallback is only performed for FTP reply codes indicating that the command or
+     * its parameters are not supported.
+     * </p>
+     *
+     * @param provider the FTP provider
+     * @param selection the file selection criteria
+     * @param directoryPath the path of the directory to list
+     * @param result the list to which matching files are added
+     * @param counterAdded the number of files already added
+     * @return the updated number of files added
+     * @throws Exception if the directory cannot be listed */
     private static int list(FTPProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
             throws Exception {
         FTPClient client = provider.requireFTPClient();
-        FTPFile[] subDirInfos = client.listFiles(directoryPath);
+        FTPFile[] subDirInfos = client.mlistDir(directoryPath);
         FTPProtocolReply reply = new FTPProtocolReply(client);
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug(provider.getPathOperationPrefix("MLSD " + directoryPath) + reply);
+        }
         if (!reply.isPositiveReply()) {
-            provider.throwDirectoryException(directoryPath, reply.toString());
+            if (reply.isCommandNotSupportedReply()) {
+                subDirInfos = client.listFiles(directoryPath);
+                reply = new FTPProtocolReply(client);
+                if (provider.getLogger().isDebugEnabled()) {
+                    provider.getLogger().debug(provider.getPathOperationPrefix("LIST " + directoryPath) + reply);
+                }
+            }
+            if (!reply.isPositiveReply()) {
+                provider.throwDirectoryException(directoryPath, reply.toString());
+            }
         }
         for (FTPFile subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {

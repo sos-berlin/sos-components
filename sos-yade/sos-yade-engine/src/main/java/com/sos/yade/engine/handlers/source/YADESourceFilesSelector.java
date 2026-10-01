@@ -112,6 +112,8 @@ public class YADESourceFilesSelector {
             throw new YADEEngineSourceDirectoryNotFoundException(e);
         } catch (ProviderDirectoryException e) {
             throw new YADEEngineSourceDirectoryException(e);
+        } catch (ProviderConnectException e) {
+            throw new YADEEngineSourceConnectionException(e);
         } catch (ProviderException e) {
             throw new YADEEngineSourceFilesSelectorException(e.toString(), e.getCause() == null ? e : e.getCause());
         } catch (Exception e) {

@@ -590,7 +590,7 @@ public class YADEFileHandler {
         if (logger.isTraceEnabled()) {
             logger.trace("  [StackTrace]" + SOSClassUtil.getStackTrace(e));
         }
-        throw new YADEEngineTransferFileException(msg, e.getCause() == null ? e : e.getCause());
+        throw new YADEEngineTransferFileException(msg, e);
     }
 
     private void throwExceptionOnSource(String fileTransferLogPrefix, Throwable e) throws YADEEngineTransferFileException {
