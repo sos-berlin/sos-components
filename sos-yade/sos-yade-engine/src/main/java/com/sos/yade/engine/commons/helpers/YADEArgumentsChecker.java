@@ -108,13 +108,15 @@ public class YADEArgumentsChecker {
 
         if (ZeroByteTransfer.RELAXED.equals(sourceArgs.getZeroByteTransfer().getValue())) {
             try {
-                if (ProviderFileSelectionConfig.toFileSize(sourceArgs.getMinFileSize().getValue()) <= 0L) {
+                if (sourceArgs.getMinFileSize().getValue() == null || ProviderFileSelectionConfig.toFileSize(sourceArgs.getMinFileSize()
+                        .getValue()) <= 0L) {
                     logger.info("[%s][%s=1]ZeroByteTransfer.RELAXED is active, setting %s=1", YADESourceArguments.LABEL, sourceArgs.getMinFileSize()
                             .getName(), sourceArgs.getMinFileSize().getName());
                     sourceArgs.getMinFileSize().setValue("1");
                 }
             } catch (Exception e) {
-                throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "]" + e.toString(), e);
+                throw new YADEEngineInitializationException("[" + YADESourceArguments.LABEL + "][" + sourceArgs.getMinFileSize().getName() + "="
+                        + sourceArgs.getMinFileSize().getValue() + "]" + e.toString(), e);
             }
         }
 
