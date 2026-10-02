@@ -325,9 +325,13 @@ public class YADEEngineJumpHostAddon {
         if (jumpHostDelegator == null) {
             return;
         }
+
         String dir = isSourceDisconnectingEnabled ? config.directory : config.dataDirectory;
         try {
             SSHProvider<?, ?> jumpHostSSH = (SSHProvider<?, ?>) jumpHostDelegator.getProvider();
+
+            jumpHostSSH.ensureConnected();
+
             boolean deleted;
             if (argsLoader.getJumpHostArgs().isPlatformEnabled()) {
                 if (argsLoader.getJumpHostArgs().isWindowsPlatform()) {
