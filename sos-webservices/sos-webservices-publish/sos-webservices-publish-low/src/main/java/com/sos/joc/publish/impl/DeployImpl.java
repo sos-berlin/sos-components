@@ -58,7 +58,6 @@ public class DeployImpl extends ADeploy implements IDeploy {
             try {
                 deploy(xAccessToken, deployFilter, dbAuditlog, SEC_LVL, API_CALL);
             } catch (Exception e) {
-                LOGGER.error(e.toString());
                 ProblemHelper.postExceptionEventIfExist(Either.left(e), xAccessToken, getJocError(), null);
             }
         }, "deploy-" + deployFilter.getTransactionId()).start();
