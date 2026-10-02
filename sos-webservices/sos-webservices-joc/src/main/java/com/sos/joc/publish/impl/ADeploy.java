@@ -54,6 +54,7 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
+import com.sos.joc.publish.record.DeployRecord;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
@@ -95,8 +96,7 @@ public abstract class ADeploy extends JOCResourceImpl {
             }
             LOGGER.debug("DEPLOY: acquire semaphore with transactionId " + deployFilter.getTransactionId());
             
-            Set<String> allowedControllerIds = Collections.emptySet();
-            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
+            Set<String> allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> 
                     getBasicControllerPermissions(availableController).getDeployments().getDeploy()).collect(Collectors.toSet());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -108,14 +108,18 @@ public abstract class ADeploy extends JOCResourceImpl {
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
             }
             // process filter
-            Set<String> controllerIds = deployFilter.getControllerIds().stream().collect(Collectors.toSet());
-            List<Config> foldersToDelete = getFoldersToDelete(deployFilter, dbLayer);
+            Set<String> controllerIds = deployFilter.getControllerIds().stream()
+                    .filter(controllerId -> allowedControllerIds.contains(controllerId)).collect(Collectors.toSet());
+            if(controllerIds.isEmpty()) {
+                throw new JocDeployException("No controller to deploy to, due to missing permissions.");
+            }
             // read all objects provided in the filter from the database
+            List<Config> foldersToDelete = getFoldersToDelete(deployFilter, dbLayer);
+            Set<DBItemDeploymentHistory> itemsFromFolderToDelete = getDepItemsFromFolders(controllerIds, deployFilter, dbLayer);
             // get all objects from INV_CONFIGURATION with deployed = false
             Set<DBItemInventoryConfiguration> unsignedDrafts = getInvDbItemsToStore(deployFilter, dbLayer);
             // get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
             Set<DBItemDeploymentHistory> unsignedReDeployables = getDepDbItemsToStore(deployFilter, dbLayer);
-            Set<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = getDepDbItemsToDelete(deployFilter, dbLayer);
             // set new versionId for first round (update items)
             final String commitId = UUID.randomUUID().toString();
             final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
@@ -123,83 +127,19 @@ public abstract class ADeploy extends JOCResourceImpl {
             // Map<ControllerId, Map<AgentId, Set<AgentNames and Aliases>>>
             Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId = agentDbLayer.getAgentWithAliasesByControllerIds(controllerIds);
 
-            List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
+            Long auditLogId = dbAuditlog.getId();
             // store to selected allowed controllers
+            Map<String, DeployRecord> verifiedDeployablesPerController = 
+                    prepareItemsPerController(controllerIds, commitId, account, keyPair, auditLogId, unsignedDrafts, unsignedReDeployables, 
+                            agentsWithAliasesByControllerId, releasedScripts, deployFilter, dbLayer);
+            
+            // loop 1: update Items
             for (String controllerId : controllerIds) {
-                if (!allowedControllerIds.contains(controllerId)) {
-                    continue;
-                }
-                AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, 
-                        getControllerPermissionsPredicate().getDeployments().getDeploy());
-
-                // sign deployed configurations with new versionId
-                Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
-                // determine agent names to be replaced
-                Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
-                Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
-                // determine all (latest) entries from the given folders
-                if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                    itemsFromFolderToDelete.addAll(foldersToDelete.stream().map(Config::getConfiguration).flatMap(item -> dbLayer
-                            .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).collect(Collectors.toSet()));
-
-                }
-                if (unsignedDrafts != null) {
-                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                            .filter(draft -> canAdd(draft.getPath(), authFolders))
-                            .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
-                            .collect(Collectors.toList());
-                    if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
-                        filteredUnsignedDrafts.stream()
-                            .filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
-                            .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
-                        filteredUnsignedDrafts.stream()
-                            .filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
-                            .forEach(item -> {
-                                UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
-                                try {
-                                    ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-                                    updateableAgentNamesFileOrderSources.add(update);
-                                } catch (Exception e) {}
-                            });
-                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                                commitId, account, filteredUnsignedDrafts, updateableAgentNames, keyPair, controllerId, session));
-                    }
-                }
-                // already deployed objects AgentName handling
-                // all items will be signed or re-signed with current commitId
-                if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
-                    // filter regarding folder permissions
-                    List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                            .filter(draft -> canAdd(draft.getPath(), authFolders)).map(dbItem -> cloneToNew(dbItem))
-                            .peek(item -> {
-                                try {
-                                    item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
-                                            .getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
-                                    item.setCommitId(commitId);
-                                } catch (IOException e) {
-                                    throw new JocException(e);
-                                }
-                            }).collect(Collectors.toList());
-                    if (!filteredUnsignedReDeployables.isEmpty()) {
-                        filteredUnsignedReDeployables.stream()
-                            .filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
-                            .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
-                        filteredUnsignedReDeployables.stream()
-                            .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
-                            .forEach(item -> {
-                                UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
-                                try {
-                                    ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-                                    updateableAgentNamesFileOrderSources.add(update);
-                                } catch (Exception e) {}
-                            });
-                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                                commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, session));
-                    }
-                }
+                Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = verifiedDeployablesPerController.get(controllerId).verifiedDeployables();
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 Set<DBItemDeploymentHistory> renamedOriginalHistoryEntries = UpdateItemUtils
                         .checkRenamingForUpdate(verifiedDeployables.keySet(), controllerId, dbLayer);
+
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
                     if (deployFilter.getAddOrdersDateFrom() != null ) {
                         
@@ -225,8 +165,8 @@ public abstract class ADeploy extends JOCResourceImpl {
                                 // contains futures with errors
                                 ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), xAccessToken, getJocError());
                             } else {
-                                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
-                                        updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, verifiedDeployablesPerController.get(controllerId).updateableAgentNames(),
+                                        verifiedDeployablesPerController.get(controllerId).updateableAgentNamesFileOrderSources(), dbAuditlog.getId());
                                 // call updateRepo command via ControllerApi for given controller
                                 SOSHibernateSession sessionAfterCancel = null;
                                 try {
@@ -242,8 +182,8 @@ public abstract class ADeploy extends JOCResourceImpl {
                             }
                         });
                     } else {
-                        SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
-                                updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                        SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, verifiedDeployablesPerController.get(controllerId).updateableAgentNames(),
+                                verifiedDeployablesPerController.get(controllerId).updateableAgentNamesFileOrderSources(), dbAuditlog.getId());
                         // call updateRepo command via ControllerApi for given controller
                         SOSHibernateSession sessionWithoutCancel = null;
                         try {
@@ -266,20 +206,13 @@ public abstract class ADeploy extends JOCResourceImpl {
             Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
 
             Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-            // loop 1: store db entries optimistically
+            // loop 2: remove items from all allowed controller
             for (String controllerId : allowedControllerIds) {
                 List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
                 AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
                         getControllerPermissionsPredicate().getDeployments().getDeploy());
                 
-//                folderPermissions.setSchedulerId(controllerId);
-//                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 // store history entries for delete operation optimistically
-                if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                    filteredDepHistoryItemsToDelete.addAll(depHistoryDBItemsToDeployDelete.stream()
-                            .filter(history -> canAdd(history.getPath(), permittedAuthFolders))
-                            .collect(Collectors.toList()));
-                }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                     // first filter for folder permissions
                     // second filter for not already deleted
@@ -348,6 +281,82 @@ public abstract class ADeploy extends JOCResourceImpl {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private Map<String, DeployRecord> prepareItemsPerController(Set<String> controllerIds, String commitId, 
+            String account, JocKeyPair keyPair, Long auditLogId, Set<DBItemInventoryConfiguration> unsignedDrafts, 
+            Set<DBItemDeploymentHistory> unsignedReDeployables, Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, 
+            Map<String, String> releasedScripts, DeployFilter deployFilter, DBLayerDeploy dbLayer) throws Exception {
+        Map<String, DeployRecord> signedDeployablesPerController = new HashMap<>();
+        for (String controllerId : controllerIds) {
+            AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                    getControllerPermissionsPredicate().getDeployments().getDeploy());
+
+            // sign deployed configurations with new versionId
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
+            // determine agent names to be replaced
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
+            Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
+            // determine all (latest) entries from the given folders
+
+            if (unsignedDrafts != null) {
+                List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
+                        .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders))
+                        .map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, auditLogId, releasedScripts))
+                        .collect(Collectors.toList());
+                if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
+                    filteredUnsignedDrafts.stream()
+                        .filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
+                        .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
+                    filteredUnsignedDrafts.stream()
+                        .filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
+                        .forEach(item -> {
+                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
+                            try {
+                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                updateableAgentNamesFileOrderSources.add(update);
+                            } catch (Exception e) {}
+                        });
+                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
+                            commitId, account, filteredUnsignedDrafts, updateableAgentNames, keyPair, controllerId, dbLayer.getSession()));
+                }
+            }
+            // already deployed objects AgentName handling
+            // all items will be signed or re-signed with current commitId
+            if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
+                // filter regarding folder permissions
+                List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
+                        .filter(draft -> canAdd(draft.getPath(), permittedAuthFolders)).map(dbItem -> cloneToNew(dbItem))
+                        .peek(item -> {
+                            try {
+                                item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(controllerId, item.getPath(), item
+                                        .getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
+                                item.setCommitId(commitId);
+                            } catch (IOException e) {
+                                throw new JocException(e);
+                            }
+                        }).collect(Collectors.toList());
+                if (!filteredUnsignedReDeployables.isEmpty()) {
+                    filteredUnsignedReDeployables.stream()
+                        .filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
+                        .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item, controllerId)));
+                    filteredUnsignedReDeployables.stream()
+                        .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
+                        .forEach(item -> {
+                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item, controllerId);
+                            try {
+                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                updateableAgentNamesFileOrderSources.add(update);
+                            } catch (Exception e) {}
+                        });
+                    verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
+                            commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, dbLayer.getSession()));
+                }
+            }
+            signedDeployablesPerController.put(controllerId, new DeployRecord(verifiedDeployables, updateableAgentNames, 
+                    updateableAgentNamesFileOrderSources));
+        }
+        return signedDeployablesPerController;
     }
     
     private Set<DBItemInventoryConfiguration> getInvDbItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
@@ -471,6 +480,19 @@ public abstract class ADeploy extends JOCResourceImpl {
             return foldersToDelete;
         }
         return Collections.emptyList();
+    }
+    
+    private Set<DBItemDeploymentHistory> getDepItemsFromFolders(Set<String> controllerIds, DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        Set<DBItemDeploymentHistory> itemsFromFolderToDelete = new HashSet<DBItemDeploymentHistory>();
+        List<Config> folders = getFoldersToDelete(deployFilter, dbLayer);
+        if (!folders.isEmpty()) {
+            controllerIds.stream().forEach(controllerId -> {
+                itemsFromFolderToDelete.addAll(folders.stream().map(Config::getConfiguration).flatMap(item -> dbLayer
+                        .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).collect(Collectors.toSet()));
+            });
+        }
+        itemsFromFolderToDelete.addAll(getDepDbItemsToDelete(deployFilter, dbLayer));
+        return itemsFromFolderToDelete;
     }
     
     public static DBItemDeploymentHistory cloneToNew(DBItemDeploymentHistory oldItem) {
