@@ -61,6 +61,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                 //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else if (treeForDescriptors || treeForDescriptorsTrash) {
                 //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.WORKFLOW)) {
+                //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else {
                 Predicate<String> jocPermPredicate = null;
                 Predicate<String> controllerPermPredicate = null;
@@ -124,6 +126,18 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             } else if (treeForDescriptorsTrash) {
                 folders = TreePermanent.initFoldersByFoldersForDescriptorsTrash(treeBody);
                 root = TreePermanent.getInventoryTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.WORKFLOW)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getWorkflowViewTree(folders, controllerId, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.NOTICEBOARD)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getBoardViewTree(folders, controllerId, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.REPORT)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getReportViewTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.DOCUMENTATION)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getDocuViewTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
                 root = TreePermanent.getTree(folders, jocPermittedFolders, controllerPermittedFolders);

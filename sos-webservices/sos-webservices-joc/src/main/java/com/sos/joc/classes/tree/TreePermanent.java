@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -18,8 +19,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
+import com.sos.auth.predicate.ControllerPermissionsPredicate;
 import com.sos.auth.predicate.JocPermissionsPredicate;
+import com.sos.auth.predicate.controller.NoticeBoards;
+import com.sos.auth.predicate.controller.Orders;
+import com.sos.auth.predicate.joc.Documentations;
 import com.sos.auth.predicate.joc.Inventory;
+import com.sos.auth.predicate.joc.Reports;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
@@ -513,53 +519,83 @@ public class TreePermanent {
     public static Tree getInventoryTree(SortedSet<Tree> folders, SOSAuthDetailedFolderPermissions permissions, boolean withDeploy) {
         Inventory inventoryPreds = new JocPermissionsPredicate().getInventory();
         AuthFolders permittedFolders = permissions.getPermittedFoldersByJocPermissions(inventoryPreds.getView());
-        AuthFolders managedFolders = permissions.getPermittedFoldersByJocPermissions(inventoryPreds.getManage());
-        AuthFolders deployFolders = !withDeploy ? null : permissions.getPermittedFoldersByJocPermissions(inventoryPreds.getDeploy());
         
-        Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
-        Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(permittedFolders);
-        for (Tree folder : folders) {
-            boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), permittedFolders);
-            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
-
-            if (isPermittedForFolder || isNotPermittedParentFolder) {
-                
-                Set<String> furtherPermissions = null;
-                if (isPermittedForFolder) {
-                    furtherPermissions = new HashSet<>(2);
-                    if (SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), managedFolders)) {
-                        furtherPermissions.add("manage");
-                    }
-                    if (withDeploy && SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), deployFolders)) {
-                        furtherPermissions.add("deploy");
-                    }
-                }
-                
-                Path pFolder = Paths.get(folder.getPath());
-                TreeModel tree = new TreeModel();
-                if (treeMap.containsKey(pFolder)) {
-                    tree = treeMap.get(pFolder);
-                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
-                    tree.setPermissions(furtherPermissions);
-                } else {
-                    tree.setPath(folder.getPath());
-                    Path fileName = pFolder.getFileName();
-                    tree.setName(fileName == null ? "" : fileName.toString());
-                    tree.setFolders(null);
-                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
-                    tree.setPermissions(furtherPermissions);
-                    treeMap.put(pFolder, tree);
-                }
-                fillTreeMap(treeMap, pFolder, tree);
-            }
+        Map<String, AuthFolders> perms = new HashMap<>();
+        perms.put("manage", permissions.getPermittedFoldersByJocPermissions(inventoryPreds.getManage()));
+        if (withDeploy) {
+            perms.put("deploy", permissions.getPermittedFoldersByJocPermissions(inventoryPreds.getDeploy()));
         }
+        
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
         if (treeMap.isEmpty()) {
             return null;
         }
 
         return treeMap.get(Paths.get("/"));
     }
+    
+    public static Tree getWorkflowViewTree(SortedSet<Tree> folders, String controllerId, SOSAuthDetailedFolderPermissions permissions) {
+        ControllerPermissionsPredicate controllerPred = new ControllerPermissionsPredicate();
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByControllerPermissions(controllerId, controllerPred.getWorkflows().getView());
+        Orders ordersPred = controllerPred.getOrders();
+        Map<String, AuthFolders> perms = new HashMap<>();
+        perms.put("cancel", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getCancel()));
+        perms.put("confirm", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getConfirm()));
+        perms.put("create", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getCreate()));
+        perms.put("modify", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getModify()));
+        perms.put("suspendResume", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getSuspendResume()));
+        
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
 
+        return treeMap.get(Paths.get("/"));
+    }
+    
+    public static Tree getBoardViewTree(SortedSet<Tree> folders, String controllerId, SOSAuthDetailedFolderPermissions permissions) {
+        NoticeBoards noticeBoardPred = new ControllerPermissionsPredicate().getNoticeBoards();
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByControllerPermissions(controllerId, noticeBoardPred.getView());
+        Map<String, AuthFolders> perms = new HashMap<>();
+        perms.put("delete", permissions.getPermittedFoldersByControllerPermissions(controllerId, noticeBoardPred.getDelete()));
+        perms.put("post", permissions.getPermittedFoldersByControllerPermissions(controllerId, noticeBoardPred.getPost()));
+        
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+    
+    public static Tree getReportViewTree(SortedSet<Tree> folders, SOSAuthDetailedFolderPermissions permissions) {
+        Reports reportsPred = new JocPermissionsPredicate().getReports();
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByJocPermissions(reportsPred.getView());
+        Map<String, AuthFolders> perms = new HashMap<>();
+        perms.put("manage", permissions.getPermittedFoldersByJocPermissions(reportsPred.getManage()));
+        
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+    
+    public static Tree getDocuViewTree(SortedSet<Tree> folders, SOSAuthDetailedFolderPermissions permissions) {
+        Documentations docuPred = new JocPermissionsPredicate().getDocumentations();
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByJocPermissions(docuPred.getView());
+        Map<String, AuthFolders> perms = new HashMap<>();
+        perms.put("manage", permissions.getPermittedFoldersByJocPermissions(docuPred.getManage()));
+        
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+    
     public static Tree getTree(SortedSet<Tree> folders, AuthFolders jocPermittedFolders, AuthFolders controllerPermittedFolders) {
         Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
         Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(jocPermittedFolders);
@@ -572,18 +608,7 @@ public class TreePermanent {
             if (isPermittedForFolder || isNotPermittedParentFolder) {
 
                 Path pFolder = Paths.get(folder.getPath());
-                TreeModel tree = new TreeModel();
-                if (treeMap.containsKey(pFolder)) {
-                    tree = treeMap.get(pFolder);
-                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
-                } else {
-                    tree.setPath(folder.getPath());
-                    Path fileName = pFolder.getFileName();
-                    tree.setName(fileName == null ? "" : fileName.toString());
-                    tree.setFolders(null);
-                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
-                    treeMap.put(pFolder, tree);
-                }
+                TreeModel tree = buildTreeItem(folder, pFolder, treeMap, isPermittedForFolder, null);
                 fillTreeMap(treeMap, pFolder, tree);
             }
         }
@@ -593,8 +618,48 @@ public class TreePermanent {
 
         return treeMap.get(Paths.get("/"));
     }
+    
+    private static Map<Path, TreeModel> buildTreeMap(SortedSet<Tree> folders, AuthFolders permittedFolders, Map<String, AuthFolders> perms) {
+        Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
+        Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(permittedFolders);
+        for (Tree folder : folders) {
+            boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), permittedFolders);
+            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
 
-    private static TreeModel setFolderItemProps(Tree folder, boolean isPermitted, TreeModel tree) {
+            if (isPermittedForFolder || isNotPermittedParentFolder) {
+                
+                Set<String> furtherPermissions = null;
+                if (isPermittedForFolder && perms != null && !perms.isEmpty()) {
+                    furtherPermissions = perms.entrySet().stream().map(e -> SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), e
+                            .getValue()) ? e.getKey() : null).filter(Objects::nonNull).collect(Collectors.toSet());
+                }
+                
+                Path pFolder = Paths.get(folder.getPath());
+                TreeModel tree = buildTreeItem(folder, pFolder, treeMap, isPermittedForFolder, furtherPermissions);
+                fillTreeMap(treeMap, pFolder, tree);
+            }
+        }
+        return treeMap;
+    }
+    
+    private static TreeModel buildTreeItem(Tree folder, Path pFolder, Map<Path, TreeModel> treeMap, boolean isPermittedForFolder,
+            Set<String> permission) {
+        TreeModel tree = new TreeModel();
+        if (treeMap.containsKey(pFolder)) {
+            tree = treeMap.get(pFolder);
+            tree = setFolderItemProps(folder, isPermittedForFolder, permission, tree);
+        } else {
+            tree.setPath(folder.getPath());
+            Path fileName = pFolder.getFileName();
+            tree.setName(fileName == null ? "" : fileName.toString());
+            tree.setFolders(null);
+            tree = setFolderItemProps(folder, isPermittedForFolder, permission, tree);
+            treeMap.put(pFolder, tree);
+        }
+        return tree;
+    }
+
+    private static TreeModel setFolderItemProps(Tree folder, boolean isPermitted, Set<String> permission, TreeModel tree) {
         if (folder.getDeleted() != null && folder.getDeleted()) {
             tree.setDeleted(true);
         }
@@ -606,6 +671,7 @@ public class TreePermanent {
         }
         tree.setRepoControlled(folder.getRepoControlled());
         tree.setPermitted(isPermitted);
+        tree.setPermissions(permission);
         return tree;
     }
 
