@@ -2,10 +2,13 @@
 package com.sos.joc.model.tree;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -41,7 +44,8 @@ public class TreeFilter {
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("types")
-    private List<TreeType> types = new ArrayList<TreeType>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<TreeType> types = new LinkedHashSet<TreeType>();
     /**
      * folders
      * <p>
@@ -86,12 +90,12 @@ public class TreeFilter {
     }
 
     @JsonProperty("types")
-    public List<TreeType> getTypes() {
+    public Set<TreeType> getTypes() {
         return types;
     }
 
     @JsonProperty("types")
-    public void setTypes(List<TreeType> types) {
+    public void setTypes(Set<TreeType> types) {
         this.types = types;
     }
 

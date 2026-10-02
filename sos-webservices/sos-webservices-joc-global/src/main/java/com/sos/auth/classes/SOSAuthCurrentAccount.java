@@ -12,10 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sos.auth.common.AuthFolder;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.records.PermissionsPerRole;
 import com.sos.auth.records.UniqueRole;
@@ -35,7 +31,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class SOSAuthCurrentAccount {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthCurrentAccount.class);
     private ISOSAuthSubject currentSubject;
     private String accountName;
     private String id;
@@ -52,7 +47,6 @@ public class SOSAuthCurrentAccount {
     private String ipAddress;
 
     private Permissions sosPermissionJocCockpitControllers;
-    private SOSAuthFolderPermissions sosAuthFolderPermissions;
     private SOSAuthDetailedFolderPermissions sosAuthDetailedFolderPermissions;
     private Permissions sos4EyesPermissions;
 
@@ -76,12 +70,6 @@ public class SOSAuthCurrentAccount {
         if (sosPermissionJocCockpitControllers.getControllers() != null) {
             return Optional.ofNullable(sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId)).orElse(
                     sosPermissionJocCockpitControllers.getControllerDefaults());
-
-//            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
-//                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
-//            } else {
-//                return sosPermissionJocCockpitControllers.getControllerDefaults();
-//            }
         } else {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
@@ -384,30 +372,13 @@ public class SOSAuthCurrentAccount {
     }
 
     public void initFolders() {
-        if (sosAuthFolderPermissions == null) {
-            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
-        }
         if (sosAuthDetailedFolderPermissions == null) {
             sosAuthDetailedFolderPermissions = new SOSAuthDetailedFolderPermissions();
         }
     }
     
     public void addFolders() {
-        if (sosAuthFolderPermissions == null) {
-            sosAuthFolderPermissions = new SOSAuthFolderPermissions();
-        }
-        Optional.ofNullable(currentSubject.getMapOfFolderPermissions()).orElse(Collections.emptyMap()).forEach((role, folders) -> addFolders(role,
-                folders));
         addDetailedFolders();
-    }
-
-    private void addFolders(UniqueRole role, Set<AuthFolder> folders) {
-        if (hasRole(role.roleName())) {
-            LOGGER.debug(String.format("Adding folders %s for role %s", folders.toString(), role));
-
-            folders.stream().collect(Collectors.groupingBy(AuthFolder::getControllerId)).forEach((cId, f) -> sosAuthFolderPermissions.setFolders(cId,
-                    f));
-        }
     }
     
     private void addDetailedFolders() {
@@ -425,11 +396,6 @@ public class SOSAuthCurrentAccount {
 
     public boolean withAuthorization() {
         return withAuthorization;
-    }
-
-    @Deprecated
-    public SOSAuthFolderPermissions getSosAuthFolderPermissions() {
-        return sosAuthFolderPermissions;
     }
     
     public SOSAuthDetailedFolderPermissions getSOSAuthDetailedFolderPermissions() {

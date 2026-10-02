@@ -4,10 +4,12 @@ package com.sos.joc.model.tree;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -28,6 +30,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "repoControlled",
     "lockedBy",
     "lockedSince",
+    "permissions",
     "folders"
 })
 public class Tree {
@@ -53,7 +56,12 @@ public class Tree {
     private Boolean deleted;
     @JsonProperty("permitted")
     private Boolean permitted = true;
+    /**
+     * only for top level folder in the reponse
+     * 
+     */
     @JsonProperty("repoControlled")
+    @JsonPropertyDescription("only for top level folder in the reponse")
     private Boolean repoControlled;
     @JsonProperty("lockedBy")
     private String lockedBy;
@@ -66,6 +74,9 @@ public class Tree {
     @JsonProperty("lockedSince")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date lockedSince;
+    @JsonProperty("permissions")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> permissions = null;
     @JsonProperty("folders")
     private List<Tree> folders = new ArrayList<Tree>();
 
@@ -133,14 +144,22 @@ public class Tree {
         this.permitted = permitted;
     }
 
+    /**
+     * only for top level folder in the reponse
+     * 
+     */
     @JsonProperty("repoControlled")
     public Boolean getRepoControlled() {
         return repoControlled;
     }
 
+    /**
+     * only for top level folder in the reponse
+     * 
+     */
     @JsonProperty("repoControlled")
-    public void setRepoControlled(Boolean permitted) {
-        this.repoControlled = permitted;
+    public void setRepoControlled(Boolean repoControlled) {
+        this.repoControlled = repoControlled;
     }
 
     @JsonProperty("lockedBy")
@@ -175,6 +194,16 @@ public class Tree {
         this.lockedSince = lockedSince;
     }
 
+    @JsonProperty("permissions")
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    @JsonProperty("permissions")
+    public void setPermissions(Set<String> permissions) {
+        this.permissions = permissions;
+    }
+
     @JsonProperty("folders")
     public List<Tree> getFolders() {
         return folders;
@@ -187,12 +216,12 @@ public class Tree {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("name", name).append("deleted", deleted).append("permitted", permitted).append("lockedBy", lockedBy).append("lockedSince", lockedSince).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("path", path).append("name", name).append("deleted", deleted).append("permitted", permitted).append("repoControlled", repoControlled).append("lockedBy", lockedBy).append("lockedSince", lockedSince).append("permissions", permissions).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(deleted).append(folders).append(permitted).append(lockedBy).append(lockedSince).append(name).toHashCode();
+        return new HashCodeBuilder().append(path).toHashCode();
     }
 
     @Override
@@ -204,7 +233,7 @@ public class Tree {
             return false;
         }
         Tree rhs = ((Tree) other);
-        return new EqualsBuilder().append(path, rhs.path).append(deleted, rhs.deleted).append(folders, rhs.folders).append(permitted, rhs.permitted).append(lockedBy, rhs.lockedBy).append(lockedSince, rhs.lockedSince).append(name, rhs.name).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).isEquals();
     }
 
 }

@@ -24,7 +24,6 @@ import java.util.zip.GZIPOutputStream;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;

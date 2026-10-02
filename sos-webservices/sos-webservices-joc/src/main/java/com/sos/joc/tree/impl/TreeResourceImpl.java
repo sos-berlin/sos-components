@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
 
@@ -46,7 +47,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             boolean treeForDescriptors = treeBody.getForDescriptors() == Boolean.TRUE;
             
             String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
-            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getBasicJocPermissions(), getBasicControllerPermissions(
+            Set<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getBasicJocPermissions(), getBasicControllerPermissions(
                     controllerId), treeForInventory, treeForInventoryTrash, treeForDescriptors, treeForDescriptorsTrash);
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(types.size() > 0);
@@ -57,9 +58,9 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             AuthFolders jocPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
             AuthFolders controllerPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
             if (treeForInventory || treeForInventoryTrash) {
-                jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else if (treeForDescriptors || treeForDescriptorsTrash) {
-                jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else {
                 Predicate<String> jocPermPredicate = null;
                 Predicate<String> controllerPermPredicate = null;
@@ -113,16 +114,16 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             Tree root = null;
             if (treeForInventory) {
                 folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
-                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
+                root = TreePermanent.getInventoryTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions(), true);
             } else if (treeForInventoryTrash) {
                 folders = TreePermanent.initFoldersByFoldersForInventoryTrash(treeBody);
-                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
+                root = TreePermanent.getInventoryTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             } else if (treeForDescriptors) {
                 folders = TreePermanent.initFoldersByFoldersForDescriptors(treeBody);
-                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
+                root = TreePermanent.getInventoryTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             } else if (treeForDescriptorsTrash) {
                 folders = TreePermanent.initFoldersByFoldersForDescriptorsTrash(treeBody);
-                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
+                root = TreePermanent.getInventoryTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
                 root = TreePermanent.getTree(folders, jocPermittedFolders, controllerPermittedFolders);

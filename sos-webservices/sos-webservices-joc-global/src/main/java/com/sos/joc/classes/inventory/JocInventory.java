@@ -32,7 +32,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -837,97 +836,6 @@ public class JocInventory {
         return notPermittedParentFolders.contains(path);
     }
 
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            SOSAuthFolderPermissions folderPermissions) throws Exception {
-        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
-    }
-
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSAuthFolderPermissions folderPermissions) throws Exception {
-        return getConfiguration(dbLayer, id, path, type, folderPermissions, false);
-    }
-
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSAuthFolderPermissions folderPermissions, boolean withIsNotPermittedParentFolder) throws Exception {
-        DBItemInventoryConfiguration config = null;
-        String name = null;
-
-        if (id != null) {
-            config = dbLayer.getConfiguration(id);
-            if (config == null) {
-                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
-            }
-            if (isFolder(config.getType())) {
-                boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(config.getPath());
-                if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, config.getPath(), withIsNotPermittedParentFolder)) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
-                }
-            } else if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-            }
-            // temp. because of rename error on root folder
-            config.setPath(config.getPath().replaceAll("//+", "/"));
-        } else {
-            if (!isFolder(type) && path != null && !path.contains("/")) {
-                name = path;
-                path = null;
-            }
-            if (path != null) {
-                if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
-                    config = new DBItemInventoryConfiguration();
-                    config.setId(0L);
-                    config.setPath(path);
-                    config.setName("");
-                    config.setType(type);
-                    config.setFolder(path);
-                    config.setDeleted(false);
-                    config.setValid(true);
-                    config.setDeployed(false);
-                    config.setReleased(false);
-                } else {
-                    Path p = normalizePath(path);
-                    path = p.toString().replace('\\', '/');
-
-                    if (isFolder(type)) {
-                        boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(path);
-                        if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, path, withIsNotPermittedParentFolder)) {
-                            throw new JocFolderPermissionsException("Access denied for folder: " + path);
-                        }
-                    } else if (ROOT_FOLDER.equals(p.toString().replace('\\', '/'))) {
-                        throw new JocBadRequestException(String.format("Invalid object name '%1$s'.", p.toString().replace('\\', '/')));
-                    } else if (!folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
-                        throw new JocFolderPermissionsException("Access denied for folder: " + p.getParent().toString().replace('\\', '/'));
-                    }
-                    config = dbLayer.getConfiguration(path, type.intValue());
-                    if (config == null) {
-                        throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
-                    }
-                }
-            } else if (name != null) {// name
-                List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
-                if (configs == null || configs.isEmpty()) {
-                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), name));
-                }
-                config = configs.get(0); // TODO
-                if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-                }
-                // temp. because of rename error on root folder
-                config.setPath(config.getPath().replaceAll("//+", "/"));
-            }
-        }
-        return config;
-    }
-
-    private static boolean isNotPermittedParentFolder(SOSAuthFolderPermissions folderPermissions, String path,
-            boolean withIsNotPermittedParentFolder) {
-        if (!withIsNotPermittedParentFolder) {
-            return true;
-        }
-        Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections.emptySet());
-        return notPermittedParentFolders.contains(path);
-    }
-
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             AuthFolders authFolders) throws Exception {
         return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), authFolders);
@@ -968,44 +876,6 @@ public class JocInventory {
                     }
                 } else if (!SOSAuthDetailedFolderPermissions.isPermitted(config.getFolder(), authFolders)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-                }
-            }
-        }
-        return config;
-    }
-
-    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            SOSAuthFolderPermissions folderPermissions) throws Exception {
-        return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
-    }
-
-    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSAuthFolderPermissions folderPermissions) throws Exception {
-        DBItemInventoryConfigurationTrash config = null;
-        if (id != null) {
-            config = dbLayer.getTrashConfiguration(id);
-            if (config == null) {
-                throw new DBMissingDataException(String.format("Couldn't find the configuration: %s", id));
-            }
-            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-            }
-        } else if (path != null) {
-            if (JocInventory.ROOT_FOLDER.equals(path) && (ConfigurationType.FOLDER.equals(type) || ConfigurationType.DESCRIPTORFOLDER.equals(type))) {
-                config = new DBItemInventoryConfigurationTrash();
-                config.setId(0L);
-                config.setPath(path);
-                config.setType(type);
-                config.setFolder(path);
-                config.setValid(true);
-            } else {
-                path = normalizePath(path).toString().replace('\\', '/');
-                if (!folderPermissions.isPermittedForFolder(path)) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + path);
-                }
-                config = dbLayer.getTrashConfiguration(path, type.intValue());
-                if (config == null) {
-                    throw new DBMissingDataException(String.format("Couldn't find the %s: %s", type.value().toLowerCase(), path));
                 }
             }
         }
