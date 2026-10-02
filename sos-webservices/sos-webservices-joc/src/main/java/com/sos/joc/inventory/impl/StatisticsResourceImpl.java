@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -14,7 +13,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.inventory.resource.IStatisticsResource;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.inventory.Statistics;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -40,27 +38,40 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             }
             AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
 
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Statistics entity = new Statistics();
             entity.setSurveyDate(Date.from(Instant.now()));
             // TODO: JOC-2255 adjust dblayer methods to use AuthFolders instead
-            Map<ConfigurationType, Long> numOfDeployed = dbLayer.getNumOfDeployedObjects(controllerId, permittedFolders);
-            Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects(controllerId, permittedFolders);
-            entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));
-            entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controllerId, permittedFolders));
-            entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
-            entity.setNumOfNoticeBoards(numOfDeployed.getOrDefault(ConfigurationType.NOTICEBOARD, 0L));
-            entity.setNumOfJobResources(numOfDeployed.getOrDefault(ConfigurationType.JOBRESOURCE, 0L));
-            entity.setNumOfFileOrderSources(numOfDeployed.getOrDefault(ConfigurationType.FILEORDERSOURCE, 0L));
-            entity.setNumOfSchedules(numOfReleased.getOrDefault(ConfigurationType.SCHEDULE, 0L));
-            entity.setNumOfIncludeScripts(numOfReleased.getOrDefault(ConfigurationType.INCLUDESCRIPT, 0L));
-            entity.setNumOfJobTemplates(numOfReleased.getOrDefault(ConfigurationType.JOBTEMPLATE, 0L));
-            entity.setNumOfCalendars(numOfReleased.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, 0L) + numOfReleased.getOrDefault(
-                    ConfigurationType.NONWORKINGDAYSCALENDAR, 0L));
-            entity.setNumOfReports(numOfReleased.getOrDefault(ConfigurationType.REPORT, 0L));
-            
+            if (authFolders.allow().isEmpty()) {
+                // no folder permissions
+                entity.setNumOfWorkflows(0L);
+                entity.setNumOfJobs(0L);
+                entity.setNumOfLocks(0L);
+                entity.setNumOfNoticeBoards(0L);
+                entity.setNumOfJobResources(0L);
+                entity.setNumOfFileOrderSources(0L);
+                entity.setNumOfSchedules(0L);
+                entity.setNumOfIncludeScripts(0L);
+                entity.setNumOfJobTemplates(0L);
+                entity.setNumOfCalendars(0L);
+                entity.setNumOfReports(0L);
+            } else {
+                Map<ConfigurationType, Long> numOfDeployed = dbLayer.getNumOfDeployedObjects(controllerId, authFolders.allow().get());
+                Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects(controllerId, authFolders.allow().get());
+                entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));
+                entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controllerId, authFolders.allow().get()));
+                entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
+                entity.setNumOfNoticeBoards(numOfDeployed.getOrDefault(ConfigurationType.NOTICEBOARD, 0L));
+                entity.setNumOfJobResources(numOfDeployed.getOrDefault(ConfigurationType.JOBRESOURCE, 0L));
+                entity.setNumOfFileOrderSources(numOfDeployed.getOrDefault(ConfigurationType.FILEORDERSOURCE, 0L));
+                entity.setNumOfSchedules(numOfReleased.getOrDefault(ConfigurationType.SCHEDULE, 0L));
+                entity.setNumOfIncludeScripts(numOfReleased.getOrDefault(ConfigurationType.INCLUDESCRIPT, 0L));
+                entity.setNumOfJobTemplates(numOfReleased.getOrDefault(ConfigurationType.JOBTEMPLATE, 0L));
+                entity.setNumOfCalendars(numOfReleased.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, 0L) + numOfReleased.getOrDefault(
+                        ConfigurationType.NONWORKINGDAYSCALENDAR, 0L));
+                entity.setNumOfReports(numOfReleased.getOrDefault(ConfigurationType.REPORT, 0L));
+            }
             
             entity.setDeliveryDate(Date.from(Instant.now()));
 

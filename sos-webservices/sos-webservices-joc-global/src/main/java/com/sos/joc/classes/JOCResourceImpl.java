@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
-import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.predicate.ControllerPermissionsPredicate;
 import com.sos.auth.predicate.JocPermissionsPredicate;
 import com.sos.auth.records.AuthFolders;
@@ -69,9 +68,7 @@ public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
     private SOSAuthCurrentAccount currentAccount;
-    private SOSAuthDetailedFolderPermissions detailedFolderPermissions;
     @Deprecated
-    protected SOSAuthFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     // private String accessToken;
     @HeaderParam("X-Access-Token")
@@ -94,8 +91,6 @@ public class JOCResourceImpl {
     
     public void setCurrentAccount(JOCResourceImpl obj) {
         this.currentAccount = obj.getCurrentAccount();
-        this.folderPermissions = currentAccount.getSosAuthFolderPermissions();
-        this.detailedFolderPermissions = currentAccount.getSOSAuthDetailedFolderPermissions();
         this.headerAccessToken = currentAccount.getAccessToken();
         this.jobschedulerUser = new JobSchedulerUser(this.headerAccessToken);
         if (obj.getJocError() != null) {
@@ -755,55 +750,6 @@ public class JOCResourceImpl {
     protected static boolean hasPermittedFolders(AuthFolders permittedFolders) {
         return permittedFolders.allow().isPresent();
     }
-    
-//    /**
-//     * @deprecated  As of JOC-2255, replaced by above {@link #checkFolderPermissions()}
-//     */
-//    @Deprecated
-//    protected void checkFolderPermissions(String path) throws JocFolderPermissionsException {
-//        String folder = getParent(path);
-//        if (!folderPermissions.isPermittedForFolder(folder)) {
-//            throw new JocFolderPermissionsException(folder);
-//        }
-//    }
-
-//    /**
-//     * @deprecated  As of JOC-2255, replaced by {@link #canAdd()}
-//     */
-//    @Deprecated
-//    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
-//        if (path == null || !path.startsWith("/")) {
-//            return false;
-//        }
-//        if (listOfFolders == null || listOfFolders.isEmpty()) {
-//            return true;
-//        }
-//        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
-//    }
-
-//    /**
-//     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
-//     */
-//    @Deprecated
-//    protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
-//        return folderPermissions.getPermittedFolders(folders);
-//    }
-
-//    /**
-//     * @deprecated  As of JOC-2255, replaced by two filters: one for the requested folders, the other {@link #getPermittedFolders()} with requestedFolders
-//     */
-//    @Deprecated
-//    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
-//        return folderPermissions.getPermittedFolders(folders);
-//    }
-
-//    /**
-//     * @deprecated  As of JOC-2255, replaced by above {@link #folderIsPermitted()}
-//     */
-//    @Deprecated
-//    protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-//        return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
-//    }
 
     public String getAccountName() {
         try {
@@ -812,11 +758,6 @@ public class JOCResourceImpl {
             return null;
         }
     }
-
-    // public JOCDefaultResponse responseStatus200(byte[] entity, Map<String, Object> headers) {
-    // jocAuditLog.setResponse(entity);
-    // return JOCDefaultResponse.responseStatus200(entity, MediaType.APPLICATION_JSON, headers, jocAuditLog);
-    // }
 
     public JOCDefaultResponse responseStatus200(byte[] entity, String mediaType) {
         /** no response iff application/pdf application/octet-stream image/* */

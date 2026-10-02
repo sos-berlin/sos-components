@@ -10,14 +10,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.classes.SOSAuthDetailedFolderPermissions;
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.deploy.DeployType;
@@ -53,7 +53,7 @@ public class TreePermanent {
         }
         Set<TreeType> types = new HashSet<TreeType>();
         boolean inventoryPermission = jocPermissions.getInventory().getView();
-
+        
         for (TreeType type : bodyTypes) {
             switch (type) {
             case INVENTORY:
@@ -194,7 +194,7 @@ public class TreePermanent {
                 break;
             }
         }
-        return new ArrayList<TreeType>(types);
+        return types.stream().toList();
     }
 
     // public static Tree initFoldersByTagsForInventory(TagTreeFilter treeBody, SOSAuthFolderPermissions sosAuthFolderPermissions) throws JocException {
@@ -350,23 +350,15 @@ public class TreePermanent {
             session = Globals.createSosHibernateStatelessConnection("initTreeForInventory");
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            // DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
             Set<Tree> results = null;
-            // Set<Tree> docResults = null;
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
                     results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects(),
                             folderTypes);
-                    // if (withDocus) {
-                    // docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
-                    // if (docResults != null && !docResults.isEmpty()) {
-                    // results.addAll(docResults);
-                    // }
-                    // }
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -379,12 +371,6 @@ public class TreePermanent {
                 }
             } else {
                 results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects(), folderTypes);
-                // if (withDocus) {
-                // docResults = dbDocLayer.getFoldersByFolder("/");
-                // if (docResults != null && !docResults.isEmpty()) {
-                // results.addAll(docResults);
-                // }
-                // }
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
@@ -393,11 +379,10 @@ public class TreePermanent {
             if (jocLocks != null && jocLocks.size() > 0) {
                 Supplier<TreeSet<Tree>> supplier = () -> new TreeSet<Tree>(comparator);
                 folders = folders.stream().map(folder -> {
-                    Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
-                    if (jocLock.isPresent()) {
-                        folder.setLockedBy(jocLock.get().getAccount());
-                        folder.setLockedSince(SOSDate.toUtcDate(jocLock.get().getCreated()));
-                    }
+                    jocLocks.stream().filter(jl -> jl.getFolder().equals(folder.getPath())).findFirst().ifPresent(jl -> {
+                        folder.setLockedBy(jl.getAccount());
+                        folder.setLockedSince(SOSDate.toUtcDate(jl.getCreated()));
+                    });
                     return folder;
                 }).collect(Collectors.toCollection(supplier));
             }
@@ -498,11 +483,10 @@ public class TreePermanent {
             if (jocLocks != null && jocLocks.size() > 0) {
                 Supplier<TreeSet<Tree>> supplier = () -> new TreeSet<Tree>(comparator);
                 folders = folders.stream().map(folder -> {
-                    Optional<DBItemJocLock> jocLock = jocLocks.stream().filter(l -> l.getFolder().equals(folder.getPath())).findFirst();
-                    if (jocLock.isPresent()) {
-                        folder.setLockedBy(jocLock.get().getAccount());
-                        folder.setLockedSince(SOSDate.toUtcDate(jocLock.get().getCreated()));
-                    }
+                    jocLocks.stream().filter(jl -> jl.getFolder().equals(folder.getPath())).findFirst().ifPresent(jl -> {
+                        folder.setLockedBy(jl.getAccount());
+                        folder.setLockedSince(SOSDate.toUtcDate(jl.getCreated()));
+                    });
                     return folder;
                 }).collect(Collectors.toCollection(supplier));
             }
@@ -659,14 +643,46 @@ public class TreePermanent {
             Globals.disconnect(session);
         }
     }
-
-    public static Tree getTree(SortedSet<Tree> folders, String controllerId, SOSAuthFolderPermissions sosAuthFolderPermissions) {
+    
+    public static Tree getInventoryTree(SortedSet<Tree> folders, AuthFolders permittedFolders) {
         Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
-        Set<Folder> listOfFolders = sosAuthFolderPermissions.getListOfFolders();
-        Set<String> notPermittedParentFolders = sosAuthFolderPermissions.getNotPermittedParentFolders().getOrDefault(controllerId, Collections
-                .emptySet());
+        Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(permittedFolders);
         for (Tree folder : folders) {
-            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders);
+            boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), permittedFolders);
+            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
+
+            if (isPermittedForFolder || isNotPermittedParentFolder) {
+
+                Path pFolder = Paths.get(folder.getPath());
+                TreeModel tree = new TreeModel();
+                if (treeMap.containsKey(pFolder)) {
+                    tree = treeMap.get(pFolder);
+                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
+                } else {
+                    tree.setPath(folder.getPath());
+                    Path fileName = pFolder.getFileName();
+                    tree.setName(fileName == null ? "" : fileName.toString());
+                    tree.setFolders(null);
+                    tree = setFolderItemProps(folder, isPermittedForFolder, tree);
+                    treeMap.put(pFolder, tree);
+                }
+                fillTreeMap(treeMap, pFolder, tree);
+            }
+        }
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+
+    public static Tree getTree(SortedSet<Tree> folders, AuthFolders jocPermittedFolders, AuthFolders controllerPermittedFolders) {
+        Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
+        Set<String> notPermittedParentFolders = SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(jocPermittedFolders);
+        notPermittedParentFolders.addAll(SOSAuthDetailedFolderPermissions.getNotPermittedParentFolders(controllerPermittedFolders));
+        for (Tree folder : folders) {
+            boolean isPermittedForFolder = SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), jocPermittedFolders)
+                    || SOSAuthDetailedFolderPermissions.isPermitted(folder.getPath(), controllerPermittedFolders);
             boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
 
             if (isPermittedForFolder || isNotPermittedParentFolder) {

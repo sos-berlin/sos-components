@@ -4,8 +4,13 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Predicate;
 
+import com.sos.auth.predicate.ControllerPermissionsPredicate;
+import com.sos.auth.predicate.JocPermissionsPredicate;
+import com.sos.auth.records.AuthFolders;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -35,7 +40,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
             boolean treeForInventoryTrash = treeBody.getForInventoryTrash() == Boolean.TRUE;
-            boolean treeForInventory = !treeForInventoryTrash && ((treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody
+            boolean treeForInventory = !treeForInventoryTrash && (treeBody.getForInventory() == Boolean.TRUE || (treeBody
                     .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
             boolean treeForDescriptorsTrash = treeBody.getForDescriptorsTrash() == Boolean.TRUE;
             boolean treeForDescriptors = treeBody.getForDescriptors() == Boolean.TRUE;
@@ -49,24 +54,80 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                 return jocDefaultResponse;
             }
             
+            AuthFolders jocPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
+            AuthFolders controllerPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
+            if (treeForInventory || treeForInventoryTrash) {
+                jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            } else if (treeForDescriptors || treeForDescriptorsTrash) {
+                jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            } else {
+                Predicate<String> jocPermPredicate = null;
+                Predicate<String> controllerPermPredicate = null;
+                for (TreeType type : types) {
+                    if (type.equals(TreeType.WORKFLOW)) {
+                        if (controllerPermPredicate == null) {
+                            controllerPermPredicate = new ControllerPermissionsPredicate().getWorkflows().getView();
+                        } else {
+                            controllerPermPredicate = controllerPermPredicate.or(new ControllerPermissionsPredicate().getWorkflows().getView());
+                        }
+                    } else if (type.equals(TreeType.LOCK)) {
+                        if (controllerPermPredicate == null) {
+                            controllerPermPredicate = new ControllerPermissionsPredicate().getLocks().getView();
+                        } else {
+                            controllerPermPredicate = controllerPermPredicate.or(new ControllerPermissionsPredicate().getLocks().getView());
+                        }
+                    } else if (type.equals(TreeType.NONWORKINGDAYSCALENDAR) || type.equals(TreeType.WORKINGDAYSCALENDAR)) {
+                        if (jocPermPredicate == null) {
+                            jocPermPredicate = new JocPermissionsPredicate().getCalendars().getView();
+                        } else {
+                            jocPermPredicate = jocPermPredicate.or(new JocPermissionsPredicate().getCalendars().getView());
+                        }
+                    } else if (type.equals(TreeType.NOTICEBOARD)) {
+                        if (controllerPermPredicate == null) {
+                            controllerPermPredicate = new ControllerPermissionsPredicate().getNoticeBoards().getView();
+                        } else {
+                            controllerPermPredicate = controllerPermPredicate.or(new ControllerPermissionsPredicate().getNoticeBoards().getView());
+                        }
+                    } else if (type.equals(TreeType.REPORT)) {
+                        if (jocPermPredicate == null) {
+                            jocPermPredicate = new JocPermissionsPredicate().getReports().getView();
+                        } else {
+                            jocPermPredicate = jocPermPredicate.or(new JocPermissionsPredicate().getReports().getView());
+                        }
+                    }
+                }
+                if (jocPermPredicate != null) {
+                    jocPermittedFolders = getPermittedFoldersByJocPermissions(jocPermPredicate);
+                }
+                if (controllerPermPredicate != null) {
+                    controllerPermittedFolders = getPermittedFoldersByControllerPermissions(controllerId, controllerPermPredicate);
+                }
+            }
+            
+            
             treeBody.setTypes(types);
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 checkFoldersFilterParam(treeBody.getFolders());
             }
             SortedSet<Tree> folders = Collections.emptySortedSet();
+            Tree root = null;
             if (treeForInventory) {
                 folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
+                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
             } else if (treeForInventoryTrash) {
                 folders = TreePermanent.initFoldersByFoldersForInventoryTrash(treeBody);
+                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
             } else if (treeForDescriptors) {
                 folders = TreePermanent.initFoldersByFoldersForDescriptors(treeBody);
+                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
             } else if (treeForDescriptorsTrash) {
                 folders = TreePermanent.initFoldersByFoldersForDescriptorsTrash(treeBody);
+                root = TreePermanent.getInventoryTree(folders, jocPermittedFolders);
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getTree(folders, jocPermittedFolders, controllerPermittedFolders);
             }
 
-            Tree root = TreePermanent.getTree(folders, controllerId, folderPermissions);
             TreeView entity = new TreeView();
             if (root != null) {
                 entity.getFolders().add(root);
@@ -132,7 +193,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
 //    }
 
     private void checkFoldersFilterParam(List<Folder> folders) throws Exception {
-        if (folders != null && !folders.isEmpty() && folders.stream().parallel().anyMatch(folder -> folder.getFolder() == null || folder.getFolder()
+        if (folders != null && !folders.isEmpty() && folders.stream().anyMatch(folder -> folder.getFolder() == null || folder.getFolder()
                 .isEmpty())) {
             throw new JocMissingRequiredParameterException("undefined 'folder'");
         }

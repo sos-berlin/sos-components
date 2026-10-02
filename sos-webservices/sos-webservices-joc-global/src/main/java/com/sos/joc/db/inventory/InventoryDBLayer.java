@@ -1308,6 +1308,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append(" where range=:range");
             Query<DBItemJocLock> query = getSession().createQuery(hql.toString());
             query.setParameter("range", DBItemJocLock.LockRange.INVENTORY.value());
+            List<DBItemJocLock> result = getSession().getResultList(query);
             return getSession().getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

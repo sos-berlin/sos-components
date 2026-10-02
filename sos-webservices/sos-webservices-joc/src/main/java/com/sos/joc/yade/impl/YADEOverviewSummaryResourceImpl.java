@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -15,7 +16,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.TransferFilesOverView;
 import com.sos.joc.model.yade.TransferFilesSummary;
 import com.sos.joc.model.yade.TransferFilter;
@@ -47,17 +47,16 @@ public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getBasicControllerPermissions(availableController).getView()).collect(Collectors.toSet());
+                        availableController -> getBasicControllerPermissions(availableController).getOrders().getView()).collect(Collectors.toSet());
             } else {
-                if (getBasicControllerPermissions(controllerId).getView()) {
+                if (getBasicControllerPermissions(controllerId).getOrders().getView()) {
                     allowedControllers = Collections.singleton(controllerId);
                 }
             }
             
-            Map<String, Set<Folder>> permittedFoldersMap = null;
-            if (!folderPermissions.noFolderRestrictionAreSpecified(allowedControllers)) {
-                permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
-            }
+            Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(allowedControllers,
+                    getControllerPermissionsPredicate().getOrders().getView());
+            
             if (controllerId.isEmpty() && allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
@@ -70,8 +69,8 @@ public class YADEOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             answer.setSurveyDate(Date.from(Instant.now()));
             TransferFilesSummary files = new TransferFilesSummary();
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
-            files.setSuccessful(dbLayer.getSuccessFulTransfersCount(allowedControllers, from, to, permittedFoldersMap));
-            files.setFailed(dbLayer.getFailedTransfersCount(allowedControllers, from, to, permittedFoldersMap));
+            files.setSuccessful(dbLayer.getSuccessFulTransfersCount(allowedControllers, from, to, permittedFoldersPerController));
+            files.setFailed(dbLayer.getFailedTransfersCount(allowedControllers, from, to, permittedFoldersPerController));
             answer.setFiles(files);
             answer.setDeliveryDate(Date.from(Instant.now()));
             return responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));

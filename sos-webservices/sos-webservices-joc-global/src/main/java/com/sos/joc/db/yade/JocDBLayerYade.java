@@ -6,19 +6,18 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.function.like.SOSHibernateLikePatterns;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;
@@ -410,42 +409,42 @@ public class JocDBLayerYade {
         return session.getResultList(query);
     }
 
-    private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder();
-        hql.append("select count(*) from ").append(DBLayer.DBITEM_YADE_TRANSFERS);
-        hql.append(" where state = :state");
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            hql.append(" and controllerId in (:controllerIds)");
-        }
-        if (from != null) {
-            hql.append(" and start >= :from");
-        }
-        if (to != null) {
-            hql.append(" and start < :to");
-        }
-        Query<Long> query = session.createQuery(hql.toString());
-        if (successful) {
-            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
-        } else {
-            query.setParameter("state", TransferState.FAILED.intValue());
-        }
-        if (from != null) {
-            query.setParameter("from", from);
-        }
-        if (to != null) {
-            query.setParameter("to", to);
-        }
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            query.setParameterList("controllerIds", controllerIds);
-        }
-        return session.getSingleResult(query);
-    }
+//    private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder();
+//        hql.append("select count(*) from ").append(DBLayer.DBITEM_YADE_TRANSFERS);
+//        hql.append(" where state = :state");
+//        if (controllerIds != null && !controllerIds.isEmpty()) {
+//            hql.append(" and controllerId in (:controllerIds)");
+//        }
+//        if (from != null) {
+//            hql.append(" and start >= :from");
+//        }
+//        if (to != null) {
+//            hql.append(" and start < :to");
+//        }
+//        Query<Long> query = session.createQuery(hql.toString());
+//        if (successful) {
+//            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
+//        } else {
+//            query.setParameter("state", TransferState.FAILED.intValue());
+//        }
+//        if (from != null) {
+//            query.setParameter("from", from);
+//        }
+//        if (to != null) {
+//            query.setParameter("to", to);
+//        }
+//        if (controllerIds != null && !controllerIds.isEmpty()) {
+//            query.setParameterList("controllerIds", controllerIds);
+//        }
+//        return session.getSingleResult(query);
+//    }
 
     private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to,
-            Map<String, Set<Folder>> permittedFoldersMap) throws SOSHibernateException {
-        if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
-            return getTransfersCount(controllerIds, successful, from, to);
-        }
+            Map<String, AuthFolders> permittedFoldersPerController) throws SOSHibernateException {
+//        if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
+//            return getTransfersCount(controllerIds, successful, from, to);
+//        }
         StringBuilder hql = new StringBuilder();
         hql.append("select new ").append(YADE_GROUPED_SUMMARY).append("(count(id), controllerId, workflowPath) from ");
         hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
@@ -479,32 +478,20 @@ public class JocDBLayerYade {
 
         List<YadeGroupedSummary> result = session.getResultList(query);
         if (result != null) {
-            return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s
-                    .getCount()).sum();
+            return result.stream().filter(s -> JOCResourceImpl.folderIsPermitted(s.getFolder(), permittedFoldersPerController.get(s
+                    .getControllerId()))).mapToLong(YadeGroupedSummary::getCount).sum();
         }
         return 0L;
     }
 
-    private static boolean isPermittedForFolder(String folder, Collection<Folder> permittedFolders) {
-        if (folder == null || folder.isEmpty()) {
-            return true;
-        }
-        if (permittedFolders == null || permittedFolders.isEmpty()) {
-            return true;
-        }
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return permittedFolders.stream().parallel().anyMatch(filter);
+    public Long getSuccessFulTransfersCount(Collection<String> controllerIds, Date from, Date to,
+            Map<String, AuthFolders> permittedFoldersPerController) throws SOSHibernateException {
+        return getTransfersCount(controllerIds, true, from, to, permittedFoldersPerController);
     }
 
-    public Long getSuccessFulTransfersCount(Collection<String> controllerIds, Date from, Date to, Map<String, Set<Folder>> permittedFoldersMap)
+    public Long getFailedTransfersCount(Collection<String> controllerIds, Date from, Date to, Map<String, AuthFolders> permittedFoldersPerController)
             throws SOSHibernateException {
-        return getTransfersCount(controllerIds, true, from, to, permittedFoldersMap);
-    }
-
-    public Long getFailedTransfersCount(Collection<String> controllerIds, Date from, Date to, Map<String, Set<Folder>> permittedFoldersMap)
-            throws SOSHibernateException {
-        return getTransfersCount(controllerIds, false, from, to, permittedFoldersMap);
+        return getTransfersCount(controllerIds, false, from, to, permittedFoldersPerController);
     }
 
 }

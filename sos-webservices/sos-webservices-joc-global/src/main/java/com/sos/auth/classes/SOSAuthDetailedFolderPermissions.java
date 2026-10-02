@@ -32,10 +32,10 @@ public class SOSAuthDetailedFolderPermissions {
     }
 
     public static Set<String> getNotPermittedParentFolders(AuthFolders permittedFolders) {
-        if (permittedFolders.allow().isEmpty()) {
-            return Collections.emptySet();
-        }
         Set<String> paths = new HashSet<>();
+        if (permittedFolders.allow().isEmpty()) {
+            return paths;
+        }
         permittedFolders.allow().get().forEach(f -> {
             Path p = Paths.get(f.getFolder());
             p = p.getParent();
