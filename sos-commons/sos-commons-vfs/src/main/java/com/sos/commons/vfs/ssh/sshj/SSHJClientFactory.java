@@ -43,11 +43,8 @@ public class SSHJClientFactory {
     protected static SSHClient create(SSHJProvider provider) throws Exception {
         Config config = new DefaultConfig();
         SSHJConfigPostProcessor.apply(provider, config);
+        setConfigKeepAliveProvider(provider, config);
 
-        // Keep Alive Provider - see NOTE above about KeepAliveRunner
-        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
-            config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
-        }
         // SSH Client
         SSHClient client = createClient(provider, config); // with PROXY
         setHostKeyVerifier(provider.getArguments(), client);
@@ -76,12 +73,36 @@ public class SSHJClientFactory {
     }
 
     protected static void connectAndAuthenticate(SSHJProvider provider, String connectMsg, SSHClient client) throws Exception {
-        /** 1) Connect */
+        /** 1) Pre-Connect Keep Alive */
+        client = setPreConnectKeepAlive(provider, client);
+        /** 2) Connect */
         provider.getLogger().info(connectMsg);
         client.connect(provider.getArguments().getHost().getValue(), provider.getArguments().getPort().getValue());
-        /** 2) Authenticate */
+        /** 3) Authenticate */
         authenticate(provider, client);
-        /** 3) Post-Connect Keep Alive */
+    }
+
+    /** 1st part) Set Keep Alive Provider - See NOTE below about KeepAliveRunner
+     * <p>
+     * 2nd part) Set interval - See {@link #setPreConnectKeepAlive(SSHJProvider, SSHClient)} */
+    private static Config setConfigKeepAliveProvider(SSHJProvider provider, Config config) {
+        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
+            config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
+        }
+        return config;
+    }
+
+    /** 1st part) Set Keep Alive Provider - See {@link #setConfigKeepAliveProvider(SSHJProvider, Config)}<br />
+     * <p>
+     * 2nd part) Set interval<br />
+     * 
+     * @apiNote Must be set BEFORE connect(): sshj only starts the keep-alive thread during connect() and only if the interval is already > 0<br />
+     *          See https://github.com/hierynomus/sshj/blob/v0.41.1/examples/src/main/java/net/schmizz/sshj/examples/KeepAlive.java
+     * 
+     * @param provider
+     * @param client
+     * @return */
+    private static SSHClient setPreConnectKeepAlive(SSHJProvider provider, SSHClient client) {
         if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
             client.getConnection().getKeepAlive().setKeepAliveInterval(provider.getArguments().getServerAliveIntervalAsSeconds());
             if (!provider.getArguments().getServerAliveCountMax().isEmpty()) {
@@ -90,6 +111,7 @@ public class SSHJClientFactory {
                         .intValue());
             }
         }
+        return client;
     }
 
     private static void authenticate(SSHJProvider provider, SSHClient client) throws ProviderAuthenticationException {
