@@ -101,100 +101,30 @@ public abstract class ADeploy extends JOCResourceImpl {
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer  = new DBLayerDeploy(session);
-            // process filter
-            Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
-            List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
-            List<Configuration> draftFoldersToStore = getDraftConfigurationFoldersToStoreFromFilter(deployFilter);
-            List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
-            List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
-            List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
-            
-            List<Config> foldersToDelete = null;
-            if (deployFilter.getDelete() != null) {
-                foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
-                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
-                if (!(foldersToDelete.size() == 1 && "/".equals(foldersToDelete.get(0).getConfiguration().getPath()))) {
-                    foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
-                }
-            }
-            // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToStore = null;
-            if (!draftConfigsToStore.isEmpty()) {
-                configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore, true);
-            }
-            /*
-             * get all objects from INV_CONFIGURATION with deployed = false
-             * 
-             *                  START
-             * */
-            if (!draftFoldersToStore.isEmpty()) {
-                if (configurationDBItemsToStore == null) {
-                    configurationDBItemsToStore = new ArrayList<DBItemInventoryConfiguration>();
-                }
-                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
-            }
-            
-            /*
-             * get all objects from INV_CONFIGURATION with deployed = false
-             * 
-             *                  END
-             * */
-            List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
-            if (!deployConfigsToStoreAgain.isEmpty()) {
-                depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
-            }
-            /*
-             * get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
-             * 
-             *                  START
-             * */
-            if (!deployFoldersToStoreAgain.isEmpty()) {
-                if (depHistoryDBItemsToStore == null) {
-                    depHistoryDBItemsToStore = new ArrayList<DBItemDeploymentHistory>();
-                }
-                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain, dbLayer));
-            }
-            /*
-             * get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
-             * 
-             *                  END
-             * */
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
-            if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
-                depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
-                if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                    Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream()
-                            .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
-                    depHistoryDBItemsToDeployDelete = grouped.keySet().stream().map(item -> grouped.get(item).get(0)).collect(Collectors.toList());
-                }
-            }
-            // sign undeployed configurations
-            Set<DBItemInventoryConfiguration> unsignedDrafts = null;
-            if (configurationDBItemsToStore != null) {
-                unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToStore);
-            }
-            Set<DBItemDeploymentHistory> unsignedReDeployables = null;
-            if (depHistoryDBItemsToStore != null) {
-                unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
-            }
-            
-            // set new versionId for first round (update items)
-            final String commitId = UUID.randomUUID().toString();
-
             DBLayerKeys dbLayerKeys = new DBLayerKeys(session);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, secLvl);
-            if (keyPair == null) {
+            if (keyPair == null || keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
                 throw new JocMissingKeyException(
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
             }
-            
+            // process filter
+            Set<String> controllerIds = deployFilter.getControllerIds().stream().collect(Collectors.toSet());
+            List<Config> foldersToDelete = getFoldersToDelete(deployFilter, dbLayer);
+            // read all objects provided in the filter from the database
+            // get all objects from INV_CONFIGURATION with deployed = false
+            Set<DBItemInventoryConfiguration> unsignedDrafts = getInvDbItemsToStore(deployFilter, dbLayer);
+            // get all latest objects from DEP_HISTORY where INV_CONFIGURATION object has deployed = true
+            Set<DBItemDeploymentHistory> unsignedReDeployables = getDepDbItemsToStore(deployFilter, dbLayer);
+            Set<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = getDepDbItemsToDelete(deployFilter, dbLayer);
+            // set new versionId for first round (update items)
+            final String commitId = UUID.randomUUID().toString();
             final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
-            List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
-            
-            // store to selected controllers
-            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
+            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(session);
+            // Map<ControllerId, Map<AgentId, Set<AgentNames and Aliases>>>
             Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId = agentDbLayer.getAgentWithAliasesByControllerIds(controllerIds);
 
+            List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
+            // store to selected allowed controllers
             for (String controllerId : controllerIds) {
                 if (!allowedControllerIds.contains(controllerId)) {
                     continue;
@@ -420,33 +350,81 @@ public abstract class ADeploy extends JOCResourceImpl {
         }
     }
     
+    private Set<DBItemInventoryConfiguration> getInvDbItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        Set<DBItemInventoryConfiguration> items = getInvItemsToStore(deployFilter, dbLayer);
+        if(items.isEmpty()) {
+            return getInvItemsToStoreFromFolder(deployFilter, dbLayer);
+        }
+        items.addAll(getInvItemsToStoreFromFolder(deployFilter, dbLayer));
+        return items;
+    }
+    
+    private Set<DBItemInventoryConfiguration> getInvItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
+        if (!draftConfigsToStore.isEmpty()) {
+            return dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore, true).stream().collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
+    }
+    
+    private Set<DBItemInventoryConfiguration> getInvItemsToStoreFromFolder(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        List<Configuration> draftFoldersToStore = getDraftConfigurationFoldersToStoreFromFilter(deployFilter);
+        if (!draftFoldersToStore.isEmpty()) {
+            return PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer);
+        }
+        return Collections.emptySet();
+    }
+    
     private List<Configuration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                     .map(Config::getConfiguration).peek(item -> item.setCommitId(null)).filter(Objects::nonNull).collect(Collectors.toList());
-        } else {
-            return new ArrayList<Configuration>();
         }
-   }
+        return Collections.emptyList();
+    }
     
     private List<Configuration> getDraftConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream()
                     .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                     .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
-        } else {
-            return new ArrayList<Configuration>();
         }
+        return Collections.emptyList();
     }
 
+    private Set<DBItemDeploymentHistory> getDepDbItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        Set<DBItemDeploymentHistory> items = getDepItemsToStore(deployFilter, dbLayer);
+        if(items.isEmpty()) {
+            return getDepItemsToStoreFromFolder(deployFilter, dbLayer);
+        }
+        items.addAll(getDepItemsToStoreFromFolder(deployFilter, dbLayer));
+        return items;
+    }
+    
+    private Set<DBItemDeploymentHistory> getDepItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
+        if (!deployConfigsToStoreAgain.isEmpty()) {
+            return dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain).stream().collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
+    }
+    
+    private Set<DBItemDeploymentHistory> getDepItemsToStoreFromFolder(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
+        if (!deployFoldersToStoreAgain.isEmpty()) {
+            return PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain, dbLayer);
+        }
+        return Collections.emptySet();
+    }
+    
     private List<Configuration> getDeployConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDeployConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                     .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-            return new ArrayList<Configuration>();
+            return Collections.emptyList();
         }
     }
     
@@ -459,14 +437,40 @@ public abstract class ADeploy extends JOCResourceImpl {
         }
     }
 
+    private Set<DBItemDeploymentHistory> getDepDbItemsToDelete(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+        if (!deployConfigsToDelete.isEmpty()) {
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
+            if (!depHistoryDBItemsToDeployDelete.isEmpty()) {
+                Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream()
+                        .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
+                return grouped.keySet().stream().map(item -> grouped.get(item).get(0)).collect(Collectors.toSet());
+            }
+        }
+        return Collections.emptySet();
+    }
+    
     private List<Configuration> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getDelete() != null) {
             return deployFilter.getDelete().getDeployConfigurations().stream()
                     .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
                     .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-          return new ArrayList<Configuration>();
+          return Collections.emptyList();
         }
+    }
+    
+    private List<Config> getFoldersToDelete(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
+        if (deployFilter.getDelete() != null) {
+            List<Config> foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
+                    .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .filter(folder -> "/".equals(folder.getConfiguration().getPath())).collect(Collectors.toList());
+            if (!foldersToDelete.isEmpty()) {
+                foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
+            }
+            return foldersToDelete;
+        }
+        return Collections.emptyList();
     }
     
     public static DBItemDeploymentHistory cloneToNew(DBItemDeploymentHistory oldItem) {
