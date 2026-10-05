@@ -58,11 +58,23 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             AuthFolders jocPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
             AuthFolders controllerPermittedFolders = new AuthFolders(Optional.empty(), Optional.empty());
             if (treeForInventory || treeForInventoryTrash) {
+                // special: tree in Inventory (trash)
                 //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else if (treeForDescriptors || treeForDescriptorsTrash) {
+                // special: tree for Descriptor (trash)
                 //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
             } else if (types.size() == 1 && types.iterator().next().equals(TreeType.WORKFLOW)) {
-                //jocPermittedFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+                // special: tree in Workflows view
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.NOTICEBOARD)) {
+                // special: tree in Boards view
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.LOCK)) {
+                // special: tree in Locks view
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.REPORT)) {
+                // special: tree in Reports view
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.DOCUMENTATION)) {
+                // special: tree in Docus view
+            } else if (types.stream().allMatch(Set.of(TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR)::contains)) {
+                // special: tree in Calendars view
             } else {
                 Predicate<String> jocPermPredicate = null;
                 Predicate<String> controllerPermPredicate = null;
@@ -138,6 +150,12 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             } else if (types.size() == 1 && types.iterator().next().equals(TreeType.DOCUMENTATION)) {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
                 root = TreePermanent.getDocuViewTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.size() == 1 && types.iterator().next().equals(TreeType.LOCK)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getLockViewTree(folders, controllerId, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
+            } else if (types.stream().allMatch(Set.of(TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR)::contains)) {
+                folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
+                root = TreePermanent.getCalendarViewTree(folders, getCurrentAccount().getSOSAuthDetailedFolderPermissions());
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
                 root = TreePermanent.getTree(folders, jocPermittedFolders, controllerPermittedFolders);

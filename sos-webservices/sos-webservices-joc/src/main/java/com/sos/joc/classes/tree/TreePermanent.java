@@ -544,6 +544,7 @@ public class TreePermanent {
         perms.put("create", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getCreate()));
         perms.put("modify", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getModify()));
         perms.put("suspendResume", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getSuspendResume()));
+        perms.put("resumeFailed", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getResumeFailed()));
         
         Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
         if (treeMap.isEmpty()) {
@@ -589,6 +590,27 @@ public class TreePermanent {
         perms.put("manage", permissions.getPermittedFoldersByJocPermissions(docuPred.getManage()));
         
         Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, perms);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+    
+    public static Tree getLockViewTree(SortedSet<Tree> folders, String controllerId, SOSAuthDetailedFolderPermissions permissions) {
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByControllerPermissions(controllerId, new ControllerPermissionsPredicate()
+                .getLocks().getView());
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, null);
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+
+        return treeMap.get(Paths.get("/"));
+    }
+    
+    public static Tree getCalendarViewTree(SortedSet<Tree> folders, SOSAuthDetailedFolderPermissions permissions) {
+        AuthFolders permittedFolders = permissions.getPermittedFoldersByJocPermissions(new JocPermissionsPredicate().getCalendars().getView());
+        Map<Path, TreeModel> treeMap = buildTreeMap(folders, permittedFolders, null);
         if (treeMap.isEmpty()) {
             return null;
         }
@@ -671,7 +693,9 @@ public class TreePermanent {
         }
         tree.setRepoControlled(folder.getRepoControlled());
         tree.setPermitted(isPermitted);
-        tree.setPermissions(permission);
+        if (isPermitted) {
+            tree.setPermissions(permission);
+        }
         return tree;
     }
 
