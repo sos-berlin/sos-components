@@ -1,17 +1,13 @@
 
 package com.sos.joc.model.order;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -25,40 +21,25 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "orderIds",
-    "workflowIds",
     "compact",
     "regex",
     "states",
-    "folders",
+    "agentIds",
     "orderTags",
     "workflowTags",
-    "dateTo",
     "stateDateFrom",
     "stateDateTo",
-    "timeZone",
-    "scheduledNever",
     "limit",
     "withoutWorkflowTags"
 })
-public class OrdersFilterV {
+public class OrdersFilterV
+    extends OrdersFilterVBase
+{
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("orderIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> orderIds = new LinkedHashSet<String>();
-    @JsonProperty("workflowIds")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<WorkflowId> workflowIds = new LinkedHashSet<WorkflowId>();
     /**
      * compact parameter
      * <p>
@@ -78,15 +59,11 @@ public class OrdersFilterV {
     @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
     @JsonProperty("states")
-    private List<OrderStateText> states = new ArrayList<OrderStateText>();
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("folders")
-    private List<Folder> folders = new ArrayList<Folder>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<OrderStateText> states = new LinkedHashSet<OrderStateText>();
+    @JsonProperty("agentIds")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> agentIds = new LinkedHashSet<String>();
     /**
      * tags
      * <p>
@@ -111,15 +88,6 @@ public class OrdersFilterV {
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("dateTo")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
-    private String dateTo;
-    /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
-     * 
-     */
     @JsonProperty("stateDateFrom")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String stateDateFrom;
@@ -132,20 +100,6 @@ public class OrdersFilterV {
     @JsonProperty("stateDateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String stateDateTo;
-    /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    private String timeZone;
-    /**
-     * deprecated -> is State.PENDING
-     * 
-     */
-    @JsonProperty("scheduledNever")
-    @JsonPropertyDescription("deprecated -> is State.PENDING")
-    private Boolean scheduledNever = false;
     /**
      * -1=unlimited
      * 
@@ -161,30 +115,6 @@ public class OrdersFilterV {
     @JsonPropertyDescription("if true then response doesn't contain 'workflowsTagPerWorkflow'")
     private Boolean withoutWorkflowTags = false;
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
     @JsonProperty("orderIds")
     public Set<String> getOrderIds() {
         return orderIds;
@@ -193,16 +123,6 @@ public class OrdersFilterV {
     @JsonProperty("orderIds")
     public void setOrderIds(Set<String> orderIds) {
         this.orderIds = orderIds;
-    }
-
-    @JsonProperty("workflowIds")
-    public Set<WorkflowId> getWorkflowIds() {
-        return workflowIds;
-    }
-
-    @JsonProperty("workflowIds")
-    public void setWorkflowIds(Set<WorkflowId> workflowIds) {
-        this.workflowIds = workflowIds;
     }
 
     /**
@@ -250,35 +170,23 @@ public class OrdersFilterV {
     }
 
     @JsonProperty("states")
-    public List<OrderStateText> getStates() {
+    public Set<OrderStateText> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<OrderStateText> states) {
+    public void setStates(Set<OrderStateText> states) {
         this.states = states;
     }
 
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("folders")
-    public List<Folder> getFolders() {
-        return folders;
+    @JsonProperty("agentIds")
+    public Set<String> getAgentIds() {
+        return agentIds;
     }
 
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("folders")
-    public void setFolders(List<Folder> folders) {
-        this.folders = folders;
+    @JsonProperty("agentIds")
+    public void setAgentIds(Set<String> agentIds) {
+        this.agentIds = agentIds;
     }
 
     /**
@@ -331,28 +239,6 @@ public class OrdersFilterV {
      *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
-    @JsonProperty("dateTo")
-    public String getDateTo() {
-        return dateTo;
-    }
-
-    /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
-     * 
-     */
-    @JsonProperty("dateTo")
-    public void setDateTo(String dateTo) {
-        this.dateTo = dateTo;
-    }
-
-    /**
-     * string for dateFrom and dateTo as search filter
-     * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
-     * 
-     */
     @JsonProperty("stateDateFrom")
     public String getStateDateFrom() {
         return stateDateFrom;
@@ -389,42 +275,6 @@ public class OrdersFilterV {
     @JsonProperty("stateDateTo")
     public void setStateDateTo(String stateDateTo) {
         this.stateDateTo = stateDateTo;
-    }
-
-    /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    public String getTimeZone() {
-        return timeZone;
-    }
-
-    /**
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
-    }
-
-    /**
-     * deprecated -> is State.PENDING
-     * 
-     */
-    @JsonProperty("scheduledNever")
-    public Boolean getScheduledNever() {
-        return scheduledNever;
-    }
-
-    /**
-     * deprecated -> is State.PENDING
-     * 
-     */
-    @JsonProperty("scheduledNever")
-    public void setScheduledNever(Boolean scheduledNever) {
-        this.scheduledNever = scheduledNever;
     }
 
     /**
@@ -465,12 +315,12 @@ public class OrdersFilterV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("orderTags", orderTags).append("workflowTags", workflowTags).append("dateTo", dateTo).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).append("withoutWorkflowTags", withoutWorkflowTags).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("compact", compact).append("regex", regex).append("states", states).append("agentIds", agentIds).append("orderTags", orderTags).append("workflowTags", workflowTags).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("limit", limit).append("withoutWorkflowTags", withoutWorkflowTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(scheduledNever).append(folders).append(controllerId).append(compact).append(timeZone).append(states).append(orderTags).append(stateDateFrom).append(withoutWorkflowTags).append(regex).append(dateTo).append(limit).append(orderIds).append(workflowTags).append(stateDateTo).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stateDateFrom).append(withoutWorkflowTags).append(regex).append(agentIds).append(compact).append(limit).append(orderIds).append(workflowTags).append(stateDateTo).append(states).append(orderTags).toHashCode();
     }
 
     @Override
@@ -482,7 +332,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(timeZone, rhs.timeZone).append(states, rhs.states).append(orderTags, rhs.orderTags).append(stateDateFrom, rhs.stateDateFrom).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(workflowTags, rhs.workflowTags).append(stateDateTo, rhs.stateDateTo).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(stateDateFrom, rhs.stateDateFrom).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(regex, rhs.regex).append(agentIds, rhs.agentIds).append(compact, rhs.compact).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(workflowTags, rhs.workflowTags).append(stateDateTo, rhs.stateDateTo).append(states, rhs.states).append(orderTags, rhs.orderTags).isEquals();
     }
 
 }

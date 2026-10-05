@@ -108,7 +108,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Instant surveyDateInstant = currentState.instant();
             Long surveyDateMillis = surveyDateInstant.toEpochMilli();
 
-            List<OrderStateText> states = ordersFilter.getStates();
+            Set<OrderStateText> states = ordersFilter.getStates();
             boolean stateDateDisallowed = states.stream().anyMatch(s -> !allowedStateDateStates.contains(s));
             // BLOCKED is not a Controller state. It needs a special handling. These are SCHEDULED with scheduledFor in the past
             final boolean withStatesFilter = states != null && !states.isEmpty();
@@ -231,6 +231,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setWorkflowIds(null);
                 ordersFilter.setFolders(null);
                 ordersFilter.setStates(null);
+                ordersFilter.setAgentIds(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
                 blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
 
@@ -238,6 +239,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setRegex(null);
                 ordersFilter.setFolders(null);
                 ordersFilter.setStates(null);
+                ordersFilter.setAgentIds(null);
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
                 Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
                         .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
@@ -297,9 +299,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                cycledOrderStream = cycledOrderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id()
-                        .string()));
-                orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
+                Predicate<JOrder> regexFilter = o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string());
+                cycledOrderStream = cycledOrderStream.filter(regexFilter);
+                orderStream = orderStream.filter(regexFilter);
+            }
+            
+            if (ordersFilter.getAgentIds() != null && !ordersFilter.getAgentIds().isEmpty()) {
+                Predicate<JOrder> agentFilter = o -> o.attached().isRight() ? ordersFilter.getAgentIds().contains(o.attached().get().string())
+                        : false;
+                cycledOrderStream = cycledOrderStream.filter(agentFilter);
+                orderStream = orderStream.filter(agentFilter);
             }
             
             Set<JOrder> blockedOrders = blockedOrderStream.collect(Collectors.toSet());

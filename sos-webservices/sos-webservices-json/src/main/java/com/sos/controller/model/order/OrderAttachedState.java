@@ -1,6 +1,7 @@
 
 package com.sos.controller.model.order;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -30,6 +31,9 @@ public class OrderAttachedState {
     @JsonProperty("TYPE")
     @JsonPropertyDescription("Attaching, Attached, ...")
     private String tYPE;
+    @JsonAlias({
+        "agentPath"
+    })
     @JsonProperty("agentName")
     private String agentName;
 
