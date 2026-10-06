@@ -40,7 +40,9 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.InventoryTagDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.order.OrderStateText;
@@ -231,7 +233,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setWorkflowIds(null);
                 ordersFilter.setFolders(null);
                 ordersFilter.setStates(null);
-                ordersFilter.setAgentIds(null);
+                ordersFilter.setAgentNames(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
                 blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
 
@@ -239,7 +241,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setRegex(null);
                 ordersFilter.setFolders(null);
                 ordersFilter.setStates(null);
-                ordersFilter.setAgentIds(null);
+                ordersFilter.setAgentNames(null);
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
                 Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
                         .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
@@ -304,9 +306,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = orderStream.filter(regexFilter);
             }
             
-            if (ordersFilter.getAgentIds() != null && !ordersFilter.getAgentIds().isEmpty()) {
-                Predicate<JOrder> agentFilter = o -> o.attached().isRight() ? ordersFilter.getAgentIds().contains(o.attached().get().string())
-                        : false;
+            if (ordersFilter.getAgentNames() != null && !ordersFilter.getAgentNames().isEmpty()) {
+                if (connection == null) {
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                }
+                InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(connection);
+                Predicate<String> contains = ordersFilter.getAgentNames()::contains;
+                Set<String> agentIds = agentDbLayer.getAgentWithAliasesByControllerId(controllerId).stream().filter(i -> contains.test(i
+                        .getAgentName()) || contains.test(i.getAgentId())).map(DBItemInventoryAgentName::getAgentId).collect(Collectors.toSet());
+
+                Predicate<JOrder> agentFilter = o -> o.attached().isRight() ? agentIds.contains(o.attached().get().string()) : false;
                 cycledOrderStream = cycledOrderStream.filter(agentFilter);
                 orderStream = orderStream.filter(agentFilter);
             }
@@ -344,7 +353,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     .groupingByConcurrent(JOrder::workflowId));
             
             if (withWorkflowTags) {
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                if (connection == null) {
+                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+                }
                 InventoryTagDBLayer tagDbLayer = new InventoryTagDBLayer(connection);
                 List<String> taggedWorkflowNames = tagDbLayer.getWorkflowNamesHavingTags(ordersFilter.getWorkflowTags().stream().map(GroupedTag::new)
                         .map(GroupedTag::getTag).collect(Collectors.toList()));

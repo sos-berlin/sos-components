@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
@@ -367,33 +368,47 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             Map<String, Set<String>> agentIdsByControllerId = agentIds.stream().collect(Collectors.groupingBy(
                     DBItemInventoryAgentInstance::getControllerId, Collectors.mapping(DBItemInventoryAgentInstance::getAgentId, Collectors.toSet())));
             Map<String, Map<String, Set<String>>> agentIdsWithAliasesByControllerIds = new HashMap<>();
-            agentIdsByControllerId.forEach((K, V) -> {
-                Map<String, Set<String>> a = getAgentNameAliasesByAgentIds(V);
-                Map<String, Set<String>> b = new HashMap<>();
-                for (String agentId : V) {
+            agentIdsByControllerId.forEach((cId, aIds) -> {
+                Map<String, Set<String>> a = getAgentNameAliasesByAgentIds(aIds);
+                for (String agentId : aIds) {
                     if (a.containsKey(agentId)) {
                         a.get(agentId).add(agentIDWithAgentName.get(agentId));
                     } else {
-                        b.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
+                        a.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
                     }
                 }
-                if (!b.isEmpty()) {
-                    if (a != null && !a.isEmpty()) {
-                        a.putAll(b);
-                    } else {
-                        a = b;
-                    }
-                }
-                agentIdsWithAliasesByControllerIds.put(K, a);
+                agentIdsWithAliasesByControllerIds.put(cId, a);
             });
             return agentIdsWithAliasesByControllerIds;
         } catch (Exception e) {
             throw e;
         }
     }
+    
+    public Set<DBItemInventoryAgentName> getAgentWithAliasesByControllerId(String controllerId) {
+        try {
+            Map<String, List<DBItemInventoryAgentName>> agentIds = getAgentsByControllerIds(Collections.singleton(controllerId)).stream().map(item -> {
+                DBItemInventoryAgentName an = new DBItemInventoryAgentName();
+                an.setAgentId(item.getAgentId());
+                an.setAgentName(item.getAgentName());
+                return an;
+            }).collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId));
+            
+            List<DBItemInventoryAgentName> aliases = getAgentNameAliasesByAgentIds1(agentIds.keySet());
+            return Stream.concat(aliases.stream(), agentIds.values().stream().flatMap(List::stream)).collect(Collectors.toSet());
+        } catch (Exception e) {
+            throw e;
+        }
+    }
 
-    public Map<String, Set<String>> getAgentNameAliasesByAgentIds(Collection<String> agentIds) throws DBInvalidDataException, DBMissingDataException,
+    private Map<String, Set<String>> getAgentNameAliasesByAgentIds(Collection<String> agentIds) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
+        return getAgentNameAliasesByAgentIds1(agentIds).stream().collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, Collectors.mapping(
+                DBItemInventoryAgentName::getAgentName, Collectors.toSet())));
+    }
+
+    private List<DBItemInventoryAgentName> getAgentNameAliasesByAgentIds1(Collection<String> agentIds) throws DBInvalidDataException,
+            DBMissingDataException, DBConnectionRefusedException {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
@@ -406,10 +421,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             }
             List<DBItemInventoryAgentName> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
-                return result.stream().collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, Collectors.mapping(
-                        DBItemInventoryAgentName::getAgentName, Collectors.toSet())));
+                return result;
             }
-            return Collections.emptyMap();
+            return Collections.emptyList();
         } catch (DBMissingDataException e) {
             throw e;
         } catch (SOSHibernateInvalidSessionException e) {

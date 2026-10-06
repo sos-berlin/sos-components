@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "compact",
     "regex",
     "states",
-    "agentIds",
+    "agentNames",
     "orderTags",
     "workflowTags",
     "stateDateFrom",
@@ -61,9 +61,9 @@ public class OrdersFilterV
     @JsonProperty("states")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<OrderStateText> states = new LinkedHashSet<OrderStateText>();
-    @JsonProperty("agentIds")
+    @JsonProperty("agentNames")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> agentIds = new LinkedHashSet<String>();
+    private Set<String> agentNames = new LinkedHashSet<String>();
     /**
      * tags
      * <p>
@@ -179,14 +179,14 @@ public class OrdersFilterV
         this.states = states;
     }
 
-    @JsonProperty("agentIds")
-    public Set<String> getAgentIds() {
-        return agentIds;
+    @JsonProperty("agentNames")
+    public Set<String> getAgentNames() {
+        return agentNames;
     }
 
-    @JsonProperty("agentIds")
-    public void setAgentIds(Set<String> agentIds) {
-        this.agentIds = agentIds;
+    @JsonProperty("agentNames")
+    public void setAgentNames(Set<String> agentNames) {
+        this.agentNames = agentNames;
     }
 
     /**
@@ -315,12 +315,12 @@ public class OrdersFilterV
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("compact", compact).append("regex", regex).append("states", states).append("agentIds", agentIds).append("orderTags", orderTags).append("workflowTags", workflowTags).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("limit", limit).append("withoutWorkflowTags", withoutWorkflowTags).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderIds", orderIds).append("compact", compact).append("regex", regex).append("states", states).append("agentNames", agentNames).append("orderTags", orderTags).append("workflowTags", workflowTags).append("stateDateFrom", stateDateFrom).append("stateDateTo", stateDateTo).append("limit", limit).append("withoutWorkflowTags", withoutWorkflowTags).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stateDateFrom).append(withoutWorkflowTags).append(regex).append(agentIds).append(compact).append(limit).append(orderIds).append(workflowTags).append(stateDateTo).append(states).append(orderTags).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(stateDateFrom).append(withoutWorkflowTags).append(regex).append(agentNames).append(compact).append(limit).append(orderIds).append(workflowTags).append(stateDateTo).append(states).append(orderTags).toHashCode();
     }
 
     @Override
@@ -332,7 +332,7 @@ public class OrdersFilterV
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(stateDateFrom, rhs.stateDateFrom).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(regex, rhs.regex).append(agentIds, rhs.agentIds).append(compact, rhs.compact).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(workflowTags, rhs.workflowTags).append(stateDateTo, rhs.stateDateTo).append(states, rhs.states).append(orderTags, rhs.orderTags).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(stateDateFrom, rhs.stateDateFrom).append(withoutWorkflowTags, rhs.withoutWorkflowTags).append(regex, rhs.regex).append(agentNames, rhs.agentNames).append(compact, rhs.compact).append(limit, rhs.limit).append(orderIds, rhs.orderIds).append(workflowTags, rhs.workflowTags).append(stateDateTo, rhs.stateDateTo).append(states, rhs.states).append(orderTags, rhs.orderTags).isEquals();
     }
 
 }
