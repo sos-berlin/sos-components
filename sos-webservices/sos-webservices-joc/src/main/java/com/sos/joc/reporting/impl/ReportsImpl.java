@@ -61,7 +61,7 @@ public class ReportsImpl extends JOCResourceImpl implements IReportsResource {
                 }
             };
             
-            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> canAdd(item.getFolder(), permittedFolders);
+            Predicate<DBItemInventoryReleasedConfiguration> isPermitted = item -> folderIsPermitted(item.getFolder(), permittedFolders);
             
             connection = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(connection);

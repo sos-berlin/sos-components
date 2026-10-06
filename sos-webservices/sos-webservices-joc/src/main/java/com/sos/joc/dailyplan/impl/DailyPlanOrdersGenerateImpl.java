@@ -282,7 +282,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
     private boolean isPermitted(Folder folder, AuthFolders permittedFolders, Map<String, Boolean> checkedFolders) {
         Boolean result = checkedFolders.get(folder.getFolder());
         if (result == null) {
-            result = canAdd(folder.getFolder(), permittedFolders);
+            result = folderIsPermitted(folder.getFolder(), permittedFolders);
             checkedFolders.put(folder.getFolder(), result);
         }
         return result;

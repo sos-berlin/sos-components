@@ -51,7 +51,7 @@ public class RunReportImpl extends JOCResourceImpl implements IRunReportResource
             List<String> reportNames = in.getReportPaths().stream().map(JocInventory::pathToName).collect(Collectors.toList());
             List<DBItemInventoryReleasedConfiguration> dbItems = dbLayer.getReleasedConfigurations(reportNames, ConfigurationType.REPORT);
             for (DBItemInventoryReleasedConfiguration dbItem : dbItems) {
-                if (!canAdd(dbItem.getFolder(), authFolders)) {
+                if (!folderIsPermitted(dbItem.getFolder(), authFolders)) {
                     continue;
                 }
                 
