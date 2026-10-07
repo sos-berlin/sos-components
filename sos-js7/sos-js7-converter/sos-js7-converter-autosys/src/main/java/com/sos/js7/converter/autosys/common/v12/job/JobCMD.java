@@ -97,6 +97,10 @@ public class JobCMD extends ACommonMachineJob {
         super(source, ConverterJobType.CMD, reference);
     }
 
+    public boolean isWindowsStyleCommand() {
+        return command.getValue() != null && command.getValue().matches("^[A-Za-z]\\\\?:[\\\\/].*");
+    }
+
     public SOSArgument<String> getCommand() {
         return command;
     }

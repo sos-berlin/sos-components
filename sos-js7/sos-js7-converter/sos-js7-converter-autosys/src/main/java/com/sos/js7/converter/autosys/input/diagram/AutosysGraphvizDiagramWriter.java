@@ -24,6 +24,7 @@ import com.sos.js7.converter.autosys.common.v12.job.JobFTP;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.JobHTTP;
 import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
+import com.sos.js7.converter.autosys.common.v12.job.JobOMP;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
 import com.sos.js7.converter.autosys.common.v12.job.JobSCP;
 import com.sos.js7.converter.autosys.common.v12.job.JobSQL;
@@ -975,6 +976,12 @@ public class AutosysGraphvizDiagramWriter extends AGraphvizDiagramWriter {
                 sb.append("</tr>").append(NEW_LINE);
             }
 
+            break;
+        case OMP:
+            JobOMP omp = (JobOMP) job;
+            writeJobRow(sb, omp.getProcessName());
+            writeJobRow(sb, omp.getProcessStatus());
+            writeJobRow(sb, omp.getMonitorMode());
             break;
         case OMTF:
             JobOMTF omtf = (JobOMTF) job;

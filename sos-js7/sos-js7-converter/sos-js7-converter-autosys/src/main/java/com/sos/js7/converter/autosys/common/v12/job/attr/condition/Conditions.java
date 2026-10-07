@@ -31,6 +31,7 @@ public class Conditions {
      * v(app.varA) = "X" & s(app.JobA) & s(app.JobB) <br/>
      * (v(app.varA) = "X" & s(app.JobA)) | s(app.JobB) <br/>
      * v(app.varA) = "X" & s(app.JobA) ---s(app.JobB,24.00) <br/>
+     * v(app.varA) != "X"<br />
      * 
      * @param val
      * @return List of Condition and Operator or nested List
@@ -108,6 +109,7 @@ public class Conditions {
             } else {
                 if (partEnd) {
                     switch (s.toLowerCase()) {
+                    case "!": // v(app.varA) != "X"
                     case "=":
                         valueBegin = true;
                         valueCounter = 0;

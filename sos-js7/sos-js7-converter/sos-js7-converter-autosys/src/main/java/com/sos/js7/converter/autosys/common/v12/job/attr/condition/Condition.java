@@ -61,7 +61,7 @@ public class Condition implements Serializable {
             this.originalValue = v;
             int i = val.indexOf("(");
             if (i == -1) {
-                throw new Exception("[condition can't be set]starting bracket '(' not found");
+                throw new Exception("[condition can't be set][" + val + "]starting bracket '(' not found");
             }
 
             // app.varA

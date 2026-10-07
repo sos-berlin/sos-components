@@ -141,6 +141,9 @@ public class JILJobParser extends AFileParser {
     private void toProperty(LinkedHashMap<String, String> p, String line) throws Exception {
         if (p != null) {
             String lineTrimmed = line.trim();
+            if (lineTrimmed.isEmpty()) {
+                return;
+            }
             if (lineTrimmed.startsWith(";") || lineTrimmed.startsWith("#")) {
                 return;
             }
@@ -172,7 +175,7 @@ public class JILJobParser extends AFileParser {
                 }
                 p.put(name, value);
             } else {
-                throw new Exception("[not parsable][line][: pos=" + pos + "]" + line);
+                throw new Exception("[not parsable][line][: pos=" + pos + "]line=" + line);
             }
         }
     }

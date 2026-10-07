@@ -1,5 +1,6 @@
 package com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl;
 
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.InternalExecutableType;
@@ -8,6 +9,7 @@ import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.db.DBJobConverter;
 import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.rest.RESTJobConverter;
 import com.sos.js7.converter.autosys.output.js7.helper.jobs.jitl.yade.YADEJobConverter;
+import com.sos.js7.converter.commons.JS7ConverterHelper;
 
 public class JITLJobConverter {
 
@@ -26,8 +28,11 @@ public class JITLJobConverter {
         ex.setClassName(className);
 
         Environment env = new Environment();
-        if (Autosys2JS7Converter.CONFIG.getMockConfig().hasForcedScript()) {
-            env.getAdditionalProperties().put("mock_level", "INFO");
+        if (!SOSString.isEmpty(Autosys2JS7Converter.CONFIG.getMockConfig().getForcedJitlJobsMockLevel())) {
+            env.getAdditionalProperties().put("mock_level", JS7ConverterHelper.quoteValue4JS7(Autosys2JS7Converter.CONFIG.getMockConfig()
+                    .getForcedJitlJobsMockLevel()));
+        } else if (Autosys2JS7Converter.CONFIG.getMockConfig().hasForcedScript()) {
+            env.getAdditionalProperties().put("mock_level", JS7ConverterHelper.quoteValue4JS7("INFO"));
         }
 
         ex.setArguments(env);

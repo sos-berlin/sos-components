@@ -36,13 +36,14 @@ public abstract class ACommonJob {
     private static final Logger LOGGER = LoggerFactory.getLogger(ACommonJob.class);
 
     /** <br/>
-     * CMD -<br/>
      * BOX -<br/>
-     * FW - File Watcher<br/>
+     * CMD -<br/>
      * FT - File Trigger<br/>
-     * OTMF - Text File Reading and Monitoring<br/>
-     * HTTP - HTTP calls<br/>
      * FTP - FTP transfers<br/>
+     * FW - File Watcher<br/>
+     * HTTP - HTTP calls<br/>
+     * OMP - Operating System Process Monitoring<br/>
+     * OTMF - Text File Reading and Monitoring<br/>
      * SCP - SCP/SFTP transfers<br/>
      * SQL - database statement execution<br/>
      * WSDOC - custom job type - web service calls (SOAP etc)<br/>
@@ -50,7 +51,7 @@ public abstract class ACommonJob {
      * NOT_SUPPORTED - sos type<br/>
      */
     public enum ConverterJobType {
-        CMD, BOX, FW, FT, OMTF, HTTP, FTP, FTPS, SCP, SQL, WSDOC, NOT_SUPPORTED
+        BOX, CMD, FT, FTP, FTPS, FW, HTTP, OMP, OMTF, SCP, SQL, WSDOC, NOT_SUPPORTED
     }
 
     public static final String LIST_VALUE_DELIMITER = ";";
@@ -314,6 +315,8 @@ public abstract class ACommonJob {
     // --------------------calculated properties
     private Path jobFullPathFromJILDefinition;
 
+    private String boxFolderPath;
+
     public ACommonJob(Path source, ConverterJobType type, boolean reference) {
         this.source = source;
         this.converterJobType = type;
@@ -490,6 +493,13 @@ public abstract class ACommonJob {
     @ArgumentSetter(name = ATTR_TERM_RUN_TIME)
     public void setTermRunTime(String val) {
         termRunTime.setValue(JS7ConverterHelper.integerValue(val));
+    }
+
+    /** Minutes to seconds
+     * 
+     * @return minutes to seconds or -1 if not set */
+    public int getTermRunTimeAsSeconds() {
+        return termRunTime.getValue() == null ? -1 : termRunTime.getValue() * 60;
     }
 
     public SOSArgument<Boolean> getInteractive() {
@@ -852,6 +862,14 @@ public abstract class ACommonJob {
             return null;
         }
         return folder.getApplication().getValue();
+    }
+
+    public void setBoxFolderPath(String path) {
+        boxFolderPath = path;
+    }
+
+    public String getBoxFolderPath() {
+        return boxFolderPath;
     }
 
     @Override

@@ -19,6 +19,7 @@ public class JobConfig extends AConfigItem {
     private Boolean forcedV1Compatible;
 
     private String defaultUnixShebang = "#!/bin/bash";
+    private String defaultUnixKshShebang = null;
     private String forcedUnixNewLine = "\n";
     private String forcedUnixPowershellShebang = "#!/usr/bin/env pwsh";
     private String forcedUnixCommandPrefix;
@@ -75,6 +76,9 @@ public class JobConfig extends AConfigItem {
         // SHELL UNIX
         case "default.shell.unix.shebang":
             withDefaultUnixShebang(val);
+            break;
+        case "default.shell.unix.ksh.shebang":
+            withDefaultUnixKshShebang(val);
             break;
         case "forced.shell.unix.newline":
             withForcedUnixNewLine(val);
@@ -164,6 +168,11 @@ public class JobConfig extends AConfigItem {
 
     public JobConfig withDefaultUnixShebang(String val) {
         this.defaultUnixShebang = val;
+        return this;
+    }
+
+    public JobConfig withDefaultUnixKshShebang(String val) {
+        this.defaultUnixKshShebang = val;
         return this;
     }
 
@@ -265,6 +274,10 @@ public class JobConfig extends AConfigItem {
 
     public String getDefaultUnixShebang() {
         return defaultUnixShebang;
+    }
+
+    public String getDefaultUnixKshShebang() {
+        return defaultUnixKshShebang;
     }
 
     public String getForcedUnixNewLine() {

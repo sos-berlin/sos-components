@@ -93,6 +93,7 @@ public class Report {
     // - Jobs
     public static final String FILE_NAME_JOBS_DUPLICATES = "Report-Jobs[Duplicates].txt";
     private static final String FILE_NAME_JOBS_BY_TYPE = "Report-Jobs[By-Type].txt";
+    private static final String FILE_NAME_JOBS_DETECTED_CUSTOM_ENV_VARS = "Report-Jobs[Custom-EnvVars].txt";
     private static final String FILE_NAME_JOBS_BY_APPLICATION_GROUP = FOLDER_NAME_MORE_REPORTS + "/Report-Jobs[By-Application,Group].txt";
     private static final String FILE_NAME_JOBS_ALL_BY_RUNTIME = FOLDER_NAME_MORE_REPORTS + "/Report-Jobs[By-Runtime].txt";
     private static final String FILE_NAME_JOBS_ALL_BY_RUNTIME_RUN_WINDOW = FOLDER_NAME_MORE_REPORTS + "/Report-Jobs[By-Runtime]run_window.txt";
@@ -144,8 +145,8 @@ public class Report {
             checkParentDirectory(f);
 
             for (JobBOX box : boxes) {
-                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(box), box
-                        .getName(), "Total nested child boxes=" + box.getChildBoxes().size() + ", Total jobs=" + box.getJobs().size());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(box), box.getName(),
+                        "Total nested child boxes=" + box.getChildBoxes().size() + ", Total jobs=" + box.getJobs().size());
                 SOSPath.appendLine(f, msg);
 
                 writeJS7BOXNestedChildBoxes(f, box.getChildBoxes(), INDENT_JOB_NAME);
@@ -211,8 +212,8 @@ public class Report {
                     }
                 }
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(box), box
-                        .getName(), "Total BOX ChildJobs=" + totalJobs + ", Total WorkflowJobs=" + wJobs);
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(box), box.getName(),
+                        "Total BOX ChildJobs=" + totalJobs + ", Total WorkflowJobs=" + wJobs);
                 SOSPath.appendLine(f1, msg);
                 if (missingAutosysJobs.size() > 0) {
                     msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", "", "Missing autosys jobs:");
@@ -251,9 +252,9 @@ public class Report {
                 LOGGER.error("[BOX=" + box.getName() + "][job count mismatch][autosys box child jobs=" + totalJobs + "]workflow jobs converted="
                         + wJobs + ", used=0");
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", PathResolver
-                        .getJILJobParentPathNormalized(box), box.getName(), "Diff=" + totalJobs, "(Total  autosys box child jobs=" + totalJobs + ",",
-                        "workflow jobs converted=" + wJobs + ", used=0)");
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", getJobFolderPath(box), box
+                        .getName(), "Diff=" + totalJobs, "(Total  autosys box child jobs=" + totalJobs + ",", "workflow jobs converted=" + wJobs
+                                + ", used=0)");
                 SOSPath.appendLine(f1, msg);
                 SOSPath.appendLine(f1, LINE_DELIMETER);
             } else {
@@ -282,9 +283,9 @@ public class Report {
                         }
                     }
 
-                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", PathResolver
-                            .getJILJobParentPathNormalized(box), box.getName(), "Diff=" + diff, "(Total autosys box child jobs=" + totalJobs + ",",
-                            "workflow jobs converted=" + wJobs + ", used=" + l.size() + ")");
+                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + diffIndent + totalIndent + "%s", getJobFolderPath(box), box
+                            .getName(), "Diff=" + diff, "(Total autosys box child jobs=" + totalJobs + ",", "workflow jobs converted=" + wJobs
+                                    + ", used=" + l.size() + ")");
                     SOSPath.appendLine(f1, msg);
 
                     if (missingAutosysJobs.size() > 0) {
@@ -306,8 +307,8 @@ public class Report {
 
                     SOSPath.appendLine(f1, LINE_DELIMETER);
                 } else {
-                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(box), box
-                            .getName(), "Total jobs=" + totalJobs);
+                    String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(box), box.getName(), "Total jobs="
+                            + totalJobs);
                     SOSPath.appendLine(f2, msg);
                     SOSPath.appendLine(f2, LINE_DELIMETER);
                 }
@@ -361,8 +362,8 @@ public class Report {
                 Path f = d.resolve(e.getKey() + ".txt");
 
                 SOSPath.appendLine(f, e.getKey() + "=" + e.getValue());
-                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", PathResolver
-                        .getJILJobParentPathNormalized(j), j.getName(), getDetails(j));
+                String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", "", getJobFolderPath(j), j
+                        .getName(), getDetails(j));
                 SOSPath.appendLine(f, msg);
                 SOSPath.appendLine(f, LINE_DELIMETER);
             }
@@ -434,7 +435,7 @@ public class Report {
                 if (cj.isReference()) {
                     continue;
                 }
-                String cjp = PathResolver.getJILJobParentPathNormalized(cj);
+                String cjp = getJobFolderPath(cj);
                 String cjn = cj.getName();
 
                 Set<String> jobs = analyzer.getConditionAnalyzer().getINConditionJobs(c);
@@ -451,7 +452,7 @@ public class Report {
                         msg = String.format(Report.INDENT_JOB_NAME + Report.INDENT_JOB_PARENT_PATH + "%s", "", "!!!NOT FOUND", jn);
                         SOSPath.appendLine(f, msg);
                     } else {
-                        String p = PathResolver.getJILJobParentPathNormalized(j);
+                        String p = getJobFolderPath(j);
                         String n = j.getName();
                         msg = String.format(Report.INDENT_JOB_NAME + Report.INDENT_JOB_PARENT_PATH + Report.INDENT_JOB_NAME + indentDetails + "%s",
                                 "", p, n, getDetails(j), "runtime[" + j.getRunTime() + "]");
@@ -475,7 +476,7 @@ public class Report {
             Path report = reportDir.resolve(FILE_NAME_BOX_CHILDREN_JOBS_RECURSION);
             checkParentDirectory(report);
 
-            String bp = PathResolver.getJILJobParentPathNormalized(boxJob);
+            String bp = getJobFolderPath(boxJob);
             String bn = boxJob.getName();
             if (reportBOXNames.contains(bn)) {
                 bp = "";
@@ -496,6 +497,23 @@ public class Report {
 
     }
 
+    public static void writePerJobDetectedCustomEnvVarReport(Path reportDir, ACommonJob j, String jobPath, String envVars) {
+        if (reportDir == null || j.isReference()) {
+            return;
+        }
+
+        try {
+            Path report = reportDir.resolve(FILE_NAME_JOBS_DETECTED_CUSTOM_ENV_VARS);
+            checkParentDirectory(report);
+
+            String msg = String.format("%-100s%s", jobPath, envVars);
+            SOSPath.appendLine(report, msg);
+        } catch (Throwable e) {
+            LOGGER.error("[writePerJobDetectedCustomEnvVarReport]" + e, e);
+        }
+
+    }
+
     public static void writePerJobBOXConditionRefersReports(Path reportDir, AutosysAnalyzer analyzer, JobBOX boxJob,
             Map<String, Condition> toRemoveConditionsRefersToChildrenJobs, Map<String, Condition> toRemoveConditionsRefersToBoxItself) {
         if (reportDir == null || boxJob.isReference()) {
@@ -507,7 +525,7 @@ public class Report {
                 Path report = reportDir.resolve(FILE_NAME_BOX_CONDITION_REFERS_TO_CHILDREN_JOBS);
                 checkParentDirectory(report);
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(boxJob), boxJob.getName());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(boxJob), boxJob.getName());
                 SOSPath.appendLine(report, msg);
                 msg = String.format("%-30s%-20s%-4s%s", "", "condition", ":", boxJob.getCondition().getOriginalCondition());
                 SOSPath.appendLine(report, msg);
@@ -528,8 +546,8 @@ public class Report {
                 Path report = reportDir.resolve(Report.FILE_NAME_BOX_CONDITION_REFERS_TO_BOX_ITSELF);
                 checkParentDirectory(report);
 
-                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-40s%s", PathResolver.getJILJobParentPathNormalized(boxJob), boxJob
-                        .getName(), "Jobs=" + boxJob.getJobs().size());
+                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-40s%s", getJobFolderPath(boxJob), boxJob.getName(), "Jobs=" + boxJob
+                        .getJobs().size());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "condition", ":", boxJob.getCondition()
                         .getOriginalCondition());
@@ -576,7 +594,7 @@ public class Report {
                 Path report = reportDir.resolve(Report.FILE_NAME_STANDALONE_CONDITION_REFERS_TO_ITSELF);
                 checkParentDirectory(report);
 
-                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(job), job.getName());
+                String msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(job), job.getName());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(Report.INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", "runtime", ":", job.getRunTime());
                 SOSPath.appendLine(report, msg);
@@ -627,7 +645,7 @@ public class Report {
                 Path report = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_OR);
                 checkParentDirectory(report);
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(indentDetails + "%s", "", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(report, msg);
@@ -637,7 +655,7 @@ public class Report {
                 Path report = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_GROUP);
                 checkParentDirectory(report);
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(indentDetails + "%s", "", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(report, msg);
@@ -648,7 +666,7 @@ public class Report {
                 Path report = reportDir.resolve(FILE_NAME_CONDITIONS_WITH_INSTANCE_TAG);
                 checkParentDirectory(report);
 
-                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(report, msg);
                 msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(report, msg);
@@ -769,7 +787,7 @@ public class Report {
 
         Map<String, TreeSet<ACommonJob>> map = new LinkedHashMap<>();
         for (ACommonJob j : njobs) {
-            String key = PathResolver.getJILJobParentPathNormalized(j);
+            String key = getJobFolderPath(j);
             TreeSet<ACommonJob> jobs = map.get(key);
             if (jobs == null) {
                 jobs = AutosysConverterHelper.newJobTreeSet();
@@ -975,12 +993,19 @@ public class Report {
                 if (isNotSupported) {
                     add = "(" + j.getJobType().getValue() + ") ";
                 }
-                msg = String.format("%-8s" + INDENT_JOB_PATH + "%s", "", PathResolver.getJILJobParentPathNormalized(j), j.getName(), add + getDetails(
-                        j));
+
+                msg = String.format("%-8s" + INDENT_JOB_PATH + "%s", "", getJobFolderPath(j), j.getName(), add + getDetails(j));
                 SOSPath.appendLine(f, msg);
             }
             SOSPath.appendLine(f, LINE_DELIMETER);
         }
+    }
+
+    private static String getJobFolderPath(ACommonJob j) {
+        if (j.getBoxFolderPath() != null) {
+            return j.getBoxFolderPath();
+        }
+        return PathResolver.getJILJobParentPathNormalized(j);
     }
 
     private static void writeJobReportJobsAllByRuntime(DirectoryParserResult pr, Path reportDir, AutosysAnalyzer analyzer) throws Exception {
@@ -1126,8 +1151,7 @@ public class Report {
             try {
                 SOSPath.appendLine(f, msg);
                 for (ACommonJob j : e.getValue()) {
-                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                            getDetails(j));
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
                     SOSPath.appendLine(f, "    " + msg);
                 }
                 SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1176,8 +1200,7 @@ public class Report {
             try {
                 SOSPath.appendLine(f, msg);
                 for (ACommonJob j : e.getValue()) {
-                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                            getDetails(j));
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
                     SOSPath.appendLine(f, "    " + msg);
                 }
                 SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1226,8 +1249,7 @@ public class Report {
             try {
                 SOSPath.appendLine(f, msg);
                 for (ACommonJob j : e.getValue()) {
-                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                            getDetails(j));
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
                     SOSPath.appendLine(f, "    " + msg);
                 }
                 SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1276,8 +1298,7 @@ public class Report {
             try {
                 SOSPath.appendLine(f, msg);
                 for (ACommonJob j : e.getValue()) {
-                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                            getDetails(j));
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
                     SOSPath.appendLine(f, "    " + msg);
                 }
                 SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1326,8 +1347,7 @@ public class Report {
             try {
                 SOSPath.appendLine(f, msg);
                 for (ACommonJob j : e.getValue()) {
-                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                            getDetails(j));
+                    msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
                     SOSPath.appendLine(f, "    " + msg);
                 }
                 SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1348,8 +1368,7 @@ public class Report {
         checkParentDirectory(f);
 
         for (ACommonJob j : jobs) {
-            String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                    getDetails(j));
+            String msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
             SOSPath.appendLine(f, msg);
             SOSPath.appendLine(f, LINE_DELIMETER);
         }
@@ -1410,9 +1429,8 @@ public class Report {
                 }
                 if (report) {
                     List<ACommonJob> childrenWithRuntime = box.getJobs().stream().filter(e -> e.hasRunTime()).collect(Collectors.toList());
-                    String msg = String.format(INDENT_JOB_PATH + "%s", PathResolver.getJILJobParentPathNormalized(box), box.getName(),
-                            "Children(total=" + box.getJobs().size() + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + box
-                                    .getRunTime());
+                    String msg = String.format(INDENT_JOB_PATH + "%s", getJobFolderPath(box), box.getName(), "Children(total=" + box.getJobs().size()
+                            + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + box.getRunTime());
                     SOSPath.append(f, msg);
                     for (ACommonJob cj : childrenWithRuntime) {
                         msg = String.format("%-43s%-111s %s", "", cj.getName(), "JOB runtime=" + cj.getRunTime());
@@ -1508,8 +1526,7 @@ public class Report {
                     continue;
                 }
 
-                String msg = String.format(INDENT_JOB_PATH + "%-20s %s", PathResolver.getJILJobParentPathNormalized(j), j.getName(), getDetails(j), j
-                        .getRunTime());
+                String msg = String.format(INDENT_JOB_PATH + "%-20s %s", getJobFolderPath(j), j.getName(), getDetails(j), j.getRunTime());
                 SOSPath.appendLine(f, "        " + msg);
             }
             SOSPath.appendLine(f, LINE_DELIMETER);
@@ -1529,9 +1546,9 @@ public class Report {
                     continue;
                 }
                 List<ACommonJob> childrenWithRuntime = j.getJobs().stream().filter(e -> e.hasRunTime()).collect(Collectors.toList());
-                String msg = String.format(INDENT_JOB_PATH + "%-40s %s", PathResolver.getJILJobParentPathNormalized(j), j.getName(), "Children(total="
-                        + j.getJobs().size() + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + j.getRunTime()
-                                + ", BOX condition=" + j.getCondition().getOriginalCondition());
+                String msg = String.format(INDENT_JOB_PATH + "%-40s %s", getJobFolderPath(j), j.getName(), "Children(total=" + j.getJobs().size()
+                        + ", with runtime=" + childrenWithRuntime.size() + ")", "BOX runtime=" + j.getRunTime() + ", BOX condition=" + j
+                                .getCondition().getOriginalCondition());
                 SOSPath.appendLine(f, "        " + msg);
 
                 for (ACommonJob cj : childrenWithRuntime) {
@@ -1564,8 +1581,8 @@ public class Report {
         List<JobBOX> notUsed = new ArrayList<>();
         List<JobBOX> asInCond = new ArrayList<>();
         for (JobBOX j : boxes) {
-            msg = String.format(INDENT_JOB_PATH + "%-10s %s", PathResolver.getJILJobParentPathNormalized(j), j.getName(), getDetails(j), "condition="
-                    + j.getCondition().getOriginalCondition() + ", runtime=" + j.getRunTime());
+            msg = String.format(INDENT_JOB_PATH + "%-10s %s", getJobFolderPath(j), j.getName(), getDetails(j), "condition=" + j.getCondition()
+                    .getOriginalCondition() + ", runtime=" + j.getRunTime());
             SOSPath.appendLine(f, "    " + msg);
 
             Map<Condition, Set<String>> in = analyzer.getConditionAnalyzer().getINConditionJobs(j);
@@ -1583,7 +1600,7 @@ public class Report {
         SOSPath.appendLine(f, "BOX without children jobs -  Used as IN Condition for:");
         for (JobBOX b : asInCond) {
             Map<Condition, Set<String>> in = analyzer.getConditionAnalyzer().getINConditionJobs(b);
-            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(b), b.getName());
+            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(b), b.getName());
             SOSPath.appendLine(f, "    " + msg);
             for (Map.Entry<Condition, Set<String>> e : in.entrySet()) {
                 msg = String.format("%-80s %s", "", e.getKey());// condition
@@ -1597,8 +1614,7 @@ public class Report {
                         if (j.isBox()) {
                             add = ",children_jobs=" + ((JobBOX) j).getJobs().size();
                         }
-                        msg = String.format("%-84s %-65s %s", "", PathResolver.getJILJobParentPathNormalized(j) + "/" + j.getName(), getDetails(j)
-                                + add);
+                        msg = String.format("%-84s %-65s %s", "", getJobFolderPath(j) + "/" + j.getName(), getDetails(j) + add);
                     }
                     SOSPath.appendLine(f, msg);
                 }
@@ -1608,7 +1624,7 @@ public class Report {
 
         SOSPath.appendLine(f, "BOX without children jobs - Not used:");
         for (JobBOX j : notUsed) {
-            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
             SOSPath.appendLine(f, "    " + msg);
         }
     }
@@ -1629,8 +1645,7 @@ public class Report {
         SOSPath.appendLine(f, "BOX terminator(Total=" + boxTerminators.size() + "):");
         String msg = "";
         for (ACommonJob j : boxTerminators) {
-            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                    getDetails(j));
+            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
             SOSPath.appendLine(f, msg);
             SOSPath.appendLine(f, LINE_DELIMETER);
 
@@ -1652,8 +1667,7 @@ public class Report {
         SOSPath.appendLine(f, "JOB terminator(Total=" + jobTerminators.size() + "):");
         String msg = "";
         for (ACommonJob j : jobTerminators) {
-            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                    getDetails(j));
+            msg = String.format(INDENT_JOB_PARENT_PATH + INDENT_JOB_NAME + "%s", getJobFolderPath(j), j.getName(), getDetails(j));
             SOSPath.appendLine(f, msg);
             SOSPath.appendLine(f, LINE_DELIMETER);
 
@@ -1683,7 +1697,7 @@ public class Report {
         checkParentDirectory(f);
 
         for (JobBOX j : boxes) {
-            String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+            String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
             SOSPath.appendLine(f, msg);
             if (j.getBoxSuccess().getValue() != null) {
                 msg = String.format(INDENT_JOB_PARENT_PATH + "%-20s%-4s%s", "", j.getBoxSuccess().getName(), ":", j.getBoxSuccess().getValue());
@@ -1715,7 +1729,7 @@ public class Report {
                 continue;
             }
 
-            String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(b), b.getName());
+            String msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(b), b.getName());
             SOSPath.appendLine(f, msg);
 
             for (Map.Entry<Condition, Set<String>> entry : m.entrySet()) {
@@ -1727,8 +1741,8 @@ public class Report {
                         msg = String.format("%-8s%s", "", "[!!!NOT_FOUND]" + jn);
                         SOSPath.appendLine(f, msg);
                     } else {
-                        msg = String.format("%-8s" + INDENT_JOB_PATH + "%s", "", PathResolver.getJILJobParentPathNormalized(j), j.getName(),
-                                getDetails(j) + ", condition=" + j.getCondition().getOriginalCondition());
+                        msg = String.format("%-8s" + INDENT_JOB_PATH + "%s", "", getJobFolderPath(j), j.getName(), getDetails(j) + ", condition=" + j
+                                .getCondition().getOriginalCondition());
                         SOSPath.appendLine(f, msg);
                     }
                 }
@@ -1832,7 +1846,7 @@ public class Report {
                         List<Condition> nr = j.conditionsAsList().stream().filter(t -> t.getType().equals(ConditionType.NOTRUNNING)).collect(
                                 Collectors.toList());
 
-                        String p = PathResolver.getJILJobParentPathNormalized(j);
+                        String p = getJobFolderPath(j);
                         String n = j.getName();
                         msg = String.format(Report.INDENT_JOB_NAME + Report.INDENT_JOB_PARENT_PATH + Report.INDENT_JOB_NAME + indentDetails + "%s",
                                 "", p, n, getDetails(j), "NOTRUNNING=" + nr.size() + ",condition[" + j.getCondition().getOriginalCondition() + "]");
@@ -1917,7 +1931,7 @@ public class Report {
             SOSPath.appendLine(f, "Jobs with condition lookBack!=0 (" + withLookBackNotEquals0.size() + " jobs):");
             SOSPath.appendLine(f, LINE_DELIMETER);
             for (ACommonJob j : withLookBackNotEquals0.keySet()) {
-                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(f, msg);
                 msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(f, msg);
@@ -1934,7 +1948,7 @@ public class Report {
             SOSPath.appendLine(f, "Jobs with condition lookBack=0 (" + withLookBackEquals0.size() + " jobs):");
             SOSPath.appendLine(f, LINE_DELIMETER);
             for (ACommonJob j : withLookBackEquals0.keySet()) {
-                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(f, msg);
                 msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(f, msg);
@@ -1954,7 +1968,7 @@ public class Report {
             SOSPath.appendLine(f, "Jobs with condition lookBack=24 (" + withLookBackEquals24.size() + " jobs):");
             SOSPath.appendLine(f, LINE_DELIMETER);
             for (ACommonJob j : withLookBackEquals24.keySet()) {
-                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+                msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
                 SOSPath.appendLine(f, msg);
                 msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
                 SOSPath.appendLine(f, msg);
@@ -2037,7 +2051,7 @@ public class Report {
         String indentDetails = "%-40s";
         SOSPath.appendLine(f, "Jobs with condition that refer to the jobs not found:");
         for (ACommonJob j : jobsRefersToNotFoundJobs.keySet()) {
-            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", PathResolver.getJILJobParentPathNormalized(j), j.getName());
+            msg = String.format(INDENT_JOB_PARENT_PATH + "%s", getJobFolderPath(j), j.getName());
             SOSPath.appendLine(f, msg);
             msg = String.format(indentDetails + "%-18s%-4s%s", "", "condition", "=", j.getCondition().getOriginalCondition());
             SOSPath.appendLine(f, msg);

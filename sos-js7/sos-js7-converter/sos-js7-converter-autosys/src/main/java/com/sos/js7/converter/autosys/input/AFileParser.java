@@ -14,6 +14,7 @@ import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
 import com.sos.js7.converter.autosys.config.AutosysConverterConfig;
 import com.sos.js7.converter.autosys.input.DirectoryParser.DirectoryParserResult;
+import com.sos.js7.converter.autosys.output.js7.helper.PathResolver;
 
 public abstract class AFileParser {
 
@@ -117,12 +118,16 @@ public abstract class AFileParser {
             }
             if (m.getJobs() == null) {
                 m.setJobs(new ArrayList<>());
+
+                job.setBoxFolderPath(PathResolver.getJILJobParentPathNormalized(m));
+
                 m.getJobs().add(job);
             } else {
                 List<ACommonJob> l = m.getJobs().stream().filter(e -> e.isNameEquals(job)).collect(Collectors.toList());
                 if (l != null && l.size() > 0) {
                     childrenJobsDuplicates.put(job.getName(), l.size());
                 } else {
+                    job.setBoxFolderPath(PathResolver.getJILJobParentPathNormalized(m));
                     m.getJobs().add(job);
                 }
             }

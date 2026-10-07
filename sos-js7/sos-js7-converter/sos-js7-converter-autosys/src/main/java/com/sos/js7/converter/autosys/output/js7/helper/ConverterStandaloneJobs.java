@@ -76,7 +76,7 @@ public class ConverterStandaloneJobs {
 
         // WORKFLOW JOBS
         Jobs js = new Jobs();
-        js.setAdditionalProperty(wr.getName(), converter.getJob(result, (ACommonMachineJob) jilJob));
+        js.setAdditionalProperty(wr.getName(), converter.getJob(result, w, wr.getPath(), (ACommonMachineJob) jilJob));
         w.setJobs(js);
 
         // INSTRUCTIONS

@@ -28,11 +28,11 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Parameters;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
+import com.sos.js7.converter.autosys.common.v12.job.ACommonFileWatcherJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonJob.ConverterJobType;
 import com.sos.js7.converter.autosys.common.v12.job.ACommonMachineJob;
 import com.sos.js7.converter.autosys.common.v12.job.JobBOX;
-import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.output.js7.Autosys2JS7Converter;
 import com.sos.js7.converter.autosys.output.js7.WorkflowResult;
 import com.sos.js7.converter.autosys.output.js7.helper.fork.BOXJobHelper;
@@ -72,7 +72,7 @@ public class ConverterBOXJobs {
             jobMap.put(job.getName(), (JobBOX) job);
         }
 
-        //Map<String, List<JobBOX>> roots = new HashMap<>();
+        // Map<String, List<JobBOX>> roots = new HashMap<>();
 
         for (ACommonJob job : jobs) {
             String rootName = findRoot((JobBOX) job, jobMap);
@@ -143,7 +143,7 @@ public class ConverterBOXJobs {
         if (size == 0) {
             return;
         }
-        List<ACommonJob> fileWatchers = box.getJobs().stream().filter(j -> j instanceof JobFW).collect(Collectors.toList());
+        List<ACommonJob> fileWatchers = box.getJobs().stream().filter(j -> j instanceof ACommonFileWatcherJob).collect(Collectors.toList());
         if (fileWatchers.size() > 0) {
             box.getJobs().removeAll(fileWatchers);
         }
@@ -172,11 +172,12 @@ public class ConverterBOXJobs {
             case HTTP:
             case FTP:
             case FTPS:
+            case OMP:
             case SCP:
             case SQL:
             case WSDOC:
             case NOT_SUPPORTED:
-                jobs.setAdditionalProperty(jn, converter.getJob(result, (ACommonMachineJob) j));
+                jobs.setAdditionalProperty(jn, converter.getJob(result, w, wr.getPath(), (ACommonMachineJob) j));
                 break;
             default:
                 String add = "[not impemented yet]type=" + j.getConverterJobType();

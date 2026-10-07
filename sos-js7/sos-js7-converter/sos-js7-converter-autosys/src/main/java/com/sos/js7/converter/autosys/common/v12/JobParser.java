@@ -25,6 +25,7 @@ import com.sos.js7.converter.autosys.common.v12.job.JobFTPS;
 import com.sos.js7.converter.autosys.common.v12.job.JobFW;
 import com.sos.js7.converter.autosys.common.v12.job.JobHTTP;
 import com.sos.js7.converter.autosys.common.v12.job.JobNotSupported;
+import com.sos.js7.converter.autosys.common.v12.job.JobOMP;
 import com.sos.js7.converter.autosys.common.v12.job.JobOMTF;
 import com.sos.js7.converter.autosys.common.v12.job.JobSCP;
 import com.sos.js7.converter.autosys.common.v12.job.JobSQL;
@@ -88,6 +89,8 @@ public class JobParser {
             return new JobFW(source, reference);
         case BOX:
             return new JobBOX(source, reference);
+        case OMP:
+            return new JobOMP(source, reference);
         case OMTF:
             return new JobOMTF(source, reference);
         case HTTP:
@@ -127,6 +130,7 @@ public class JobParser {
         JOB_METHODS.put(ConverterJobType.SQL, getJobMethods(JobSQL.class));
         JOB_METHODS.put(ConverterJobType.WSDOC, getJobMethods(JobWSDOC.class));
         JOB_METHODS.put(ConverterJobType.NOT_SUPPORTED, getJobMethods(JobNotSupported.class));
+        JOB_METHODS.put(ConverterJobType.OMP, getJobMethods(JobOMP.class));
         JOB_METHODS.put(ConverterJobType.OMTF, getJobMethods(JobOMTF.class));
     }
 
