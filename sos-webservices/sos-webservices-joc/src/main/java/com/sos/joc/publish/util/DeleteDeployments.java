@@ -13,13 +13,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +29,15 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.publish.DeployAction;
+import com.sos.joc.classes.publish.record.DeployTransportRecord;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -46,6 +51,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
@@ -89,19 +95,15 @@ public class DeleteDeployments {
             ConfigurationType.SCHEDULE);
 
     public static Set<DBItemInventoryConfiguration> delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
-
+            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion, boolean withEvents, String cancelOrderDate,
+            JOCResourceImpl impl) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, 
+                JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         if (dbItems == null || dbItems.isEmpty()) {
             return Collections.emptySet();
         }
-        
-        
         Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> dbItemsPerController = dbItems.stream().filter(Objects::nonNull).filter(
                 item -> OperationType.UPDATE.value() == item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId,
                         Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
-        
         Map<String, JControllerProxy> proxyPerController = new HashMap<>();
         dbItemsPerController.keySet().forEach(controllerId -> {
             try {
@@ -110,22 +112,20 @@ public class DeleteDeployments {
                 throw new ProxyNotCoupledException(e);
             }
         });
-
         // check older workflow versions
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
             checkIfWorkflowsHaveOrders(proxyPerController.get(entry.getKey()), entry.getValue().getOrDefault(DeployType.WORKFLOW, Collections.emptyList()).stream().map(
                     DBItemDeploymentHistory::getName).collect(Collectors.toSet()));
         }
-
         final String commitId = UUID.randomUUID().toString();
         final String commitIdforFileOrderSource = UUID.randomUUID().toString();
-        
         // delete configurations optimistically
         Set<DBItemInventoryConfiguration> invConfsToTrash = getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, dbItems, commitId,
                 commitIdforFileOrderSource, account, auditlogId));
         deleteConfigurations(dbLayer, null, invConfsToTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
         // optimistic DB operations
+        List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
             List<DBItemDeploymentHistory> fileOrderSourceItems = entry.getValue().getOrDefault(
                     DeployType.FILEORDERSOURCE, Collections.emptyList());
@@ -134,10 +134,10 @@ public class DeleteDeployments {
                 for (DeployType type : DELETE_ORDER) {
                     sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                 }
-
                 // send commands to controllers
-                UpdateItemUtils.updateItemsDelete(commitId, sortedItems, proxyPerController.get(entry.getKey())).thenAccept(
-                        either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError, cancelOrderDate));
+                DeployTransportRecord record = new DeployTransportRecord(account, commitId, impl, "", cancelOrderDate, 
+                        false, "", DeployAction.DELETE);
+                futures.add(getDeleteItemsFuture(proxyPerController.get(entry.getKey()), sortedItems, entry.getKey(), record));
             } else {
                 List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                 for (DeployType type : DELETE_ORDER) {
@@ -148,17 +148,39 @@ public class DeleteDeployments {
 
                 // send commands to controllers
                 Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
-                UpdateItemUtils.updateItemsDelete(commitIdforFileOrderSource, fileOrderSourceItems, proxyPerController.get(entry.getKey()))
-                        .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitIdforFileOrderSource, accessToken, jocError,
-                                cancelOrderDate, sortedItems, commitId, fileOrderSourceNames));
+                DeployTransportRecord fosRecord = new DeployTransportRecord(account, commitIdforFileOrderSource, impl, "REMOVE", 
+                        cancelOrderDate, false, "", DeployAction.DELETE);
+                futures.add(getDeleteItemsFuture(proxyPerController.get(entry.getKey()), fileOrderSourceItems, entry.getKey(), fosRecord)
+                        .thenCompose(ccr -> {
+                            if (!ccr.hasException()) {
+                                if(checkFOSdeleted(fileOrderSourceNames, proxyPerController.get(entry.getKey()))) {
+                                    DeployTransportRecord record = new DeployTransportRecord(account, commitId, impl, "REMOVE", 
+                                            cancelOrderDate, false, "", DeployAction.DELETE);
+                                    return getDeleteItemsFuture(proxyPerController.get(entry.getKey()), sortedItems, entry.getKey(), record);
+                                }
+                            }
+                            return CompletableFuture.completedFuture(ccr); 
+                        }));
             }
         }
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
+                    .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+            // futures with exceptions
+            mappedFutures.putIfAbsent(true, Collections.emptyList());
+            // futures without exception
+            mappedFutures.putIfAbsent(false, Collections.emptyList());
+            mappedFutures.values().stream().flatMap(Collection::stream).forEach(ccr -> {
+                processAfterDelete(ccr.hasException() ? new JocDeployException(ccr.getException().get()) : null, ccr.getControllerId(), 
+                        ccr.getDeployTransportRecord().get());
+            });
+        });
         return invConfsToTrash;
     }
     
     public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, String folder, boolean recursive, Collection<String> controllerIds,
             DBLayerDeploy dbLayer, String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents, String cancelOrderDate) throws SOSHibernateException, ControllerConnectionResetException,
+            boolean withEvents, String cancelOrderDate, JOCResourceImpl impl) throws SOSHibernateException, ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
@@ -167,12 +189,12 @@ public class DeleteDeployments {
         conf.setPath(folder);
         conf.setRecursive(recursive);
         return deleteFolder(apiCall, conf, controllerIds, dbLayer, account, accessToken, jocError, auditlogId, withoutFolderDeletion,
-                withEvents, cancelOrderDate);
+                withEvents, cancelOrderDate, impl);
     }
     
     public static Set<DBItemInventoryConfiguration> deleteFolder(String apiCall, Configuration conf, Collection<String> controllerIds,
             DBLayerDeploy dbLayer, String account, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
-            boolean withEvents, String cancelOrderDate) {
+            boolean withEvents, String cancelOrderDate, JOCResourceImpl impl) {
 
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
             return Collections.emptySet();
@@ -209,6 +231,7 @@ public class DeleteDeployments {
         deleteConfigurations(dbLayer, null, invItemsforTrash, accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
         
         // optimistic DB operations
+        List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : itemsToDeletePerController.entrySet()) {
             if (!entry.getValue().isEmpty()) {
                 List<DBItemDeploymentHistory> fileOrderSourceItems = entry.getValue().getOrDefault(
@@ -219,8 +242,9 @@ public class DeleteDeployments {
                         sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                     }
                     // send commands to controllers
-                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, proxyPerController.get(entry.getKey())).thenAccept(either -> processAfterDelete(
-                            either, entry.getKey(), account, commitIdForDeleteFromFolder, accessToken, jocError, cancelOrderDate));
+                    DeployTransportRecord record = new DeployTransportRecord(account, commitIdForDeleteFromFolder, impl, apiCall, cancelOrderDate, 
+                            false, "", DeployAction.DELETE);
+                    futures.add(getDeleteItemsFuture(proxyPerController.get(entry.getKey()), sortedItems, entry.getKey(), record));
                 } else {
                     List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
                     for (DeployType type : DELETE_ORDER) {
@@ -228,58 +252,65 @@ public class DeleteDeployments {
                             sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
                         }
                     }
+                    DeployTransportRecord fosRecord = new DeployTransportRecord(account, commitIdForDeleteFileOrderSource, impl, apiCall, cancelOrderDate, 
+                            false, "", DeployAction.DELETE);
                     // send commands to controllers
                     Set<String> fileOrderSourceNames = fileOrderSourceItems.stream().map(item -> item.getName()).collect(Collectors.toSet());
-                    UpdateItemUtils.updateItemsDelete(commitIdForDeleteFileOrderSource, fileOrderSourceItems, proxyPerController.get(entry.getKey())).thenAccept(either -> {
-                        processAfterDelete(either, entry.getKey(), account, commitIdForDeleteFileOrderSource, accessToken, jocError, cancelOrderDate,
-                                sortedItems, commitIdForDeleteFromFolder, fileOrderSourceNames);
-                    });
+                    futures.add(getDeleteItemsFuture(proxyPerController.get(entry.getKey()), fileOrderSourceItems, entry.getKey(), fosRecord)
+                        .thenCompose(ccr -> {
+                            if (!ccr.hasException()) {
+                                if(checkFOSdeleted(fileOrderSourceNames, proxyPerController.get(entry.getKey()))) {
+                                    DeployTransportRecord record = new DeployTransportRecord(account, commitIdForDeleteFromFolder, impl, "REMOVE", cancelOrderDate, 
+                                            false, "", DeployAction.DELETE);
+                                    return getDeleteItemsFuture(proxyPerController.get(entry.getKey()), sortedItems, entry.getKey(), record);
+                                }
+                            }
+                            return CompletableFuture.completedFuture(ccr); 
+                        }));
                 }
             }
         }
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
+                    .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+            // futures with exceptions
+            mappedFutures.putIfAbsent(true, Collections.emptyList());
+            // futures without exception
+            mappedFutures.putIfAbsent(false, Collections.emptyList());
+//            List<CompletableFuture<ControllerCommandResponse>> processAfterFutures = new ArrayList<>(); 
+            mappedFutures.values().stream().flatMap(Collection::stream).forEach(ccr -> {
+                processAfterDelete(ccr.hasException() ? new JocDeployException(ccr.getException().get()) : null, ccr.getControllerId(),
+                        ccr.getDeployTransportRecord().get());
+            });
+        });
         return invItemsforTrash;
     }
     
-    public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate) {
-        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, null, null);
-    }
-    
-    private static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate, String commitId2) {
-        processAfterDelete(either, controllerId, account, commitId, accessToken, jocError, cancelOrderDate, null, commitId2, null);
-    }
-    
-    public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
-            String accessToken, JocError jocError, String cancelOrderDate, List<DBItemDeploymentHistory> toDelete, String commitId2,
-            Set<String> fileOrderSourceNames) {
+    public static CompletableFuture<ControllerCommandResponse> processAfterDelete(Exception exception, String controllerId, 
+            DeployTransportRecord record) {
         SOSHibernateSession newHibernateSession = null;
+        ControllerCommandResponse ccr = null;
         try {
-            if (either.isLeft()) {
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
+            if (exception != null) {
+//                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
                 newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
                 final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, exception.getMessage());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
 
                 // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> currentOptimisticEntries = dbLayer.getDepHistory(commitId);
-                List<DBItemDeploymentHistory> previousOptimisticEntries = dbLayer.getDepHistory(commitId2);
-                List<DBItemDeploymentHistory> optimisticEntries = Stream
-                        .concat(currentOptimisticEntries.stream(), previousOptimisticEntries.stream()).collect(Collectors.toList());
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(record.commitId());
                
                 // update all previously optimistically stored entries with the error message and change the state
                 Map<Integer, Set<DBItemInventoryConfigurationTrash>> itemsFromTrashByType = 
                         new HashMap<Integer, Set<DBItemInventoryConfigurationTrash>>();
                 InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                 for(DBItemDeploymentHistory optimistic : optimisticEntries) {
-                    if(currentOptimisticEntries.contains(optimistic)) {
-                        optimistic.setErrorMessage(either.getLeft().message());
-                        optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
-                        optimistic.setDeleteDate(null);
-                        dbLayer.getSession().update(optimistic);
-                    }
+                    optimistic.setErrorMessage(exception.getMessage());
+                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+                    optimistic.setDeleteDate(null);
+                    dbLayer.getSession().update(optimistic);
                     // restore related inventory configuration - Recover and remove from trash
                     if(itemsFromTrashByType.containsKey(optimistic.getType())) {
                         itemsFromTrashByType.get(optimistic.getType())
@@ -316,30 +347,55 @@ public class DeleteDeployments {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception.getCause())));
             } else {
-                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
-                    JControllerProxy proxy = Proxy.of(controllerId);
-                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(OrderWatchPath::of).collect(Collectors.toSet());
-                    for (int second = 0; second < 10; second++) {
-                        if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
-                            // file order source is deleted
-                            break;
-                        }
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(200L);
-                        } catch (Exception e) {}
-                    }
-                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, proxy).thenAccept(either2 -> processAfterDelete(either2,
-                            controllerId, account, commitId2, accessToken, jocError, cancelOrderDate, commitId));
-                }
+//                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
+//                    JControllerProxy proxy = Proxy.of(controllerId);
+//                    Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(OrderWatchPath::of).collect(Collectors.toSet());
+//                    for (int second = 0; second < 10; second++) {
+//                        if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fos -> fosPaths.contains(fos))) {
+//                            // file order source is deleted
+//                            break;
+//                        }
+//                        try {
+//                            TimeUnit.MILLISECONDS.sleep(200L);
+//                        } catch (Exception e) {}
+//                    }
+//                    UpdateItemUtils.updateItemsDelete(commitId2, toDelete, proxy).thenAccept(either2 -> processAfterDelete(
+//                            either2.isLeft() ? new JocDeployException(either2.getLeft().throwable()) : null,
+//                            controllerId, account, commitId2, accessToken, jocError, cancelOrderDate, commitId));
+//                }
+                ccr = new ControllerCommandResponse(controllerId, Optional.empty());
             }
+            return CompletableFuture.completedFuture(ccr);
+        } catch (JocDeployException e) {
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), record.impl().getAccessToken(), record.impl().getJocError(), controllerId);
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), record.impl().getAccessToken(), record.impl().getJocError(), controllerId);
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            return CompletableFuture.completedFuture(ccr);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
     }
+    
 
+    public static boolean checkFOSdeleted(Set<String> fileOrderSourceNames, JControllerProxy proxy) {
+        Set<OrderWatchPath> fosPaths = fileOrderSourceNames.stream().map(OrderWatchPath::of).collect(Collectors.toSet());
+        for (int second = 0; second < 10; second++) {
+            if (!proxy.currentState().pathToFileWatch().keySet().stream().anyMatch(fosPaths::contains)) {
+                // file order sources are deleted
+                return true;
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(200L);
+            } catch (Exception e) {}
+        }
+        return false;
+    }
+    
     public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, Collection<DBItemDeploymentHistory> itemsToDelete,
             String commitId, String account, Long auditLogId) {
         return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, null, false, account, auditLogId);
@@ -594,4 +650,15 @@ public class DeleteDeployments {
             .map(JocBadRequestException::new).ifPresent(e -> {throw e;});
     }
 
+    public static CompletableFuture<ControllerCommandResponse> getDeleteItemsFuture(JControllerProxy proxy, 
+            List<DBItemDeploymentHistory> itemsToDelete, String controllerId, DeployTransportRecord record) {
+        return UpdateItemUtils.updateItemsDelete(record.commitId(), itemsToDelete, proxy).thenCompose(either -> {
+            if(either.isRight()) {
+                return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record)));
+            } else {
+                return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
+                        ProblemHelper.getErrorMessage(either.getLeft()))), Optional.of(record))); 
+            }
+        });
+    }
 }

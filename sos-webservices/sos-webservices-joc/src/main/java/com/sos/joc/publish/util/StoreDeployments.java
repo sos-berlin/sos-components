@@ -11,7 +11,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -27,18 +29,18 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.board.BoardConverter;
+import com.sos.joc.classes.controller.ControllerCommandResponse;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.inventory.PublishSemaphore;
 import com.sos.joc.classes.inventory.ReleaseDeploySemaphore;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.publish.record.DeployTransportRecord;
 import com.sos.joc.dailyplan.impl.DailyPlanOrdersGenerateImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -61,7 +63,6 @@ import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.proxy.javaapi.JControllerProxy;
 
@@ -84,7 +85,6 @@ public class StoreDeployments {
             });
     public static final String API_CALL_REDEPLOY = "./inventory/deployment/redeploy";
     public static final String API_CALL_SYNC = "./inventory/deployment/synchronize";
-    private static final String SEMAPHORE_ID = "DEPLOY";
 
     public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec, String account, String commitId, String controllerId,
             String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
@@ -170,26 +170,26 @@ public class StoreDeployments {
         }
     }
 
-    public static void processAfterAdd(Either<Problem, ?> either, String account, String commitId, String controllerId, JOCResourceImpl impl,
-            String wsIdentifier, String dailyPlanDate, boolean includeLate, String transactionId) {
+    public static CompletableFuture<ControllerCommandResponse> processAfterAdd(Exception exception, String controllerId, DeployTransportRecord record) {
         // asynchronous processing: this method is called from a CompletableFuture and therefore
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
-        String accessToken = impl.getAccessToken();
-        JocError jocError = impl.getJocError();
+        String accessToken = record.impl().getAccessToken();
+        JocError jocError = record.impl().getJocError();
+        ControllerCommandResponse ccr = null;
         try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection(wsIdentifier);
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(record.wsIdentifier());
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            if (either.isRight()) {
+            if (exception == null) {
                 // cleanup stored signatures
-                dbLayer.cleanupSignatures(commitId, controllerId);
+                dbLayer.cleanupSignatures(record.commitId(), controllerId);
                 // cleanup stored commitIds
-                dbLayer.cleanupCommitIds(commitId);
+                dbLayer.cleanupCommitIds(record.commitId());
                 // create new (daily) planned orders
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                if (dailyPlanDate != null) {
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(record.commitId());
+                if (record.dailyPlanDate() != null) {
                     DailyPlanOrdersGenerateImpl ordersGenerate = new DailyPlanOrdersGenerateImpl();
-                    ordersGenerate.setCurrentAccount(impl);
+                    ordersGenerate.setCurrentAccount(record.impl());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
                     List<String> workflowNames = optimisticEntries.stream().filter(item -> item.getTypeAsEnum().equals(DeployType.WORKFLOW)).map(
                             workflow -> workflow.getName()).collect(Collectors.toList());
@@ -217,19 +217,19 @@ public class StoreDeployments {
                     List<GenerateRequest> requests = new ArrayList<GenerateRequest>();
                     List<String> allowedDailyPlanDates = ordersGenerate.getAllowedDailyPlanDates(newHibernateSession, controllerId);
                     if (!workflowsWithSubmit.isEmpty()) {
-                        PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getWorkflowNames)
+                        PublishSemaphore.getInstance().getSemaphore(record.transactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
                                 .ifPresent(set -> workflowsWithSubmit.removeAll(set));
-                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithSubmit, null, controllerId,
+                        requests.addAll(ordersGenerate.getGenerateRequests(record.dailyPlanDate(), workflowsWithSubmit, null, controllerId,
                                 true, true, allowedDailyPlanDates));
                     }
                     if (!workflowsWithoutSubmit.isEmpty()) {
-                        PublishSemaphore.getInstance().getSemaphore(transactionId).map(ReleaseDeploySemaphore::getWorkflowNames)
+                        PublishSemaphore.getInstance().getSemaphore(record.transactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
                                 .ifPresent(set -> workflowsWithoutSubmit.removeAll(set));
-                        requests.addAll(ordersGenerate.getGenerateRequests(dailyPlanDate, workflowsWithoutSubmit, null, controllerId, 
+                        requests.addAll(ordersGenerate.getGenerateRequests(record.dailyPlanDate(), workflowsWithoutSubmit, null, controllerId, 
                                 false, true, allowedDailyPlanDates));
                     }
                     if (!requests.isEmpty()) {
-                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, includeLate, ADeploy.API_CALL);
+                        boolean successful = ordersGenerate.generateOrders(requests, accessToken, false, record.includeLate(), ADeploy.API_CALL);
                         if (!successful) {
                             LOGGER.warn("generate orders failed due to missing permission.");
                         }
@@ -240,36 +240,33 @@ public class StoreDeployments {
                         optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
                             .collect(Collectors.toSet()),
                         newHibernateSession);
-            } else if (either.isLeft()) {
+                ccr = new ControllerCommandResponse(controllerId, Optional.empty());
+            } else {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
                 // get all already optimistically stored entries for the commit
                 // update all previously optimistically stored entries with the error message and change the state
-                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(commitId, either.getLeft().message(), dbLayer, wsIdentifier);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
+                List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer, 
+                        record.wsIdentifier());
+//                ProblemHelper.postProblemEventIfExist(either.getLeft(), accessToken, jocError, null);
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception.getCause())));
             }
+            return CompletableFuture.completedFuture(ccr);
+        } catch (JocDeployException e) {
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            return CompletableFuture.completedFuture(ccr);
         } finally {
             Globals.disconnect(newHibernateSession);
-            if(transactionId != null) {
-                try {
-                    PublishSemaphore.release(transactionId);
-                    LOGGER.debug("DEPLOY: final release of semaphore from deploy with transactionId " + transactionId);
-                    if(PublishSemaphore.getInstance().getSemaphore(transactionId)
-                            .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
-                        PublishSemaphore.remove(transactionId);
-                        LOGGER.debug("DEPLOY: final remove of semaphore from deploy with transactionId " + transactionId);
-                    }
-                } catch (Exception e) {
-                    // DO NOTHING if semaphore release failed
-                }
-            }
         }
     }
 
-    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer, String wsIdentifier)
-            throws SOSHibernateException {
+    public static List<DBItemDeploymentHistory> updateOptimisticEntriesIfFailed(String commitId, String message, DBLayerDeploy dbLayer,
+            String wsIdentifier) throws SOSHibernateException {
         List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
         LOGGER.trace("JSON(s) rejected from controller: ");
         optimisticEntries.stream().filter(item -> item.getType() == 1 || item.getType() == 10).forEach(item -> LOGGER.trace(item
@@ -291,94 +288,63 @@ public class StoreDeployments {
         return optimisticEntries;
     }
 
-    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, impl, wsIdentifier, null,
-                false, null);
-    }
+//    public static CompletableFuture<ControllerCommandResponse> callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
+//            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier)
+//                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+//        return callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, impl, wsIdentifier, null,
+//                false, null);
+//    }
+//
+//    public static CompletableFuture<ControllerCommandResponse> callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec,
+//            Set<DBItemDeploymentHistory> renamedToDelete, String controllerId, DeployResponseRecord record)
+//                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+//        return callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, controllerId, record);
+//    }
 
-    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier, String transactionId)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
-        callUpdateItemsFor(dbLayer, signedItemsSpec, renamedToDelete, account, commitId, controllerId, impl, wsIdentifier, null,
-                false, transactionId);
-    }
-
-    public static void callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, Set<DBItemDeploymentHistory> renamedToDelete,
-            String account, String commitId, String controllerId, JOCResourceImpl impl, String wsIdentifier, String dailyPlanDate,
-            boolean includeLate, String transactionId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException,
-            CertificateException {
-
+    public static CompletableFuture<ControllerCommandResponse> callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, 
+            Set<DBItemDeploymentHistory> renamedToDelete, String controllerId, DeployTransportRecord record) throws SOSException, IOException, 
+            InterruptedException, ExecutionException, TimeoutException, CertificateException {
+        CompletableFuture<ControllerCommandResponse> future = null;
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
             // store new history entries and update inventory for update operation optimistically
-            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, commitId, null, account, signedItemsSpec.getAuditlogId());
-            if (!API_CALL_REDEPLOY.equals(wsIdentifier) && !API_CALL_SYNC.equals(wsIdentifier)) {
-                storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, impl.getAccessToken(), impl.getJocError(), dbLayer,
-                        false);
+            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, record.commitId(), null, record.account(), 
+                    signedItemsSpec.getAuditlogId());
+            if (!API_CALL_REDEPLOY.equals(record.wsIdentifier()) && !API_CALL_SYNC.equals(record.wsIdentifier())) {
+                storeNewDepHistoryEntries(signedItemsSpec, record.account(), record.commitId(), controllerId, record.impl().getAccessToken(), 
+                        record.impl().getJocError(), dbLayer, false);
             }
 
-            List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
-            // boolean verified = false;
             boolean selfIssued = false;
             String signerDN = null;
             X509Certificate cert = null;
             JControllerProxy proxy = Proxy.of(controllerId);
             // call updateItems command via ControllerApi for the given controller
-
             switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                         .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
-                
-                BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
-                    if (e.isRight()) {
-                        UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations1).thenAccept(either -> processAfterAdd(either, account,
-                                commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
-                    } else {
-                        processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
-                    }
-                });
-                break;
+                future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations1); 
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
                     cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                 }
                 if (cert != null) {
                     selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
-                    // verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    // if (verified) {
                     if (!selfIssued) {
                         Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
                                         .getCertificate(), null, proxy);
-                        
-                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
-                            if (e.isRight()) {
-                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations2).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
-                            } else {
-                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
-                            }
-                        });
+                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations2); 
                     } else {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
-                        
-                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
-                            if (e.isRight()) {
-                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations3).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
-                            } else {
-                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
-                            }
-                        });
+                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations3); 
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer, wsIdentifier);
+                    updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
                     throw new JocDeployException(message);
                 }
                 break;
@@ -386,43 +352,44 @@ public class StoreDeployments {
                 cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                 if (cert != null) {
                     selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
-                    // verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    // if (verified) {
                     if (!selfIssued) {
                         Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
                                         .getCertificate(), null, proxy);
-                        
-                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
-                            if (e.isRight()) {
-                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations4).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
-                            } else {
-                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
-                            }
-                        });
+                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations4); 
                     } else {
                         signerDN = cert.getSubjectX500Principal().getName();
                         Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
                                 .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
-                        
-                        BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenAccept(e -> {
-                            if (e.isRight()) {
-                                UpdateItemUtils.updateItems(proxy.api(), commitId, itemOperations5).thenAccept(either -> processAfterAdd(either,
-                                        account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId));
-                            } else {
-                                processAfterAdd(e, account, commitId, controllerId, impl, wsIdentifier, dailyPlanDate, includeLate, transactionId);
-                            }
-                        });
+                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations5); 
                     }
                 } else {
                     String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(commitId, message, dbLayer, wsIdentifier);
+                    updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
                     throw new JocDeployException(message);
                 }
                 break;
             }
         }
+        return future;
     }
 
+    private static CompletableFuture<ControllerCommandResponse> getUpdateItemsFuture(JControllerProxy proxy, SignedItemsSpec signedItemsSpec,
+            String controllerId, DeployTransportRecord record, Set<JUpdateItemOperation> itemOperations) {
+        return BoardConverter.convertFromDepItems(proxy, signedItemsSpec.getVerifiedDeployables().keySet()).thenCompose(e -> {
+            if (e.isRight()) {
+                return UpdateItemUtils.updateItems(proxy.api(), record.commitId(), itemOperations).thenCompose(either -> {
+                    if(either.isRight()) {
+                        return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record)));
+                    } else {
+                        return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
+                                ProblemHelper.getErrorMessage(either.getLeft()))), Optional.of(record)));
+                    }
+                });
+            } else {
+                return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(
+                        ProblemHelper.getErrorMessage(e.getLeft()))), Optional.of(record)));
+            }
+        });
+    }
 }

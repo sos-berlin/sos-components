@@ -25,6 +25,7 @@ import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.dependencies.DependencyResolver;
 import com.sos.joc.classes.dependencies.items.ReferencedDbItem;
 import com.sos.joc.classes.inventory.JsonConverter;
+import com.sos.joc.classes.publish.record.DeployTransportRecord;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -207,8 +208,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(),
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptySet(), account, commitId, controllerId,
-                        this, action);
+                DeployTransportRecord record = new DeployTransportRecord(account, commitId, this, "REDEPLOY", null, false, null, null);
+                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, Collections.emptySet(), controllerId, record);
             }
             return responseStatusJSOk(Date.from(Instant.now()));
         } catch (Exception e) {
