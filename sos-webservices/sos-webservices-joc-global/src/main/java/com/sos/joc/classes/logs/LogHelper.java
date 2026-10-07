@@ -330,7 +330,6 @@ public class LogHelper {
     }
     
     private static void setLogLines(Flux<List<KeyedLogLine>> flux, LogSession ls, Long chunk, LogResponse entity) {
-        int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
         AtomicLong linesCounter = new AtomicLong(1l);
         AtomicLong chunkLinesCounter = new AtomicLong(0);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
@@ -342,7 +341,7 @@ public class LogHelper {
             }
             if (row <= chunk) {
                 lastChunkKey.set(keyedLogLine.key());
-                entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+                entity.getLogLines().add(getLogLine(keyedLogLine));
                 chunkLinesCounter.incrementAndGet();
             }
         }).blockLast();
@@ -363,12 +362,10 @@ public class LogHelper {
     }
     
     private static void setPrevLogLines(Flux<KeyedLogLine> flux, LogSession ls, Long chunk, LogLineKey inKey, LogResponse entity) {
-        int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
-
         AtomicLong linesCounter = new AtomicLong(1l);
         flux.takeWhile(keyIsReached(inKey)).doOnNext(keyedLogLine -> {
             long row = linesCounter.getAndIncrement();
-            entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+            entity.getLogLines().add(getLogLine(keyedLogLine));
             if (row > chunk) {
                 entity.getLogLines().remove(0);
             }
@@ -385,7 +382,6 @@ public class LogHelper {
     private static void setNextLogLines(Flux<KeyedLogLine> flux, LogLineKey inKey, LogSession ls, Long chunk, boolean force, boolean exactlyNextChunk,
             boolean running, LogResponse entity) {
         long skip = 1l;
-        int skipLogLevelFromKey = ls.getLogLevel().toString().length() + 1;
         AtomicBoolean startNextLineCount = new AtomicBoolean(exactlyNextChunk);
         AtomicLong linesCounter = new AtomicLong(1l);
         AtomicReference<LogLineKey> lastChunkKey = new AtomicReference<>();
@@ -398,7 +394,7 @@ public class LogHelper {
                     long row = linesCounter.getAndIncrement();
                     if (row < chunk) {
                         lastChunkKey.set(keyedLogLine.key());
-                        entity.getLogLines().add(getLogLine(keyedLogLine, skipLogLevelFromKey));
+                        entity.getLogLines().add(getLogLine(keyedLogLine));
                     }
                 });
 
@@ -424,10 +420,10 @@ public class LogHelper {
         ls.setLastKey(lastChunkKey.get());
     }
     
-    private static LogLine getLogLine(KeyedLogLine keyedLogLine, int skipLogLevelFromKey) {
+    private static LogLine getLogLine(KeyedLogLine keyedLogLine) {
         LogLine line = new LogLine();
         line.setLine(keyedLogLine.line());
-        line.setKey(keyedLogLine.key().asString().substring(skipLogLevelFromKey));
+        line.setKey(keyedLogLine.key().asString());
         return line;
     }
     

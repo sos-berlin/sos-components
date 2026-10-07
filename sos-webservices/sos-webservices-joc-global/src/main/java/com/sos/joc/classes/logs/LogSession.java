@@ -246,7 +246,7 @@ public class LogSession {
     }
     
     public LogLineKey createLogLineKey(String key) {
-        return LogLineKey.parse(logLevel.toString() + "/" + key).toOption().get();
+        return LogLineKey.parse(key).toOption().get();
     }
 
 }
