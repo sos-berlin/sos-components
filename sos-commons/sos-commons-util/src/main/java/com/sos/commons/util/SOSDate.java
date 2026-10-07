@@ -335,7 +335,14 @@ public class SOSDate {
     }
 
     public static String getDateTimeAsString(LocalDateTime date) throws SOSInvalidDataException {
-        return getDateTimeAsString(toUtcDate(date), null);
+        if (date == null) {
+            return null;
+        }
+        try {
+            return date.format(DateTimeFormatter.ofPattern(DATETIME_FORMAT));
+        } catch (Exception e) {
+            throw new SOSInvalidDataException(e.toString(), e);
+        }
     }
 
     public static String tryGetDateTimeAsString(Date date) {
