@@ -189,6 +189,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
     private LocalDateTime toDailyPlanDate(LocalDateTime date) {
         return date.with(LocalTime.MIDNIGHT);
+        
     }
 
 }
