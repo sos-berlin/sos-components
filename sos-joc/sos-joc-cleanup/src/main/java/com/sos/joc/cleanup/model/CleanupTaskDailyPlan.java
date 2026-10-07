@@ -1,7 +1,7 @@
 package com.sos.joc.cleanup.model;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSDate;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.ForceCleanup;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.helper.CleanupPartialResult;
@@ -47,7 +47,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         try {
             TaskDateTime datetime = datetimes.get(0);
             Age age = datetime.getAge();
-            Date date = toDailyPlanDate(datetime.getDatetime());
+            LocalDateTime date = toDailyPlanDate(datetime.getDatetime());
 
             tryOpenSession();
 
@@ -71,7 +71,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         return state;
     }
 
-    private JocClusterServiceTaskState cleanupHistory(Age age, Date datetime) throws Exception {
+    private JocClusterServiceTaskState cleanupHistory(Age age, LocalDateTime datetime) throws Exception {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("]");
         log.append("[").append(age.getConfigured()).append(" ").append(getDateTime(datetime)).append("][deleted]");
 
@@ -82,7 +82,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         return r.getState();
     }
 
-    private JocClusterServiceTaskState cleanupSubmissions(Age age, Date datetime) throws Exception {
+    private JocClusterServiceTaskState cleanupSubmissions(Age age, LocalDateTime datetime) throws Exception {
         StringBuilder log = new StringBuilder("[").append(getIdentifier()).append("]");
         log.append("[").append(age.getConfigured()).append(" ").append(getDateTime(datetime)).append("][deleted]");
 
@@ -115,10 +115,9 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         return r.getState();
     }
 
-    private CleanupPartialResult deleteEntries(Date datetime, String table, String column) throws SOSHibernateException {
+    private CleanupPartialResult deleteEntries(LocalDateTime datetime, String table, String column) throws SOSHibernateException {
         CleanupPartialResult r = new CleanupPartialResult(table);
         r.addParameter("date", datetime);
-        query.setParameter("submissionForDate", SOSDate.toUtcDate(datetime.getDatetime()));
 
         StringBuilder sql = new StringBuilder("delete ");
         sql.append(getLimitTop());
@@ -188,14 +187,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
     }
 
-    private Date toDailyPlanDate(Date date) {
-        Calendar c = Calendar.getInstance();
-        c.setTime(date);
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        return c.getTime();
+    private LocalDateTime toDailyPlanDate(LocalDateTime date) {
+        return date.with(LocalTime.MIDNIGHT);
     }
 
 }
