@@ -31,7 +31,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
     public JocClusterServiceTaskState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime datetime = datetimes.get(0);
-            LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
+            LOGGER.info(String.format("[%s][%s][%s]cleanup started", getIdentifier(), datetime.getAge().getConfigured(), datetime
+                    .getZonedDatetime()));
 
             tryOpenSession();
             boolean run = true;

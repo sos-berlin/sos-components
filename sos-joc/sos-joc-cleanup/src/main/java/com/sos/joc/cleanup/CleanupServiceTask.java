@@ -73,6 +73,13 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         this.logIdentifier = identifier + "_task";
     }
 
+    /** JUnit */
+    private CleanupServiceTask() {
+        this.schedule = null;
+        this.identifier = "junit";
+        this.logIdentifier = identifier + "_task";
+    }
+
     @Override
     public JocClusterAnswer call() {
         schedule.setBusy(true);
@@ -443,6 +450,10 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             factory = null;
         }
         LOGGER.info(String.format("[%s]database factory closed", logIdentifier));
+    }
+
+    public static TaskDateTime newTaskDateTime(Age age, ZonedDateTime start) {
+        return new CleanupServiceTask().new TaskDateTime(age, start);
     }
 
     public class TaskDateTime {

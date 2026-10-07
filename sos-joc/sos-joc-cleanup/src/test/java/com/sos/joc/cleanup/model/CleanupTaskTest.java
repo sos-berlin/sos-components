@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,38 @@ public class CleanupTaskTest {
             t.cleanupSearch();
         } catch (Throwable e) {
             throw e;
+        } finally {
+            close(t, factory);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testCleanupDailyPlan() {
+        JocClusterHibernateFactory factory = null;
+        CleanupTaskModel t = null;
+        try {
+            factory = createFactory();
+            t = new CleanupTaskDailyPlan(factory, null, 1000, null);
+
+            ConfigurationGlobalsCleanup c = new ConfigurationGlobalsCleanup();
+            c.getTimeZone().setValue("Europe/Berlin");
+            c.getDailyPlanHistoryAge().setValue("60d");
+
+            c.getPeriodBegin().setValue("00:00:00");
+            c.getBatchSize().setValue("1000");
+
+            c.getDeploymentHistoryVersions().setValue("10");
+            c.getMaxPoolSize().setValue("10");
+
+            CleanupServiceConfiguration sc = new CleanupServiceConfiguration(c);
+            TaskDateTime datetime = CleanupServiceTask.newTaskDateTime(sc.getDailyPlanHistoryAge(), ZonedDateTime.now());
+
+            JocClusterServiceTaskState state = t.cleanup(List.of(datetime));
+            LOGGER.info("[STATE]" + state);
+        } catch (Throwable e) {
+            rollback(t);
+            LOGGER.error(e.toString(), e);
         } finally {
             close(t, factory);
         }

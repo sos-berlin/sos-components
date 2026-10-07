@@ -77,7 +77,7 @@ public class CleanupPartialResult {
                 state = JocClusterServiceTaskState.COMPLETED;
                 if (deletedTotal > 0) {
                     int r = runCounter + 1;
-                    LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                    LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString() + "run=" + r);
                 }
                 task.getPauseHandler().setCleanupRunning(false);
                 return;
@@ -86,7 +86,7 @@ public class CleanupPartialResult {
             lastRunsDeleted += getDeletedLast();
             if (runCounter % LOG_AFTER_N_RUNS == 0) {
                 int r = runCounter + 1;
-                LOGGER.info(logPrefix + "[run=" + r + "]" + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString());
+                LOGGER.info(logPrefix + task.getDeleted(table, lastRunsDeleted, getDeletedTotal()).toString() + "run=" + r);
                 lastRunsDeleted = 0;
             }
             runCounter++;
