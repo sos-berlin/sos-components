@@ -402,7 +402,7 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
                     
                     deployments.stream().map(DBItemDeploymentHistory::getFolder).forEach(foldersForEvent::add);
                     Set<DBItemInventoryConfiguration> deployedDeployables = DeleteDeployments.delete(deployments, new DBLayerDeploy(futureSession),
-                            account, accessToken, getJocError(), dbAuditLog.getId(), true, false, cancelOrdersDateFrom);
+                            account, accessToken, getJocError(), dbAuditLog.getId(), true, false, cancelOrdersDateFrom, this);
                     
                     Set<Long> deployedInvIds = deployments.stream().map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors
                             .toSet());

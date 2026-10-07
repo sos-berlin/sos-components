@@ -44,6 +44,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.WorkflowConverter;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.publish.record.DeployTransportRecord;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -354,6 +355,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         X509Certificate cert = null;
         JControllerProxy proxy = Proxy.of(controllerId);
         
+        DeployTransportRecord record = new DeployTransportRecord(account, commitIdForUpdate, this, "DEPLOY(HIGH)", null, false, null, null);
         switch (keyPair.getKeyAlgorithm()) {
         case SOSKeyConstants.PGP_ALGORITHM_NAME:
             Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperationsFromImport(importedObjects,
@@ -362,11 +364,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                 if (e.isRight()) {
                     UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations1).thenAccept(either -> StoreDeployments
-                            .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                    false, null));
+                            .processAfterAdd(null, controllerId, record));
                 } else {
-                    StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                            false, null);
+                    StoreDeployments.processAfterAdd(new JocDeployException(e.getLeft().throwable()), controllerId, record);
                 }
             });
             break;
@@ -383,11 +383,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations2).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                        false, null));
+                                .processAfterAdd(null, controllerId, record));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                false, null);
+                        StoreDeployments.processAfterAdd(new JocDeployException(e.getLeft().throwable()), controllerId, record);
                     }
                 });
             } else {
@@ -399,11 +397,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations3).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                        false, null));
+                                .processAfterAdd(null, controllerId, record));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                false, null);
+                        StoreDeployments.processAfterAdd(new JocDeployException(e.getLeft().throwable()), controllerId, record);
                     }
                 });
             }
@@ -421,11 +417,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
               BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                   if (e.isRight()) {
                       UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations4).thenAccept(either -> StoreDeployments
-                              .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                      false, null));
+                              .processAfterAdd(null, controllerId, record));
                   } else {
-                      StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                              false, null);
+                      StoreDeployments.processAfterAdd(new JocDeployException(e.getLeft().throwable()), controllerId, record);
                   }
               });
             } else {
@@ -437,11 +431,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 BoardConverter.convertToFromControllerObjs(proxy, importedObjects.keySet()).thenAccept(e -> {
                     if (e.isRight()) {
                         UpdateItemUtils.updateItems(proxy.api(), commitIdForUpdate, itemOperations5).thenAccept(either -> StoreDeployments
-                                .processAfterAdd(either, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                        false, null));
+                                .processAfterAdd(null, controllerId, record));
                     } else {
-                        StoreDeployments.processAfterAdd(e, account, commitIdForUpdate, controllerId, this, API_CALL, null,
-                                false, null);
+                        StoreDeployments.processAfterAdd(new JocDeployException(e.getLeft().throwable()), controllerId, record);
                     }
                 });
             }
