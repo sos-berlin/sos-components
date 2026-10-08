@@ -165,9 +165,6 @@ public class AzureBlobStorageProviderUtils {
             }
 
             i++;
-            if (provider.getLogger().isDebugEnabled()) {
-                provider.getLogger().debug("%s[list][%s]%s", provider.getLogPrefix(), i, resource);
-            }
             if (resource.isDirectory()) {
                 if (selection.getConfig().isRecursive()) {
                     // root folder already processed
@@ -193,7 +190,7 @@ public class AzureBlobStorageProviderUtils {
                             result.add(file);
 
                             if (provider.getLogger().isDebugEnabled()) {
-                                provider.getLogger().debug("%s[list][%s][added][fullPath]%s", provider.getLogPrefix(), i, resource.getFullPath());
+                                provider.getLogger().debug(provider.getLogPrefix() + "[added][" + file.getIndex() + "]" + file.info());
                             }
                         }
                     }
@@ -213,6 +210,7 @@ public class AzureBlobStorageProviderUtils {
     private static List<AzureBlobStorageResource> parseAzureBlobResources(AzureBlobStorageProvider provider, String containerName, String blobPath,
             HttpExecutionResult<String> result, boolean recursive, int level) throws Exception {
         boolean isDebugEnabled = provider.getLogger().isDebugEnabled();
+        boolean isTraceEnabled = provider.getLogger().isTraceEnabled();
 
         String body = SOSXML.removeBOMIfExists(result.response().body().trim());
         NodeList fileNodes = SOSXML.parse(body, false).getElementsByTagName("Blob");
@@ -237,8 +235,8 @@ public class AzureBlobStorageProviderUtils {
         List<AzureBlobStorageResource> resources = new ArrayList<>();
         for (int i = 0; i < fileNodes.getLength(); i++) {
             Element blob = (Element) fileNodes.item(i);
-            if (isDebugEnabled) {
-                provider.getLogger().debug("%s[parseAzureBlobResources][%s][file]%s", provider.getLogPrefix(), i, SOSXmlTransformer.nodeToString(
+            if (isTraceEnabled) {
+                provider.getLogger().trace("%s[parseAzureBlobResources][%s][file]%s", provider.getLogPrefix(), i, SOSXmlTransformer.nodeToString(
                         blob));
             }
             String resourcePath = SOSXML.getChildNodeValue(blob, "Name");

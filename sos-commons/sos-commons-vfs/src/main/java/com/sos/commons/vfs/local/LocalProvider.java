@@ -411,7 +411,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                                     result.add(file);
 
                                     if (isDebugEnabled) {
-                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                        getLogger().debug(getLogPrefix() + "[added][" + file.getIndex() + "]" + file.info());
                                     }
                                 }
                             }
@@ -461,7 +461,7 @@ public class LocalProvider extends AProvider<LocalProviderArguments, Object> {
                                     result.add(file);
 
                                     if (isDebugEnabled) {
-                                        getLogger().debug(getPathOperationPrefix(path.toString()) + "added");
+                                        getLogger().debug(getLogPrefix() + "[added][" + file.getIndex() + "]" + file.info());
                                     }
                                 }
                             }
