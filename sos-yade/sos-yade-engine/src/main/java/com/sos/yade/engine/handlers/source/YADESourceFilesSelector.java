@@ -226,13 +226,15 @@ public class YADESourceFilesSelector {
                     logger.info(logPrefix + "not found");
                 }
             } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug(logPrefix + "found");
-                }
                 if (addSingleFile(logger, sourceDelegator.getProvider(), file, selection)) {
                     counterAdded++;
                     file.setIndex(counterAdded);
                     result.add(file);
+
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(sourceDelegator.getProvider().getLogPrefix() + "[selectSingleFiles][added][" + file.getIndex() + "]" + file
+                                .info());
+                    }
                 }
             }
         }

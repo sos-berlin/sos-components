@@ -83,7 +83,7 @@ public class YADEClientBannerWriter {
             List<String> l = new ArrayList<>();
             if (logger.isDebugEnabled()) {
                 for (ProviderFile f : files) {
-                    logger.debug("Source " + (YADEProviderFile) f);
+                    logger.debug("[Source][" + f.getIndex() + "]" + f.info());
                 }
             }
 
