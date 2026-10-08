@@ -262,7 +262,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             FTPProviderUtils.selectFiles(this, selection, directory, result);
             return result;
         } catch (SocketException e) {
-            throwConnectException(e);
+            String add = getDataConnectionInfo(client);
+            if (!SOSString.isEmpty(add)) {
+                add = " " + add;
+            }
+            throwConnectException("Data Connection" + add, e);
             return null;
         } catch (ProviderException e) {
             throw e;
@@ -1006,6 +1010,18 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         }
         if (getLogger().isDebugEnabled()) {
             getLogger().debug("%s[createDirectory][%s]created", getLogPrefix(), path);
+        }
+    }
+
+    private String getDataConnectionInfo(FTPClient client) {
+        try {
+            if (client.getDataConnectionMode() == FTPClient.PASSIVE_LOCAL_DATA_CONNECTION_MODE) {
+                return getArguments().getHost().getValue() + ":" + client.getPassivePort();
+            }
+            return getAccessInfo();
+        } catch (Exception e) {
+            getLogger().info("[getDataConnectionInfo]" + e);
+            return "";
         }
     }
 
