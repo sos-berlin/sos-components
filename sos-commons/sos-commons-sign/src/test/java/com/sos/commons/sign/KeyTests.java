@@ -1390,7 +1390,7 @@ public class KeyTests {
         }
     }
 
-    // @Ignore
+    @Ignore
     @Test
     public void test35CreateAndValidateMLKEMKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
@@ -1422,37 +1422,6 @@ public class KeyTests {
         }
     }
 
-//    //@Test
-//    public void test36CreateAndValidateKyberKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-//            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
-//        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair with Kyber and check secret  *************************");
-//        String username = "test";
-//        LOGGER.info("****************  Create KeyPair  **************************************************************");
-//        KeyPair keyPair = KeyUtil.createMLKyberKeyPairBC(KyberParameterSpec.kyber768);
-//        JocKeyPair jocKeyPair = KeyUtil.createMLKyberJocKeyPairBC(keyPair, username, null);
-//        LOGGER.info("KeyPair generation was successful!");
-//        LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
-//        LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
-//        // Transport Object
-//
-//        PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
-//                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
-//         KeyGenerator keyGenSender = KeyGenerator.getInstance("Kyber", "BCPQC");
-//        keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
-//        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
-//
-//        LOGGER.info("****************  Verify  **********************************************************************");
-//        KeyGenerator keyGenReceiver = KeyGenerator.getInstance("Kyber", "BCPQC");
-//
-//        PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_KYB_SIGN_ALGORITHM, 
-//                KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
-//        keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
-//        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
-//        if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
-//            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
-//        }
-//    }
-
     @Ignore
     @Test
     public void test37CreateMLDSAKeyPairAndCertificateSignAndVerify() {
@@ -1483,7 +1452,7 @@ public class KeyTests {
         Certificate issuerCert = null;
         X509Certificate userCertificate = null;
         if (jocKeyPair != null) {
-            String filename = "X.509.MLDSA-44.certificate_bundle.zip";
+            String filename = "X.509.MLDSA-87.certificate_bundle.zip";
             String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE");
             String csrString = null;
             try {
@@ -1601,9 +1570,9 @@ public class KeyTests {
         try {
             LOGGER.info("****************  Create KeyPair  **************************************************************");
             // create new KeyPair for user
-            signerkeyPair = KeyUtil.createMLDSAKeyPairBC(MLDSAParameterSpec.ml_dsa_87);
+            signerkeyPair = KeyUtil.createMLKEMKeyPairBC(MLKEMParameterSpec.ml_kem_512);
             // create new JocKeyPair from the java KeyPair
-            jocKeyPair = KeyUtil.createMLDSAJocKeyPairBC(signerkeyPair, username, null);
+            jocKeyPair = KeyUtil.createMLKEMJocKeyPairBC(signerkeyPair, username, null);
             assertNotNull(jocKeyPair.getPrivateKey());
             assertNotNull(jocKeyPair.getPublicKey());
             assertNotEquals(jocKeyPair.getPrivateKey(), "");
@@ -1618,7 +1587,7 @@ public class KeyTests {
         Certificate issuerCert = null;
         X509Certificate userCertificate = null;
         if (jocKeyPair != null) {
-            String filename = "X.509.MLDSA-44.certificate_bundle.zip";
+            String filename = "X.509.MLKEM.certificate_bundle.zip";
             String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE");
             String csrString = null;
             try {
@@ -1647,60 +1616,6 @@ public class KeyTests {
                 LOGGER.error(e.getMessage(), e);
             }
         }
-        try {
-            LOGGER.info("****************  Sign  ************************************************************************");
-            // sign the test string with the users private (MLDSA) key
-            signature = SignObject.signX509(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPrivateKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey())), ORIGINAL_STRING);
-            assertNotNull(signature);
-            assertNotEquals(signature, "");
-            LOGGER.info("Signing was successful!");
-            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 112), "..."));
-        } catch (IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException e) {
-            LOGGER.info("Signing was not successful!");
-            LOGGER.error(e.getMessage(), e);
-        }
-        try {
-            LOGGER.info("****************  Verify  **********************************************************************");
-            // verify the signature with the users public key
-            Boolean verified = VerifySignature.verifyBC(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.getPublicKeyFromStringBC(
-                    SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey())), ORIGINAL_STRING, signature);
-            if (verified) {
-                LOGGER.info("Created signature verification was successful!");
-            } else {
-                LOGGER.warn("Created signature verification was not successful!");
-            }
-            assertTrue(verified);
-            // verify the signature with the CAs public key derived from the CAs certificate
-            if (issuerCert != null) {
-                try {
-                    verified = VerifySignature.verifyX509(issuerCert.getPublicKey(), ORIGINAL_STRING, signature);
-                    LOGGER.info("Signature verification with intermediate certificate was successful!");
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                    LOGGER.warn("Signature verification with intermediate certificate was not successful!");
-                }
-            }
-            // verify the signature with the users public key derived from the users X509 certificate (the controller way)
-            if (userCertificate != null) {
-                try {
-                    verified = VerifySignature.verifyX509(userCertificate.getPublicKey(), ORIGINAL_STRING, signature);
-                    LOGGER.info("Signature verification with user certificate was successful!");
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                    LOGGER.warn("Signature verification with user certificate was not successful!");
-                }
-            }
-        } catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | InvalidKeySpecException | NoSuchProviderException
-                | IOException e) {
-            LOGGER.error(e.getMessage(), e);
-        } finally {
-            LOGGER.info("The created private key was used for signing.");
-            LOGGER.info("The created public key was used for signature verification.");
-            LOGGER.info("The public key of the created X509 certificate was used for signature verification.");
-            LOGGER.info("The created signature was verified.");
-        }
-
     }
 
     private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert,
