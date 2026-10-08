@@ -79,4 +79,19 @@ public class ProviderFile {
         return AProvider.isValidModificationTime(lastModifiedMillis) ? SOSDate.tryGetDateTimeAsString(lastModifiedMillis, TimeZone.getTimeZone(
                 SOSDate.TIMEZONE_UTC)) : String.valueOf(lastModifiedMillis);
     }
+
+    // not toString, because toString is overwritten by e.g. YADEProviderFile
+    public String info() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(fullPath);
+        sb.append(" (Bytes=").append(size);
+        sb.append(", LastModified[UTC]");
+        if (AProvider.isValidModificationTime(lastModifiedMillis)) {
+            sb.append("=").append(getLastModifiedAsUTCString());
+        } else {
+            sb.append(" unknown");
+        }
+        sb.append(")");
+        return sb.toString();
+    }
 }

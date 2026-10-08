@@ -585,8 +585,8 @@ public class YADEFileHandler {
         }
         String msg = String.format("[%s][%s][%s=%s][%s]%s", fileTransferLogPrefix, targetState, sourceDelegator.getLabel(), sourceFile.getFullPath(),
                 targetDelegator.getLabel(), target);
+        msg = msg + " " + throwExceptionAdd + e;
         logger.error(msg);
-        logger.error("  " + throwExceptionAdd + e);
         if (logger.isTraceEnabled()) {
             logger.trace("  [StackTrace]" + SOSClassUtil.getStackTrace(e));
         }

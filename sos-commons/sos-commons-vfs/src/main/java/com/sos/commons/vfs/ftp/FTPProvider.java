@@ -96,6 +96,9 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         super(logger, args);
         isFTPS = Protocol.FTPS.equals(getArguments().getProtocol().getValue());
         setAccessInfo(args.getAccessInfo());
+        if (logger.isDebugEnabled()) {
+            args.getProtocolCommandListener().setValue(true);
+        }
     }
 
     /** Overrides {@link IProvider#getPathSeparator()} */
@@ -128,6 +131,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             throw new ProviderConnectException(new SOSRequiredArgumentMissingException("host"));
         }
 
+        // All reply/responses are logged by the FTPProtocolCommandListener at the DEBUG level
         synchronized (clientLock) {
             try {
                 getLogger().info(getConnectMsg());
@@ -140,9 +144,6 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 client.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
 
                 FTPProtocolReply reply = new FTPProtocolReply(client);
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[connect][reply]%s", getLogPrefix(), reply);
-                }
                 if (!reply.isPositiveReply()) {
                     throw new Exception(String.format("%s[connect][FTP server refused connection]%s", getLogPrefix(), reply));
                 }
@@ -155,18 +156,11 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                     throw new ProviderAuthenticationException(e);
                 }
                 reply = new FTPProtocolReply(client);
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[connect][login][reply]%s", getLogPrefix(), reply);
-                }
                 if (!reply.isPositiveReply()) {
                     throw new ProviderAuthenticationException(String.format("%s[login]%s", getLogPrefix(), reply));
                 }
 
                 postLoginOperations(client);
-
-                if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("%s[connect][after login][printWorkingDirectory]%s", getLogPrefix(), client.printWorkingDirectory());
-                }
 
                 getLogger().info(getConnectedMsg(getConnectedInfos(client)));
             } catch (ProviderConnectException e) {
@@ -582,9 +576,13 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                         boolean completed = client.completePendingCommand(); // can self thrown an IOException
                         if (!completed) {
                             exception = SOSException.mergeException(exception, new IOException(new FTPProtocolReply(client).toString()));
-                        }
-                        if (getLogger().isDebugEnabled()) {
-                            getLogger().debug("%s[%s]completed=%s", getLogPrefix(), SOSClassUtil.getMethodName(), completed);
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug("%s[getInputStream.close][%s][completed=false]%s", getLogPrefix(), path, exception);
+                            }
+                        } else {
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug("%s[getInputStream.close][%s]completed=true", getLogPrefix(), path);
+                            }
                         }
                     } catch (IOException e) {
                         exception = SOSException.mergeException(exception, e);
@@ -638,20 +636,49 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                     }
 
                     IOException exception = null;
-                    // 1) close stream - super.close() closes "os"
+
+                    /** 1) Flush buffered data before shutting down the TLS output. */
+                    try {
+                        flush();
+                    } catch (IOException e) {
+                        exception = SOSException.mergeException(exception, e);
+                    }
+
+                    /** 2) For FTPS, shut down the TLS output before closing the stream.<br />
+                     * This prevents the TLSv1.3 "user_canceled" alert during SSLSocket.close().<br />
+                     * Without this explicit shutdown, FileZilla Server may report:<br/>
+                     * - [Error] Received TLS alert from the client: User canceled (90) and the transfer may fail with:<br />
+                     * - [425] Error while downloading data: ECONNABORTED - Connection aborted.
+                     * 
+                     * For TLSv1.2, this explicit shutdown is not required because the underlying Java socket implementation handles the connection shutdown
+                     * differently. Calling dataSslSocketShutdownOutput() is safe for both TLSv1.2 and TLSv1.3. */
+                    if (isFTPS) {
+                        try {
+                            ((FTPFTPSClient) client).dataSslSocketShutdownOutput();
+                        } catch (IOException e) {
+                            exception = SOSException.mergeException(exception, e);
+                        }
+                    }
+
+                    /** 3) Close the stream. super.close() closes "os". */
                     try {
                         super.close();
                     } catch (IOException e) {
                         exception = SOSException.mergeException(exception, e);
                     }
-                    // 2) check completion
+
+                    /** 4) Check whether the FTP transfer completed successfully. */
                     try {
-                        boolean completed = client.completePendingCommand(); // can self thrown an IOException
+                        boolean completed = client.completePendingCommand(); // can thrown an IOException
                         if (!completed) {
                             exception = SOSException.mergeException(exception, new IOException(new FTPProtocolReply(client).toString()));
-                        }
-                        if (getLogger().isDebugEnabled()) {
-                            getLogger().debug("%s[%s]completed=%s", getLogPrefix(), SOSClassUtil.getMethodName(), completed);
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug("%s[getOutputStream.close][%s][completed=false]%s", getLogPrefix(), path, exception);
+                            }
+                        } else {
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug("%s[getOutputStream.close][%s]completed=true", getLogPrefix(), path);
+                            }
                         }
                     } catch (IOException e) {
                         exception = SOSException.mergeException(exception, e);
@@ -913,35 +940,16 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
     // see notes: autodetectUTF8Enabled
     private void features(FTPClient client) {
-        if (autodetectUTF8Enabled) {
-            if (getLogger().isDebugEnabled()) {
-                try {
-                    if (client.features()) {
-                        getLogger().debug("%s[FEAT][Server supports the following features]%s", getLogPrefix(), new FTPProtocolReply(client));
-                    } else {
-                        getLogger().debug("%s[FEAT]Server did not return any supported features in response to FEAT.", getLogPrefix());
-                    }
-                } catch (IOException e) {
-                    getLogger().debug("%s[FEAT][exception]%s", getLogPrefix(), e);
-                }
-            }
-        } else {
+        if (!autodetectUTF8Enabled) {
             // apiNote: Please note that this has to be set before the connection is established.
             // client.setControlEncoding(charsetUTF8);
             try {
-                if (client.features()) {
-                    getLogger().debug("%s[setControlEncoding][FEAT][Server supports the following features]%s", getLogPrefix(), new FTPProtocolReply(
-                            client));
-                    String charsetUTF8 = StandardCharsets.UTF_8.name();
-                    if (client.hasFeature("UTF8") || client.hasFeature(charsetUTF8)) {
-                        client.setControlEncoding(charsetUTF8);
-                        if (getLogger().isDebugEnabled()) {
-                            getLogger().debug("%s[setControlEncoding]%s", getLogPrefix(), charsetUTF8);
-                        }
+                String charsetUTF8 = StandardCharsets.UTF_8.name();
+                if (client.hasFeature("UTF8") || client.hasFeature(charsetUTF8)) {
+                    client.setControlEncoding(charsetUTF8);
+                    if (getLogger().isDebugEnabled()) {
+                        getLogger().debug("%s[setControlEncoding]%s", getLogPrefix(), charsetUTF8);
                     }
-                } else {
-                    getLogger().debug("%s[setControlEncoding][FEAT]Server did not return any supported features in response to FEAT.",
-                            getLogPrefix());
                 }
             } catch (IOException e) {
                 getLogger().debug("%s[setControlEncoding][FEAT][exception]%s", getLogPrefix(), e);
@@ -987,7 +995,7 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
 
     private void setProtocolCommandListener(FTPClient client) {
         if (getArguments().getProtocolCommandListener().isTrue() || FTPProviderUtils.isCommandListenerEnvVarSet()) {
-            client.addProtocolCommandListener(new FTPProtocolCommandListener(getLogger()));
+            client.addProtocolCommandListener(new FTPProtocolCommandListener(getLogger(), getLogPrefix()));
             getLogger().debug(getLogPrefix() + "ProtocolCommandListener added");
         }
     }

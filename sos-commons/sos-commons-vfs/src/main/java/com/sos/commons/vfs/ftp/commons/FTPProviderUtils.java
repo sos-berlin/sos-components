@@ -177,7 +177,7 @@ public class FTPProviderUtils {
                         result.add(file);
 
                         if (provider.getLogger().isDebugEnabled()) {
-                            provider.getLogger().debug(provider.getPathOperationPrefix(file.getFullPath()) + "added");
+                            provider.getLogger().debug(provider.getLogPrefix() + "[added][" + file.getIndex() + "]" + file.info());
                         }
                     }
                 }
