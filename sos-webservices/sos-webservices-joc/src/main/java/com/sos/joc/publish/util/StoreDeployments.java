@@ -248,9 +248,7 @@ public class StoreDeployments {
                 // update all previously optimistically stored entries with the error message and change the state
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer, 
                         record.wsIdentifier());
-//                ProblemHelper.postProblemEventIfExist(either.getLeft(), accessToken, jocError, null);
                 ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception.getCause())));
-                // dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
             }
             return CompletableFuture.completedFuture(ccr);
         } catch (JocDeployException e) {
@@ -361,7 +359,9 @@ public class StoreDeployments {
                 }
                 break;
             case SOSKeyConstants.MLDSA_ALGORITHM_NAME:
-                cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                }
                 if (cert != null) {
                     selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
                     if (!selfIssued) {
