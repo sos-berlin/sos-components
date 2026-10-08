@@ -665,6 +665,11 @@ public abstract class AProvider<A extends AProviderArguments, R> implements IPro
         throw new ProviderConnectException(String.format("[%s][%s]", getAccessInfo(), getConfiguredConnectInfos()), e);
     }
 
+    public void throwConnectException(String msg, Exception e) throws ProviderConnectException {
+        logConnectFailedMsg(e);
+        throw new ProviderConnectException(String.format("[%s]", msg), e);
+    }
+
     private void resolveSecrets(SOSArgument<?>... additionalSecretArg) throws ProviderInitializationException {
         if (arguments == null) {
             return;
