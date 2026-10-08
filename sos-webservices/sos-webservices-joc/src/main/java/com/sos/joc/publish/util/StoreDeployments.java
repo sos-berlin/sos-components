@@ -338,7 +338,9 @@ public class StoreDeployments {
                 }
                 break;
             case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                }
                 if (cert != null) {
                     selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
                     if (!selfIssued) {
