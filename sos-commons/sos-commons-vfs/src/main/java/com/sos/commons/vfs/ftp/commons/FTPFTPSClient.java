@@ -33,6 +33,8 @@ public class FTPFTPSClient extends FTPSClient {
     private final int serverPort;
 
     private boolean resolveHostname;
+    private String loggerPrefix;
+    private SSLSocket dataSslSocket;
 
     private FTPFTPSClient(final ISOSLogger logger, final boolean isImplicit, final SSLContext context, final String serverHostname, int serverPort) {
         super(isImplicit, context);
@@ -56,12 +58,18 @@ public class FTPFTPSClient extends FTPSClient {
 
         FTPFTPSClient client = new FTPFTPSClient(provider.getLogger(), args.isSecurityModeImplicit(), context, args.getHost().getValue(), args
                 .getPort().getValue());
+        client.loggerPrefix = provider.getLogPrefix();
 
         if (!customStoresEnabled) {
             if (!args.getSsl().getUntrustedSslVerifyCertificateHostname().isTrue()) {
                 client.setHostnameVerifier(null);
                 provider.logIfHostnameVerificationDisabled(args.getSsl());
             }
+        }
+
+        String[] protocols = SslContextFactory.getFilteredEnabledProtocols(args.getSsl());
+        if (protocols != null && protocols.length > 0) {
+            client.setEnabledProtocols(protocols);
         }
 
         if (provider.getProxyConfig() != null) {
@@ -77,7 +85,7 @@ public class FTPFTPSClient extends FTPSClient {
             }
         }
         if (client.logger.isDebugEnabled()) {
-            client.logger.debug(provider.getLogPrefix() + "[FTPFTPSClient][create]serverHostname=" + client.serverHostname + ", resolveHostname="
+            client.logger.debug(client.loggerPrefix + "[FTPFTPSClient][create]serverHostname=" + client.serverHostname + ", resolveHostname="
                     + client.resolveHostname);
         }
         return client;
@@ -105,6 +113,7 @@ public class FTPFTPSClient extends FTPSClient {
      * This method overrides the data connection implementation provided by {@link FTPClient#_openDataConnection_(String, String)} to establish the data
      * connection using FTPS/TLS.
      * </p>
+     * -Djavax.net.debug=ssl,handshake,session - javax.net.ssl|DEBUG|10|main|2026-10-08 12:26:24.044 CEST|PreSharedKeyExtension.java:910|Resuming session: ...
      *
      * @param command the FTP command for which the data connection is required
      * @param arg the argument associated with the FTP command
@@ -168,6 +177,7 @@ public class FTPFTPSClient extends FTPSClient {
             // Create an SSL socket layered over the existing TCP connection.
             // The SSL socket provides TLS encryption for the data connection.
             final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, passivePort, true);
+            // final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, serverPort, true);
 
             if (getRestartOffset() > 0 && !restart(getRestartOffset()) || !FTPReply.isPositivePreliminary(sendCommand(command, arg))) {
                 closeSockets(socket, sslSocket);
@@ -204,6 +214,16 @@ public class FTPFTPSClient extends FTPSClient {
 
             // Perform the TLS handshake and establish the secure data connection.
             sslSocket.startHandshake();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("%s[Data TLS connection established]Remote=%s, Protocol=%s, Cipher=%s", loggerPrefix, sslSocket.getRemoteSocketAddress(),
+                        sslSocket.getSession().getProtocol(), sslSocket.getSession().getCipherSuite());
+                // logger.debug("%s[Data TLS connection established]local=%s remote=%s protocol=%s cipher=%s sessionId=%s", loggerPrefix, sslSocket
+                // .getLocalSocketAddress(), sslSocket.getRemoteSocketAddress(), sslSocket.getSession().getProtocol(), sslSocket.getSession()
+                // .getCipherSuite(), HexFormat.of().formatHex(sslSocket.getSession().getId()));
+            }
+
+            dataSslSocket = sslSocket;
             return sslSocket;
         } catch (IOException | RuntimeException e) {
             SOSClassUtil.closeQuietly(socket);
@@ -214,6 +234,13 @@ public class FTPFTPSClient extends FTPSClient {
     @Override
     public InetAddress getRemoteAddress() {
         return resolveHostname ? super.getRemoteAddress() : FTPFqdnFTPClient.getRemoteAddress(serverHostname);
+    }
+
+    public void dataSslSocketShutdownOutput() throws IOException {
+        if (dataSslSocket == null || dataSslSocket.isClosed()) {
+            return;
+        }
+        dataSslSocket.shutdownOutput();
     }
 
     private void closeSockets(final Socket socket, final Socket sslSocket) throws IOException {
