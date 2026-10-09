@@ -1390,7 +1390,6 @@ public class KeyTests {
         }
     }
 
-    @Ignore
     @Test
     public void test35CreateAndValidateMLKEMKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
@@ -1419,6 +1418,70 @@ public class KeyTests {
 
         if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
             LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
+        }
+    }
+
+    @Ignore
+    @Test
+    public void test36CreateAndValidateMLKEMKeyPairAndCertificate() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            InvalidKeyException, InvalidKeySpecException, SignatureException, IOException {
+        LOGGER.info("*********  Test 36: Create ML-KEM KeyPair and check secret  ************************************");
+        String username = "test";
+        LOGGER.info("****************  Create KeyPair  **************************************************************");
+        KeyPair keyPair = KeyUtil.createMLKEMKeyPairBC(MLKEMParameterSpec.ml_kem_768);
+        JocKeyPair jocKeyPair = KeyUtil.createMLKEMJocKeyPairBC(keyPair, username, null);
+        LOGGER.info("KeyPair generation was successful!");
+        LOGGER.info(String.format("privateKey:\n%1$s%2$s", jocKeyPair.getPrivateKey().substring(0, 120), "..."));
+        LOGGER.info(String.format("publicKey:\n%1$s%2$s", jocKeyPair.getPublicKey().substring(0, 119), "..."));
+        // Transport Object
+        PublicKey sendersPubKey = KeyUtil.getPublicKeyFromStringBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, 
+                KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+        KeyGenerator keyGenSender = KeyGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
+        keyGenSender.init(new KEMGenerateSpec(sendersPubKey, "AES", 128), new SecureRandom());
+        SecretKeyWithEncapsulation secEnc1 = (SecretKeyWithEncapsulation) keyGenSender.generateKey();
+
+        LOGGER.info("****************  Verify  **********************************************************************");
+        KeyGenerator keyGenReceiver = KeyGenerator.getInstance(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, SOSKeyConstants.DEFAULT_BC_PROVIDER);
+
+        PrivateKey receiversPrivateKey = KeyUtil.getPrivateKeyFromStringBC(SOSKeyConstants.MLKEM_SIGNER_ALGORITHM, 
+                KeyUtil.stripFormatFromPrivateKey(jocKeyPair.getPrivateKey()));
+        keyGenReceiver.init(new KEMExtractSpec(receiversPrivateKey, secEnc1.getEncapsulation(), "AES", 128));
+        SecretKeyWithEncapsulation secEnc2 = (SecretKeyWithEncapsulation) keyGenReceiver.generateKey();
+
+        if (Arrays.equals(secEnc1.getEncoded(), secEnc2.getEncoded())) {
+            LOGGER.info("AES key secret successfully validated: " + Hex.toHexString(secEnc1.getEncoded()));
+        }
+        Certificate issuerCert = null;
+        X509Certificate userCertificate = null;
+        if (jocKeyPair != null) {
+            String filename = "X.509.MLKEM-768.certificate_bundle.zip";
+            String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "root", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE");
+            String csrString = null;
+            try {
+                // issuer: the CA that takes the user signed csr and creates an issuer signed user certificate
+                KeyPair issuerkeyPair = KeyUtil.getKeyPairFromEncryptedPrivatKeyString(new String(Files.readAllBytes(Paths.get(
+                        "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.key"))), new String(Files.readAllBytes(Paths.get(
+                                "C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.pwd"))));
+                issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
+                // create a CertificateSigningRequest (CSR) for the users KeyPair
+                PKCS10CertificationRequest csr = CAUtils.createCSR(keyPair.getPrivate().getAlgorithm(), keyPair, userSubjectDN);
+                csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+                // use the users CSR to create the new user certificate and sign it by the given CA
+                userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), keyPair, csr,
+                        (X509Certificate) issuerCert, "test sp sp.sos");
+
+                String userCert = CertificateUtils.asPEMString(userCertificate);
+                jocKeyPair.setCertificate(userCert);
+                // verify the CA signed user certificate against the public key of the CA
+                userCertificate.verify(issuerkeyPair.getPublic());
+                exportCertificateBundle(new String(Files.readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\root-ca.key"))), new String(Files
+                        .readAllBytes(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"))), csrString, jocKeyPair.getPrivateKey(),
+                        jocKeyPair.getCertificate(), filename);
+            } catch (IOException | NoSuchAlgorithmException | CertException | CertificateException | OperatorCreationException | InvalidKeyException
+                    | NoSuchProviderException | SignatureException e) {
+                LOGGER.info("Signing was not successful!");
+                LOGGER.error(e.getMessage(), e);
+            }
         }
     }
 
