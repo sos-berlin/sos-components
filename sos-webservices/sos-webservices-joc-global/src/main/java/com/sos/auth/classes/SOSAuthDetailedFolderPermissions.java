@@ -176,7 +176,8 @@ public class SOSAuthDetailedFolderPermissions {
     }
 
     private Set<String> getJocPermissions(UniqueRole role, PermissionsPerRole perms) {
-        Predicate<String> isJocPermission = perm -> perm.startsWith(JocPermissions.prefix) || perm.equals(JocPermissions.mainPrefix);
+        Predicate<String> isJocPermission = perm -> perm.startsWith(JocPermissions.prefix) || perm.startsWith("-" + JocPermissions.prefix) || perm
+                .equals(JocPermissions.mainPrefix) || perm.equals("-" + JocPermissions.mainPrefix);
         jocPermissions.putIfAbsent(role, perms.permissions().getOrDefault("", Collections.emptySet()).stream().filter(isJocPermission).collect(
                 Collectors.toSet()));
         return jocPermissions.get(role);

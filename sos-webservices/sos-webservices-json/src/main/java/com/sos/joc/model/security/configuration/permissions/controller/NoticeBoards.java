@@ -46,7 +46,7 @@ public class NoticeBoards {
     private Boolean delete = false;
 
     public NoticeBoards(String prefix) {
-        this.prefix = JocPermissions.getPermissionString(prefix, "noticeBoards");
+        this.prefix = JocPermissions.getPermissionString(prefix, "noticeboards");
     }
     
     @JsonIgnore
