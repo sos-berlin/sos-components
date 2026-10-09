@@ -248,7 +248,8 @@ public class StoreDeployments {
                 // update all previously optimistically stored entries with the error message and change the state
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer, 
                         record.wsIdentifier());
-                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception.getCause())));
+                Throwable t = exception.getCause() != null ? exception.getCause() : exception;
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(t)));
             }
             return CompletableFuture.completedFuture(ccr);
         } catch (JocDeployException e) {
