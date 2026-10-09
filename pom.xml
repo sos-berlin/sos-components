@@ -89,7 +89,7 @@
     <jwt.version>4.2.2</jwt.version>
     <json.schema.validator.version>1.0.29</json.schema.validator.version>
     <scala.java8.compat.version>1.0.2</scala.java8.compat.version>
-    <sshj.version>0.40.0</sshj.version>
+    <sshj.version>0.41.1</sshj.version>
     <smbj.version>0.15.0</smbj.version>
     <!-- jetty dependencies are used to be integrated into sbom only, no direct usage -->
     <jetty.version>12.1.10</jetty.version>
