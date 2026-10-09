@@ -131,7 +131,7 @@ public class StoreDeployments {
                             if (JocInventory.isWorkflow(toUpdate.getType())) {
                                 workflowInvIds.add(toUpdate.getId());
                             }
-                            if (!redeploy) {
+                            if(!redeploy) {
                                 toUpdate.setDeployed(true);
                             }
 
@@ -292,14 +292,6 @@ public class StoreDeployments {
             InterruptedException, ExecutionException, TimeoutException, CertificateException {
         CompletableFuture<ControllerCommandResponse> future = null;
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
-
-            // store new history entries and update inventory for update operation optimistically
-            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, record.commitId(), null, record.account(), 
-                    signedItemsSpec.getAuditlogId());
-            if (!API_CALL_REDEPLOY.equals(record.wsIdentifier()) && !API_CALL_SYNC.equals(record.wsIdentifier())) {
-                storeNewDepHistoryEntries(signedItemsSpec, record.account(), record.commitId(), controllerId, record.impl().getAccessToken(), 
-                        record.impl().getJocError(), dbLayer, false);
-            }
 
             @SuppressWarnings("unused")
             boolean selfIssued = false;
