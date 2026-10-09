@@ -50,6 +50,7 @@ public class SOSInternAuthSubject extends ASOSAuthSubject {
             IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
             List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName, identityService
                     .getIdentityServiceId());
+            identityServiceId = identityService.getIdentityServiceId();
             setOfRoles = listOfRoles.stream().map(DBItemIamPermissionWithName::getRoleName).collect(Collectors.toSet());
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());

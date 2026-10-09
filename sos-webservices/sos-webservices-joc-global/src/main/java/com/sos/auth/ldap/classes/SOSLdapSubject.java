@@ -59,6 +59,7 @@ public class SOSLdapSubject extends ASOSAuthSubject {
                 }
             }
 
+            identityServiceId = identityService.getIdentityServiceId();
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, identityService
                     .getIdentityServiceId());
             folderPermissionsPerRole = SOSAuthHelper.getMapOfFolderPermissions(listOfPermissions, identityService.getIdentityServiceId());

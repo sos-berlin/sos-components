@@ -32,6 +32,7 @@ import com.sos.auth.oidc.GetToken;
 import com.sos.auth.openid.SOSOpenIdHandler;
 import com.sos.auth.openid.classes.SOSOpenIdLogin;
 import com.sos.auth.openid.classes.SOSOpenIdWebserviceCredentials;
+import com.sos.auth.records.UniqueRole;
 import com.sos.auth.sosintern.classes.SOSInternAuthLogin;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
@@ -815,7 +816,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                 DBItemIamBlockedAccount dbItemIamBlockedAccount = iamAccountDBLayer.getBlockedAccount(iamAccountFilter);
 
                 Map<String, String> authenticationResult = new HashMap<>();
-                Set<String> setOfAccountPermissions = new HashSet<>();
+                Map<UniqueRole, Map<String, Set<String>>> accountPermissionsPerRole = new HashMap<>();
                 Set<String> setOf4EyesRolePermissions = new HashSet<>();
 
                 IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
@@ -841,8 +842,8 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                             if (msg.isEmpty()) {
                                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                         dbItemIamIdentityService));
-                                currentAccount.setRoles(securityConfiguration);
-                                setOfAccountPermissions.addAll(currentAccount.getCurrentSubject().getListOfAccountPermissions());
+                                currentAccount.setRoles();
+                                accountPermissionsPerRole.putAll(currentAccount.getCurrentSubject().getAccountPermissionsPerRole());
                                 setOf4EyesRolePermissions.addAll(currentAccount.getCurrentSubject().getListOf4EyesRolePermissions());
                                 currentAccount.addFolders();
                             } else {
@@ -887,7 +888,7 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
                                 msg = createAccount(currentAccount, password, dbItemIamIdentityService);
                                 SecurityConfiguration securityConfiguration = sosPermissionMerger.addIdentityService(new SOSIdentityService(
                                         dbItemIamIdentityService));
-                                currentAccount.setRoles(securityConfiguration);
+                                currentAccount.setRoles();
                                 if (dbItemIamBlockedAccount != null) {
                                     msg = "Account is blocked";
                                     currentAccount.setCurrentSubject(null);
@@ -927,9 +928,10 @@ public class SOSServicePermissionIam extends JOCResourceImpl {
 
                 IamHistoryDbLayer iamHistoryDbLayer = new IamHistoryDbLayer(sosHibernateSession);
 
-                if (currentAccount.getCurrentSubject() != null && currentAccount.getCurrentSubject().getListOfAccountPermissions() != null) {
+                if (currentAccount.getCurrentSubject() != null && !currentAccount.getCurrentSubject().getAccountPermissionsPerRole().isEmpty()) {
                     iamHistoryDbLayer.addLoginAttempt(currentAccount, authenticationResult, true);
-                    currentAccount.getCurrentSubject().getListOfAccountPermissions().addAll(setOfAccountPermissions);
+                    // why?
+                    currentAccount.getCurrentSubject().getAccountPermissionsPerRole().putAll(accountPermissionsPerRole);
                     currentAccount.getCurrentSubject().getListOf4EyesRolePermissions().addAll(setOf4EyesRolePermissions);
                     SecurityConfiguration securityConfigurationEntry = sosPermissionMerger.mergePermissions();
                     SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);

@@ -34,12 +34,15 @@ public class DBItemIamPermissionWithName {
     }
 
     public String getAccountPermission() {
+        if (accountPermission != null) {
+            accountPermission = accountPermission.replace(":adminstration:", ":administration:"); // because of typo in the past
+        }
         return accountPermission;
     }
     
     public Optional<String> getAccountPermissionWithControllerIdAndExludes() {
         if (accountPermission != null && !accountPermission.isEmpty()) {
-            String permission = accountPermission.replace(":adminstration:", ":administration:"); // because of typo in the past
+            String permission = getAccountPermission();
             if (controllerId != null && !controllerId.isEmpty()) {
                 permission = controllerId + ":" + permission;
             }

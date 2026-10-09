@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +40,7 @@ public class SOSAuthCurrentAccount {
     private Map<String, String> identyServiceAccessToken;
     private boolean withAuthorization;
     private Set<String> roles;
+    private Set<UniqueRole> uniqueRoles;
     private Set<ISOSAuthSubject> currentSubjects;
     private SOSLoginParameters sosLoginParameters;
     private String kid;
@@ -161,6 +163,7 @@ public class SOSAuthCurrentAccount {
         return accountName;
     }
 
+    // only used in Unit test
     public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
@@ -174,7 +177,28 @@ public class SOSAuthCurrentAccount {
             this.roles.addAll(Stream.concat(securityConf.getAccounts().stream().filter(account -> account.getRoles() != null).flatMap(
                     account -> account.getRoles().stream()), securityConf.getRoles().getAdditionalProperties().keySet().stream()).filter(
                             role -> currentSubject.hasRole(role)).collect(Collectors.toSet()));
+        }
+        String fourEyesRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
+        if (fourEyesRole == null || fourEyesRole.isEmpty()) {
+            this.isRequestor = false;
+        } else {
+            this.isRequestor = this.roles.contains(fourEyesRole);
+        }
+    }
+    
+    public void setRoles() {
 
+        if (this.roles == null) {
+            this.roles = new HashSet<>();
+        }
+        if (currentSubject != null) {
+            this.roles.addAll(currentSubject.getRoles());
+        }
+        if (this.uniqueRoles == null) {
+            this.uniqueRoles = new HashSet<>();
+        }
+        if (currentSubject != null) {
+            this.uniqueRoles.addAll(currentSubject.getUniqueRoles());
         }
         String fourEyesRole = Globals.getConfigurationGlobalsJoc().getApprovalRequestorRole().getValue();
         if (fourEyesRole == null || fourEyesRole.isEmpty()) {
@@ -189,6 +213,13 @@ public class SOSAuthCurrentAccount {
             return Collections.emptySet();
         }
         return roles;
+    }
+    
+    public Set<String> getStringsOfUniqueRoles() {
+        if (uniqueRoles == null) {
+            return Collections.emptySet();
+        }
+        return uniqueRoles.stream().map(UniqueRole::string).collect(Collectors.toSet());
     }
 
     public String getRolesAsString() {
@@ -343,14 +374,23 @@ public class SOSAuthCurrentAccount {
         }
     }
 
-    public boolean isPermitted(String controllerId, String permission, boolean onlyfourEyesRole) {
+    public boolean isPermitted(String controllerId, String permission, boolean considerFolders, boolean isControllerPermission, boolean onlyfourEyesRole) {
         boolean permitted = false;
-        if (currentSubjects != null) {
-            for (ISOSAuthSubject subject : currentSubjects) {
-                if (subject != null) {
-                    permitted = getPermissionFromSubject(subject, controllerId, permission, onlyfourEyesRole);
-                    if (permitted) {
-                        return true;
+        if (!onlyfourEyesRole && considerFolders) {
+            SOSAuthDetailedFolderPermissions folderPerms = getSOSAuthDetailedFolderPermissions();
+            if (!isControllerPermission) {
+                permitted = folderPerms.getPermittedFoldersByJocPermissions(createPredicate(permission)).allow().isPresent();
+            } else {
+                permitted = folderPerms.getPermittedFoldersByControllerPermissions(controllerId, createPredicate(permission)).allow().isPresent();
+            }
+        } else {
+            if (currentSubjects != null) {
+                for (ISOSAuthSubject subject : currentSubjects) {
+                    if (subject != null) {
+                        permitted = getPermissionFromSubject(subject, controllerId, permission, onlyfourEyesRole);
+                        if (permitted) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -360,9 +400,13 @@ public class SOSAuthCurrentAccount {
     }
 
     public boolean isPermitted(String permission) {
-        return (isPermitted("", permission, false));
+        return (isPermitted("", permission, false, false, false));
     }
-
+    
+    private static Predicate<String> createPredicate(String str) {
+        return s -> str.startsWith(s);
+    }
+    
     public boolean isAuthenticated() {
         if (currentSubject != null) {
             return currentSubject.isAuthenticated();
@@ -378,12 +422,7 @@ public class SOSAuthCurrentAccount {
     }
     
     public void addFolders() {
-        addDetailedFolders();
-    }
-    
-    private void addDetailedFolders() {
-        Stream.of(currentSubject.getMapOfFolderPermissions().keySet(), currentSubject.getMapOfAccountPermissions().keySet()).flatMap(Set::stream)
-                .distinct().forEach(this::addDetailedFolders);
+        currentSubject.getAccountPermissionsPerRole().keySet().stream().distinct().forEach(this::addDetailedFolders);
     }
     
     private void addDetailedFolders(UniqueRole role) {

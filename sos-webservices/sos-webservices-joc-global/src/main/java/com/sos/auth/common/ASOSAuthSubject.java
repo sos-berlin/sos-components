@@ -3,9 +3,11 @@ package com.sos.auth.common;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -19,6 +21,7 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     protected Map<UniqueRole, Map<String, Set<String>>> accountPermissionsPerRole;
     protected Set<String> setOfRoles;
     protected Set<String> setOf4EyesRolePermissions;
+    protected Long identityServiceId = 0L;
     private Set<String> accountPermissions;
     
     @Override
@@ -92,7 +95,7 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     }
     
     @Override
-    public Map<UniqueRole, Map<String, Set<String>>> getMapOfAccountPermissions() {
+    public Map<UniqueRole, Map<String, Set<String>>> getAccountPermissionsPerRole() {
         if (accountPermissionsPerRole == null) {
             return Collections.emptyMap();
         }
@@ -125,8 +128,14 @@ public abstract class ASOSAuthSubject implements ISOSAuthSubject {
     }
 
     @Override
-    public Set<String> getListOfAccountRoles() {
-        return this.setOfRoles;
+    public Set<String> getRoles() {
+        return Optional.ofNullable(setOfRoles).orElse(Collections.emptySet());
+    }
+    
+    @Override
+    public Set<UniqueRole> getUniqueRoles() {
+        return Optional.ofNullable(setOfRoles).map(Set::stream).orElse(Stream.empty()).map(role -> new UniqueRole(role, identityServiceId)).collect(
+                Collectors.toSet());
     }
 
     @Override

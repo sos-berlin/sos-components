@@ -21,12 +21,13 @@ public interface ISOSAuthSubject {
     public Map<UniqueRole, Set<AuthFolder>> getMapOfFolderPermissions();
     public Map<String, Set<AuthFolder>> getFolderPermissionsOfRole(UniqueRole role);
 
-    public Map<UniqueRole, Map<String, Set<String>>> getMapOfAccountPermissions();
+    public Map<UniqueRole, Map<String, Set<String>>> getAccountPermissionsPerRole();
     public Map<String, Set<String>> getAccountPermissionsOfRole(UniqueRole role);
 
     public Set<String> getListOfAccountPermissions();
 
-    public Set<String> getListOfAccountRoles();
+    public Set<String> getRoles();
+    public Set<UniqueRole> getUniqueRoles();
     
     public Set<String> getListOf4EyesRolePermissions();
 
