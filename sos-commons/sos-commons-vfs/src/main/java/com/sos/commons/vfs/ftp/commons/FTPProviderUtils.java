@@ -125,23 +125,7 @@ public class FTPProviderUtils {
     private static int list(FTPProvider provider, ProviderFileSelection selection, String directoryPath, List<ProviderFile> result, int counterAdded)
             throws Exception {
         FTPClient client = provider.requireFTPClient();
-        FTPFile[] subDirInfos = client.mlistDir(directoryPath);
-        FTPProtocolReply reply = new FTPProtocolReply(client);
-        if (provider.getLogger().isDebugEnabled()) {
-            provider.getLogger().debug(provider.getPathOperationPrefix("MLSD " + directoryPath) + reply);
-        }
-        if (!reply.isPositiveReply()) {
-            if (reply.isCommandNotSupportedReply()) {
-                subDirInfos = client.listFiles(directoryPath);
-                reply = new FTPProtocolReply(client);
-                if (provider.getLogger().isDebugEnabled()) {
-                    provider.getLogger().debug(provider.getPathOperationPrefix("LIST " + directoryPath) + reply);
-                }
-            }
-            if (!reply.isPositiveReply()) {
-                provider.throwDirectoryException(directoryPath, reply.toString());
-            }
-        }
+        FTPFile[] subDirInfos = listDirectory(provider, client, directoryPath);
         for (FTPFile subResource : subDirInfos) {
             if (selection.maxFilesExceeded(counterAdded)) {
                 return counterAdded;
@@ -149,6 +133,34 @@ public class FTPProviderUtils {
             counterAdded = processListEntry(provider, selection, directoryPath, subResource, result, counterAdded);
         }
         return counterAdded;
+    }
+
+    private static FTPFile[] listDirectory(FTPProvider provider, FTPClient client, String directoryPath) throws Exception {
+        Boolean supportsMlsd = provider.supportsMlsd();
+        FTPFile[] directoryInfos;
+        FTPProtocolReply reply;
+
+        if (Boolean.FALSE.equals(supportsMlsd)) {
+            directoryInfos = client.listFiles(directoryPath);
+            reply = new FTPProtocolReply(client);
+        } else {
+            directoryInfos = client.mlistDir(directoryPath);
+            reply = new FTPProtocolReply(client);
+            if (!reply.isPositiveReply() && reply.isCommandNotSupportedReply()) {
+                provider.setSupportsMlsd(false);
+
+                directoryInfos = client.listFiles(directoryPath);
+                reply = new FTPProtocolReply(client);
+            } else if (reply.isPositiveReply()) {
+                provider.setSupportsMlsd(true);
+            }
+        }
+
+        if (!reply.isPositiveReply()) {
+            provider.throwDirectoryException(directoryPath, reply.toString());
+        }
+
+        return directoryInfos;
     }
 
     // TODO resource.getName() - path???
