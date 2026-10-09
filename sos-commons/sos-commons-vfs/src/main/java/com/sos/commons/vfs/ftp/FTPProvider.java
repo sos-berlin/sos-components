@@ -92,6 +92,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
     private int readBufferSize = 32 * 1_024; // 32KB
     private int writeBufferSize = readBufferSize * 2;
 
+    private Boolean supportsMlsd;
+
     public FTPProvider(ISOSLogger logger, FTPProviderArguments args) throws ProviderInitializationException {
         super(logger, args);
         isFTPS = Protocol.FTPS.equals(getArguments().getProtocol().getValue());
@@ -778,6 +780,17 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
         calculateWriteBufferSize(readBufferSize);
     }
 
+    public Boolean supportsMlsd() {
+        return supportsMlsd;
+    }
+
+    public void setSupportsMlsd(boolean val) {
+        supportsMlsd = val;
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug("%s[hasFeature]MLSD=%s", getLogPrefix(), supportsMlsd);
+        }
+    }
+
     private FTPClient createClient() throws Exception {
         FTPClient client = isFTPS ? FTPFTPSClient.create(this) : createFTPClient();
         applyPreConnectSettings(client);
@@ -959,6 +972,14 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
                 getLogger().debug("%s[setControlEncoding][FEAT][exception]%s", getLogPrefix(), e);
             }
         }
+
+        try {
+            setSupportsMlsd(client.hasFeature(FTPCmd.MLSD));
+        } catch (IOException e) {
+            getLogger().debug("%s[hasFeature][MLSD][exception]%s", getLogPrefix(), e);
+            supportsMlsd = null;
+        }
+
     }
 
     private String getConnectedInfos(FTPClient client) {
