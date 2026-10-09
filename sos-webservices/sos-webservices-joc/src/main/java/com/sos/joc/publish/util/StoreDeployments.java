@@ -294,14 +294,6 @@ public class StoreDeployments {
         CompletableFuture<ControllerCommandResponse> future = null;
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
-            // store new history entries and update inventory for update operation optimistically
-            DeleteDeployments.storeNewDepHistoryEntries(dbLayer, renamedToDelete, record.commitId(), null, record.account(), 
-                    signedItemsSpec.getAuditlogId());
-            if (!API_CALL_REDEPLOY.equals(record.wsIdentifier()) && !API_CALL_SYNC.equals(record.wsIdentifier())) {
-                storeNewDepHistoryEntries(signedItemsSpec, record.account(), record.commitId(), controllerId, record.impl().getAccessToken(), 
-                        record.impl().getJocError(), dbLayer, false);
-            }
-
             boolean selfIssued = false;
             String signerDN = null;
             X509Certificate cert = null;
