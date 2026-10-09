@@ -544,6 +544,7 @@ public class TreePermanent {
         perms.put("create", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getCreate()));
         perms.put("managePositions", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getManagePositions()));
         perms.put("modify", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getModify()));
+        perms.put("post", permissions.getPermittedFoldersByControllerPermissions(controllerId, controllerPred.getNoticeBoards().getPost()));
         perms.put("suspendResume", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getSuspendResume()));
         perms.put("resumeFailed", permissions.getPermittedFoldersByControllerPermissions(controllerId, ordersPred.getResumeFailed()));
         
