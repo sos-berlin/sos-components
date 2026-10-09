@@ -176,8 +176,8 @@ public class FTPFTPSClient extends FTPSClient {
             Socket logical = new SessionReuseSocket(socket, serverPort);
             // Create an SSL socket layered over the existing TCP connection.
             // The SSL socket provides TLS encryption for the data connection.
-            final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, passivePort, true);
-            // final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, serverPort, true);
+            // final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, passivePort, true);
+            final SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket(logical, serverHostname, serverPort, true);
 
             if (getRestartOffset() > 0 && !restart(getRestartOffset()) || !FTPReply.isPositivePreliminary(sendCommand(command, arg))) {
                 closeSockets(socket, sslSocket);
