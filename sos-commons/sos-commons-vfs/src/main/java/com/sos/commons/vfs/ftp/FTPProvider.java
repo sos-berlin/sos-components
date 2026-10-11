@@ -869,7 +869,8 @@ public class FTPProvider extends AProvider<FTPProviderArguments, Object> {
             }
 
             if (getLogger().isDebugEnabled()) {
-                getLogger().debug("%s[getEnabledProtocols]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client).getEnabledProtocols()));
+                getLogger().debug("%s[Control connection][EnabledProtocols][SSLSocket]%s", getLogPrefix(), Arrays.asList(((FTPSClient) client)
+                        .getEnabledProtocols()));
             }
         }
     }
