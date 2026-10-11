@@ -198,7 +198,7 @@ public class OrderNotifierModel {
         }
         // PAYLOAD: orders (ERROR, SUCCESS)
         for (MonitorOrderResult order : toNotifyPayloads.getErrorOrders()) {
-            order.isErrorOrder();
+            order.setIsErrorOrder();
             candidates.add(order);
         }
         for (MonitorOrderResult order : toNotifyPayloads.getSuccessOrders()) {
