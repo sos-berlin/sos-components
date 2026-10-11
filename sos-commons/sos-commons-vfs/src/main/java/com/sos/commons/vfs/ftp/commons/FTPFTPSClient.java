@@ -5,10 +5,13 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
 import org.apache.commons.io.IOUtils;
@@ -25,7 +28,20 @@ import com.sos.commons.util.socket.SessionReuseSocket;
 import com.sos.commons.util.ssl.SslContextFactory;
 import com.sos.commons.vfs.ftp.FTPProvider;
 
+/** Observation:<br />
+ * TLSv1.3 and the server configured to reuse session<br />
+ * - FileZilla Server works<br />
+ * - ProFTPD Server fails with [425]425 Unable to build data connection: Operation not permitted after transfer of 1 file<br />
+ * -- all Control and Data connection sessions are not equals<br />
+ * -- set to TLSv1.2 solve the problem<br />
+ * - vsFTPd 3.0.5 (require_ssl_reuse=YES) fails with [522]522 SSL connection failed: session reuse required<br />
+ * -- all Control and Data connection sessions are not equals<br />
+ * -- set to TLSv1.2 + additional setting -Djdk.tls.client.enableSessionTicketExtension=false solve the problem<br />
+ * TLSv1.3 and the server is not configured to reuse session<br />
+ * - works */
 public class FTPFTPSClient extends FTPSClient {
+
+    private static final String DEFAULT_SSL_PROTOCOL = "TLSv1.2"; // see TLSv1.3 comment above
 
     private final ISOSLogger logger;
     private final SSLContext context;
@@ -70,6 +86,8 @@ public class FTPFTPSClient extends FTPSClient {
         String[] protocols = SslContextFactory.getFilteredEnabledProtocols(args.getSsl());
         if (protocols != null && protocols.length > 0) {
             client.setEnabledProtocols(protocols);
+        } else {
+            client.setEnabledProtocols(new String[] { DEFAULT_SSL_PROTOCOL });
         }
 
         if (provider.getProxyConfig() != null) {
@@ -216,11 +234,21 @@ public class FTPFTPSClient extends FTPSClient {
             sslSocket.startHandshake();
 
             if (logger.isDebugEnabled()) {
-                logger.debug("%s[Data TLS connection established]Remote=%s, Protocol=%s, Cipher=%s", loggerPrefix, sslSocket.getRemoteSocketAddress(),
-                        sslSocket.getSession().getProtocol(), sslSocket.getSession().getCipherSuite());
-                // logger.debug("%s[Data TLS connection established]local=%s remote=%s protocol=%s cipher=%s sessionId=%s", loggerPrefix, sslSocket
-                // .getLocalSocketAddress(), sslSocket.getRemoteSocketAddress(), sslSocket.getSession().getProtocol(), sslSocket.getSession()
-                // .getCipherSuite(), HexFormat.of().formatHex(sslSocket.getSession().getId()));
+                try {
+                    SSLSession controlSession = ((SSLSocket) _socket_).getSession();
+                    SSLSession sslSession = sslSocket.getSession();
+                    SSLSession dataSession = sslSocket.getSession();
+                    byte[] controlSessionId = controlSession.getId();
+                    byte[] dataSessionId = dataSession.getId();
+
+                    logger.info(
+                            "%s[After handshake][Data connection][SSLSocket][RemoteSocketAddress=%s, SSLSession Protocol=%s, SSLSession CipherSuite=%s][Session IDs equal=%s][Control session ID=%s, valid=%s][Data session ID=%s, valid=%s]",
+                            loggerPrefix, sslSocket.getRemoteSocketAddress(), sslSession.getProtocol(), sslSession.getCipherSuite(), Arrays.equals(
+                                    controlSessionId, dataSessionId), HexFormat.of().formatHex(controlSessionId), controlSession.isValid(), HexFormat
+                                            .of().formatHex(dataSessionId), dataSession.isValid());
+                } catch (Exception e) {
+                    logger.debug(e.toString(), e);
+                }
             }
 
             dataSslSocket = sslSocket;
