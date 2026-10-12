@@ -1,5 +1,6 @@
 package com.sos.joc.dailyplan.db;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,27 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         query.setParameter("dateTo", dateTo);
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemDailyPlanOrder> getSubmittedOrdersForDelete(String controllerId, String dateFor, String dateFrom, String dateTo)
+            throws Exception {
+        SubmissionsDeleteWhere where = new SubmissionsDeleteWhere(controllerId, dateFor, dateFrom, dateTo);
+
+        List<DBItemDailyPlanOrder> result = getSubmittedOrdersForDelete(where);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
+    }
+
+    private List<DBItemDailyPlanOrder> getSubmittedOrdersForDelete(SubmissionsDeleteWhere where) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where submissionHistoryId in (");
+        hql.append("select id from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ").append(where.getHql());
+        hql.append(")");
+
+        Query<DBItemDailyPlanOrder> query = getSession().createQuery(hql.toString());
+        return getSession().getResultList(where.bindParams(query));
+    }
 
     public int delete(StartupMode mode, String caller, String controllerId, String dateFor, String dateFrom, String dateTo) throws Exception {
         String lpDate = dateFor == null ? ("from=" + dateFrom + ",to=" + dateTo) : dateFor;
@@ -79,7 +101,7 @@ public class DBLayerDailyPlanSubmissions extends DBLayer {
         }
         return result;
     }
-
+    
     private Long getCountSubmittedOrders(SubmissionsDeleteWhere where) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submitted=true ");

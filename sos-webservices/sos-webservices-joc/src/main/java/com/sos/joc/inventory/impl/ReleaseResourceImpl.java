@@ -150,7 +150,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         try {
             SOSHibernateSession session = null;
             InventoryDBLayer dbLayer;
-            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getView());
+            AuthFolders authFolders = getPermittedFoldersByJocPermissions(getJocPermissionsPredicate().getInventory().getDeploy());
 
             DBItemJocAuditLog dbAuditLog;
             JocAuditObjectsLog auditLogObjectsLogging;

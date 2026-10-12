@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.model.common.Folder;
@@ -31,7 +30,7 @@ public class AuthFolder extends Folder {
     
     @Override
     public String toString() {
-        return Optional.ofNullable(controllerId).map(id -> id.isEmpty() ? "" : id + ":").orElse("") + getFolder() + (getRecursive() ? "/*" : "");
+        return Optional.ofNullable(controllerId).map(id -> id.isEmpty() ? "" : id + ":").orElse("") + getFolder() + (getRecursive() ? "/*" : "").replaceAll("//+", "/");
     }
 
     @Override
