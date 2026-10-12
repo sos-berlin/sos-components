@@ -347,7 +347,7 @@ public class DeleteDeployments {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception.getCause())));
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)));
             } else {
 //                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
 //                    JControllerProxy proxy = Proxy.of(controllerId);
