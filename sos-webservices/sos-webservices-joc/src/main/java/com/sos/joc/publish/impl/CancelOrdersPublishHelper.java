@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,13 +25,6 @@ import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.impl.common.ADeleteConfiguration;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
@@ -40,41 +32,44 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 public class CancelOrdersPublishHelper {
 
     public static List<CompletableFuture<ControllerCommandResponse>> getCancelOrderFutures(JOCResourceImpl impl, DailyPlanOrderFilterDef orderFilter,
-            Function<ControllerCommandResponse, ControllerCommandResponse> apply) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, SOSHibernateException, ExecutionException {
+            Function<ControllerCommandResponse, ControllerCommandResponse> apply) {
 
         if ((orderFilter.getWorkflowPaths() == null || orderFilter.getWorkflowPaths().isEmpty()) && 
                 (orderFilter.getSchedulePaths() == null || orderFilter.getSchedulePaths().isEmpty())) {
             return Collections.emptyList();
         }
         List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
-        DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
-        cancelOrderImpl.setCurrentAccount(impl);
-        Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
-        Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
-                ordersPerController);
-        for (String controllerId : cancelOrderResponsePerController.keySet()) {
-            CompletableFuture<ControllerCommandResponse> f = cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
-                if (ccr.getException().isEmpty()) {
-                    try {
-                        DailyPlanDeleteOrdersImpl.deleteOrdersOfController(null, controllerId, orderFilter.getDailyPlanDateFrom(), orderFilter
-                                .getWorkflowPaths(), orderFilter.getSchedulePaths());
+        try {
+            DailyPlanCancelOrderImpl cancelOrderImpl = new DailyPlanCancelOrderImpl();
+            cancelOrderImpl.setCurrentAccount(impl);
+            Map<String, List<DBItemDailyPlanOrder>> ordersPerController = cancelOrderImpl.getSubmittedOrderIdsFromDailyplanDate(orderFilter);
+            Map<String, CompletableFuture<ControllerCommandResponse>> cancelOrderResponsePerController = cancelOrderImpl.cancelOrders(
+                    ordersPerController);
+            for (String controllerId : cancelOrderResponsePerController.keySet()) {
+                CompletableFuture<ControllerCommandResponse> f = cancelOrderResponsePerController.get(controllerId).thenApply(ccr -> {
+                    if (ccr.getException().isEmpty()) {
+                        try {
+                            DailyPlanDeleteOrdersImpl.deleteOrdersOfController(null, controllerId, orderFilter.getDailyPlanDateFrom(), orderFilter
+                                    .getWorkflowPaths(), orderFilter.getSchedulePaths());
 
-                    } catch (Exception e) {
-                        return new ControllerCommandResponse(controllerId, Optional.of(e));
+                        } catch (Exception e) {
+                            return new ControllerCommandResponse(controllerId, Optional.of(e));
+                        }
                     }
+                    return ccr;
+                });
+                if (apply != null) {
+                    f.thenApply(apply);
                 }
-                return ccr;
-            });
-            if (apply != null) {
-                f.thenApply(apply);
+                futures.add(f);
             }
-            futures.add(f);
+            Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId)).map(ControllerCommandResponse::new)
+                    .map(CompletableFuture::completedFuture).forEach(futures::add);
+            return futures;
+        } catch (Exception e) {
+            futures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(orderFilter.getControllerIds().get(0), Optional.of(e))));
+            return futures;
         }
-        Proxies.getControllerDbInstances().keySet().stream().filter(cId -> !ordersPerController.containsKey(cId)).map(ControllerCommandResponse::new)
-                .map(CompletableFuture::completedFuture).forEach(futures::add);
-        return futures;
     }
     
     // for Deploy and Revoke operations

@@ -2,7 +2,6 @@ package com.sos.joc.publish.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +63,6 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
-import io.vavr.control.Either;
 import js7.proxy.javaapi.JControllerProxy;
 
 public abstract class ADeploy extends JOCResourceImpl {
@@ -216,31 +214,29 @@ public abstract class ADeploy extends JOCResourceImpl {
                         LOGGER.debug("DEPLOY: order cancel - future started");
                         List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = 
                                 CancelOrdersPublishHelper.getCancelOrderFutures(this, orderFilter, null);
+                        LOGGER.info("cancelOrderResponses count: " + cancelOrderResponse.size());
                         CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
                             Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
-                                    .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+                                    .peek(ccr -> LOGGER.info(ccr.getControllerId() + " " + ccr.getException().toString())).collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                             mappedFutures.putIfAbsent(true, Collections.emptyList());
                             mappedFutures.putIfAbsent(false, Collections.emptyList());
                             LOGGER.debug("DEPLOY: order cancel - future finished");
                             
-                            if(!mappedFutures.get(true).isEmpty()) {
-                                // contains futures with errors
-                                ProblemHelper.postExceptionsIfExist(mappedFutures.get(true), xAccessToken, getJocError());
-                            } else {
-                                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, 
-                                        verifiedDeployablesPerController.get(controllerId).updateableAgentNames(),
-                                        verifiedDeployablesPerController.get(controllerId).updateableAgentNamesFileOrderSources(), dbAuditlog.getId());
+                            mappedFutures.get(true).forEach(ccr -> futures.add(CompletableFuture.completedFuture(ccr)));
+                            mappedFutures.get(false).forEach(ccr -> {
+                                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, verifiedDeployablesPerController
+                                        .get(controllerId).updateableAgentNames(), verifiedDeployablesPerController.get(controllerId)
+                                                .updateableAgentNamesFileOrderSources(), dbAuditlog.getId());
                                 SOSHibernateSession sessionAfterCancel = null;
                                 try {
                                     sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders");
                                     futures.add(StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec,
                                             renamedOriginalEntriesPerController.get(controllerId), controllerId, updateRecord));
-                                } catch (Exception e) {
-                                    throw new JocDeployException(e);
                                 } finally {
                                     Globals.disconnect(sessionAfterCancel);
                                 }
-                            }
+                            });
+                            processFutures(futures, deployFilter, xAccessToken);
                         });
                     } else {
                         SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, 
@@ -251,8 +247,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                             sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy");
                             futures.add(StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec,
                                     renamedOriginalEntriesPerController.get(controllerId), controllerId, updateRecord));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
                         } finally {
                             Globals.disconnect(sessionWithoutCancel);
                         }
@@ -263,7 +257,13 @@ public abstract class ADeploy extends JOCResourceImpl {
             // loop 2: delete from all allowed controllers
             for (String controllerId : allowedControllerIds) {
                 if(itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
-                    JControllerProxy proxy = Proxy.of(controllerId);
+                    JControllerProxy proxy;
+                    try {
+                        proxy = Proxy.of(controllerId);
+                    } catch (Exception e) {
+                        futures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(e))));
+                        continue;
+                    }
                     Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = itemsToDeletePerController.get(controllerId).stream()
                             .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
                    if(allItemsToDelete.get(true) != null && !allItemsToDelete.get(true).isEmpty()) {
@@ -291,50 +291,24 @@ public abstract class ADeploy extends JOCResourceImpl {
                    }
                 }
             }
+            LOGGER.info("futures count: " + futures.size());
+//                return futures;
+//            }).thenAccept(futures -> processFutures(futures, deployFilter, xAccessToken));
             // process when all asynchronous (deploy/delete) futures are finished
-            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-                Map<Boolean, List<ControllerCommandResponse>> mappedFutures = futures.stream().map(CompletableFuture::join)
-                        .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
-                // futures with exceptions
-                mappedFutures.putIfAbsent(true, Collections.emptyList());
-                // futures without exception
-                mappedFutures.putIfAbsent(false, Collections.emptyList());
-                List<CompletableFuture<ControllerCommandResponse>> processAfterFutures = new ArrayList<>(); 
-                mappedFutures.values().stream().flatMap(Collection::stream).forEach(ccr -> {
-                    if(DeployAction.UPDATE.equals(ccr.getDeployTransportRecord().get().action())) {
-                        processAfterFutures.add(StoreDeployments.processAfterAdd( ccr.hasException() ? ccr.getException().get() : null,
-                                ccr.getControllerId(), ccr.getDeployTransportRecord().get()));
-                    } else {
-                        processAfterFutures.add(DeleteDeployments.processAfterDelete( ccr.hasException() ? ccr.getException().get() : null,
-                                ccr.getControllerId(), ccr.getDeployTransportRecord().get()));
-                    }
-                });
-                // process when all asynchronous (processAfter) futures are finished
-                CompletableFuture.allOf(processAfterFutures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-                    Map<Boolean, List<ControllerCommandResponse>> mappedFutures2 = processAfterFutures.stream().map(CompletableFuture::join)
-                            .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
-                    // futures with exceptions
-                    mappedFutures2.putIfAbsent(true, Collections.emptyList());
-                    // futures without exception
-                    mappedFutures2.putIfAbsent(false, Collections.emptyList());
-                    if(!mappedFutures2.get(true).isEmpty()) {
-                        String accessToken = mappedFutures2.get(true).get(0).getDeployTransportRecord().get().impl().getAccessToken();
-                        JocError jocError = mappedFutures2.get(true).get(0).getDeployTransportRecord().get().impl().getJocError();
-                        ProblemHelper.postExceptionsIfExist(mappedFutures2.get(true), accessToken, jocError);
-                    }
-                    if(deployFilter.getTransactionId() != null) {
-                        try {
-                            PublishSemaphore.release(deployFilter.getTransactionId());
-                            LOGGER.debug("DEPLOY: final release of semaphore from deploy with transactionId " + deployFilter.getTransactionId());
-                            if(PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId())
-                                    .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
-                                PublishSemaphore.remove(deployFilter.getTransactionId());
-                                LOGGER.debug("DEPLOY: final remove of semaphore from deploy with transactionId " + deployFilter.getTransactionId());
-                            }
-                        } catch (Exception e) {}
-                    }
-                });
-            });
+//            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+//                List<CompletableFuture<ControllerCommandResponse>> processAfterFutures = new ArrayList<>();
+//                futures.stream().map(CompletableFuture::join).forEach(ccr -> {
+//                    if (DeployAction.UPDATE.equals(ccr.getDeployTransportRecord().get().action())) {
+//                        processAfterFutures.add(StoreDeployments.processAfterAdd(ccr.hasException() ? ccr.getException().get() : null, ccr
+//                                .getControllerId(), ccr.getDeployTransportRecord().get()));
+//                    } else {
+//                        processAfterFutures.add(DeleteDeployments.processAfterDelete(ccr.hasException() ? ccr.getException().get() : null, ccr
+//                                .getControllerId(), ccr.getDeployTransportRecord().get()));
+//                    }
+//                });
+//                // process when all asynchronous (processAfter) futures are finished
+//                processProcessAfterFutures(processAfterFutures, deployFilter, xAccessToken);
+//            });
         } catch(Exception e) {
             if(deployFilter.getTransactionId() != null) {
                 try {
@@ -353,6 +327,81 @@ public abstract class ADeploy extends JOCResourceImpl {
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    private List<CompletableFuture<ControllerCommandResponse>> processCancelOrderFutures (
+            List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse, 
+            Map<String, DeployRecord> verifiedDeployablesPerController, JocKeyPair keyPair, 
+            Map<String, Set<DBItemDeploymentHistory>> renamedOriginalEntriesPerController, DeployTransportRecord updateRecord, Long auditLogId) {
+        List<CompletableFuture<ControllerCommandResponse>> futures = new ArrayList<>();
+        CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(CompletableFuture::join)
+                    .peek(ccr -> LOGGER.info(ccr.getControllerId() + " " + ccr.getException().toString()))
+                    .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+            mappedFutures.putIfAbsent(true, Collections.emptyList());
+            mappedFutures.putIfAbsent(false, Collections.emptyList());
+            LOGGER.debug("DEPLOY: order cancel - future finished");
+            
+            mappedFutures.get(true).forEach(ccr -> futures.add(CompletableFuture.completedFuture(ccr)));
+            mappedFutures.get(false).forEach(ccr -> {
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, 
+                        verifiedDeployablesPerController.get(ccr.getControllerId()).verifiedDeployables(), 
+                        verifiedDeployablesPerController.get(ccr.getControllerId()).updateableAgentNames(), 
+                        verifiedDeployablesPerController.get(ccr.getControllerId()).updateableAgentNamesFileOrderSources(), 
+                        auditLogId);
+                SOSHibernateSession sessionAfterCancel = null;
+                try {
+                    sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders");
+                    futures.add(StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec,
+                            renamedOriginalEntriesPerController.get(ccr.getControllerId()), ccr.getControllerId(), updateRecord));
+                } finally {
+                    Globals.disconnect(sessionAfterCancel);
+                }
+            });
+        });
+        return futures;
+    }
+    private void processFutures(List<CompletableFuture<ControllerCommandResponse>> futures, DeployFilter deployFilter, String xAccessToken) {
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            List<CompletableFuture<ControllerCommandResponse>> processAfterFutures = new ArrayList<>();
+            futures.stream().map(CompletableFuture::join).forEach(ccr -> {
+                if (DeployAction.UPDATE.equals(ccr.getDeployTransportRecord().get().action())) {
+                    processAfterFutures.add(StoreDeployments.processAfterAdd(ccr.hasException() ? ccr.getException().get() : null, ccr
+                            .getControllerId(), ccr.getDeployTransportRecord().get()));
+                } else {
+                    processAfterFutures.add(DeleteDeployments.processAfterDelete(ccr.hasException() ? ccr.getException().get() : null, ccr
+                            .getControllerId(), ccr.getDeployTransportRecord().get()));
+                }
+            });
+            // process when all asynchronous (processAfter) futures are finished
+            LOGGER.info("processAfterFutures count: " + processAfterFutures.size());
+            processProcessAfterFutures(processAfterFutures, deployFilter, xAccessToken);
+        });
+    }
+    
+    private void processProcessAfterFutures(List<CompletableFuture<ControllerCommandResponse>> processAfterFutures, DeployFilter deployFilter, String xAccessToken) {
+        CompletableFuture.allOf(processAfterFutures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            Map<Boolean, List<ControllerCommandResponse>> mappedFutures2 = processAfterFutures.stream().map(CompletableFuture::join)
+                    .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+            // futures with exceptions
+            mappedFutures2.putIfAbsent(true, Collections.emptyList());
+            // futures without exception
+            mappedFutures2.putIfAbsent(false, Collections.emptyList());
+            if(!mappedFutures2.get(true).isEmpty()) {
+                ProblemHelper.postExceptionsIfExist(mappedFutures2.get(true), xAccessToken, getJocError());
+            }
+            if(deployFilter.getTransactionId() != null) {
+                try {
+                    PublishSemaphore.release(deployFilter.getTransactionId());
+                    LOGGER.debug("DEPLOY: final release of semaphore from deploy with transactionId " + deployFilter.getTransactionId());
+                    if(PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId())
+                            .map(ReleaseDeploySemaphore::getInitialCaller).filter(str -> str.equals(SEMAPHORE_ID)).isPresent()) {
+                        PublishSemaphore.remove(deployFilter.getTransactionId());
+                        LOGGER.debug("DEPLOY: final remove of semaphore from deploy with transactionId " + deployFilter.getTransactionId());
+                    }
+                } catch (Exception e) {}
+            }
+        });
     }
     
     private Map<String, DeployRecord> prepareItemsPerController(Set<String> controllerIds, String commitId, 

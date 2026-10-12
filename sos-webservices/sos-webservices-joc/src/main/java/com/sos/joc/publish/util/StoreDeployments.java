@@ -1,7 +1,5 @@
 package com.sos.joc.publish.util;
 
-import java.io.IOException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,14 +12,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
@@ -251,9 +246,6 @@ public class StoreDeployments {
                 ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)), Optional.of(record));
             }
             return CompletableFuture.completedFuture(ccr);
-        } catch (JocDeployException e) {
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
-            return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
             ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);
@@ -286,94 +278,101 @@ public class StoreDeployments {
     }
 
     public static CompletableFuture<ControllerCommandResponse> callUpdateItemsFor(DBLayerDeploy dbLayer, SignedItemsSpec signedItemsSpec, 
-            Set<DBItemDeploymentHistory> renamedToDelete, String controllerId, DeployTransportRecord record) throws SOSException, IOException, 
-            InterruptedException, ExecutionException, TimeoutException, CertificateException {
+            Set<DBItemDeploymentHistory> renamedToDelete, String controllerId, DeployTransportRecord record) {
         CompletableFuture<ControllerCommandResponse> future = null;
-        if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
+        try {
+            if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
 
-            @SuppressWarnings("unused")
-            boolean selfIssued = false;
-            String signerDN = null;
-            X509Certificate cert = null;
-            JControllerProxy proxy = Proxy.of(controllerId);
-            // call updateItems command via ControllerApi for the given controller
-            switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
-            case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                        .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
-                future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations1); 
-            case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
-                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
-                }
-                if (cert != null) {
-                    selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
-                    if (!selfIssued) {
-                        Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                        .getCertificate(), null, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations2); 
-                    } else {
-                        signerDN = cert.getSubjectX500Principal().getName();
-                        Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations3); 
+                @SuppressWarnings("unused")
+                boolean selfIssued = false;
+                String signerDN = null;
+                X509Certificate cert = null;
+                JControllerProxy proxy = Proxy.of(controllerId);
+                // call updateItems command via ControllerApi for the given controller
+                switch (signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
+                case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                    Set<JUpdateItemOperation> itemOperations1 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                            .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.PGP_ALGORITHM_NAME, null, null, proxy);
+                    future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations1); 
+                case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                    if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                        cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
                     }
-                } else {
-                    String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                    throw new JocDeployException(message);
-                }
-                break;
-            case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
-                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
-                }
-                if (cert != null) {
-                    selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
-                    if (!selfIssued) {
-                        Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                        .getCertificate(), null, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations4); 
+                    if (cert != null) {
+                        selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+                        if (!selfIssued) {
+                            Set<JUpdateItemOperation> itemOperations2 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
+                                            .getCertificate(), null, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations2); 
+                        } else {
+                            signerDN = cert.getSubjectX500Principal().getName();
+                            Set<JUpdateItemOperation> itemOperations3 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.RSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations3); 
+                        }
                     } else {
-                        signerDN = cert.getSubjectX500Principal().getName();
-                        Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations5); 
+                        String message = "No certificate present! Items could not be deployed to controller.";
+                        updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
+                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, 
+                                Optional.of(new JocDeployException(message)), Optional.of(record)));
                     }
-                } else {
-                    String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                    throw new JocDeployException(message);
-                }
-                break;
-            case SOSKeyConstants.MLDSA_ALGORITHM_NAME:
-                if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
-                    cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
-                }
-                if (cert != null) {
-                    selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
-                    if (!selfIssued) {
-                        Set<JUpdateItemOperation> itemOperations6 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
-                                        .getCertificate(), null, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations6); 
+                    break;
+                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                    if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                        cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                    }
+                    if (cert != null) {
+                        selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+                        if (!selfIssued) {
+                            Set<JUpdateItemOperation> itemOperations4 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
+                                            .getCertificate(), null, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations4); 
+                        } else {
+                            signerDN = cert.getSubjectX500Principal().getName();
+                            Set<JUpdateItemOperation> itemOperations5 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations5); 
+                        }
                     } else {
-                        signerDN = cert.getSubjectX500Principal().getName();
-                        Set<JUpdateItemOperation> itemOperations7 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
-                                .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
-                        future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations7); 
+                        String message = "No certificate present! Items could not be deployed to controller.";
+                        updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
+                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, 
+                                Optional.of(new JocDeployException(message)), Optional.of(record)));
                     }
-                } else {
-                    String message = "No certificate present! Items could not be deployed to controller.";
-                    updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
-                    throw new JocDeployException(message);
+                    break;
+                case SOSKeyConstants.MLDSA_ALGORITHM_NAME:
+                    if (signedItemsSpec.getKeyPair().getCertificate() != null && !signedItemsSpec.getKeyPair().getCertificate().isEmpty()) {
+                        cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                    }
+                    if (cert != null) {
+                        selfIssued = PublishUtils.checkCertificateIsSelfIssued(cert);
+                        if (!selfIssued) {
+                            Set<JUpdateItemOperation> itemOperations6 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, signedItemsSpec.getKeyPair()
+                                            .getCertificate(), null, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations6); 
+                        } else {
+                            signerDN = cert.getSubjectX500Principal().getName();
+                            Set<JUpdateItemOperation> itemOperations7 = UpdateItemUtils.createUpdateAndDeleteItemOperations(signedItemsSpec
+                                    .getVerifiedDeployables(), renamedToDelete, SOSKeyConstants.MLDSA_SIGNER_ALGORITHM, null, signerDN, proxy);
+                            future = getUpdateItemsFuture(proxy, signedItemsSpec, controllerId, record, itemOperations7); 
+                        }
+                    } else {
+                        String message = "No certificate present! Items could not be deployed to controller.";
+                        updateOptimisticEntriesIfFailed(record.commitId(), message, dbLayer, record.wsIdentifier());
+                        future = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, 
+                                Optional.of(new JocDeployException(message)), Optional.of(record)));
+                    }
+                    break;
                 }
-                break;
             }
+            return future;
+        } catch (Exception e) {
+            return CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(e)),
+                    Optional.of(record)));
         }
-        return future;
     }
 
     private static CompletableFuture<ControllerCommandResponse> getUpdateItemsFuture(JControllerProxy proxy, SignedItemsSpec signedItemsSpec,
