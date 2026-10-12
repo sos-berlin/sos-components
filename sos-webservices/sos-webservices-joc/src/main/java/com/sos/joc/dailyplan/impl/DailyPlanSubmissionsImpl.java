@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
@@ -19,6 +20,7 @@ import com.sos.joc.dailyplan.resource.IDailyPlanSubmissionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsDeleteRequest;
 import com.sos.joc.model.dailyplan.submissions.SubmissionsRequest;
@@ -90,10 +92,17 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
                 return response;
             }
 
-            storeAuditLog(in.getAuditLog(), in.getControllerId());
+            storeAuditLog(in.getAuditLog(), controllerId);
+            AuthFolders authFolders = getPermittedFoldersByControllerPermissions(controllerId, getControllerPermissionsPredicate().getOrders().getCancel());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
+            
+            dbLayer.getSubmittedOrdersForDelete(controllerId, in.getFilter().getDateFor(), in.getFilter().getDateFrom(), in.getFilter().getDateTo())
+                    .stream().filter(i -> !folderIsPermitted(i.getWorkflowFolder(), authFolders)).findAny().ifPresent(i -> {
+                        throw new JocFolderPermissionsException(String.format("Access denied for folder '%s'", i.getWorkflowFolder()));
+                    });
+
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
             int result = dbLayer.delete(StartupMode.webservice, IMPL_PATH_DELETE, controllerId, in.getFilter().getDateFor(), in.getFilter()

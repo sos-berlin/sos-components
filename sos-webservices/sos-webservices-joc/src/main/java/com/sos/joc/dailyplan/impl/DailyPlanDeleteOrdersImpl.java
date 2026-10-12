@@ -50,7 +50,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                 String controllerId = entry.getKey();
                 Set<String> workflows = ordersPerController.getOrDefault(controllerId, Collections.emptyList()).stream().map(
                         DBItemDailyPlanOrder::getWorkflowName).collect(Collectors.toSet());
-                response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getCreate()), workflows);
+                response = initWorkflowPermissions(getControllerPermissions(controllerId).map(p -> p.getOrders().getCancel()), workflows);
                 if (response != null) {
                     return response;
                 }
@@ -71,7 +71,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (!ordersPerController.isEmpty()) {
                 
                 Map<String, AuthFolders> permittedFoldersPerController = getPermittedFoldersByControllerPermissions(ordersPerController.keySet(),
-                        getControllerPermissionsPredicate().getOrders().getCreate());
+                        getControllerPermissionsPredicate().getOrders().getCancel());
 
                 SOSHibernateSession session = null;
                 try {
