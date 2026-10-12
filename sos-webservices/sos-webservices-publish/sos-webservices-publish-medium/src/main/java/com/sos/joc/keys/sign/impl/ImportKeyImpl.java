@@ -1,7 +1,5 @@
 package com.sos.joc.keys.sign.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
@@ -9,25 +7,17 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
-import jakarta.ws.rs.Path;
-
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.keys.DBLayerKeys;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
-import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.sign.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
@@ -37,6 +27,8 @@ import com.sos.joc.model.publish.ImportKeyFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+
+import jakarta.ws.rs.Path;
 
 @Path("profile/key")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
@@ -66,8 +58,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
