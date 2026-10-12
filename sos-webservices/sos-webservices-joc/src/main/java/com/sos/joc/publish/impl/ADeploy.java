@@ -310,7 +310,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                 });
                 // process when all asynchronous (processAfter) futures are finished
                 CompletableFuture.allOf(processAfterFutures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-                    Map<Boolean, List<ControllerCommandResponse>> mappedFutures2 = futures.stream().map(CompletableFuture::join)
+                    Map<Boolean, List<ControllerCommandResponse>> mappedFutures2 = processAfterFutures.stream().map(CompletableFuture::join)
                             .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
                     // futures with exceptions
                     mappedFutures2.putIfAbsent(true, Collections.emptyList());
