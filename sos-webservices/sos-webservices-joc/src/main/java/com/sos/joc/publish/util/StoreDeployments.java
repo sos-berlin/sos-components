@@ -249,7 +249,7 @@ public class StoreDeployments {
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer, 
                         record.wsIdentifier());
                 Throwable t = exception.getCause() != null ? exception.getCause() : exception;
-                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(t)));
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)));
             }
             return CompletableFuture.completedFuture(ccr);
         } catch (JocDeployException e) {
