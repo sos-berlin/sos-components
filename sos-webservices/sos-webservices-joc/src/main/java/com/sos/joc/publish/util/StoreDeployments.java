@@ -240,7 +240,7 @@ public class StoreDeployments {
                         optimisticEntries.stream().map(entry -> entry.getInventoryConfigurationId())
                             .collect(Collectors.toSet()),
                         newHibernateSession);
-                ccr = new ControllerCommandResponse(controllerId, Optional.empty());
+                ccr = new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record));
             } else {
                 // an error occurred
                 // updateRepo command is atomic, therefore all items are rejected
@@ -248,17 +248,14 @@ public class StoreDeployments {
                 // update all previously optimistically stored entries with the error message and change the state
                 List<DBItemDeploymentHistory> optimisticEntries = updateOptimisticEntriesIfFailed(record.commitId(), exception.getMessage(), dbLayer, 
                         record.wsIdentifier());
-//                ProblemHelper.postProblemEventIfExist(either.getLeft(), accessToken, jocError, null);
-                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)));
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)), Optional.of(record));
             }
             return CompletableFuture.completedFuture(ccr);
         } catch (JocDeployException e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);
         } finally {
             Globals.disconnect(newHibernateSession);
