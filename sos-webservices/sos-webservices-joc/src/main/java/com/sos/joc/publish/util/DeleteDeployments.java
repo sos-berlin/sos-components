@@ -335,7 +335,7 @@ public class DeleteDeployments {
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)));
+                ccr = new ControllerCommandResponse(controllerId, Optional.of(new JocDeployException(exception)), Optional.of(record));
             } else {
 //                if(toDelete != null && commitId2 != null && !toDelete.isEmpty() && fileOrderSourceNames != null && !fileOrderSourceNames.isEmpty() ) {
 //                    JControllerProxy proxy = Proxy.of(controllerId);
@@ -353,16 +353,14 @@ public class DeleteDeployments {
 //                            either2.isLeft() ? new JocDeployException(either2.getLeft().throwable()) : null,
 //                            controllerId, account, commitId2, accessToken, jocError, cancelOrderDate, commitId));
 //                }
-                ccr = new ControllerCommandResponse(controllerId, Optional.empty());
+                ccr = new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record));
             }
             return CompletableFuture.completedFuture(ccr);
         } catch (JocDeployException e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), record.impl().getAccessToken(), record.impl().getJocError(), controllerId);
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), record.impl().getAccessToken(), record.impl().getJocError(), controllerId);
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e));
+            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);
         } finally {
             Globals.disconnect(newHibernateSession);

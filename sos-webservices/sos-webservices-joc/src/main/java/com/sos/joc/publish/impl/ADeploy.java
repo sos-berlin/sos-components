@@ -64,6 +64,7 @@ import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.joc.publish.util.UpdateItemUtils;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 
+import io.vavr.control.Either;
 import js7.proxy.javaapi.JControllerProxy;
 
 public abstract class ADeploy extends JOCResourceImpl {
@@ -310,6 +311,17 @@ public abstract class ADeploy extends JOCResourceImpl {
                 });
                 // process when all asynchronous (processAfter) futures are finished
                 CompletableFuture.allOf(processAfterFutures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+                    Map<Boolean, List<ControllerCommandResponse>> mappedFutures2 = futures.stream().map(CompletableFuture::join)
+                            .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
+                    // futures with exceptions
+                    mappedFutures2.putIfAbsent(true, Collections.emptyList());
+                    // futures without exception
+                    mappedFutures2.putIfAbsent(false, Collections.emptyList());
+                    if(!mappedFutures2.get(true).isEmpty()) {
+                        String accessToken = mappedFutures2.get(true).get(0).getDeployTransportRecord().get().impl().getAccessToken();
+                        JocError jocError = mappedFutures2.get(true).get(0).getDeployTransportRecord().get().impl().getJocError();
+                        ProblemHelper.postExceptionsIfExist(mappedFutures2.get(true), accessToken, jocError);
+                    }
                     if(deployFilter.getTransactionId() != null) {
                         try {
                             PublishSemaphore.release(deployFilter.getTransactionId());
