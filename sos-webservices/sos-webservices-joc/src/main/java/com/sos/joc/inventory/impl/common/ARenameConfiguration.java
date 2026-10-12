@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -295,7 +296,7 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
 
     private static void updateMovedReleasedItems(InventoryDBLayer dbLayer, Collection<Long> invIds, Path newPath) throws SOSHibernateException {
         List<DBItemInventoryReleasedConfiguration> released = dbLayer.getReleasedItemByConfigurationIds(invIds);
-        released.stream().peek(item -> setReleasedItem(item, newPath)).forEach(updated -> {
+        released.stream().filter(Objects::nonNull).peek(item -> setReleasedItem(item, newPath)).forEach(updated -> {
             try {
                 dbLayer.getSession().update(updated);
             } catch (SOSHibernateException e) {
@@ -306,8 +307,10 @@ public abstract class ARenameConfiguration extends JOCResourceImpl {
     
     private static void updateMovedReleasedItem(InventoryDBLayer dbLayer, Path newPath, Long invConfigId) throws SOSHibernateException {
         DBItemInventoryReleasedConfiguration released = dbLayer.getReleasedItemByConfigurationId(invConfigId);
-        setReleasedItem(released, newPath);
-        dbLayer.getSession().update(released);
+        if(released != null) {
+            setReleasedItem(released, newPath);
+            dbLayer.getSession().update(released);
+        }
     }
     
     private static void postNewDepHistoryEntryEvent(String name, String folder, Integer objectType, Long inventoryId, Long auditLogId) {
