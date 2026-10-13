@@ -165,47 +165,14 @@ public abstract class ADeploy extends JOCResourceImpl {
                             dbLayer, false);
                 }
             });
-            Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-            // prepare items to delete from all known controllers
-            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
-            for (String controllerId : allowedControllerIds) {
-                List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
-                AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
-                        getControllerPermissionsPredicate().getDeployments().getDeploy());
-                // store history entries for delete operation optimistically
-                if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-                    // first filter for folder permissions
-                    // second filter for not already deleted
-                    // remember filtered items for later
-                    filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
-                            .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedAuthFolders))
-                            .filter(item -> item.getControllerId().equals(controllerId) 
-                                    && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                            .collect(Collectors.toList()));
-                }
-                Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
-                        .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-                // store history entries for delete operation optimistically
-                invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account,
-                                dbAuditlog.getId())));
-                invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(false), commitIdForDelete, account,
-                                dbAuditlog.getId())));
-                itemsToDeletePerController.put(controllerId, filteredDepHistoryItemsToDelete);
-            }
-            // delete configurations optimistically from inventory
-            List<Configuration> folders = null;
-            if (foldersToDelete != null) {
-                folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
-            }
-            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, getAccessToken(),  getJocError(), dbAuditlog.getId(),
-                    false);
+            Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = prepareItemsToDelete(allowedControllerIds, 
+                    itemsFromFolderToDelete, dbLayer, account, commitIdForDelete, commitIdForDeleteFileOrderSources, foldersToDelete,
+                    auditLogId);
 
             DeployTransportRecord updateRecord = new DeployTransportRecord(account, commitId, this, apiCall, deployFilter.getAddOrdersDateFrom(), 
                     false, deployFilter.getTransactionId(), DeployAction.UPDATE);
             List<CompletableFuture<ControllerCommandResponse>> updateFutures = new ArrayList<>();
-            // loop 1: deploy to selected allowed controllers
+            // deploy to selected and delete from all allowed controllers
             for (String controllerId : allowedControllerIds) {
                 CompletableFuture<ControllerCommandResponse> cancelOrderResponse = null;
                 if (deployFilter.getAddOrdersDateFrom() != null) {
@@ -224,7 +191,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                     LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed from order filter");
                     LOGGER.debug("DEPLOY: order cancel - future started");
                     cancelOrderResponse = getCancelOrderFuture(this, orderFilter, null);
-//                    LOGGER.info("cancelOrderResponses count: " + cancelOrderResponse.size());
                 } else {
                     cancelOrderResponse = CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.empty()));
                 }
@@ -266,89 +232,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                 if(future != null) {
                     updateFutures.add(future);
                 }
-//                if (controllerIds.contains(controllerId)) {
-//                    Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = verifiedDeployablesPerController.get(controllerId)
-//                            .verifiedDeployables();
-//                    if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
-//                        if (deployFilter.getAddOrdersDateFrom() != null) {
-//                            DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(verifiedDeployables.keySet(),
-//                                    Optional.of(renamedOriginalEntriesPerController.get(controllerId)), deployFilter.getAddOrdersDateFrom(),
-//                                    controllerId);
-//                            PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
-//                                    .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
-//                            LOGGER.debug("DEPLOY: already processed workflows from Semaphore information removed from order filter");
-//                            LOGGER.debug("DEPLOY: order cancel - future started");
-//                            List<CompletableFuture<ControllerCommandResponse>> cancelOrderResponse = CancelOrdersPublishHelper.getCancelOrderFutures(
-//                                    this, orderFilter, null);
-//                            LOGGER.info("cancelOrderResponses count: " + cancelOrderResponse.size());
-//                            CompletableFuture.allOf(cancelOrderResponse.toArray(CompletableFuture[]::new)).thenRun(() -> {
-//                                Map<Boolean, List<ControllerCommandResponse>> mappedFutures = cancelOrderResponse.stream().map(
-//                                        CompletableFuture::join).peek(ccr -> LOGGER.info(ccr.getControllerId() + " " + ccr.getException().toString()))
-//                                        .collect(Collectors.groupingBy(ControllerCommandResponse::hasException));
-//                                mappedFutures.putIfAbsent(true, Collections.emptyList());
-//                                mappedFutures.putIfAbsent(false, Collections.emptyList());
-//                                LOGGER.debug("DEPLOY: order cancel - future finished");
-//
-//                                mappedFutures.get(true).forEach(ccr -> updateFutures.add(CompletableFuture.completedFuture(ccr)));
-//                                mappedFutures.get(false).forEach(ccr -> {
-//                                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables,
-//                                            verifiedDeployablesPerController.get(controllerId).updateableAgentNames(),
-//                                            verifiedDeployablesPerController.get(controllerId).updateableAgentNamesFileOrderSources(), dbAuditlog
-//                                                    .getId());
-//                                    SOSHibernateSession sessionAfterCancel = null;
-//                                    try {
-//                                        sessionAfterCancel = Globals.createSosHibernateStatelessConnection("deploy-after-cancelOrders");
-//                                        updateFutures.add(StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionAfterCancel), signedItemsSpec,
-//                                                renamedOriginalEntriesPerController.get(controllerId), controllerId, updateRecord));
-//                                    } finally {
-//                                        Globals.disconnect(sessionAfterCancel);
-//                                    }
-//                                });
-//                                try {
-//                                    updateFutures.add(processDelete(controllerId, itemsToDeletePerController, deployFilter, Proxy.of(controllerId),
-//                                            account, commitIdForDelete, commitIdForDeleteFileOrderSources, apiCall));
-//                                } catch (Exception e) {
-//                                    updateFutures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(e))));
-//                                }
-//                                processUpdateFutures(updateFutures, deployFilter, xAccessToken);
-//                            });
-//                        } else {
-//                            SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, verifiedDeployablesPerController.get(
-//                                    controllerId).updateableAgentNames(), verifiedDeployablesPerController.get(controllerId)
-//                                            .updateableAgentNamesFileOrderSources(), dbAuditlog.getId());
-//                            SOSHibernateSession sessionWithoutCancel = null;
-//                            try {
-//                                sessionWithoutCancel = Globals.createSosHibernateStatelessConnection("deploy");
-//                                updateFutures.add(StoreDeployments.callUpdateItemsFor(new DBLayerDeploy(sessionWithoutCancel), signedItemsSpec,
-//                                        renamedOriginalEntriesPerController.get(controllerId), controllerId, updateRecord));
-//                            } finally {
-//                                Globals.disconnect(sessionWithoutCancel);
-//                            }
-//                            try {
-//                                updateFutures.add(processDelete(controllerId, itemsToDeletePerController, deployFilter, Proxy.of(controllerId),
-//                                        account, commitIdForDelete, commitIdForDeleteFileOrderSources, apiCall));
-//                            } catch (Exception e) {
-//                                updateFutures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(e))));
-//                            }
-//                            processUpdateFutures(updateFutures, deployFilter, xAccessToken);
-//                        }
-//                    } else {
-//                        try {
-//                            updateFutures.add(processDelete(controllerId, itemsToDeletePerController, deployFilter, Proxy.of(controllerId), account,
-//                                    commitIdForDelete, commitIdForDeleteFileOrderSources, apiCall));
-//                        } catch (Exception e) {
-//                            updateFutures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(e))));
-//                        }
-//                        processUpdateFutures(updateFutures, deployFilter, xAccessToken);
-//                    } 
-//                } else {
-//                    try {
-//                        updateFutures.add(processDelete(controllerId, itemsToDeletePerController, deployFilter, Proxy.of(controllerId), account,
-//                                commitIdForDelete, commitIdForDeleteFileOrderSources, apiCall));
-//                    } catch (Exception e) {
-//                        updateFutures.add(CompletableFuture.completedFuture(new ControllerCommandResponse(controllerId, Optional.of(e))));
-//                    }
-//                }
             }
             LOGGER.info("futures count(impl): " + updateFutures.size());
             processUpdateFutures(updateFutures, deployFilter, xAccessToken);
@@ -408,7 +291,6 @@ public abstract class ADeploy extends JOCResourceImpl {
     
     private void processUpdateFutures(List<CompletableFuture<ControllerCommandResponse>> futures, DeployFilter deployFilter, String xAccessToken) {
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-            LOGGER.info("futures count(CF.allOf()): " + futures.size());
             List<CompletableFuture<ControllerCommandResponse>> processAfterFutures = new ArrayList<>();
             futures.stream().map(CompletableFuture::join).forEach(ccr -> {
                 if (DeployAction.UPDATE.equals(ccr.getDeployTransportRecord().get().action())) {
@@ -419,7 +301,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                             .getControllerId(), ccr.getDeployTransportRecord().get()));
                 }
             });
-            LOGGER.info("processAfterFutures count: " + processAfterFutures.size());
             // process when all asynchronous (processAfter) futures are finished
             processAfterUpdatesFutures(processAfterFutures, deployFilter, xAccessToken);
         });
@@ -526,39 +407,46 @@ public abstract class ADeploy extends JOCResourceImpl {
         return signedDeployablesPerController;
     }
     
-//    private Map<String, List<DBItemDeploymentHistory>> prepareItemsToDelete (Set<String> allowedControllerIds, 
-//            Set<DBItemDeploymentHistory> itemsFromFolderToDelete, DBLayerDeploy dbLayer, String account, String commitIdForDelete, 
-//            String commitIdForDeleteFileOrderSources) {
-//        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
-//        for (String controllerId : allowedControllerIds) {
-//            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
-//            List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
-//            AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
-//                    getControllerPermissionsPredicate().getDeployments().getDeploy());
-//            // store history entries for delete operation optimistically
-//            if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-//                // first filter for folder permissions
-//                // second filter for not already deleted
-//                // remember filtered items for later
-//                filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
-//                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedAuthFolders))
-//                        .filter(item -> item.getControllerId().equals(controllerId) 
-//                                && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-//                        .collect(Collectors.toList()));
-//            }
-//            Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
-//                    .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
-//            // store history entries for delete operation optimistically
-//            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-//                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources, account,
-//                            dbAuditlog.getId())));
-//            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-//                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(false), commitIdForDelete, account,
-//                            dbAuditlog.getId())));
-//            itemsToDeletePerController.put(controllerId, filteredDepHistoryItemsToDelete);
-//        }
-//        return itemsToDeletePerController;
-//    }
+    private Map<String, List<DBItemDeploymentHistory>> prepareItemsToDelete (Set<String> allowedControllerIds, 
+            Set<DBItemDeploymentHistory> itemsFromFolderToDelete, DBLayerDeploy dbLayer, String account, String commitIdForDelete, 
+            String commitIdForDeleteFileOrderSources, List<Config> foldersToDelete, Long auditLogId) {
+        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
+        for (String controllerId : allowedControllerIds) {
+            List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = new ArrayList<DBItemDeploymentHistory>();
+            AuthFolders permittedAuthFolders = getPermittedFoldersByControllerPermissions(controllerId, 
+                    getControllerPermissionsPredicate().getDeployments().getDeploy());
+            // store history entries for delete operation optimistically
+            if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
+                // first filter for folder permissions
+                // second filter for not already deleted
+                // remember filtered items for later
+                filteredDepHistoryItemsToDelete.addAll(itemsFromFolderToDelete.stream()
+                        .filter(fromFolder -> canAdd(fromFolder.getPath(), permittedAuthFolders))
+                        .filter(item -> item.getControllerId().equals(controllerId) 
+                                && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+                        .collect(Collectors.toList()));
+            }
+            Map<Boolean, List<DBItemDeploymentHistory>> allItemsToDelete = filteredDepHistoryItemsToDelete.stream()
+                    .collect(Collectors.groupingBy(fos -> DeployType.FILEORDERSOURCE.equals(fos.getTypeAsEnum())));
+            // store history entries for delete operation optimistically
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(true), commitIdForDeleteFileOrderSources,
+                            account, auditLogId)));
+            invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, allItemsToDelete.get(false), commitIdForDelete, account, 
+                            auditLogId)));
+            itemsToDeletePerController.put(controllerId, filteredDepHistoryItemsToDelete);
+        }
+        // delete configurations optimistically from inventory
+        List<Configuration> folders = null;
+        if (foldersToDelete != null) {
+            folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
+        }
+        DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, getAccessToken(),  getJocError(), auditLogId,
+                false);
+        return itemsToDeletePerController;
+    }
     
     private Set<DBItemInventoryConfiguration> getInvDbItemsToStore(DeployFilter deployFilter, DBLayerDeploy dbLayer) {
         Set<DBItemInventoryConfiguration> items = getInvItemsToStore(deployFilter, dbLayer);
