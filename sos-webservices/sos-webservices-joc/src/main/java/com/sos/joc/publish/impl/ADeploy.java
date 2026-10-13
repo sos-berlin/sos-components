@@ -233,7 +233,6 @@ public abstract class ADeploy extends JOCResourceImpl {
                     updateFutures.add(future);
                 }
             }
-            LOGGER.info("futures count(impl): " + updateFutures.size());
             processUpdateFutures(updateFutures, deployFilter, xAccessToken);
         } catch(Exception e) {
             if(deployFilter.getTransactionId() != null) {
