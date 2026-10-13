@@ -23,6 +23,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
@@ -2063,7 +2064,11 @@ public class DBLayerDeploy {
     public synchronized boolean recallReleasedConfiguration(DBItemInventoryReleasedConfiguration released, Long AuditLogId) {
         try {
             if (released != null) {
-                getSession().delete(released);
+                try {
+                    getSession().delete(released);
+                } catch (SOSHibernateObjectOperationException e) {
+                    //
+                }
             }
             DBItemInventoryConfiguration unreleased = getSession().get(DBItemInventoryConfiguration.class, released.getCid());
             if (unreleased != null) {

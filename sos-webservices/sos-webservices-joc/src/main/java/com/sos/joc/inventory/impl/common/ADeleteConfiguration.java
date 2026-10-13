@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.records.AuthFolders;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -476,7 +477,11 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer) throws SOSHibernateException {
         conf.setAuditLogId(dbAuditLog.getId());
         if (released != null) {
-            dbLayer.getSession().delete(released);
+            try {
+                dbLayer.getSession().delete(released);
+            } catch (SOSHibernateObjectOperationException e) {
+                //
+            }
         }
         JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer, ConfigurationType.FOLDER);
         DBLayerDependencies dependenciesDbLayer = new DBLayerDependencies(dbLayer.getSession());
