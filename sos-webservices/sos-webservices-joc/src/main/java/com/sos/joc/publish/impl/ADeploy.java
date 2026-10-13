@@ -184,7 +184,7 @@ public abstract class ADeploy extends JOCResourceImpl {
                     }
                     forCancelOrders.addAll(itemsToDeletePerController.get(controllerId));
                     DailyPlanOrderFilterDef orderFilter = CancelOrdersPublishHelper.getDailyPlanOrderFilter(forCancelOrders,
-                            Optional.of(renamedOriginalEntriesPerController.get(controllerId)), deployFilter.getAddOrdersDateFrom(),
+                            Optional.ofNullable(renamedOriginalEntriesPerController.get(controllerId)), deployFilter.getAddOrdersDateFrom(),
                             controllerId);
                     PublishSemaphore.getInstance().getSemaphore(deployFilter.getTransactionId()).map(ReleaseDeploySemaphore::getWorkflowNames)
                             .ifPresent(set -> orderFilter.getWorkflowPaths().removeAll(set));
