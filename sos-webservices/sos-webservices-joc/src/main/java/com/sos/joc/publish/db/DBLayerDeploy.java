@@ -2062,7 +2062,9 @@ public class DBLayerDeploy {
             queryReleased.setParameter("name", name);
             DBItemInventoryReleasedConfiguration released = getSession().getSingleResult(queryReleased);
             if (released != null) {
-                getSession().delete(released);
+                try {
+                    getSession().delete(released);
+                } catch (SOSHibernateException e) {}
             } else {
                 throw new JocSosHibernateException(String.format("no item found to delete with name: %1$s and objectType: %2$s", name, type.value()));
             }
@@ -2087,7 +2089,9 @@ public class DBLayerDeploy {
     public synchronized boolean recallReleasedConfiguration (DBItemInventoryReleasedConfiguration released, Long AuditLogId) {
         try {
             if (released != null) {
-                getSession().delete(released);
+                try {
+                    getSession().delete(released);
+                } catch (SOSHibernateException e) {}
             }
             DBItemInventoryConfiguration unreleased = getSession().get(DBItemInventoryConfiguration.class, released.getCid());
             if (unreleased != null) {

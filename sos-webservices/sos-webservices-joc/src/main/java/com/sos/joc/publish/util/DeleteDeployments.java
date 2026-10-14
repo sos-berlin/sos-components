@@ -368,9 +368,6 @@ public class DeleteDeployments {
                 ccr = new ControllerCommandResponse(controllerId, Optional.empty(), Optional.of(record));
             }
             return CompletableFuture.completedFuture(ccr);
-        } catch (JocDeployException e) {
-            ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
-            return CompletableFuture.completedFuture(ccr);
         } catch (Exception e) {
             ccr = new ControllerCommandResponse(controllerId, Optional.of(e), Optional.of(record));
             return CompletableFuture.completedFuture(ccr);

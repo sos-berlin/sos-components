@@ -473,7 +473,9 @@ public abstract class ADeleteConfiguration extends JOCResourceImpl {
             InventoryDBLayer dbLayer) throws SOSHibernateException {
         conf.setAuditLogId(dbAuditLog.getId());
         if (released != null) {
-            dbLayer.getSession().delete(released);
+            try {
+                dbLayer.getSession().delete(released);
+            } catch (SOSHibernateException e) {}
         }
         JocInventory.deleteInventoryConfigurationAndPutToTrash(conf, dbLayer, ConfigurationType.FOLDER);
         DBLayerDependencies dependenciesDbLayer = new DBLayerDependencies(dbLayer.getSession());
