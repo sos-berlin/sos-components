@@ -45,6 +45,14 @@ public class SSHJClientFactory {
         SSHJConfigPostProcessor.apply(provider, config);
         setConfigKeepAliveProvider(provider, config);
 
+        if (provider.getLogger().isDebugEnabled()) {
+            boolean async = provider.getArguments().getLogAsyncSshj().isTrue();
+            if (async) {
+                provider.getLogger().debug("SSHJ asynchronous logging active");
+            }
+            config.setLoggerFactory(new SSHJLoggerFactory(provider.getLogger(), async));
+        }
+
         // SSH Client
         SSHClient client = createClient(provider, config); // with PROXY
         setHostKeyVerifier(provider.getArguments(), client);

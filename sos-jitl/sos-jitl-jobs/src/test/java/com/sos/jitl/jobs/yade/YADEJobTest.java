@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.loggers.impl.StdLogger;
 import com.sos.js7.job.UnitTestJobHelper;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 
@@ -23,8 +24,10 @@ public class YADEJobTest {
     public void testJob() throws Exception {
 
         Map<String, Object> args = new HashMap<>();
-        args.put("settings", Path.of("xyz"));
-        args.put("profile", "xyz");
+        args.put("settings", Path.of("x.xml"));
+        args.put("profile", "y");
+        args.put("log_level", "debug");
+        args.put("log_async_sshj", true);
 
         // overrides settings
         boolean overrides = false;
@@ -35,6 +38,12 @@ public class YADEJobTest {
             args.put("source_file_list", Path.of("xyz"));
             args.put("target_dir", "xyz");
         }
+
+        StdLogger l = new StdLogger();
+        l.info("hallo {} {}", "1", "2");
+        l.info("hallo %s %s", "1", "2");
+        l.info("hallo %s %d", "1", 2);
+
         // for unit tests only
         UnitTestJobHelper<YADEJobArguments> h = new UnitTestJobHelper<>(new YADEJob(null));
         h.getStepConfig().setControllerId("js7");

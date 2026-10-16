@@ -38,8 +38,9 @@ public class YADEJob extends Job<YADEJobArguments> {
                     .getAllArgumentsAsNameStringValueMap(), args.getSettingsReplacerCaseSensitive().getValue(), args
                             .getSettingsReplacerKeepUnresolved().getValue());
 
-            // Set YADE parallelism from the Job Argument
+            // Set YADE parallelism/logAsyncSshj from the Job Arguments
             argsLoader.getArgs().getParallelism().setValue(args.getParallelism().getValue());
+            argsLoader.getArgs().getLogAsyncSshj().setValue(args.getLogAsyncSshj().getValue());
 
             // Overrides some settings with the Job Arguments
             applyOverrides(argsLoader, args);

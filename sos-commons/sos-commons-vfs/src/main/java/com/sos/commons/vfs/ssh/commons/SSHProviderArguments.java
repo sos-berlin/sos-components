@@ -14,6 +14,7 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 public class SSHProviderArguments extends AProviderArguments {
 
     public static final String CLASS_KEY = "SSH_PROVIDER";
+    public static final String ARG_LOG_ASYNC_SSHJ = "log_async_sshj";
 
     // TODO add JSCH or ...
     public enum SSHProviderType {
@@ -52,6 +53,7 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<Boolean> useZlibCompression = new SOSArgument<>("use_zlib_compression", false, false);
     private SOSArgument<Boolean> simulateShell = new SOSArgument<>("simulate_shell", false, false);
     private SOSArgument<Boolean> disableAutoDetectShell = new SOSArgument<>("disable_auto_detect_shell", false, false);
+    private SOSArgument<Boolean> logAsyncSshj = new SOSArgument<>(ARG_LOG_ASYNC_SSHJ, false, false);
 
     private SOSArgument<Charset> remoteCharset = new SOSArgument<>("remote_charset", false, Charset.forName("UTF-8"));
 
@@ -160,6 +162,10 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Boolean> getDisableAutoDetectShell() {
         return disableAutoDetectShell;
+    }
+
+    public SOSArgument<Boolean> getLogAsyncSshj() {
+        return logAsyncSshj;
     }
 
     public SOSArgument<Charset> getRemoteCharset() {

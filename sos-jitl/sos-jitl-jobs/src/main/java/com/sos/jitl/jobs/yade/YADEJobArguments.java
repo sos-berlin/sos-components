@@ -2,7 +2,9 @@ package com.sos.jitl.jobs.yade;
 
 import java.nio.file.Path;
 
+import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.vfs.commons.IProvider;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
 import com.sos.js7.job.OrderProcessStepOutcomeVariable;
@@ -18,6 +20,8 @@ public class YADEJobArguments extends JobArguments {
     /** see {@link YADEArguments#STARTUP_ARG_PARALLELISM} */
     private JobArgument<Integer> parallelism = new JobArgument<>(YADEArguments.STARTUP_ARG_PARALLELISM, false,
             YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
+
+    private JobArgument<Boolean> logAsyncSshj = new JobArgument<>(SSHProviderArguments.ARG_LOG_ASYNC_SSHJ, false, false);
 
     /** Connectivity fault simulation
      * 
@@ -62,6 +66,10 @@ public class YADEJobArguments extends JobArguments {
 
     public JobArgument<Integer> getParallelism() {
         return parallelism;
+    }
+
+    public SOSArgument<Boolean> getLogAsyncSshj() {
+        return logAsyncSshj;
     }
 
     public JobArgument<String> getSimConnFaults() {
