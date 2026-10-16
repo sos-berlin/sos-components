@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.smb.commons.SMBProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.YADEEngine;
@@ -50,7 +50,7 @@ public class SMBYADEEngineTest {
             argsLoader.getTargetArgs().getDirectory().setValue(TARGET_DIR);
             argsLoader.getTargetArgs().getKeepModificationDate().setValue(true);
 
-            yade.execute(new SLF4JLogger(), argsLoader, false);
+            yade.execute(new Slf4jLogger(), argsLoader, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString());
         }
@@ -79,7 +79,7 @@ public class SMBYADEEngineTest {
             argsLoader.getTargetArgs().getDirectory().setValue(LocalYADEEngineTest.TARGET_DIR);
             argsLoader.getTargetArgs().getKeepModificationDate().setValue(true);
 
-            yade.execute(new SLF4JLogger(), argsLoader, false);
+            yade.execute(new Slf4jLogger(), argsLoader, false);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

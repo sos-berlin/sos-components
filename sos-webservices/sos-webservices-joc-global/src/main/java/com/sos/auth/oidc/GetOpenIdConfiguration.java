@@ -19,7 +19,7 @@ import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -39,20 +39,21 @@ public class GetOpenIdConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetOpenIdConfiguration.class);
     private static final String API_PATH = "/.well-known/openid-configuration";
     private UriBuilder uriBuilder;
-    private KeyStore truststore; 
+    private KeyStore truststore;
     private BaseHttpClient client;
     private BaseHttpClient.Builder baseHttpClientBuilder;
-    
+
     public GetOpenIdConfiguration(OidcProperties provider) throws Exception {
         setTrustStore(provider);
         setUriBuilder(provider.getIamOidcAuthenticationUrl());
     }
-    
-    public GetOpenIdConfiguration(OidcProperties provider, KeyStore truststore) throws SOSSSLException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
+
+    public GetOpenIdConfiguration(OidcProperties provider, KeyStore truststore) throws SOSSSLException, KeyManagementException,
+            NoSuchAlgorithmException, KeyStoreException {
         this.truststore = truststore;
         setUriBuilder(provider.getIamOidcAuthenticationUrl());
     }
-    
+
     private void setUriBuilder(String url) throws SOSSSLException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
         if (url == null) {
             throw new JocConfigurationException("The authentication URL of the OIDC provider is undefined.");
@@ -62,9 +63,9 @@ public class GetOpenIdConfiguration {
     }
 
     public OpenIdConfiguration getJsonObjectFromGet() throws JocException {
-		return getJsonObject(getJsonStringFromGet());
-	}
-    
+        return getJsonObject(getJsonStringFromGet());
+    }
+
     public String getJsonStringFromGet() throws JocException {
         try {
             return getJsonStringFromGet(uriBuilder.build());
@@ -94,7 +95,7 @@ public class GetOpenIdConfiguration {
             throw new JocBadRequestException(jocError, e);
         }
     }
-    
+
     private OpenIdConfiguration getJsonObject(String jsonStr) throws JocInvalidResponseDataException {
         try {
             if (jsonStr == null) {
@@ -122,8 +123,7 @@ public class GetOpenIdConfiguration {
                     }
                     return response;
                 } else {
-                    throw new JocInvalidResponseDataException(
-                            String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
+                    throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
                 }
             default:
                 throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
@@ -133,7 +133,7 @@ public class GetOpenIdConfiguration {
             throw e;
         }
     }
-    
+
     private void setTrustStore(OidcProperties provider) throws Exception {
         truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
@@ -142,18 +142,18 @@ public class GetOpenIdConfiguration {
         if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
-        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
-                .withLogger(new SLF4JLogger(LOGGER));
-        if(url.startsWith("https:")) {
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withLogger(
+                new Slf4jLogger(LOGGER));
+        if (url.startsWith("https:")) {
             baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
         }
     }
-    
+
     private BaseHttpClient createClient() throws Exception {
-        if(client == null) {
+        if (client == null) {
             client = baseHttpClientBuilder.build();
         }
         return client;
     }
-    
+
 }

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.engine.commons.arguments.loaders.AYADEArgumentsLoader;
 import com.sos.yade.engine.commons.arguments.loaders.xml.YADEXMLArgumentsLoader;
@@ -34,7 +34,7 @@ public class YADEEngineTest {
         boolean settingsReplacerKeepUnresolved = true;
         int parallelism = 1;
         try {
-            ISOSLogger logger = new SLF4JLogger();
+            ISOSLogger logger = new Slf4jLogger();
 
             // Load Arguments from Settings XML
             AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
@@ -50,7 +50,7 @@ public class YADEEngineTest {
             List<ProviderFile> files = engine.execute(logger, argsLoader, true);
             LOGGER.info("[files]" + files);
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
+            // LOGGER.error(e.toString(), e);
         }
     }
 
@@ -69,7 +69,7 @@ public class YADEEngineTest {
         int parallelism = 1;// calculateParallelism();
         boolean simulateConnectivityFault = true;
         try {
-            ISOSLogger logger = new SLF4JLogger();
+            ISOSLogger logger = new Slf4jLogger();
 
             // Load Arguments from Settings XML
             AYADEArgumentsLoader argsLoader = new YADEXMLArgumentsLoader().load(logger, settings, profile, map, settingsReplacerCaseSensitive,
@@ -101,10 +101,17 @@ public class YADEEngineTest {
     public void testMain() {
         resetSystemProperties();
 
+        // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false"); // TLSv1.2 only
+
+        // System.setProperty("jdk.tls.allowLegacyResumption", "true");
+        // System.setProperty("jdk.tls.useExtendedMasterSecret", "false");
+        // System.setProperty("jdk.tls.client.enableSessionTicketExtension", "false");
+        // System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
+
         List<String> args = new ArrayList<>();
-        args.add("--file-spec=xyz");
-        args.add("--recursive=true");
-        // args.add("-h");
+        args.add("--settings=yade.xml");
+        args.add("--profile=x");
+
         YADEEngineMain.main(args.toArray(new String[0]));
     }
 

@@ -12,7 +12,7 @@ import com.sos.commons.credentialstore.CredentialStoreArguments;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.beans.SOSCommandResult;
 import com.sos.commons.util.beans.SOSEnv;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 
 public class LocalProviderTest {
@@ -26,7 +26,7 @@ public class LocalProviderTest {
         CredentialStoreArguments csArgs = null; // new CredentialStoreArguments();
 
         args.setCredentialStore(csArgs);
-        LocalProvider p = new LocalProvider(new SLF4JLogger(), args);
+        LocalProvider p = new LocalProvider(new Slf4jLogger(), args);
         try {
             p.connect();
             SOSCommandResult result = p.executeCommand("ls -la /var/opt/apache-archiva/data/repositories");
@@ -53,7 +53,7 @@ public class LocalProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
 
         args.setCredentialStore(csArgs);
-        LocalProvider p = new LocalProvider(new SLF4JLogger(), args);
+        LocalProvider p = new LocalProvider(new Slf4jLogger(), args);
         try {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
@@ -89,7 +89,7 @@ public class LocalProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
 
         args.setCredentialStore(csArgs);
-        LocalProvider p = new LocalProvider(new SLF4JLogger(), args);
+        LocalProvider p = new LocalProvider(new Slf4jLogger(), args);
         try {
             p.connect();
             Map<String, String> envVars = new HashMap<>();

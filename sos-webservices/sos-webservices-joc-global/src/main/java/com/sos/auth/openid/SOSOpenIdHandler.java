@@ -46,12 +46,10 @@ import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
-
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-
 import com.sos.joc.model.security.properties.oidc.OidcFlowTypes;
 
 public class SOSOpenIdHandler {
@@ -59,7 +57,7 @@ public class SOSOpenIdHandler {
     public static final String PREFERRED_USERNAME = "preferred_username";
     private static final String CLIENT_CREDENTIAL_APP_ID = "appid";
     public static final String EMAIL = "email";
-//    private static final String CLAIMS_SUPPORTED = "claims_supported";
+    // private static final String CLAIMS_SUPPORTED = "claims_supported";
     private static final String WELL_KNOWN_OPENID_CONFIGURATION = "/.well-known/openid-configuration";
     private static final String JWKS_URI_ENDPOINT = "jwks_uri";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSOpenIdHandler.class);
@@ -71,8 +69,8 @@ public class SOSOpenIdHandler {
     private SOSOpenIdWebserviceCredentials webserviceCredentials;
     private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     private static final String CONTENT_TYPE = "Content-Type";
-//    private static final String BEARER = "Bearer";
-//    private static final String AUTHORIZATION = "Authorization";
+    // private static final String BEARER = "Bearer";
+    // private static final String AUTHORIZATION = "Authorization";
     private JsonObject jsonHeader;
     private JsonObject jsonPayload;
     private KeyStore truststore = null;
@@ -96,15 +94,14 @@ public class SOSOpenIdHandler {
             }
         }
     }
-    
+
     private String getFormResponse(URI requestUri) throws SOSException, SocketException {
         HttpExecutionResult<String> result;
         int httpReplyCode = 0;
         String contentType = "";
         try {
-            Builder builder = BaseHttpClient.withBuilder().withLogger(new SLF4JLogger(LOGGER))
-                    .withConnectTimeout(Duration.ofMillis(SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT))
-                    .withHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
+            Builder builder = BaseHttpClient.withBuilder().withLogger(new Slf4jLogger(LOGGER)).withConnectTimeout(Duration.ofMillis(
+                    SOSAuthHelper.RESTAPI_CONNECTION_TIMEOUT)).withHeader(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED);
             if (truststore != null && requestUri.toString().startsWith("https:")) {
                 builder.withSSLContext(SSLContext.createSslContext(truststore));
             }
@@ -161,7 +158,8 @@ public class SOSOpenIdHandler {
 
     }
 
-    private String getAccountIdentifier(JsonObject idTokenPayload) throws SocketException, SOSException, JsonMappingException, JsonProcessingException {
+    private String getAccountIdentifier(JsonObject idTokenPayload) throws SocketException, SOSException, JsonMappingException,
+            JsonProcessingException {
 
         if (webserviceCredentials.getFlowType().equals(OidcFlowTypes.CLIENT_CREDENTIAL)) {
             return CLIENT_CREDENTIAL_APP_ID;
@@ -171,7 +169,7 @@ public class SOSOpenIdHandler {
             accountNameClaim = PREFERRED_USERNAME;
 
         }
-        
+
         if (isSupportedClaim(accountNameClaim, idTokenPayload)) {
             return accountNameClaim;
         } else {
@@ -181,7 +179,7 @@ public class SOSOpenIdHandler {
         return EMAIL;
 
     }
-    
+
     private boolean isSupportedClaim(String claimName, JsonObject idTokenPayload) {
         JsonValue jv = idTokenPayload.get(claimName);
         return jv != null && jv.getValueType().equals(ValueType.STRING);
@@ -204,7 +202,7 @@ public class SOSOpenIdHandler {
         } else {
             openidConfiguration = new String(Base64.getUrlDecoder().decode(webserviceCredentials.getOpenidConfiguration()), StandardCharsets.UTF_8);
         }
-        
+
         JsonReader jsonReaderConfigurationResponse = null;
         try {
             jsonReaderConfigurationResponse = Json.createReader(new StringReader(openidConfiguration));
@@ -264,7 +262,7 @@ public class SOSOpenIdHandler {
             }
         }
     }
-    
+
     private boolean authenticationUrlIsValid(String authUrlFromIdentityService, String authUrlFromIdToken) {
         if (authUrlFromIdentityService == null || authUrlFromIdToken == null) {
             return false;
@@ -325,13 +323,11 @@ public class SOSOpenIdHandler {
     }
 
     public String decodeIdToken(String idToken) throws Exception {
-        
 
         JsonReader jsonReaderHeader = null;
         JsonReader jsonReaderPayload = null;
 
         try {
-
 
             String[] accessTokenParts = idToken.split("\\.");
             Base64.Decoder decoder = Base64.getUrlDecoder();
@@ -343,13 +339,12 @@ public class SOSOpenIdHandler {
             jsonReaderPayload = Json.createReader(new StringReader(payload));
             jsonHeader = jsonReaderHeader.readObject();
             jsonPayload = jsonReaderPayload.readObject();
-            
+
             if (accountIdentifier == null) {
                 accountIdentifier = getAccountIdentifier(jsonPayload);
 
             }
 
-            
             return jsonPayload.getString(accountIdentifier, "");
         } catch (Exception e) {
             LOGGER.warn(String.format("Could not decode jwt id-token"));
@@ -383,7 +378,7 @@ public class SOSOpenIdHandler {
             jsonReaderPayload = Json.createReader(new StringReader(payload));
             jsonHeader = jsonReaderHeader.readObject();
             jsonPayload = jsonReaderPayload.readObject();
-            
+
             Map<String, List<String>> groupRolesMap = webserviceCredentials.getGroupRolesMap();
 
             if (webserviceCredentials.getClaims() != null && groupRolesMap != null) {
@@ -418,7 +413,7 @@ public class SOSOpenIdHandler {
             }
         }
     }
-    
+
     private void addRoles(String group, Map<String, List<String>> groupRolesMap, Set<String> roles) {
         LOGGER.debug("--------- account is member of group:" + group);
         List<String> mappedRoles = groupRolesMap.get(group);

@@ -271,8 +271,12 @@ public class SOSClassUtil {
         }
     }
 
-    private static String getSimpleName(String className) {
-        return className.substring(className.lastIndexOf('.') + 1);
+    public static String getSimpleName(String className) {
+        if (className == null) {
+            return "";
+        }
+        int li = className.lastIndexOf('.');
+        return li > 0 ? className.substring(li + 1) : className;
     }
 
 }

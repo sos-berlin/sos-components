@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.azure.commons.AzureBlobStorageProviderArguments;
 
@@ -39,7 +39,7 @@ public class AzureBlobStorageProviderTest {
         CredentialStoreArguments csArgs = null;// new CredentialStoreArguments();
         args.setCredentialStore(csArgs);
 
-        AzureBlobStorageProvider p = new AzureBlobStorageProvider(new SLF4JLogger(), args);
+        AzureBlobStorageProvider p = new AzureBlobStorageProvider(new Slf4jLogger(), args);
         try {
             p.connect();
             cancelAfterSeconds(p, 2);
