@@ -35,7 +35,7 @@ public class YADEEngineJumpHostAddonTest {
 
             Instant start = Instant.now();
             YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader();
-            argsLoader.load(new Slf4jLogger(), Path.of(settingsFile), profile, System.getenv(), true, true);
+            argsLoader.load(new Slf4jLogger(), Path.of(settingsFile), profile, alternativeProfile, System.getenv(), true, true);
             LOGGER.info("[duration]" + SOSDate.getDuration(start, Instant.now()));
 
             ISOSLogger logger = new Slf4jLogger();
