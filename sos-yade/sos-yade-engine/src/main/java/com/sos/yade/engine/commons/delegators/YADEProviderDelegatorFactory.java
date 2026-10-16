@@ -126,7 +126,9 @@ public class YADEProviderDelegatorFactory {
                 break;
             case SFTP:
             case SSH:
-                p = SSHProvider.createInstance(logger, (SSHProviderArguments) providerArgs);
+                SSHProviderArguments sa = (SSHProviderArguments) providerArgs;
+                sa.getLogAsyncSshj().setValue(args.getLogAsyncSshj().getValue());
+                p = SSHProvider.createInstance(logger, sa);
                 break;
             case SMB:
                 p = SMBProvider.createInstance(logger, (SMBProviderArguments) providerArgs);

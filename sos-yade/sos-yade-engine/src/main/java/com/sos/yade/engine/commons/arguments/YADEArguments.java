@@ -93,6 +93,7 @@ public class YADEArguments extends ASOSArguments {
      * </p>
      */
     private SOSArgument<Integer> parallelism = new SOSArgument<>(STARTUP_ARG_PARALLELISM, false, Integer.valueOf(1));
+    private SOSArgument<Boolean> logAsyncSshj = new SOSArgument<>("LogAsyncSshj", false, false);
 
     /** COPY/MOVE operations */
     private SOSArgument<Boolean> transactional = new SOSArgument<>("Transactional", false, Boolean.valueOf(false));
@@ -143,6 +144,10 @@ public class YADEArguments extends ASOSArguments {
 
     public SOSArgument<Integer> getParallelism() {
         return parallelism;
+    }
+
+    public SOSArgument<Boolean> getLogAsyncSshj() {
+        return logAsyncSshj;
     }
 
     public boolean isParallelismEnabled() {
