@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.sos.commons.util.arguments.base.ASOSArguments;
 import com.sos.commons.util.arguments.base.SOSArgument;
+import com.sos.commons.util.loggers.base.ISOSLogger.LogLevel;
 
 /** Represents the declared job arguments for a job execution.
  * <p>
@@ -15,11 +16,6 @@ import com.sos.commons.util.arguments.base.SOSArgument;
  * </p>
  */
 public class JobArguments {
-
-    /** Log levels supported for job execution. */
-    public enum LogLevel {
-        INFO, DEBUG, TRACE, WARN, ERROR
-    }
 
     /** Mocking levels supported for job execution.
      * <ul>

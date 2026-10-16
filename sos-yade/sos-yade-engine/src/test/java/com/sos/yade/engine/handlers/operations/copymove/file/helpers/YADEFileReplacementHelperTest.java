@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.local.LocalProvider;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.yade.engine.commons.YADEProviderFile;
@@ -101,7 +101,7 @@ public class YADEFileReplacementHelperTest {
             YADESourceArguments sargs = new YADESourceArguments();
             sargs.applyDefaultIfNullQuietly();
             sargs.setProvider(pargs);
-            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new SLF4JLogger(), pargs), sargs);
+            AYADEProviderDelegator delegator = new YADESourceProviderDelegator(new LocalProvider(new Slf4jLogger(), pargs), sargs);
 
             YADEProviderFile file = new YADEProviderFile(delegator, yadeProviderFilePath, 0, 0, null, false);
             Optional<YADEFileNameInfo> result = YADEFileReplacementHelper.getReplacementResultIfDifferent(delegator, file.getName(), replaceWhat,

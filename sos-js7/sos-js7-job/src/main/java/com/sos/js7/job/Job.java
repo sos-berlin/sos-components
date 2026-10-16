@@ -217,6 +217,8 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
                                     .getName(), mockLevel, e.toString()));
                             return step.success();
                         }
+                    } finally {
+                        step.getLogger().close();
                     }
                 }
                 return JOutcome.failed("Canceled");
@@ -226,22 +228,25 @@ public abstract class Job<A extends JobArguments> implements BlockingInternalJob
             public void cancel(boolean immediately) {
                 try {
                     if (processOrderStepRef != null && !canceled) {
-                        OrderProcessStep<A> orderProcessStep = processOrderStepRef.get();
-                        boolean log = false;
-                        if (orderProcessStep != null) {
-                            log = true;
-                            cancelProcessOrder(orderProcessStep);
+                        OrderProcessStep<A> step = processOrderStepRef.get();
+                        OrderProcessStepLogger logger = null;
+                        if (step != null) {
+                            logger = step.getLogger();
+                            cancelProcessOrder(step);
                         }
                         Thread thread = thread();
                         if (thread == null) {
-                            if (log) {
-                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][skip interrupt]thread not found");
+                            if (logger != null) {
+                                logger.info("[" + OPERATION_CANCEL_KILL + "][thread][skip interrupt]thread not found");
                             }
                         } else {
-                            if (log) {
-                                orderProcessStep.getLogger().info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
+                            if (logger != null) {
+                                logger.info("[" + OPERATION_CANCEL_KILL + "][thread][" + thread.getName() + "]interrupt ...");
                             }
                             thread.interrupt();
+                        }
+                        if (logger != null) {
+                            logger.close();
                         }
                     }
                 } finally {

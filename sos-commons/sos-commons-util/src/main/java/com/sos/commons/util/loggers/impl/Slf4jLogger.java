@@ -6,13 +6,14 @@ import org.slf4j.spi.LocationAwareLogger;
 
 import com.sos.commons.util.loggers.base.ISOSLogger;
 
-/** slf4j-based implementation for applications that can be used in JS7 jobs (job logger) or standalone (slf4j API). */
-public class SLF4JLogger implements ISOSLogger {
+/** An {@link ISOSLogger} implementation that delegates log messages to SLF4J. */
+public class Slf4jLogger implements ISOSLogger {
 
     private final String fqcn;
     private final Logger logger;
     private final LocationAwareLogger locationAwareLogger;
 
+    private final boolean isInfoEnabled;
     private final boolean isDebugEnabled;
     private final boolean isTraceEnabled;
 
@@ -20,8 +21,12 @@ public class SLF4JLogger implements ISOSLogger {
      * <p>
      * Initializes the logger using {@code SLF4JLogger.class} as both the SLF4J delegate and the fully qualified class name (FQCN).<br/>
      * This setup enables standard logging with the actual calling class and method being correctly reflected in the logs. */
-    public SLF4JLogger() {
-        this(LoggerFactory.getLogger(SLF4JLogger.class), SLF4JLogger.class);
+    public Slf4jLogger() {
+        this((ISOSLogger) null);
+    }
+
+    public Slf4jLogger(ISOSLogger provider) {
+        this(LoggerFactory.getLogger(Slf4jLogger.class), Slf4jLogger.class, provider);
     }
 
     /** Constructor for use by classes implementing {@link ISOSLogger}.
@@ -31,8 +36,12 @@ public class SLF4JLogger implements ISOSLogger {
      * This ensures that log messages reflect the intended logger class (e.g. {@code OrderProcessStepLogger}) when using SLF4J's location-aware logging.
      *
      * @param fqcnClazz the class implementing {@link ISOSLogger}; used to control caller location in logs */
-    public SLF4JLogger(Class<?> fqcnClazz) {
-        this(LoggerFactory.getLogger(SLF4JLogger.class), fqcnClazz);
+    public Slf4jLogger(Class<?> fqcnClazz) {
+        this(LoggerFactory.getLogger(Slf4jLogger.class), fqcnClazz, null);
+    }
+
+    public Slf4jLogger(Class<?> fqcnClazz, ISOSLogger provider) {
+        this(LoggerFactory.getLogger(Slf4jLogger.class), fqcnClazz, provider);
     }
 
     /** Constructor with a provided SLF4J {@link Logger} instance.
@@ -41,8 +50,12 @@ public class SLF4JLogger implements ISOSLogger {
      * This ensures that log entries reflect the actual calling class and method that invoked the logger.
      *
      * @param logger the SLF4J logger instance to delegate to */
-    public SLF4JLogger(Logger logger) {
-        this(logger, SLF4JLogger.class);
+    public Slf4jLogger(Logger logger) {
+        this(logger, Slf4jLogger.class, null);
+    }
+
+    public Slf4jLogger(Logger logger, ISOSLogger provider) {
+        this(logger, Slf4jLogger.class, provider);
     }
 
     /** Full constructor with custom SLF4J logger and fully qualified class name.
@@ -53,11 +66,17 @@ public class SLF4JLogger implements ISOSLogger {
      * @param logger the SLF4J logger instance to delegate to
      * @param fqcnClazz the class implementing {@link ISOSLogger}, used to resolve the caller location;<br/>
      *            if {@code null}, defaults to {@code SLF4JLogger.class} */
-    public SLF4JLogger(Logger logger, Class<?> fqcnClazz) {
-        this.fqcn = fqcnClazz == null ? SLF4JLogger.class.getName() : fqcnClazz.getName();
+    public Slf4jLogger(Logger logger, Class<?> fqcnClazz) {
+        this(logger, fqcnClazz, null);
+    }
+
+    public Slf4jLogger(Logger logger, Class<?> fqcnClazz, ISOSLogger provider) {
+        this.fqcn = fqcnClazz == null ? Slf4jLogger.class.getName() : fqcnClazz.getName();
         this.logger = logger;
-        this.isDebugEnabled = logger.isDebugEnabled();
-        this.isTraceEnabled = logger.isTraceEnabled();
+
+        this.isInfoEnabled = provider == null ? logger.isInfoEnabled() : provider.isInfoEnabled();
+        this.isDebugEnabled = provider == null ? logger.isDebugEnabled() : provider.isDebugEnabled();
+        this.isTraceEnabled = provider == null ? logger.isTraceEnabled() : provider.isTraceEnabled();
 
         if (logger instanceof LocationAwareLogger) {
             this.locationAwareLogger = (LocationAwareLogger) logger;
@@ -68,12 +87,26 @@ public class SLF4JLogger implements ISOSLogger {
 
     @Override
     public void info(Object msg) {
+        if (!isInfoEnabled) {
+            return;
+        }
         log(LocationAwareLogger.INFO_INT, String.valueOf(msg), null);
     }
 
     @Override
     public void info(String format, Object... args) {
+        if (!isInfoEnabled) {
+            return;
+        }
         log(LocationAwareLogger.INFO_INT, format, args);
+    }
+
+    @Override
+    public void info(String format, Throwable t) {
+        if (!isInfoEnabled) {
+            return;
+        }
+        log(LocationAwareLogger.INFO_INT, format, null, t);
     }
 
     @Override
@@ -93,6 +126,14 @@ public class SLF4JLogger implements ISOSLogger {
     }
 
     @Override
+    public void debug(String format, Throwable t) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        log(LocationAwareLogger.DEBUG_INT, format, null, t);
+    }
+
+    @Override
     public void trace(Object msg) {
         if (!isTraceEnabled) {
             return;
@@ -109,6 +150,14 @@ public class SLF4JLogger implements ISOSLogger {
     }
 
     @Override
+    public void trace(String format, Throwable t) {
+        if (!isTraceEnabled) {
+            return;
+        }
+        log(LocationAwareLogger.TRACE_INT, format, null, t);
+    }
+
+    @Override
     public void warn(Object msg) {
         log(LocationAwareLogger.WARN_INT, String.valueOf(msg), null);
     }
@@ -119,8 +168,8 @@ public class SLF4JLogger implements ISOSLogger {
     }
 
     @Override
-    public void warn(String msg, Throwable e) {
-        log(LocationAwareLogger.WARN_INT, msg, null, e);
+    public void warn(String msg, Throwable t) {
+        log(LocationAwareLogger.WARN_INT, msg, null, t);
     }
 
     @Override
@@ -134,13 +183,18 @@ public class SLF4JLogger implements ISOSLogger {
     }
 
     @Override
-    public void error(String msg, Throwable e) {
-        log(LocationAwareLogger.ERROR_INT, msg, null, e);
+    public void error(String msg, Throwable t) {
+        log(LocationAwareLogger.ERROR_INT, msg, null, t);
     }
 
     @Override
-    public void error(Throwable e) {
-        log(LocationAwareLogger.ERROR_INT, e.toString(), null, e);
+    public void error(Throwable t) {
+        log(LocationAwareLogger.ERROR_INT, t == null ? null : t.toString(), null, t);
+    }
+
+    @Override
+    public boolean isInfoEnabled() {
+        return isInfoEnabled;
     }
 
     @Override
@@ -158,57 +212,49 @@ public class SLF4JLogger implements ISOSLogger {
     }
 
     private void log(int level, String msg, Object[] args, Throwable t) {
-        if (locationAwareLogger != null) {
-            locationAwareLogger.log(null, fqcn, level, format(msg, args), null, t);
-        } else {
-            switch (level) {
-            case LocationAwareLogger.TRACE_INT:
-                if (t != null) {
-                    logger.trace(format(msg, args), t);
-                } else {
-                    logger.trace(format(msg, args));
-                }
-                break;
-            case LocationAwareLogger.DEBUG_INT:
-                if (t != null) {
-                    logger.debug(format(msg, args), t);
-                } else {
-                    logger.debug(format(msg, args));
-                }
-                break;
-            case LocationAwareLogger.INFO_INT:
-                if (t != null) {
-                    logger.info(format(msg, args), t);
-                } else {
-                    logger.info(format(msg, args));
-                }
-                break;
-            case LocationAwareLogger.WARN_INT:
-                if (t != null) {
-                    logger.warn(format(msg, args), t);
-                } else {
-                    logger.warn(format(msg, args));
-                }
-                break;
-            case LocationAwareLogger.ERROR_INT:
-                if (t != null) {
-                    logger.error(format(msg, args), t);
-                } else {
-                    logger.error(format(msg, args));
-                }
-                break;
-            }
-        }
-    }
+        String message = ISOSLogger.format(msg, args).getMessage();
 
-    private String format(String format, Object[] args) {
-        if (args == null || args.length == 0) {
-            return format;
+        if (locationAwareLogger != null) {
+            locationAwareLogger.log(null, fqcn, level, message, args, t);
+            return;
         }
-        try {
-            return String.format(format, args);
-        } catch (Exception e) {
-            return "[" + SLF4JLogger.class.getSimpleName() + "][" + format + "]" + e.getMessage();
+
+        switch (level) {
+        case LocationAwareLogger.TRACE_INT:
+            if (t != null) {
+                logger.trace(message, t);
+            } else {
+                logger.trace(message);
+            }
+            break;
+        case LocationAwareLogger.DEBUG_INT:
+            if (t != null) {
+                logger.debug(message, t);
+            } else {
+                logger.debug(message);
+            }
+            break;
+        case LocationAwareLogger.INFO_INT:
+            if (t != null) {
+                logger.info(message, t);
+            } else {
+                logger.info(message);
+            }
+            break;
+        case LocationAwareLogger.WARN_INT:
+            if (t != null) {
+                logger.warn(message, t);
+            } else {
+                logger.warn(message);
+            }
+            break;
+        case LocationAwareLogger.ERROR_INT:
+            if (t != null) {
+                logger.error(message, t);
+            } else {
+                logger.error(message);
+            }
+            break;
         }
     }
 }

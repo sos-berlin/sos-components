@@ -18,7 +18,7 @@ import com.sos.commons.httpclient.commons.auth.IHttpClientAuthStrategy;
 import com.sos.commons.util.SOSCollection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.ssl.SslArguments;
 import com.sos.commons.util.ssl.SslContextFactory;
@@ -27,7 +27,7 @@ public abstract class ABaseHttpClientBuilder<T extends ABaseHttpClient, B extend
 
     private final HttpClient.Builder httpClientBuilder;
 
-    private ISOSLogger logger = new SLF4JLogger();
+    private ISOSLogger logger = new Slf4jLogger();
     private ProxyConfig proxyConfig;
     private SslArguments ssl;
     private SSLContext sslContext;

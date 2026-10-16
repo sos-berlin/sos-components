@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.local.commons.LocalProviderArguments;
 import com.sos.yade.commons.Yade.TransferOperation;
 import com.sos.yade.engine.YADEEngine;
@@ -67,7 +67,7 @@ public class LocalYADEEngineTest {
 
             // argsLoader.getClientArgs().getResultSetFileName().setValue(Path.of(LOCAL_TARGET_DIR).resolve("result_set_file.txt"));
 
-            yade.execute(new SLF4JLogger(), argsLoader, true);
+            yade.execute(new Slf4jLogger(), argsLoader, true);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }

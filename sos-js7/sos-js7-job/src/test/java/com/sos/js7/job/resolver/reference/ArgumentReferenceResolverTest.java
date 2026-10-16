@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.js7.job.JobArgument;
 import com.sos.js7.job.JobArguments;
@@ -32,7 +32,7 @@ public class ArgumentReferenceResolverTest {
             LOGGER.info("[before]" + args.getTest().getName() + "=" + args.getTest().getValue());
 
             Map<String, JobArgument<?>> map = toMap(args);
-            ArgumentReferenceResolver.resolve(new SLF4JLogger(), map);
+            ArgumentReferenceResolver.resolve(new Slf4jLogger(), map);
             for (Map.Entry<String, JobArgument<?>> entry : map.entrySet()) {
                 LOGGER.info("    [after]" + entry.getValue().toString(true));
             }
@@ -52,7 +52,7 @@ public class ArgumentReferenceResolverTest {
             LOGGER.info("[before]" + args.getTest().getName() + "=" + args.getTest().getValue());
 
             Map<String, JobArgument<?>> map = toMap(args);
-            ArgumentReferenceResolver.resolve(new SLF4JLogger(), map);
+            ArgumentReferenceResolver.resolve(new Slf4jLogger(), map);
             for (Map.Entry<String, JobArgument<?>> entry : map.entrySet()) {
                 LOGGER.info("    [after]" + entry.getValue().toString(true));
             }

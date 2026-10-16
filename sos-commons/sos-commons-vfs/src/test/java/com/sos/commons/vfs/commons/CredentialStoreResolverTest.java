@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.CredentialStoreArguments;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 
@@ -40,7 +40,7 @@ public class CredentialStoreResolverTest {
         args.getPassphrase().setValue("cs://server/SFTP/ssh.sos@user");
         args.getAuthFile().setValue("cs://server/SFTP/ssh.sos@test.txt");
 
-        ProviderCredentialStoreResolver.resolve(new SLF4JLogger(), args, args.getProxy(), Collections.singletonList(args.getPassphrase()));
+        ProviderCredentialStoreResolver.resolve(new Slf4jLogger(), args, args.getProxy(), Collections.singletonList(args.getPassphrase()));
         ProviderCredentialStoreResolver.resolveAttachment(args, args.getAuthFile());
 
         LOGGER.info("HOST=" + args.getHost().getValue());

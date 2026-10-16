@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -57,7 +57,7 @@ public class JOCJsonCommand {
     private BaseHttpClient client;
     private BaseHttpClient.Builder baseHttpClientBuilder;
     public static Map<String, String> urlMapper = Collections.emptyMap();
-    
+
     public JOCJsonCommand() {
         init();
     }
@@ -67,7 +67,7 @@ public class JOCJsonCommand {
         this.csrfToken = csrfToken;
         init();
     }
-    
+
     public JOCJsonCommand(String uri, String csrfToken) {
         this.url = urlMapper.getOrDefault(uri, uri);
         this.csrfToken = csrfToken;
@@ -77,19 +77,19 @@ public class JOCJsonCommand {
     public JOCResourceImpl getJOCResourceImpl() {
         return jocResourceImpl;
     }
-    
+
     public void setUriBuilderForCommands() {
-    	setUriBuilder(url, CONTROLLER_API_PATH + "/command");
+        setUriBuilder(url, CONTROLLER_API_PATH + "/command");
     }
-    
+
     public void setUriBuilderForOverview() {
         setUriBuilder(url, CONTROLLER_API_PATH);
     }
-    
+
     public void setUriBuilderForCluster() {
         setUriBuilder(url, CONTROLLER_API_PATH + "/cluster");
     }
-    
+
     public URI getUriForJobPathAsUrlParam(String jobPath, Integer limit) {
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(CONTROLLER_API_PATH + "/job/{path}");
@@ -97,24 +97,24 @@ public class JOCJsonCommand {
         uriBuilder.queryParam("limit", limit);
         return uriBuilder.buildFromEncoded(jobPath.replaceFirst("^/+", ""));
     }
-    
-    public void setUriBuilderForMainLog(boolean snapshot) { ///api/controller/log?snapshot=true
+
+    public void setUriBuilderForMainLog(boolean snapshot) { /// api/controller/log?snapshot=true
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(CONTROLLER_API_PATH + "/log");
         if (snapshot) {
             uriBuilder.queryParam("snapshot", true);
         }
     }
-    
+
     public void setToken(String csrfToken) {
         this.csrfToken = csrfToken;
     }
-    
+
     public void setUriBuilder(String path) {
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(path);
     }
-    
+
     public void setUriBuilder(String url, String path) {
         uriBuilder = UriBuilder.fromPath(url);
         uriBuilder.path(path);
@@ -131,28 +131,28 @@ public class JOCJsonCommand {
     public URI getURI() {
         return uriBuilder.build();
     }
-    
+
     public String getSchemeAndAuthority() {
         URI uri = uriBuilder.build();
-        return uri.getScheme()+"://"+uri.getAuthority();
+        return uri.getScheme() + "://" + uri.getAuthority();
     }
-    
+
     public static String urlEncodedPath(String value) {
         return UriBuilder.fromPath("{path}").buildFromEncoded(value).toString();
     }
-    
+
     public void addJobHistoryQuery(Integer limit) {
         uriBuilder.queryParam("return", "History");
         uriBuilder.queryParam("limit", limit);
     }
 
     public void addOrderCompactQuery(boolean compact) {
-        //String returnQuery = (compact) ? "OrdersComplemented/OrderOverview" : "OrdersComplemented/OrderDetailed";
-        //Workaround: JOC-84 
+        // String returnQuery = (compact) ? "OrdersComplemented/OrderOverview" : "OrdersComplemented/OrderDetailed";
+        // Workaround: JOC-84
         String returnQuery = "OrdersComplemented/OrderDetailed";
         uriBuilder.queryParam("return", returnQuery);
     }
-    
+
     public void addJobCompactQuery(boolean compact) {
         String returnQuery = (compact) ? "JobOverview" : "JobDetailed";
         uriBuilder.queryParam("return", returnQuery);
@@ -161,30 +161,30 @@ public class JOCJsonCommand {
     public void addOrderStatisticsQuery() {
         addOrderStatisticsQuery(null);
     }
-    
+
     public void addOrderStatisticsQuery(Boolean isDistributed) {
         uriBuilder.queryParam("return", "JocOrderStatistics");
         if (isDistributed != null) {
             uriBuilder.queryParam("isDistributed", isDistributed);
         }
     }
-    
+
     public void addEventTimeout(Integer timeout) {
         if (timeout == null) {
             timeout = 0;
         }
         uriBuilder.queryParam("timeout", timeout);
     }
-    
+
     public void replaceEventQuery(Long eventId, Integer timeout) {
         uriBuilder.replaceQueryParam("after", eventId);
         uriBuilder.replaceQueryParam("timeout", timeout);
     }
-    
+
     public void addEventQuery(Long eventId, Integer timeout) {
         addEventQuery(eventId, timeout, null);
     }
-    
+
     public void addEventQuery(Long eventId, Integer timeout, String event) {
         if (event != null && !event.isEmpty()) {
             uriBuilder.queryParam("return", event);
@@ -195,7 +195,7 @@ public class JOCJsonCommand {
         uriBuilder.queryParam("timeout", timeout);
         uriBuilder.queryParam("after", eventId);
     }
-    
+
     public void addOrderEventQuery(Long eventId, Integer timeout) {
         addEventQuery(eventId, timeout, "OrderEvent");
     }
@@ -210,9 +210,9 @@ public class JOCJsonCommand {
     }
 
     public <T extends JsonStructure> T getJsonObjectFromPost(String postBody) throws JocException {
-    	return getJsonStructure(getJsonStringFromPost(postBody));
+        return getJsonStructure(getJsonStringFromPost(postBody));
     }
-    
+
     private String getJsonStringFromPost(String postBody) throws JocException {
         try {
             return getJsonStringFromPost(getURI(), postBody);
@@ -222,7 +222,7 @@ public class JOCJsonCommand {
             throw new JocBadRequestException(e);
         }
     }
-    
+
     private String getJsonStringFromPost(URI uri, String postBody) throws JocException {
         if (postBody == null) {
             postBody = "";
@@ -251,13 +251,13 @@ public class JOCJsonCommand {
             throw new JocBadRequestException(jocError, e);
         }
     }
-    
+
     public StreamingOutput getStreamingOutputFromGet(String acceptHeader, boolean withGzipEncoding) {
         return getStreamingOutputFromGet(getURI(), acceptHeader, withGzipEncoding, getCsrfToken());
     }
-    
+
     private StreamingOutput getStreamingOutputFromGet(URI uri, String acceptHeader, boolean withGzipEncoding, String csrfToken) {
-        Map<String,String> headers = new HashMap<String, String>(3);
+        Map<String, String> headers = new HashMap<String, String>(3);
         if (acceptHeader != null && !acceptHeader.isEmpty()) {
             headers.put("Accept", acceptHeader);
         }
@@ -275,6 +275,7 @@ public class JOCJsonCommand {
             if (result != null && result.response() != null) {
                 final InputStream instream = result.response().body();
                 fileStream = new StreamingOutput() {
+
                     @Override
                     public void write(OutputStream output) throws IOException {
                         if (withGzipEncoding) {
@@ -305,9 +306,9 @@ public class JOCJsonCommand {
     }
 
     public <T> T getJsonObjectFromGet(Class<T> clazz) {
-		return getJsonObject(getJsonStringFromGet(), clazz);
-	}
-    
+        return getJsonObject(getJsonStringFromGet(), clazz);
+    }
+
     private String getJsonStringFromGet() {
         try {
             return getJsonStringFromGet(getURI());
@@ -323,8 +324,8 @@ public class JOCJsonCommand {
         jocError.appendMetaInfo("JS-URL: " + (uri == null ? "null" : uri.toString()));
         try {
             createClient();
-            HttpExecutionResult<String> result = client.executeGET(uri,
-                    client.mergeWithDefaultHeaders(Map.of("Accept", "application/json", "X-CSRF-Token", getCsrfToken())));
+            HttpExecutionResult<String> result = client.executeGET(uri, client.mergeWithDefaultHeaders(Map.of("Accept", "application/json",
+                    "X-CSRF-Token", getCsrfToken())));
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (HttpConnectTimeoutException e) {
             throw new ControllerConnectionRefusedException(jocError, e);
@@ -336,23 +337,23 @@ public class JOCJsonCommand {
             } else {
                 throw new JocBadRequestException(jocError, e);
             }
-        }  catch (JocException e) {
+        } catch (JocException e) {
             throw e;
         } catch (Exception e) {
             throw new JocBadRequestException(jocError, e);
         }
     }
-    
+
     public String getCsrfToken() {
         if (csrfToken == null || csrfToken.isEmpty()) {
             return UUID.randomUUID().toString();
         }
         return csrfToken;
     }
-    
+
     private void init() throws ControllerConnectionRefusedException {
         baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withRequestTimeout(
-                Duration.ofMillis(Globals.httpSocketTimeout)).withLogger(new SLF4JLogger(LOGGER));
+                Duration.ofMillis(Globals.httpSocketTimeout)).withLogger(new Slf4jLogger(LOGGER));
         if (url.startsWith("https:")) {
             if (SSLContext.getInstance().getTrustStore() == null) {
                 throw new ControllerConnectionRefusedException("Couldn't find required truststore");
@@ -361,27 +362,27 @@ public class JOCJsonCommand {
         }
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {
-            //LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));
+            // LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));
             baseHttpClientBuilder.withAuth(evt.getUser(), evt.getPwd());
         } else {
             baseHttpClientBuilder.withAuth(ProxyUser.JOC.getUser(), ProxyUser.JOC.getPwd());
         }
     }
-    
+
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
-    	JsonReader rdr = Json.createReader(new StringReader(jsonStr));
+        JsonReader rdr = Json.createReader(new StringReader(jsonStr));
         try {
             @SuppressWarnings("unchecked")
             T json = (T) rdr.read();
             return json;
         } catch (Exception e) {
-            //LOGGER.error(jsonStr);
+            // LOGGER.error(jsonStr);
             throw e;
         } finally {
             rdr.close();
         }
     }
-    
+
     private <T> T getJsonObject(String jsonStr, Class<T> clazz) {
         try {
             if (jsonStr == null) {
@@ -401,10 +402,10 @@ public class JOCJsonCommand {
             response = "";
         }
         String actualContentType = result.response().headers().firstValue("Content-Type").orElse("");
-        // TODO Async call while JobScheduler is terminating 
-//        if (response.contains("com.sos.scheduler.engine.common.async.CallQueue$ClosedException")) {
-//            throw new JobSchedulerConnectionResetException(response);
-//        }
+        // TODO Async call while JobScheduler is terminating
+        // if (response.contains("com.sos.scheduler.engine.common.async.CallQueue$ClosedException")) {
+        // throw new JobSchedulerConnectionResetException(response);
+        // }
         try {
             switch (httpReplyCode) {
             case 200:
@@ -415,23 +416,23 @@ public class JOCJsonCommand {
                     LOGGER.debug(response.toString());
                     return response;
                 } else {
-                    throw new ControllerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", 
+                    throw new ControllerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s",
                             actualContentType, response));
                 }
             case 201:
                 return response;
             case 400:
-                if ("Unknown Agent".equalsIgnoreCase(response)) { //TODO from JS1
+                if ("Unknown Agent".equalsIgnoreCase(response)) { // TODO from JS1
                     throw new UnknownJobSchedulerAgentException(uri.toString().replaceFirst(".*/(https?://.*)$", "$1"));
                 }
-//              if (type.equals("Problem")) {  //TODO all are problems. Use code later, but yet not always inside the answer
-//                  throw new JobSchedulerObjectNotExistException(msg);
-//              }
+                // if (type.equals("Problem")) { //TODO all are problems. Use code later, but yet not always inside the answer
+                // throw new JobSchedulerObjectNotExistException(msg);
+                // }
                 throw new JocBadRequestException(getJsonErrorMessage(actualContentType, response, uri));
             case 409:
                 throw new ControllerConflictException(getJsonErrorMessage(actualContentType, response, uri));
             case 503:
-                //TODO consider code=ControllerIsNotYetReady for passive cluster node
+                // TODO consider code=ControllerIsNotYetReady for passive cluster node
                 throw new ControllerServiceUnavailableException(getJsonErrorMessage(actualContentType, response, uri));
             default:
                 throw new JocBadRequestException(httpReplyCode + " " + HttpUtils.getReasonPhrase(httpReplyCode));
@@ -441,7 +442,7 @@ public class JOCJsonCommand {
             throw e;
         }
     }
-    
+
     private String getJsonErrorMessage(String contentType, String response, URI uri) {
         if (!response.isEmpty()) {
             if (contentType.contains("application/json")) {
@@ -451,10 +452,10 @@ public class JOCJsonCommand {
                 String msg = json.getString("message", null);
                 String code = json.getString("code", null);
                 if (msg == null) {
-                    msg = response; 
+                    msg = response;
                 } else {
                     if (code != null) {
-                       msg = code + ": " + msg; 
+                        msg = code + ": " + msg;
                     }
                 }
                 return msg;
@@ -465,12 +466,12 @@ public class JOCJsonCommand {
             return uri.toString();
         }
     }
-    
+
     private BaseHttpClient createClient() throws Exception {
-        if(client == null) {
+        if (client == null) {
             client = baseHttpClientBuilder.build();
         }
         return client;
     }
-    
+
 }

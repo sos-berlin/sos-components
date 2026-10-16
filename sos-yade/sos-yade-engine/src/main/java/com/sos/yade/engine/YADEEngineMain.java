@@ -17,7 +17,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.vfs.commons.AProviderArguments;
 import com.sos.commons.vfs.commons.file.ProviderFile;
 import com.sos.yade.commons.Yade;
@@ -60,7 +60,7 @@ public class YADEEngineMain {
     }
 
     private int execute(String[] args) {
-        logger = new SLF4JLogger();
+        logger = new Slf4jLogger();
 
         String historyReturnValuesFile = null;
         YADEXMLArgumentsLoader argsLoader = null;

@@ -27,10 +27,11 @@ import com.sos.commons.util.arguments.base.SOSArgument;
 import com.sos.commons.util.arguments.base.SOSArgument.DisplayMode;
 import com.sos.commons.util.arguments.base.SOSArgumentHelper;
 import com.sos.commons.util.keystore.KeyStoreArguments;
+import com.sos.commons.util.loggers.base.ISOSLogger;
+import com.sos.commons.util.loggers.base.ISOSLogger.LogLevel;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.JobArgument.Type;
-import com.sos.js7.job.JobArguments.LogLevel;
 import com.sos.js7.job.UnitTestJobHelper.UnitTestStepConfig;
 import com.sos.js7.job.ValueSource.ValueSourceType;
 import com.sos.js7.job.exception.JobArgumentException;
@@ -1020,17 +1021,12 @@ public class OrderProcessStep<A extends JobArguments> {
     protected JOutcome.Completed failed(final String msg, Throwable e) {
         String fm = SOSString.isEmpty(msg) ? "" : msg;
         Throwable ex;
-        String eToString;
         if (e == null) {
             ex = null;
-            eToString = "";
         } else {
             ex = logger.handleException(e);
-            eToString = e.toString();
         }
-
-        logger.failed2slf4j(getStepInfo(), eToString, ex);
-        logger.error(logger.throwable2String(fm, ex));
+        logger.error(ISOSLogger.getMessage(fm, ex));
         return JOutcome.failed(getJOutcomeFailed(fm, ex), mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 
@@ -1063,7 +1059,7 @@ public class OrderProcessStep<A extends JobArguments> {
                 logAllArguments(ll);
             }
         } catch (Exception e) {
-            logger.error2allLoggers(getStepInfo(), e.toString(), e);
+            logger.error(getStepInfo() + e.toString(), e);
         } finally {
             if (ae != null) {
                 throw ae;
@@ -1170,8 +1166,7 @@ public class OrderProcessStep<A extends JobArguments> {
                         l.add(arg);
                     }
                 } catch (Exception e) {
-                    logger.warn2allLoggers(getStepInfo(), String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
-                            .toString()), e);
+                    logger.warn(getStepInfo() + String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
                 }
             }
             if (declaredArguments.getIncludedArguments() != null && declaredArguments.getIncludedArguments().size() > 0) {
@@ -1406,7 +1401,6 @@ public class OrderProcessStep<A extends JobArguments> {
 
     private JOutcome.Completed failed() {
         String fm = SOSString.isEmpty(outcome.getMessage()) ? "" : outcome.getMessage();
-        logger.failed2slf4j(getStepInfo(), fm);
         return JOutcome.failed(fm, mapProcessResult(getOutcomeVariables(), getReturnCodeFailed(outcome.getReturnCode())));
     }
 

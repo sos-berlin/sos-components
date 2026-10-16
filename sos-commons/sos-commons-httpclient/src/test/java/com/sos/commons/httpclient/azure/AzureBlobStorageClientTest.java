@@ -11,7 +11,7 @@ import com.sos.commons.httpclient.azure.AzureBlobStorageClient.Builder;
 import com.sos.commons.httpclient.azure.commons.auth.blob.AzureBlobSharedKeyAuthProvider;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.util.ssl.SslArguments;
@@ -23,7 +23,7 @@ public class AzureBlobStorageClientTest {
     public void testSharedKey() {
         BaseHTTPClientTest.resetSystemProperties();
 
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String accountName = "account";
             String accountKey = "xyz";

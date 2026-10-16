@@ -14,7 +14,7 @@ import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.commons.auth.HttpClientAuthConfig;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxyConfig;
 import com.sos.commons.util.proxy.ProxyConfigArguments;
 import com.sos.commons.util.ssl.SslArguments;
@@ -24,7 +24,7 @@ public class BaseHTTPClientTest {
     @Ignore
     @Test
     public void test() {
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String user = null;
             String password = null;
@@ -64,7 +64,7 @@ public class BaseHTTPClientTest {
     @Ignore
     @Test
     public void testJS7Login() {
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String user = "root";
             String password = "root";
@@ -98,7 +98,7 @@ public class BaseHTTPClientTest {
     @Ignore
     @Test
     public void testJS7LoginJsonTypeReference() {
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String user = "root";
             String password = "root";
@@ -134,7 +134,7 @@ public class BaseHTTPClientTest {
     @Ignore
     @Test
     public void testJS7LoginJsonMap() {
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String user = "root";
             String password = "root";
@@ -169,7 +169,7 @@ public class BaseHTTPClientTest {
     @Ignore
     @Test
     public void testBasicAuth() {
-        SLF4JLogger logger = new SLF4JLogger();
+        Slf4jLogger logger = new Slf4jLogger();
         try {
             String user = "yade";
             String password = "yade";

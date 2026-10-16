@@ -24,15 +24,13 @@ import com.sos.commons.httpclient.commons.HttpExecutionResult;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
-
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocBadRequestException;
-
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocInvalidResponseDataException;
@@ -53,7 +51,7 @@ public class EndSession {
     private BaseHttpClient client;
     private BaseHttpClient.Builder baseHttpClientBuilder;
     private Map<String, String> additionalHeaders;
-    
+
     public EndSession(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Locker locker, String origin, String referrer)
             throws Exception {
         setTrustStore(props);
@@ -76,11 +74,11 @@ public class EndSession {
             String clientId = loginProps.get("clientId");
             String clientSecret = loginProps.get("clientSecret");
             String endSessionEndPoint = loginProps.get("endSessionEndPoint");
-            if(additionalHeaders == null) {
+            if (additionalHeaders == null) {
                 additionalHeaders = new HashMap<String, String>(3);
             }
             additionalHeaders.put("Origin", origin);
-            
+
             if (endSessionEndPoint.contains("login.windows.net") || endSessionEndPoint.contains("login.microsoftonline.com")) {
                 httpMethod = "GET";
 
@@ -103,8 +101,8 @@ public class EndSession {
                         additionalHeaders.put("Authorization", "Basic " + authEncBytes);
 
                         createBody(token, referrer);
-                        
-                    } else { //if (supportedMethods.contains("client_secret_post")) {
+
+                    } else { // if (supportedMethods.contains("client_secret_post")) {
                         createBody(clientId, clientSecret, token, referrer);
                     }
                 } else {
@@ -118,15 +116,15 @@ public class EndSession {
             throw e;
         } catch (Exception e) {
             throw new JocAuthenticationException("Incomplete data to close session at OIDC identity service: " + props.getIamOidcName(), e);
-        } 
+        }
     }
-    
+
     private void createBody(String token, String referrer) {
         body.put("token_type_hint", "access_token");
         body.put("token", token);
         body.put("redirect_uri", referrer);
     }
-    
+
     private void createBody(String clientId, String clientSecret, String token, String referrer) {
         createBody(token, referrer);
         body.put("client_id", clientId);
@@ -142,7 +140,7 @@ public class EndSession {
         this.uriBuilder = UriBuilder.fromPath(url);
         init(url);
     }
-    
+
     private void setUriBuilder(String url, String param) throws SOSSSLException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
         if (url == null) {
             throw new JocAuthenticationException("The end session endpoint of the OIDC provider is undefined.");
@@ -155,11 +153,11 @@ public class EndSession {
     public String getStringResponse() throws JocException {
         try {
             if (httpMethod.equals("POST")) {
-                return getStringFromPost(uriBuilder.build()); 
+                return getStringFromPost(uriBuilder.build());
             } else {
                 // Do nothing, doesn't work
                 return "";
-                //return getJsonStringFromGet(uriBuilder.build());
+                // return getJsonStringFromGet(uriBuilder.build());
             }
         } catch (JocException e) {
             throw e;
@@ -167,10 +165,9 @@ public class EndSession {
             throw new JocBadRequestException(e);
         }
     }
-    
 
     private String getStringFromPost(URI uri) throws JocException {
-        Map<String,String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<String, String>();
         headers.put("Accept", "application/json, text/plain, */*");
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         headers.putAll(additionalHeaders);
@@ -192,7 +189,6 @@ public class EndSession {
         }
     }
 
-    
     private String getJsonStringFromResponse(HttpExecutionResult<String> result, URI uri, JocError jocError) throws JocException {
         int httpReplyCode = result.response().statusCode();
         String response = result.response().body();
@@ -217,14 +213,14 @@ public class EndSession {
             throw e;
         }
     }
-    
+
     private void setTrustStore(OidcProperties provider) throws Exception {
         truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
 
     private void init(String url) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
-                .withLogger(new SLF4JLogger(LOGGER));
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withLogger(
+                new Slf4jLogger(LOGGER));
         if (url.startsWith("https:")) {
             if (truststore == null) {
                 throw new ControllerConnectionRefusedException("Couldn't find required truststore");
@@ -232,12 +228,12 @@ public class EndSession {
             baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
         }
     }
-    
+
     private BaseHttpClient createClient() throws Exception {
-        if(client == null) {
+        if (client == null) {
             client = baseHttpClientBuilder.build();
         }
         return client;
     }
-    
+
 }

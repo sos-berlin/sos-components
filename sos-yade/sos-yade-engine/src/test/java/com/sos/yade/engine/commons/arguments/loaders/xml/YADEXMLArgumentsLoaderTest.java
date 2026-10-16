@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.yade.engine.commons.helpers.YADEArgumentsHelper;
 
 public class YADEXMLArgumentsLoaderTest {
@@ -28,10 +28,10 @@ public class YADEXMLArgumentsLoaderTest {
 
             Instant start = Instant.now();
             YADEXMLArgumentsLoader argsLoader = new YADEXMLArgumentsLoader();
-            argsLoader.load(new SLF4JLogger(), Path.of(settingsFile), profile, alternativeProfile, System.getenv(), true, true);
+            argsLoader.load(new Slf4jLogger(), Path.of(settingsFile), profile, System.getenv(), true, true);
             LOGGER.info("[duration]" + SOSDate.getDuration(start, Instant.now()));
 
-            ISOSLogger logger = new SLF4JLogger();
+            ISOSLogger logger = new Slf4jLogger();
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[YADE]", argsLoader.getArgs()));
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[CLIENT]", argsLoader.getClientArgs()));
             LOGGER.info(YADEArgumentsHelper.toString(logger, "[SOURCE]", argsLoader.getSourceArgs()));

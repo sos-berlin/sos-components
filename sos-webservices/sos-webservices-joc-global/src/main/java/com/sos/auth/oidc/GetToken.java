@@ -21,11 +21,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.httpclient.BaseHttpClient;
 import com.sos.commons.httpclient.commons.HttpExecutionResult;
-//import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
+// import com.sos.commons.httpclient.deprecated.SOSRestApiClient;
 import com.sos.commons.httpclient.exception.SOSSSLException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.http.HttpUtils;
-import com.sos.commons.util.loggers.impl.SLF4JLogger;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -49,13 +49,13 @@ public class GetToken {
     private KeyStore truststore;
     private BaseHttpClient client;
     private BaseHttpClient.Builder baseHttpClientBuilder;
-    
+
     public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin)
             throws Exception {
         setTrustStore(props);
         setUriBuilder(props, openIdConfigurationResponse, requestBody, origin);
     }
-    
+
     public GetToken(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin,
             KeyStore truststore) throws SOSSSLException {
         this.truststore = truststore;
@@ -65,12 +65,12 @@ public class GetToken {
     private void setUriBuilder(OidcProperties props, OpenIdConfiguration openIdConfigurationResponse, Map<String, String> requestBody, String origin)
             throws SOSSSLException {
         setUriBuilder(openIdConfigurationResponse.getToken_endpoint(), origin);
-        
+
         String clientSecret = props.getIamOidcClientSecret();
         if (openIdConfigurationResponse.getToken_endpoint().contains("/v2.0")) {
             clientSecret = "";
         }
-        
+
         if (!SOSString.isEmpty(clientSecret)) {
             List<String> supportedMethods = openIdConfigurationResponse.getToken_endpoint_auth_methods_supported();
             if (supportedMethods.contains("client_secret_basic")) {
@@ -83,11 +83,11 @@ public class GetToken {
             createBody(clientSecret, props, requestBody);
         }
     }
-    
+
     private void createBody(Map<String, String> requestBody) {
         body.putAll(requestBody);
     }
-    
+
     private void createBody(String clientSecret, OidcProperties props, Map<String, String> requestBody) {
         createBody(requestBody);
         body.put("client_id", props.getIamOidcClientId());
@@ -105,9 +105,9 @@ public class GetToken {
     }
 
     public GetTokenResponse getJsonObjectFromPost() throws JocException {
-		return getJsonObject(getJsonStringFromPost());
-	}
-    
+        return getJsonObject(getJsonStringFromPost());
+    }
+
     public String getJsonStringFromPost() throws JocException {
         try {
             return getJsonStringFromPost(uriBuilder.build());
@@ -126,8 +126,7 @@ public class GetToken {
         jocError.appendMetaInfo("URL: " + uri.toString());
         try {
             createClient();
-            HttpExecutionResult<String> result = client.executePOST(uri, 
-                    client.mergeWithDefaultHeaders(headers), asBodyString(body));
+            HttpExecutionResult<String> result = client.executePOST(uri, client.mergeWithDefaultHeaders(headers), asBodyString(body));
             return getJsonStringFromResponse(result, uri, jocError);
         } catch (HttpConnectTimeoutException e) {
             throw new ControllerConnectionRefusedException("", e);
@@ -139,7 +138,7 @@ public class GetToken {
             throw new JocBadRequestException(jocError, e);
         }
     }
-    
+
     private GetTokenResponse getJsonObject(String jsonStr) throws JocInvalidResponseDataException {
         try {
             if (jsonStr == null) {
@@ -167,8 +166,7 @@ public class GetToken {
                     }
                     return response;
                 } else {
-                    throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
-                            response));
+                    throw new JocInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType, response));
                 }
             case 400:
                 if (!response.isEmpty()) {
@@ -183,28 +181,28 @@ public class GetToken {
             throw e;
         }
     }
-    
+
     private void setTrustStore(OidcProperties provider) throws Exception {
         truststore = SOSAuthHelper.getOIDCTrustStore(provider);
     }
 
     private BaseHttpClient createClient() throws Exception {
-        if(client == null) {
+        if (client == null) {
             client = baseHttpClientBuilder.build();
         }
         return client;
     }
-    
+
     private void init(String origin, String url) throws ControllerConnectionRefusedException {
         if (url.startsWith("https:") && truststore == null) {
             throw new JocConfigurationException("Couldn't find required truststore");
         }
-        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout))
-                .withLogger(new SLF4JLogger(LOGGER));
+        baseHttpClientBuilder = BaseHttpClient.withBuilder().withConnectTimeout(Duration.ofMillis(Globals.httpConnectionTimeout)).withLogger(
+                new Slf4jLogger(LOGGER));
         if (!SOSString.isEmpty(origin)) {
             baseHttpClientBuilder.withHeader("Origin", origin);
         }
-        if(url.startsWith("https:")) {
+        if (url.startsWith("https:")) {
             try {
                 baseHttpClientBuilder.withSSLContext(SSLContext.createSslContext(truststore));
             } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
@@ -212,10 +210,10 @@ public class GetToken {
             }
         }
     }
-    
+
     private String asBodyString(Map<String, String> params) {
         return params.entrySet().stream().map(entry -> URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(entry
                 .getValue(), StandardCharsets.UTF_8)).collect(Collectors.joining("&"));
     }
-    
+
 }
