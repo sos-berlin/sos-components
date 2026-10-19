@@ -49,7 +49,8 @@ public class DelegatingSlf4jLogger implements Logger {
         // --------- Problem: own StdLogger formatting differs from the original Log4J format
         // Option 2) provider
         // --------- Slf4jLogger using the original Log4J format
-        return provider;
+        // Wrap in a new Slf4jLogger with this class as FQCN so Log4j2 skips this wrapper frame and reports the real caller in %C:%L.
+        return new Slf4jLogger(getClass(), provider);
     }
 
     @Override
