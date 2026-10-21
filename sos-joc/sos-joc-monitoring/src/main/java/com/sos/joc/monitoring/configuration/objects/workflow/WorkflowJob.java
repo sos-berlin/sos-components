@@ -6,9 +6,11 @@ import java.util.List;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXML;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.monitoring.configuration.AElement;
 
@@ -17,6 +19,8 @@ public class WorkflowJob extends AElement {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowJob.class);
+
+    private static final String ELEMENT_NAME_RETRY_ERROR_POLICY = "RetryErrorPolicy";
 
     private static String ATTRIBUTE_NAME_NAME = "name";
     private static String ATTRIBUTE_NAME_LABEL = "label";
@@ -31,6 +35,8 @@ public class WorkflowJob extends AElement {
     private final int returnCodeFrom;
     private final int returnCodeTo;
 
+    private WorkflowJobRetryErrorPolicy retryErrorPolicy;
+
     public WorkflowJob(Node node) throws Exception {
         super(node);
         name = getAttributeValue(ATTRIBUTE_NAME_NAME, AElement.ASTERISK);
@@ -39,6 +45,21 @@ public class WorkflowJob extends AElement {
         criticalitiesNames = evaluateCriticalitiesNames();
         returnCodeFrom = getReturnCode(ATTRIBUTE_NAME_RETURN_CODE_FROM);
         returnCodeTo = getReturnCode(ATTRIBUTE_NAME_RETURN_CODE_TO);
+
+        process();
+    }
+
+    private void process() {
+        List<Element> children = SOSXML.getChildElemens(getElement());
+        if (children != null) {
+            for (Element child : children) {
+                switch (child.getNodeName()) {
+                case ELEMENT_NAME_RETRY_ERROR_POLICY:
+                    retryErrorPolicy = new WorkflowJobRetryErrorPolicy(child);
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -50,6 +71,54 @@ public class WorkflowJob extends AElement {
         b.append(returnCodeFrom);
         b.append(returnCodeTo);
         return b.toHashCode();
+    }
+
+    public boolean criticalityMatches(Integer criticality) {
+        if (criticalities == null || criticalities.size() == 0) {
+            return true;
+        }
+        return criticalities.contains(criticality);
+    }
+
+    public static String getCriticalityName(Integer val) {
+        try {
+            return JobCriticality.fromValue(val).value();
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[getCriticalityName][parse criticality=%s]%s", val, e.toString()), e);
+            return "UNKNOWN";
+        }
+    }
+
+    public boolean isRetryErrorPolicyEnabled() {
+        return retryErrorPolicy != null;
+    }
+
+    public boolean shouldNotifyOnRetryError(String workflowPosition, boolean isDebugEnabled, String debugMsgPrefixOnFound,
+            String debugMsgPrefixOnNotFound) {
+        if (!isRetryErrorPolicyEnabled()) {
+            return true;
+        }
+        return retryErrorPolicy.shouldNotify(workflowPosition, isDebugEnabled, debugMsgPrefixOnFound, debugMsgPrefixOnNotFound);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getCriticalitiesNames() {
+        return criticalitiesNames;
+    }
+
+    public int getReturnCodeFrom() {
+        return returnCodeFrom;
+    }
+
+    public int getReturnCodeTo() {
+        return returnCodeTo;
     }
 
     private List<Integer> evaluateCriticalities() {
@@ -99,22 +168,6 @@ public class WorkflowJob extends AElement {
         return "[" + String.join(",", l) + "]";
     }
 
-    public boolean criticalityMatches(Integer criticality) {
-        if (criticalities == null || criticalities.size() == 0) {
-            return true;
-        }
-        return criticalities.contains(criticality);
-    }
-
-    public static String getCriticalityName(Integer val) {
-        try {
-            return JobCriticality.fromValue(val).value();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[getCriticalityName][parse criticality=%s]%s", val, e.toString()), e);
-            return "UNKNOWN";
-        }
-    }
-
     private int getReturnCode(String name) {
         String r = getAttributeValue(name, AElement.ASTERISK);
         if (!r.equals(AElement.ASTERISK)) {
@@ -125,26 +178,6 @@ public class WorkflowJob extends AElement {
             }
         }
         return -1;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public String getCriticalitiesNames() {
-        return criticalitiesNames;
-    }
-
-    public int getReturnCodeFrom() {
-        return returnCodeFrom;
-    }
-
-    public int getReturnCodeTo() {
-        return returnCodeTo;
     }
 
 }
