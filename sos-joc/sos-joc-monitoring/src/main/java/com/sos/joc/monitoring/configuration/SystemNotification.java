@@ -21,6 +21,8 @@ import com.sos.monitoring.notification.NotificationType;
 
 public class SystemNotification extends AElement {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemNotification.class);
 
     public static final String NOTIFICATION_ID = "joc_system_notification";
