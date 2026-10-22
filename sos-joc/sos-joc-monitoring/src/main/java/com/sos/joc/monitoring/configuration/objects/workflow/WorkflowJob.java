@@ -96,6 +96,9 @@ public class WorkflowJob extends AElement {
     public boolean shouldNotifyOnRetryError(String workflowPosition, boolean isDebugEnabled, String debugMsgPrefixOnFound,
             String debugMsgPrefixOnNotFound) {
         if (!isRetryErrorPolicyEnabled()) {
+            if (isDebugEnabled) {
+                LOGGER.debug(debugMsgPrefixOnFound + ", RetryErrorPolicy is not enabled");
+            }
             return true;
         }
         return retryErrorPolicy.shouldNotify(workflowPosition, isDebugEnabled, debugMsgPrefixOnFound, debugMsgPrefixOnNotFound);

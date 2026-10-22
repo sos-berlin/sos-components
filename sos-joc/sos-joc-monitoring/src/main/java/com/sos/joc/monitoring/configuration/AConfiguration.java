@@ -37,6 +37,7 @@ public abstract class AConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AConfiguration.class);
 
     private static final String LOG_FIND_START = LOG_INTENT + "[find][start]";
+    private static final String LOG_FIND_PROCESS = LOG_INTENT_2 + "[process]";
     private static final String LOG_FIND_END = LOG_INTENT + "[find][end]";
     private static final String ATTRIBUTE_NAME_NOTIFICATIONS_PARALLELISM = "parallelism";
     private static final String ATTRIBUTE_NAME_NOTIFICATIONS_RETRY_INCOMPLETE_ON_STARTUP = "retry_incomplete_on_startup";
@@ -316,23 +317,25 @@ public abstract class AConfiguration {
         }
     }
 
-    public List<Notification> findWorkflowMatches(OrderNotificationRange range, List<Notification> source, String controllerId, String workflowPath) {
-        return findWorkflowMatches(range, source, controllerId, workflowPath, null, false);
+    public List<Notification> findWorkflowMatches(OrderNotificationRange range, NotificationType type, List<Notification> source, String controllerId,
+            String workflowPath) {
+        return findWorkflowMatches(range, type, source, controllerId, workflowPath, null);
     }
 
-    public List<Notification> findWorkflowMatches(OrderNotificationRange range, List<Notification> source, String controllerId, String workflowPath,
-            HistoryOrderStepBean step, boolean isStepErrorNotification) {
+    public List<Notification> findWorkflowMatches(OrderNotificationRange range, NotificationType type, List<Notification> source, String controllerId,
+            String workflowPath, HistoryOrderStepBean step) {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean analyzeJobs = step != null;
+        boolean isStepErrorNotification = analyzeJobs && NotificationType.ERROR.equals(type);
         if (isDebugEnabled) {
             if (analyzeJobs) {
                 LOGGER.debug(String.format(
-                        "%s[%s][analyzeJobs=true]controllerId=%s, workflowPath=%s, jobName=%s, jobLabel=%s, criticality=%s, returnCode=%s",
-                        LOG_FIND_START, range, controllerId, workflowPath, step.getJobName(), step.getJobLabel(), step.getCriticality(), step
+                        "%s[%s][%s][analyzeJobs=true]controllerId=%s, workflowPath=%s, jobName=%s, jobLabel=%s, criticality=%s, returnCode=%s",
+                        LOG_FIND_START, range, type, controllerId, workflowPath, step.getJobName(), step.getJobLabel(), step.getCriticality(), step
                                 .getReturnCode()));
             } else {
-                LOGGER.debug(String.format("%s[%s][analyzeJobs=false]controllerId=%s, workflowPath=%s", LOG_FIND_START, range, controllerId,
+                LOGGER.debug(String.format("%s[%s][%s][analyzeJobs=false]controllerId=%s, workflowPath=%s", LOG_FIND_START, range, type, controllerId,
                         workflowPath));
             }
         }
@@ -345,14 +348,14 @@ public abstract class AConfiguration {
                             if (analyzeJobs) {
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format(
-                                            "%s[%s][skip][%s][WorkfowJob notification][job=%s]skip because 0 WorkflowJob configured", LOG_FIND_END,
-                                            range, toString(n), step.getJobName()));
+                                            "%s[%s][%s][skip][%s][WorkfowJob notification][job=%s]skip because 0 WorkflowJob configured",
+                                            LOG_FIND_PROCESS, range, type, toString(n), step.getJobName()));
                                 }
                             } else {
                                 if (isDebugEnabled) {
                                     LOGGER.debug(String.format(
-                                            "%s[%s][found][%s][workflowPath match and 0 WorkflowJob]configured path=%s, controller_id=%s",
-                                            LOG_FIND_END, range, toString(n), w.getPath(), w.getControllerId()));
+                                            "%s[%s][%s][found][%s][workflowPath match and 0 WorkflowJob]configured path=%s, controller_id=%s",
+                                            LOG_FIND_PROCESS, range, type, toString(n), w.getPath(), w.getControllerId()));
                                 }
                                 result.add(n);
                             }
@@ -371,63 +374,69 @@ public abstract class AConfiguration {
                                                         String debugMsgPrefixOnNotFound = "";
                                                         if (isDebugEnabled) {
                                                             debugMsgPrefixOnFound = String.format(
-                                                                    "%s[%s][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
-                                                                    LOG_FIND_END, range, toString(n), w.getPath(), w.getControllerId(), j.getName(), j
-                                                                            .getLabel(), j.getCriticalitiesNames(), j.getReturnCodeFrom(), j
-                                                                                    .getReturnCodeTo());
-                                                            debugMsgPrefixOnNotFound = String.format("%s[%s][skip][%s]", LOG_FIND_END, range,
+                                                                    "%s[%s][%s][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
+                                                                    LOG_FIND_PROCESS, range, type, toString(n), w.getPath(), w.getControllerId(), j
+                                                                            .getName(), j.getLabel(), j.getCriticalitiesNames(), j
+                                                                                    .getReturnCodeFrom(), j.getReturnCodeTo());
+                                                            debugMsgPrefixOnNotFound = String.format("%s[%s][skip][%s]", LOG_FIND_PROCESS, range,
                                                                     toString(n));
                                                         }
-                                                        if (j.shouldNotifyOnRetryError(step.getWorkflowPath(), isDebugEnabled, debugMsgPrefixOnFound,
-                                                                debugMsgPrefixOnNotFound)) {
+                                                        if (j.shouldNotifyOnRetryError(step.getWorkflowPosition(), isDebugEnabled,
+                                                                debugMsgPrefixOnFound, debugMsgPrefixOnNotFound)) {
                                                             result.add(n);
                                                             break x;
                                                         }
                                                     } else {
                                                         if (isDebugEnabled) {
                                                             LOGGER.debug(String.format(
-                                                                    "%s[%s][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
-                                                                    LOG_FIND_END, range, toString(n), w.getPath(), w.getControllerId(), j.getName(), j
-                                                                            .getLabel(), j.getCriticalitiesNames(), j.getReturnCodeFrom(), j
-                                                                                    .getReturnCodeTo()));
+                                                                    "%s[%s][%s][found][%s][job match][configured][workflow path=%s controller_id=%s][job]name=%s, label=%s, criticality=%s, return_code_from=%s, return_code_to=%s",
+                                                                    LOG_FIND_PROCESS, range, type, toString(n), w.getPath(), w.getControllerId(), j
+                                                                            .getName(), j.getLabel(), j.getCriticalitiesNames(), j
+                                                                                    .getReturnCodeFrom(), j.getReturnCodeTo()));
                                                         }
                                                         result.add(n);
                                                         break x;
                                                     }
                                                 } else if (isDebugEnabled) {
-                                                    LOGGER.debug(String.format("%s[%s][skip][%s][returnCodeTo not match]current=%s, configured=%s",
-                                                            LOG_FIND_END, range, toString(n), step.getReturnCode(), j.getReturnCodeTo()));
+                                                    LOGGER.debug(String.format(
+                                                            "%s[%s][%s][skip][%s][returnCodeTo not match]current=%s, configured=%s", LOG_FIND_PROCESS,
+                                                            range, type, toString(n), step.getReturnCode(), j.getReturnCodeTo()));
                                                 }
                                             } else if (isDebugEnabled) {
-                                                LOGGER.debug(String.format("%s[%s][skip][%s][returnCodeFrom not match]current=%s, configured=%s",
-                                                        LOG_FIND_END, range, toString(n), step.getReturnCode(), j.getReturnCodeFrom()));
+                                                LOGGER.debug(String.format("%s[%s][%s][skip][%s][returnCodeFrom not match]current=%s, configured=%s",
+                                                        LOG_FIND_PROCESS, range, type, toString(n), step.getReturnCode(), j.getReturnCodeFrom()));
                                             }
                                         } else if (isDebugEnabled) {
-                                            LOGGER.debug(String.format("%s[%s][skip][%s][criticality not match]current=%s, configured=%s",
-                                                    LOG_FIND_END, range, toString(n), WorkflowJob.getCriticalityName(step.getCriticality()), j
-                                                            .getCriticalitiesNames()));
+                                            LOGGER.debug(String.format("%s[%s][%s][skip][%s][criticality not match]current=%s, configured=%s",
+                                                    LOG_FIND_PROCESS, range, type, toString(n), WorkflowJob.getCriticalityName(step.getCriticality()),
+                                                    j.getCriticalitiesNames()));
                                         }
                                     } else if (isDebugEnabled) {
-                                        LOGGER.debug(String.format("%s[%s][skip][%s][jobLabel not match]current=%s, configured=%s", LOG_FIND_END,
-                                                range, toString(n), step.getJobLabel(), j.getLabel()));
+                                        LOGGER.debug(String.format("%s[%s][%s][skip][%s][jobLabel not match]current=%s, configured=%s",
+                                                LOG_FIND_PROCESS, range, type, toString(n), step.getJobLabel(), j.getLabel()));
                                     }
                                 } else if (isDebugEnabled) {
-                                    LOGGER.debug(String.format("%s[%s][skip][%s][jobName not match]current=%s, configured=%s", LOG_FIND_END, range,
-                                            toString(n), step.getJobName(), j.getName()));
+                                    LOGGER.debug(String.format("%s[%s][%s][skip][%s][jobName not match]current=%s, configured=%s", LOG_FIND_PROCESS,
+                                            range, type, toString(n), step.getJobName(), j.getName()));
                                 }
                             }
                         } else {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("%s[%s][skip][%s][Workfow notification]skip because WorkflowJob configured", LOG_FIND_END,
-                                        range, toString(n)));
+                                LOGGER.debug(String.format("%s[%s][%s][skip][%s][Workfow notification]skip because WorkflowJob configured",
+                                        LOG_FIND_PROCESS, range, type, toString(n)));
                             }
                         }
                     }
                 } else if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[%s][skip][%s][workflowPath not match]current=%s, configured=%s", LOG_FIND_END, range, toString(n),
-                            workflowPath, w.getPath()));
+                    LOGGER.debug(String.format("%s[%s][%s][skip][%s][workflowPath not match]current=%s, configured=%s", LOG_FIND_PROCESS, range, type,
+                            toString(n), workflowPath, w.getPath()));
                 }
             }
+        }
+
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("%s[%s][%s][analyzeJobs=%s]controllerId=%s, workflowPath=%s", LOG_FIND_END, range, type, analyzeJobs,
+                    controllerId, workflowPath));
         }
         return result;
     }

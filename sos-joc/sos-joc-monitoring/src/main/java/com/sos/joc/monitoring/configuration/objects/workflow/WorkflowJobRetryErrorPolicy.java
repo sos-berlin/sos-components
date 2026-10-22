@@ -23,9 +23,8 @@ public class WorkflowJobRetryErrorPolicy extends AElement {
     private static final Pattern RETRY_PATTERN = Pattern.compile("/retry\\+(\\d+):");
     private static final Pattern ENTRY_PATTERN = Pattern.compile("^(\\d+)(?:/(\\d+))?$");
 
-    private boolean notifyOnEveryFailure;
-    private String failures;
-    private List<Rule> rules;
+    private final String failures;
+    private final List<Rule> rules;
 
     private record Rule(int start, int interval) {
 
@@ -43,18 +42,16 @@ public class WorkflowJobRetryErrorPolicy extends AElement {
     public WorkflowJobRetryErrorPolicy(Node node) {
         super(node);
 
-        process();
+        failures = getAttributeValue(ATTRIBUTE_NAME_FAILURES, null);
+        rules = process();
     }
 
-    private void process() {
-        notifyOnEveryFailure = true;
-
-        failures = getAttributeValue(ATTRIBUTE_NAME_FAILURES, null);
+    private List<Rule> process() {
         if (SOSString.isEmpty(failures)) {
-            return;
+            return null;
         }
 
-        rules = new ArrayList<>();
+        List<Rule> rules = new ArrayList<>();
         l: for (String entry : failures.split(";", -1)) {
             Matcher matcher = ENTRY_PATTERN.matcher(entry.trim());
             if (!matcher.matches()) {
@@ -74,16 +71,14 @@ public class WorkflowJobRetryErrorPolicy extends AElement {
 
             rules.add(new Rule(start, interval));
         }
-        if (rules.size() > 0) {
-            notifyOnEveryFailure = false;
-        } else {
-            rules = null;
-        }
-
+        return rules.size() == 0 ? null : rules;
     }
 
     public boolean shouldNotify(String workflowPosition, boolean isDebugEnabled, String debugMsgPrefixOnFound, String debugMsgPrefixOnNotFound) {
-        if (notifyOnEveryFailure) {
+        if (rules == null) {
+            if (isDebugEnabled) {
+                LOGGER.debug(debugMsgPrefixOnFound + ", RetryErrorPolicy[configured=" + failures + "] notify on every failure (no rules found)");
+            }
             return true;
         }
         Matcher retryMatcher = RETRY_PATTERN.matcher(workflowPosition);
@@ -92,7 +87,10 @@ public class WorkflowJobRetryErrorPolicy extends AElement {
             retry = Integer.parseInt(retryMatcher.group(1)) + 1;
         }
         if (retry == null) {
-            notifyOnEveryFailure = true;
+            if (isDebugEnabled) {
+                LOGGER.debug(debugMsgPrefixOnFound + ", RetryErrorPolicy[configured=" + failures
+                        + "] notify on every failure because no retry instructions was found in the workflowPosition=" + workflowPosition);
+            }
             return true;
         }
 
@@ -100,12 +98,11 @@ public class WorkflowJobRetryErrorPolicy extends AElement {
         boolean result = rules.stream().anyMatch(rule -> rule.matches(failureCount));
         if (isDebugEnabled) {
             if (result) {
-                LOGGER.debug(debugMsgPrefixOnFound + ", failures[" + failures + "] matches failureCount=" + failureCount + " of " + workflowPosition);
+                LOGGER.debug(debugMsgPrefixOnFound + ", RetryErrorPolicy[configured=" + failures + "] matches current failureCount=" + failureCount
+                        + " (derived from workflowPosition=" + workflowPosition + " + 1)");
             } else {
-                if (result) {
-                    LOGGER.debug(debugMsgPrefixOnFound + "[RetryErrorPolicy not match] failures[" + failures + "] does not match failureCount="
-                            + failureCount + " of " + workflowPosition);
-                }
+                LOGGER.debug(debugMsgPrefixOnNotFound + "[RetryErrorPolicy not match] configured failures[" + failures
+                        + "] does not match current failureCount=" + failureCount + " (derived from workflowPosition=" + workflowPosition + " + 1)");
             }
         }
         return result;
