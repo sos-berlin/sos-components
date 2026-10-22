@@ -705,9 +705,6 @@
                </ul>
                <p/>
                <p>If <em>failures</em> attribute is not specified, a notification is raised on every failure (default behavior).</p>
-               <p/>
-               <p>
-                  <strong>Note:</strong> The failure counter is not persisted.<br/>If the <em>Monitor Service</em> is restarted (e.g. due to a JOC Cockpit restart), failure notifications are triggered according to the configured policy, starting from a reset counter rather than the last recorded state.</p>
             </div>
          </xs:documentation>
       </xs:annotation>

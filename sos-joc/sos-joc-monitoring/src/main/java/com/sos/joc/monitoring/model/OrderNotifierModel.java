@@ -233,29 +233,29 @@ public class OrderNotifierModel {
         if (r.getStep().getError()) {
             // ERROR
             if (!r.isErrorCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
-                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep(), true);
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, NotificationType.ERROR, Configuration.INSTANCE
+                        .getOnError(), r.getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep());
                 notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.ERROR, null);
                 r.setErrorCompleted();
             }
         } else {
             // RECOVERY
             if (!r.isRecoveryCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnError(), r.getStep()
-                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep(), false);
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, NotificationType.RECOVERED, Configuration.INSTANCE
+                        .getOnError(), r.getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep());
                 notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.RECOVERED, null);
                 r.setRecoveryCompleted();
             }
             // SUCCESS
             if (!r.isSuccessCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnSuccess(), r.getStep()
-                        .getControllerId(), r.getStep().getWorkflowPath(), r.getStep(), false);
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, NotificationType.SUCCESS, Configuration.INSTANCE
+                        .getOnSuccess(), r.getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep());
                 notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.SUCCESS, null);
                 r.setSuccessCompleted();
             }
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[%s][notifyStep][end][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, r.toString()));
+            LOGGER.debug(String.format("%s[%s][notifyStep][end][%s]", LOG_IDENTIFIER, r.getControllerId(), range));
         }
     }
 
@@ -269,8 +269,8 @@ public class OrderNotifierModel {
                         .size()));
             }
             OrderNotificationRange range = OrderNotificationRange.WORKFLOW_JOB;
-            List<Notification> configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, Configuration.INSTANCE.getOnWarning(), r
-                    .getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep(), false);
+            List<Notification> configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(range, NotificationType.WARNING,
+                    Configuration.INSTANCE.getOnWarning(), r.getStep().getControllerId(), r.getStep().getWorkflowPath(), r.getStep());
             notify(r.getControllerId(), range, configuredNotifications, null, r, NotificationType.WARNING, r.getWarnings());
             r.setWarnCompleted();
             if (LOGGER.isDebugEnabled()) {
@@ -291,16 +291,15 @@ public class OrderNotifierModel {
         }
 
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[%s][notifyOrder][start][%s][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, type, SOSString.toString(
-                    r)));
+            LOGGER.debug(String.format("%s[%s][notifyOrder][start][%s][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, type, r.toString()));
         }
 
         List<Notification> configuredNotifications;
         switch (type) {
         case ERROR:
             if (!r.isErrorCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
-                        .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, NotificationType.ERROR,
+                        Configuration.INSTANCE.getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
                 notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.ERROR, null);
                 r.setErrorCompleted();
             }
@@ -308,15 +307,15 @@ public class OrderNotifierModel {
         case SUCCESS:
             // RECOVERY
             if (!r.isRecoveryCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
-                        .getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, NotificationType.RECOVERED,
+                        Configuration.INSTANCE.getOnError(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
                 notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.RECOVERED, null);
                 r.setRecoveryCompleted();
             }
             // SUCCESS
             if (!r.isSuccessCompleted()) {
-                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, Configuration.INSTANCE
-                        .getOnSuccess(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
+                configuredNotifications = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, NotificationType.SUCCESS,
+                        Configuration.INSTANCE.getOnSuccess(), r.getOrder().getControllerId(), r.getOrder().getWorkflowPath());
                 notify(r.getControllerId(), range, configuredNotifications, r, null, NotificationType.SUCCESS, null);
                 r.setSuccessCompleted();
             }
@@ -329,8 +328,7 @@ public class OrderNotifierModel {
             break;
         }
         if (isDebugEnabled) {
-            LOGGER.debug(String.format("%s[%s][notifyOrder][end][%s][%s]%s", LOG_IDENTIFIER, r.getControllerId(), range, type, SOSString.toString(
-                    r)));
+            LOGGER.debug(String.format("%s[%s][notifyOrder][end][%s][%s]", LOG_IDENTIFIER, r.getControllerId(), range, type));
         }
     }
 
