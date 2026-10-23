@@ -9,7 +9,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.loggers.base.ISOSLogger.LogLevel;
 import com.sos.commons.util.loggers.impl.StdLogger;
+import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
 import com.sos.js7.job.UnitTestJobHelper;
 import com.sos.yade.engine.commons.arguments.YADEArguments;
 
@@ -24,10 +26,11 @@ public class YADEJobTest {
     public void testJob() throws Exception {
 
         Map<String, Object> args = new HashMap<>();
-        args.put("settings", Path.of("x.xml"));
-        args.put("profile", "y");
-        args.put("log_level", "debug");
-        args.put("log_async_sshj", true);
+        args.put("settings", Path.of("sftp-v.2.0.0.xml"));
+        args.put("profile", "GETLIST-sftp");
+        args.put("log_level", LogLevel.TRACE);
+        args.put(SSHProviderArguments.ARG_LOG_SSHJ_TRACE_UNFILTERED, false);
+        args.put(SSHProviderArguments.ARG_LOG_SSHJ_ASYNC, true);
 
         // overrides settings
         boolean overrides = false;

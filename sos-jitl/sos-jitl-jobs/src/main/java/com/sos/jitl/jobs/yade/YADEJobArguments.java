@@ -21,7 +21,8 @@ public class YADEJobArguments extends JobArguments {
     private JobArgument<Integer> parallelism = new JobArgument<>(YADEArguments.STARTUP_ARG_PARALLELISM, false,
             YADEArguments.STARTUP_ARG_PARALLELISM_DEFAULT);
 
-    private JobArgument<Boolean> logAsyncSshj = new JobArgument<>(SSHProviderArguments.ARG_LOG_ASYNC_SSHJ, false, false);
+    private JobArgument<Boolean> logSshjTraceUnfiltered = new JobArgument<>(SSHProviderArguments.ARG_LOG_SSHJ_TRACE_UNFILTERED, false, false);
+    private JobArgument<Boolean> logSshjAsync = new JobArgument<>(SSHProviderArguments.ARG_LOG_SSHJ_ASYNC, false, false);
 
     /** Connectivity fault simulation
      * 
@@ -68,8 +69,12 @@ public class YADEJobArguments extends JobArguments {
         return parallelism;
     }
 
-    public SOSArgument<Boolean> getLogAsyncSshj() {
-        return logAsyncSshj;
+    public SOSArgument<Boolean> getLogSshjTraceUnfiltered() {
+        return logSshjTraceUnfiltered;
+    }
+
+    public SOSArgument<Boolean> getLogSshjAsync() {
+        return logSshjAsync;
     }
 
     public JobArgument<String> getSimConnFaults() {

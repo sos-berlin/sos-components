@@ -110,6 +110,7 @@
              		</p>
                	</note>
             </param>
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_log_sshj_trace_unfiltered.xml" parse="xml" />
         </params>
     </configuration>
     <documentation>
