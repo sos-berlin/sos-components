@@ -93,7 +93,8 @@ public class YADEArguments extends ASOSArguments {
      * </p>
      */
     private SOSArgument<Integer> parallelism = new SOSArgument<>(STARTUP_ARG_PARALLELISM, false, Integer.valueOf(1));
-    private SOSArgument<Boolean> logAsyncSshj = new SOSArgument<>("LogAsyncSshj", false, false);
+    private SOSArgument<Boolean> logSshjTraceUnfiltered = new SOSArgument<>("LogSshjTraceUnfiltered", false, false);
+    private SOSArgument<Boolean> logSshjAsync = new SOSArgument<>("LogSshjAsync", false, false);
 
     /** COPY/MOVE operations */
     private SOSArgument<Boolean> transactional = new SOSArgument<>("Transactional", false, Boolean.valueOf(false));
@@ -146,8 +147,12 @@ public class YADEArguments extends ASOSArguments {
         return parallelism;
     }
 
-    public SOSArgument<Boolean> getLogAsyncSshj() {
-        return logAsyncSshj;
+    public SOSArgument<Boolean> getLogSshjTraceUnfiltered() {
+        return logSshjTraceUnfiltered;
+    }
+
+    public SOSArgument<Boolean> getLogSshjAsync() {
+        return logSshjAsync;
     }
 
     public boolean isParallelismEnabled() {

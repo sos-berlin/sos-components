@@ -46,11 +46,28 @@ public class SSHJClientFactory {
         setConfigKeepAliveProvider(provider, config);
 
         if (provider.getLogger().isDebugEnabled()) {
-            boolean async = provider.getArguments().getLogAsyncSshj().isTrue();
-            if (async) {
-                provider.getLogger().debug("SSHJ asynchronous logging active");
+            boolean traceUnfiltered = provider.getArguments().getLogSshjTraceUnfiltered().isTrue();
+            boolean async = provider.getArguments().getLogSshjAsync().isTrue();
+            config.setLoggerFactory(new SSHJLoggerFactory(provider.getLogger(), traceUnfiltered, async));
+
+            provider.getLogger().debug("[SSHJ][KEX algorithms] {}", config.getKeyExchangeFactories().stream().map(factory -> factory.getName())
+                    .collect(Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][Cipher algorithms] {}", config.getCipherFactories().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][MAC algorithms] {}", config.getMACFactories().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][Host-key algorithms] {}", config.getKeyAlgorithms().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            if (traceUnfiltered) {
+                provider.getLogger().debug("[SSHJ] unfiltered TRACE logging active");
             }
-            config.setLoggerFactory(new SSHJLoggerFactory(provider.getLogger(), async));
+            if (async) {
+                provider.getLogger().debug("[SSHJ] asynchronous logging active");
+            }
         }
 
         // SSH Client

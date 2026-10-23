@@ -13,28 +13,30 @@ public class DelegatingSlf4jLogger implements Logger {
     private final String name;
 
     private final boolean isInfoEnabled;
+    private final boolean isTraceEnabled;
     private final boolean isWarnEnabled = true;
     private final boolean isErrorEnabled = true;
 
     public DelegatingSlf4jLogger(ISOSLogger provider) {
-        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), true, false);
+        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), true, provider.isTraceEnabled(), false);
     }
 
     public DelegatingSlf4jLogger(ISOSLogger provider, boolean isInfoEnabled) {
-        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), isInfoEnabled, false);
+        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), isInfoEnabled, provider.isTraceEnabled(), false);
     }
 
-    public DelegatingSlf4jLogger(ISOSLogger provider, boolean isInfoEnabled, boolean async) {
-        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), isInfoEnabled, async);
+    public DelegatingSlf4jLogger(ISOSLogger provider, boolean isInfoEnabled, boolean isTraceEnabled, boolean async) {
+        this(provider, DelegatingSlf4jLogger.class.getSimpleName(), isInfoEnabled, isTraceEnabled, async);
     }
 
-    public DelegatingSlf4jLogger(ISOSLogger provider, String name, boolean isInfoEnabled, boolean async) {
+    public DelegatingSlf4jLogger(ISOSLogger provider, String name, boolean isInfoEnabled, boolean isTraceEnabled, boolean async) {
         if (provider == null) {
             throw new IllegalArgumentException("Logger provider must not be null");
         }
         this.delegate = getDelegate(provider, isInfoEnabled, async);
         this.name = name;
         this.isInfoEnabled = isInfoEnabled;
+        this.isTraceEnabled = isTraceEnabled;
     }
 
     private ISOSLogger getDelegate(ISOSLogger provider, boolean isInfoEnabled, boolean async) {
@@ -64,7 +66,7 @@ public class DelegatingSlf4jLogger implements Logger {
 
     @Override
     public boolean isTraceEnabled() {
-        return delegate.isTraceEnabled();
+        return isTraceEnabled;
     }
 
     @Override
