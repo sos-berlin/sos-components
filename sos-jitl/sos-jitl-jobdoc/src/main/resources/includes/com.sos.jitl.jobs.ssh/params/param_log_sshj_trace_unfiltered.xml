@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="log_sshj_trace_unfiltered" required="false" default_value="false"
+	DataType="java.lang.Boolean">
+	<note>
+		<p>
+			Processing argument: Enables unfiltered SSHJ
+			<em>TRACE</em>
+			logging for SSH and SFTP operations when
+			<em>log_level</em>
+			is set to
+			<em>TRACE</em>
+			.
+			<br />
+			<br />
+			By default,
+			<em>TRACE</em>
+			logging is suppressed for the following classes to prevent sensitive
+			packet data from being exposed in logs and to avoid excessive log
+			output during file transfers:
+			<ul>
+				<li>
+					<em>net.schmizz.sshj.transport.Encoder</em>
+				</li>
+				<li>
+					<em>net.schmizz.sshj.transport.Decoder</em>
+				</li>
+				<li>
+					<em>net.schmizz.sshj.connection.channel.direct.SessionChannel
+					</em>
+				</li>
+			</ul>
+		</p>
+	</note>
+</param>
