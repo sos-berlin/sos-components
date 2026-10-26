@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -65,7 +66,6 @@ import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.data_for_java.workflow.position.JWorkflowPosition;
-import scala.Function1;
 import scala.jdk.javaapi.OptionConverters;
 
 public class CheckedResumeOrdersPositions extends OrdersResumePositions {
@@ -421,10 +421,10 @@ public class CheckedResumeOrdersPositions extends OrdersResumePositions {
         return getResumableOrders(o -> orders.contains(o.id().string()), currentState, permittedFolders);
     }
     
-    private static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Function1<Order<Order.State>, Object> containsFilter,
+    private static ConcurrentMap<JWorkflowId, Set<JOrder>> getResumableOrders(Predicate<Order<Order.State>> containsFilter,
             JControllerState currentState, AuthFolders permittedFolders) {
         
-        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.and(containsFilter, OrdersHelper::isResumable);
+        Predicate<Order<Order.State>> stateFilter = JOrderPredicates.and(containsFilter, OrdersHelper::isResumable);
         ConcurrentMap<JWorkflowId, Set<JOrder>> resumableOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
                 JOrder::workflowId, Collectors.toSet()));
 

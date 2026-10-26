@@ -29,7 +29,6 @@ import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
-import scala.Function1;
 
 public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
 
@@ -128,11 +127,11 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
             int suspendedOrders = 0;
             Stream<JOrder> freshOrders = null;
 
-            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+            Predicate<Order<Order.State>> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                     Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                             Order.ProcessingKilled$.class));
-            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-            Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+            Predicate<Order<Order.State>> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+            Predicate<Order<Order.State>> notSuspendFilter = JOrderPredicates.not(suspendFilter);
             Function<JOrder, String> collapseCyclicOrders = o -> OrdersHelper.isFresh(o) ? OrdersHelper.getCyclicOrderIdMainPart(o.id().string()) : o
                     .id().string();
 
@@ -152,7 +151,7 @@ public class OrdersSnapshot implements OrdersSnapshotMBean, IJocMBean {
                 Set<OrderId> blockedOrderIds = freshOrderSet.stream().filter(o -> {
                     Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
                     return scheduledFor != null && scheduledFor.isBefore(now);
-                }).map(o -> o.id()).collect(Collectors.toSet());
+                }).map(JOrder::id).collect(Collectors.toSet());
 
                 Set<OrderId> waitingForAdmissionOrderIds = OrdersHelper.getWaitingForAdmissionOrderIds(blockedOrderIds, controllerState);
                 waitingForAdmissionOrderIds.forEach(i -> blockedOrderIds.remove(i));

@@ -569,7 +569,7 @@ public class HistoryEventEntry {
             return result;
         }
 
-        private OrderLock getOrderLock(LockPath lockPath, Option<Object> count, boolean checkState) throws HistoryControllerProxyEventException {
+        private OrderLock getOrderLock(LockPath lockPath, Option<Integer> count, boolean checkState) throws HistoryControllerProxyEventException {
             Lock l = null;
             Collection<OrderId> orderIds = null;
             List<OrderId> queuedOrderIds = null;
@@ -657,10 +657,10 @@ public class HistoryEventEntry {
             private final Integer count;
             private OrderLockState state;
 
-            private OrderLock(String lockId, int limit, Optional<Object> count, Collection<OrderId> orderIds, List<OrderId> queuedOrderIds) {
+            private OrderLock(String lockId, int limit, Optional<Integer> count, Collection<OrderId> orderIds, List<OrderId> queuedOrderIds) {
                 this.lockId = lockId;
                 this.limit = limit;
-                this.count = count != null && count.isPresent() ? (Integer) count.get() : null;
+                this.count = count != null && count.isPresent() ? count.get() : null;
                 this.state = null;
                 if (orderIds != null || queuedOrderIds != null) {
                     this.state = new OrderLockState(orderIds, queuedOrderIds);

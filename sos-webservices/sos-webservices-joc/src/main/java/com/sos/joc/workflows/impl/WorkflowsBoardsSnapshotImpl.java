@@ -37,7 +37,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowRefs;
 import com.sos.joc.db.deploy.items.WorkflowBoards;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderIdToOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
@@ -60,7 +59,6 @@ import js7.data_for_java.item.JRepo;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.plan.JPlan;
-import scala.Function1;
 
 @Path("workflows")
 public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWorkflowsBoardsSnapshotResource {
@@ -320,11 +318,11 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
 
     private Map<WorkflowPath, List<JOrder>> getCriticalOrdersPerWorkflow(Set<OrderId> orderIds, Set<String> workflowNames) {
         // maybe forked orders too?
-        Function1<Order<Order.State>, Object> suspendFilter = o -> o.isSuspended();
-        Function1<Order<Order.State>, Object> promptingFilter = JOrderPredicates.byOrderState(Order.Prompting.class);
-        Iterator<Function1<Order<Order.State>, Object>> failedFilters = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
+        Predicate<Order<Order.State>> suspendFilter = o -> o.isSuspended();
+        Predicate<Order<Order.State>> promptingFilter = JOrderPredicates.byOrderState(Order.Prompting.class);
+        Iterator<Predicate<Order<Order.State>>> failedFilters = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
                 .equals(OrderStateText.FAILED)).map(Map.Entry::getKey).map(JOrderPredicates::byOrderState).iterator();
-        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.or(suspendFilter, promptingFilter);
+        Predicate<Order<Order.State>> stateFilter = JOrderPredicates.or(suspendFilter, promptingFilter);
         while (failedFilters.hasNext()) {
             stateFilter = JOrderPredicates.or(stateFilter, failedFilters.next());
         }
@@ -335,7 +333,7 @@ public class WorkflowsBoardsSnapshotImpl extends JOCResourceImpl implements IWor
     }
     
     private Map<WorkflowPath, Set<String>> getExpectingOrdersPerWorkflow(Set<OrderId> orderIds, Set<String> workflowNames) {
-        Function1<Order<Order.State>, Object> stateFilter = JOrderPredicates.byOrderState(Order.ExpectingNotices.class);
+        Predicate<Order<Order.State>> stateFilter = JOrderPredicates.byOrderState(Order.ExpectingNotices.class);
         stateFilter = JOrderPredicates.and(stateFilter, JOrderPredicates.byOrderIdPredicate(oId -> orderIds.contains(oId)));
         return currentState.ordersBy(stateFilter).filter(o -> workflowNames.contains(o.workflowId().path().string())).collect(Collectors.groupingBy(
                 o -> o.workflowId().path(), Collectors.mapping(o -> o.id().string(), Collectors.toSet())));

@@ -115,7 +115,6 @@ import js7.data_for_java.workflow.JWorkflowControlId;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JBranchPath;
 import js7.data_for_java.workflow.position.JPosition;
-import scala.Function1;
 import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
 
@@ -146,7 +145,7 @@ public class WorkflowsHelper {
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
         Repo repo = currentState.asScala().repo();
-        Function1<Order<Order.State>, Object> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
+        Predicate<Order<Order.State>> isOldWorkflow = o -> !repo.isCurrentItem(o.workflowId());
         return currentState.ordersBy(isOldWorkflow).map(JOrder::workflowId).distinct();
     }
 
@@ -1889,19 +1888,19 @@ public class WorkflowsHelper {
                     }
                 }).filter(Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
 
-        Function1<Order<Order.State>, Object> workflowFilter = o -> workflows2.contains(o.workflowId());
+        Predicate<Order<Order.State>> workflowFilter = o -> workflows2.contains(o.workflowId());
         //JOC-1681
-//        Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+//        Predicate<Order<Order.State>> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
 //                Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
 //                        Order.ProcessingKilled$.class));
-//        Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-//        Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
+//        Predicate<Order<Order.State>> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+//        Predicate<Order<Order.State>> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
 //                JOrderPredicates.and(o -> OrdersHelper.isCyclicOrderId(o.id().string()), JOrderPredicates.not(suspendFilter)));
-        Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
+        Predicate<Order<Order.State>> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
                 o -> OrdersHelper.isCyclicOrderId(o.id().string()));
-        Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
+        Predicate<Order<Order.State>> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
-        Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
+        Predicate<Order<Order.State>> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
                 .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
         Set<JOrder> blockedOrders = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter)).collect(Collectors.toSet());
