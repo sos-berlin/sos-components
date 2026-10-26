@@ -60,15 +60,13 @@ public class LogImpl extends JOCResourceImpl implements IControllerLogResource {
 
             JLogSelection selection = JLogSelection.empty().withLineLimit(numOfLines).withEnd(instantTo);
 
-            CompletableFuture<List<byte[]>> future = JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
-                return logDirectoryIndex.logIndex(in.getServiceId().logPrefix(), logLevel).thenCompose(logIndex -> {
-                    return logIndex.keyedByteLogLineFlux(instantFrom, selection)
-                            // .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
-                            .flatMapIterable(Function.identity())
-                            .map(kbll -> kbll.lineAsString().getBytes(StandardCharsets.UTF_8)).collectList()
-                            .toFuture();
-                });
-            });
+            CompletableFuture<List<byte[]>> future = JOCLogProxyContext.getJLogDirectoryIndex().logIndex(in.getServiceId().logPrefix(), logLevel)
+                    .thenCompose(logIndex -> {
+                        return logIndex.keyedByteLogLineFlux(instantFrom, selection)
+                                // .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                                .flatMapIterable(Function.identity()).map(kbll -> kbll.lineAsString().getBytes(StandardCharsets.UTF_8)).collectList()
+                                .toFuture();
+                    });
 
             return responseOctetStreamDownloadStatus200(new FutureStreamingOutput(true, future, header), targetFilename);
         } catch (Exception e) {
