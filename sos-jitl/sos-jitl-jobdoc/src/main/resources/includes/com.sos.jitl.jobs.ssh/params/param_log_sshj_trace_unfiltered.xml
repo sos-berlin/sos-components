@@ -16,21 +16,74 @@
 			.
 			<br />
 			<br />
-			By default,
-			<em>TRACE</em>
-			logging is suppressed for the following classes to prevent sensitive
-			packet data from being exposed in logs and to avoid excessive log
-			output during file transfers:
 			<ul>
 				<li>
-					<em>net.schmizz.sshj.transport.Encoder</em>
+					<em>false</em>
+					(default)
+					<ul>
+						<li>
+							By default,
+							<em>TRACE</em>
+							logging is suppressed for the following classes to prevent
+							sensitive
+							packet data from being exposed in logs and to avoid
+							excessive log
+							output during file transfers:
+							<ul>
+								<li>
+									<em>net.schmizz.sshj.transport.Encoder</em>
+								</li>
+								<li>
+									<em>net.schmizz.sshj.transport.Decoder</em>
+								</li>
+								<li>
+									<em>net.schmizz.sshj.connection.channel.direct.SessionChannel
+									</em>
+								</li>
+							</ul>
+						</li>
+					</ul>
 				</li>
 				<li>
-					<em>net.schmizz.sshj.transport.Decoder</em>
-				</li>
-				<li>
-					<em>net.schmizz.sshj.connection.channel.direct.SessionChannel
-					</em>
+					<em>true</em>
+					<ul>
+						<li>
+							<em>TRACE</em>
+							logging is no longer suppressed for the classes listed above.
+						</li>
+						<li>
+							Note:
+							<ul>
+								<li>
+									Enabling unfiltered
+									<em>TRACE</em>
+									logging may expose sensitive data
+									in log files and significantly
+									increase log output.
+								</li>
+								<li>
+									The output can quickly exceed the limits configured in JOC
+									Cockpit Settings:
+									<ul>
+										<li>the Max. display size (default 10 MB), so that the log can
+											only be downloaded, or
+										</li>
+										<li>the Max. log size (default 50 MB), resulting in log
+											truncation.
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li>
+							Therefore,
+							<em>log_sshj_trace_unfiltered = true</em>
+							should preferably
+							be used for troubleshooting connection problems
+							rather than
+							enabled permanently, and disabled again afterwards.
+						</li>
+					</ul>
 				</li>
 			</ul>
 		</p>
