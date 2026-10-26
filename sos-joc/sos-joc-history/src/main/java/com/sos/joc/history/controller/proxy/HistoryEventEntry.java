@@ -253,7 +253,7 @@ public class HistoryEventEntry {
         public String getOrderId() {
             return orderId.string();
         }
-        
+
         public Integer getPriority() {
             if (order == null) {
                 return null;
@@ -994,7 +994,8 @@ public class HistoryEventEntry {
              * if "try+" is detected in the position string:<br/>
              * --- position=0/try+0:0/try+0:0/try+0:0/try+0:0<br />
              * a copy of the position string is made when a Try instruction is a Retry<br/>
-             * --- positionResolved=0/try+0:0/retry+0:0/try+0:0/retry+0:0
+             * --- positionResolved=0/try+0:0/retry+0(maxTries):0/try+0:0/retry+0(maxTries):0<br />
+             * --- 0/try+0:0/retry+0(10):0/try+0:0/retry+0(5):0
              * 
              * @param p */
             private void resolvePosition(Position p) {
@@ -1026,7 +1027,7 @@ public class HistoryEventEntry {
                             int idx = parentSegmentCount - depth;
                             if (idx >= 0) {// cannot be greater than the last index of the segments due to -1 - depth
                                 hasRetry = true;
-                                segments[idx] = segments[idx].replace(HistoryPosition.TRY_PREFIX, HistoryPosition.RETRY_PREFIX);
+                                segments[idx] = getRetry(ti, segments[idx]);
                             }
                         }
                         pp = getParentPosition(pp);
@@ -1035,9 +1036,24 @@ public class HistoryEventEntry {
                     if (hasRetry) {
                         p.resolved = String.join(HistoryPosition.PATH_SEPARATOR, segments);
                     }
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     LOGGER.warn(String.format("[resolvePosition][%s][%s]%s", getOrderId(), p.asString(), e.toString()), e);
                 }
+            }
+
+            private String getRetry(TryInstruction ti, String segment) {
+                // original: try+0:0
+                String seg = segment;
+                try {
+                    String[] arr = segment.substring(HistoryPosition.TRY_PREFIX.length()).split(":");
+                    // Optional<Object> maxTries = OptionConverters.toJava(ti.maxTries());
+                    // replaced: retry+0(10):0
+                    seg = HistoryPosition.RETRY_PREFIX + arr[0] + "(" + ti.maxTries().get() + "):" + arr[1];
+                } catch (Exception e) { // can not actually happen if "/try+n:n" is contained ...
+                    // replaced: retry+0:0
+                    seg = seg.replace(HistoryPosition.TRY_PREFIX, HistoryPosition.RETRY_PREFIX);
+                }
+                return seg;
             }
 
             public JWorkflow getWorkflow() throws Exception {

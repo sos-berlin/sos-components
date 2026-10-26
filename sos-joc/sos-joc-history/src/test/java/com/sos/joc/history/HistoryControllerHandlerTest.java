@@ -116,8 +116,8 @@ public class HistoryControllerHandlerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandlerTest.class);
     // Controller and Flux configuration
-    private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
-    private static final String CONTROLLER_ID = "js7.x";
+    private static final String CONTROLLER_URI_PRIMARY = "http://localhost:49990";
+    private static final String CONTROLLER_ID = "2.9.x-49990";
     private static final Long START_EVENT_ID = 0L;// 1756121197867003L;
     // Flux - Collect incoming values into a List that will be pushed into the returned Flux every timespan OR maxSize items.
     private int BUFFER_TIMEOUT_MAXSIZE = 1_000; // the max collected size
