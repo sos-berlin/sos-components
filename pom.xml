@@ -36,7 +36,7 @@
     <release.version>2.9.1</release.version>
     <sos.engine.version>${release.version}</sos.engine.version>
     <api.schema.version>${release.version}</api.schema.version>
-    <joc.cockpit.version>${project.version}</joc.cockpit.version>
+    <joc.cockpit.version>${release.version}</joc.cockpit.version>
     <inventory.schema.version>1.9.1</inventory.schema.version>
     <sos.license.version>1.1.2</sos.license.version>
 

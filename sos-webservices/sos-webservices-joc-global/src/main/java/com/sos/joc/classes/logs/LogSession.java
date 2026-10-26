@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -15,7 +16,6 @@ import js7.base.log.reader.KeyedLogLine;
 import js7.base.log.reader.LogLineKey;
 import js7.data.node.Js7ServerId;
 import js7.proxy.javaapi.JControllerProxy;
-import js7.proxy.javaapi.JResource;
 import js7.proxy.javaapi.log.JLogDirectoryIndex;
 import js7.proxy.javaapi.log.JLogSelection;
 import reactor.core.publisher.Flux;
@@ -206,28 +206,26 @@ public class LogSession {
         return zoneId;
     }
     
-    public JResource<JLogDirectoryIndex> getResource() {
-        return JOCLogProxyContext.getJResource();
+    public JLogDirectoryIndex getResource() throws InterruptedException, ExecutionException {
+        return JOCLogProxyContext.getJLogDirectoryIndex();
+    }
+
+    public CompletableFuture<Void> getNextLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, LogLineKey key)
+            throws InterruptedException, ExecutionException {
+        return JOCLogProxyContext.getJLogDirectoryIndex().logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
+            return logIndex.keyedLogLineFlux(key, selection)
+                    // .publishOn(Schedulers.fromExecutor(ForkJoinPool .commonPool()))
+                    .flatMapIterable(Function.identity());
+        }).thenAccept(consumer);
     }
     
-    public CompletableFuture<Void> getNextLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, LogLineKey key) {
-        return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
-            return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
-                return logIndex.keyedLogLineFlux(key, selection)
-                        //.publishOn(Schedulers.fromExecutor(ForkJoinPool .commonPool()))
-                        .flatMapIterable(Function.identity());
-            }).thenAccept(consumer);
-        });
-    }
-    
-    public CompletableFuture<Void> getPrevLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, Instant instantFrom) {
-        return JOCLogProxyContext.getJResource().use(logDirectoryIndex -> {
-            return logDirectoryIndex.logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
-                return logIndex.keyedLogLineFlux(instantFrom, selection)
-                        //.publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
-                        .flatMapIterable(Function.identity());
-            }).thenAccept(consumer);
-        });
+    public CompletableFuture<Void> getPrevLogLinesFlux(Consumer<Flux<KeyedLogLine>> consumer, JLogSelection selection, Instant instantFrom)
+            throws InterruptedException, ExecutionException {
+        return JOCLogProxyContext.getJLogDirectoryIndex().logIndex(serviceId.logPrefix(), logLevel).thenApply(logIndex -> {
+            return logIndex.keyedLogLineFlux(instantFrom, selection)
+                    // .publishOn(Schedulers.fromExecutor(ForkJoinPool.commonPool()))
+                    .flatMapIterable(Function.identity());
+        }).thenAccept(consumer);
     }
     
     public Flux<KeyedLogLine> getNextLogLinesFlux(JControllerProxy proxy, JLogSelection selection, LogLineKey key) {
