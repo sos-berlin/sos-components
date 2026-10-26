@@ -104,12 +104,12 @@ public class LockEntryHelper {
             Map<String, Integer> sharedAcquired = null;
             if (ls.acquired() instanceof Acquired.NonExclusive) {
                 Acquired.NonExclusive a = (Acquired.NonExclusive) ls.acquired();
-                Map<OrderId, Object> map = JavaConverters.asJava(a.orderToCount());
+                Map<OrderId, Integer> map = JavaConverters.asJava(a.orderToCount());
                 if (map != null) {
                     sharedAcquired = new HashMap<String, Integer>();
-                    for (Map.Entry<OrderId, Object> entry : map.entrySet()) {
+                    for (Map.Entry<OrderId, Integer> entry : map.entrySet()) {
                         try {
-                            sharedAcquired.put(entry.getKey().string(), (Integer) entry.getValue());
+                            sharedAcquired.put(entry.getKey().string(), entry.getValue());
                         } catch (Throwable e) {
                             LOGGER.warn(String.format("[%s][%s]%s", entry.getKey(), entry.getValue(), e.toString()), e);
                         }
@@ -235,10 +235,10 @@ public class LockEntryHelper {
             if (in != null && in instanceof LockInstruction) {
                 JavaConverters.asJava(((LockInstruction) in).demands()).stream().filter(ld -> lockId.equals(ld.lockPath().string())).findAny()
                         .ifPresent(ld -> {
-                            Optional<Object> c = OptionConverters.toJava(ld.count());
+                            Optional<Integer> c = OptionConverters.toJava(ld.count());
                             if (c != null && c.isPresent()) {
                                 l.setType(WorkflowLockType.SHARED);
-                                l.setCount((Integer) c.get());
+                                l.setCount(c.get());
                             } else {
                                 l.setType(WorkflowLockType.EXCLUSIVE);
                             }

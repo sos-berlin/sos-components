@@ -5,12 +5,13 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.model.log.JOCServiceId;
 
-import js7.proxy.javaapi.JResource;
+import js7.proxy.javaapi.JAllocated;
 import js7.proxy.javaapi.log.JLogDirectoryIndex;
 
 public class JOCLogProxyContext {
@@ -18,7 +19,8 @@ public class JOCLogProxyContext {
     private static JOCLogProxyContext instance;
     //private JProxyContext proxyContext;
     private static Path logDir = Paths.get("logs");
-    private JResource<JLogDirectoryIndex> resource = null;
+    private JLogDirectoryIndex dirIndex = null;
+    private JAllocated<JLogDirectoryIndex> resource = null;
     public static ZoneId zoneId = ZoneId.of("UTC");
     private static Set<String> logPrefizes = EnumSet.allOf(JOCServiceId.class).stream().map(JOCServiceId::logPrefix).collect(Collectors.toSet());
     //for tests
@@ -37,15 +39,26 @@ public class JOCLogProxyContext {
         return instance;
     }
     
-    public static JResource<JLogDirectoryIndex> getJResource() {
-        return JOCLogProxyContext.getInstance()._getJResource();
+    public static JLogDirectoryIndex getJLogDirectoryIndex() throws InterruptedException, ExecutionException {
+        return JOCLogProxyContext.getInstance()._getJLogDirectoryIndex();
     }
     
-    private JResource<JLogDirectoryIndex> _getJResource() {
+    public static void release() {
+        JOCLogProxyContext.getInstance()._release();
+    }
+    
+    private JLogDirectoryIndex _getJLogDirectoryIndex() throws InterruptedException, ExecutionException {
         // logging with js7.base.log.reader.LogDirectoryIndex
-        if (resource == null) {
-            resource = JLogDirectoryIndex.directory(logDir, logPrefizes, zoneId, Proxies.proxyContext);
+        if (dirIndex == null) {
+            resource = JLogDirectoryIndex.directory(logDir, logPrefizes, zoneId, Proxies.proxyContext).allocate().get();
+            dirIndex = resource.allocatedThing();
         }
-        return resource;
+        return dirIndex;
+    }
+    
+    private void _release() {
+        if (resource != null) {
+            resource.release();
+        }
     }
 }

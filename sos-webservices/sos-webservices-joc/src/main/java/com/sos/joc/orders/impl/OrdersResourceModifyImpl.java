@@ -89,7 +89,6 @@ import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
-import scala.Function1;
 
 @Path("orders")
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
@@ -304,10 +303,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
             Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
-            Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+            Predicate<Order<Order.State>> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
 
-            Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
+            Predicate<Order<Order.State>> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
                     zoneId);
             orderStream = currentState.ordersBy(workflowStateFilter).parallel();
             if (Action.SUSPEND.equals(action) || Action.CANCEL.equals(action)) {
@@ -322,9 +321,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, modifyOrders.getFolders(),
                     currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
-                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                Predicate<Order<Order.State>> workflowFilter = o -> workflowIds2.contains(o.workflowId());
 
-                Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
+                Predicate<Order<Order.State>> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter,
                         zoneId);
                 orderStream = currentState.ordersBy(workflowStateFilter).parallel();
                 if (Action.SUSPEND.equals(action) || Action.CANCEL.equals(action)) {
@@ -397,7 +396,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
             Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
-            Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+            Predicate<Order<Order.State>> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
             jOrders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId))
                     .parallel().filter(getDateToFilter(modifyOrders, Action.RESUME));
@@ -408,7 +407,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(modifyOrders.getControllerId(), modifyOrders
                     .getFolders(), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
-                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                Predicate<Order<Order.State>> workflowFilter = o -> workflowIds2.contains(o.workflowId());
                 jOrders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter, zoneId)).parallel().filter(
                         getDateToFilter(modifyOrders, Action.RESUME));
             }
@@ -1148,10 +1147,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return dateToFilter;
     }
 
-    private static Function1<Order<Order.State>, Object> getWorkflowStateFilter(ModifyOrders modifyOrders, long surveyDateMillis,
-            Function1<Order<Order.State>, Object> workflowFilter, ZoneId zoneId) {
+    private static Predicate<Order<Order.State>> getWorkflowStateFilter(ModifyOrders modifyOrders, long surveyDateMillis,
+            Predicate<Order<Order.State>> workflowFilter, ZoneId zoneId) {
         List<OrderStateText> states = modifyOrders.getStates();
-        Function1<Order<Order.State>, Object> stateFilter = null;
+        Predicate<Order<Order.State>> stateFilter = null;
 
         if (states != null && !states.isEmpty()) {
 
@@ -1159,13 +1158,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             final boolean lookingForPending = states.contains(OrderStateText.PENDING);
             final boolean lookingForScheduled = states.contains(OrderStateText.SCHEDULED);
 
-            Function1<Order<Order.State>, Object> freshOrderFilter = null;
+            Predicate<Order<Order.State>> freshOrderFilter = null;
 
-            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+            Predicate<Order<Order.State>> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                     Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                             Order.ProcessingKilled$.class));
-            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-            Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+            Predicate<Order<Order.State>> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+            Predicate<Order<Order.State>> notSuspendFilter = JOrderPredicates.not(suspendFilter);
 
             states.remove(OrderStateText.SCHEDULED);
             states.remove(OrderStateText.PENDING);
@@ -1173,7 +1172,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
             Map<OrderStateText, Set<Class<? extends Order.State>>> m = OrdersHelper.groupByStateClasses.entrySet().stream().collect(Collectors
                     .groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
-            Iterator<Function1<Order<Order.State>, Object>> stateFilters = states.stream().filter(s -> m.containsKey(s)).flatMap(s -> m.get(s)
+            Iterator<Predicate<Order<Order.State>>> stateFilters = states.stream().filter(s -> m.containsKey(s)).flatMap(s -> m.get(s)
                     .stream()).map(JOrderPredicates::byOrderState).iterator();
 
             if (stateFilters.hasNext()) {
@@ -1238,11 +1237,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private static Stream<JOrder> considerAdmissionOrders(Stream<JOrder> orderStream, boolean lookingForBlocked, boolean lookingForInProgress,
-            Function1<Order<Order.State>, Object> filter, JControllerState controllerState, ZoneId zoneId) {
+            Predicate<Order<Order.State>> filter, JControllerState controllerState, ZoneId zoneId) {
 
         if (lookingForBlocked || lookingForInProgress) {
             long surveyDateMillis = controllerState.instant().toEpochMilli();
-            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
+            Predicate<Order<Order.State>> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> !o
                     .isSuspended() && OrdersHelper.getScheduledForMillis(o, zoneId, surveyDateMillis) < surveyDateMillis);
 
             Set<JOrder> blockedOrders = controllerState.ordersBy(JOrderPredicates.and(filter, blockedFilter)).collect(Collectors.toSet());

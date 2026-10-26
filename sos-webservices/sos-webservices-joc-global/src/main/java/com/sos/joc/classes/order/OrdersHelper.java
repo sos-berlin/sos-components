@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -149,7 +150,6 @@ import js7.data_for_java.workflow.position.JPositionOrLabel;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
-import scala.Function1;
 import scala.Option;
 import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
@@ -1189,7 +1189,7 @@ public class OrdersHelper {
     }
 
     public static Optional<Set<String>> getNotFreshOrders(Collection<String> orderIds, JControllerState currentState) {
-        Function1<Order<Order.State>, Object> notFreshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
+        Predicate<Order<Order.State>> notFreshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
                 .not(JOrderPredicates.byOrderState(Order.Fresh.class)));
         Set<String> notFreshOrderIds = currentState.ordersBy(notFreshAndExistsFilter).map(JOrder::id).map(OrderId::string).collect(Collectors
                 .toSet());
@@ -1200,7 +1200,7 @@ public class OrdersHelper {
     }
 
     public static Stream<String> getWorkflowNamesOfFreshOrders(Collection<String> orderIds, JControllerState currentState) {
-        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
+        Predicate<Order<Order.State>> freshAndExistsFilter = JOrderPredicates.and(o -> orderIds.contains(o.id().string()), JOrderPredicates
                 .byOrderState(Order.Fresh.class));
         return currentState.ordersBy(freshAndExistsFilter).map(JOrder::workflowId).map(JWorkflowId::path).map(WorkflowPath::string).distinct();
     }
@@ -1316,7 +1316,7 @@ public class OrdersHelper {
             return either;
         };
 
-        Function1<Order<Order.State>, Object> freshAndExistsFilter = JOrderPredicates.and(o -> temporaryOrderIds.contains(o.id().string()),
+        Predicate<Order<Order.State>> freshAndExistsFilter = JOrderPredicates.and(o -> temporaryOrderIds.contains(o.id().string()),
                 JOrderPredicates.byOrderState(Order.Fresh.class));
         Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(freshAndExistsFilter).parallel().map(mapper).collect(
                 Collectors.groupingBy(Either::isRight, Collectors.toSet()));
@@ -1335,7 +1335,7 @@ public class OrdersHelper {
                     cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
                         ProblemHelper.postProblemEventIfExist(either2, accessToken, jocError, controllerId);
                         if (either2.isRight()) {
-                            // TODO check if really all orders are cancelled. Only then the same orderId can be used fro addOrders(...)
+                            // TODO check if really all orders are cancelled. Only then the same orderId can be used for addOrders(...)
 
                             // try {
                             // for (int i = 0; i < 10; i++) {

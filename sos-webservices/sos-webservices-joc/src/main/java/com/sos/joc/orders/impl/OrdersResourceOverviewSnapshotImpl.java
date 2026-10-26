@@ -45,7 +45,6 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
-import scala.Function1;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
@@ -117,11 +116,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         int suspendedOrders = 0;
         Stream<JOrder> freshOrders = null;
 
-        Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+        Predicate<Order<Order.State>> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                 Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                         Order.ProcessingKilled$.class));
-        Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-        Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+        Predicate<Order<Order.State>> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+        Predicate<Order<Order.State>> notSuspendFilter = JOrderPredicates.not(suspendFilter);
         Function<JOrder, String> collapseCyclicOrders = o -> OrdersHelper.isFresh(o) ? OrdersHelper.getCyclicOrderIdMainPart(o.id().string()) : o.id()
                 .string();
 
