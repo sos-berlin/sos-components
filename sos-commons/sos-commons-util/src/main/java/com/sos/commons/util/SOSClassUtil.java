@@ -267,7 +267,7 @@ public class SOSClassUtil {
             throw new SOSMissingDataException("resourcePath");
         }
         try (InputStream is = openResourceStream(contextClass, resourcePath)) {
-            return SOSString.toString(is);
+            return SOSString.readAllBytesAsString(is);
         }
     }
 
