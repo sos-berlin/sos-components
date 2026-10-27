@@ -267,12 +267,16 @@ public class SOSClassUtil {
             throw new SOSMissingDataException("resourcePath");
         }
         try (InputStream is = openResourceStream(contextClass, resourcePath)) {
-            return SOSString.toString(is);
+            return SOSString.readAllBytesAsString(is);
         }
     }
 
-    private static String getSimpleName(String className) {
-        return className.substring(className.lastIndexOf('.') + 1);
+    public static String getSimpleName(String className) {
+        if (className == null) {
+            return "";
+        }
+        int li = className.lastIndexOf('.');
+        return li > 0 ? className.substring(li + 1) : className;
     }
 
 }
