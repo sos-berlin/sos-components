@@ -90,10 +90,14 @@ public class SSHJClientFactory {
         if (provider.getProxyConfig() == null) {
             client = new SSHClient(config);
         } else {
-            if (provider.getProxyConfig().shouldResolveSocksHostname()) {
+            if (provider.getProxyConfig().isSOCKS()) { // SOCKS PROXY
+                if (provider.getProxyConfig().shouldResolveSocksHostname()) {
+                    client = new SSHClient(config);
+                } else {
+                    client = new SSHJFqdnSSHClient(config);
+                }
+            } else { // HTTP PROXY
                 client = new SSHClient(config);
-            } else {
-                client = new SSHJFqdnSSHClient(config);
             }
             client.setSocketFactory(new ProxySocketFactory(provider.getProxyConfig()));
         }
