@@ -32,6 +32,7 @@ import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.BoardWorkflows;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.controller.model.workflow.WorkflowBoardExpressions;
 import com.sos.controller.model.workflow.WorkflowDeps;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.controller.model.workflow.WorkflowIdAndTags;
@@ -321,9 +322,17 @@ public class WorkflowsHelper {
         Map<String, Set<String>> boardPostPositions = new HashMap<>();
         Map<String, Set<String>> boardExpectPositions = new HashMap<>();
         Map<String, Set<String>> boardConsumePositions = new HashMap<>();
-        setWorkflowBoardPositions(pos, instructions, level, boardPostPositions, boardExpectPositions, boardConsumePositions);
         if (wb == null) {
             wb = new WorkflowBoards();
+        }
+        wb.setConsumeNoticesExpressions(new WorkflowBoardExpressions());
+        wb.setExpectNoticesExpressions(new WorkflowBoardExpressions());
+        setWorkflowBoardPositions(pos, instructions, level, boardPostPositions, boardExpectPositions, boardConsumePositions, wb);
+        if (wb.getConsumeNoticesExpressions().getAdditionalProperties().isEmpty()) {
+            wb.setConsumeNoticesExpressions(null); 
+        }
+        if (wb.getExpectNoticesExpressions().getAdditionalProperties().isEmpty()) {
+            wb.setExpectNoticesExpressions(null); 
         }
         wb.setPostPositions(boardPostPositions);
         wb.setExpectPositions(boardExpectPositions);
@@ -1393,14 +1402,14 @@ public class WorkflowsHelper {
     }
     
     private static int setWorkflowBoardPositions(Object[] parentPosition, List<Instruction> insts, int level,
-            Map<String, Set<String>> boardPostPositions,
-            Map<String, Set<String>> boardExpectPositions, Map<String, Set<String>> boardConsumePositions) {
-        return setWorkflowBoardPositions(parentPosition, 0, insts, level, boardPostPositions, boardExpectPositions, boardConsumePositions);
+            Map<String, Set<String>> boardPostPositions, Map<String, Set<String>> boardExpectPositions,
+            Map<String, Set<String>> boardConsumePositions, WorkflowBoards wb) {
+        return setWorkflowBoardPositions(parentPosition, 0, insts, level, boardPostPositions, boardExpectPositions, boardConsumePositions, wb);
     }
     
     private static int setWorkflowBoardPositions(Object[] parentPosition, int posIndex, List<Instruction> insts, int level,
-            Map<String, Set<String>> boardPostPositions,
-            Map<String, Set<String>> boardExpectPositions, Map<String, Set<String>> boardConsumePositions) {
+            Map<String, Set<String>> boardPostPositions, Map<String, Set<String>> boardExpectPositions,
+            Map<String, Set<String>> boardConsumePositions, WorkflowBoards wb) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 if (level > 0 && parentPosition.length/2 >= level) {
@@ -1422,7 +1431,7 @@ public class WorkflowsHelper {
                     for (Branch b : f.getBranches()) {
                         if (b.getWorkflow() != null) {
                             setWorkflowBoardPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), level,
-                                    boardPostPositions, boardExpectPositions, boardConsumePositions);
+                                    boardPostPositions, boardExpectPositions, boardConsumePositions, wb);
                         }
                     }
                     break;
@@ -1430,18 +1439,18 @@ public class WorkflowsHelper {
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case IF:
                     IfElse ie = inst.cast();
                     if (ie.getThen() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "then"), ie.getThen().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     if (ie.getElse() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "else"), ie.getElse().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case CASE_WHEN:
@@ -1453,59 +1462,59 @@ public class WorkflowsHelper {
                                 String cI = caseIndex == 1 ? "" : "+" + caseIndex;
                                 caseIndex++;
                                 setWorkflowBoardPositions(extendArray(pos, "then" + cI), when.getThen().getInstructions(), level, boardPostPositions,
-                                        boardExpectPositions, boardConsumePositions);
+                                        boardExpectPositions, boardConsumePositions, wb);
                             }
                         }
                     }
                     if (cw.getElse() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "else"), cw.getElse().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
                     if (tc.getTry() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     if (tc.getCatch() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case OPTIONS:
                     Options o = inst.cast();
                     if (o.getBlock() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "options"), o.getBlock().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case ADMISSION_TIME:
                     AdmissionTime at = inst.cast();
                     if (at.getBlock() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "admissionTime"), at.getBlock().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
                     if (l.getLockedWorkflow() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     if (c.getCycleWorkflow() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case STICKY_SUBAGENT:
                     StickySubagent ss = inst.cast();
                     if (ss.getSubworkflow() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "stickySubagent"), ss.getSubworkflow().getInstructions(), level,
-                                boardPostPositions, boardExpectPositions, boardConsumePositions);
+                                boardPostPositions, boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case CONSUME_NOTICES:
@@ -1514,10 +1523,11 @@ public class WorkflowsHelper {
                     Set<String> cnsNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(cnsNamesExpr);
                     if (cnsNames != null && !cnsNames.isEmpty() && p.getPositionString() != null) {
                         boardConsumePositions.put(p.getPositionString(), cnsNames);
+                        wb.getConsumeNoticesExpressions().setAdditionalProperty(p.getPositionString(), cnsNamesExpr);
                     }
                     if (cns.getSubworkflow() != null) {
                         setWorkflowBoardPositions(extendArray(pos, "consumeNotices"), cns.getSubworkflow().getInstructions(), level,
-                                boardPostPositions, boardExpectPositions, boardConsumePositions);
+                                boardPostPositions, boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 case EXPECT_NOTICES:
@@ -1526,6 +1536,7 @@ public class WorkflowsHelper {
                     Set<String> ensNames = NoticeToNoticesConverter.expectNoticeBoardsToSet(ensNamesExpr);
                     if (ensNames != null && !ensNames.isEmpty() && p.getPositionString() != null) {
                         boardExpectPositions.put(p.getPositionString(), ensNames);
+                        wb.getExpectNoticesExpressions().setAdditionalProperty(p.getPositionString(), ensNamesExpr);
                     }
                     break;
                 case POST_NOTICES:
@@ -1539,7 +1550,7 @@ public class WorkflowsHelper {
                     posIndex--;
                     if (seg.getBlock() != null) {
                         posIndex = setWorkflowBoardPositions(parentPosition, posIndex, seg.getBlock().getInstructions(), level, boardPostPositions,
-                                boardExpectPositions, boardConsumePositions);
+                                boardExpectPositions, boardConsumePositions, wb);
                     }
                     break;
                 
