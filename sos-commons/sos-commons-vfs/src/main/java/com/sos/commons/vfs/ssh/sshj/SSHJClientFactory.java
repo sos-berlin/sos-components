@@ -16,7 +16,8 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.proxy.socket.ProxySocketFactory;
+import com.sos.commons.util.loggers.impl.Slf4jLogger;
+import com.sos.commons.util.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
 import com.sos.commons.vfs.ssh.commons.SSHProviderArguments;
@@ -43,11 +44,35 @@ public class SSHJClientFactory {
     protected static SSHClient create(SSHJProvider provider) throws Exception {
         Config config = new DefaultConfig();
         SSHJConfigPostProcessor.apply(provider, config);
+        setConfigKeepAliveProvider(provider, config);
 
-        // Keep Alive Provider - see NOTE above about KeepAliveRunner
-        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
-            config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
+        if (provider.getLogger().isDebugEnabled()) {
+            provider.getLogger().debug("[SSHJ][KEX algorithms] {}", config.getKeyExchangeFactories().stream().map(factory -> factory.getName())
+                    .collect(Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][Cipher algorithms] {}", config.getCipherFactories().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][MAC algorithms] {}", config.getMACFactories().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            provider.getLogger().debug("[SSHJ][Host-key algorithms] {}", config.getKeyAlgorithms().stream().map(factory -> factory.getName()).collect(
+                    Collectors.joining(", ")));
+
+            // set config.setLoggerFactory only in JITL job mode
+            if (!(provider.getLogger() instanceof Slf4jLogger)) {
+                boolean traceUnfiltered = provider.getArguments().getLogSshjTraceUnfiltered().isTrue();
+                boolean async = provider.getArguments().getLogSshjAsync().isTrue();
+                config.setLoggerFactory(new SSHJLoggerFactory(provider.getLogger(), traceUnfiltered, async));
+                if (traceUnfiltered) {
+                    provider.getLogger().debug("[SSHJ] unfiltered TRACE logging active");
+                }
+                if (async) {
+                    provider.getLogger().debug("[SSHJ] asynchronous logging active");
+                }
+            }
         }
+
         // SSH Client
         SSHClient client = createClient(provider, config); // with PROXY
         setHostKeyVerifier(provider.getArguments(), client);
@@ -65,10 +90,14 @@ public class SSHJClientFactory {
         if (provider.getProxyConfig() == null) {
             client = new SSHClient(config);
         } else {
-            if (provider.getProxyConfig().shouldResolveSocksHostname()) {
+            if (provider.getProxyConfig().isSOCKS()) { // SOCKS PROXY
+                if (provider.getProxyConfig().shouldResolveSocksHostname()) {
+                    client = new SSHClient(config);
+                } else {
+                    client = new SSHJFqdnSSHClient(config);
+                }
+            } else { // HTTP PROXY
                 client = new SSHClient(config);
-            } else {
-                client = new SSHJFqdnSSHClient(config);
             }
             client.setSocketFactory(new ProxySocketFactory(provider.getProxyConfig()));
         }
@@ -76,12 +105,36 @@ public class SSHJClientFactory {
     }
 
     protected static void connectAndAuthenticate(SSHJProvider provider, String connectMsg, SSHClient client) throws Exception {
-        /** 1) Connect */
+        /** 1) Pre-Connect Keep Alive */
+        client = setPreConnectKeepAlive(provider, client);
+        /** 2) Connect */
         provider.getLogger().info(connectMsg);
         client.connect(provider.getArguments().getHost().getValue(), provider.getArguments().getPort().getValue());
-        /** 2) Authenticate */
+        /** 3) Authenticate */
         authenticate(provider, client);
-        /** 3) Post-Connect Keep Alive */
+    }
+
+    /** 1st part) Set Keep Alive Provider - See NOTE below about KeepAliveRunner
+     * <p>
+     * 2nd part) Set interval - See {@link #setPreConnectKeepAlive(SSHJProvider, SSHClient)} */
+    private static Config setConfigKeepAliveProvider(SSHJProvider provider, Config config) {
+        if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
+            config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
+        }
+        return config;
+    }
+
+    /** 1st part) Set Keep Alive Provider - See {@link #setConfigKeepAliveProvider(SSHJProvider, Config)}<br />
+     * <p>
+     * 2nd part) Set interval<br />
+     * 
+     * @apiNote Must be set BEFORE connect(): sshj only starts the keep-alive thread during connect() and only if the interval is already > 0<br />
+     *          See https://github.com/hierynomus/sshj/blob/v0.41.1/examples/src/main/java/net/schmizz/sshj/examples/KeepAlive.java
+     * 
+     * @param provider
+     * @param client
+     * @return */
+    private static SSHClient setPreConnectKeepAlive(SSHJProvider provider, SSHClient client) {
         if (!provider.getArguments().getServerAliveInterval().isEmpty()) {
             client.getConnection().getKeepAlive().setKeepAliveInterval(provider.getArguments().getServerAliveIntervalAsSeconds());
             if (!provider.getArguments().getServerAliveCountMax().isEmpty()) {
@@ -90,6 +143,7 @@ public class SSHJClientFactory {
                         .intValue());
             }
         }
+        return client;
     }
 
     private static void authenticate(SSHJProvider provider, SSHClient client) throws ProviderAuthenticationException {
