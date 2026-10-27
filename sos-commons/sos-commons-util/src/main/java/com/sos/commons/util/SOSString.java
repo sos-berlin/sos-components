@@ -1,5 +1,6 @@
 package com.sos.commons.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -82,7 +83,14 @@ public class SOSString {
         return sb.toString().trim();
     }
 
-    public static String toString(InputStream is) throws Exception {
+    /** Reads all bytes from the input stream and converts them to a UTF-8 string.<br />
+     * This method is intended only for completed streams that reach EOF.<br />
+     * It may block indefinitely if the stream remains open, e.g. a socket stream.
+     *
+     * @param is the completed input stream to read from
+     * @return the stream content as a UTF-8 string, or null if the input stream is null
+     * @throws IOException if an I/O error occurs while reading the stream */
+    public static String readAllBytesAsString(InputStream is) throws IOException {
         if (is == null) {
             return null;
         }
