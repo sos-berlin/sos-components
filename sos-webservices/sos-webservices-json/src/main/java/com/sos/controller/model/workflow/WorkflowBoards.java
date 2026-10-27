@@ -3,14 +3,12 @@ package com.sos.controller.model.workflow;
 
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
@@ -23,7 +21,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "postNotices",
     "expectNotices",
-    "consumeNotices"
+    "consumeNotices",
+    "expectNoticesExpressions",
+    "consumeNoticesExpressions"
 })
 public class WorkflowBoards
     extends WorkflowIdAndTags
@@ -35,6 +35,10 @@ public class WorkflowBoards
     private List<String> expectNotices = null;
     @JsonProperty("consumeNotices")
     private List<String> consumeNotices = null;
+    @JsonProperty("expectNoticesExpressions")
+    private WorkflowBoardExpressions expectNoticesExpressions;
+    @JsonProperty("consumeNoticesExpressions")
+    private WorkflowBoardExpressions consumeNoticesExpressions;
 
     /**
      * No args constructor for use in serialization
@@ -48,15 +52,19 @@ public class WorkflowBoards
      * @param expectNotices
      * @param path
      * @param versionId
+     * @param consumeNoticesExpressions
      * @param postNotices
      * @param consumeNotices
      * @param workflowTags
+     * @param expectNoticesExpressions
      */
-    public WorkflowBoards(List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
+    public WorkflowBoards(List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, WorkflowBoardExpressions expectNoticesExpressions, WorkflowBoardExpressions consumeNoticesExpressions, Set<String> workflowTags, String path, String versionId) {
         super(workflowTags, path, versionId);
         this.postNotices = postNotices;
         this.expectNotices = expectNotices;
         this.consumeNotices = consumeNotices;
+        this.expectNoticesExpressions = expectNoticesExpressions;
+        this.consumeNoticesExpressions = consumeNoticesExpressions;
     }
 
     @JsonProperty("postNotices")
@@ -89,14 +97,34 @@ public class WorkflowBoards
         this.consumeNotices = consumeNotices;
     }
 
+    @JsonProperty("expectNoticesExpressions")
+    public WorkflowBoardExpressions getExpectNoticesExpressions() {
+        return expectNoticesExpressions;
+    }
+
+    @JsonProperty("expectNoticesExpressions")
+    public void setExpectNoticesExpressions(WorkflowBoardExpressions expectNoticesExpressions) {
+        this.expectNoticesExpressions = expectNoticesExpressions;
+    }
+
+    @JsonProperty("consumeNoticesExpressions")
+    public WorkflowBoardExpressions getConsumeNoticesExpressions() {
+        return consumeNoticesExpressions;
+    }
+
+    @JsonProperty("consumeNoticesExpressions")
+    public void setConsumeNoticesExpressions(WorkflowBoardExpressions consumeNoticesExpressions) {
+        this.consumeNoticesExpressions = consumeNoticesExpressions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("postNotices", postNotices).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("postNotices", postNotices).append("expectNotices", expectNotices).append("consumeNotices", consumeNotices).append("expectNoticesExpressions", expectNoticesExpressions).append("consumeNoticesExpressions", consumeNoticesExpressions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectNotices).append(postNotices).append(consumeNotices).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectNotices).append(postNotices).append(consumeNotices).append(expectNoticesExpressions).append(consumeNoticesExpressions).toHashCode();
     }
 
     @Override
@@ -108,7 +136,7 @@ public class WorkflowBoards
             return false;
         }
         WorkflowBoards rhs = ((WorkflowBoards) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectNotices, rhs.expectNotices).append(postNotices, rhs.postNotices).append(consumeNotices, rhs.consumeNotices).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectNotices, rhs.expectNotices).append(postNotices, rhs.postNotices).append(consumeNotices, rhs.consumeNotices).append(expectNoticesExpressions, rhs.expectNoticesExpressions).append(consumeNoticesExpressions, rhs.consumeNoticesExpressions).isEquals();
     }
 
 }

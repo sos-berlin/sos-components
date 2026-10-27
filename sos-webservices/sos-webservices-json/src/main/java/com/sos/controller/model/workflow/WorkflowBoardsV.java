@@ -57,18 +57,20 @@ public class WorkflowBoardsV
     /**
      * 
      * @param expectNotices
-     * @param postNotices
-     * @param consumeNotices
-     * @param expectingOrderIds
      * @param path
      * @param versionId
      * @param numOfExpectingOrders
      * @param futureDueOrderIds
+     * @param consumeNoticesExpressions
+     * @param postNotices
+     * @param consumeNotices
      * @param workflowTags
+     * @param expectingOrderIds
      * @param presentDueOrderIds
+     * @param expectNoticesExpressions
      */
-    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfExpectingOrders, Set<String> expectingOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, Set<String> workflowTags, String path, String versionId) {
-        super(postNotices, expectNotices, consumeNotices, workflowTags, path, versionId);
+    public WorkflowBoardsV(Set<String> presentDueOrderIds, Set<String> futureDueOrderIds, Integer numOfExpectingOrders, Set<String> expectingOrderIds, List<String> postNotices, List<String> expectNotices, List<String> consumeNotices, WorkflowBoardExpressions expectNoticesExpressions, WorkflowBoardExpressions consumeNoticesExpressions, Set<String> workflowTags, String path, String versionId) {
+        super(postNotices, expectNotices, consumeNotices, expectNoticesExpressions, consumeNoticesExpressions, workflowTags, path, versionId);
         this.presentDueOrderIds = presentDueOrderIds;
         this.futureDueOrderIds = futureDueOrderIds;
         this.numOfExpectingOrders = numOfExpectingOrders;
