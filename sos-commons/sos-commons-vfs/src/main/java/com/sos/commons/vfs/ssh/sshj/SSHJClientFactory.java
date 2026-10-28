@@ -16,7 +16,6 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassPath;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.loggers.base.ISOSLogger;
-import com.sos.commons.util.loggers.impl.Slf4jLogger;
 import com.sos.commons.util.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exceptions.ProviderAuthenticationException;
 import com.sos.commons.vfs.ssh.commons.SSHAuthMethod;
@@ -58,19 +57,6 @@ public class SSHJClientFactory {
 
             provider.getLogger().debug("[SSHJ][Host-key algorithms] {}", config.getKeyAlgorithms().stream().map(factory -> factory.getName()).collect(
                     Collectors.joining(", ")));
-
-            // set config.setLoggerFactory only in JITL job mode
-            if (!(provider.getLogger() instanceof Slf4jLogger)) {
-                boolean traceUnfiltered = provider.getArguments().getLogSshjTraceUnfiltered().isTrue();
-                boolean async = provider.getArguments().getLogSshjAsync().isTrue();
-                config.setLoggerFactory(new SSHJLoggerFactory(provider.getLogger(), traceUnfiltered, async));
-                if (traceUnfiltered) {
-                    provider.getLogger().debug("[SSHJ] unfiltered TRACE logging active");
-                }
-                if (async) {
-                    provider.getLogger().debug("[SSHJ] asynchronous logging active");
-                }
-            }
         }
 
         // SSH Client

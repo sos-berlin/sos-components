@@ -14,6 +14,8 @@ import com.sos.commons.vfs.exceptions.ProviderInitializationException;
 public class SSHProviderArguments extends AProviderArguments {
 
     public static final String CLASS_KEY = "SSH_PROVIDER";
+    public static final String ARG_LOG_SSHJ_TRACE_UNFILTERED = "log_sshj_trace_unfiltered";
+    public static final String ARG_LOG_SSHJ_ASYNC = "log_sshj_async";
 
     // TODO add JSCH or ...
     public enum SSHProviderType {
@@ -52,6 +54,8 @@ public class SSHProviderArguments extends AProviderArguments {
     private SOSArgument<Boolean> useZlibCompression = new SOSArgument<>("use_zlib_compression", false, false);
     private SOSArgument<Boolean> simulateShell = new SOSArgument<>("simulate_shell", false, false);
     private SOSArgument<Boolean> disableAutoDetectShell = new SOSArgument<>("disable_auto_detect_shell", false, false);
+    private SOSArgument<Boolean> logSshjTraceUnfiltered = new SOSArgument<>(ARG_LOG_SSHJ_TRACE_UNFILTERED, false, false);
+    private SOSArgument<Boolean> logSshjAsync = new SOSArgument<>(ARG_LOG_SSHJ_ASYNC, false, false);
 
     private SOSArgument<Charset> remoteCharset = new SOSArgument<>("remote_charset", false, Charset.forName("UTF-8"));
 
@@ -160,6 +164,14 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Boolean> getDisableAutoDetectShell() {
         return disableAutoDetectShell;
+    }
+
+    public SOSArgument<Boolean> getLogSshjTraceUnfiltered() {
+        return logSshjTraceUnfiltered;
+    }
+
+    public SOSArgument<Boolean> getLogSshjAsync() {
+        return logSshjAsync;
     }
 
     public SOSArgument<Charset> getRemoteCharset() {
