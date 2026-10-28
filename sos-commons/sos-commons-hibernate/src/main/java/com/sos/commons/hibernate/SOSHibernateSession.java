@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -30,6 +29,7 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -406,7 +406,7 @@ public class SOSHibernateSession implements Serializable, AutoCloseable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
-    public <T> NativeQuery<T> createNativeQuery(String sql, @Nonnull Class<T> resultType) throws SOSHibernateException {
+    public <T> NativeQuery<T> createNativeQuery(String sql, @NonNull Class<T> resultType) throws SOSHibernateException {
         if (SOSString.isEmpty(sql)) {
             throw new SOSHibernateQueryException("sql statement is empty");
         }
