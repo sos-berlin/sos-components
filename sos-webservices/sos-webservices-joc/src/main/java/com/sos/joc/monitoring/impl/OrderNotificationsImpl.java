@@ -180,10 +180,10 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
 
     private String getMessage(NotificationDBItemEntity entity) {
         if (entity.getType().equals(NotificationType.WARNING.intValue())) {
-            return entity.getOrderStepWarnText();
+            return getOrderStepMessage(entity, entity.getOrderStepWarnText());
         }
-        if (!SOSString.isEmpty(entity.getOrderStepErrorText())) {
-            return entity.getOrderStepErrorText();
+        if (entity.isOrderStepError() != null && entity.isOrderStepError()) {
+            return getOrderStepMessage(entity, entity.getOrderStepErrorText());
         }
         return entity.getOrderErrorText();
     }
@@ -194,5 +194,12 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
         } catch (Throwable e) {
             return JobCriticality.NORMAL;
         }
+    }
+
+    private String getOrderStepMessage(NotificationDBItemEntity entity, String msg) {
+        if (SOSString.isEmpty(entity.getOrderStepJobName())) {
+            return msg;
+        }
+        return String.format("[Job=%s, pos=%s] %s", entity.getOrderStepJobName(), entity.getOrderStepWorkflowPosition(), msg == null ? "" : msg);
     }
 }
