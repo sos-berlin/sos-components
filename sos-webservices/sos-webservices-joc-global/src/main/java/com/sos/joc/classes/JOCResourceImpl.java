@@ -203,20 +203,6 @@ public class JOCResourceImpl {
         return error;
     }
 
-    public static Date getDateFromString(String dateString) {
-        Date date = null;
-        try {
-            dateString = dateString.trim().replaceFirst("^(\\d{4}-\\d{2}-\\d{2}) ", "$1T");
-            date = Date.from(Instant.parse(dateString));
-        } catch (Exception e) {
-            // TODO what should we do with this exception?
-            // jocError = new JocError("JOC-420","Could not parse date: " +
-            // dateString);
-            LOGGER.warn("Could not parse date: " + dateString, e);
-        }
-        return date;
-    }
-
     public static Date getDateFromTimestamp(Long timeStamp) {
         Instant fromEpochMilli = Instant.ofEpochMilli(timeStamp / 1000);
         return Date.from(fromEpochMilli);
@@ -489,7 +475,8 @@ public class JOCResourceImpl {
         if (bodyStr.length() > 4096) {
             bodyStr = bodyStr.substring(0, 4093) + "...";
         }
-        if (LOGGER.isDebugEnabled()) {
+        //"request.matches" to avoid (debug) log line when log is requested
+        if (LOGGER.isDebugEnabled() && !(request + "/").matches(".*/(joc|controller|agent)/log/.*")) {
             LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         }
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
