@@ -8,6 +8,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.model.log.JOCServiceId;
 
@@ -48,10 +51,11 @@ public class JOCLogProxyContext {
     }
     
     private JLogDirectoryIndex _getJLogDirectoryIndex() throws InterruptedException, ExecutionException {
-        // logging with js7.base.log.reader.LogDirectoryIndex
+        // logging with js7.base.log.reader.LogDirectoryIndex, js7.base.log.reader.LogIndex
         if (dirIndex == null) {
             resource = JLogDirectoryIndex.directory(logDir, logPrefizes, zoneId, Proxies.proxyContext).allocate().get();
             dirIndex = resource.allocatedThing();
+            Configurator.setLevel("js7.base.log.reader.LogIndex", Level.INFO);
         }
         return dirIndex;
     }
