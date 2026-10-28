@@ -200,6 +200,9 @@ public class OrderNotificationsImpl extends JOCResourceImpl implements IOrderNot
         if (SOSString.isEmpty(entity.getOrderStepJobName())) {
             return msg;
         }
-        return String.format("[Job=%s, pos=%s] %s", entity.getOrderStepJobName(), entity.getOrderStepWorkflowPosition(), msg == null ? "" : msg);
+        if (SOSString.isEmpty(msg)) {
+            return String.format("Job=%s, pos=%s", entity.getOrderStepJobName(), entity.getOrderStepWorkflowPosition());
+        }
+        return String.format("[Job=%s, pos=%s] %s", entity.getOrderStepJobName(), entity.getOrderStepWorkflowPosition(), msg);
     }
 }
