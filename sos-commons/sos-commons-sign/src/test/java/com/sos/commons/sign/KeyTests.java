@@ -17,7 +17,6 @@ import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -1314,30 +1313,6 @@ public class KeyTests {
         KeyUtil.isInputPrivateKey(wrongValue);
     }
 
-    @SuppressWarnings("unused")
-    private static String byteArrayToHexString(byte[] ba) {
-        MessageDigest digest;
-        StringBuilder hexString = new StringBuilder();
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(ba);
-
-            for (int i = 0; i < hash.length; i++) {
-                String hex = Integer.toHexString(0xff & hash[i]);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-                if (hexString.toString().length() % 4 == 0) {
-                    hexString.append(" ");
-                }
-            }
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.error(e.getMessage());
-        }
-        return hexString.toString().toUpperCase();
-    }
-
     @Test
     public void test34CreateMLDSAKeyPairSignAndVerify() {
         LOGGER.info("*********  Test 34: Create ML-DSA KeyPair, Sign and Verify  ************************************");
@@ -1679,6 +1654,20 @@ public class KeyTests {
                 LOGGER.error(e.getMessage(), e);
             }
         }
+    }
+    
+    @Test
+    public void testReadFingerprint() throws Exception {
+        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sp.crt")), StandardCharsets.UTF_8);
+        X509Certificate certificate = KeyUtil.getX509Certificate(certificateString);
+        assertNotNull(certificate);
+        LOGGER.info("KeyId = " + certificate.getSubjectX500Principal().getName());
+        LOGGER.info("notBefore = " + certificate.getNotBefore());
+        LOGGER.info("notAfter = " + certificate.getNotAfter());
+        String fingerprint = KeyUtil.byteArrayToHexString(certificate.getEncoded(), "SHA-1");
+        LOGGER.info("fingerprint(SHA-1) with Hex               = " + fingerprint);
+        fingerprint = KeyUtil.byteArrayToHexString(certificate.getEncoded(), "SHA-256");
+        LOGGER.info("fingerprint(SHA-256) with Hex               = " + fingerprint);
     }
 
     private void exportCertificateBundle(String rootCert, String intermediateCert, String userCertificateRequest, String userKey, String userCert,

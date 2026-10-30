@@ -4,6 +4,7 @@ package com.sos.joc.model.sign;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,7 +12,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**
- * SOS PGP Key Pair
+ * SOS Key Pair
  * <p>
  * 
  * 
@@ -23,6 +24,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "keyID",
     "certificate",
     "validUntil",
+    "notBefore",
+    "fingerprintSHA1",
+    "fingerprintSHA256",
     "keyType",
     "keyAlgorithm"
 })
@@ -36,8 +40,28 @@ public class JocKeyPair {
     private String keyID;
     @JsonProperty("certificate")
     private String certificate;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("validUntil")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date validUntil;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("notBefore")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date notBefore;
+    @JsonProperty("fingerprintSHA1")
+    private String fingerprintSHA1;
+    @JsonProperty("fingerprintSHA256")
+    private String fingerprintSHA256;
     @JsonProperty("keyType")
     private String keyType;
     /**
@@ -88,14 +112,68 @@ public class JocKeyPair {
         this.certificate = certificate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("validUntil")
     public Date getValidUntil() {
         return validUntil;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("validUntil")
     public void setValidUntil(Date validUntil) {
         this.validUntil = validUntil;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("notBefore")
+    public Date getNotBefore() {
+        return notBefore;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("notBefore")
+    public void setNotBefore(Date notBefore) {
+        this.notBefore = notBefore;
+    }
+
+    @JsonProperty("fingerprintSHA1")
+    public String getFingerprintSHA1() {
+        return fingerprintSHA1;
+    }
+
+    @JsonProperty("fingerprintSHA1")
+    public void setFingerprintSHA1(String fingerprintSHA1) {
+        this.fingerprintSHA1 = fingerprintSHA1;
+    }
+
+    @JsonProperty("fingerprintSHA256")
+    public String getFingerprintSHA256() {
+        return fingerprintSHA256;
+    }
+
+    @JsonProperty("fingerprintSHA256")
+    public void setFingerprintSHA256(String fingerprintSHA256) {
+        this.fingerprintSHA256 = fingerprintSHA256;
     }
 
     @JsonProperty("keyType")
@@ -130,12 +208,12 @@ public class JocKeyPair {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("keyType", keyType).append("keyAlgorithm", keyAlgorithm).toString();
+        return new ToStringBuilder(this).append("privateKey", privateKey).append("publicKey", publicKey).append("keyID", keyID).append("certificate", certificate).append("validUntil", validUntil).append("notBefore", notBefore).append("fingerprintSHA1", fingerprintSHA1).append("fingerprintSHA256", fingerprintSHA256).append("keyType", keyType).append("keyAlgorithm", keyAlgorithm).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(privateKey).append(keyAlgorithm).append(certificate).append(keyID).append(validUntil).append(publicKey).append(keyType).toHashCode();
+        return new HashCodeBuilder().append(privateKey).append(keyAlgorithm).append(fingerprintSHA1).append(certificate).append(keyID).append(validUntil).append(fingerprintSHA256).append(publicKey).append(keyType).append(notBefore).toHashCode();
     }
 
     @Override
@@ -147,7 +225,7 @@ public class JocKeyPair {
             return false;
         }
         JocKeyPair rhs = ((JocKeyPair) other);
-        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyAlgorithm, rhs.keyAlgorithm).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(publicKey, rhs.publicKey).append(keyType, rhs.keyType).isEquals();
+        return new EqualsBuilder().append(privateKey, rhs.privateKey).append(keyAlgorithm, rhs.keyAlgorithm).append(fingerprintSHA1, rhs.fingerprintSHA1).append(certificate, rhs.certificate).append(keyID, rhs.keyID).append(validUntil, rhs.validUntil).append(fingerprintSHA256, rhs.fingerprintSHA256).append(publicKey, rhs.publicKey).append(keyType, rhs.keyType).append(notBefore, rhs.notBefore).isEquals();
     }
 
 }
