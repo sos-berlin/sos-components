@@ -37,7 +37,7 @@ public class ProviderCredentialStoreResolver {
         }
         if (args.getCredentialStore().getKeepassDatabase() == null) {
             setDatabase(args);
-            Entry<?, ?, ?, ?> entry = keepass2Arguments(args, proxyArgs, additional2resolve);
+            Entry entry = keepass2Arguments(args, proxyArgs, additional2resolve);
             setDecryptionPrivateKey(logger, entry, args);
             return true;
         }
@@ -81,7 +81,7 @@ public class ProviderCredentialStoreResolver {
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getCredentialStore().getKeepassDatabase().getHandler().isKdbx(), arg.getValue()
                 .toString(), args.getCredentialStore().getEntryPath().getValue());
         if (keePassPath.isValid()) {
-            Entry<?, ?, ?, ?> entry = getEntry(args, keePassPath.getEntryPath());
+            Entry entry = getEntry(args, keePassPath.getEntryPath());
             if (entry != null) {
                 args.getCredentialStore().setKeepassDatabaseEntry(entry);
                 args.getCredentialStore().setKeepassAttachmentPropertyName(keePassPath.getPropertyName());
@@ -96,8 +96,7 @@ public class ProviderCredentialStoreResolver {
     }
 
     private static SOSKeePassDatabase load(AProviderArguments args) throws Exception {
-        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()), SOSKeePassDatabase
-                .getModule(args.getCredentialStore().getKeePassModule().getValue()));
+        SOSKeePassDatabase kpd = new SOSKeePassDatabase(SOSPath.toAbsolutePath(args.getCredentialStore().getFile().getValue()));
         Path keyFile = null;
         if (args.getCredentialStore().getKeyFile().getValue() != null) {
             Path cskf = SOSPath.toAbsolutePath(args.getCredentialStore().getKeyFile().getValue());
@@ -122,10 +121,10 @@ public class ProviderCredentialStoreResolver {
     }
 
     /** Note: each argument value can contain a different Keepass entry path */
-    private static Entry<?, ?, ?, ?> keepass2Arguments(AProviderArguments args, ProxyConfigArguments proxyArgs,
-            List<SOSArgument<?>> additional2resolve) throws Exception {
+    private static Entry keepass2Arguments(AProviderArguments args, ProxyConfigArguments proxyArgs, List<SOSArgument<?>> additional2resolve)
+            throws Exception {
         // host(port),user,password
-        Entry<?, ?, ?, ?> entry = keepass2Argument(null, args, args.getHost(), args.getPort(), ":");
+        Entry entry = keepass2Argument(null, args, args.getHost(), args.getPort(), ":");
         entry = keepass2Argument(entry, args, args.getUser());
         entry = keepass2Argument(entry, args, args.getPassword());
 
@@ -146,19 +145,18 @@ public class ProviderCredentialStoreResolver {
         return entry;
     }
 
-    private static Entry<?, ?, ?, ?> keepass2Argument(Entry<?, ?, ?, ?> lastEntry, AProviderArguments args, final SOSArgument<?> arg)
-            throws Exception {
+    private static Entry keepass2Argument(Entry lastEntry, AProviderArguments args, final SOSArgument<?> arg) throws Exception {
         return keepass2Argument(lastEntry, args, arg, null, null);
     }
 
-    private static Entry<?, ?, ?, ?> keepass2Argument(Entry<?, ?, ?, ?> lastEntry, AProviderArguments args, final SOSArgument<?> mainArg,
-            final SOSArgument<?> secondArg, String mainSecondSplitter) throws Exception {
+    private static Entry keepass2Argument(Entry lastEntry, AProviderArguments args, final SOSArgument<?> mainArg, final SOSArgument<?> secondArg,
+            String mainSecondSplitter) throws Exception {
         if (mainArg.getName() == null || mainArg.isEmpty()) {// intern
             return lastEntry;
         }
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getCredentialStore().getKeepassDatabase().getHandler().isKdbx(), mainArg.getValue()
                 .toString(), args.getCredentialStore().getEntryPath().getValue());
-        Entry<?, ?, ?, ?> entry = null;
+        Entry entry = null;
         String fileName = args.getCredentialStore().getFile().getValue().toString();
         String argName = mainArg.getName();
         if (keePassPath.isValid()) {
@@ -189,8 +187,8 @@ public class ProviderCredentialStoreResolver {
         return entry == null ? lastEntry : entry;
     }
 
-    private static Entry<?, ?, ?, ?> getEntry(AProviderArguments args, final String entryPath) throws Exception {
-        Entry<?, ?, ?, ?> entry = args.getCredentialStore().getKeepassDatabase().getEntryByPath(entryPath);
+    private static Entry getEntry(AProviderArguments args, final String entryPath) throws Exception {
+        Entry entry = args.getCredentialStore().getKeepassDatabase().getEntryByPath(entryPath);
         if (entry == null) {
             throw new Exception(String.format("[%s][%s]entry not found", args.getCredentialStore().getFile().getValue(), entryPath));
         }
@@ -201,14 +199,14 @@ public class ProviderCredentialStoreResolver {
         return entry;
     }
 
-    private static void setDecryptionPrivateKey(ISOSLogger logger, Entry<?, ?, ?, ?> lastEntry, AProviderArguments args) throws Exception {
+    private static void setDecryptionPrivateKey(ISOSLogger logger, Entry lastEntry, AProviderArguments args) throws Exception {
         if (!args.isEncryptionDecryptEnabled()) {
             return;
         }
 
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getCredentialStore().getKeepassDatabase().getHandler().isKdbx(), args
                 .getEncryptionDecrypt().getPrivateKeyPath().getValue().toString(), args.getCredentialStore().getEntryPath().getValue());
-        Entry<?, ?, ?, ?> entry = null;
+        Entry entry = null;
 
         if (keePassPath.isValid()) {
             if (lastEntry == null || !keePassPath.getEntryPath().equals(lastEntry.getPath())) {
