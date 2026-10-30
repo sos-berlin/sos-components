@@ -2,6 +2,7 @@ package com.sos.joc.classes.controller;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.controller.model.cluster.ClusterState;
@@ -37,7 +38,9 @@ public class ControllerAnswer extends Controller {
     @JsonIgnore
     private ClusterType clusterState = null;
     @JsonIgnore
-    private NodeId lossNode = null;
+    private NodeId lossNodeId = null;
+    @JsonIgnore
+    private Optional<String> lossNode = Optional.empty();
     @JsonIgnore
     private boolean onlyDb = false;
 
@@ -83,11 +86,13 @@ public class ControllerAnswer extends Controller {
     }
 
     @JsonIgnore
-    public String getLossNode() {
-        if (lossNode == null) {
-            return null;
-        }
-        return lossNode.string();
+    public Optional<String> getLossNodeId() {
+        return Optional.ofNullable(lossNodeId).map(NodeId::string);
+    }
+    
+    @JsonIgnore
+    public Optional<String> getLossNode() {
+        return lossNode;
     }
 	
 	@JsonIgnore
@@ -119,15 +124,18 @@ public class ControllerAnswer extends Controller {
 	        }
 			boolean currentNodeIsLoss = false;
             if (dbInstance.getIsCluster()) {
-                lossNode = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
-                if (lossNode != null) {
+                lossNodeId = ClusterWatch.getInstance().getClusterNodeLoss(dbInstance.getControllerId());
+                if (lossNodeId != null) {
                     if (NodeLossEventType.Failover.equals(ClusterWatch.getInstance().getNodeLossEventType(dbInstance.getControllerId()))) {
                         clusterState = ClusterType.FAILOVER_TO_BE_CONFIRMED;
                     } else {
                         clusterState = ClusterType.NODE_LOSS_TO_BE_CONFIRMED;
                     }
-                    currentNodeIsLoss = ((lossNode.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNode.string().equals("Backup")
+                    currentNodeIsLoss = ((lossNodeId.string().equals("Primary") && dbInstance.getIsPrimary()) || (lossNodeId.string().equals("Backup")
                             && !dbInstance.getIsPrimary()));
+                    if (currentNodeIsLoss) {
+                        lossNode = Optional.of(dbInstance.getTitle());
+                    }
                 }
             }
 			if (clusterState == null) {

@@ -85,6 +85,7 @@ import com.sos.joc.model.event.EventType;
 import com.sos.monitoring.notification.NotificationType;
 
 import js7.data.agent.AgentPath;
+import js7.data.agent.AgentRef;
 import js7.data.agent.AgentRefState;
 import js7.data.agent.AgentRefStateEvent;
 import js7.data.board.BoardPath;
@@ -147,6 +148,7 @@ import js7.data.subagent.SubagentItemStateEvent;
 import js7.data.workflow.WorkflowPath;
 import js7.data.workflow.WorkflowPathControlPath;
 import js7.data.workflow.instructions.NoticeInstruction;
+import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -581,7 +583,7 @@ public class EventService {
         }
         String message = evt.getMessage();
         if (evt.getNodeId() != null) {
-            String msg = reason + " of '" + evt.getNodeId().toUpperCase() + "' instance in Controller Cluster '" + evt.getControllerId()
+            String msg = reason + " of '" + evt.getNodeId() + "' instance in Controller Cluster '" + evt.getControllerId()
                     + "' requires confirmation";
             if (message == null) {
                 message = msg;
@@ -767,7 +769,7 @@ public class EventService {
                 AgentRefStateEvent.AgentClusterWatchConfirmationRequired clusterWatchEvt = (AgentRefStateEvent.AgentClusterWatchConfirmationRequired) evt;
                 ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem = clusterWatchEvt.problem();
                 // TODO store lostNostId for confirm command and for repeated events
-                addEvent(createNodeLossProblem(eventId, agentPath, problem));
+                addEvent(createNodeLossProblem(eventId, currentState.pathToAgentRef().get(agentPath), problem));
                 addEvent(createAgentEvent(eventId, agentPath.string()));
                 uncoupledAgents.remove(agentPath.string());
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
@@ -927,9 +929,9 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createNodeLossProblem(long eventId, AgentPath agentPath,
+    private EventSnapshot createNodeLossProblem(long eventId, JAgentRef agentRef,
             ClusterWatchProblems.ClusterNodeLostEventNotConfirmedProblem problem) {
-        String msg = AgentClusterWatch.put(controllerId, agentPath, problem);
+        String msg = AgentClusterWatch.put(controllerId, agentRef, problem);
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         if (isFailOver.test(problem)) {
