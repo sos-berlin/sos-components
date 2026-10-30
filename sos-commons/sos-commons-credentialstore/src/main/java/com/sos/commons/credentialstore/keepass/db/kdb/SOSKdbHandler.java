@@ -44,8 +44,8 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
 
         KdbDatabase database = null;
         try (InputStream is = Files.newInputStream(getKeePassFile())) {
-            database = KdbDatabase.load(getCredentials(), is);
-        } catch (Exception e) {
+            database = KdbDatabase.read(getCredentials(), is);
+        } catch (Throwable e) {
             throw new SOSKeePassDatabaseException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(getKeePassFile()), e.toString()), e);
         }
         setDatabase(database);
@@ -65,7 +65,7 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
             }
             try {
                 cred = new KdbCredentials.Password(pass.getBytes());
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 throw new SOSKeePassCredentialException(e);
             }
         } else {
@@ -81,7 +81,7 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
             }
             try (InputStream is = Files.newInputStream(keyFile)) {
                 cred = new KdbCredentials.KeyFile(pass.getBytes(), is);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 throw new SOSKeePassCredentialException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(keyFile), e.toString()), e);
             }
         }
@@ -89,26 +89,26 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public List<? extends Entry<?, ?, ?, ?>> getEntries() {
+    public List<? extends Entry> getEntries() {
         if (getDatabase() == null) {
             return null;
         }
         return getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 return !entry.getTitle().equals(KDB_GROUP_TITLE);
             }
         });
     }
 
     @Override
-    public Entry<?, ?, ?, ?> getEntryByPath(String path) {
+    public Entry getEntryByPath(String path) {
         if (getDatabase() == null || path == null) {
             return null;
         }
-        List<? extends Entry<?, ?, ?, ?>> l = getDatabase().findEntries(new Entry.Matcher() {
+        List<? extends Entry> l = getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 String p = path.startsWith("/") ? path : "/" + path;
                 return entry.getPath().equals("/" + KDB_ROOT_GROUP_NAME + p);
             }
@@ -117,16 +117,16 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public byte[] getBinaryProperty(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
+    public byte[] getBinaryProperty(Entry entry, String propertyName) throws SOSKeePassAttachmentException {
         try {
             return ((KdbEntry) entry).getBinaryData();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new SOSKeePassAttachmentException(e);
         }
     }
 
     @Override
-    public Entry<?, ?, ?, ?> createEntry(String entryPath) throws SOSKeePassDatabaseException {
+    public Entry createEntry(String entryPath) throws SOSKeePassDatabaseException {
         throw new SOSKeePassDatabaseException(".kdx format is not yet supported");
     }
 
@@ -136,12 +136,12 @@ public class SOSKdbHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public Entry<?, ?, ?, ?> setBinaryProperty(SOSKeePassPath path, Entry<?, ?, ?, ?> entry, Path attachment) throws SOSKeePassDatabaseException {
+    public Entry setBinaryProperty(SOSKeePassPath path, Entry entry, Path attachment) throws SOSKeePassDatabaseException {
         throw new SOSKeePassDatabaseException(".kdx format is not yet supported");
     }
 
     @Override
-    public Entry<?, ?, ?, ?> setProperty(Entry<?, ?, ?, ?> entry, String name, String value) throws SOSKeePassDatabaseException {
+    public Entry setProperty(Entry entry, String name, String value) throws SOSKeePassDatabaseException {
         throw new SOSKeePassDatabaseException(".kdx format is not yet supported");
     }
 

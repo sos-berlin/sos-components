@@ -23,25 +23,19 @@ public class SOSKeePassDatabase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSKeePassDatabase.class);
 
-    public enum Module {
-        DOM, JAXB
-    };
-
-    public static final Module DEFAULT_MODULE = Module.JAXB;
-
     public static final String ENV_VAR_APPDATA_PATH = "APPDATA_PATH";
     public static final String STANDARD_PROPERTY_NAME_ATTACHMENT = "Attachment";
 
     private SOSKeePassPath _keepassPath;
-    private Entry<?, ?, ?, ?> _entry;
+    private Entry _entry;
 
     private ASOSKeePassHandler _handler;
 
-    public SOSKeePassDatabase(final Path file, Module module) throws SOSKeePassDatabaseException {
+    public SOSKeePassDatabase(final Path file) throws SOSKeePassDatabaseException {
         if (file == null) {
             throw new SOSKeePassDatabaseException("KeePass file is null");
         }
-        _handler = ASOSKeePassHandler.newInstance(file, module);
+        _handler = ASOSKeePassHandler.newInstance(file);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[%s][%s]isKdbx=%s", SOSKeePassDatabase.class.getSimpleName(), getFilePath(_handler.getKeePassFile()), _handler
                     .isKdbx()));
@@ -68,12 +62,12 @@ public class SOSKeePassDatabase {
         _handler.load(password, keyFile);
     }
 
-    public List<? extends Entry<?, ?, ?, ?>> getEntries() {
+    public List<? extends Entry> getEntries() {
         LOGGER.debug("[getEntries]");
         return _handler.getEntries();
     }
 
-    public List<? extends Entry<?, ?, ?, ?>> getEntriesByTitle(final String match) {
+    public List<? extends Entry> getEntriesByTitle(final String match) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[getEntriesByTitle]%s", match));
         }
@@ -82,13 +76,13 @@ public class SOSKeePassDatabase {
         }
         return _handler.getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 return entry.getTitle().matches(match == null ? "" : match);
             }
         });
     }
 
-    public List<? extends Entry<?, ?, ?, ?>> getEntriesByUsername(final String match) {
+    public List<? extends Entry> getEntriesByUsername(final String match) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[getEntriesByUsername]%s", match));
         }
@@ -97,13 +91,13 @@ public class SOSKeePassDatabase {
         }
         return _handler.getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 return entry.getUsername().matches(match == null ? "" : match);
             }
         });
     }
 
-    public List<? extends Entry<?, ?, ?, ?>> getEntriesByUrl(final String match) {
+    public List<? extends Entry> getEntriesByUrl(final String match) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[getEntriesByUrl]%s", match));
         }
@@ -112,13 +106,13 @@ public class SOSKeePassDatabase {
         }
         return _handler.getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 return entry.getUrl().matches(match == null ? "" : match);
             }
         });
     }
 
-    public Entry<?, ?, ?, ?> getEntryByPath(final String path) {
+    public Entry getEntryByPath(final String path) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[getEntryByPath]%s", path));
         }
@@ -136,12 +130,12 @@ public class SOSKeePassDatabase {
     }
 
     /** V1 KDB - returns the attachment data, V2 KDBX - returns the first attachment data */
-    public byte[] getAttachment(final Entry<?, ?, ?, ?> entry) throws SOSKeePassDatabaseException {
+    public byte[] getAttachment(final Entry entry) throws SOSKeePassDatabaseException {
         return getAttachment(entry, null);
     }
 
     /** V1 KDB - returns the attachment data, V2 KDBX - returns the attachment data of the propertyName */
-    public byte[] getAttachment(final Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassDatabaseException {
+    public byte[] getAttachment(final Entry entry, String propertyName) throws SOSKeePassDatabaseException {
         if (entry == null) {
             throw new SOSKeePassEntryNotFoundException("entry is null");
         }
@@ -173,13 +167,12 @@ public class SOSKeePassDatabase {
     }
 
     /** V1 KDB - exports the attachment, V2 KDBX - exports the first attachment */
-    public void exportAttachment2File(final Entry<?, ?, ?, ?> entry, final Path targetFile) throws SOSKeePassDatabaseException {
+    public void exportAttachment2File(final Entry entry, final Path targetFile) throws SOSKeePassDatabaseException {
         exportAttachment2File(entry, targetFile, null);
     }
 
     /** V1 KDB - exports the attachment, V2 KDBX - exports the attachment of the propertyName */
-    public String exportAttachment2File(final Entry<?, ?, ?, ?> entry, final Path targetFile, final String propertyName)
-            throws SOSKeePassDatabaseException {
+    public String exportAttachment2File(final Entry entry, final Path targetFile, final String propertyName) throws SOSKeePassDatabaseException {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[exportAttachment2File][%s][%s]%s", entry.getPath(), propertyName, targetFile));
         }
@@ -231,24 +224,24 @@ public class SOSKeePassDatabase {
         _keepassPath = val;
     }
 
-    public Entry<?, ?, ?, ?> getEntry() {
+    public Entry getEntry() {
         return _entry;
     }
 
-    protected void setEntry(Entry<?, ?, ?, ?> val) {
+    protected void setEntry(Entry val) {
         _entry = val;
     }
 
-    private Entry<?, ?, ?, ?> createEntry(String entryPath) throws SOSKeePassDatabaseException {
+    private Entry createEntry(String entryPath) throws SOSKeePassDatabaseException {
         return _handler.createEntry(entryPath);
     }
 
-    protected Entry<?, ?, ?, ?> getEntry(SOSKeePassPath path) throws SOSKeePassDatabaseException {
+    protected Entry getEntry(SOSKeePassPath path) throws SOSKeePassDatabaseException {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[getEntry]%s", path.getEntry()));
         }
 
-        Entry<?, ?, ?, ?> entry = getEntryByPath(path.getEntry());
+        Entry entry = getEntryByPath(path.getEntry());
         if (entry == null) {
             if (path.isCreateEntry()) {
                 entry = createEntry(path.getEntry());
@@ -286,7 +279,7 @@ public class SOSKeePassDatabase {
     public static String getProperty(String uri) throws Exception {
         SOSKeePassDatabase kpd = loadFromUri(uri);
         SOSKeePassPath path = kpd.getKeePassPath();
-        Entry<?, ?, ?, ?> entry = kpd.getEntry(path);
+        Entry entry = kpd.getEntry(path);
 
         String val = null;
         String queryParamSetProperty = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_SET_PROPERTY);
@@ -327,14 +320,14 @@ public class SOSKeePassDatabase {
         return path.isAttachment() || path.getPropertyName().equals(STANDARD_PROPERTY_NAME_ATTACHMENT);
     }
 
-    public static String getAttachmentPropertyAsString(SOSKeePassDatabase kpd, Entry<?, ?, ?, ?> entry, SOSKeePassPath path) throws Exception {
+    public static String getAttachmentPropertyAsString(SOSKeePassDatabase kpd, Entry entry, SOSKeePassPath path) throws Exception {
         if (kpd == null || entry == null || path == null) {
             return null;
         }
         return new String(kpd.getAttachment(entry, path.getPropertyName()), "UTF-8");
     }
 
-    public static String getProperty(Entry<?, ?, ?, ?> entry, SOSKeePassPath path) {
+    public static String getProperty(Entry entry, SOSKeePassPath path) {
         if (entry == null || path == null) {
             return null;
         }
@@ -344,7 +337,7 @@ public class SOSKeePassDatabase {
     public static byte[] getBinaryProperty(String uri) throws Exception {
         SOSKeePassDatabase kpd = loadFromUri(uri);
         SOSKeePassPath path = kpd.getKeePassPath();
-        Entry<?, ?, ?, ?> entry = kpd.getEntry(path);
+        Entry entry = kpd.getEntry(path);
 
         byte[] val = null;
         String queryParamSetProperty = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_SET_PROPERTY);
@@ -371,7 +364,6 @@ public class SOSKeePassDatabase {
         String queryFile = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_FILE);
         String queryKeyFile = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_KEY_FILE);
         String queryPassword = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_PASSWORD);
-        String queryModule = path.getQueryParameters().get(SOSKeePassPath.QUERY_PARAMETER_MODULE);
 
         Path file = Paths.get(queryFile);
         Path keyFile = null;
@@ -388,7 +380,7 @@ public class SOSKeePassDatabase {
                 throw new SOSKeePassDatabaseException(String.format("[%s][%s]key file not found", uri, getFilePath(keyFile)));
             }
         }
-        SOSKeePassDatabase kpd = new SOSKeePassDatabase(file, getModule(queryModule));
+        SOSKeePassDatabase kpd = new SOSKeePassDatabase(file);
         kpd.setKeePassPath(path);
         if (keyFile == null) {
             kpd.load(queryPassword);
@@ -396,17 +388,6 @@ public class SOSKeePassDatabase {
             kpd.load(queryPassword, keyFile);
         }
         return kpd;
-    }
-
-    public static Module getModule(String m) {
-        if (m == null) {
-            return DEFAULT_MODULE;
-        }
-        try {
-            return Module.valueOf(m.toUpperCase());
-        } catch (Exception e) {
-            return DEFAULT_MODULE;
-        }
     }
 
     public static Path getDefaultKeyFile(Path database) {
