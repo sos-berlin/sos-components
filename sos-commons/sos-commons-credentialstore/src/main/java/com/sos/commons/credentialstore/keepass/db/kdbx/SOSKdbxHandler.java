@@ -1,15 +1,14 @@
 package com.sos.commons.credentialstore.keepass.db.kdbx;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 
-import org.linguafranca.pwdb.Database;
 import org.linguafranca.pwdb.Entry;
+import org.linguafranca.pwdb.Group;
+import org.linguafranca.pwdb.kdbx.jackson.KdbxDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +19,9 @@ import com.sos.commons.credentialstore.keepass.db.kdbx.credentials.SOSKdbxCreds;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassAttachmentException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 
-public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
+public class SOSKdbxHandler extends ASOSKeePassHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ASOSKdbxHandler.class);
-
-    protected abstract Database<?, ?, ?, ?> load() throws SOSKeePassDatabaseException;
-
-    protected abstract Entry<?, ?, ?, ?> createEntry(String[] entryPath) throws SOSKeePassDatabaseException;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSKdbxHandler.class);
 
     @Override
     public boolean isKdbx() {
@@ -34,16 +29,24 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public void load(String pass, Path keyFile) throws SOSKeePassDatabaseException {
+    public void load(final String pass, final Path keyFile) throws SOSKeePassDatabaseException {
+        setCredentials(pass, keyFile);
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[load]%s", SOSKeePassDatabase.getFilePath(getKeePassFile())));
         }
-        setCredentials(pass, keyFile);
-        setDatabase(load());
+
+        KdbxDatabase database = null;
+        try (InputStream is = Files.newInputStream(getKeePassFile())) {
+            database = KdbxDatabase.read(getCredentials(), is);
+        } catch (Throwable e) {
+            throw new SOSKeePassDatabaseException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(getKeePassFile()), e.toString()), e);
+        }
+        setDatabase(database);
     }
 
     @Override
-    public List<? extends Entry<?, ?, ?, ?>> getEntries() {
+    public List<? extends Entry> getEntries() {
         if (getDatabase() == null) {
             return null;
         }
@@ -51,13 +54,13 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public Entry<?, ?, ?, ?> getEntryByPath(String path) {
+    public Entry getEntryByPath(String path) {
         if (getDatabase() == null || path == null) {
             return null;
         }
-        List<? extends Entry<?, ?, ?, ?>> l = getDatabase().findEntries(new Entry.Matcher() {
+        List<? extends Entry> l = getDatabase().findEntries(new Entry.Matcher() {
 
-            public boolean matches(@SuppressWarnings("rawtypes") Entry entry) {
+            public boolean matches(Entry entry) {
                 String p = path.startsWith("/") ? path : "/" + path;
                 return entry.getPath().equals(p);
             }
@@ -66,7 +69,7 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public byte[] getBinaryProperty(Entry<?, ?, ?, ?> entry, String propertyName) throws SOSKeePassAttachmentException {
+    public byte[] getBinaryProperty(Entry entry, String propertyName) throws SOSKeePassAttachmentException {
         try {
             if (propertyName == null) {
                 List<String> l = entry.getBinaryPropertyNames();
@@ -90,7 +93,7 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public Entry<?, ?, ?, ?> setBinaryProperty(SOSKeePassPath path, Entry<?, ?, ?, ?> entry, Path attachment) throws SOSKeePassAttachmentException {
+    public Entry setBinaryProperty(SOSKeePassPath path, Entry entry, Path attachment) throws SOSKeePassAttachmentException {
         String method = "setBinaryProperty";
         if (Files.notExists(attachment)) {
             throw new SOSKeePassAttachmentException(String.format("[%s]attachment file not founded", SOSKeePassDatabase.getFilePath(attachment)));
@@ -108,13 +111,13 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
     }
 
     @Override
-    public Entry<?, ?, ?, ?> setProperty(Entry<?, ?, ?, ?> entry, String name, String value) {
+    public Entry setProperty(Entry entry, String name, String value) {
         entry.setProperty(name, value);
         return entry;
     }
 
     @Override
-    public Entry<?, ?, ?, ?> createEntry(final String entryPath) throws SOSKeePassDatabaseException {
+    public Entry createEntry(final String entryPath) throws SOSKeePassDatabaseException {
         String method = "createEntry";
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[%s][entryPath]%s", method, entryPath));
@@ -138,18 +141,63 @@ public abstract class ASOSKdbxHandler extends ASOSKeePassHandler {
             return;
         }
         try (FileOutputStream fos = new FileOutputStream(file.toFile())) {
-            getDatabase().save(getCredentials(), fos);
+            getDatabase().write(getCredentials(), fos);
         } catch (Throwable e) {
             throw new SOSKeePassDatabaseException(e);
         }
     }
 
-    protected Date getNowAsUTC() {
-        LocalDateTime localDateTime = LocalDateTime.now(ZoneId.of("UTC"));
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    private Entry createEntry(String[] entryPath) throws SOSKeePassDatabaseException {
+        String method = "createEntry";
+
+        KdbxDatabase d = (KdbxDatabase) getDatabase();
+        Group lastGroup = d.getRootGroup();
+        Entry entry = null;
+
+        for (int i = 2; i < entryPath.length; i++) {
+            String name = entryPath[i];
+
+            if (i == entryPath.length - 1) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[%s][addEntry]%s", method, name));
+                }
+                entry = addEntry(d, lastGroup, name);
+            } else {
+                List<Group> result = lastGroup.findGroups(name);
+                if (result == null || result.size() == 0) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[%s][addGroup]%s", method, name));
+                    }
+
+                    lastGroup = addGroup(d, lastGroup, name);
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[%s][useExistingGroup]%s", method, name));
+                    }
+                    lastGroup = result.get(0);
+                }
+            }
+        }
+        setDatabase(d);
+        return entry;
     }
 
-    protected void setCredentials(final String pass, final Path keyFile) throws SOSKeePassDatabaseException {
+    private Group addGroup(KdbxDatabase d, Group parentGroup, String groupName) {
+        Group g = d.newGroup(groupName);
+        g.setIcon(d.newIcon(ICON_INDEX_NEW_GROUP));
+        Group group = parentGroup.addGroup(g);
+        return group;
+    }
+
+    private Entry addEntry(KdbxDatabase d, Group parentGroup, String entryName) {
+        Entry e = d.newEntry(entryName);
+        e.setIcon(d.newIcon(ICON_INDEX_NEW_ENTRY));
+
+        Entry entry = parentGroup.addEntry(e);
+        return entry;
+    }
+
+    private void setCredentials(final String pass, final Path keyFile) throws SOSKeePassDatabaseException {
         SOSKdbxCreds cred = new SOSKdbxCreds();
         cred.load(pass, keyFile);
         setCredentials(cred);

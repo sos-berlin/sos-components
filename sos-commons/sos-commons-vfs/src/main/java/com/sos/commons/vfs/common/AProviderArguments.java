@@ -39,8 +39,7 @@ public abstract class AProviderArguments extends ASOSArguments {
 
     // Internal/Keepass
     private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<SOSKeePassDatabase>(null, false);
-    private SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>> keepassDatabaseEntry = new SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>>(null,
-            false);
+    private SOSArgument<org.linguafranca.pwdb.Entry> keepassDatabaseEntry = new SOSArgument<org.linguafranca.pwdb.Entry>(null, false);
     private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>(null, false);
 
     private CredentialStoreArguments credentialStore;
@@ -72,11 +71,11 @@ public abstract class AProviderArguments extends ASOSArguments {
         keepassDatabase.setValue(val);
     }
 
-    public org.linguafranca.pwdb.Entry<?, ?, ?, ?> getKeepassDatabaseEntry() {
+    public org.linguafranca.pwdb.Entry getKeepassDatabaseEntry() {
         return keepassDatabaseEntry.getValue();
     }
 
-    protected void setKeepassDatabaseEntry(org.linguafranca.pwdb.Entry<?, ?, ?, ?> val) {
+    protected void setKeepassDatabaseEntry(org.linguafranca.pwdb.Entry val) {
         keepassDatabaseEntry.setValue(val);
     }
 

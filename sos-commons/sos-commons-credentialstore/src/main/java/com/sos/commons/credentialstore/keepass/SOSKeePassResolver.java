@@ -10,7 +10,6 @@ import org.linguafranca.pwdb.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase.Module;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassPropertyNotFoundException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassResolverException;
@@ -25,7 +24,7 @@ public class SOSKeePassResolver {
     private String password;
     private String entryPath;
     private Map<String, SOSKeePassDatabase> databases = new HashMap<String, SOSKeePassDatabase>();
-    private Map<String, Entry<?, ?, ?, ?>> entries = new HashMap<String, Entry<?, ?, ?, ?>>();
+    private Map<String, Entry> entries = new HashMap<String, Entry>();
 
     public SOSKeePassResolver() {
     }
@@ -165,7 +164,7 @@ public class SOSKeePassResolver {
         } else {
             String p = getCurrentPassword(queryParameters);
             Path kf = getCurrentKeyFile(path, queryParameters, f, p);
-            d = loadDatabase(f, kf, p, getCurrentModule(queryParameters));
+            d = loadDatabase(f, kf, p);
             databases.put(key, d);
         }
         d.setEntry(getCurrentEntry(path, f, d));
@@ -173,9 +172,8 @@ public class SOSKeePassResolver {
         return d;
     }
 
-    private SOSKeePassDatabase loadDatabase(Path currentFile, Path currentKeyFile, String currentPassword, Module module)
-            throws SOSKeePassDatabaseException {
-        SOSKeePassDatabase d = new SOSKeePassDatabase(currentFile, module);
+    private SOSKeePassDatabase loadDatabase(Path currentFile, Path currentKeyFile, String currentPassword) throws SOSKeePassDatabaseException {
+        SOSKeePassDatabase d = new SOSKeePassDatabase(currentFile);
         if (currentKeyFile == null) {
             d.load(currentPassword);
         } else {
@@ -184,9 +182,8 @@ public class SOSKeePassResolver {
         return d;
     }
 
-    private Entry<?, ?, ?, ?> getCurrentEntry(SOSKeePassPath path, Path currentFile, SOSKeePassDatabase currentDatabase)
-            throws SOSKeePassDatabaseException {
-        Entry<?, ?, ?, ?> entry = null;
+    private Entry getCurrentEntry(SOSKeePassPath path, Path currentFile, SOSKeePassDatabase currentDatabase) throws SOSKeePassDatabaseException {
+        Entry entry = null;
         String key = new StringBuilder(currentFile.toString()).append(path.getEntryPath()).toString();
         if (entries.containsKey(key)) {
             entry = entries.get(key);
@@ -262,14 +259,6 @@ public class SOSKeePassResolver {
             p = password;
         }
         return p;
-    }
-
-    private Module getCurrentModule(Map<String, String> queryParameters) {
-        String v = null;
-        if (queryParameters != null) {
-            v = queryParameters.get(SOSKeePassPath.QUERY_PARAMETER_MODULE);
-        }
-        return SOSKeePassDatabase.getModule(v);
     }
 
     public Path getFile() {

@@ -1,7 +1,6 @@
 package com.sos.commons.credentialstore;
 
 import com.sos.commons.credentialstore.exceptions.SOSCredentialStoreException;
-import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
@@ -24,7 +23,6 @@ public class CredentialStoreArguments extends ASOSArguments {
     private SOSArgument<String> keyFile = new SOSArgument<String>(ARG_NAME_KEY_FILE, false);
     private SOSArgument<String> password = new SOSArgument<String>(ARG_NAME_PASSWORD, false, DisplayMode.MASKED);
     private SOSArgument<String> entryPath = new SOSArgument<String>(ARG_NAME_ENTRY_PATH, false);
-    private SOSArgument<String> keePassModule = new SOSArgument<String>(ARG_NAME_KEEPASS_MODULE, false, SOSKeePassDatabase.DEFAULT_MODULE.name());
 
     public SOSArgument<String> getFile() {
         return file;
@@ -48,14 +46,6 @@ public class CredentialStoreArguments extends ASOSArguments {
 
     public void setPassword(String val) {
         password.setValue(val);
-    }
-
-    public SOSArgument<String> getKeePassModule() {
-        return keePassModule;
-    }
-
-    public void setKeePassModule(String val) {
-        keePassModule.setValue(val);
     }
 
     public SOSArgument<String> getEntryPath() {
