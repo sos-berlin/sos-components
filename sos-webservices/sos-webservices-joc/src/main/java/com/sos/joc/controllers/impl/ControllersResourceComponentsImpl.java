@@ -287,6 +287,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
     private static ClusterState getClusterState(List<ControllerAnswer> controllers, String controllerId) {
         ClusterType clusterType = null;
+        Optional<String> lossNodeId = Optional.empty();
         Optional<String> lossNode = Optional.empty();
         if (!controllers.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
             int unreachables = controllers.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
@@ -302,14 +303,19 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                     clusterType = controllers.get(0).getClusterState();
                 }
                 
-                lossNode = controllers.stream().map(m -> m.getLossNode()).filter(Objects::nonNull).findAny();
+                Optional<ControllerAnswer> ca = controllers.stream().filter(m -> m.getLossNodeId().isPresent()).findAny();
+                if (ca.isPresent()) {
+                    lossNodeId = ca.get().getLossNodeId();
+                    lossNode = ca.get().getLossNode();
+                };
                 
             } else {
                 ControllerAnswer j = controllers.stream().filter(m -> m.getConnectionState().get_text() != ConnectionStateText.unreachable).findAny()
                         .get();
                 clusterType = j.getClusterState();
-                if (j.getLossNode() != null) {
-                    lossNode = Optional.of(j.getLossNode());
+                if (j.getLossNodeId().isPresent()) {
+                    lossNodeId = j.getLossNodeId();
+                    lossNode = j.getLossNode();
                 }
                 if (j.isCoupledOrPreparedTobeCoupled()) {
                     int index = controllers.indexOf(j);
@@ -330,14 +336,16 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         }
         ClusterState clusterState = States.getClusterState(clusterType);
         boolean isFailOverToBeConfirmed = ClusterType.FAILOVER_TO_BE_CONFIRMED.equals(clusterType);
-        lossNode.ifPresent(n -> {
-            clusterState.setLossNode(n);
+        if (lossNodeId.isPresent()) {
+            String lossNodeStr = lossNode.orElse(lossNodeId.get());
+            clusterState.setLossNodeId(lossNodeId.get());
+            clusterState.setLossNode(lossNodeStr);
             if (isFailOverToBeConfirmed) {
-                EventBus.getInstance().post(new FailoverConfirmEvent(controllerId, n, null, true));
+                EventBus.getInstance().post(new FailoverConfirmEvent(controllerId, lossNodeStr, null, true));
             } else {
-                EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, n, null, true));
+                EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, lossNodeStr, null, true));
             }
-        });
+        }
         return clusterState;
     }
 

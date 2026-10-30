@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -46,8 +47,8 @@ public class JOCLogProxyContext {
         return JOCLogProxyContext.getInstance()._getJLogDirectoryIndex();
     }
     
-    public static void release() {
-        JOCLogProxyContext.getInstance()._release();
+    public static CompletableFuture<Void> release() {
+        return JOCLogProxyContext.getInstance()._release();
     }
     
     private JLogDirectoryIndex _getJLogDirectoryIndex() throws InterruptedException, ExecutionException {
@@ -60,9 +61,10 @@ public class JOCLogProxyContext {
         return dirIndex;
     }
     
-    private void _release() {
+    private CompletableFuture<Void> _release() {
         if (resource != null) {
-            resource.release();
+            return resource.release();
         }
+        return CompletableFuture.completedFuture(null);
     }
 }

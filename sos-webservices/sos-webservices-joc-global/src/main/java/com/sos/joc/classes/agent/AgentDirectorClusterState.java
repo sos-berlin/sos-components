@@ -13,8 +13,20 @@ public class AgentDirectorClusterState extends ClusterState {
     private String lostNodeId;
     
     @JsonIgnore
+    private Optional<String> lostNode;
+    
+    @JsonIgnore
     private String lostNodeProblem;
 
+    @JsonIgnore
+    public Optional<String> getLostNode() {
+        return lostNode;
+    }
+    
+    public void setLostNode(Optional<String> lostNode) {
+        this.lostNode = lostNode;
+    }
+    
     @JsonIgnore
     public String getLostNodeId() {
         return lostNodeId;

@@ -75,7 +75,6 @@ import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.base.version.Version;
 import js7.data.agent.AgentPath;
-import js7.data.agent.AgentRef;
 import js7.data.agent.AgentRefState;
 import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerCommand;
@@ -86,7 +85,6 @@ import js7.data.order.OrderId;
 import js7.data.platform.PlatformInfo;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemState;
-import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
@@ -267,7 +265,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     }
 
                     Map<AgentPath, JAgentRefState> agentRefStates = currentState.pathToAgentRefState();
-                    Map<AgentPath, JAgentRef> agentRefs = currentState.pathToAgentRef();
                     Map<SubagentId, JSubagentItemState> subagentItemStates = currentState.idToSubagentItemState();
                     Map<String, AgentDirectorClusterState> agentClusterStates = new HashMap<>();
 
@@ -282,7 +279,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                             OrderV::getSubagentId));
 
                             JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbSubagents.getKey()));
-                            AgentDirectorClusterState clusterState = getClusterState(jAgentRefState);
+                            AgentDirectorClusterState clusterState = getClusterState(jAgentRefState, dbSubagents.getValue());
                             agentClusterStates.put(dbSubagents.getKey(), clusterState);
 
                             Optional<String> agentStateRefProblem = Optional.ofNullable(jAgentRefState).map(JAgentRefState::asScala).map(
@@ -354,8 +351,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbAgent.getAgentId()));
-                        boolean requireFailoverConfirmation = Optional.ofNullable(agentRefs.get(AgentPath.of(dbAgent.getAgentId()))).map(
-                                JAgentRef::asScala).map(AgentRef::requireFailoverConfirmation).orElse(false);
+                        jAgentRefState.agentRef().asScala().requireFailoverConfirmation();
+                        boolean requireFailoverConfirmation = jAgentRefState.agentRef().asScala().requireFailoverConfirmation();
                         AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam
                                 .getStates());
                         agent.setForceFailoverConfirmation(requireFailoverConfirmation);
@@ -403,7 +400,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             if (agent.getSubagents().stream().map(SubagentV::getIsDirector).filter(t -> !SubagentDirectorType.NO_DIRECTOR.equals(t))
                                     .mapToInt(d -> 1).sum() > 1) {
                                 agent.setClusterState(States.getClusterState(getClusterStateType(agentClusterStates.get(dbAgent.getAgentId())),
-                                        getClusterLostNodeId(agentClusterStates.get(dbAgent.getAgentId()))));
+                                        getClusterLostNodeId(agentClusterStates.get(dbAgent.getAgentId())), agentClusterStates.get(
+                                                dbAgent.getAgentId()).getLostNode()));
                             }
                         }
                         return agent;
@@ -640,7 +638,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         return null;
     }
 
-    private static AgentDirectorClusterState getClusterState(JAgentRefState jAgentRefState) {
+    private static AgentDirectorClusterState getClusterState(JAgentRefState jAgentRefState, List<DBItemInventorySubAgentInstance> subagents) {
         AgentDirectorClusterState clusterState = null;
         if (jAgentRefState != null) {
             try {
@@ -655,6 +653,17 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         clusterState.setTYPE(ClusterType.NODE_LOSS_TO_BE_CONFIRMED); 
                     }
                     clusterState.setLostNodeId(problem.event().lostNodeId().string());
+                    Optional<String> subagentId = Optional.empty();
+                    if (problem.event().lostNodeId().string() != null) {
+                        if ("Primary".equals(problem.event().lostNodeId().string())) {
+                            subagentId = subagents.stream().filter(sa -> sa.getIsDirector() == SubagentDirectorType.PRIMARY_DIRECTOR.intValue()).map(
+                                    sa -> sa.getSubAgentId()).findFirst();
+                        } else if ("Backup".equals(problem.event().lostNodeId().string())) {
+                            subagentId = subagents.stream().filter(sa -> sa.getIsDirector() == SubagentDirectorType.SECONDARY_DIRECTOR.intValue())
+                                    .map(sa -> sa.getSubAgentId()).findFirst();
+                        }
+                    }
+                    clusterState.setLostNode(subagentId);
                     clusterState.setLostNodeProblem(ProblemHelper.getErrorMessage(problem));
                 }
             } catch (Exception e) {
