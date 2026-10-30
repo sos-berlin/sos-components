@@ -215,7 +215,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                 if (clusterState == null || ClusterType.EMPTY.equals(clusterState.getTYPE())) {
                     throw new JocBadRequestException("There is no Director Agent cluster with the Id: " + agentId);
                 }
-                NodeId nodeId = AgentClusterWatch.getLostNodeId(controllerId, agentPath, agentState).orElseThrow(() -> new JocBadRequestException(
+                NodeId nodeId = AgentClusterWatch.getLostNodeId(controllerId, agentState).orElseThrow(() -> new JocBadRequestException(
                         "The Agent cluster '" + agentId + "' does not indicate loss of a Director Agent node"));
                 String user = null;
                 try {

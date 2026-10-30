@@ -6,11 +6,13 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ClusterNodeLossEvent;
 import com.sos.joc.event.bean.proxy.FailoverConfirmEvent;
@@ -41,7 +43,9 @@ public class ClusterWatchServiceContext {
     private NodeLossEventType eventType = NodeLossEventType.Unknown;
     private String message = null;
     private boolean requireFailoverConfirmation = false;
-    
+    private Predicate<DBItemInventoryJSInstance> nodeFilter = dbItem -> (primaryId.equals(lossNode) && dbItem.getIsPrimary()) || (backupId.equals(
+            lossNode) && !dbItem.getIsPrimary());
+
     public enum NodeLossEventType {
         NodeLoss, Failover, Unknown
     }
@@ -63,16 +67,16 @@ public class ClusterWatchServiceContext {
         Instant now = Instant.now();
         if (burstFilter == null || !burstFilter.isAfter(now)) {
             burstFilter = Instant.now().plusSeconds(120);
+            String lossNodeTitle = Proxies.getControllerDbInstances().get(controllerId).stream().filter(nodeFilter).map(
+                    DBItemInventoryJSInstance::getTitle).findAny().orElse(lossNode.string());
             if (problem instanceof ClusterWatchProblems.ClusterFailoverNotConfirmedProblem) {
                 eventType = NodeLossEventType.Failover;
-                LOGGER.error("[ClusterWatchService] ClusterFailoverNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
-                        .messageWithCause());
-                EventBus.getInstance().post(new FailoverConfirmEvent(controllerId, lossNode.string(), message));
+                LOGGER.error("[ClusterWatchService] ClusterFailoverNotConfirmedProblem of cluster '" + controllerId + "' received: " + message);
+                EventBus.getInstance().post(new FailoverConfirmEvent(controllerId, lossNodeTitle, message));
             } else { // instanceof ClusterNodeLossNotConfirmedProblem
                 eventType = NodeLossEventType.NodeLoss;
-                LOGGER.error("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + problem
-                        .messageWithCause());
-                EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, lossNode.string(), message));
+                LOGGER.error("[ClusterWatchService] ClusterNodeLossNotConfirmedProblem of cluster '" + controllerId + "' received: " + message);
+                EventBus.getInstance().post(new ClusterNodeLossEvent(controllerId, lossNodeTitle, message));
             }
         }
     }

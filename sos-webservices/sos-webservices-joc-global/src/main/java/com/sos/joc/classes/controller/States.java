@@ -116,9 +116,12 @@ public class States {
         return clusterState;
     }
     
-    public static ClusterState getClusterState(ClusterType state, Optional<String> lostNodeId) {
+    public static ClusterState getClusterState(ClusterType state, Optional<String> lostNodeId, Optional<String> lostNode) {
         ClusterState clusterState = getClusterState(state);
-        lostNodeId.ifPresent(s -> clusterState.setLossNode(s));
+        lostNodeId.ifPresent(s -> {
+            clusterState.setLossNodeId(s);
+            clusterState.setLossNode(lostNode.orElse(s));
+        });
         return clusterState;
     }
     

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "severity",
     "_text",
+    "lossNodeId",
     "lossNode"
 })
 public class ClusterState {
@@ -39,6 +40,8 @@ public class ClusterState {
      */
     @JsonProperty("_text")
     private String _text;
+    @JsonProperty("lossNodeId")
+    private String lossNodeId;
     @JsonProperty("lossNode")
     private String lossNode;
 
@@ -82,6 +85,16 @@ public class ClusterState {
         this._text = _text;
     }
     
+    @JsonProperty("lossNodeId")
+    public String getLossNodeId() {
+        return lossNodeId;
+    }
+    
+    @JsonProperty("lossNodeId")
+    public void setLossNodeId(String lossNodeId) {
+        this.lossNodeId = lossNodeId;
+    }
+    
     @JsonProperty("lossNode")
     public String getLossNode() {
         return lossNode;
@@ -94,12 +107,12 @@ public class ClusterState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("lossNode", lossNode).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("lossNodeId", lossNodeId).append("lossNode", lossNode).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).append(lossNode).toHashCode();
+        return new HashCodeBuilder().append(severity).append(_text).append(lossNodeId).toHashCode();
     }
 
     @Override
@@ -111,7 +124,7 @@ public class ClusterState {
             return false;
         }
         ClusterState rhs = ((ClusterState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).append(lossNode, rhs.lossNode).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).append(lossNodeId, rhs.lossNodeId).isEquals();
     }
 
 }
