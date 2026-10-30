@@ -29,6 +29,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.bean.JOCMBeanServer;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.agent.AgentHelper;
+import com.sos.joc.classes.logs.JOCLogProxyContext;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
@@ -465,8 +466,9 @@ public class Proxies {
                         controllerFutures.clear();
                         controllerApis.clear();
                         ClusterWatch.getInstance().clear();
-                        return proxyContext.release();
+                        return JOCLogProxyContext.release();
                     })
+                    .thenCompose(v -> proxyContext.release())
                     .get(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             //
