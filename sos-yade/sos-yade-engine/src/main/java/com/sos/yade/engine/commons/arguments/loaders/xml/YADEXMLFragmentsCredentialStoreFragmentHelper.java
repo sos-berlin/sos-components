@@ -41,9 +41,6 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
                     case "CSEntryPath":
                         argsLoader.setStringArgumentValue(csArgs.getEntryPath(), n);
                         break;
-                    case "CSKeePass":
-                        parseCSKeePass(logger, argsLoader, n, csArgs);
-                        break;
                     case "CSExportAttachment":
                         // ignored
                         break;
@@ -108,21 +105,7 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
             }
         }
     }
-
-    private static void parseCSKeePass(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node keePass, CredentialStoreArguments csArgs) {
-        NodeList nl = keePass.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "CSKeePassModule":
-                    argsLoader.setStringArgumentValue(csArgs.getKeePassModule(), n);
-                    break;
-                }
-            }
-        }
-    }
-
+ 
     private static void handleJumpHostCsFragments(ISOSLogger logger, YADEXMLArgumentsLoader argsLoader, Node fragment, String name) {
         if (argsLoader.getJumpHostArgs() == null) {
             return;

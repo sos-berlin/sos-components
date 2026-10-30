@@ -369,7 +369,7 @@ public class SSHJClientFactory {
         if (kd == null) {
             throw new Exception("[keepass]keepass_database property is null");
         }
-        org.linguafranca.pwdb.Entry<?, ?, ?, ?> ke = args.getKeepassDatabaseEntry();
+        org.linguafranca.pwdb.Entry ke = args.getKeepassDatabaseEntry();
         if (ke == null) {
             throw new Exception(String.format("[keepass][can't find database entry]attachment property name=%s", args
                     .getKeepassAttachmentPropertyName()));
