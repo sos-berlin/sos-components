@@ -7,9 +7,9 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.linguafranca.pwdb.Credentials;
-import org.linguafranca.pwdb.kdbx.KdbxCreds;
+import org.linguafranca.pwdb.format.KdbxCredentials;
 import org.linguafranca.pwdb.security.Encryption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,6 @@ import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassCredentialException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassDatabaseException;
 import com.sos.commons.credentialstore.keepass.exceptions.SOSKeePassKeyFileException;
-import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSString;
 
 public class SOSKdbxCreds implements Credentials {
@@ -34,16 +33,16 @@ public class SOSKdbxCreds implements Credentials {
 
     public void load(String password, Path keyFile) throws SOSKeePassDatabaseException {
 
-        FileInputStream is = null;
         try {
             if (keyFile == null) {
                 handlePassword(password);
             } else {
-                is = new FileInputStream(SOSKeePassDatabase.getFilePath(keyFile));
-                if (isXmlKey(is)) {
-                    handleXmlKey(is, password);
-                } else {
-                    handleBinaryKey(is, password);
+                try (FileInputStream is = new FileInputStream(SOSKeePassDatabase.getFilePath(keyFile))) {
+                    if (isXmlKey(is)) {
+                        handleXmlKey(is, password);
+                    } else {
+                        handleBinaryKey(is, password);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -52,12 +51,10 @@ public class SOSKdbxCreds implements Credentials {
             } else {
                 throw new SOSKeePassCredentialException(String.format("[%s]%s", SOSKeePassDatabase.getFilePath(keyFile), e.toString()), e);
             }
-        } finally {
-            SOSClassUtil.closeQuietly(is);
         }
     }
 
-    private boolean isXmlKey(@NotNull FileInputStream is) throws Exception {
+    private boolean isXmlKey(@NonNull FileInputStream is) throws Exception {
 
         FileChannel fc = null;
         try {
@@ -83,24 +80,24 @@ public class SOSKdbxCreds implements Credentials {
         if (SOSString.isEmpty(password)) {
             throw new SOSKeePassCredentialException("The password for the database must not be null. Please provide a valid password.");
         }
-        key = new KdbxCreds(password.getBytes()).getKey();
+        key = new KdbxCredentials(password.getBytes()).getKey();
     }
 
-    private void handleXmlKey(@NotNull InputStream keyFile, String password) throws SOSKeePassKeyFileException {
+    private void handleXmlKey(@NonNull InputStream keyFile, String password) throws SOSKeePassKeyFileException {
         if (SOSString.isEmpty(password)) {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("[handleXmlKey]keyFile");
             }
-            this.key = new KdbxCreds(keyFile).getKey();
+            this.key = new KdbxCredentials(keyFile).getKey();
         } else {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("[handleXmlKey]pass,keyFile");
             }
-            this.key = new KdbxCreds(password.getBytes(), keyFile).getKey();
+            this.key = new KdbxCredentials(password.getBytes(), keyFile).getKey();
         }
     }
 
-    private void handleBinaryKey(@NotNull InputStream keyFile, String password) {
+    private void handleBinaryKey(@NonNull InputStream keyFile, String password) {
         MessageDigest md = Encryption.getSha256MessageDigestInstance();
         if (SOSString.isEmpty(password)) {
             if (LOGGER.isTraceEnabled()) {
@@ -118,7 +115,7 @@ public class SOSKdbxCreds implements Credentials {
         }
     }
 
-    private byte[] toByteArray(@NotNull InputStream keyFile) {
+    private byte[] toByteArray(@NonNull InputStream keyFile) {
         byte[] ba = null;
         try {
             ba = ByteStreams.toByteArray(keyFile);

@@ -36,9 +36,6 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
                     case "CSEntryPath":
                         argsLoader.setStringArgumentValue(csArgs.getEntryPath(), n);
                         break;
-                    case "CSKeePass":
-                        parseCSKeePass(argsLoader, n, csArgs);
-                        break;
                     case "CSExportAttachment":
                         // ignored
                         break;
@@ -97,20 +94,6 @@ public class YADEXMLFragmentsCredentialStoreFragmentHelper {
                     break;
                 case "CSPassword":
                     argsLoader.setStringArgumentValue(csArgs.getPassword(), n);
-                    break;
-                }
-            }
-        }
-    }
-
-    private static void parseCSKeePass(YADEXMLArgumentsLoader argsLoader, Node keePass, CredentialStoreArguments csArgs) {
-        NodeList nl = keePass.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            Node n = nl.item(i);
-            if (n.getNodeType() == Node.ELEMENT_NODE) {
-                switch (n.getNodeName()) {
-                case "CSKeePassModule":
-                    argsLoader.setStringArgumentValue(csArgs.getKeePassModule(), n);
                     break;
                 }
             }
