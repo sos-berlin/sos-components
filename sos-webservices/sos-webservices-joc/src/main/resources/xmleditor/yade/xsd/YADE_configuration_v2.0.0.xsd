@@ -621,7 +621,6 @@
 				        <xs:element ref="CSFile"/>
 				        <xs:element ref="CSAuthentication"/>
 				        <xs:element ref="CSEntryPath" minOccurs="0"/>
-				        <xs:element ref="CSKeePass" minOccurs="0"/>
 			      </xs:sequence>
 			      <xs:attribute name="name" type="xs:NMTOKEN" use="required">
             <xs:annotation>
@@ -977,58 +976,7 @@
 				        <xs:minLength value="1"/>
 			      </xs:restriction>
 		    </xs:simpleType>
-	  </xs:element>
-	  <xs:element name="CSKeePass">
-		    <xs:annotation>
-         <xs:appinfo source="Fragments/CredentialStoreFragments/CSKeePass"/>
-         <xs:documentation>
-            <div xmlns="http://www.w3.org/1999/xhtml">
-               <strong>References</strong>
-               <ul>
-                  <li>
-                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
-                  </li>
-               </ul>
-               <strong>Notes</strong>
-               <p>
-			Specifies the configuration settings for KeePass.
-		</p>
-            </div>
-         </xs:documentation>
-      </xs:annotation>
-		    <xs:complexType>
-			      <xs:sequence>
-				        <xs:element ref="CSKeePassModule" minOccurs="1" maxOccurs="1"/>
-			      </xs:sequence>
-		    </xs:complexType>
-	  </xs:element>
-	  <xs:element name="CSKeePassModule" default="JAXB">
-		    <xs:annotation>
-         <xs:appinfo source="Fragments/CredentialStoreFragments/CSKeePassModule">
-                <XmlEditor type="combobox" options="DOM;JAXB;${VAR}"/>
-            </xs:appinfo>
-         <xs:documentation>
-            <div xmlns="http://www.w3.org/1999/xhtml">
-               <strong>References</strong>
-               <ul>
-                  <li>
-                     <a target="_blank" href="https://kb.sos-berlin.com/x/fI12B">JS7 - File Transfer Configuration</a>
-                  </li>
-               </ul>
-               <strong>Notes</strong>
-               <p>
-			Specifies the desired approach (DOM or JAXB) to handle KDBX using the underlying KeePassJava2 interface.
-		</p>
-            </div>
-         </xs:documentation>
-      </xs:annotation>
-		    <xs:simpleType>
-			      <xs:restriction base="xs:string">
-				<!-- DOM, JAXB or ${VAR} -->
-                <xs:pattern value="DOM|JAXB|(\$\{[\p{L}_][\p{L}\p{N}_]*\})"/>
-			      </xs:restriction>
-		    </xs:simpleType>
-	  </xs:element>
+	  </xs:element>	  
 	  <!-- 2nd-Level - Fragments/DecryptionFragments -->
 	  <xs:element name="DecryptionFragment">
 		    <xs:annotation>

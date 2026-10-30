@@ -22,8 +22,6 @@ public class SOSKeePassPath {
     public static final String QUERY_PARAMETER_CREATE_ENTRY = "create_entry";
     public static final String QUERY_PARAMETER_SET_PROPERTY = "set_property"; // '&' and '=' characters not allowed
     public static final String QUERY_PARAMETER_STDOUT_ON_SET_BINARY_PROPERTY = "stdout_on_set_binary_property";
-    // module=dom,simple
-    public static final String QUERY_PARAMETER_MODULE = "module";
     // if a query param value contains the & or = character, this characters must be masked to avoid an query split exception
     // example: ...&set_property=X '&' Y
     // will be evaluated to ...&set_property=X & Y
