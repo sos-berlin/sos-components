@@ -1706,4 +1706,24 @@ public abstract class KeyUtil {
         return jocKeyPair;
     }
 
+    public static String byteArrayToHexString(byte[] ba, String algorithm) {
+        MessageDigest digest;
+        StringBuilder hexString = new StringBuilder();
+        try {
+            digest = MessageDigest.getInstance(algorithm);
+            byte[] hash = digest.digest(ba);
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return hexString.toString().toUpperCase();
+    }
+
 }
