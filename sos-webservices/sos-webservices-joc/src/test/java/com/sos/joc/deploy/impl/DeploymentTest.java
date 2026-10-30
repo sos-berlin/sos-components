@@ -26,6 +26,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -39,7 +40,6 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.naming.InvalidNameException;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.cert.CertException;
@@ -669,12 +669,12 @@ public class DeploymentTest {
         assertNotNull(rootKeyPair);
         assertNotNull(rootCertificate);
         
-        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded()),
+        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(rootKeyPair.getPrivate().getEncoded())),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
         LOGGER.trace("root private key - algorithm: " + rootKeyPair.getPrivate().getAlgorithm());
         LOGGER.trace("root private key - format: " + rootKeyPair.getPrivate().getFormat());
         LOGGER.trace("\n" + rootPrivateKeyString);
-        String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
+        String rootCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(rootCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         try {
             rootCertificate.verify(rootKeyPair.getPublic());
@@ -697,14 +697,14 @@ public class DeploymentTest {
         }
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
-        String userPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded()),
+        String userPrivateKeyString = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(userKeyPair.getPrivate().getEncoded())),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
         String userSubjectDN = CAUtils.createUserSubjectDN("SOS root CA", "SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
         LOGGER.trace("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair, rootKeyPair, userSubjectDN);
         assertNotNull(csr);
-        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(new String(Base64.getEncoder().encode(csr.getEncoded())));
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2099, 0, 31);
@@ -714,7 +714,7 @@ public class DeploymentTest {
                 CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair.getPrivate(), userKeyPair, csr, 
                         (X509Certificate)rootCertificate, null, validUntil);
         assertNotNull(userCertificate);
-        String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
+        String userCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(userCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         try {
             LOGGER.trace("****************************  Verify user Certificate:  ***************************************");
