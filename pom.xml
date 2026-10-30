@@ -78,7 +78,7 @@
     <xml.apis.version>1.4.01</xml.apis.version>
     <google.findbugs.version>3.0.2</google.findbugs.version>
     <typesafe.config.version>1.4.5</typesafe.config.version>
-    <keepass.java2.version>2.2.1</keepass.java2.version>
+    <keepass.java2.version>3.1.0</keepass.java2.version>
     <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
     <guava.version>33.7.2-jre</guava.version>
     <sshj.version>0.40.0</sshj.version>
@@ -806,7 +806,6 @@
         <artifactId>bcpkix-jdk18on</artifactId>
         <version>${bouncycastle.version}</version>
       </dependency>
-      <!-- KeePass makes use of Guava 19, to use current guava version the next dependency is needed -->
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId> 
@@ -829,7 +828,7 @@
       </dependency>
       <dependency>
         <groupId>org.linguafranca.pwdb</groupId>
-        <artifactId>KeePassJava2-kdb</artifactId>
+        <artifactId>KeePassJava2</artifactId>
         <version>${keepass.java2.version}</version>
         <exclusions>
           <exclusion>
@@ -863,118 +862,6 @@
           <exclusion>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId> 
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linguafranca.pwdb</groupId>
-        <artifactId>KeePassJava2-dom</artifactId>
-        <version>${keepass.java2.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linguafranca.pwdb</groupId>
-        <artifactId>KeePassJava2-jaxb</artifactId>
-        <version>${keepass.java2.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linguafranca.pwdb</groupId>
-        <artifactId>KeePassJava2-kdbx</artifactId>
-        <version>${keepass.java2.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.linguafranca.pwdb</groupId>
-        <artifactId>database</artifactId>
-        <version>${keepass.java2.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk18on</artifactId> 
-          </exclusion>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId> 
           </exclusion>
         </exclusions>
       </dependency>
