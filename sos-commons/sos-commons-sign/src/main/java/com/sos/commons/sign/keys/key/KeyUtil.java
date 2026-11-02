@@ -1605,7 +1605,7 @@ public abstract class KeyUtil {
     }
 
     public static PrivateKey getPrivateKeyFromStringBC(String signerAlgorithm, String privateKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
-         Security.addProvider(new BouncyCastleProvider());
+        Security.addProvider(new BouncyCastleProvider());
         KeyFactory kf = KeyFactory.getInstance(signerAlgorithm);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(privateKey)));
         return privKey;
