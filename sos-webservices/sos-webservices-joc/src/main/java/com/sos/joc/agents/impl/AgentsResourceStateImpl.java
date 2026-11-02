@@ -75,6 +75,7 @@ import jakarta.ws.rs.Path;
 import js7.base.problem.Problem;
 import js7.base.version.Version;
 import js7.data.agent.AgentPath;
+import js7.data.agent.AgentRef;
 import js7.data.agent.AgentRefState;
 import js7.data.cluster.ClusterWatchProblems;
 import js7.data.controller.ControllerCommand;
@@ -85,6 +86,7 @@ import js7.data.order.OrderId;
 import js7.data.platform.PlatformInfo;
 import js7.data.subagent.SubagentId;
 import js7.data.subagent.SubagentItemState;
+import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
@@ -351,8 +353,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbAgent.getAgentId()));
-                        jAgentRefState.agentRef().asScala().requireFailoverConfirmation();
-                        boolean requireFailoverConfirmation = jAgentRefState.agentRef().asScala().requireFailoverConfirmation();
+                        boolean requireFailoverConfirmation = Optional.ofNullable(agentRefStates.get(AgentPath.of(dbAgent.getAgentId()))).map(
+                                JAgentRefState::agentRef).map(JAgentRef::asScala).map(AgentRef::requireFailoverConfirmation).orElse(false);
                         AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam
                                 .getStates());
                         agent.setForceFailoverConfirmation(requireFailoverConfirmation);
