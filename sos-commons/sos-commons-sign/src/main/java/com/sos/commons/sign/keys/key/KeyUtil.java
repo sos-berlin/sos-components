@@ -51,8 +51,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.bouncycastle.asn1.ASN1Integer;
@@ -170,9 +168,9 @@ public abstract class KeyUtil {
         KeyPair kp = kpg.generateKeyPair();
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = kp.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         keyPair.setPrivateKey(formatPrivateRSAKey(encodedPrivateToString));
         keyPair.setPublicKey(formatPublicRSAKey(encodedPublicToString));
         keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
@@ -202,9 +200,9 @@ public abstract class KeyUtil {
         KeyPair kp = createECDSAKeyPair(curveName);
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = kp.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
         keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
@@ -222,9 +220,9 @@ public abstract class KeyUtil {
             InvalidAlgorithmParameterException {
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = kp.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
         keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
         return keyPair;
@@ -258,9 +256,9 @@ public abstract class KeyUtil {
     public static JocKeyPair createJOCKeyPair(KeyPair keyPair) throws NoSuchAlgorithmException, NoSuchProviderException {
         JocKeyPair jocKeyPair = new JocKeyPair();
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = keyPair.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
         jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         jocKeyPair.setKeyID(getRSAKeyIDAsHexString(keyPair.getPublic()).toUpperCase());
@@ -838,9 +836,7 @@ public abstract class KeyUtil {
         }
         RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
         byte[] certModulusData = rsaPublicKey.getModulus().toByteArray();
-        MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-        byte[] certID = sha256.digest(certModulusData);
-        String certIDinHex = new String(DatatypeConverter.printHexBinary(certID));
+        String certIDinHex = KeyUtil.byteArrayToHexString(certModulusData, "SHA-256");
         PemReader privKeyReader = new PemReader(new StringReader(privateKey));
         PemObject privKeyAsPemObject = privKeyReader.readPemObject();
         privKeyReader.close();
@@ -856,8 +852,7 @@ public abstract class KeyUtil {
         }
         RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) privKey;
         byte[] keyModulusData = rsaPrivateKey.getModulus().toByteArray();
-        byte[] keyID = sha256.digest(keyModulusData);
-        String keyIDinHex = new String(DatatypeConverter.printHexBinary(keyID));
+        String keyIDinHex = KeyUtil.byteArrayToHexString(keyModulusData, "SHA-256");
         if (certIDinHex.equals(keyIDinHex)) {
             return true;
         } else {
@@ -1352,7 +1347,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPrivateKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PRIVATE_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PRIVATE_KEY_FOOTER);
     }
@@ -1363,7 +1358,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPrivateRSAKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PRIVATE_RSA_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PRIVATE_RSA_KEY_FOOTER);
     }
@@ -1374,7 +1369,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPrivateECDSAKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PRIVATE_EC_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
     }
@@ -1385,7 +1380,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPublicRSAKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PUBLIC_RSA_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PUBLIC_RSA_KEY_FOOTER);
     }
@@ -1396,7 +1391,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPublicECDSAKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PUBLIC_EC_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PUBLIC_EC_KEY_FOOTER);
     }
@@ -1407,7 +1402,7 @@ public abstract class KeyUtil {
     }
 
     public static String formatPublicKey(byte[] key) {
-        String base64Key = DatatypeConverter.printBase64Binary(key);
+        String base64Key = new String(java.util.Base64.getEncoder().encode(key));
         return String.join("\n", SOSKeyConstants.PUBLIC_KEY_HEADER, insertLineFeedsInEncodedString(base64Key),
                 SOSKeyConstants.PUBLIC_KEY_FOOTER);
     }
@@ -1589,6 +1584,25 @@ public abstract class KeyUtil {
         return key.replace(SOSKeyConstants.PUBLIC_DSA_KEY_HEADER, "").replace(SOSKeyConstants.PUBLIC_DSA_KEY_FOOTER, "")
                 .replaceAll("\n", "");
     }
+  public static String byteArrayToHexString(byte[] ba, String algorithm) {
+      MessageDigest digest;
+      StringBuilder hexString = new StringBuilder();
+      try {
+          digest = MessageDigest.getInstance(algorithm);
+          byte[] hash = digest.digest(ba);
+
+          for (int i = 0; i < hash.length; i++) {
+              String hex = Integer.toHexString(0xff & hash[i]);
+              if (hex.length() == 1) {
+                  hexString.append('0');
+              }
+              hexString.append(hex);
+          }
+      } catch (NoSuchAlgorithmException e) {
+          LOGGER.error(e.getMessage());
+      }
+      return hexString.toString().toUpperCase();
+  }
 
     public static PublicKey getMLDSAPublicKeyFromStringBC(byte[] decoded) throws NoSuchAlgorithmException, InvalidKeySpecException {
         KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM);
@@ -1599,7 +1613,7 @@ public abstract class KeyUtil {
     public static PrivateKey getMLDSAPrivateKeyFromStringBC(String privateKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
         Security.addProvider(new BouncyCastleProvider());
         KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.MLDSA_SIGNER_ALGORITHM);
-        PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(privateKey)));
+        PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(privateKey)));
         return privKey;
     }
 
@@ -1610,9 +1624,9 @@ public abstract class KeyUtil {
     }
 
     public static PrivateKey getPrivateKeyFromStringBC(String signerAlgorithm, String privateKey) throws InvalidKeySpecException, NoSuchAlgorithmException {
-         Security.addProvider(new BouncyCastleProvider());
+        Security.addProvider(new BouncyCastleProvider());
         KeyFactory kf = KeyFactory.getInstance(signerAlgorithm);
-        PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(privateKey)));
+        PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(java.util.Base64.getDecoder().decode(privateKey)));
         return privKey;
     }
     
@@ -1643,9 +1657,9 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = keyPairMLDSA.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = keyPairMLDSA.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
         keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         keyPair.setKeyAlgorithm(JocKeyAlgorithm.MLDSA.name());
@@ -1676,9 +1690,9 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         JocKeyPair jocKeyPair = new JocKeyPair();
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = keyPair.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
         jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());
@@ -1696,9 +1710,9 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         JocKeyPair jocKeyPair = new JocKeyPair();
         byte[] encodedPrivate = keyPair.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+        String encodedPrivateToString = new String(java.util.Base64.getEncoder().encode(encodedPrivate));
         byte[] encodedPublic = keyPair.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+        String encodedPublicToString = new String(java.util.Base64.getEncoder().encode(encodedPublic));
         jocKeyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
         jocKeyPair.setPublicKey(formatPublicKey(encodedPublicToString));
         jocKeyPair.setKeyAlgorithm(JocKeyAlgorithm.MLKEM.name());

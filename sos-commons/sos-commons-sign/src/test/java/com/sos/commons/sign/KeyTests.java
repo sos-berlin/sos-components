@@ -39,7 +39,6 @@ import java.util.zip.ZipOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x500.RDN;
@@ -1465,7 +1464,7 @@ public class KeyTests {
                 issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
                 // create a CertificateSigningRequest (CSR) for the users KeyPair
                 PKCS10CertificationRequest csr = CAUtils.createCSR(keyPair.getPrivate().getAlgorithm(), keyPair, userSubjectDN);
-                csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+                csrString = KeyUtil.insertLineFeedsInEncodedString(new String(java.util.Base64.getEncoder().encode(csr.getEncoded())));
                 // use the users CSR to create the new user certificate and sign it by the given CA
                 userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), keyPair, csr,
                         (X509Certificate) issuerCert, "test sp sp.sos");
@@ -1526,7 +1525,7 @@ public class KeyTests {
                 issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
                 // create a CertificateSigningRequest (CSR) for the users KeyPair
                 PKCS10CertificationRequest csr = CAUtils.createCSR(signerkeyPair.getPrivate().getAlgorithm(), signerkeyPair, userSubjectDN);
-                csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+                csrString = KeyUtil.insertLineFeedsInEncodedString(new String(java.util.Base64.getEncoder().encode(csr.getEncoded())));
                 // use the users CSR to create the new user certificate and sign it by the given CA
                 userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), signerkeyPair, csr,
                         (X509Certificate) issuerCert, "test sp sp.sos");
@@ -1661,7 +1660,7 @@ public class KeyTests {
                 issuerCert = KeyUtil.getCertificate(Paths.get("C:\\sp\\devel\\js7\\signing\\MLDSA\\intermediate-ca.crt"));
                 // create a CertificateSigningRequest (CSR) for the users KeyPair
                 PKCS10CertificationRequest csr = CAUtils.createCSR(signerkeyPair.getPrivate().getAlgorithm(), signerkeyPair, userSubjectDN);
-                csrString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+                csrString = KeyUtil.insertLineFeedsInEncodedString(new String(java.util.Base64.getEncoder().encode(csr.getEncoded())));
                 // use the users CSR to create the new user certificate and sign it by the given CA
                 userCertificate = CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, issuerkeyPair.getPrivate(), signerkeyPair, csr,
                         (X509Certificate) issuerCert, "test sp sp.sos");
