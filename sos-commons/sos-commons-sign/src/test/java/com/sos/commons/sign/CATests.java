@@ -20,6 +20,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -31,7 +32,6 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.x500.X500Principal;
-import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -79,7 +79,7 @@ public class CATests {
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.RSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
-        String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
+        String rootCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(rootCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         LOGGER.trace("************************************  root Certificate:  **********************************************");
         LOGGER.trace("\n" + rootCert);
@@ -123,13 +123,13 @@ public class CATests {
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair, rootKeyPair, userSubjectDN);
         assertNotNull(csr);
-        String csrAsString = KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+        String csrAsString = KeyUtil.insertLineFeedsInEncodedString(new String(Base64.getEncoder().encode(csr.getEncoded())));
         LOGGER.trace("************************************  CSR:  ***********************************************************");
         LOGGER.trace("\n" + csrAsString);
         X509Certificate userCertificate = 
                 CAUtils.signCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, rootKeyPair.getPrivate(), userKeyPair, csr, (X509Certificate)rootCertificate, "sp.sos");
         assertNotNull(userCertificate);
-        String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userCertificate.getEncoded()), 
+        String userCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(userCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         LOGGER.trace("************************************  User Certificate:  **********************************************");
         LOGGER.trace("\n" + userCert);
@@ -185,10 +185,10 @@ public class CATests {
         assertTrue(verify);
         String filename = "X.509.RSA.certificate_bundle.zip";
         exportCertificateBundle( 
-                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded())),
+                KeyUtil.formatPrivateKey(new String(Base64.getEncoder().encode(rootKeyPair.getPrivate().getEncoded()))),
                 rootCert,
                 csrAsString,
-                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded())),
+                KeyUtil.formatPrivateKey(new String(Base64.getEncoder().encode(userKeyPair.getPrivate().getEncoded()))),
                 userCert, 
                 filename);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
@@ -203,7 +203,7 @@ public class CATests {
         LOGGER.trace("************************************  Test ECDSA: create rootCertificate, CSR and userCertificate  ****");
         // create a KeyPair for the root CA
         KeyPair rootKeyPair = KeyUtil.createECDSAKeyPair();
-        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded()),
+        String rootPrivateKeyString = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(rootKeyPair.getPrivate().getEncoded())),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
         LOGGER.trace("************************************  Root Private Key:  **********************************************");
         LOGGER.trace("root private key - algorithm: " + rootKeyPair.getPrivate().getAlgorithm());
@@ -215,7 +215,7 @@ public class CATests {
         // create a root certificate for the root CA
         Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, true);
         assertNotNull(rootCertificate);
-        String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
+        String rootCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(rootCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         LOGGER.trace("************************************  Root Certificate:  **********************************************");
         LOGGER.trace("\n" + rootCert);
@@ -241,7 +241,7 @@ public class CATests {
         }
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createECDSAKeyPair();
-        String userPrivateKeyString = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded()),
+        String userPrivateKeyString = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(userKeyPair.getPrivate().getEncoded())),
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
         LOGGER.trace("************************************  User Private Key:  **********************************************");
         LOGGER.trace("\n" + userPrivateKeyString);
@@ -251,7 +251,7 @@ public class CATests {
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, userKeyPair, rootKeyPair, userSubjectDN);
         assertNotNull(csr);
-        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(DatatypeConverter.printBase64Binary(csr.getEncoded()));
+        String csrAsString= KeyUtil.insertLineFeedsInEncodedString(new String(Base64.getEncoder().encode(csr.getEncoded())));
         LOGGER.trace("************************************  CSR:  ***********************************************************");
         LOGGER.trace("\n" + csrAsString);
         Calendar calendar = Calendar.getInstance();
@@ -261,7 +261,7 @@ public class CATests {
                 CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair.getPrivate(), userKeyPair, csr, 
                         (X509Certificate)rootCertificate, "sp.sos", validUntil);
         assertNotNull(userSigningCertificate);
-        String userCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(userSigningCertificate.getEncoded()), 
+        String userCert = KeyUtil.formatEncodedDataString(new String(Base64.getEncoder().encode(userSigningCertificate.getEncoded())), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
         LOGGER.trace("************************************  User Certificate:  **********************************************");
         LOGGER.trace("\n" + userCert);
@@ -294,10 +294,10 @@ public class CATests {
         LOGGER.trace("Signature verification successful: " + verify);
         String filename = "X.509.ECDSA.certificate_bundle.zip";
         exportCertificateBundle(
-                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(rootKeyPair.getPrivate().getEncoded())), 
+                KeyUtil.formatPrivateKey(new String(Base64.getEncoder().encode(rootKeyPair.getPrivate().getEncoded()))), 
                 rootCert, 
                 csrAsString,
-                KeyUtil.formatPrivateKey(DatatypeConverter.printBase64Binary(userKeyPair.getPrivate().getEncoded())), 
+                KeyUtil.formatPrivateKey(new String(Base64.getEncoder().encode(userKeyPair.getPrivate().getEncoded()))), 
                 userCert, 
                 filename);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
