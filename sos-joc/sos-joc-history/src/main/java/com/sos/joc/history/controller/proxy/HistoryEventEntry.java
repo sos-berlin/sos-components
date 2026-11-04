@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.history.HistoryPosition;
+import com.sos.joc.cluster.bean.history.HistoryOrderOutcomeType;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.agent.AgentVersionUpdatedEvent;
 import com.sos.joc.event.bean.agent.SubagentVersionUpdatedEvent;
@@ -93,14 +94,6 @@ import scala.concurrent.duration.FiniteDuration;
 import scala.jdk.javaapi.OptionConverters;
 
 public class HistoryEventEntry {
-
-    public static enum OutcomeType {
-        succeeded, failed, disrupted, broken, killed, timedout
-    }
-
-    public static enum OutcomeTypeFailedReason {
-        finish_instruction, fail_instruction
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
 
@@ -402,11 +395,11 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
-        private OutcomeInfo newOutcomeInfo(OutcomeType type) {
+        private OutcomeInfo newOutcomeInfo(HistoryOrderOutcomeType.Type type) {
             return new OutcomeInfo(type, (Problem) null);
         }
 
-        public OutcomeInfo getOutcomeInfo(OutcomeType type, Option<Problem> problem) throws Exception {
+        public OutcomeInfo getOutcomeInfo(HistoryOrderOutcomeType.Type type, Option<Problem> problem) throws Exception {
             if (outcomeInfo == null) {
                 Optional<Problem> op = OptionConverters.toJava(problem);
                 if (!op.isPresent()) {
@@ -421,16 +414,16 @@ public class HistoryEventEntry {
         public OutcomeInfo getOutcomeInfo(Option<OrderOutcome.NotSucceeded> problem) throws Exception {
             if (outcomeInfo == null) {
                 if (problem == null) {
-                    outcomeInfo = newOutcomeInfo(OutcomeType.failed);
+                    outcomeInfo = newOutcomeInfo(HistoryOrderOutcomeType.getFailed());
                     return outcomeInfo;
                 }
                 Optional<OrderOutcome.NotSucceeded> op = OptionConverters.toJava(problem);
                 if (!op.isPresent()) {
-                    outcomeInfo = newOutcomeInfo(OutcomeType.failed);
+                    outcomeInfo = newOutcomeInfo(HistoryOrderOutcomeType.getFailed());
                     return outcomeInfo;
                 }
 
-                outcomeInfo = new OutcomeInfo(OutcomeType.failed, op.get());
+                outcomeInfo = new OutcomeInfo(HistoryOrderOutcomeType.getFailed(), op.get());
             }
             return outcomeInfo;
         }
@@ -441,7 +434,7 @@ public class HistoryEventEntry {
                 if (outcomeInfo != null) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Fail) {
-                        outcomeInfo.errorReason = OutcomeTypeFailedReason.fail_instruction;
+                        outcomeInfo.nonJobInstructionFailureReason = HistoryOrderOutcomeType.getFailInstruction();
                     }
                 }
             }
@@ -457,7 +450,7 @@ public class HistoryEventEntry {
                 if (outcomeInfo != null) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Fail) {
-                        outcomeInfo.errorReason = OutcomeTypeFailedReason.fail_instruction;
+                        outcomeInfo.nonJobInstructionFailureReason = HistoryOrderOutcomeType.getFailInstruction();
                     }
                 }
             }
@@ -468,12 +461,12 @@ public class HistoryEventEntry {
             if (outcomeInfo == null) {
                 Option<Completed> completed = ((OrderFinished) event).outcome();
                 if (completed == null) {
-                    outcomeInfo = newOutcomeInfo(OutcomeType.succeeded);
+                    outcomeInfo = newOutcomeInfo(HistoryOrderOutcomeType.getSucceeded());
                     return outcomeInfo;
                 }
                 Optional<Completed> op = OptionConverters.toJava(completed);
                 if (!op.isPresent()) {
-                    outcomeInfo = newOutcomeInfo(OutcomeType.succeeded);
+                    outcomeInfo = newOutcomeInfo(HistoryOrderOutcomeType.getSucceeded());
                     return outcomeInfo;
                 }
 
@@ -481,7 +474,7 @@ public class HistoryEventEntry {
                 if (outcomeInfo.isFailed) {
                     Instruction i = getCurrentPositionInstruction();
                     if (i != null && i instanceof Finish) {
-                        outcomeInfo.errorReason = OutcomeTypeFailedReason.finish_instruction;
+                        outcomeInfo.nonJobInstructionFailureReason = HistoryOrderOutcomeType.getFinishInstruction();
                     }
                 }
             }
@@ -729,8 +722,8 @@ public class HistoryEventEntry {
             private boolean isSucceeded;
             private boolean isFailed;
             private Map<String, Value> namedValues;
-            private OutcomeType type;
-            private OutcomeTypeFailedReason errorReason;
+            private HistoryOrderOutcomeType.Type type;
+            private HistoryOrderOutcomeType.NonJobInstructionFailureReason nonJobInstructionFailureReason;
             private String errorCode;
             private String errorMessage;
 
@@ -741,7 +734,7 @@ public class HistoryEventEntry {
                     isFailed = !isSucceeded; // c.isFailed();
                     handleNamedValues(c);
                     if (isFailed) {
-                        type = OutcomeType.failed;
+                        type = HistoryOrderOutcomeType.getFailed();
                         if (outcome instanceof Failed) {
                             setError((Failed) outcome);
                         } else {
@@ -751,7 +744,7 @@ public class HistoryEventEntry {
                         if (returnCode == null) {
                             returnCode = 0;
                         }
-                        type = OutcomeType.succeeded;
+                        type = HistoryOrderOutcomeType.getSucceeded();
                     }
                 } else if (outcome instanceof Disrupted) {
                     handleDisrupted(outcome, (Disrupted) outcome);
@@ -762,7 +755,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            private OutcomeInfo(OutcomeType type, Problem problem) {
+            private OutcomeInfo(HistoryOrderOutcomeType.Type type, Problem problem) {
                 this.type = type;
                 setError(problem);
                 switch (type) {
@@ -782,7 +775,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            private OutcomeInfo(OutcomeType type, OrderOutcome.NotSucceeded problem) {
+            private OutcomeInfo(HistoryOrderOutcomeType.Type type, OrderOutcome.NotSucceeded problem) {
                 this.type = type;
                 if (problem instanceof Disrupted) {
                     handleDisrupted(null, (Disrupted) problem);
@@ -817,7 +810,7 @@ public class HistoryEventEntry {
             private void handleFailed(Failed failed) {
                 isSucceeded = failed.isSucceeded();
                 isFailed = !isSucceeded;
-                type = OutcomeType.failed;
+                type = HistoryOrderOutcomeType.getFailed();
                 handleNamedValues(failed);
                 setError(failed);
             }
@@ -826,7 +819,7 @@ public class HistoryEventEntry {
                 returnCode = null; // TODO ?
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
-                type = OutcomeType.disrupted;
+                type = HistoryOrderOutcomeType.getDisrupted();
                 if (isFailed) {
                     try {
                         setError(problem.reason().problem());
@@ -844,13 +837,13 @@ public class HistoryEventEntry {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
-                type = OutcomeType.killed;
+                type = HistoryOrderOutcomeType.getKilled();
 
                 if (isFailed) {
                     Completed o = problem.outcome();
                     if (o != null && o instanceof Failed) {
                         handleFailed((Failed) o);
-                        type = OutcomeType.killed;
+                        type = HistoryOrderOutcomeType.getKilled();
                     }
                 }
             }
@@ -859,13 +852,13 @@ public class HistoryEventEntry {
                 returnCode = null;
                 isSucceeded = problem.isSucceeded();
                 isFailed = !isSucceeded; // problem.isFailed();
-                type = OutcomeType.timedout;
+                type = HistoryOrderOutcomeType.getTimedout();
 
                 if (isFailed) {
                     Completed o = problem.outcome();
                     if (o != null && o instanceof Failed) {
                         handleFailed((Failed) o);
-                        type = OutcomeType.timedout;
+                        type = HistoryOrderOutcomeType.getTimedout();
                     }
                 }
             }
@@ -910,12 +903,12 @@ public class HistoryEventEntry {
                 return namedValues;
             }
 
-            public OutcomeType getType() {
+            public HistoryOrderOutcomeType.Type getType() {
                 return type;
             }
 
-            public OutcomeTypeFailedReason getErrorReason() {
-                return errorReason;
+            public HistoryOrderOutcomeType.NonJobInstructionFailureReason getNonJobInstructionFailureReason() {
+                return nonJobInstructionFailureReason;
             }
 
             public FatOutcome toFatOutcome() {

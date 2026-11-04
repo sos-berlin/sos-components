@@ -34,7 +34,6 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.history.AHistoryBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
-import com.sos.joc.cluster.common.JocClusterUtil;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -54,6 +53,7 @@ import com.sos.joc.monitoring.model.bean.AMonitorResult;
 import com.sos.joc.monitoring.model.bean.ExpectedSeconds;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarn;
+import com.sos.joc.monitoring.model.bean.NotificationObject;
 import com.sos.joc.monitoring.model.bean.NotifierTask;
 import com.sos.joc.monitoring.model.bean.ToNotify;
 
@@ -69,7 +69,7 @@ public class HistoryMonitoringModel implements Serializable {
     /** 1day */
     private static final int MAX_LONGER_THAN_SECONDS = 24 * 60 * 60;
     /** 1day */
-    private static final int MAX_PAYLOAD_SECONDS = 24 * 60 * 60;
+    public static final int MAX_PAYLOAD_SECONDS = 24 * 60 * 60;
 
     private static final int MAX_IN_PROCESS_IN_SECONDS = 60; // 1 minute
 
@@ -633,30 +633,30 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private void add2Payload(AHistoryBean bean) {
-        if (bean == null || bean.getEventId() == null) {
+        if (bean == null) {
             return;
         }
-        Instant eventDate = JocClusterUtil.eventId2Instant(bean.getEventId());
-        if (eventDate == null) {
+        if (bean.getEventIdInSeconds() == null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("%s[missing eventDate]%s", HistoryMonitorService.LOG_IDENTIFIER, SOSString.toString(bean)));
+                LOGGER.debug(String.format("%s[missing eventIdInSeconds]%s", HistoryMonitorService.LOG_IDENTIFIER, SOSString.toString(bean)));
             }
+            return;
+        }
+
+        Instant now = Instant.now();
+        if (isNotExpired(now, bean.getEventIdInSeconds(), MAX_PAYLOAD_SECONDS)) {
+            payloads.add(bean);
         } else {
-            Instant now = Instant.now();
-            if (isNotExpired(now, eventDate, MAX_PAYLOAD_SECONDS)) {
-                payloads.add(bean);
-            } else {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("%s[%s][skip][now=%s-eventDate=%s > MAX_PAYLOAD_SECONDS=%s]%s", HistoryMonitorService.LOG_IDENTIFIER,
-                            bean.getControllerId(), SOSDate.tryGetDateTimeAsString(Date.from(now)), SOSDate.tryGetDateTimeAsString(Date.from(
-                                    eventDate)), MAX_PAYLOAD_SECONDS, SOSString.toString(bean)));
-                }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("%s[%s][skip][now=%s-eventDate=%s > MAX_PAYLOAD_SECONDS=%s]%s", HistoryMonitorService.LOG_IDENTIFIER, bean
+                        .getControllerId(), SOSDate.tryGetDateTimeAsString(Date.from(now)), SOSDate.tryGetDateTimeAsString(Date.from(Instant
+                                .ofEpochSecond(bean.getEventIdInSeconds()))), MAX_PAYLOAD_SECONDS, SOSString.toString(bean)));
             }
         }
     }
 
-    private boolean isNotExpired(Instant now, Instant event, int maxTime) {
-        return (now.getEpochSecond() - event.getEpochSecond()) <= maxTime;
+    private boolean isNotExpired(Instant now, long eventSeconds, int maxTime) {
+        return (now.getEpochSecond() - eventSeconds) <= maxTime;
     }
 
     private boolean isPercentage(String definition) {
@@ -672,18 +672,20 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private void persistQueues() {
-        if (payloads.size() > 0 || longerThan.size() > 0 || notifier.getCandidatesSize() > 0 || notifier.getActiveSize() > 0) {
+        if (needsPersistence() || notifier.needsPersistence()) {
             try {
                 CopyOnWriteArraySet<AHistoryBean> payloadsSnapshot = new CopyOnWriteArraySet<>(payloads);
                 Map<Long, HistoryOrderStepBean> longerThanSnapshot = new HashMap<>(longerThan);
                 List<AMonitorResult> notifierCandidatesSnapshot = notifier.getCandidatesSnapshot();
+                Map<String, NotificationObject> notificationObjectsSnapshot = notifier.getNotificationObjectsSnapshot();
                 Set<NotifierTask> notifierActiveSnapshot = notifier.getActiveSnapshot();
 
                 saveJocVariable(new SOSSerializer<SerializedHistoryResult>().serializeCompressed2bytes(new SerializedHistoryResult(payloadsSnapshot,
-                        longerThanSnapshot, notifierCandidatesSnapshot, notifierActiveSnapshot)));
-                LOGGER.info(String.format("%s[persisted][history payloads=%s, longerThan=%s]notification candidates=%s, active=%s",
+                        longerThanSnapshot, notifierCandidatesSnapshot, notificationObjectsSnapshot, notifierActiveSnapshot)));
+                LOGGER.info(String.format(
+                        "%s[persisted][history payloads=%s, longerThan=%s]notification candidates=%s, notificationObjects=%s, active=%s",
                         HistoryMonitorService.LOG_IDENTIFIER, payloadsSnapshot.size(), longerThanSnapshot.size(), notifierCandidatesSnapshot.size(),
-                        notifierActiveSnapshot.size()));
+                        notificationObjectsSnapshot.size(), notifierActiveSnapshot.size()));
             } catch (Exception e) {
                 LOGGER.warn(String.format("%s[persistQueues]%s", HistoryMonitorService.LOG_IDENTIFIER, e.toString()), e);
             }
@@ -715,6 +717,7 @@ public class HistoryMonitoringModel implements Serializable {
         int payloadsSize = 0;
         int longerThanSize = 0;
         int notifierCandidatesSize = 0;
+        int notifierNotificationObjects = 0;
         int notifierActiveSize = 0;
 
         SerializedHistoryResult sr = new SOSSerializer<SerializedHistoryResult>().deserializeCompressed(var.getBinaryValue());
@@ -730,14 +733,23 @@ public class HistoryMonitoringModel implements Serializable {
         }
         if (sr.getNotifierCandidates() != null) {
             notifierCandidatesSize = sr.getNotifierCandidates().size();
-            notifier.setCandidates(sr.getNotifierCandidates());
+            notifier.restoreCandidates(sr.getNotifierCandidates());
+        }
+        if (sr.getNotifierNotificationObjects() != null) {
+            notifierNotificationObjects = sr.getNotifierNotificationObjects().size();
+            notifier.restoreNotificationObjects(sr.getNotifierNotificationObjects());
         }
         if (sr.getNotifierActive() != null) {
             notifierActiveSize = sr.getNotifierActive().size();
             notifier.runRestoredActiveNotifiers(sr.getNotifierActive());
         }
-        LOGGER.info(String.format("%s[restored][history payloads=%s, longerThan=%s]notification candidates=%s, active=%s",
-                HistoryMonitorService.LOG_IDENTIFIER, payloadsSize, longerThanSize, notifierCandidatesSize, notifierActiveSize));
+        LOGGER.info(String.format("%s[restored][history payloads=%s, longerThan=%s]notification candidates=%s, notificationObjects=%s, active=%s",
+                HistoryMonitorService.LOG_IDENTIFIER, payloadsSize, longerThanSize, notifierCandidatesSize, notifierNotificationObjects,
+                notifierActiveSize));
+    }
+
+    private boolean needsPersistence() {
+        return payloads.size() > 0 || longerThan.size() > 0;
     }
 
     private DBItemJocVariable getJocVariable() throws Exception {

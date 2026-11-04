@@ -3,7 +3,6 @@ package com.sos.joc.monitoring.notification.notifier;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
@@ -21,6 +20,7 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.inventory.model.job.JobCriticality;
+import com.sos.joc.cluster.bean.history.HistoryOrderOutcomeType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
@@ -96,7 +96,7 @@ public abstract class ANotifier {
 
         setStatus(type);
         setCommonVars();
-        setTableFields(mo, mos, mn);
+        setTableFields(type, mo, mos, mn);
 
         this.jocVariables = new JocVariables(mo, mos);
     }
@@ -336,7 +336,7 @@ public abstract class ANotifier {
         commonVars.put(COMMON_VAR_TIME_ZONE, getMonitor().getTimeZoneValue());
     }
 
-    private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    private void setTableFields(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         tableFields = new HashMap<String, String>();
         // additional fields
         tableFields.put(PREFIX_TABLE_ORDERS + "_TIME_ELAPSED", "");
@@ -352,11 +352,17 @@ public abstract class ANotifier {
         }
         if (mos == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrderStep.class, true, PREFIX_TABLE_ORDER_STEPS));
+            if (NotificationType.ERROR.equals(type)) {
+                adjustOrderStepFieldsOnError(mo);
+            }
         } else {
             tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS, timeZone, true));
             adjustFields(PREFIX_TABLE_ORDER_STEPS);
             if (mos.getTags() != null) {
                 tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_JOB_TAGS", mos.getTags());
+            }
+            if (NotificationType.ERROR.equals(type)) {
+                adjustOrderStepFieldsOnError(mo, mos);
             }
         }
 
@@ -372,6 +378,9 @@ public abstract class ANotifier {
             }
         } else {
             tableFields.putAll(mn.toMap(true, PREFIX_TABLE_NOTIFICATIONS, timeZone, true));
+            if (NotificationType.WARNING.equals(type)) {
+                adjustNotificationFieldsOnWarning(mn, mos);
+            }
             adjustFields(PREFIX_TABLE_NOTIFICATIONS);
 
             if (compatibilityMode) {
@@ -379,6 +388,88 @@ public abstract class ANotifier {
                 putTableField(PREFIX_TABLE_ORDER_STEPS + "_WARN_TEXT", tableFields.get(PREFIX_TABLE_NOTIFICATIONS + "_WARN_TEXT"));
             }
         }
+    }
+
+    private void adjustOrderStepFieldsOnError(DBItemMonitoringOrder mo) {
+        if (mo == null || !mo.getError()) {
+            return;
+        }
+
+        String returnCode = mo.getErrorReturnCode() + "";
+        String errorText = mo.getErrorText();
+        String errorReason = mo.getErrorReason() == null ? "" : mo.getErrorReason();
+        String severity = mo.getSeverity() == null ? "" : mo.getSeverity() + "";
+        String state = mo.getState() == null ? "" : mo.getState() + "";
+
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_RETURN_CODE", returnCode);
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_ERROR", "1");
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_ERROR_TEXT", errorText);
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_ERROR_REASON", errorReason);
+        try {
+            tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_SEVERITY", HistorySeverity.getName(Integer.valueOf(severity)));
+        } catch (Exception e) {
+        }
+        try {
+            tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value());
+        } catch (Exception e) {
+        }
+    }
+
+    private void adjustOrderStepFieldsOnError(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        boolean orderStepErrorTextAdjusted = false;
+        if (mo != null && mo.getError()) {
+            // Fail/Finish instructions
+            if (HistoryOrderOutcomeType.isNonJobInstructionFailureReason(mo.getErrorReason())) {
+                boolean rtEquals = true;
+                if (mo.getErrorReturnCode() != null && mos.getReturnCode() != null) {
+                    rtEquals = mo.getErrorReturnCode().equals(mos.getReturnCode());
+                    if (!rtEquals) {
+                        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_RETURN_CODE", mo.getErrorReturnCode() + "");
+                    }
+                }
+                String errorText = mo.getErrorText(); // e.g. [Finish, pos=0/catch+0:0] my finish message
+                if (!SOSString.isEmpty(errorText)) {
+                    if (!SOSString.isEmpty(mos.getErrorText())) {
+                        String add = " ";
+                        if (!startsWithOrderStepInfo(mos.getErrorText())) {
+                            add = add + getOrderStepInfo(mos, !rtEquals) + " ";
+                        }
+                        errorText = errorText + add + mos.getErrorText();
+                    }
+                    tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_ERROR_TEXT", errorText);
+                    orderStepErrorTextAdjusted = true;
+                }
+            }
+        }
+        if (!orderStepErrorTextAdjusted) {
+            if (!SOSString.isEmpty(mos.getErrorText())) {
+                String add = startsWithOrderStepInfo(mos.getErrorText()) ? "" : (getOrderStepInfo(mos, false) + " ");
+                tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_ERROR_TEXT", add + mos.getErrorText());
+            }
+            orderStepErrorTextAdjusted = true;
+        }
+    }
+
+    private void adjustNotificationFieldsOnWarning(DBItemNotification mn, DBItemMonitoringOrderStep mos) {
+        if (mos != null && !SOSString.isEmpty(mn.getWarnText())) {
+            String add = startsWithOrderStepInfo(mn.getWarnText()) ? "" : (getOrderStepInfo(mos, false) + " ");
+            tableFields.put(PREFIX_TABLE_NOTIFICATIONS + "_WARN_TEXT", add + mn.getWarnText());
+        }
+    }
+
+    private boolean startsWithOrderStepInfo(String text) {
+        return text != null && text.toLowerCase().startsWith("[job");
+    }
+
+    private String getOrderStepInfo(DBItemMonitoringOrderStep mos, boolean withReturnCode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[Job=").append(mos.getJobName());
+        sb.append(", pos=").append(mos.getWorkflowPosition());
+        if (withReturnCode) {
+            sb.append(", returnCode=").append(mos.getReturnCode());
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     private void adjustFields(String tablePrefix) {
@@ -390,7 +481,7 @@ public abstract class ANotifier {
             String state = tableFields.get(tablePrefix + "_STATE");
             try {
                 tableFields.put(tablePrefix + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 putTableField(tablePrefix + "_STATE", state);
             }
             putTableFieldVariables(tablePrefix, "START");
@@ -399,7 +490,7 @@ public abstract class ANotifier {
             String criticality = tableFields.get(tablePrefix + "_JOB_CRITICALITY");
             try {
                 tableFields.put(tablePrefix + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 putTableField(tablePrefix + "_JOB_CRITICALITY", criticality);
             }
             putTableFieldVariables(tablePrefix, "START");
@@ -409,19 +500,19 @@ public abstract class ANotifier {
             String type = tableFields.get(tablePrefix + "_TYPE");
             try {
                 tableFields.put(tablePrefix + "_TYPE", NotificationType.fromValue(Integer.valueOf(type)).value());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 putTableField(tablePrefix + "_TYPE", type);
             }
             String range = tableFields.get(tablePrefix + "_RANGE");
             try {
                 tableFields.put(tablePrefix + "_RANGE", OrderNotificationRange.fromValue(Integer.valueOf(range)).value());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 putTableField(tablePrefix + "_RANGE", range);
             }
             String warn = tableFields.get(tablePrefix + "_WARN");
             try {
                 tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value());
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 putTableField(tablePrefix + "_WARN", warn);
             }
             String recoveredId = tableFields.get(tablePrefix + "_RECOVERED_ID");
@@ -452,7 +543,7 @@ public abstract class ANotifier {
                     Long diffSeconds = e.getTime() / 1000 - s.getTime() / 1000;
                     tableFields.put(newField, diffSeconds.toString());
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
             }
         }
     }
@@ -460,10 +551,10 @@ public abstract class ANotifier {
     private Date toDate(String date) {
         try {
             return SOSDate.parse(date, SOSDate.DATETIME_FORMAT_WITH_ZONE_OFFSET);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             try {
                 return SOSDate.getDateTime(date);
-            } catch (Throwable ee) {
+            } catch (Exception ee) {
             }
             return null;
         }
@@ -476,7 +567,7 @@ public abstract class ANotifier {
         String severity = tableFields.get(tablePrefix + "_SEVERITY");
         try {
             tableFields.put(tablePrefix + "_SEVERITY", HistorySeverity.getName(Integer.valueOf(severity)));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             putTableField(tablePrefix + "_SEVERITY", severity);
         }
     }
@@ -492,14 +583,10 @@ public abstract class ANotifier {
                 JsonNode root = ANotifier.JSON_OM.readTree(vars);
                 if (root != null) {
                     String varNamePrefix = tablePrefix + "_" + variablesRange + "_VARIABLE_";
-                    Iterator<Entry<String, JsonNode>> nodes = root.fields();
-                    while (nodes.hasNext()) {
-                        Map.Entry<String, JsonNode> entry = (Map.Entry<String, JsonNode>) nodes.next();
 
+                    for (Entry<String, JsonNode> entry : root.properties()) {
                         if (entry.getValue().isObject()) {// ListValue
-                            Iterator<Entry<String, JsonNode>> entryNodes = entry.getValue().fields();
-                            while (entryNodes.hasNext()) {
-                                Map.Entry<String, JsonNode> entryChild = (Map.Entry<String, JsonNode>) entryNodes.next();
+                            for (Entry<String, JsonNode> entryChild : entry.getValue().properties()) {
                                 tableFields.put(varNamePrefix + entry.getKey().toUpperCase() + "_" + entryChild.getKey().toUpperCase(), getValue(
                                         entryChild));
                             }
@@ -508,7 +595,7 @@ public abstract class ANotifier {
                         }
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER.warn(String.format("[%s_%s_VARIABLES=%s]%s", tablePrefix, variablesRange, vars, e.toString()), e);
             }
         }
@@ -517,7 +604,7 @@ public abstract class ANotifier {
     private String getValue(Entry<String, JsonNode> entry) {
         try {
             return entry.getValue().asText();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return "";
         }
     }

@@ -1168,7 +1168,7 @@ public class HistoryModel {
                 checkControllerTimezone(dbLayer);
 
                 CachedOrderStep cos = getCurrentOrderStep(dbLayer, orig, co, endedOrderSteps);
-                LogEntry le = createOrderLogEntry(eventType, eventId, outcome, co);
+                LogEntry le = createOrderLogEntry(eventType, eventId, outcome, co, position);
                 co.setState(le.getState());
 
                 Date endTime = null;
@@ -1180,7 +1180,13 @@ public class HistoryModel {
                 Long currentHistoryOrderStepId = (cos == null) ? co.getCurrentHistoryOrderStepId() : cos.getId();
                 if (terminateOrder) {
                     endTime = eventDate;
-                    endWorkflowPosition = (cos == null) ? co.getWorkflowPosition() : cos.getWorkflowPosition();
+                    // endWorkflowPosition = (cos == null) ? co.getWorkflowPosition() : cos.getWorkflowPosition();
+                    if (position == null) {
+                        endWorkflowPosition = (cos == null) ? co.getWorkflowPosition() : cos.getWorkflowPosition();
+                    } else {
+                        endWorkflowPosition = position.getValue();
+                    }
+
                     endHistoryOrderStepId = currentHistoryOrderStepId;
                     endEventId = eventId;
                 }
@@ -1316,7 +1322,7 @@ public class HistoryModel {
         return step;
     }
 
-    private LogEntry createOrderLogEntry(EventType eventType, Long eventId, FatOutcome outcome, CachedOrder co) {
+    private LogEntry createOrderLogEntry(EventType eventType, Long eventId, FatOutcome outcome, CachedOrder co, FatPosition position) {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         LogEntry le = new LogEntry(OrderLogEntryLogLevel.DETAIL, eventType, JocClusterUtil.getEventIdAsDate(eventId), null);
 
@@ -1328,7 +1334,7 @@ public class HistoryModel {
                     setError = false;
                 }
                 if (setError) {
-                    le.setError(co, outcome);
+                    le.setOrderError(co, outcome, position);
                 }
             } else if (outcome.isSucceeded()) {
                 co.resetLastStepError();
@@ -1728,7 +1734,7 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             co.setCurrentHistoryOrderStepId(item.getId());
-            dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentHistoryOrderStepId());
+            dbLayer.updateOrderCurrentOrderStepId(co.getId(), co.getCurrentHistoryOrderStepId());
 
             CachedOrderStep cos = new CachedOrderStep(item, eos, ca.getTimezone());
             LogEntry le = new LogEntry(OrderLogEntryLogLevel.MAIN, EventType.OrderProcessingStarted, JocClusterUtil.getEventIdAsDate(eos
@@ -1803,7 +1809,7 @@ public class HistoryModel {
                 OrderStepProcessedResult r = new OrderStepProcessedResult(eos, controllerConfiguration.getCurrent().getId(), co, cos, yadeHandler);
 
                 if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
-                    le.setErrorText(cos.getFirstChunkStdError());
+                    le.setErrorText(cos.getFirstChunkStdError() == null ? le.getErrorReason() : cos.getFirstChunkStdError());
                 }
                 co.setLastStepError(le, cos);
                 cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));

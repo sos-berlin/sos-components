@@ -21,6 +21,7 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.bean.history.HistoryOrderOutcomeType;
 import com.sos.joc.cluster.configuration.JocHistoryConfiguration;
 import com.sos.joc.cluster.service.JocClusterServiceLogger;
 import com.sos.joc.history.controller.proxy.FluxStopper;
@@ -36,7 +37,6 @@ import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
-import com.sos.joc.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.joc.history.controller.proxy.HistoryEventType;
 import com.sos.joc.history.controller.proxy.common.JProxyTestClass;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEvent;
@@ -519,7 +519,8 @@ public class HistoryControllerHandlerTest {
                 OrderBroken ob = (OrderBroken) entry.getEvent();
 
                 event = new FatEventOrderBroken(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), order.getOutcomeInfo(OutcomeType.broken, ob.problem()), order.getWorkflowInfo().getPosition());
+                event.set(order.getOrderId(), order.getOutcomeInfo(HistoryOrderOutcomeType.getBroken(), ob.problem()), order.getWorkflowInfo()
+                        .getPosition());
                 break;
 
             case OrderSuspended:

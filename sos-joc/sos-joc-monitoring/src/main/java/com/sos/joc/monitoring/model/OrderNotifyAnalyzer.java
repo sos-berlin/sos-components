@@ -19,12 +19,13 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
 import com.sos.joc.monitoring.model.bean.MonitorOrderResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResult;
 import com.sos.joc.monitoring.model.bean.MonitorOrderStepResultWarn;
+import com.sos.joc.monitoring.model.bean.NotificationObject;
+import com.sos.joc.monitoring.model.bean.NotificationRun;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.OrderNotificationRange;
 
@@ -52,40 +53,77 @@ public class OrderNotifyAnalyzer implements Serializable {
     // TODO
     private boolean checkPeriodAge = false;
 
-    protected boolean analyze(OrderNotificationRange range, DBLayerMonitoring dbLayer, List<Notification> list, MonitorOrderResult mor,
-            MonitorOrderStepResult mosr, NotificationType type, List<MonitorOrderStepResultWarn> warnings) throws Exception {
+    protected List<NotificationRun> analyze(OrderNotifierModel notifier, OrderNotificationRange range, DBLayerMonitoring dbLayer,
+            List<NotificationRun> notifications, MonitorOrderResult mor, MonitorOrderStepResult mosr, NotificationType type,
+            List<MonitorOrderStepResultWarn> warnings) throws Exception {
 
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        boolean isWorkflow = false;
         switch (range) {
         case WORKFLOW_JOB:
             orderId = mosr.getStep().getHistoryOrderId();
             stepId = mosr.getStep().getHistoryId();
-            workflowPosition = mosr.getStep().getWorkflowPosition();
+            // workflowPosition = mosr.getStep().getWorkflowPosition();
             controllerId = mosr.getStep().getControllerId();
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, controllerId, range, type,
-                        toString(list), SOSString.toString(mosr)));
+                        toString(notifications), SOSString.toString(mosr)));
             }
+
             break;
         case WORKFLOW:
+            isWorkflow = true;
             orderId = mor.getOrder().getHistoryId();
             stepId = mor.getOrder().getCurrentHistoryOrderStepId();
-            workflowPosition = mor.getOrder().getWorkflowPosition();
+            // workflowPosition = mor.getOrder().getWorkflowPosition();
             controllerId = mor.getOrder().getControllerId();
 
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s]%s", Configuration.LOG_INTENT, controllerId, range, type,
-                        toString(list), SOSString.toString(mor)));
+                        toString(notifications), SOSString.toString(mor)));
             }
+
             break;
         }
 
         switch (type) {
+        case SUCCESS:
+        case ERROR:
+            String key = type + "-" + controllerId + "-" + orderId;
+            if (isWorkflow) {
+                NotificationObject notificationObject = notifier.getNotificationObjects().get(key);
+                if (notificationObject != null) {
+                    if (stepId.equals(notificationObject.getOrderStepHistoryId())) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format(
+                                    "%s[%s][analyze][%s][%s][notification ids=%s][skip][same order step(historyId=%s) has already been sent][order historyId=%s]%s",
+                                    Configuration.LOG_INTENT, controllerId, range, type, toString(notifications), stepId, orderId,
+                                    notificationObject));
+                        }
+                        notifier.getNotificationObjects().remove(key);
+                        return null;
+                    } else {
+                        notifier.getNotificationObjects().remove(key);
+                    }
+                }
+            } else {
+                notifier.getNotificationObjects().put(key, new NotificationObject(mosr.getStep()));
+            }
+            break;
         case RECOVERED:
+            if (isWorkflow) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][nothing to recovery if %s]orderId=%s",
+                            Configuration.LOG_INTENT, controllerId, range, type, toString(notifications), range, orderId));
+                }
+                return null;
+            }
+
             toRecovery = new HashMap<>();
-            for (Notification n : list) {
-                LastWorkflowNotificationDBItemEntity last = dbLayer.getLastNotification(n.getNotificationId(), range, orderId);
+            for (NotificationRun n : notifications) {
+                LastWorkflowNotificationDBItemEntity last = dbLayer.getLastNotification(n.getConfiguredNotification().getNotificationId(), range,
+                        orderId);
                 if (last == null || !last.getType().equals(NotificationType.ERROR.intValue())) {
                     continue;
                 }
@@ -93,10 +131,10 @@ public class OrderNotifyAnalyzer implements Serializable {
             }
             if (toRecovery.size() == 0) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][orderId=%s]nothing to recovery found",
-                            Configuration.LOG_INTENT, controllerId, range, type, toString(list), orderId));
+                    LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][nothing to recovery found]orderId=%s",
+                            Configuration.LOG_INTENT, controllerId, range, type, toString(notifications), orderId));
                 }
-                return false;
+                return null;
             }
             break;
         case WARNING:
@@ -122,9 +160,15 @@ public class OrderNotifyAnalyzer implements Serializable {
         if (order == null && orderStep == null) {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s[%s][analyze][%s][%s][notification ids=%s][skip][orderId=%s][stepId=%s]order and step not found",
-                        Configuration.LOG_INTENT, controllerId, range, type, toString(list), orderId, stepId));
+                        Configuration.LOG_INTENT, controllerId, range, type, toString(notifications), orderId, stepId));
             }
-            return false;
+            return null;
+        }
+
+        if (isWorkflow) {
+            workflowPosition = order.getEndWorkflowPosition() == null ? order.getWorkflowPosition() : order.getEndWorkflowPosition();
+        } else {
+            workflowPosition = orderStep.getWorkflowPosition();
         }
 
         if (checkPeriodAge) {
@@ -133,7 +177,7 @@ public class OrderNotifyAnalyzer implements Serializable {
                 if (order != null) {
                     // not send entries older as ...
                     if (isPeriodExeeded(order.getStartTime(), order.getEndTime())) {
-                        return false;
+                        return null;
                     }
                 }
                 break;
@@ -141,18 +185,18 @@ public class OrderNotifyAnalyzer implements Serializable {
                 if (orderStep != null) {
                     // not send entries older as ...
                     if (isPeriodExeeded(orderStep.getStartTime(), orderStep.getEndTime())) {
-                        return false;
+                        return null;
                     }
                 }
                 break;
             }
         }
 
-        return true;
+        return notifications;
     }
 
-    private String toString(List<Notification> list) {
-        return String.join(",", list.stream().map(e -> e.getNotificationId()).collect(Collectors.toList()));
+    private String toString(List<NotificationRun> list) {
+        return String.join(",", list.stream().map(e -> e.getConfiguredNotification().getNotificationId()).collect(Collectors.toList()));
     }
 
     private boolean isPeriodExeeded(Date startTime, Date endTime) {
