@@ -338,7 +338,7 @@ public class DBLayerHistory extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int updateOrderOnOrderStep(Long id, Long currentHistoryOrderStepId) throws SOSHibernateException {
+    public int updateOrderCurrentOrderStepId(Long id, Long currentHistoryOrderStepId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("set currentHistoryOrderStepId=:currentHistoryOrderStepId ");
         hql.append(",modified=").append(SOSHibernateCurrentTimestampUtc.getFunction()).append(" ");

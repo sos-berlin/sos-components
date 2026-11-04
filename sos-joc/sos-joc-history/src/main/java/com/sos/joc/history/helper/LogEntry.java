@@ -7,6 +7,7 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.common.Variables;
+import com.sos.joc.cluster.bean.history.HistoryOrderOutcomeType;
 import com.sos.joc.history.controller.model.HistoryModel;
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.joc.history.controller.proxy.fatevent.AFatEventOrderBase;
@@ -103,7 +104,7 @@ public class LogEntry {
         }
         this.info = co.getOrderId();
     }
-    
+
     public void onStartOrder(CachedOrder co, FatPosition position, Integer priority) {
         onOrder(co, position);
         this.priority = priority;
@@ -202,11 +203,16 @@ public class LogEntry {
     }
 
     public void setError(String state, FatOutcome outcome) {
+        setError(state, outcome, outcome.getErrorMessage());
+    }
+
+    public void setError(String state, FatOutcome outcome, String errorMessage) {
         this.error = true;
         this.errorState = state == null ? null : state.toLowerCase();
         this.errorReason = outcome.getErrorReason();
         this.errorCode = outcome.getErrorCode();
-        this.errorText = outcome.getErrorMessage();
+        //this.errorText = SOSString.isEmpty(errorMessage) ? this.errorReason : errorMessage;
+        this.errorText = errorMessage;
     }
 
     public void onOrderJoined(CachedOrder co, FatOutcome outcome, FatPosition position, List<String> childs) {
@@ -226,7 +232,7 @@ public class LogEntry {
         }
     }
 
-    public void setError(CachedOrder co, FatOutcome outcome) {
+    public void setOrderError(CachedOrder co, FatOutcome outcome, FatPosition position) {
         if (outcome.getReturnCode() == null && SOSString.isEmpty(outcome.getErrorMessage()) && co.getLastStepError() != null) {
             setError(OrderStateText.FAILED.value(), co);
             setReturnCode(co.getLastStepError().getReturnCode());
@@ -234,7 +240,17 @@ public class LogEntry {
                 this.errorReason = outcome.getErrorReason();
             }
         } else {
-            setError(OrderStateText.FAILED.value(), outcome);
+            String errorMessage = outcome.getErrorMessage();
+            if (HistoryOrderOutcomeType.isNonJobInstructionFailureReason(outcome.getErrorReason())) {
+                String info = "[" + HistoryOrderOutcomeType.getReason(outcome.getErrorReason()) + ", pos=" + (position == null ? co
+                        .getWorkflowPosition() : position.getValue()) + "]";
+                if (SOSString.isEmpty(errorMessage)) {
+                    errorMessage = info;
+                } else {
+                    errorMessage = info + " " + errorMessage;
+                }
+            }
+            setError(OrderStateText.FAILED.value(), outcome, errorMessage);
         }
     }
 
@@ -451,11 +467,11 @@ public class LogEntry {
     public Date getDelayedUntil() {
         return delayedUntil;
     }
-    
+
     public Date getSleepUntil() {
         return sleepUntil;
     }
-    
+
     public Integer getPriority() {
         return priority;
     }

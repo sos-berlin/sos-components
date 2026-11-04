@@ -3,13 +3,11 @@ package com.sos.joc.history.controller.proxy.fatevent;
 import java.util.Map;
 
 import com.sos.joc.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
-import com.sos.joc.history.controller.proxy.HistoryEventEntry.OutcomeType;
 
 import js7.data.value.Value;
 
 public class FatOutcome {
 
-    private final OutcomeType type;
     private final Integer returnCode;
     private final boolean isSucceeded;
     private final boolean isFailed;
@@ -20,7 +18,6 @@ public class FatOutcome {
     private String errorReason;
 
     public FatOutcome(OutcomeInfo oi) {
-        this.type = oi.getType();
         this.returnCode = oi.getReturnCode();
         this.isSucceeded = oi.isSucceeded();
         this.isFailed = oi.isFailed();
@@ -28,16 +25,12 @@ public class FatOutcome {
         this.errorCode = oi.getErrorCode();
         this.errorMessage = oi.getErrorMessage();
         if (isFailed) {
-            if (oi.getErrorReason() == null) {
-                this.errorReason = type == null ? null : type.name();
+            if (oi.getNonJobInstructionFailureReason() == null) {
+                this.errorReason = oi.getType() == null ? null : oi.getType().name();
             } else {
-                this.errorReason = oi.getErrorReason().name();
+                this.errorReason = oi.getNonJobInstructionFailureReason().name();
             }
         }
-    }
-
-    public OutcomeType getType() {
-        return type;
     }
 
     public Integer getReturnCode() {

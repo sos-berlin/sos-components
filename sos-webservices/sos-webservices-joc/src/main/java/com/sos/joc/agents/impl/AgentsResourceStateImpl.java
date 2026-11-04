@@ -353,8 +353,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         JAgentRefState jAgentRefState = agentRefStates.get(AgentPath.of(dbAgent.getAgentId()));
-                        boolean requireFailoverConfirmation = Optional.ofNullable(agentRefStates.get(AgentPath.of(dbAgent.getAgentId()))).map(
-                                JAgentRefState::agentRef).map(JAgentRef::asScala).map(AgentRef::requireFailoverConfirmation).orElse(false);
+                        boolean requireFailoverConfirmation = Optional.ofNullable(jAgentRefState).map(JAgentRefState::agentRef).map(
+                                JAgentRef::asScala).map(AgentRef::requireFailoverConfirmation).orElse(false);
                         AgentV agent = mapDbAgentToAgentV(dbAgent, subagentsPerAgentId.get(dbAgent.getAgentId()), withStateFilter, agentsParam
                                 .getStates());
                         agent.setForceFailoverConfirmation(requireFailoverConfirmation);

@@ -113,6 +113,7 @@ public class HistoryMonitoringPayloadHandler {
                     orderProcessingStarted(model, dbLayer, (HistoryOrderStepBean) b);
                     break;
                 case OrderProcessed:
+
                     toNotify.getSteps().add(orderProcessed(model, dbLayer, (HistoryOrderStepBean) b));
                     break;
                 case OrderStderrWritten:

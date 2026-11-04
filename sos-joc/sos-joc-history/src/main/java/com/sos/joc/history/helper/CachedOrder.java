@@ -161,7 +161,7 @@ public class CachedOrder implements IOriginalOrderIdProvider {
     public void setLastStepError(LogEntry le, CachedOrderStep cos) {
         if (le.isError()) {
             String msg = cos == null ? le.getErrorText() : String.format("[Job=%s, pos=%s]%s", cos.getJobName(), cos.getWorkflowPosition(), le
-                    .getErrorText() == null ? "" : le.getErrorText());
+                    .getErrorText() == null ? "" : " " + le.getErrorText());
             setLastStepError(le.getErrorState(), le.getErrorReason(), le.getErrorCode(), msg, le.getReturnCode());
         } else {
             lastStepError = null;

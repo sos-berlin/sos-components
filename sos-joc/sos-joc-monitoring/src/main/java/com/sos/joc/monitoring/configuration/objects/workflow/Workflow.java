@@ -21,13 +21,15 @@ public class Workflow extends AElement {
 
     private static String ATTRIBUTE_NAME_PATH = "path";
 
-    private final String controllerId;
+    private final String parentName; // Workflows.name
+    private final String controllerId; // Workflows.controllerId
     private final String path;
 
     private List<WorkflowJob> jobs;
 
-    public Workflow(Node node, String controllerId) throws Exception {
+    public Workflow(final Node node, final String parentName, final String controllerId) throws Exception {
         super(node);
+        this.parentName = parentName;
         this.controllerId = controllerId;
 
         path = getAttributeValue(ATTRIBUTE_NAME_PATH, AElement.ASTERISK);
@@ -55,6 +57,10 @@ public class Workflow extends AElement {
 
     public String getPath() {
         return path;
+    }
+
+    public String getParentName() {
+        return parentName;
     }
 
     public String getControllerId() {

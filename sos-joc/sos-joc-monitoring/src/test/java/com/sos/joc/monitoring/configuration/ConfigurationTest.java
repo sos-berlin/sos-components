@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.configuration;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -9,13 +10,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
+import com.sos.joc.monitoring.model.bean.NotificationRun;
 import com.sos.monitoring.notification.NotificationType;
 import com.sos.monitoring.notification.OrderNotificationRange;
 
@@ -33,7 +34,7 @@ public class ConfigurationTest {
     @Ignore
     @Test
     public void testTypes() throws Exception {
-        Configuration.INSTANCE.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
+        Configuration.INSTANCE.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), StandardCharsets.UTF_8));
 
         LOGGER.info("---TYPE ON_ERROR---:" + Configuration.INSTANCE.getOnError().size());
         showNotifications(Configuration.INSTANCE.getOnError());
@@ -48,31 +49,31 @@ public class ConfigurationTest {
     @Ignore
     @Test
     public void testMatches() throws Exception {
-        Configuration.INSTANCE.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
+        Configuration.INSTANCE.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), StandardCharsets.UTF_8));
 
         LOGGER.info("---WORKFLOW MATCHES---:");
-        List<Notification> r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW, NotificationType.ERROR,
+        List<NotificationRun> r = Configuration.INSTANCE.findNotificationsForOrder(OrderNotificationRange.WORKFLOW, NotificationType.ERROR,
                 Configuration.INSTANCE.getOnError(), "js7.x", "/my_workflow");
         LOGGER.info("---               MATCHES---:" + r.size());
-        for (Notification n : r) {
+        for (NotificationRun n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
 
         LOGGER.info("---JOB MATCHES 1---:");
         // "my_job_name", "my_job_label", JobCriticality.NORMAL.intValue(), 0
-        r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW_JOB, NotificationType.SUCCESS, Configuration.INSTANCE
+        r = Configuration.INSTANCE.findNotificationsForOrderStep(OrderNotificationRange.WORKFLOW_JOB, NotificationType.SUCCESS, Configuration.INSTANCE
                 .getOnError(), "js7.x", "/my_workflow", null);
         LOGGER.info("---               MATCHES---:" + r.size());
-        for (Notification n : r) {
+        for (NotificationRun n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
 
         LOGGER.info("---JOB MATCHES 2---:");
         // "my_job_name", "my_job_label", JobCriticality.CRITICAL.intValue(), 0
-        r = Configuration.INSTANCE.findWorkflowMatches(OrderNotificationRange.WORKFLOW_JOB, NotificationType.ERROR, Configuration.INSTANCE
+        r = Configuration.INSTANCE.findNotificationsForOrderStep(OrderNotificationRange.WORKFLOW_JOB, NotificationType.ERROR, Configuration.INSTANCE
                 .getOnSuccess(), "js7.x", "/my_workflow", null);
         LOGGER.info("---               MATCHES---:" + r.size());
-        for (Notification n : r) {
+        for (NotificationRun n : r) {
             LOGGER.info("                  " + SOSString.toString(n));
         }
     }

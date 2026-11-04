@@ -125,7 +125,7 @@ public class Notification extends AElement {
                         List<Element> ws = SOSXML.getChildElemens(n, ELEMENT_NAME_WORKFLOW);
                         if (ws != null) {
                             for (Element ew : ws) {
-                                workflows.add(new Workflow(ew, controllerId));
+                                workflows.add(new Workflow(ew, ref, controllerId));
                             }
                         }
                     }
